@@ -112,13 +112,30 @@ class DynamicPlaylistSyncTask implements TaskInterface
 
                 $this->log->debug('Assessing Playlist: ' . $playlist->name);
 
+                if (empty($playlist->filterMediaName) && empty($playlist->filterMediaTags)) {
+                    // if this Dynamic Playlist was populated will all Media in the system
+                    // before we introduced measures against it, we need to go through and unassign all Widgets from it.
+                    // if it is fresh Playlist added recently, it will not have any Widgets on it with empty filters.
+                    if (!empty($playlist->widgets)) {
+                        foreach ($playlist->widgets as $widget) {
+                            $playlist->deleteWidget($widget);
+                        }
+                    }
+                    $this->log->debug(sprintf('Dynamic Playlist ID %d , with no filters set, skipping.', $playlist->playlistId));
+                    continue;
+                }
+
                 // Query for media which would be assigned to this Playlist and see if there are any differences
                 $media = [];
                 $mediaIds = [];
                 foreach ($this->mediaFactory->query(null, [
                     'name' => $playlist->filterMediaName,
                     'tags' => $playlist->filterMediaTags,
-                    'userCheckUserId' => $playlist->getOwnerId()
+                    'exactTags' => $playlist->filterExactTags,
+                    'logicalOperator' => $playlist->filterLogicalOperator,
+                    'userCheckUserId' => $playlist->getOwnerId(),
+                    'start' => 0,
+                    'length' => $playlist->maxNumberOfItems
                 ]) as $item) {
                     $media[$item->mediaId] = $item;
                     $mediaIds[] = $item->mediaId;
@@ -129,7 +146,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 $different = (count($playlist->widgets) !== count($media));
 
                 $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets)
-                    . ' currently assigned. First check difference is ' . var_export($different, true));
+                    . ' currently assigned with max number of items set to ' . $playlist->maxNumberOfItems . ' First check difference is ' . var_export($different, true));
 
                 if (!$different) {
                     // Try a more complete check, using mediaIds
@@ -197,7 +214,6 @@ class DynamicPlaylistSyncTask implements TaskInterface
                                 // We do want to save the Playlist here.
                                 $assignmentMade = true;
                             }
-
                         } catch (NotFoundException $exception) {
                             // Delete it
                             $playlist->deleteWidget($widget);
@@ -208,6 +224,10 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     // Add the ones we have left
                     foreach ($media as $item) {
                         if (in_array($item->mediaId, $mediaIds)) {
+                            if (count($playlist->widgets) >= $playlist->maxNumberOfItems) {
+                                $this->log->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                                break;
+                            }
                             $assignmentMade = true;
                             $this->createAndAssign($playlist, $item, $count);
                         }
@@ -224,7 +244,6 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 } else {
                     $this->log->debug('No differences detected');
                 }
-
             } catch (GeneralException $exception) {
                 $this->log->debug($exception->getTraceAsString());
                 $this->log->error('Problem with PlaylistId: ' . $playlist->getId() . ', e = ' . $exception->getMessage());

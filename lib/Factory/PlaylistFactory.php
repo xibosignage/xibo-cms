@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,10 +26,7 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -58,19 +55,15 @@ class PlaylistFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $config, $sanitizerService, $user, $userFactory, $permissionFactory, $widgetFactory, $tagFactory)
+    public function __construct($config, $user, $userFactory, $permissionFactory, $widgetFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
@@ -87,6 +80,7 @@ class PlaylistFactory extends BaseFactory
         return new Playlist(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->config,
             $this->permissionFactory,
             $this,
@@ -183,28 +177,21 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.isDynamic,
                 `playlist`.filterMediaName,
                 `playlist`.filterMediaTags,
+                `playlist`.filterExactTags,
+                `playlist`.filterLogicalOperator,
+                `playlist`.maxNumberOfItems,
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
                 `playlist`.folderId,
                 `playlist`.permissionsFolderId,
-                (
-                SELECT GROUP_CONCAT(DISTINCT tag) 
-                  FROM tag 
-                    INNER JOIN lktagplaylist 
-                    ON lktagplaylist.tagId = tag.tagId 
-                 WHERE lktagplaylist.playlistId = playlist.playlistId 
-                GROUP BY lktagplaylist.playlistId
-                ) AS tags,
-                
-                (
-                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                  FROM tag 
-                    INNER JOIN lktagplaylist 
-                    ON lktagplaylist.tagId = tag.tagId 
-                 WHERE lktagplaylist.playlistId = playlist.playlistId 
-                GROUP BY lktagplaylist.playlistId
-                ) AS tagValues,
-                
+                ( 
+                   SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                        FROM tag
+                        INNER JOIN lktagplaylist
+                            ON lktagplaylist.tagId = tag.tagId
+                            WHERE lktagplaylist.playlistId = playlist.playlistId
+                        GROUP BY lktagplaylist.playlistId
+                ) as tags,
                 (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -298,8 +285,19 @@ class PlaylistFactory extends BaseFactory
                 $body .= ' AND `playlist`.regionId IS NULL ';
         }
 
-        // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
+        if ($parsedFilter->getInt('layoutId', $filterBy) !== null) {
+            $body .= '
+                AND playlist.playlistId IN (
+                       SELECT lkplaylistplaylist.childId
+                        FROM region
+                        INNER JOIN playlist
+                            ON playlist.regionId = region.regionId
+                        INNER JOIN lkplaylistplaylist
+                            ON lkplaylistplaylist.parentId = playlist.playlistId
+                        WHERE region.layoutId = :layoutId
+                )';
+            $params['layoutId'] = $parsedFilter->getInt('layoutId', $filterBy);
+        }
 
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {
@@ -321,7 +319,6 @@ class PlaylistFactory extends BaseFactory
 
         // Tags
         if ($parsedFilter->getString('tags') != '') {
-
             $tagFilter = $parsedFilter->getString('tags', $filterBy);
 
             if (trim($tagFilter) === '--no-tag') {
@@ -334,16 +331,16 @@ class PlaylistFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `playlist`.playlistID IN (
+                $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $body .=  ' AND `playlist`.playlistID IN (
                 SELECT lktagplaylist.playlistId
                   FROM tag
                     INNER JOIN lktagplaylist
                     ON lktagplaylist.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagplaylist', 'lkTagPlaylistId', 'playlistId', $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -384,6 +381,9 @@ class PlaylistFactory extends BaseFactory
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
+        // Logged in user view permissions
+        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder)) {
@@ -395,13 +395,13 @@ class PlaylistFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic']]);
+            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems', 'duration']]);
             $entries[] = $playlist;
         }
 

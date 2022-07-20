@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,7 +27,9 @@ jQuery.fn.extend({
           "widgetDesignWidth": 0,
           "widgetDesignHeight": 0,
           "widgetDesignPadding": 0,
-          "itemsPerPage": 0
+          "itemsPerPage": 0,
+          "alignmentH": "center",
+          "alignmentV": "middle"
         };
 
         options = $.extend({}, defaults, options);
@@ -67,8 +69,8 @@ jQuery.fn.extend({
             var widgetRatio = Math.min(newWidth / options.widgetDesignWidth, newHeight / options.widgetDesignHeight);
 
             ratio = ratio * widgetRatio;
-            newWidth = width / ratio;
-            newHeight = height / ratio;
+            newWidth = options.widgetDesignWidth;
+            newHeight = options.widgetDesignHeight;
         }
 
         // Multiple element options
@@ -80,17 +82,20 @@ jQuery.fn.extend({
             mElOptions.contentWidth = (options.numCols > 1) ? (options.widgetDesignWidth * options.numCols) : options.widgetDesignWidth;
             mElOptions.contentHeight = (options.numRows > 1) ? (options.widgetDesignHeight * options.numRows) : options.widgetDesignHeight;
 
-            mElOptions.contentScaleX = newWidth/ mElOptions.contentWidth;
-            mElOptions.contentScaleY = newHeight/ mElOptions.contentHeight;
+            mElOptions.contentScaleX = width / mElOptions.contentWidth;
+            mElOptions.contentScaleY = height / mElOptions.contentHeight;
         }
 
         // Apply these details
         $(this).each(function() {
             if(!$.isEmptyObject(mElOptions)) {
-                $(this).find('#content').css('transform-origin', 'top left');
-                $(this).find('#content').css('transform', 'scale(' + Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY) + ')');
-                $(this).find('#content').width(mElOptions.contentWidth);
-                $(this).find('#content').height(mElOptions.contentHeight);
+                // calculate/update ratio
+                ratio = Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
+
+                $(this).css('transform-origin', '0 0');
+                $(this).css('transform', 'scale(' + ratio + ')');
+                $(this).width(mElOptions.contentWidth);
+                $(this).height(mElOptions.contentHeight);
 
                 $(this).find('.multi-element').css({
                     overflow: 'hidden',
@@ -103,20 +108,42 @@ jQuery.fn.extend({
                     width: newWidth,
                     height: newHeight
                 });
+
+                // Handle the scaling
+                // What IE are we?
+                if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
+                    $(this).css({
+                        "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod=\'auto expand\'"
+                    });
+                } else {
+
+                    $(this).css({
+                        "transform": "scale(" + ratio + ")",
+                        "transform-origin": "0 0"
+                    });
+                }
             }
-            
-            // Handle the scaling
-            // What IE are we?
-            if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
-                $(this).css({
-                    "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod=\'auto expand\'"
-                });
-            }
-            else {
-                $(this).css({
-                    "transform": "scale(" + ratio + ")",
-                    "transform-origin": "0 0"
-                });
+
+            // Set ratio on the body incase we want to get it easily
+            $(this).data('ratio', ratio);
+
+            // Handle alignment (do not add position absolute unless needed)
+            if (!options.type || options.type !== 'text') {
+              $(this).css('position', 'absolute');
+
+              //  Horizontal alignment
+              if (options.alignmentH === 'right') {
+                $(this).css('left', width - ($(this).width() * ratio));
+              } else if (options.alignmentH === 'center') {
+                $(this).css('left', (width / 2) - ($(this).width() * ratio) / 2);
+              }
+
+              //  Vertical alignment
+              if (options.alignmentV === 'bottom') {
+                $(this).css('top', height - ($(this).height() * ratio));
+              } else if (options.alignmentV === 'middle') {
+                $(this).css('top', (height / 2) - ($(this).height() * ratio) / 2);
+              }
             }
         });
 

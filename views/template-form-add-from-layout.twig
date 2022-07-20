@@ -39,7 +39,7 @@
         <div class="col-md-12">
             <form id="templateAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("template.add.from.layout", {id: layout.layoutId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 {% if currentUser.featureEnabled('folder.view') %}
-                    <div class="form-group">
+                    <div class="form-group row">
                         <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                         <div class="col-sm-10" style="padding-top: 7px">
                             <span id="originalFormFolder"></span>
@@ -64,7 +64,7 @@
                 {% if currentUser.featureEnabled("tag.tagging") %}
                     {% set title %}{% trans "Tags" %}{% endset %}
                     {% set helpText %}{% trans "Tags for this Layout - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
-                    {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+                    {{ forms.inputWithTags("tags", title, layout.tags, helpText, 'tags-with-value') }}
 
                     <p id="loadingValues" style="margin-left: 17%"></p>
 

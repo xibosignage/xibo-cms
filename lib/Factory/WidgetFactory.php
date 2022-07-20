@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,9 +26,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -56,35 +54,31 @@ class WidgetFactory extends BaseFactory
      */
     private $permissionFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /** @var ActionFactory */
     private $actionFactory;
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
+    public function __construct($user, $userFactory, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayNotifyService, $actionFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->actionFactory = $actionFactory;
     }
 
@@ -97,11 +91,12 @@ class WidgetFactory extends BaseFactory
         return new Widget(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->widgetOptionFactory,
             $this->widgetMediaFactory,
             $this->widgetAudioFactory,
             $this->permissionFactory,
-            $this->displayFactory,
+            $this->displayNotifyService,
             $this->actionFactory
         );
     }
@@ -120,12 +115,13 @@ class WidgetFactory extends BaseFactory
     /**
      * Load widgets by MediaId
      * @param int $mediaId
-     * @return array[Widget]
+     * @param int|null $isDynamicPlaylist
+     * @return Widget[]
      * @throws NotFoundException
      */
-    public function getByMediaId($mediaId)
+    public function getByMediaId($mediaId, $isDynamicPlaylist = null)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
+        return $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId, 'isDynamicPlaylist' => $isDynamicPlaylist]);
     }
 
     /**
@@ -137,7 +133,7 @@ class WidgetFactory extends BaseFactory
      * @return int|null
      * @throws NotFoundException
      */
-    public function getWidgetForStat($widgetId)
+    public function getMediaByWidgetId($widgetId)
     {
         // Try getting the widget directly
         $row = $this->getStore()->select('
@@ -202,6 +198,16 @@ class WidgetFactory extends BaseFactory
     }
 
     /**
+     * @param $ownerId
+     * @return Widget[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
+    /**
      * Create a new widget
      * @param int $ownerId
      * @param int $playlistId
@@ -254,7 +260,8 @@ class WidgetFactory extends BaseFactory
               `widget`.calculatedDuration,
               `playlist`.name AS playlist,
               `playlist`.folderId,
-              `playlist`.permissionsFolderId
+              `playlist`.permissionsFolderId,
+              `playlist`.isDynamic
         ';
 
         if (is_array($sortOrder) && (in_array('`widget`', $sortOrder) || in_array('`widget` DESC', $sortOrder))) {
@@ -303,9 +310,6 @@ class WidgetFactory extends BaseFactory
         if ($sanitizedFilter->getInt('showWidgetsFrom') === 2) {
             $body .= ' AND playlist.regionId IS NULL ';
         }
-
-        // Permissions
-        $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy, 'playlist.permissionsFolderId');
 
         if ($sanitizedFilter->getInt('playlistId') !== null) {
             $body .= ' AND `widget`.playlistId = :playlistId';
@@ -361,11 +365,24 @@ class WidgetFactory extends BaseFactory
             $params['media'] = '%' . $sanitizedFilter->getString('media') . '%';
         }
 
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `widget`.ownerId = :userId';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
         // Playlist Like
         if ($sanitizedFilter->getString('playlist') != '') {
             $terms = explode(',', $sanitizedFilter->getString('playlist'));
             $this->nameFilter('playlist', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
+
+        if ($sanitizedFilter->getInt('isDynamicPlaylist') !== null) {
+            $body .= ' AND `playlist`.isDynamic = :isDynamicPlaylist';
+            $params['isDynamicPlaylist'] = $sanitizedFilter->getInt('isDynamicPlaylist');
+        }
+
+        // Permissions
+        $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy, 'playlist.permissionsFolderId');
 
         // Sorting?
         $order = '';
@@ -375,7 +392,7 @@ class WidgetFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

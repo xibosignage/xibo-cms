@@ -1,0 +1,32 @@
+# htaccess file for CMS instances using an Alias.
+# REPLACE_ME gets replaced on container start by entrypoint.sh
+RewriteEngine On
+
+RewriteBase REPLACE_ME/
+
+# fix authorization header
+RewriteCond %{HTTP:Authorization} .+
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# requests for api authorize
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/api/authorize/.*$
+RewriteRule ^ api/authorize/index.php [QSA,L]
+
+# requests that start with api go down to api/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/api/.*$
+RewriteRule ^ api/index.php [QSA,L]
+
+# install
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/install/.*$
+RewriteRule ^ install/index.php [QSA,L]
+
+# all others - i.e. web
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !\.(css|js|png|jpg)$
+RewriteCond %{REQUEST_URI} !^REPLACE_ME/dist/.*$
+RewriteCond %{REQUEST_URI} !^REPLACE_ME/theme/.*$
+RewriteRule ^ index.php [QSA,L]

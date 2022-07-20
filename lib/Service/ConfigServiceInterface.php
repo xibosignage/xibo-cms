@@ -22,8 +22,8 @@
 namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Interface ConfigServiceInterface
@@ -173,4 +173,12 @@ interface ConfigServiceInterface
      * @return string
      */
     public function getCacheNamespace();
+
+    /**
+     * Get Connector settings from the file based settings
+     *  this acts as an override for settings stored in the database
+     * @param string $connector The connector to return settings for.
+     * @return array
+     */
+    public function getConnectorSettings(string $connector): array;
 }

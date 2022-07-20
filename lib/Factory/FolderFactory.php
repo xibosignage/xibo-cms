@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Folder;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 class FolderFactory extends BaseFactory
@@ -39,16 +36,12 @@ class FolderFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param PermissionFactory $permissionFactory
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $permissionFactory, $user, $userFactory)
+    public function __construct($permissionFactory, $user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->permissionFactory = $permissionFactory;
     }
@@ -61,6 +54,7 @@ class FolderFactory extends BaseFactory
         return new Folder(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this,
             $this->permissionFactory
         );
@@ -71,9 +65,9 @@ class FolderFactory extends BaseFactory
      * @return Folder
      * @throws NotFoundException
      */
-    public function getById($folderId)
+    public function getById($folderId, $disableUserCheck = 1)
     {
-        $folder = $this->query(null, ['folderId' => $folderId]);
+        $folder = $this->query(null, ['folderId' => $folderId, 'disableUserCheck' => $disableUserCheck]);
 
         if (count($folder) <= 0) {
             throw new NotFoundException(__('Folder not found'));
@@ -116,9 +110,6 @@ class FolderFactory extends BaseFactory
           FROM `folder`
          WHERE 1 = 1 ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folder`.folderId', null, $filterBy, 'folder.permissionsFolderId');
-
         if ($sanitizedFilter->getInt('folderId') !== null) {
             $body .= ' AND folder.folderId = :folderId ';
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
@@ -144,6 +135,9 @@ class FolderFactory extends BaseFactory
             $body .= 'OR folder.isRoot = 1';
         }
 
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folder`.folderId', null, $filterBy, 'folder.permissionsFolderId');
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -157,7 +151,7 @@ class FolderFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isRoot']]);
         }
 
         // Paging

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,16 +19,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Xmds;
 
-define('BLACKLIST_ALL', "All");
-define('BLACKLIST_SINGLE', "Single");
+namespace Xibo\Xmds;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Monolog\Logger;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Region;
@@ -62,7 +61,6 @@ use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\DeadlockException;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
 
@@ -153,6 +151,10 @@ class Soap
 
     /** @var  PlayerVersionFactory */
     protected $playerVersionFactory;
+    /**
+     * @var EventDispatcher
+     */
+    private $dispatcher;
 
     /**
      * Soap constructor.
@@ -180,9 +182,31 @@ class Soap
      * @param PlayerVersionFactory $playerVersionFactory
      */
 
-    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
-
-    {
+    public function __construct(
+        $logProcessor,
+        $pool,
+        $store,
+        $timeSeriesStore,
+        $log,
+        $sanitizer,
+        $config,
+        $requiredFileFactory,
+        $moduleFactory,
+        $layoutFactory,
+        $dataSetFactory,
+        $displayFactory,
+        $userGroupFactory,
+        $bandwidthFactory,
+        $mediaFactory,
+        $widgetFactory,
+        $regionFactory,
+        $notificationFactory,
+        $displayEventFactory,
+        $scheduleFactory,
+        $dayPartFactory,
+        $playerVersionFactory,
+        $dispatcher
+    ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
         $this->store = $store;
@@ -205,6 +229,7 @@ class Soap
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -259,6 +284,19 @@ class Soap
     protected function getConfig()
     {
         return $this->configService;
+    }
+
+    /**
+     * @return EventDispatcher
+     */
+    public function getDispatcher(): EventDispatcher
+    {
+        if ($this->dispatcher === null) {
+            $this->getLog()->error('getDispatcher: [soap] No dispatcher found, returning an empty one');
+            $this->dispatcher = new EventDispatcher();
+        }
+
+        return $this->dispatcher;
     }
 
     /**
@@ -421,18 +459,34 @@ class Soap
                     continue;
                 }
 
-                if (count($scheduleEvents) <= 0)
+                if (count($scheduleEvents) <= 0) {
                     continue;
+                }
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 $layoutId = $parsedRow->getInt('layoutId');
-
-                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT || $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT)) {
+                $layoutCode = $parsedRow->getString('actionLayoutCode');
+                if ($layoutId != null &&
+                    (
+                        $schedule->eventTypeId == Schedule::$LAYOUT_EVENT ||
+                        $schedule->eventTypeId == Schedule::$OVERLAY_EVENT ||
+                        $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT ||
+                        $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT
+                    )
+                ) {
                     $layouts[] = $layoutId;
                 }
-            }
 
+                if (!empty($layoutCode) && $schedule->eventTypeId == Schedule::$ACTION_EVENT) {
+                    $actionEventLayout = $this->layoutFactory->getByCode($layoutCode);
+                    if ($actionEventLayout->status <= 3) {
+                        $layouts[] = $actionEventLayout->layoutId;
+                    } else {
+                        $this->getLog()->error(sprintf(__('Scheduled Action Event ID %d contains an invalid Layout linked to it by the Layout code.'), $schedule->eventId));
+                    }
+                }
+            }
         } catch (\Exception $e) {
             $this->getLog()->error('Unable to get a list of layouts. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of layouts');
@@ -440,8 +494,7 @@ class Soap
 
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
         foreach ($layouts as $layoutId) {
-            $layout = $this->layoutFactory->loadById($layoutId);
-            $actionLayoutIds = $layout->getActionLayoutIds();
+            $actionLayoutIds = $this->layoutFactory->getActionPublishedLayoutIds($layoutId);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
             if (!empty($actionLayoutIds) ) {
@@ -617,11 +670,15 @@ class Soap
                 }
 
                 // Load this layout
-                $layout = $this->layoutFactory->loadById($layoutId);
-                $layout->loadPlaylists();
+                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->loadById($layoutId));
+                try {
+                    $layout->loadPlaylists();
 
-                // Make sure its XLF is up to date
-                $path = $layout->xlfToDisk(['notify' => false]);
+                    // Make sure its XLF is up to date
+                    $path = $layout->xlfToDisk(['notify' => false]);
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
                 if ($layout->status === ModuleWidget::$STATUS_INVALID) {
@@ -751,30 +808,29 @@ class Soap
             }
         }
 
-        // Add a blacklist node
-        $blackList = $requiredFilesXml->createElement("file");
-        $blackList->setAttribute("type", "blacklist");
-
-        $fileElements->appendChild($blackList);
+        // Add Purge List node
+        $purgeList = $requiredFilesXml->createElement('purge');
+        $fileElements->appendChild($purgeList);
 
         try {
             $dbh = $this->getStore()->getConnection();
 
-            $sth = $dbh->prepare('SELECT MediaID FROM blacklist WHERE DisplayID = :displayid AND isIgnored = 0');
-            $sth->execute(array(
-                'displayid' => $this->display->displayId
-            ));
+            // get list of mediaId/storedAs that should be purged from the Player storage
+            // records in that table older than provided expiryDate, should be removed by the task
+            $sth = $dbh->prepare('SELECT mediaId, storedAs FROM purge_list');
+            $sth->execute();
 
-            // Add a black list element for each file
+            // Add a purge list item for each file
             foreach ($sth->fetchAll() as $row) {
-                $file = $requiredFilesXml->createElement("file");
-                $file->setAttribute("id", $row['MediaID']);
+                $item = $requiredFilesXml->createElement('item');
+                $item->setAttribute('id', $row['mediaId']);
+                $item->setAttribute('storedAs', $row['storedAs']);
 
-                $blackList->appendChild($file);
+                $purgeList->appendChild($item);
             }
         } catch (\Exception $e) {
-            $this->getLog()->error('Unable to get a list of blacklisted files. ' . $e->getMessage());
-            return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
+            $this->getLog()->error('Unable to get a list of purge_list files. ' . $e->getMessage());
+            return new \SoapFault('Sender', 'Unable to get purge list files');
         }
 
         if ($this->display->isAuditing()) {
@@ -798,7 +854,12 @@ class Soap
             $this->getLog()->debug('Removing ' . count($rfIds) . ' from requiredfiles');
 
             try {
-                $this->getStore()->updateWithDeadlockLoop('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')', $rfIds);
+                // Execute this on the default connection
+                $this->getStore()->updateWithDeadlockLoop(
+                    'DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
+                    $rfIds,
+                    'default'
+                );
             } catch (DeadlockException $deadlockException) {
                 $this->getLog()->error('Deadlock when deleting required files - ignoring and continuing with request');
             }
@@ -808,9 +869,6 @@ class Soap
         $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
             'displayId' => $this->display->displayId
         ]);
-
-        // Phone Home?
-        $this->phoneHome();
 
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
@@ -889,7 +947,7 @@ class Soap
 
         // Default Layout
         $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
-            ? $this->getConfig()->getSetting('DEFAULT_LAYOUT')
+            ? intval($this->getConfig()->getSetting('DEFAULT_LAYOUT', 0))
             : $this->display->defaultLayoutId;
 
         try {
@@ -912,8 +970,13 @@ class Soap
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];
 
-            // Layouts (pop in the default)
-            $layoutIds = [$defaultLayoutId];
+            // Layouts
+            $layoutIds = [];
+
+            // Add the default layout if it isn't empty.
+            if ($defaultLayoutId !== 0) {
+                $layoutIds[] = $defaultLayoutId;
+            }
 
             // Calculate a sync key
             $syncKey = [];
@@ -959,6 +1022,7 @@ class Soap
             $this->getLog()->debug(sprintf('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT)));
 
             $overlayNodes = null;
+            $actionNodes = null;
 
             // We must have some results in here by this point
             foreach ($events as $row) {
@@ -983,7 +1047,6 @@ class Soap
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 foreach ($scheduleEvents as $scheduleEvent) {
-
                     $eventTypeId = $row['eventTypeId'];
                     $layoutId = $row['layoutId'];
                     $commandCode = $row['code'];
@@ -993,17 +1056,17 @@ class Soap
                     // Does the Display have a timezone?
                     if ($isSyncTimezone) {
                         $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
-                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
+                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
                     } else {
                         $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];
                     $is_priority = $parsedRow->getInt('isPriority');
 
-                     if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT || $eventTypeId == Schedule::$CAMPAIGN_EVENT) {
-                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                    if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT || $eventTypeId == Schedule::$CAMPAIGN_EVENT) {
+                        // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
                             $this->getLog()->info(sprintf('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId));
@@ -1018,25 +1081,29 @@ class Soap
                         }
 
                         // Add a layout node to the schedule
-                        $layout = $scheduleXml->createElement("layout");
-                        $layout->setAttribute("file", $layoutId);
-                        $layout->setAttribute("fromdt", $fromDt);
-                        $layout->setAttribute("todt", $toDt);
-                        $layout->setAttribute("scheduleid", $scheduleId);
-                        $layout->setAttribute("priority", $is_priority);
-                        $layout->setAttribute("syncEvent", $syncKey);
-                        $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
-                        $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
-                        $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
+                        $layout = $scheduleXml->createElement('layout');
+                        $layout->setAttribute('file', $layoutId);
+                        $layout->setAttribute('fromdt', $fromDt);
+                        $layout->setAttribute('todt', $toDt);
+                        $layout->setAttribute('scheduleid', $scheduleId);
+                        $layout->setAttribute('priority', $is_priority);
+                        $layout->setAttribute('syncEvent', $syncKey);
+                        $layout->setAttribute('shareOfVoice', $row['shareOfVoice'] ?? 0);
+                        $layout->setAttribute('duration', $row['duration'] ?? 0);
+                        $layout->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $layout->setAttribute('geoLocation', $row['geoLocation'] ?? null);
+                        $layout->setAttribute('cyclePlayback', $row['cyclePlayback'] ?? 0);
+                        $layout->setAttribute('groupKey', $row['groupKey'] ?? 0);
+                        $layout->setAttribute('playCount', $row['playCount'] ?? 0);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
                             if ($options['dependentsAsNodes']) {
                                 // Add the dependents to the layout as new nodes
-                                $dependentNode = $scheduleXml->createElement("dependents");
+                                $dependentNode = $scheduleXml->createElement('dependents');
 
                                 foreach ($layoutDependents[$layoutId] as $storedAs) {
-                                    $fileNode = $scheduleXml->createElement("file", $storedAs);
+                                    $fileNode = $scheduleXml->createElement('file', $storedAs);
 
                                     $dependentNode->appendChild($fileNode);
                                 }
@@ -1044,20 +1111,19 @@ class Soap
                                 $layout->appendChild($dependentNode);
                             } else {
                                 // Add the dependents to the layout as an attribute
-                                $layout->setAttribute("dependents", implode(',', $layoutDependents[$layoutId]));
+                                $layout->setAttribute('dependents', implode(',', $layoutDependents[$layoutId]));
                             }
                         }
 
                         $layoutElements->appendChild($layout);
-
-                    } else if ($eventTypeId == Schedule::$COMMAND_EVENT) {
+                    } elseif ($eventTypeId == Schedule::$COMMAND_EVENT) {
                         // Add a command node to the schedule
-                        $command = $scheduleXml->createElement("command");
-                        $command->setAttribute("date", $fromDt);
-                        $command->setAttribute("scheduleid", $scheduleId);
+                        $command = $scheduleXml->createElement('command');
+                        $command->setAttribute('date', $fromDt);
+                        $command->setAttribute('scheduleid', $scheduleId);
                         $command->setAttribute('code', $commandCode);
                         $layoutElements->appendChild($command);
-                    } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
+                    } elseif ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
@@ -1077,16 +1143,36 @@ class Soap
                         }
 
                         $overlay = $scheduleXml->createElement('overlay');
-                        $overlay->setAttribute("file", $layoutId);
-                        $overlay->setAttribute("fromdt", $fromDt);
-                        $overlay->setAttribute("todt", $toDt);
-                        $overlay->setAttribute("scheduleid", $scheduleId);
-                        $overlay->setAttribute("priority", $is_priority);
-                        $overlay->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
-                        $overlay->setAttribute("geoLocation", $row['geoLocation'] ?? null);
+                        $overlay->setAttribute('file', $layoutId);
+                        $overlay->setAttribute('fromdt', $fromDt);
+                        $overlay->setAttribute('todt', $toDt);
+                        $overlay->setAttribute('scheduleid', $scheduleId);
+                        $overlay->setAttribute('priority', $is_priority);
+                        $overlay->setAttribute('duration', $row['duration'] ?? 0);
+                        $overlay->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $overlay->setAttribute('geoLocation', $row['geoLocation'] ?? null);
 
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
+                    } elseif ($eventTypeId == Schedule::$ACTION_EVENT) {
+                        if ($actionNodes == null) {
+                            $actionNodes = $scheduleXml->createElement('actions');
+                        }
+                        $action = $scheduleXml->createElement('action');
+                        $action->setAttribute('fromdt', $fromDt);
+                        $action->setAttribute('todt', $toDt);
+                        $action->setAttribute('scheduleid', $scheduleId);
+                        $action->setAttribute('priority', $is_priority);
+                        $action->setAttribute('duration', $row['duration'] ?? 0);
+                        $action->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $action->setAttribute('geoLocation', $row['geoLocation'] ?? null);
+                        $action->setAttribute('syncEvent', $syncKey);
+                        $action->setAttribute('triggerCode', $row['actionTriggerCode']);
+                        $action->setAttribute('actionType', $row['actionType']);
+                        $action->setAttribute('layoutCode', $row['actionLayoutCode']);
+                        $action->setAttribute('commandCode', $commandCode);
+
+                        $actionNodes->appendChild($action);
                     }
                 }
             }
@@ -1096,6 +1182,10 @@ class Soap
                 $layoutElements->appendChild($overlayNodes);
             }
 
+            // Add Actions nodes if we had any
+            if ($actionNodes != null) {
+                $layoutElements->appendChild($actionNodes);
+            }
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get the schedule');
@@ -1204,92 +1294,6 @@ class Soap
      */
     protected function doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
-        $this->logProcessor->setRoute('BlackList');
-        $sanitized = $this->getSanitizer([
-            'serverKey' => $serverKey,
-            'hardwareKey' => $hardwareKey,
-            'mediaId' => $mediaId,
-            'type' => $type,
-            'reason' => $reason,
-        ]);
-
-        // Sanitize
-        $serverKey = $sanitized->getString('serverKey');
-        $hardwareKey = $sanitized->getString('hardwareKey');
-        $mediaId = $sanitized->getInt('mediaId');
-        $type = $sanitized->getString('type');
-        $reason = $sanitized->getString('reason');
-
-        // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-        }
-
-        // Authenticate this request...
-        if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.", $hardwareKey);
-        }
-
-        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
-        }
-
-        if ($this->display->isAuditing())
-            $this->getLog()->debug('Blacklisting ' . $mediaId . ' for ' . $reason);
-
-        try {
-            $dbh = $this->getStore()->getConnection();
-
-            // Check to see if this media / display is already blacklisted (and not ignored)
-            $sth = $dbh->prepare('SELECT BlackListID FROM blacklist WHERE MediaID = :mediaid AND isIgnored = 0 AND DisplayID = :displayid');
-            $sth->execute(array(
-                'mediaid' => $mediaId,
-                'displayid' => $this->display->displayId
-            ));
-
-            $results = $sth->fetchAll();
-
-            if (count($results) == 0) {
-
-                $insertSth = $dbh->prepare('
-                        INSERT INTO blacklist (MediaID, DisplayID, ReportingDisplayID, Reason)
-                            VALUES (:mediaid, :displayid, :reportingdisplayid, :reason)
-                    ');
-
-                // Insert the black list record
-                if ($type == BLACKLIST_SINGLE) {
-                    $insertSth->execute(array(
-                        'mediaid' => $mediaId,
-                        'displayid' => $this->display->displayId,
-                        'reportingdisplayid' => $this->display->displayId,
-                        'reason' => $reason
-                    ));
-                } else {
-                    $displaySth = $dbh->prepare('SELECT displayID FROM `display`');
-                    $displaySth->execute();
-
-                    foreach ($displaySth->fetchAll() as $row) {
-
-                        $insertSth->execute(array(
-                            'mediaid' => $mediaId,
-                            'displayid' => $row['displayID'],
-                            'reportingdisplayid' => $this->display->displayId,
-                            'reason' => $reason
-                        ));
-                    }
-                }
-            } else {
-                if ($this->display->isAuditing())
-                    $this->getLog()->debug($mediaId . ' already black listed');
-            }
-        } catch (\Exception $e) {
-            $this->getLog()->error('Unable to query for Blacklist records. ' . $e->getMessage());
-            return new \SoapFault('Sender', "Unable to query for BlackList records.");
-        }
-
-        $this->logBandwidth($this->display->displayId, Bandwidth::$BLACKLIST, strlen($reason));
-
         return true;
     }
 
@@ -1339,8 +1343,7 @@ class Soap
         }
 
         // Current log level
-        //$logLevel = $this->logProcessor->getLevel();
-        $logLevel = 'error';
+        $logLevel = $this->logProcessor->getLevel();
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
@@ -1390,7 +1393,7 @@ class Soap
                 $levelName = 'NOTICE';
             }
 
-            if ($recordLogLevel > $logLevel) {
+            if ($recordLogLevel < $logLevel) {
                 $discardedLogs++;
                 continue;
             }
@@ -1547,6 +1550,7 @@ class Soap
 
         $layoutIdsNotFound = [];
         $widgetIdsNotFound = [];
+        $memoryCache = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1557,7 +1561,7 @@ class Soap
             // Each element should have these attributes
             $fromdt = $node->getAttribute('fromdt');
             $todt = $node->getAttribute('todt');
-            $type = $node->getAttribute('type');
+            $type = strtolower($node->getAttribute('type'));
             $duration = $node->getAttribute('duration');
             $count = $node->getAttribute('count');
             $engagements = [];
@@ -1587,6 +1591,11 @@ class Soap
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
                 $this->getLog()->debug('Ignoring a Stat record because the fromDt (' . $fromdt. ') and toDt (' . $todt. ') are the same');
+                continue;
+            }
+
+            if ($fromdt > $todt) {
+                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
                 continue;
             }
 
@@ -1634,7 +1643,11 @@ class Soap
                         continue;
                     }
 
-                    $mediaId = $this->widgetFactory->getWidgetForStat($widgetId);
+                    // Do we have it in cache?
+                    if (!array_key_exists('w_' . $widgetId, $memoryCache)) {
+                        $memoryCache['w_' . $widgetId] = $this->widgetFactory->getMediaByWidgetId($widgetId);
+                    }
+                    $mediaId = $memoryCache['w_' . $widgetId];
 
                     // If the mediaId is empty, then we can assume we're a stat for a region specific widget
                     if ($mediaId === null) {
@@ -1654,12 +1667,8 @@ class Soap
             }
 
             $tag = $node->getAttribute('tag');
-            if ($tag == 'null')
+            if ($tag == 'null') {
                 $tag = null;
-
-            if ($fromdt > $todt) {
-                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
-                continue;
             }
 
             // Adjust the date according to the display timezone
@@ -1679,16 +1688,27 @@ class Soap
                 // Do we need to set the duration of this record (we will do for older individually collected stats)
                 if ($duration == '') {
                     $duration = $todt->diffInSeconds($fromdt);
-
-                    // If the duration is enormous, then we have an eroneous message from the player
-                    if ($duration > (86400 * 365)) {
-                        throw new InvalidArgumentException(__('Dates are too far apart'), 'duration');
-                    }
                 }
-
             } catch (\Exception $e) {
                 // Protect against the date format being unreadable
                 $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: ' . $fromdt . ', toDt: ' . $todt . '. E = ' . $e->getMessage());
+                continue;
+            }
+
+            // check maximum retention period against stat date, do not record if it's older than max stat age
+            $maxAge = intval($this->getConfig()->getSetting('MAINTENANCE_STAT_MAXAGE'));
+            if ($maxAge != 0) {
+                $maxAgeDate = Carbon::now()->subDays($maxAge);
+
+                if ($todt->isBefore($maxAgeDate)) {
+                    $this->getLog()->debug('Stat older than max retention period, skipping.');
+                    continue;
+                }
+            }
+
+            // If the duration is enormous, then we have an eroneous message from the player
+            if ($duration > (86400 * 365)) {
+                $this->getLog()->debug('Dates are too far apart');
                 continue;
             }
 
@@ -1920,38 +1940,70 @@ class Soap
     protected function phoneHome()
     {
         if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
-            // Find out when we last PHONED_HOME :D
-            // If it's been > 28 days since last PHONE_HOME then
-            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < Carbon::now()->subSeconds(60 * 60 * 24 * 28)->format('U')) {
-
+            // If it's been > 1 week since last PHONE_HOME then send a new report
+            $oneWeekAgo = Carbon::now()->subWeek()->format('U');
+            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < $oneWeekAgo) {
                 if ($this->display->isAuditing()) {
                     $this->getLog()->debug('Phone Home required for displayId ' . $this->display->displayId);
                 }
 
                 try {
-                    $dbh = $this->getStore()->getConnection();
+                    // What type of install are we?
+                    $type = 'custom';
+                    if (isset($_SERVER['INSTALL_TYPE'])) {
+                        $type = $_SERVER['INSTALL_TYPE'];
+                    } else if ($this->getConfig()->getSetting('cloud_demo') !== null) {
+                        $type = 'cloud';
+                    }
 
-                    // Retrieve number of displays
-                    $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
-                    $sth->execute();
+                    // Make sure we have a key
+                    $key = $this->getConfig()->getSetting('PHONE_HOME_KEY');
+                    if (empty($key)) {
+                        $this->getConfig()->changeSetting('PHONE_HOME_KEY', bin2hex(random_bytes(16)));
+                    }
 
                     // Set PHONE_HOME_TIME to NOW.
-                    $update = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
-                    $update->execute(array(
-                        'time' => Carbon::now()->format('U'),
-                        'setting' => 'PHONE_HOME_DATE'
-                    ));
+                    $this->getConfig()->changeSetting('PHONE_HOME_DATE', Carbon::now()->format('U'));
+
+                    // Retrieve number of displays
+                    $stats = $this->getStore()->select('
+                        SELECT client_type, COUNT(*) AS cnt
+                          FROM `display`
+                         WHERE licensed = 1
+                        GROUP BY client_type
+                    ', []);
+
+                    $counts = [
+                        'total' => 0,
+                        'android' => 0,
+                        'windows' => 0,
+                        'linux' => 0,
+                        'lg' => 0,
+                        'sssp' => 0,
+                    ];
+                    foreach ($stats as $stat) {
+                        $counts['total'] += intval($stat['cnt']);
+                        $counts[$stat['client_type']] += intval($stat['cnt']);
+                    }
 
                     // Use Guzzle to phone home.
                     // we don't care about the response
-                    (new Client())->get($this->getConfig()->getSetting('PHONE_HOME_URL'), $this->getConfig()->getGuzzleProxy([
-                        'query' => [
-                            'id' => $this->getConfig()->getSetting('PHONE_HOME_KEY'),
-                            'version' => Environment::$WEBSITE_VERSION_NAME,
-                            'numClients' => $sth->fetchColumn()
-                        ]
-                    ]));
-
+                    (new Client())->get(
+                        $this->getConfig()->getSetting('PHONE_HOME_URL'),
+                        $this->getConfig()->getGuzzleProxy([
+                            'query' => [
+                                'id' => $key,
+                                'version' => Environment::$WEBSITE_VERSION_NAME,
+                                'type' => $type,
+                                'numClients' => $counts['total'],
+                                'windows' => $counts['windows'],
+                                'android' => $counts['android'],
+                                'linux' => $counts['linux'],
+                                'webos' => $counts['lg'],
+                                'tizen' => $counts['sssp']
+                            ]
+                        ])
+                    );
                 } catch (\Exception $e) {
                     $this->getLog()->error('Phone Home: ' . $e->getMessage());
                 }

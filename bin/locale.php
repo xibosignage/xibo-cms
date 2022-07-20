@@ -25,27 +25,44 @@
  * /cache folder
  * we can then reliably run xgettext over them to update our POT file
  */
+
+use Slim\Flash\Messages;
+use Slim\Views\Twig;
+use Slim\Views\TwigExtension;
+use Twig\TwigFilter;
+use Xibo\Twig\ByteFormatterTwigExtension;
+use Xibo\Twig\DateFormatTwigExtension;
+use Xibo\Twig\TransExtension;
+use Xibo\Twig\TwigMessages;
+
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 require_once PROJECT_ROOT . '/vendor/autoload.php';
 
-$twig = new Twig\Environment(new \Twig\Loader\FilesystemLoader([PROJECT_ROOT . '/views', PROJECT_ROOT . '/modules']), [
-    'cache'       => PROJECT_ROOT . '/cache',
-    'auto_reload' => true
+$view = Twig::create([
+    PROJECT_ROOT . '/views',
+    PROJECT_ROOT . '/modules',
+    PROJECT_ROOT . '/reports'
+], [
+    'cache' => PROJECT_ROOT . '/cache'
 ]);
+$view->addExtension(new TwigExtension());
+$view->addExtension(new TransExtension());
+$view->addExtension(new ByteFormatterTwigExtension());
+$view->addExtension(new DateFormatTwigExtension());
+$view->getEnvironment()->addFilter(new TwigFilter('url_decode', 'urldecode'));
 
-$twig->addExtension(new \Slim\Views\TwigExtension());
-$twig->addExtension(new \Xibo\Twig\TransExtension());
-$twig->addExtension(new \Xibo\Twig\ByteFormatterTwigExtension());
-$twig->addExtension(new \Xibo\Twig\DateFormatTwigExtension());
+// Trick the flash middleware
+$storage = [];
+$view->addExtension(new TwigMessages(new Messages($storage)));
 
 
 foreach (glob(PROJECT_ROOT . '/views/*.twig') as $file) {
     echo var_export($file, true) . PHP_EOL;
 
-    $twig->loadTemplate(str_replace(PROJECT_ROOT . '/views/', '', $file));
+    $view->getEnvironment()->load(str_replace(PROJECT_ROOT . '/views/', '', $file));
 }
 foreach (glob(PROJECT_ROOT . '/modules/*.twig') as $file) {
     echo var_export($file, true) . PHP_EOL;
 
-    $twig->loadTemplate(str_replace(PROJECT_ROOT . '/modules/', '', $file));
+    $view->getEnvironment()->load(str_replace(PROJECT_ROOT . '/modules/', '', $file));
 }

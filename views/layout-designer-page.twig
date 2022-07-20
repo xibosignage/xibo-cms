@@ -26,10 +26,12 @@
 
 {% block title %}{{ "Layout Designer"|trans }} | {% endblock %}
 
+{% set hideNavigation = "1" %}
+
 {% block pageContent %}
 
     <!-- Editor structure -->
-    <div id="layout-editor" data-layout-id="{{ layout.layoutId }}"></div>
+    <div id="layout-editor" data-published-layout-id="{{ publishedLayoutId }}" data-layout-id="{{ layout.layoutId }}"></div>
 
     <div class="loading-overlay">
         <i class="fa fa-spinner fa-spin loading-icon"></i>
@@ -41,23 +43,27 @@
         {# Add common file #}
         {% include "common.twig" %}
 
-        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/layoutEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
         <script type="text/javascript">
 
             {# Custom translations #}
             {% autoescape "js" %}
                 {# Insert custom translations here #}
-                var layoutDesignerTrans = {
+                var layoutEditorTrans = {
+                    back: "{% trans "Back" %}",
+                    exit: "{% trans "Exit" %}",
+                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
                     publishTitle: "{% trans "Publish layout" %}",
-                    discardTitle: "{% trans "Discard layout" %}",
+                    discardTitle: "{% trans "Discard draft" %}",
+                    deleteTitle: "{% trans "Delete layout" %}",
                     publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
                     checkoutTitle: "{% trans "Checkout" %}",
                     scheduleTitle: "{% trans "Schedule Now" %}",
                     unlockTitle: "{% trans "Unlock layout" %}",
                     saveTemplateTitle: "{% trans "Save Template" %}",
-                    readOnlyModeTitle: "{% trans "Read Only Mode" %}",
-                    readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout by clicking on this message or from the Actions menu above!" %}",
+                    readOnlyModeTitle: "{% trans "Read Only" %}",
+                    readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout by clicking on this message or from the Options menu above!" %}",
                     lockedModeTitle: "{% trans "Locked Layout" %}",
                     lockedModeMessage: "{% trans "This layout is being locked by another user. Lock expires on: [expiryDate]" %}",
                     checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",
@@ -69,12 +75,6 @@
 
                 var viewerTrans = {
                     inlineEditor: "{% trans "Inline Editor" %}",
-                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
-                    backToLayout: "{% trans "Go back to Layout view" %}",
-                    saveEditorChanges: "{% trans "Save editor changes" %}",
-                    playPreviewLayout: "{% trans "Play Layout preview" %}",
-                    editLayout: "{% trans "Edit Layout" %}",
-                    stopPreviewLayout: "{% trans "Stop Layout preview" %}",
                     nextWidget: "{% trans "Next widget" %}",
                     previousWidget: "{% trans "Previous widget" %}"
                 };
@@ -84,6 +84,8 @@
                     zoomOut: "{% trans "Zoom out" %}",
                     resetZoom: "{% trans "Reset zoom" %}",
                     zoomDelta: "{% trans "Visible area time span" %}",
+                    hiddenTimeruler: "{% trans "Zoom out to see timeruler!" %}",
+                    emptyTimeline: "{% trans "No Regions: Add a Region to start creating content by clicking here or the Edit Layout icon below!" %}",
                     zoomFindSelected: "{% trans "Scroll to selected widget" %}",
                     startTime: "{% trans "Visible area start time" %}",
                     endTime: "{% trans "Visible area end time" %}",
@@ -93,21 +95,58 @@
                     emptyRegion: "{% trans "Empty Region" %}",
                     addToThisPosition: "{% trans "Add to this position" %}",
                     hiddenContentInWidget: "{% trans "Zoom in to see more details!" %}",
-                    widgetActions: "{% trans "Widget Actions:" %}"
+                    editRegion: "{% trans "Edit region" %}",
+                    openRegionAsPlaylist: "{% trans "Open as playlist" %}",
+                    widgetActions: "{% trans "Widget Actions:" %}",
+                    regionActions: "{% trans "Region Actions:" %}"
                 };
 
-                var navigatorTrans = {
+                var bottombarTrans = {
                     edit: "{% trans "Edit layout regions" %}",
                     addRegion: "{% trans "Add" %}",
                     addRegionDesc: "{% trans "Add a new region" %}",
                     deleteRegion: "{% trans "Delete region" %}",
-                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
                     undo: "{% trans "Undo" %}",
                     undoDesc: "{% trans "Revert last change" %}",
                     close: "{% trans "Close" %}",
                     closeDesc: "{% trans "Return to Layout View" %}",
                     save: "{% trans "Save" %}",
-                    saveDesc: "{% trans "Save changes" %}"
+                    saveDesc: "{% trans "Save changes" %}",
+                    backToLayout: "{% trans "Go back to Layout view" %}",
+                    saveEditorChanges: "{% trans "Save editor changes" %}",
+                    playPreviewLayout: "{% trans "Play Layout preview" %}",
+                    playPreviewLayoutPOTitle: "{% trans "Preview stopped!" %}",
+                    playPreviewLayoutPOMessage: "{% trans "Click to Play again" %}",
+                    editLayout: "{% trans "Edit Layout" %}",
+                    stopPreviewLayout: "{% trans "Stop Layout preview" %}",
+                    nextWidget: "{% trans "Next widget" %}",
+                    previousWidget: "{% trans "Previous widget" %}",
+                    tools: {
+                        region: {
+                            name: "{{ "Region" |trans }}",
+                            description: "{{ "Add a Region"|trans }}"
+                        },
+                        audio: {
+                            name: "{{ "Audio" |trans }}",
+                            description: "{{ "Upload Audio files to assign to Widgets"|trans }}"
+                        },
+                        expiry: {
+                            name: "{{ "Expiry Dates" |trans }}",
+                            description: "{{ "Enter start and end times for Widgets"|trans }}"
+                        },
+                        transitionIn: {
+                            name: "{{ "Transition In" |trans }}",
+                            description: "{{ "Apply a Transition type for the start of a media item"|trans }}"
+                        },
+                        transitionOut: {
+                            name: "{{ "Transition Out" |trans }}",
+                            description: "{{ "Apply a Transition type for the end of a media item"|trans }}"
+                        },
+                        permissions: {
+                            name: "{{ "Sharing" |trans }}",
+                            description: "{{ "Set View, Edit and Delete Sharing for Widgets and Regions"|trans }}"
+                        }
+                    }
                 };
 
                 var drawerTrans = {
@@ -115,7 +154,10 @@
                     search: "{% trans "Search" %}",
                     emptyDrawer: "{% trans "Add widgets to be used as targets in actions" %}",
                     notInitEmptyDrawer: "{% trans "Drawer is empty!" %}",
-                    toggleDrawer: "{% trans "Toggle drawer" %}"
+                    toggleDrawer: "{% trans "Toggle drawer" %}",
+                    widgetActions: "{% trans "Widget Actions:" %}",
+                    noTargetRegion: "{% trans "No Target" %}",
+                    noTargetRegionHelp: "{% trans "Please select a target region" %}"
                 };
             {% endautoescape %}
         </script>
@@ -124,22 +166,23 @@
              * Setup the background form.
              */
             function backGroundFormSetup(dialog) {
-                $('#backgroundColor').colorpicker({format: "hex"});
-
-                var backgroundImageList = $('#backgroundImageId');
+                var $backgroundImageId = $('#backgroundImageId');
                 var notFoundIcon = $('#bg_not_found_icon');
                 var backgroundImage = $('#bg_image_image');
-                var initialBackgroundImageId = backgroundImageList.val();
+                var initialBackgroundImageId = $backgroundImageId.val();
                 var backgroundChanged = false;
 
                 function backgroundImageChange() {
                     // Want to attach an onchange event to the drop down for the bg-image
-                    var id = backgroundImageList.val();
-
+                    var id = $backgroundImageId.val();
                     var src;
-                    // If the image is not defined
-                    if ([0, ''].indexOf(id) !== -1) {
+                    var isNotDefined = [0, ''].indexOf(id) !== -1;
 
+                    // Disable remove button if no image is defined
+                    $('#backgroundRemoveButton').toggleClass('disabled', isNotDefined);
+
+                    // If the image is not defined
+                    if (isNotDefined) {
                         // Show not found icon and hide image
                         notFoundIcon.show();
                         backgroundImage.hide();
@@ -159,13 +202,58 @@
                     }
                 }
 
-                backgroundImageList.change(backgroundImageChange);
+                function backgroundImageHandleDrop(mediaToAdd, fromProvider) {
+                    if(fromProvider) {
+                        lD.importFromProvider([mediaToAdd]).then((res) =>  {
+                            $backgroundImageId.val(res[0]).trigger('change');
+                        }).catch(function() {
+                            toastr.error(errorMessagesTrans.importingMediaFailed);
+                        });
+                    } else {
+                        $backgroundImageId.val(mediaToAdd).trigger('change');
+                    }
+                    // Deselect drop zones after adding
+                    lD.toolbar.deselectCardsAndDropZones();
+                }
 
+                // Handle id change
+                $backgroundImageId.change(backgroundImageChange);
+
+                // Call change on form load
                 backgroundImageChange();
 
-                // Bind to the background add button click
-                $("#backgroundAddButton").on("click", function(e) {
+                // Bind to the background add and remove button click
+                $('#backgroundUploadButton').on('click', function(e) {
                     layoutEditBackgroundButtonClicked(e, dialog);
+                });
+
+                $('#backgroundRemoveButton').on('click', function(e) {
+                    if(!$(this).hasClass('disabled')) {
+                        $backgroundImageId.val('').trigger('change');
+                    }
+                });
+
+                // Handle droppable area
+                $('.background-image-add').droppable({
+                    greedy: true,
+                    tolerance: 'pointer',
+                    accept: function(el) {
+                        return ($(el).data('type') === 'media' && $(el).data('subType') === 'image');
+                    },
+                    drop: _.debounce(function(event, ui) {
+                        var $draggable = $(ui.draggable[0]);
+                        if($draggable.hasClass('from-provider')) {
+                            backgroundImageHandleDrop($draggable.data('providerData'), true);
+                        } else {
+                            backgroundImageHandleDrop($draggable.data('mediaId'));
+                        }
+                    }, 200)
+                });
+
+                // Handle click to add
+                $('.background-image-drop').on('click', function() {
+                    var selected = lD.toolbar.selectedQueue[0];
+                    backgroundImageHandleDrop(selected, !(typeof selected == 'number'));
                 });
 
                 // Bind to the layout form submit
@@ -222,7 +310,6 @@
                 openUploadForm({
                     url: $(e.target).data().addNewBackgroundUrl,
                     title: "{% trans "Add Background Image" %}",
-                    multi: false,
                     videoImageCovers: false,
                     buttons: {
                         main: {
@@ -234,6 +321,7 @@
                         }
                     },
                     templateOptions: {
+                        multi: false,
                         trans: {
                             addFiles: "{% trans "Browse/Add Image" %}",
                             startUpload: "{% trans "Start Upload" %}",
@@ -262,6 +350,9 @@
                         XiboDialogClose();
                     }
                 });
+            }
+
+            function layoutPublishFormOpen() {
             }
         </script>
 

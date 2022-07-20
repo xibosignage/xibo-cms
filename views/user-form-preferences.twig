@@ -1,6 +1,6 @@
 {#
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -44,11 +44,11 @@
                     {% set horizontalOption %}{% trans "Horizontal along the top" %}{% endset %}
                     {% set verticalOption %}{% trans "Vertically on the left" %}{% endset %}
                     {% set options = [
-                        { id: null, value: defaultOption },
+                        { id: "", value: defaultOption },
                         { id: "horizontal", value: horizontalOption },
                         { id: "vertical", value: verticalOption }
                     ] %}
-                    {{ forms.dropdown("navigationMenuPosition", "single", title, currentUser.getOptionValue("navigationMenuPosition", "default"), options, "id", "value", helpText) }}
+                    {{ forms.dropdown("navigationMenuPosition", "single", title, currentUser.getOptionValue("navigationMenuPosition", ""), options, "id", "value", helpText) }}
                 {% endif %}
 
                 {% if currentUser.isSuperAdmin() %}
@@ -56,13 +56,14 @@
                     {% set helpText %}{% trans "Select Standard or DOOH to see relevant content" %}{% endset %}
                     {% set options = [
                         { id: 1, value: "Standard"|trans },
-                        { id: 2, value: "DOOH"|trans }
+                        { id: 2, value: "DOOH"|trans },
+                        { id: 3, value: "Both"|trans }
                     ] %}
                     {{ forms.dropdown("showContentFrom", "single", title, currentUser.showContentFrom, options, "id", "value", helpText) }}
                 {% endif %}
             
-                {% set title %}{% trans "Use Library duration?" %}{% endset %}
-                {% set helpText %}{% trans "Assign all Media items based on their Library duration. Leave this option unticked to use the Default Module duration." %}{% endset %}
+                {% set title %}{% trans "Force current Library duration?" %}{% endset %}
+                {% set helpText %}{% trans "Assign all Media items based on their Library duration, and make it sticky so that changes in the library are not pulled into Layouts." %}{% endset %}
                 {{ forms.checkbox("useLibraryDuration", title, currentUser.getOptionValue("useLibraryDuration", 0), helpText) }}
 
                 {% set title %}{% trans "Auto show thumbnail column?" %}{% endset %}
@@ -72,6 +73,10 @@
                 {% set title %}{% trans "Clear all auto submit form choices?" %}{% endset %}
                 {% set helpText %}{% trans "If you have selected to automatically submit any forms, tick here to reset." %}{% endset %}
                 {{ forms.checkbox("autoSubmitClearAll", title, 0, helpText) }}
+
+                {% set title %}{% trans "Always use manual Add User form?" %}{% endset %}
+                {% set helpText %}{% trans "If selected the manual Add User form will always open when you click Add User, otherwise the onboarding form will open." %}{% endset %}
+                {{ forms.checkbox("isAlwaysUseManualAddUserForm", title, currentUser.getOptionValue("isAlwaysUseManualAddUserForm", 0), helpText) }}
             </form>
         </div>
     </div>

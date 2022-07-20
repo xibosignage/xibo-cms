@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -205,6 +205,40 @@ span.layout_assign_list_select {
 
 ul#LayoutAssignSortable {
     display: inline-block;
+    font-size: 0;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+ul#LayoutAssignSortable > li {
+    padding: 4px 6px;
+    margin: 2px;
+    border: 1px solid #8080ff;
+    background-color: #E5F0FF;
+    width: calc(20% - 4px);
+}
+
+ul#LayoutAssignSortable > li.ui-state-disabled {
+    background-color: #d4d4d4;
+}
+
+ul#LayoutAssignSortable > li > .layout-order {
+    width: 24px;
+    font-weight: bold;
+    color: #30426a;
+}
+
+ul#LayoutAssignSortable > li > .layout-name {
+    width: calc(100% - 34px);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+ul#LayoutAssignSortable > li > .layout-icon {
+    width: 10px;
 }
 
 #LayoutAssign {
@@ -213,16 +247,6 @@ ul#LayoutAssignSortable {
 
 .layoutAssignFilterOptions {
     padding: 10px;
-}
-
-#LayoutAssignSortable .li-sortable {
-    padding: 5px;
-    margin: 5px;
-    border: 1px solid #8080ff;
-    background-color: #E5F0FF;
-    cursor: pointer;
-    float: left;
-    list-style: none;
 }
 
 #xibo-loading-gif {
@@ -285,8 +309,16 @@ div.dropdown-menu-form {
     }
 }
 
+.display-screenshot-container {
+    text-align: center;
+    display: block;
+    background-color: #333;
+    width: 120px;
+}
+
 .display-screenshot {
-    width: 200px;
+    max-width: 120px;
+    max-height: 80px;
 }
 
 #page-wrapper {
@@ -368,6 +400,22 @@ table.dataTable tbody tr.selected > td {
     background-color: #a6b3cd;
 }
 
+.popover-content-container th, .popover-content-container td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+.scrollable-popover-table {
+    display: block;
+    width: auto;
+    height: 300px;
+    overflow-y: scroll;
+}
+
+.scrollable-popover-table table thead {
+    background: #fafafa;
+}
+
 div.dt-buttons {
     float: none;
     text-align: right;
@@ -413,8 +461,25 @@ div.dt-buttons {
     text-align: center;
 }
 
+.upload-modal .modal-dialog {
+    max-width: 80% !important;
+}
+
+/* Bootstrap 4 fix for libraries that use fade+in ( fixes blueimp uploader ) */
+.upload-modal .fade.in {
+    opacity: 1
+}
+
 .template-upload span.preview {
     position: relative;
+}
+
+.template-upload div.input-group input {
+    width: 100%;
+}
+
+.template-upload p.size {
+    min-width: 100px;
 }
 
 /* WIZARD ASSISTANT  */
@@ -875,13 +940,37 @@ ul li.active.tab-design:hover a {
 
 .bootstrap-tagsinput {
     min-width: 196px;
-    height: calc(1.5em + 0.75rem + 2px);
+    min-height: calc(1.5em + 0.75rem + 2px);
     padding: 0.375rem 0.75rem;
     line-height: 1.5;
 }
 
 .tags-input-wide .bootstrap-tagsinput {
+    overflow: auto;
     width: 100%;
+    max-height: 400px;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput {
+    overflow: auto;
+    width: 80%;
+    max-height: 400px;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput .tag,
+.tags-input-wide .bootstrap-tagsinput .tag {
+    line-height: 1.4rem;
+    vertical-align: top;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput pre[aria-hidden="true"],
+.tags-input-wide .bootstrap-tagsinput pre[aria-hidden="true"] {
+    display: none;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput div[role="listbox"],
+.tags-input-wide .bootstrap-tagsinput div[role="listbox"] {
+    position: relative !important;
 }
 
 @media (min-width: 768px) {
@@ -995,6 +1084,8 @@ ul li.active.tab-design:hover a {
 
 .permissionsDiv {
     width: 200px;
+    overflow-x: auto;
+    max-width: 250px;
 }
 
 .permissionsDiv .badge {
@@ -1040,10 +1131,17 @@ ul li.active.tab-design:hover a {
 
 .override-input button.button-close-override {
     position: absolute;
-    right: -15px;
+    right: -18px;
     height: 33.5px;
     top: 6px;
     padding: 6px 4px;
+}
+
+
+.override-input.timerOverride .multiSelectInputs {
+    width: 50%;
+    display: inline-block;
+    padding: 3px;
 }
 
 .override-input .text-muted {
@@ -1119,8 +1217,13 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 .XiboCommand .intent-extra-element .extra-value {
     width: calc(50% - 40px);
 }
-.XiboCommand .invalid .form-control-inline, .XiboCommand .command-preview.invalid {
-    background-color: #fbe5e5;
+
+.XiboCommand .invalid .validated-element, .XiboCommand .invalid.validated-element, .XiboCommand .command-preview.invalid {
+    background-color: #fbe5e5 !important;
+}
+
+.XiboCommand .command-preview.invalid code {
+    color: #960000 !important;
 }
 
 .XiboCommand label.intent-extra-container-label {
@@ -1286,4 +1389,132 @@ div.dataTables_wrapper div.dataTables_info {
 
 .nav-tabs .nav-link:hover {
     background-color: #eee;
+}
+
+/* Colour picker */
+.colorpicker-input .input-group-prepend > i{
+    cursor: pointer;
+    padding-left: 20px;
+}
+
+/* Datatable Cards */
+.dt-cards tbody tr {
+    float: left;
+    width: 20rem;
+    margin: 0.5rem;
+    border: 0.0625rem solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+    box-shadow: 0.25rem 0.25rem 0.5rem rgba(0, 0, 0, 0.25);
+}
+
+.dt-cards tbody td {
+    display: block;
+}
+
+.dt-cards tbody label {
+    display: inline;
+    position: relative;
+    font-size: 85%;
+    top: -0.5rem;
+    float: left;
+    color: #808080;
+    min-width: 4rem;
+    margin-left: 0;
+    margin-right: 1rem;
+    text-align: left;
+}
+
+.dt-cards .fa {
+    font-size: 7.5rem;
+}
+
+.dt-cards tr.selected label {
+    color: #404040;
+}
+
+/* Step Wizard */
+/* Onboarding Step Wizard */
+.stepwizard-step p {
+    margin-top: 0px;
+    color:#666;
+}
+.stepwizard-row {
+    display: table-row;
+}
+.stepwizard {
+    display: table;
+    width: 100%;
+    position: relative;
+}
+.stepwizard-step button[disabled] {
+    /*opacity: 1 !important;
+    filter: alpha(opacity=100) !important;*/
+}
+.stepwizard .btn.disabled, .stepwizard .btn[disabled], .stepwizard fieldset[disabled] .btn {
+    opacity:1 !important;
+    color:#bbb;
+    background: white;
+    border: 1px solid #bbbbbb;
+}
+.stepwizard-row:before {
+    top: 14px;
+    bottom: 0;
+    position: absolute;
+    content:" ";
+    width: 100%;
+    height: 1px;
+    background-color: #ccc;
+    z-index: 0;
+}
+.stepwizard .stepwizard-step {
+    display: table-cell;
+    text-align: center;
+    position: relative;
+}
+.stepwizard .btn-circle {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 12px;
+    line-height: 1.428571429;
+    border-radius: 15px;
+}
+.stepwizard .btn-default {
+    background: #bbbbbb;
+    border: 1px solid grey;
+}
+.stepwizard .btn-success {
+    background: #28a745;
+    border: 1px solid #28a745;
+}
+.stepwizard-form .checkbox+.checkbox, .stepwizard-form .radio+.radio {
+    margin-top: 8px;
+}
+.stepwizard-form .has-error {
+    color: red;
+}
+.stepwizard-form .jstree-checkbox-disabled {
+    display: none !important;
+}
+
+#layoutAddForm card {
+    cursor: pointer;
+}
+
+.img-replace {
+    text-align: center;
+    display: block;
+    background-color: #333;
+    width: 120px;
+}
+
+.img-replace img {
+    max-width: 120px;
+    max-height: 80px;
+}
+
+.provider-image {
+    width: 25px;
+    float: right;
 }

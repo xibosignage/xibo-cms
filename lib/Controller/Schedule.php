@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,8 +25,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -34,15 +32,11 @@ use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -59,9 +53,6 @@ class Schedule extends Base
      * @var Session
      */
     private $session;
-
-    /** @var  PoolInterface */
-    private $pool;
 
     /**
      * @var ScheduleFactory
@@ -99,48 +90,32 @@ class Schedule extends Base
     /** @var  LayoutFactory */
     private $layoutFactory;
 
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param Session $session
-     * @param PoolInterface $pool
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param CampaignFactory $campaignFactory
      * @param CommandFactory $commandFactory
      * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
      * @param DayPartFactory $dayPartFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
-     * @param Twig $view
      */
 
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory, Twig $view)
+    public function __construct($session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->session = $session;
-        $this->pool = $pool;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->campaignFactory = $campaignFactory;
         $this->commandFactory = $commandFactory;
         $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
         $this->scheduleExclusionFactory = $scheduleExclusionFactory;
@@ -277,7 +252,7 @@ class Schedule extends Base
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
 
-        if ($this->getUser()->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             $userDisplayGroupIds = array_map(function($element) {
                 /** @var \Xibo\Entity\DisplayGroup $element */
                 return $element->displayGroupId;
@@ -357,6 +332,10 @@ class Schedule extends Base
                         $row->campaign = __('Private Item');
                 }
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
+
+                if ($row->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+                    $title .= __(' with Share of Voice %d seconds per hour', $row->shareOfVoice);
+                }
             }
 
             // Day diff from start date to end date
@@ -761,6 +740,7 @@ class Schedule extends Base
         $this->getState()->setData([
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'help' => $this->getHelp()->link('Schedule', 'Add'),
@@ -806,7 +786,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
      *      type="integer",
      *      required=true
      *  ),
@@ -940,6 +920,27 @@ class Schedule extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="actionType",
+     *      in="formData",
+     *      description="For Action eventTypeId, the type of the action - command or navLayout",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionTriggerCode",
+     *      in="formData",
+     *      description="For Action eventTypeId, the webhook trigger code for the Action",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionLayoutCode",
+     *      in="formData",
+     *      description="For Action eventTypeId and navLayout actionType, the Layout Code identifier",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -977,8 +978,11 @@ class Schedule extends Base
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
         $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $customDayPart->dayPartId]);
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
+        $schedule->actionType = $sanitizedParams->getString('actionType');
+        $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+        $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {
@@ -1007,7 +1011,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $sanitizedParams->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $sanitizedParams->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn');
+        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
 
         foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1070,7 +1074,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory);
+        $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
         if ($schedule->campaignId != null) {
             $schedule->setCampaignFactory($this->campaignFactory);
         }
@@ -1194,6 +1198,7 @@ class Schedule extends Base
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
+            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'help' => $this->getHelp()->link('Schedule', 'Edit'),
             'reminders' => $scheduleReminders,
             'defaultLat' => $defaultLat,
@@ -1324,7 +1329,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
      *      type="integer",
      *      required=true
      *  ),
@@ -1458,6 +1463,27 @@ class Schedule extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="actionType",
+     *      in="formData",
+     *      description="For Action eventTypeId, the type of the action - command or navLayout",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionTriggerCode",
+     *      in="formData",
+     *      description="For Action eventTypeId, the webhook trigger code for the Action",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionLayoutCode",
+     *      in="formData",
+     *      description="For Action eventTypeId and navLayout actionType, the Layout Code identifier",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1492,10 +1518,13 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $sanitizedParams->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $sanitizedParams->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn');
+        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
         $schedule->displayGroups = [];
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
+        $schedule->actionType = $sanitizedParams->getString('actionType');
+        $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+        $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {
@@ -1575,7 +1604,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory);
+        $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
         if ($schedule->campaignId != null) {
             $schedule->setCampaignFactory($this->campaignFactory);
         }
@@ -1764,7 +1793,7 @@ class Schedule extends Base
         }
 
         $schedule
-            ->setDisplayFactory($this->displayFactory)
+            ->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService())
             ->delete();
 
         // Return

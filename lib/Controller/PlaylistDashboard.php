@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -55,23 +54,15 @@ class PlaylistDashboard extends Base
 
     /**
      * PlaylistDashboard constructor.
-     * @param $log
-     * @param $sanitizerService
-     * @param $state
-     * @param $user
-     * @param $help
-     * @param $config
      * @param $playlistFactory
      * @param $moduleFactory
      * @param $widgetFactory
      * @param $layoutFactory
      * @param $displayGroupFactory
-     * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
+    public function __construct($playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->playlistFactory = $playlistFactory;
         $this->moduleFactory = $moduleFactory;
         $this->widgetFactory = $widgetFactory;
@@ -243,9 +234,6 @@ class PlaylistDashboard extends Base
         if (!$this->getUser()->checkDeleteable($module->widget)) {
             throw new AccessDeniedException();
         }
-
-        // Set some dependencies that are used in the delete
-        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
         // Pass to view
         $this->getState()->template = 'playlist-module-form-delete';

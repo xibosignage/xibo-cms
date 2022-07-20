@@ -1,0 +1,145 @@
+@import "variables";
+@import "mixins";
+
+#layout-editor-bottombar  {
+    height: 38px;
+    margin: 0px 24px 24px 16px;
+    
+    nav {
+        border: none;
+        color: $xibo-color-blue-pastel;
+        padding: 0 16px !important;
+        min-height: 30px;
+        font-size: 0;
+        z-index: 2;
+        margin: 0;
+        background: $xibo-color-white-pure;
+        right: 0;
+        left: 0;
+        @include border-radius(0 0 4px 4px);
+
+        span, .info {
+            font-size: 1rem;
+        }
+
+        .divider {
+            display: inline-block;
+            height: 40px;
+            vertical-align: middle;
+            border-right: 3px solid $xibo-color-white;
+            margin: 0 3px;
+        }
+
+        .btn {
+            color: $xibo-color-blue-pastel;
+            height: 38px;
+            width: 38px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 0;
+
+            &:hover:not(:disabled) {
+                color: $xibo-color-white;
+                background-color: $xibo-color-blue-pastel;
+            }
+
+            &:disabled, &.disabled {
+                opacity: 0.4;
+            }
+
+            &#delete-btn {
+                color: $xibo-color-red;
+
+                &:hover {
+                    color: $xibo-color-white;
+                    background-color: $xibo-color-red;
+                }
+            }
+        }
+
+        .hide-on-fs {
+            display: inline-block;
+        }
+
+        .show-on-fs {
+            display: none;
+        }
+
+        .viewer-navbar-overlay {
+            position: absolute;
+            width: 100%;
+            height: 38px;
+            top: -38px;
+            color: $xibo-color-white;
+            opacity: 0.8;
+            padding: 0 1rem;
+            left: 0;
+            @include set-transparent-color(background, $xibo-color-black, 0.8);
+
+            .info {
+                line-height: 2.5rem;
+
+                .label-name {
+                    max-width: 20%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            }
+
+            .btn {
+                color: $xibo-color-white;
+                height: 38px;
+                width: 38px;
+                font-size: 1.2rem;
+            }
+
+            &:hover {
+                opacity: 1 !important;
+            }
+        }
+
+        &.designer-layout {
+            border-bottom: 3px solid $xibo-color-blue-lighter;
+
+            .viewer-navbar-overlay {
+                display: none;
+            }
+        }
+
+        &.designer-region {
+            border-bottom: 3px solid $xibo-color-orange;
+        }
+
+        &.designer-widget {
+            border-bottom: 3px solid $xibo-color-green;
+        }
+    }
+
+    #inline-editor-save {
+        display: none;
+    }
+}
+
+#layout-editor.fullscreen-mode #layout-editor-bottombar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1060;
+    margin: 0;
+
+    &.fs-edit {
+        #inline-editor-save {
+            display: inline-block;
+        }  
+    }
+
+    .hide-on-fs {
+        display: none;
+    }
+
+    .show-on-fs {
+        display: inline-block;
+    }
+}

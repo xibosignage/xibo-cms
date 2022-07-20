@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,10 +25,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -40,29 +36,33 @@ class Folder extends Base
      */
     private $folderFactory;
 
-    /** @var PermissionFactory */
-    private $permissionFactory;
-
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param FolderFactory $folderFactory
-     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $folderFactory, $permissionFactory)
+    public function __construct($folderFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config);
-
         $this->folderFactory = $folderFactory;
-        $this->permissionFactory = $permissionFactory;
     }
 
     /**
+     * Returns JSON representation of the Folder tree
+     *
+     * @SWG\Get(
+     *  path="/folders",
+     *  operationId="folderSearch",
+     *  tags={"folder"},
+     *  summary="Search Folders",
+     *  description="Returns JSON representation of the Folder tree",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -83,6 +83,7 @@ class Folder extends Base
 
         foreach ($folders as $folder) {
             if ($folder->id === 1) {
+                $folder->text = 'Root Folder';
                 $folder->a_attr['title'] = __("Right click a Folder for further Options");
                 $this->buildTreeView($folder);
                 array_push($treeJson, $folder);
@@ -107,6 +108,12 @@ class Folder extends Base
                 if ($child->children != null) {
                     $this->buildTreeView($child);
                 }
+
+                if (!$this->getUser()->checkViewable($child)) {
+                    $child->text = __('Private Folder');
+                    $child->li_attr['disabled'] = true;
+                }
+
                 array_push($childrenDetails, $child);
             } catch (NotFoundException $exception) {
                 // this should be fine, just log debug message about it.
@@ -118,7 +125,36 @@ class Folder extends Base
     }
 
     /**
-     * Adds a Folder
+     * Add a new Folder
+     *
+     * @SWG\Post(
+     *  path="/folders",
+     *  operationId="folderAdd",
+     *  tags={"folder"},
+     *  summary="Add Folder",
+     *  description="Add a new Folder to the specified parent Folder",
+     *  @SWG\Parameter(
+     *      name="text",
+     *      in="formData",
+     *      description="Folder Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="parentId",
+     *      in="formData",
+     *      description="The ID of the parent Folder, if not provided, Folder will be added under Root Folder",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -132,7 +168,7 @@ class Folder extends Base
 
         $folder = $this->folderFactory->createEmpty();
         $folder->text = $sanitizedParams->getString('text');
-        $folder->parentId = $sanitizedParams->getString('parentId');
+        $folder->parentId = $sanitizedParams->getString('parentId', ['default' => 1]);
 
         $folder->save();
 
@@ -147,7 +183,36 @@ class Folder extends Base
     }
 
     /**
-     * Edits a help link
+     * Edit existing Folder
+     *
+     * @SWG\Put(
+     *  path="/folders/{folderId}",
+     *  operationId="folderEdit",
+     *  tags={"folder"},
+     *  summary="Edit Folder",
+     *  description="Edit existing Folder",
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="path",
+     *      description="Folder ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="text",
+     *      in="formData",
+     *      description="Folder Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $folderId
@@ -172,7 +237,6 @@ class Folder extends Base
         }
 
         $folder->text = $sanitizedParams->getString('text');
-        $folder->parentId = $sanitizedParams->getString('parentId', ['default' => $folder->parentId]);
 
         $folder->save();
 
@@ -187,7 +251,29 @@ class Folder extends Base
     }
 
     /**
-     * Delete
+     * Delete existing Folder
+     *
+     * @SWG\Delete(
+     *  path="/folders/{folderId}",
+     *  operationId="folderDelete",
+     *  tags={"folder"},
+     *  summary="Delete Folder",
+     *  description="Delete existing Folder",
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="path",
+     *      description="Folder ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $folderId
@@ -209,7 +295,12 @@ class Folder extends Base
             throw new AccessDeniedException();
         }
 
-        $folder->delete();
+        try {
+            $folder->delete();
+        } catch (\Exception $exception) {
+            $this->getLog()->debug('Folder delete failed with message: ' . $exception->getMessage());
+            throw new InvalidArgumentException(__('Cannot remove Folder with content'), 'folderId', __('Reassign objects from this Folder before deleting.'));
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -234,23 +325,22 @@ class Folder extends Base
 
         $buttons = [];
 
-        if ($user->featureEnabled('folder.add')) {
+        if ($user->featureEnabled('folder.add') &&  $user->checkViewable($folder)) {
             $buttons['create'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder)) {
+        if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder) && !$folder->isRoot()) {
             $buttons['modify'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder)) {
+        if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder) && !$folder->isRoot()) {
             $buttons['delete'] = true;
         }
 
-        if ($user->isSuperAdmin()) {
+        if ($user->isSuperAdmin() && !$folder->isRoot()) {
             $buttons['share'] = true;
         }
 
         return $response->withJson($buttons);
     }
-
 }

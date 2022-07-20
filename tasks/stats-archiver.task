@@ -6,6 +6,9 @@
     "maxPeriods": 4,
     "archiveOwner": "",
     "archiveStats": "Off",
-    "periodsToKeep": 1
+    "periodsToKeep": 1,
+    "statsDeleteMaxAttempts": 10,
+    "statsDeleteSleep": 3,
+    "limit": 10000
   }
 }

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -119,6 +119,24 @@ class DataSetColumn implements \JsonSerializable
      */
     public $dataSetColumnType;
 
+    /**
+     * @SWG\Property(description="Help text that should be displayed when entering data for this Column.")
+     * @var string
+     */
+    public $tooltip;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether value must be provided for this Column.")
+     * @var int
+     */
+    public $isRequired = 0;
+
+    /**
+     * @SWG\Property(description="Date format of dates in the source for remote DataSet.")
+     * @var string
+     */
+    public $dateFormat;
+
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;
 
@@ -138,14 +156,15 @@ class DataSetColumn implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param DataTypeFactory $dataTypeFactory
      * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      */
-    public function __construct($store, $log, $dataSetColumnFactory, $dataTypeFactory, $dataSetColumnTypeFactory)
+    public function __construct($store, $log, $dispatcher, $dataSetColumnFactory, $dataTypeFactory, $dataSetColumnTypeFactory)
     {
         $this->excludeProperty('priorDatasetColumnId');
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->dataTypeFactory = $dataTypeFactory;
@@ -302,8 +321,8 @@ class DataSetColumn implements \JsonSerializable
     private function add()
     {
         $this->dataSetColumnId = $this->getStore()->insert('
-        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField, `showFilter`, `showSort`)
-          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField, :showFilter, :showSort)
+        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField, `showFilter`, `showSort`, `tooltip`, `isRequired`, `dateFormat`)
+          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField, :showFilter, :showSort, :tooltip, :isRequired, :dateFormat)
         ', [
             'dataSetId' => $this->dataSetId,
             'heading' => $this->heading,
@@ -314,7 +333,10 @@ class DataSetColumn implements \JsonSerializable
             'formula' => $this->formula,
             'remoteField' => $this->remoteField,
             'showFilter' => $this->showFilter,
-            'showSort' => $this->showSort
+            'showSort' => $this->showSort,
+            'tooltip' => $this->tooltip,
+            'isRequired' => $this->isRequired,
+            'dateFormat' => $this->dateFormat
         ]);
 
         // Add Column to Underlying Table
@@ -342,7 +364,10 @@ class DataSetColumn implements \JsonSerializable
             'dataSetColumnId' => $this->dataSetColumnId,
             'remoteField' => $this->remoteField,
             'showFilter' => $this->showFilter,
-            'showSort' => $this->showSort
+            'showSort' => $this->showSort,
+            'tooltip' => $this->tooltip,
+            'isRequired' => $this->isRequired,
+            'dateFormat' => $this->dateFormat
         ];
 
         $sql = '
@@ -356,7 +381,10 @@ class DataSetColumn implements \JsonSerializable
             Formula = :formula,
             RemoteField = :remoteField, 
             `showFilter` = :showFilter, 
-            `showSort` = :showSort
+            `showSort` = :showSort,
+            `tooltip` = :tooltip,
+            `isRequired` = :isRequired,
+            `dateFormat` = :dateFormat                         
          WHERE dataSetColumnId = :dataSetColumnId 
         ';
 
@@ -400,6 +428,7 @@ class DataSetColumn implements \JsonSerializable
                 break;
 
             case 1:
+            case 6:
                 $dataType = 'TEXT';
                 break;
 

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -46,23 +43,20 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
-     * @param $applicationScopeFactory
+     * @param ApplicationScopeFactory $applicationScopeFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory, $applicationScopeFactory)
+    public function __construct($user, $applicationRedirectUriFactory, $applicationScopeFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, null);
 
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
 
-        if ($this->applicationRedirectUriFactory == null)
+        if ($this->applicationRedirectUriFactory == null) {
             throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
+        }
     }
 
     /**
@@ -81,13 +75,21 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
      */
     public function createEmpty()
     {
-        if ($this->applicationRedirectUriFactory == null)
+        if ($this->applicationRedirectUriFactory == null) {
             throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
+        }
 
-        if ($this->applicationScopeFactory == null)
+        if ($this->applicationScopeFactory == null) {
             throw new \RuntimeException('Missing dependency: ApplicationScopeFactory');
+        }
 
-        return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory, $this->applicationScopeFactory);
+        return new Application(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->applicationRedirectUriFactory,
+            $this->applicationScopeFactory
+        );
     }
 
     /**
@@ -100,8 +102,9 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
     {
         $client = $this->query(null, ['clientId' => $clientId]);
 
-        if (count($client) <= 0)
+        if (count($client) <= 0) {
             throw new NotFoundException();
+        }
 
         return $client[0];
     }
@@ -116,15 +119,16 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
     {
         $client = $this->query(null, ['name' => $name]);
 
-        if (count($client) <= 0)
+        if (count($client) <= 0) {
             throw new NotFoundException();
+        }
 
         return $client[0];
     }
 
     /**
      * @param int $userId
-     * @return array
+     * @return Application[]
      */
     public function getByUserId($userId)
     {
@@ -134,7 +138,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
     /**
      * @param null $sortOrder
      * @param array $filterBy
-     * @return array
+     * @return Application[]
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -150,7 +154,15 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
                 `user`.UserName AS owner,
                 `oauth_clients`.authCode,
                 `oauth_clients`.clientCredentials,
-                `oauth_clients`.userId ';
+                `oauth_clients`.userId, 
+                `oauth_clients`.isConfidential,
+                `oauth_clients`.description,
+                `oauth_clients`.logo,
+                `oauth_clients`.coverImage,
+                `oauth_clients`.companyName,
+                `oauth_clients`.termsUrl,
+                `oauth_clients`.privacyUrl
+            ';
 
         $body = ' FROM `oauth_clients` ';
         $body .= ' INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ';
@@ -173,13 +185,14 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements
@@ -187,7 +200,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
-                'intProperties' => ['isConfidential']
+                'intProperties' => ['isConfidential', 'authCode', 'clientCredentials']
             ]);
         }
 
@@ -228,8 +241,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
             return false;
         }
 
-        if (
-            $client->isConfidential() === true
+        if ($client->isConfidential() === true
             && password_verify($clientSecret, $client->getHash()) === false
         ) {
             $this->getLog()->debug('Client secret does not match');
@@ -240,8 +252,8 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
         // Check to see if this grant_type is allowed for this client
         switch ($grantType) {
-
             case 'authorization_code':
+            case 'refresh_token':
                 if ($client->authCode != 1) {
                     return false;
                 }
@@ -263,5 +275,74 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
         $this->getLog()->debug('Grant Type is allowed.');
 
         return true;
+    }
+
+    /**
+     * Insert approval record for provided clientId/userId pair with current date and IP address
+     * @param $clientId
+     * @param $userId
+     * @param $approvedDate
+     * @param $approvedIp
+     */
+    public function setApplicationApproved($clientId, $userId, $approvedDate, $approvedIp)
+    {
+        $this->getLog()->debug('Adding approved Access for Application ' . $clientId . ' for User ' . $userId);
+
+        $this->getStore()->insert('
+            INSERT INTO `oauth_lkclientuser` (`clientId`, `userId`, `approvedDate`, `approvedIp`)
+              VALUES (:clientId, :userId, :approvedDate, :approvedIp)
+            ON DUPLICATE KEY UPDATE clientId = clientId, userId = userId, approvedDate = :approvedDate, approvedIp = :approvedIp
+
+        ', [
+            'clientId' => $clientId,
+            'userId' => $userId,
+            'approvedDate' => $approvedDate,
+            'approvedIp' => $approvedIp
+        ]);
+    }
+
+    /**
+     * Check if provided clientId and userId pair are still authorised
+     * @param $clientId
+     * @param $userId
+     * @return bool
+     */
+    public function checkAuthorised($clientId, $userId): bool
+    {
+        $results = $this->getStore()->select('SELECT clientId, userId FROM `oauth_lkclientuser` WHERE clientId = :clientId AND userId = :userId', [
+            'userId' => $userId,
+            'clientId' => $clientId
+        ]);
+
+        if (count($results) <= 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get applications authorised by specific user
+     * @param $userId
+     * @return array
+     */
+    public function getAuthorisedByUserId($userId): array
+    {
+        return $this->getStore()->select('SELECT oauth_clients.name, oauth_clients.id, approvedDate, approvedIp FROM `oauth_lkclientuser` INNER JOIN `oauth_clients` on `oauth_lkclientuser`.clientId = `oauth_clients`.id WHERE `oauth_lkclientuser`.userId = :userId', [
+            'userId' => $userId
+        ]);
+    }
+
+    /**
+     * Remove provided clientId and userId pair from link table
+     * @param $userId
+     * @param $clientId
+     */
+    public function revokeAuthorised($userId, $clientId)
+    {
+        $this->getStore()->update('DELETE FROM `oauth_lkclientuser` WHERE clientId = :clientId AND userId = :userId', [
+            'userId' => $userId,
+            'clientId' => $clientId
+        ]);
     }
 }

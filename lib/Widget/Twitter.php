@@ -94,6 +94,7 @@ class Twitter extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -376,13 +377,6 @@ class Twitter extends TwitterBase
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="ta_text_advanced",
-     *      in="formData",
-     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
      *      name="styleSheet",
      *      in="formData",
      *      description="Optional StyleSheet Pass only with overrideTemplate set to 1 ",
@@ -393,6 +387,20 @@ class Twitter extends TwitterBase
      *      name="javaScript",
      *      in="formData",
      *      description="Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
      *      type="string",
      *      required=false
      *   ),
@@ -431,10 +439,11 @@ class Twitter extends TwitterBase
         $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
         $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage', ['default' => 5]));
         $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('template', $request->getParam('ta_text', $request->getParam('template', null)));
-            $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
             $this->setRawNode('styleSheet', $request->getParam('ta_css', $request->getParam('styleSheet', null)));
             $this->setOption('resultContent', $sanitizedParams->getString('resultContent'));
 
@@ -661,7 +670,7 @@ class Twitter extends TwitterBase
                         break;
 
                     case 'Date':
-                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
+                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->translatedFormat($dateFormat);
                         break;
   
                     case 'Location':
@@ -671,19 +680,17 @@ class Twitter extends TwitterBase
                     case 'ProfileImage':
                         // Grab the profile image
                         if ($tweet->user->profile_image_url != '') {
-                            
                             // Original Default Image
                             $imageSizeType = "";
                             if( count($tagOptions) > 0 ) {
                               // Image options ( normal, bigger, mini )
                               $imageSizeType = '_' . $tagOptions[0];
                             }
-                            
                             // Twitter image size
                             $tweet->user->profile_image_url = str_replace('_normal', $imageSizeType, $tweet->user->profile_image_url);
                             
                             // Grab the profile image
-                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
+                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id_str ?? $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
                             $replace = ($isPreview)
                                 ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
@@ -703,7 +710,8 @@ class Twitter extends TwitterBase
                             $photoUrl = $mediaObject->media_url;
                             
                             if ($photoUrl != '') {
-                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
+                                $tweetUserId = $tweet->user->id_str ?? $tweet->user->id;
+                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweetUserId . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 $replace = ($isPreview)
                                     ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
@@ -792,7 +800,7 @@ class Twitter extends TwitterBase
         }
 
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($displayId);
+        $items = $this->getTwitterFeed($displayId, $this->isPreview());
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -811,7 +819,9 @@ class Twitter extends TwitterBase
             'widgetDesignPadding' => $widgetOriginalPadding,
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'itemsPerPage' => intval($this->getOption('itemsPerPage', 5))
+            'itemsPerPage' => intval($this->getOption('itemsPerPage', 5)),
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         // Work out how many pages we will be showing.
@@ -867,6 +877,7 @@ class Twitter extends TwitterBase
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -875,7 +886,7 @@ class Twitter extends TwitterBase
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("img").xiboImageRender(options);';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';

@@ -390,11 +390,10 @@ class StatsMigrationTask implements TaskInterface
 
                 $entry = [];
 
-                $entry['statDate'] = Carbon::createFromTimestamp($stat['statDate'])->format('U');
-
+                $entry['statDate'] = Carbon::createFromTimestamp($stat['statDate']);
                 $entry['type'] = $stat['type'];
-                $entry['fromDt'] = Carbon::createFromTimestamp($stat['start'])->format('U');
-                $entry['toDt'] = Carbon::createFromTimestamp($stat['end'])->format('U');
+                $entry['fromDt'] = Carbon::createFromTimestamp($stat['start']);
+                $entry['toDt'] = Carbon::createFromTimestamp($stat['end']);
                 $entry['scheduleId'] = (int) $stat['scheduleId'];
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['layoutId'] = (int) $stat['layoutId'];
@@ -408,7 +407,6 @@ class StatsMigrationTask implements TaskInterface
                 // Add stats in store $this->stats
                 $this->timeSeriesStore->addStat($entry);
                 $statCount++;
-
             }
 
             // Write stats
@@ -453,7 +451,7 @@ class StatsMigrationTask implements TaskInterface
             // Run the select
             $stats->execute();
 
-            // Keep count how many stats we've inserted
+            // Keep count how many stats we've processed
             $recordCount = $stats->rowCount();
             $count+= $recordCount;
 
@@ -491,6 +489,7 @@ class StatsMigrationTask implements TaskInterface
 
                 if (empty($display)) {
                     $this->log->error('Display not found. Display Id: '. $stat['displayId']);
+                    $statIgnoredCount+= 1;
                     continue;
                 }
 
@@ -508,7 +507,6 @@ class StatsMigrationTask implements TaskInterface
                         }
                     } catch (NotFoundException $error) {
                         $statIgnoredCount+= 1;
-                        $count = $count - 1;
                         continue;
                     }
                 } else {
@@ -530,7 +528,7 @@ class StatsMigrationTask implements TaskInterface
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['tag'] = $stat['tag'];
                 $entry['widgetId'] = (int) $stat['widgetId'];
-                $entry['duration'] = $end->diffInSeconds($start);
+                $entry['duration'] = (int) $end->diffInSeconds($start);
                 $entry['count'] = isset($stat['count']) ? (int) $stat['count'] : 1;
 
                 // Add stats in store $this->stats
@@ -555,7 +553,7 @@ class StatsMigrationTask implements TaskInterface
             if ($watermark > 0) {
 
                 if($statCount > 0 ) {
-                    $this->appendRunMessage('- '. $count. ' rows migrated.');
+                    $this->appendRunMessage('- '. $count. ' rows processed. ' . $statCount. ' rows migrated');
                     $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
                 }
                 sleep($options['pauseBetweenLoops']);

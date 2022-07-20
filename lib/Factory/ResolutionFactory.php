@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Resolution;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -37,23 +34,12 @@ use Xibo\Support\Exception\NotFoundException;
 class ResolutionFactory extends BaseFactory
 {
     /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
-    /**
      * Create Empty
      * @return Resolution
      */
     public function createEmpty()
     {
-        return new Resolution($this->getStore(), $this->getLog());
+        return new Resolution($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
@@ -104,6 +90,11 @@ class ResolutionFactory extends BaseFactory
             throw new NotFoundException(__('Resolution not found'));
 
         return $resolutions[0];
+    }
+
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
     }
 
     /**
@@ -166,6 +157,11 @@ class ResolutionFactory extends BaseFactory
             $params['resolution'] = $parsedFilter->getString('resolution');
         }
 
+        if ($parsedFilter->getString('partialResolution') != null) {
+            $body .= ' AND resolution LIKE :partialResolution ';
+            $params['partialResolution'] = '%' . $parsedFilter->getString('partialResolution') . '%';
+        }
+
         if ($parsedFilter->getDouble('width') !== null) {
             $body .= ' AND intended_width = :width ';
             $params['width'] = $parsedFilter->getDouble('width');
@@ -184,6 +180,19 @@ class ResolutionFactory extends BaseFactory
         if ($parsedFilter->getDouble('designerHeight') !== null) {
             $body .= ' AND height = :designerHeight ';
             $params['designerHeight'] = $parsedFilter->getDouble('designerHeight');
+        }
+
+        if ($parsedFilter->getString('orientation') !== null) {
+            if ($parsedFilter->getString('orientation') === 'portrait') {
+                $body .= ' AND intended_width <= intended_height ';
+            } else {
+                $body .= ' AND intended_width > intended_height ';
+            }
+        }
+
+        if ($parsedFilter->getInt('userId') !== null) {
+            $body .= ' AND `resolution`.userId = :userId ';
+            $params['userId'] = $parsedFilter->getInt('userId');
         }
 
         // Sorting?

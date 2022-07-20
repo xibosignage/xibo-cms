@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,16 +23,9 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlayerVersionFactory;
-use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -41,13 +34,14 @@ use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Media
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property $extension
+ * @property $thumbnail
  */
 class Media implements \JsonSerializable
 {
@@ -101,7 +95,6 @@ class Media implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The file size in bytes")
@@ -119,7 +112,7 @@ class Media implements \JsonSerializable
      * @SWG\Property(description="Flag indicating whether this media is valid.")
      * @var int
      */
-    public $valid = 1;
+    public $valid = 0;
 
     /**
      * @SWG\Property(description="Flag indicating whether this media is a system file or not")
@@ -199,6 +192,14 @@ class Media implements \JsonSerializable
      */
     public $enableStat;
 
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The orientation of the Media file"
+     * )
+     */
+    public $orientation;
+
     // Private
     private $unassignTags = [];
     private $requestOptions = [];
@@ -223,9 +224,9 @@ class Media implements \JsonSerializable
      */
     public $permissionsFolderId;
 
-    private $widgets = [];
-    private $displayGroups = [];
-    private $layoutBackgroundImages = [];
+    public $widgets = [];
+    public $displayGroups = [];
+    public $layoutBackgroundImages = [];
     private $permissions = [];
 
     /**
@@ -244,81 +245,28 @@ class Media implements \JsonSerializable
     private $tagFactory;
 
     /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var WidgetFactory
-     */
-    private $widgetFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
      * @var PermissionFactory
      */
     private $permissionFactory;
 
     /**
-     * @var PlayerVersionFactory
-     */
-    private $playerVersionFactory;
-
-    /**
-     * @var PlaylistFactory
-     */
-    private $playlistFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  ScheduleFactory */
-    private $scheduleFactory;
-
-    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      * @param PermissionFactory $permissionFactory
      * @param TagFactory $tagFactory
-     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $config, $mediaFactory, $permissionFactory, $tagFactory, $playlistFactory)
+    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $permissionFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->mediaFactory = $mediaFactory;
         $this->permissionFactory = $permissionFactory;
         $this->tagFactory = $tagFactory;
-        $this->playlistFactory = $playlistFactory;
-    }
-
-    /**
-     * Set Child Object Dependencies
-     * @param LayoutFactory $layoutFactory
-     * @param WidgetFactory $widgetFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param PlayerVersionFactory $playerVersionFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
-        $this->widgetFactory = $widgetFactory;
-        $this->displayGroupFactory  = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        $this->playerVersionFactory = $playerVersionFactory;
-        return $this;
     }
 
     public function __clone()
@@ -399,24 +347,11 @@ class Media implements \JsonSerializable
      * @return $this
      * @throws GeneralException
      */
-    public function assignTag($tag)
+    public function assignTag($tag): Media
     {
         $this->load();
-
-        if ($this->tags != [$tag]) {
-
-            if (!in_array($tag, $this->tags)) {
-                $this->tags[] = $tag;
-            } else {
-                foreach ($this->tags as $currentTag) {
-                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
-                        $this->tags[] = $tag;
-                    }
-                }
-            }
-        } else {
-            $this->getLog()->debug('No Tags to assign');
-        }
+        $this->handleTagAssign($tag);
+        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -438,7 +373,7 @@ class Media implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
+        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -458,12 +393,12 @@ class Media implements \JsonSerializable
                 return $a->tagId - $b->tagId;
             });
 
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
 
             // Replace the arrays
             $this->tags = $tags;
 
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
         } else {
             $this->getLog()->debug('Tags were not changed');
         }
@@ -510,15 +445,16 @@ class Media implements \JsonSerializable
      */
     public function load($options = [])
     {
-        if ($this->loaded || $this->mediaId == null)
+        if ($this->loaded || $this->mediaId == null) {
             return;
+        }
 
         $options = array_merge([
             'deleting' => false,
             'fullInfo' => false
         ], $options);
 
-        $this->getLog()->debug('Loading Media. Options = %s', json_encode($options));
+        $this->getLog()->debug(sprintf('Loading Media. Options = %s', json_encode($options)));
 
         // Tags
         $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
@@ -526,21 +462,8 @@ class Media implements \JsonSerializable
         // Are we loading for a delete? If so load the child models, unless we're a module file in which case
         // we've no need.
         if ($this->mediaType !== 'module' && ($options['deleting'] || $options['fullInfo'])) {
-
-            if ($this->widgetFactory === null)
-                throw new ConfigurationException(__('Call setChildObjectDependencies before load'));
-
             // Permissions
             $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->mediaId);
-
-            // Widgets
-            $this->widgets = $this->widgetFactory->getByMediaId($this->mediaId);
-
-            // Layout Background Images
-            $this->layoutBackgroundImages = $this->layoutFactory->getByBackgroundImageId($this->mediaId);
-
-            // Display Groups
-            $this->displayGroups = $this->displayGroupFactory->getByMediaId($this->mediaId);
         }
 
         $this->loaded = true;
@@ -565,8 +488,9 @@ class Media implements \JsonSerializable
             'saveTags' => true
         ], $options);
 
-        if ($options['validate'] && $this->mediaType != 'module')
+        if ($options['validate'] && $this->mediaType !== 'module') {
             $this->validate($options);
+        }
 
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
@@ -575,14 +499,23 @@ class Media implements \JsonSerializable
             // Always set force to true as we always want to save new files
             $this->isSaveRequired = true;
 
-            $this->audit($this->mediaId, 'Added', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName, 'folderId' => $this->folderId]);
-        }
-        else {
+            $this->audit($this->mediaId, 'Added', [
+                'mediaId' => $this->mediaId,
+                'name' => $this->name,
+                'mediaType' => $this->mediaType,
+                'fileName' => $this->fileName,
+                'folderId' => $this->folderId
+            ]);
+        } else {
             $this->edit();
 
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
-            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < Carbon::now()->format('U')));
+            $this->isSaveRequired = $this->isSaveRequired
+                || $this->valid == 0
+                || ($expires > 0 && $expires < Carbon::now()->format('U'))
+                || ($this->mediaType === 'module' && !file_exists($this->downloadSink(false)));
+
             $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
         }
 
@@ -592,8 +525,9 @@ class Media implements \JsonSerializable
             $this->getLog()->debug('Media Update happening now');
 
             // Call save file
-            if ($this->isSaveRequired)
+            if ($this->isSaveRequired) {
                 $this->saveFile();
+            }
         }
 
         if ($options['saveTags']) {
@@ -657,18 +591,6 @@ class Media implements \JsonSerializable
 
         $this->load(['deleting' => true]);
 
-        // If there is a parent, bring it back
-        try {
-            $parentMedia = $this->mediaFactory->getParentById($this->mediaId);
-            $parentMedia->isEdited = 0;
-            $parentMedia->parentId = null;
-            $parentMedia->save(['validate' => false]);
-        }
-        catch (NotFoundException $e) {
-            // This is fine, no parent
-            $parentMedia = null;
-        }
-
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->delete();
@@ -680,67 +602,8 @@ class Media implements \JsonSerializable
             $tag->save();
         }
 
-        foreach ($this->widgets as $widget) {
-            /* @var \Xibo\Entity\Widget $widget */
-            $widget->unassignMedia($this->mediaId);
-
-            if ($parentMedia != null) {
-                // Assign the parent media to the widget instead
-                $widget->assignMedia($parentMedia->mediaId);
-
-                // Swap any audio nodes over to this new widget media assignment.
-                $this->getStore()->update('
-                  UPDATE `lkwidgetaudio` SET mediaId = :mediaId WHERE widgetId = :widgetId AND mediaId = :oldMediaId
-                ' , [
-                    'mediaId' => $parentMedia->mediaId,
-                    'widgetId' => $widget->widgetId,
-                    'oldMediaId' => $this->mediaId
-                ]);
-            } else {
-                // Also delete the `lkwidgetaudio`
-                $widget->unassignAudioById($this->mediaId);
-            }
-
-            // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
-            if ($this->mediaType != 'module' && count($widget->mediaIds) <= 0) {
-                $widget->setChildObjectDepencencies($this->playlistFactory);
-                $widget->delete();
-            } else {
-                $widget->save(['saveWidgetOptions' => false]);
-            }
-        }
-
-        foreach ($this->displayGroups as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $displayGroup->unassignMedia($this);
-
-            if ($parentMedia != null)
-                $displayGroup->assignMedia($parentMedia);
-
-            $displayGroup->save(['validate' => false]);
-        }
-
-        foreach ($this->layoutBackgroundImages as $layout) {
-            /* @var Layout $layout */
-            $layout->backgroundImageId = null;
-            $layout->save(Layout::$saveOptionsMinimum);
-        }
-
         $this->deleteRecord();
         $this->deleteFile();
-
-        // Update any background images
-        if ($this->mediaType == 'image' && $parentMedia != null) {
-            $this->getLog()->debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
-            // Get all Layouts with this as the background image
-            foreach ($this->layoutFactory->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
-                /* @var Layout $layout */
-                $this->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
-                $layout->backgroundImageId = $parentMedia->mediaId;
-                $layout->save();
-            }
-        }
 
         $this->audit($this->mediaId, 'Deleted', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
     }
@@ -750,27 +613,35 @@ class Media implements \JsonSerializable
      */
     private function add()
     {
+        // The originalFileName column has limit of 254 characters
+        // if the filename basename that we are about to save is still over the limit, attempt to strip query string
+        // we cannot make any operations directly on $this->fileName, as that might be still needed to processDownloads
+        $fileName = basename($this->fileName);
+        if (strpos(basename($fileName), '?')) {
+            $fileName = substr(basename($fileName), 0, strpos(basename($fileName), '?'));
+        }
+
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`, `orientation`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId, :orientation)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
             'duration' => $this->duration,
-            'originalFileName' => basename($this->fileName),
+            'originalFileName' => $fileName,
             'userId' => $this->ownerId,
             'retired' => $this->retired,
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
             'released' => $this->released,
             'apiRef' => $this->apiRef,
-            'valid' => 0,
+            'valid' => $this->valid,
             'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
-            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId,
+            'orientation' => $this->orientation
         ]);
-
     }
 
     /**
@@ -793,7 +664,8 @@ class Media implements \JsonSerializable
                 `enableStat` = :enableStat,
                 expires = :expires,
                 folderId = :folderId,
-                permissionsFolderId = :permissionsFolderId
+                permissionsFolderId = :permissionsFolderId,
+                orientation = :orientation
            WHERE mediaId = :mediaId
         ';
 
@@ -812,7 +684,8 @@ class Media implements \JsonSerializable
             'enableStat' => $this->enableStat,
             'expires' => $this->expires,
             'folderId' => $this->folderId,
-            'permissionsFolderId' => $this->permissionsFolderId
+            'permissionsFolderId' => $this->permissionsFolderId,
+            'orientation' => $this->orientation
         ];
 
         $this->getStore()->update($sql, $params);
@@ -845,13 +718,16 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
         }
 
-        if(isset($this->urlDownload) && $this->urlDownload === true) {
-
+        if (isset($this->urlDownload) && $this->urlDownload === true) {
             // for upload via URL, handle cases where URL do not have specified extension in url
             // we either have a long string after lastPeriod or nothing
-
             if (isset($this->extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
                 $saveName = $this->mediaId . '.' . $this->extension;
+            }
+
+            // if needed strip any not needed characters from the storedAs, this should be just <mediaId>.<extension>
+            if (strpos(basename($saveName), '?')) {
+                $saveName = substr(basename($saveName), 0, strpos(basename($saveName), '?'));
             }
 
             $this->storedAs = $saveName;
@@ -863,25 +739,24 @@ class Media implements \JsonSerializable
 
         // If the storesAs is empty, then set it to be the moved file name
         if (empty($this->storedAs) && !$this->alwaysCopy) {
-
             // We could be a fresh file entirely, or we could be a clone
             if ($this->cloned) {
                 $this->getLog()->debug('Copying cloned file: ' . $libraryFolder . $this->fileName);
                 // Copy the file into the library
-                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $saveName))
+                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $saveName)) {
                     throw new ConfigurationException(__('Problem copying file in the Library Folder'));
-
+                }
             } else {
                 $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->fileName);
                 // Move the file into the library
-                if (!$this->moveFile($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName))
+                if (!$this->moveFile($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName)) {
                     throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
+                }
             }
 
             // Set the storedAs
             $this->storedAs = $saveName;
-        }
-        else {
+        } else {
             // We have pre-defined where we want this to be stored
             if (empty($this->storedAs)) {
                 // Assume we want to set this automatically (i.e. we are set to always copy)
@@ -892,13 +767,14 @@ class Media implements \JsonSerializable
                 $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->name);
 
                 // Move the file into the library
-                if (!$this->moveFile($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs))
+                if (!$this->moveFile($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs)) {
                     throw new ConfigurationException(__('Problem moving downloaded file into the Library Folder'));
+                }
             } else {
                 $this->getLog()->debug('Copying specified file: ' . $this->fileName);
 
                 if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
-                    $this->getLog()->error('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
+                    $this->getLog()->error(sprintf('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs));
                     throw new ConfigurationException(__('Problem copying provided file into the Library Folder'));
                 }
             }
@@ -912,24 +788,35 @@ class Media implements \JsonSerializable
         $this->valid = 1;
 
         // Resize image dimensions if threshold exceeds
+        // This also sets orientation
         $this->assessDimensions();
 
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('
+            UPDATE `media` 
+                SET md5 = :md5,
+                    fileSize = :fileSize,
+                    storedAs = :storedAs,
+                    expires = :expires,
+                    released = :released,
+                    orientation = :orientation,
+                    valid = :valid 
+             WHERE mediaId = :mediaId
+        ', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
             'released' => $this->released,
+            'orientation' => $this->orientation,
+            'valid' => $this->valid,
             'mediaId' => $this->mediaId
         ]);
     }
 
     private function assessDimensions()
     {
-
         if ($this->mediaType === 'image' || ($this->mediaType === 'module' && $this->moduleSystemFile === 0)) {
-
             $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
             $filePath = $libraryFolder . $this->storedAs;
             list($imgWidth, $imgHeight) = @getimagesize($filePath);
@@ -937,15 +824,15 @@ class Media implements \JsonSerializable
             $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
             $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
 
+            $this->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
+
             // Media released set to 0 for large size images
             // if image size is greater than Resize Limit then we flag that image as too big
             if ($resizeLimit > 0 && ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit)) {
                 $this->released = 2;
                 $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
-
             } elseif ($resizeThreshold > 0) {
                 if ($imgWidth > $imgHeight) { // 'landscape';
-
                     if ($imgWidth <= $resizeThreshold) {
                         $this->released = 1;
                     } else {
@@ -955,7 +842,6 @@ class Media implements \JsonSerializable
                         }
                     }
                 } else { // 'portrait';
-
                     if ($imgHeight <= $resizeThreshold) {
                         $this->released = 1;
                     } else {
@@ -966,7 +852,6 @@ class Media implements \JsonSerializable
                     }
                 }
             }
-
         }
     }
 
@@ -996,7 +881,7 @@ class Media implements \JsonSerializable
     {
         // Make sure storedAs isn't null
         if ($this->storedAs == null) {
-            $this->getLog()->error('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name);
+            $this->getLog()->error(sprintf('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name));
             return;
         }
 
@@ -1062,9 +947,11 @@ class Media implements \JsonSerializable
      * Download Sink
      * @return string
      */
-    public function downloadSink()
+    public function downloadSink($temp = true)
     {
-        return $this->config->getSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        return $this->config->getSetting('LIBRARY_LOCATION')
+            . ($temp ? 'temp' . DIRECTORY_SEPARATOR : '')
+            . $this->name;
     }
 
     /**
@@ -1074,5 +961,46 @@ class Media implements \JsonSerializable
     public function downloadRequestOptions()
     {
         return $this->requestOptions;
+    }
+
+    /**
+     * Update Media duration.
+     * This is called on processDownloads when uploading video/audio from url
+     * Real duration can be determined in determineRealDuration function in MediaFactory
+     * @param int $realDuration
+     * @return Media
+     */
+    public function updateDuration(int $realDuration): Media
+    {
+        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+
+        $this->getStore()->update('UPDATE `media` SET duration = :duration WHERE mediaId = :mediaId', [
+            'duration' => $realDuration,
+            'mediaId' => $this->mediaId
+        ]);
+
+        $this->duration = $realDuration;
+
+        return $this;
+    }
+
+    /**
+     * Update Media orientation.
+     * For videos from Library connectors, update the orientation once we have the the cover image saved.
+     * @param string $orientation
+     * @return Media
+     */
+    public function updateOrientation(string $orientation): Media
+    {
+        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+
+        $this->getStore()->update('UPDATE `media` SET orientation = :orientation WHERE mediaId = :mediaId', [
+            'orientation' => $orientation,
+            'mediaId' => $this->mediaId
+        ]);
+
+        $this->orientation = $orientation;
+
+        return $this;
     }
 }

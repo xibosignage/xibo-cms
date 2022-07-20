@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,21 +18,15 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 #}
+{% extends "base-report.twig" %}
 
+{% block content %}
 <div>
-    <img class="logo right" src="{{ logo }}">
-</div>
-<div class="header">{{ header }}</div>
-<div class="title">{{ title }} <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span></div>
-<div>
-    <span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span>
+    <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
 </div>
 <p></p>
 <span>{{ placeholder }}</span>
-<img src="{{ src }}" >
-
-
-
+<img src="{{ src|raw }}" >
+{% endblock %}

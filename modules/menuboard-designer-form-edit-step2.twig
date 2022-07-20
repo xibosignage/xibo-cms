@@ -1,0 +1,80 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Select your Menu Board" %}
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="menuBoardEditFormStep2" class="XiboForm form-horizontal pt-4" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
+                  data-next-form-url="{{ url_for("module.widget.edit.form", {id: module.widget.widgetId}) }}?step=3">
+
+                {% set message %}{% trans "Below you can add Categories to the menu structure - drag and drop to add them to the empty spaces." %}{% endset %}
+                {{ forms.message(message) }}
+
+                <div id="zonesContainer">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="text-info mb-1">{% trans "Menu Structure" %}</div>
+                            {% set gridTemplate = module.getExtra().gridTemplate %}
+                            {% set flexTemplate = module.getExtra().flexTemplate %}
+                            {% set flexTemplateSize = module.getExtra().flexTemplateSize %}
+
+                            <div class="structure" style="{% if gridTemplate %}grid-template: {{ gridTemplate }};{% endif %}{{ flexTemplate }}">
+                                {% for i in 1..module.getOption("templateZones", 1) %}
+                                    <div class="connectedlist" style="{% if gridTemplate %}grid-area: z{{ i }}{% endif %}{% if flexTemplateSize %}flex: {{ flexTemplateSize[i] }}{% endif %}";>
+                                        <ul id="categoriesAssigned_{{ i }}"
+                                            class="connectedSortable2 single">
+                                            {% for category in module.menuBoardCategoriesSelectedAssigned(i) %}
+                                                <li id="{{ category.menuCategoryId }}"
+                                                    class="li-sortable">{{ category.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="text-info mb-1">{% trans "Unassigned Categories" %}</div>
+                            <div class="connectedlist categoriesNotAssigned">
+                                <ul id="categoriesNotAssigned"
+                                    class="connectedSortable2">
+                                    {% for category in module.menuBoardCategoriesSelectedNotAssigned() %}
+                                        <li id="{{ category.menuCategoryId }}"
+                                            class="li-sortable">{{ category.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" name="step" value="2" />
+            </form>
+        </div>
+    </div>
+{% endblock %}

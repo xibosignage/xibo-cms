@@ -1,0 +1,62 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Configure Connector" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, connectorFormSubmit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="connectorEditForm" class="form-horizontal" method="put" action="{{ url_for("connector.edit", {id: connector.connectorId}) }}">
+
+                {% block connectorFormFields %}
+
+                {% endblock %}
+
+                {% set title %}{% trans "Enabled?" %}{% endset %}
+                {% set helpText %}{% trans "When enabled, this Connector will start providing the services it lists in its description." %}{% endset %}
+                {{ forms.checkbox("isEnabled", title, connector.isEnabled, helpText) }}
+
+                {% if not connector.isSystem %}
+                    {% if connector.isInstalled %}
+                        {% set title %}{% trans "Uninstall?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick to uninstall this Connector. All settings will be removed." %}{% endset %}
+                        {{ forms.checkbox("shouldUninstall", title, false, helpText) }}
+                    {% else %}
+                        {{ forms.message("This connector will be installed when you save."|trans, "", "alert alert-info") }}
+                    {% endif %}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,15 +26,13 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
+use Xibo\Event\PlaylistMaxNumberChangedEvent;
+use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -59,22 +57,13 @@ class Settings extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TransitionFactory $transitionfactory
      * @param UserFactory $userFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $userGroupFactory, $transitionfactory, $userFactory, Twig $view)
+    public function __construct($layoutFactory, $userGroupFactory, $transitionfactory, $userFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->layoutFactory = $layoutFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->transitionfactory = $transitionfactory;
@@ -319,6 +308,11 @@ class Settings extends Base
             $this->getConfig()->changeSetting('DATASET_HARD_ROW_LIMIT', $sanitizedParams->getInt('DATASET_HARD_ROW_LIMIT'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DEFAULT_PURGE_LIST_TTL')) {
+            $this->handleChangedSettings('DEFAULT_PURGE_LIST_TTL', $this->getConfig()->getSetting('DEFAULT_PURGE_LIST_TTL'), $sanitizedParams->getInt('DEFAULT_PURGE_LIST_TTL'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_PURGE_LIST_TTL', $sanitizedParams->getInt('DEFAULT_PURGE_LIST_TTL'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
             $this->handleChangedSettings('DEFAULT_LAYOUT', $this->getConfig()->getSetting('DEFAULT_LAYOUT'), $sanitizedParams->getInt('DEFAULT_LAYOUT'), $changedSettings);
             $this->getConfig()->changeSetting('DEFAULT_LAYOUT', $sanitizedParams->getInt('DEFAULT_LAYOUT'));
@@ -352,6 +346,16 @@ class Settings extends Base
             if (!v::longitude()->validate($value)) {
                 throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'DEFAULT_LONG');
             }
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')) {
+            $this->handleChangedSettings('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'), $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')) {
+            $this->handleChangedSettings('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT', $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'), $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT', $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'));
         }
 
         if ($this->getConfig()->isSettingEditable('SHOW_DISPLAY_AS_VNCLINK')) {
@@ -509,6 +513,19 @@ class Settings extends Base
             $this->getConfig()->changeSetting('LATEST_NEWS_URL', $sanitizedParams->getString('LATEST_NEWS_URL'));
         }
 
+        if ($this->getConfig()->isSettingEditable('REPORTS_EXPORT_SHOW_LOGO')) {
+            $this->handleChangedSettings(
+                'REPORTS_EXPORT_SHOW_LOGO',
+                $this->getConfig()->getSetting('REPORTS_EXPORT_SHOW_LOGO'),
+                $sanitizedParams->getCheckbox('REPORTS_EXPORT_SHOW_LOGO'),
+                $changedSettings
+            );
+            $this->getConfig()->changeSetting(
+                'REPORTS_EXPORT_SHOW_LOGO',
+                $sanitizedParams->getCheckbox('REPORTS_EXPORT_SHOW_LOGO')
+            );
+        }
+
         if ($this->getConfig()->isSettingEditable('MAINTENANCE_ENABLED')) {
             $this->handleChangedSettings('MAINTENANCE_ENABLED', $this->getConfig()->getSetting('MAINTENANCE_ENABLED'), $sanitizedParams->getString('MAINTENANCE_ENABLED'), $changedSettings);
             $this->getConfig()->changeSetting('MAINTENANCE_ENABLED', $sanitizedParams->getString('MAINTENANCE_ENABLED'));
@@ -517,11 +534,6 @@ class Settings extends Base
         if ($this->getConfig()->isSettingEditable('MAINTENANCE_EMAIL_ALERTS')) {
             $this->handleChangedSettings('MAINTENANCE_EMAIL_ALERTS', $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS'), $sanitizedParams->getCheckbox('MAINTENANCE_EMAIL_ALERTS'), $changedSettings);
             $this->getConfig()->changeSetting('MAINTENANCE_EMAIL_ALERTS', $sanitizedParams->getCheckbox('MAINTENANCE_EMAIL_ALERTS'));
-        }
-
-        if ($this->getConfig()->isSettingEditable('MAINTENANCE_KEY')) {
-            $this->handleChangedSettings('MAINTENANCE_KEY', $this->getConfig()->getSetting('MAINTENANCE_KEY'), $sanitizedParams->getString('MAINTENANCE_KEY'), $changedSettings);
-            $this->getConfig()->changeSetting('MAINTENANCE_KEY', $sanitizedParams->getString('MAINTENANCE_KEY'));
         }
 
         if ($this->getConfig()->isSettingEditable('MAINTENANCE_LOG_MAXAGE')) {
@@ -743,7 +755,7 @@ class Settings extends Base
         }
 
         if ($changedSettings != []) {
-            $this->getLog()->audit('Settings', '', 'Updated', $changedSettings);
+            $this->getLog()->audit('Settings', 0, 'Updated', $changedSettings);
         }
 
         // Return
@@ -757,11 +769,37 @@ class Settings extends Base
     private function handleChangedSettings($setting, $oldValue, $newValue, &$changedSettings)
     {
         if ($oldValue != $newValue) {
+            if ($setting === 'SYSTEM_USER') {
+                $newSystemUser = $this->userFactory->getById($newValue);
+                $oldSystemUser = $this->userFactory->getById($oldValue);
+                $this->getDispatcher()->dispatch(SystemUserChangedEvent::$NAME, new SystemUserChangedEvent($oldSystemUser, $newSystemUser));
+            } elseif ($setting === 'DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT') {
+                $this->getDispatcher()->dispatch(PlaylistMaxNumberChangedEvent::$NAME, new PlaylistMaxNumberChangedEvent($newValue));
+            }
             if ($setting === 'ELEVATE_LOG_UNTIL') {
                 $changedSettings[$setting] = Carbon::createFromTimestamp($oldValue)->format(DateFormatHelper::getSystemFormat()) . ' > ' .  Carbon::createFromTimestamp($newValue)->format(DateFormatHelper::getSystemFormat());
             } else {
                 $changedSettings[$setting] = $oldValue . ' > ' . $newValue;
             }
         }
+    }
+
+    /**
+     * Configure Adspace settings
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     */
+    public function configureAdspace(Request $request, Response $response)
+    {
+        if (!$this->getUser()->isSuperAdmin()) {
+            throw new AccessDeniedException();
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+        $this->getConfig()->changeSetting('isAdspaceEnabled', $params->getCheckbox('isAdspaceEnabled'));
+
+        return $response->withStatus(204);
     }
 }

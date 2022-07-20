@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,21 +28,18 @@ use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\LogFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RequiredFileFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
@@ -50,10 +47,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\WakeOnLan;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -62,6 +56,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\LicenceCheckAction;
+use Xibo\XMR\PurgeAllAction;
 use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
 
@@ -104,11 +99,6 @@ class Display extends Base
     private $displayGroupFactory;
 
     /**
-     * @var LogFactory
-     */
-    private $logFactory;
-
-    /**
      * @var LayoutFactory
      */
     private $layoutFactory;
@@ -117,16 +107,6 @@ class Display extends Base
      * @var DisplayProfileFactory
      */
     private $displayProfileFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
 
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
@@ -148,22 +128,13 @@ class Display extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param PlayerActionServiceInterface $playerAction
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
-     * @param LogFactory $logFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayProfileFactory $displayProfileFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param DisplayEventFactory $displayEventFactory
      * @param RequiredFileFactory $requiredFileFactory
      * @param TagFactory $tagFactory
@@ -171,22 +142,16 @@ class Display extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
+    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->store = $store;
         $this->pool = $pool;
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->logFactory = $logFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayProfileFactory = $displayProfileFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->displayEventFactory = $displayEventFactory;
         $this->requiredFileFactory = $requiredFileFactory;
         $this->tagFactory = $tagFactory;
@@ -377,9 +342,9 @@ class Display extends Base
                 'sizeRemaining' => round((double)($totalSize - $completeSize) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
-                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
+                'fromDate' => Carbon::now()->startOfMonth()->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subDay()->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->endOfMonth()->format(DateFormatHelper::getSystemFormat())
             ]
         ]);
 
@@ -413,6 +378,27 @@ class Display extends Base
      *      name="display",
      *      in="query",
      *      description="Filter by Display Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="query",
+     *      description="Filter by tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="exactTags",
+     *      in="query",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
      *      type="string",
      *      required=false
      *   ),
@@ -546,7 +532,8 @@ class Display extends Base
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation'),
             'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
-            'folderId' => $parsedQueryParams->getInt('folderId')
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
         ];
 
         // Get a list of displays
@@ -577,8 +564,7 @@ class Display extends Base
             $display->bandwidthLimitFormatted = ByteFormatter::format($display->bandwidthLimit * 1024);
 
             // Current layout from cache
-            $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $display->getCurrentLayoutId($this->pool);
+            $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
 
             if ($this->isApi($request)) {
                 $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
@@ -692,6 +678,7 @@ class Display extends Base
                         ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'display_button_delete'],
+                        ['name' => 'sort-group', 'value' => 1],
                         ['name' => 'text', 'value' => __('Delete')],
                         ['name' => 'rowtitle', 'value' => $display->display]
                     ];
@@ -720,6 +707,7 @@ class Display extends Base
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.authorise', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_authorise'),
+                        array('name' => 'sort-group', 'value' => 2),
                         array('name' => 'text', 'value' => __('Toggle Authorise')),
                         array('name' => 'rowtitle', 'value' => $display->display)
                     )
@@ -735,6 +723,7 @@ class Display extends Base
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.defaultlayout', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_defaultlayout'),
+                        array('name' => 'sort-group', 'value' => 2),
                         array('name' => 'text', 'value' => __('Set Default Layout')),
                         array('name' => 'rowtitle', 'value' => $display->display),
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
@@ -752,6 +741,7 @@ class Display extends Base
                             ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                            ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'text', 'value' => __('Move to Folder')],
                             ['name' => 'rowtitle', 'value' => $display->display],
                             ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
@@ -770,6 +760,7 @@ class Display extends Base
                             array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.licencecheck', ['id' => $display->displayId])),
                             array('name' => 'commit-method', 'value' => 'put'),
                             array('name' => 'id', 'value' => 'display_button_checkLicence'),
+                            array('name' => 'sort-group', 'value' => 2),
                             array('name' => 'text', 'value' => __('Check Licence')),
                             array('name' => 'rowtitle', 'value' => $display->display)
                         )
@@ -794,6 +785,16 @@ class Display extends Base
             if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
             ) {
+                if ($this->getUser()->featureEnabled('layout.view')) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_layouts_jump',
+                        'linkType' => '_self',
+                        'external' => true,
+                        'url' => $this->urlFor($request, 'layout.view') . '?activeDisplayGroupId=' . $display->displayGroupId,
+                        'text' => __('Jump to Scheduled Layouts')
+                    ];
+                }
+
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
@@ -818,6 +819,7 @@ class Display extends Base
                         ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.requestscreenshot', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'sort-group', 'value' => 3),
                         array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
                         array('name' => 'text', 'value' => __('Request Screen Shot')),
                         array('name' => 'rowtitle', 'value' => $display->display)
@@ -834,6 +836,7 @@ class Display extends Base
                         ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
                         array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'sort-group', 'value' => 3),
                         array('name' => 'id', 'value' => 'display_button_collectNow'),
                         array('name' => 'text', 'value' => __('Collect Now')),
                         array('name' => 'rowtitle', 'value' => $display->display)
@@ -850,11 +853,20 @@ class Display extends Base
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
+                        ['name' => 'sort-group', 'value' => 3],
                         ['name' => 'text', 'value' => __('Trigger a web hook')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
                     ]
                 ];
+
+                if ($this->getUser()->isSuperAdmin()) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_purgeAll',
+                        'url' => $this->urlFor($request, 'display.purge.all.form', ['id' => $display->displayId]),
+                        'text' => __('Purge All')
+                    ];
+                }
 
                 $display->buttons[] = ['divider' => true];
             }
@@ -881,7 +893,7 @@ class Display extends Base
                         ['name' => 'id', 'value' => 'display_button_group_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'sort-group', 'value' => 4],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
                         ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
@@ -921,6 +933,7 @@ class Display extends Base
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
                         ['name' => 'text', 'value' => __('Transfer to another CMS')],
+                        ['name' => 'sort-group', 'value' => 5],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
@@ -938,7 +951,7 @@ class Display extends Base
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
                         ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple.form')],
-                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                        ['name' => 'content-id-name', 'value' => 'displayId']
                     ]
                 ];
 
@@ -1055,7 +1068,6 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'tags' => $this->tagFactory->getTagsWithValues($display),
             'dayParts' => $dayparts
         ]);
 
@@ -1322,7 +1334,7 @@ class Display extends Base
         $display->longitude = $sanitizedParams->getDouble('longitude');
         $display->timeZone = $sanitizedParams->getString('timeZone');
         $display->displayProfileId = $sanitizedParams->getInt('displayProfileId');
-        $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
+        $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit', ['default' => 0]);
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
         $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
@@ -1333,6 +1345,8 @@ class Display extends Base
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {
+            // Set the original tags
+            $display->setOriginalValue('tags', $this->tagFactory->tagsFromString($display->tags));
             $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
         }
 
@@ -1358,7 +1372,6 @@ class Display extends Base
             $display->xmrPubKey = null;
         }
 
-        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
 
         if ($this->isApi($request)) {
@@ -1413,7 +1426,6 @@ class Display extends Base
             throw new AccessDeniedException();
         }
 
-        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->delete();
 
         // Return
@@ -1612,7 +1624,8 @@ class Display extends Base
         // Go through each ID to assign
         foreach ($sanitizedParams->getIntArray('displayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $displayGroup->load();
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
             if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -1625,7 +1638,8 @@ class Display extends Base
         // Have we been provided with unassign id's as well?
         foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $displayGroup->load();
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
             if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -1728,8 +1742,8 @@ class Display extends Base
         if ($display->lastAccessed == 0) {
             $nextCollect = __('once it has connected for the first time');
         } else {
-            $collectionInterval = $display->getSetting('collectionInterval', 5);
-            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addMinutes($collectionInterval)->diffForHumans();
+            $collectionInterval = $display->getSetting('collectInterval', 300);
+            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addSeconds($collectionInterval)->diffForHumans();
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
@@ -1784,7 +1798,9 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        if (!empty($display->xmrChannel)) {
+        $xmrPubAddress = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
+
+        if (!empty($display->xmrChannel) && !empty($xmrPubAddress) && $xmrPubAddress !== 'DISABLED') {
             $this->playerAction->sendAction($display, new ScreenShotAction());
         }
 
@@ -2252,7 +2268,7 @@ class Display extends Base
         $authenticationCode = $sanitizedParams->getString('twoFactorCode');
 
         $tfa = new TwoFactorAuth($issuer);
-        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
+        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode, 3);
 
         if ($result) {
 
@@ -2263,6 +2279,10 @@ class Display extends Base
             // validate the URL
             if (!v::url()->notEmpty()->validate(urldecode($newCmsAddress)) || !filter_var($newCmsAddress, FILTER_VALIDATE_URL)) {
                 throw new InvalidArgumentException(__('Provided CMS URL is invalid'), 'newCmsUrl');
+            }
+
+            if (!v::stringType()->length(1, 1000)->validate($newCmsAddress)) {
+                throw new InvalidArgumentException(__('New CMS URL can have maximum of 1000 characters'), 'newCmsUrl');
             }
 
             if ($newCmsKey == '') {
@@ -2518,5 +2538,86 @@ class Display extends Base
         }
 
         return $response->withJson($display->getStatusWindow($this->pool));
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function purgeAllForm(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display) || !$this->getUser()->isSuperAdmin()) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-purge-all';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * Purge All
+     *
+     * @SWG\Put(
+     *  summary="Purge All",
+     *  path="/display/purgeAll/{displayId}",
+     *  operationId="displayPurgeAll",
+     *  tags={"display"},
+     *  description="Ask this Player to purge all Media from its local storage and request fresh files from CMS.",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function purgeAll(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display) || !$this->getUser()->isSuperAdmin()) {
+            throw new AccessDeniedException();
+        }
+
+        if (empty($display->xmrChannel)) {
+            throw new InvalidArgumentException(__('XMR is not configured for this Display'), 'xmrChannel');
+        }
+
+        $this->playerAction->sendAction($display, new PurgeAllAction());
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Request sent for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+
+        return $this->render($request, $response);
     }
 }

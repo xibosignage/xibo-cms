@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -38,8 +38,10 @@ class LayoutUploadHandler extends BlueImpUploadHandler
      */
     protected function handle_form_data($file, $index)
     {
-        $controller = $this->options['controller'];
         /* @var \Xibo\Controller\Layout $controller */
+        $controller = $this->options['controller'];
+        /* @var SanitizerService $sanitizerService */
+        $sanitizerService = $this->options['sanitizerService'];
 
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
@@ -49,22 +51,25 @@ class LayoutUploadHandler extends BlueImpUploadHandler
         // Upload and Save
         try {
             // Check Library
-            if ($this->options['libraryQuotaFull'])
+            if ($this->options['libraryQuotaFull']) {
                 throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
+            }
 
             // Check for a user quota
             $controller->getUser()->isQuotaFullByUser();
+            $params = $sanitizerService->getSanitizer($_REQUEST);
 
             // Parse parameters
-            $name = isset($_REQUEST['name']) ? $_REQUEST['name'][$index] : '';
+            $name = $params->getArray('name')[$index];
             $tags = $controller->getUser()->featureEnabled('tag.tagging')
-                ? isset($_REQUEST['tags']) ? $_REQUEST['tags'][$index] : ''
+                ? $params->getArray('tags')[$index]
                 : '';
-            $template = isset($_REQUEST['template']) ? $_REQUEST['template'][$index] : 0;
-            $replaceExisting = isset($_REQUEST['replaceExisting']) ? $_REQUEST['replaceExisting'][$index] : 0;
-            $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
-            $useExistingDataSets = isset($_REQUEST['useExistingDataSets']) ? $_REQUEST['useExistingDataSets'][$index] : 0;
-            $importDataSetData = isset($_REQUEST['importDataSetData']) ? $_REQUEST['importDataSetData'][$index] : 0;
+            $template = $params->getCheckbox('template', ['default' => 0]);
+            $replaceExisting = $params->getCheckbox('replaceExisting', ['default' => 0]);
+            $importTags = $params->getCheckbox('importTags', ['default' => 0]);
+            $useExistingDataSets = $params->getCheckbox('useExistingDataSets', ['default' => 0]);
+            $importDataSetData = $params->getCheckbox('importDataSetData', ['default' => 0]);
+            $folderId = $params->getInt('folderId', ['default' => 1]);
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(
@@ -76,21 +81,29 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $importTags,
                 $useExistingDataSets,
                 $importDataSetData,
-                $this->options['libraryController'],
+                $this->options['dataSetFactory'],
                 $tags,
-                $this->options['routeParser']
+                $this->options['routeParser'],
+                $this->options['mediaService'],
+                $folderId
             );
 
+            // set folderId, permissionFolderId is handled on Layout specific Campaign record.
+            $layout->folderId = $folderId;
+
             $layout->save(['saveActions' => false, 'import' => $importTags]);
-            $layout->managePlaylistClosureTable($layout);
-            $layout->manageActions($layout);
+
+            if (!empty($layout->thumbnail)) {
+                rename($layout->thumbnail, $layout->getThumbnailUri());
+            }
+            $layout->managePlaylistClosureTable();
+            $layout->manageActions();
 
             @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
             // Set the name for the return
             $file->name = $layout->layout;
             $file->id = $layout->layoutId;
-
         } catch (Exception $e) {
             $controller->getLog()->error(sprintf('Error importing Layout: %s', $e->getMessage()));
             $controller->getLog()->debug($e->getTraceAsString());

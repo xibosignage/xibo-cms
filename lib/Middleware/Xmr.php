@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,6 +27,7 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Xibo\Service\DisplayNotifyService;
+use Xibo\Service\NullDisplayNotifyService;
 use Xibo\Service\PlayerActionService;
 use Xibo\Support\Exception\GeneralException;
 
@@ -87,7 +88,10 @@ class Xmr implements Middleware
             try {
                 $container->get('displayNotifyService')->processQueue();
             } catch (GeneralException $e) {
-                $container->get('logService')->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
+                $container->get('logService')->error(
+                    'Unable to Process Queue of Display Notifications due to %s',
+                    $e->getMessage()
+                );
             }
         }
 
@@ -96,7 +100,10 @@ class Xmr implements Middleware
             try {
                 $container->get('playerActionService')->processQueue();
             } catch (\Exception $e) {
-                $container->get('logService')->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
+                $container->get('logService')->error(
+                    'Unable to Process Queue of Player actions due to %s',
+                    $e->getMessage()
+                );
             }
         }
 
@@ -112,7 +119,7 @@ class Xmr implements Middleware
     public static function setXmr($app, $triggerPlayerActions = true)
     {
         // Player Action Helper
-        $app->getContainer()->set('playerActionService', function() use ($app, $triggerPlayerActions) {
+        $app->getContainer()->set('playerActionService', function () use ($app, $triggerPlayerActions) {
             return new PlayerActionService(
                 $app->getContainer()->get('configService'),
                 $app->getContainer()->get('logService'),
@@ -128,8 +135,7 @@ class Xmr implements Middleware
                 $app->getContainer()->get('store'),
                 $app->getContainer()->get('pool'),
                 $app->getContainer()->get('playerActionService'),
-                $app->getContainer()->get('scheduleFactory'),
-                $app->getContainer()->get('dayPartFactory')
+                $app->getContainer()->get('scheduleFactory')
             );
         });
     }

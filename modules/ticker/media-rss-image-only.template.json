@@ -1,8 +1,11 @@
 {
- "id":"media-rss-image-only",
- "value":"Image only",
- "template":"<div class=\"image\">[Link|image]<\/div>",
- "css":".image img { width:100%;}",
- "image":"modules/ticker/media-rss-image-only.template.png",
- "defaultVisualEditor": false
+  "id": "media-rss-image-only",
+  "value": "Image only",
+  "template": "<div class=\"image\">[Link|image]<\/div>",
+  "css": "#content, .item, .image, .image img { width:100%; height: 100%;}\n.image img { object-fit: contain; }",
+  "image": "modules/ticker/media-rss-image-only.template.png",
+  "defaultVisualEditor": false,
+  "options": {
+    "image-fit": true
+  }
 }

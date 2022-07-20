@@ -1,19 +1,31 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2021 Xibo Signage Ltd
- * (ApplicationScopeFactory.php)
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Factory;
+
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use Xibo\Entity\ApplicationScope;
-use Xibo\Helper\SanitizerService;
 use Xibo\OAuth\ScopeEntity;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -23,23 +35,12 @@ use Xibo\Support\Exception\NotFoundException;
 class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInterface
 {
     /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
-    /**
      * Create Empty
      * @return ApplicationScope
      */
     public function create()
     {
-        return new ApplicationScope($this->getStore(), $this->getLog());
+        return new ApplicationScope($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
@@ -50,12 +51,13 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      */
     public function getById($id)
     {
-        $clientRedirectUri = $this->query(null, ['id' => $id]);
+        $scope = $this->query(null, ['id' => $id]);
 
-        if (count($clientRedirectUri) <= 0)
+        if (count($scope) <= 0) {
             throw new NotFoundException();
+        }
 
-        return $clientRedirectUri[0];
+        return $scope[0];
     }
 
     /**
@@ -80,7 +82,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         $entries = [];
         $params = [];
 
-        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description';
+        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description, `oauth_scopes`.useRegex';
 
         $body = '  FROM `oauth_scopes`';
 
@@ -103,13 +105,13 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
+        }
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements
@@ -136,7 +138,10 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         $this->getLog()->debug('getScopeEntityByIdentifier: ' . $scopeIdentifier);
 
         try {
-            return $this->getById($scopeIdentifier);
+            $applicationScope = $this->getById($scopeIdentifier);
+            $scope = new ScopeEntity();
+            $scope->setIdentifier($applicationScope->getId());
+            return $scope;
         } catch (NotFoundException $e) {
             return null;
         }
@@ -147,13 +152,29 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      */
     public function finalizeScopes(array $scopes, $grantType, ClientEntityInterface $clientEntity, $userIdentifier = null)
     {
-        $this->getLog()->debug('finalizeScopes');
+        $this->getLog()->debug('finalizeScopes: provided scopes count = ' . count($scopes));
 
-        /** @var \Xibo\Entity\Application $clientEntity */
-        foreach ($clientEntity->scopes as $scope) {
-            $scopes[] = $this->getScopeEntityByIdentifier($scope->getIdentifier());
+        $finalScopes = [];
+
+        // $clientEntity->scopes are the valid scopes for this client.
+        // make sure all of the requested scopes are valid
+        foreach ($scopes as $scope) {
+            // See if we can find it
+            $found = false;
+
+            /** @var \Xibo\Entity\Application $clientEntity */
+            foreach ($clientEntity->getScopes() as $validScope) {
+                if ($validScope->getIdentifier() === $scope->getIdentifier()) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            if ($found) {
+                $finalScopes[] = $scope;
+            }
         }
 
-        return $scopes;
+        return $finalScopes;
     }
 }

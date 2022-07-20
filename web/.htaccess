@@ -1,6 +1,7 @@
+# htaccess file for CMS instances running in /
+# if you are running using an alias or from a sub-folder, please refer to the file in docker/tmp
+# if you previously set a RewriteBase in here, the file in docker/tmp replaces that approach
 RewriteEngine On
-
-#RewriteBase /xibo
 
 # fix authorization header
 RewriteCond %{HTTP:Authorization} .+
@@ -20,11 +21,6 @@ RewriteRule ^ api/index.php [QSA,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/install/.*$
 RewriteRule ^ install/index.php [QSA,L]
-
-# maintenance
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/maint/.*$
-RewriteRule ^ maint/index.php [QSA,L]
 
 # all others - i.e. web
 RewriteCond %{REQUEST_FILENAME} !-f

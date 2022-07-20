@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,8 +24,10 @@
 namespace Xibo\Factory;
 
 
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
+use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -67,19 +69,16 @@ class BaseFactory
     private $userFactory;
 
     /**
-     * Set common dependencies.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @return $this
+     * @var BaseDependenciesService
      */
-    protected function setCommonDependencies($store, $log, $sanitizerService)
-    {
-        $this->store = $store;
-        $this->log = $log;
-        $this->sanitizerService = $sanitizerService;
+    private $baseDependenciesService;
 
-        return $this;
+    /**
+     * @param BaseDependenciesService $baseDependenciesService
+     */
+    public function useBaseDependenciesService(BaseDependenciesService $baseDependenciesService)
+    {
+        $this->baseDependenciesService = $baseDependenciesService;
     }
 
     /**
@@ -101,7 +100,7 @@ class BaseFactory
      */
     protected function getStore()
     {
-        return $this->store;
+        return $this->baseDependenciesService->getStore();
     }
 
     /**
@@ -110,7 +109,15 @@ class BaseFactory
      */
     protected function getLog()
     {
-        return $this->log;
+        return $this->baseDependenciesService->getLogger();
+    }
+
+    /**
+     * @return SanitizerService
+     */
+    protected function getSanitizerService()
+    {
+        return $this->baseDependenciesService->getSanitizer();
     }
 
     /**
@@ -120,7 +127,15 @@ class BaseFactory
      */
     protected function getSanitizer($array)
     {
-        return $this->sanitizerService->getSanitizer($array);
+        return $this->getSanitizerService()->getSanitizer($array);
+    }
+
+    /**
+     * @return \Xibo\Support\Validator\ValidatorInterface
+     */
+    protected function getValidator()
+    {
+        return $this->getSanitizerService()->getValidator();
     }
 
     /**
@@ -142,6 +157,14 @@ class BaseFactory
     }
 
     /**
+     * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
+     */
+    public function getDispatcher(): EventDispatcherInterface
+    {
+        return $this->baseDependenciesService->getDispatcher();
+    }
+
+    /**
      * Count of records returned for the last query.
      * @return int
      */
@@ -160,8 +183,16 @@ class BaseFactory
      * @param array $filterBy
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [], $permissionFolderIdColumn = null)
-    {
+    public function viewPermissionSql(
+        $entity,
+        &$sql,
+        &$params,
+        $idColumn,
+        $ownerColumn = null,
+        $filterBy = [],
+        $permissionFolderIdColumn = null,
+        $isPerformDoohCheck = true
+    ) {
         $parsedBody = $this->getSanitizer($filterBy);
         $checkUserId = $parsedBody->getInt('userCheckUserId');
 
@@ -183,11 +214,11 @@ class BaseFactory
 
         // Check the whether we need to restrict to the DOOH user.
         // we only do this for entities which have an owner, and only if the user check hasn't been disabled.
-        if ($ownerColumn !== null && $performUserCheck) {
+        if ($ownerColumn !== null && $performUserCheck && $isPerformDoohCheck) {
             if (($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4) {
                 // DOOH only
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId = 4) ';
-            } else {
+            } elseif ($user->showContentFrom != 3) {
                 // Standard only
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
             }
@@ -333,69 +364,60 @@ class BaseFactory
     public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params, $useRegex = false)
     {
         $i = 0;
-        $j = 0;
-        $searchNames = [];
+
         $tableAndColumn = $tableName . '.' . $tableColumn;
-        // Convert into commas
-        foreach ($terms as $term) {
-            // convert into a space delimited array
-            $names = explode(' ', $term);
-            // filter empty array elements, in an attempt to better handle spaces after `,`.
-            $filteredNames = array_filter($names);
+        // filter empty array elements, in an attempt to better handle spaces after `,`.
+        $filteredNames = array_filter($terms, function ($element) {
+            return is_string($element) && '' !== trim($element);
+        });
 
-            foreach ($filteredNames as $searchName) {
-                $i++;
-                if (!isset($filteredNames[0])) {
-                    $j = 1;
-                }
+        foreach ($filteredNames as $searchName) {
+            $i++;
 
-                // Trim/Sanitise
-                $searchName = trim($searchName);
+            // Trim/Sanitise
+            $searchName = trim($searchName);
 
-                // Discard any incompatible
-                if ($searchName === '-') {
-                    continue;
-                }
+            // Discard any incompatible
+            if ($searchName === '-' || empty($searchName)) {
+                continue;
+            }
 
-                // store searchName array
-                $searchNames[] = $searchName;
-
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    if ($i == 1) {
-                        $body .= " AND ( $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
-                    } elseif ( (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) || strpos($searchNames[$i-1], '-') !== false ) {
-                        $body .= " AND $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
-                    } else {
-                        $body .= " OR $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
-                    }
+            // Not like, or like?
+            if (substr($searchName, 0, 1) == '-') {
+                if ($i === 1) {
+                    $body .= ' AND ( '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                 } else {
-                    if ($i === 1) {
-                        $body .= " AND ( $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
-                    } elseif (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) {
-                        $body .= " AND $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
-                    } else {
-                        $body .= " OR  $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
-                    }
+                    $body .= ' OR '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                }
+            } else {
+                if ($i === 1) {
+                    $body .= ' AND ( '.$tableAndColumn.' RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
+                } else {
+                    $body .= ' OR  '.$tableAndColumn.' RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
                 }
             }
         }
-        $body .= ' ) ';
+
+        if (!empty($filteredNames)) {
+            $body .= ' ) ';
+        }
     }
 
     /**
      * @param array $tags An array of tags
+     * @param string $lkTagTable name of the lktag table
+     * @param string $lkTagTableIdColumn name of the id column in the lktag table
+     * @param string $idColumn name of the id column in main table
+     * @param string $logicalOperator AND or OR logical operator passed from Factory
      * @param string $operator exactTags passed from factory, determines if the search is LIKE or =
      * @param string $body Current SQL body passed by reference
      * @param array $params Array of parameters passed by reference
      */
-    public function tagFilter($tags, $operator, &$body, &$params)
+    public function tagFilter($tags, $lkTagTable, $lkTagTableIdColumn, $idColumn, $logicalOperator, $operator, &$body, &$params)
     {
         $i = 0;
 
@@ -409,7 +431,7 @@ class BaseFactory
                 if ($i == 1) {
                     $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                 } else {
-                    $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+                    $body .= ' OR ' . ' `tag` ' . $operator . ' :tags' . $i;
                 }
 
                 if ($operator === '=') {
@@ -422,7 +444,7 @@ class BaseFactory
                 if ($i == 1) {
                     $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
                 } else {
-                    $body .= ' OR `value` ' . $operator . ' :value' . $i;
+                    $body .= ' OR ' . ' `value` ' . $operator . ' :value' . $i;
                 }
 
                 if ($operator === '=') {
@@ -436,7 +458,7 @@ class BaseFactory
                     $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
                         ' AND value ' . $operator . ' :value' . $i;
                 } else {
-                    $body .= ' OR `tag` ' . $operator . ' :tags' . $i .
+                    $body .= ' OR ' . ' `tag` ' . $operator . ' :tags' . $i .
                         ' AND value ' . $operator . ' :value' . $i;
                 }
 
@@ -449,6 +471,11 @@ class BaseFactory
                 }
             }
         }
+
+        if ($logicalOperator === 'AND' && count($tags) > 1) {
+            $body .= ' GROUP BY ' . $lkTagTable . '.' . $idColumn . ' HAVING count(' . $lkTagTable .'.'. $lkTagTableIdColumn .') = ' . count($tags);
+        }
+
         $body .= ' ) ';
     }
 }

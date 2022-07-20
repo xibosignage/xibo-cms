@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -48,17 +45,13 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $tagFactory)
+    public function __construct($user, $userFactory, $permissionFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->permissionFactory = $permissionFactory;
@@ -93,6 +86,7 @@ class DisplayGroupFactory extends BaseFactory
         return new DisplayGroup(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this,
             $this->permissionFactory,
             $this->tagFactory
@@ -110,6 +104,22 @@ class DisplayGroupFactory extends BaseFactory
 
         if (count($groups) <= 0)
             throw new NotFoundException();
+
+        return $groups[0];
+    }
+
+    /**
+     * @param int $displayId
+     * @return DisplayGroup
+     * @throws NotFoundException
+     */
+    public function getDisplaySpecificByDisplayId(int $displayId): DisplayGroup
+    {
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'isDisplaySpecific' => 1]);
+
+        if (count($groups) <= 0) {
+            throw new NotFoundException();
+        }
 
         return $groups[0];
     }
@@ -226,12 +236,13 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get by OwnerId
      * @param int $ownerId
+     * @param int $isDisplaySpecific
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId, $isDisplaySpecific = 0)
     {
-        return $this->query(null, ['userId' => $ownerId, 'isDisplaySpecific' => 0]);
+        return $this->query(null, ['userId' => $ownerId, 'isDisplaySpecific' => $isDisplaySpecific]);
     }
 
     /**
@@ -280,6 +291,8 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
                 `displaygroup`.dynamicCriteriaTags,
+                `displaygroup`.dynamicCriteriaExactTags,
+                `displaygroup`.dynamicCriteriaLogicalOperator,
                 `displaygroup`.bandwidthLimit,
                 `displaygroup`.createdDt,
                 `displaygroup`.modifiedDt,
@@ -287,21 +300,13 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.folderId,
                 `displaygroup`.permissionsFolderId,
                 (
-                  SELECT GROUP_CONCAT(DISTINCT tag) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tags,
-                (
-                  SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tagValues  
+                    SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                        FROM tag
+                        INNER JOIN lktagdisplaygroup
+                        ON lktagdisplaygroup.tagId = tag.tagId
+                        WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
+                        GROUP BY lktagdisplaygroup.displayGroupId
+                ) as tags
         ';
 
         $body = '
@@ -328,8 +333,6 @@ class DisplayGroupFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy, '`displaygroup`.permissionsFolderId');
         if ($parsedBody->getInt('displayGroupId') !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
@@ -390,7 +393,6 @@ class DisplayGroupFactory extends BaseFactory
 
         // Tags
         if ($parsedBody->getString('tags') != '') {
-
             $tagFilter = $parsedBody->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -403,16 +405,16 @@ class DisplayGroupFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `displaygroup`.displaygroupId IN (
+                $logicalOperator = $parsedBody->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagdisplaygroup', 'lkTagDisplayGroupId', 'displayGroupId', $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -437,6 +439,18 @@ class DisplayGroupFactory extends BaseFactory
             $body .= ' AND `displaygroup`.folderId = :folderId ';
             $params['folderId'] = $parsedBody->getInt('folderId');
         }
+
+        // View Permissions
+        $this->viewPermissionSql(
+            'Xibo\Entity\DisplayGroup',
+            $body,
+            $params,
+            '`displaygroup`.displayGroupId',
+            '`displaygroup`.userId',
+            $filterBy,
+            '`displaygroup`.permissionsFolderId',
+            false
+        );
 
         // Sorting?
         $order = '';
@@ -463,14 +477,21 @@ class DisplayGroupFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
+        if ($parsedBody->hasParam('start') && $parsedBody->hasParam('length')) {
+            $limit = ' LIMIT ' . $parsedBody->getInt('start')
+                . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDisplaySpecific', 'isDynamic']]);
+            $displayGroup = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDisplaySpecific', 'isDynamic']]);
+            $displayGroup->excludeProperty('displays');
+            $displayGroup->excludeProperty('media');
+            $displayGroup->excludeProperty('events');
+            $displayGroup->excludeProperty('layouts');
+
+            $entries[] = $displayGroup;
         }
 
         // Paging

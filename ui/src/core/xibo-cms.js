@@ -1,6 +1,7 @@
-/**
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2020 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -48,8 +49,9 @@ $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
     $(this).ekkoLightbox({
         onContentLoaded: function() {
-            var container = $('.ekko-lightbox-container');
-            container.css({'max-height': container.height(), "height": ""});
+            var $container = $('.ekko-lightbox-container');
+            $container.css({'max-height': $container.height(), "height": "", 'max-width': $container.width()});
+            $container.parents('.modal-content').css({'width' : 'fit-content'});
         }
     });
 });
@@ -107,11 +109,17 @@ function XiboInitialise(scope) {
             try {
                 formValues = JSON.parse(localStorage.getItem(gridName));
 
-                if (formValues == null)
-                    formValues = [];
+                if (formValues == null) {
+                    localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
+                    formValues = JSON.parse(localStorage.getItem(gridName));
+                }
             } catch (e) {
                 formValues = [];
             }
+
+            const url = new URL(window.location.href);
+            var params = new URLSearchParams(url.search.slice(1));
+
 
             $.each(formValues, function(key, element) {
                 // Does this field exist in the form
@@ -119,7 +127,9 @@ function XiboInitialise(scope) {
                 try {
                     var field = form.find("input[name=" + fieldName + "], select[name=" + fieldName + "]");
 
-                    if (field.length > 0) {
+                    if (params.get(fieldName) !== null) {
+                        field.val(params.get(fieldName))
+                    } else if (field.length > 0) {
                         field.val(element.value);
                     }
                 } catch (e) {
@@ -132,7 +142,7 @@ function XiboInitialise(scope) {
             if (gridName != undefined)
                 localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
 
-            $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+            $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
         }, 500);
         
         // Prevent enter key to submit form
@@ -148,7 +158,7 @@ function XiboInitialise(scope) {
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
 
         // init the jsTree
-        initJsTreeAjax('#container-folder-tree',  'grid-folder-tree-state', false)
+        initJsTreeAjax($(this).find('#container-folder-tree'), 'grid-folder-tree-state', false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -300,6 +310,7 @@ function XiboInitialise(scope) {
 
     $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
         var enableSeconds = dateFormat.includes('s');
+        var enable24 = !dateFormat.includes('A');
 
         if(calendarType == 'Jalali') {
             initDatePicker(
@@ -322,6 +333,7 @@ function XiboInitialise(scope) {
                 jsDateFormat,
                 {
                     enableTime: true,
+                    time_24hr: enable24,
                     enableSeconds: enableSeconds,
                     altFormat: jsDateFormat
                 }
@@ -458,6 +470,11 @@ function XiboInitialise(scope) {
     $(scope + " input.bootstrap-switch-target").each(function() {
         $(this).bootstrapSwitch();
     });
+
+    // Colour picker
+    $(scope + " .colorpicker-input").each(function() {
+        $(this).colorpicker();
+    });
     
     // Initialize tags input form
     $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").each(function() {
@@ -524,11 +541,12 @@ function XiboInitialise(scope) {
     });
 
     // Initialize tag with values function from xibo-forms.js
-    $(scope + " .tags-with-value").each(function() {
-        tagsWithValues($(this).closest("form").attr('id'));
-    });
+    // this needs to be initialised only once, otherwise some functions in it will be executed multiple times.
+    if ($(scope + " .tags-with-value").length > 0) {
+        tagsWithValues($(scope).find("form").attr('id'));
+    }
 
-    $(scope + " .XiboCommand").each(function() {
+    $(scope + ' .XiboCommand').each(function () {
         // Get main container
         var $mainContainer = $(this);
 
@@ -539,68 +557,338 @@ function XiboInitialise(scope) {
         $input.hide();
 
         var commandTypes = {
-            'freetext': translations.freeTextCommand,
-            'tpv_led': 'Philips Android',
-            'rs232': 'RS232',
-            'intent': 'Android Intent'
+            freetext: translations.freeTextCommand,
+            tpv_led: 'Philips Android',
+            rs232: 'RS232',
+            intent: 'Android Intent',
+            http: 'HTTP',
         };
 
-        // Scope functions
-        var changeTypeTemplate = function(type) {
+        // Load templates
+        var loadTemplates = function (type) {
             var initVal = $input.val();
-            var parsedVal = parseValue($input.val());
-            
+            var parsedVal = parseCommandValue($input.val());
             var $targetContainer = $mainContainer.find('.command-inputs');
 
             // Create template for the inputs
-            var inputTemplate = Handlebars.compile($('#command-input-' + type + '-template').html());
-            $targetContainer.html(inputTemplate({
-                value: parsedVal.value,
-                initVal: initVal,
-                unique: new Date().valueOf()
-            }));
+            var inputTemplate = Handlebars.compile(
+                $('#command-input-' + type + '-template').html()
+            );
+            $targetContainer.html(
+                inputTemplate({
+                    value: parsedVal.value,
+                    initVal: initVal,
+                    unique: new Date().valueOf(),
+                })
+            );
 
             // Extra templates for Android intent
-            if(type == 'intent') {
-                var inputExtraTemplate = Handlebars.compile($('#command-input-intent-extra-template').html());
-                if(parsedVal.value.extras != undefined){
-                    parsedVal.value.extras.forEach(function(el){
-                        $targetContainer.find('.intent-extra-container').append(inputExtraTemplate(el));
+            if (type == 'intent') {
+                var inputExtraTemplate = Handlebars.compile(
+                    $('#command-input-intent-extra-template').html()
+                );
+                if (parsedVal.value.extras != undefined) {
+                    parsedVal.value.extras.forEach(function (el) {
+                        $targetContainer
+                            .find('.intent-extra-container')
+                            .append(inputExtraTemplate(el));
                     });
                 }
 
                 // Add extra element
-                $targetContainer.on('click', '.intent-add-extra', function() {
+                $targetContainer.find('.intent-add-extra').on('click', function () {
                     $targetContainer.find('.intent-extra-container').append(inputExtraTemplate({}));
                     updateValue(type);
                 });
 
                 // Remove extra element
-                $targetContainer.on('click', '.intent-remove-extra', function() {
-                    $(this).parents('.intent-extra-element').remove();
-                    updateValue(type);
-                });
+                $targetContainer
+                    .off('click', '.intent-remove-extra')
+                    .on('click', '.intent-remove-extra', function () {
+                        $(this).parents('.intent-extra-element').remove();
+                        updateValue(type);
+                    });
+            }
+
+            // Header and body templates for HTTP intent
+            if (type == 'http') {
+                var inputKeyValueElementTemplate = Handlebars.compile(
+                    $('#command-input-http-key-value-template').html()
+                );
+                var sectionClasses = [
+                    '.query-builder-container',
+                    '.http-headers-container',
+                    '.http-data-container',
+                ];
+                var sectionValues = [
+                    parsedVal.value != undefined && parsedVal.value.query != undefined
+                        ? parsedVal.value.query
+                        : null,
+                    parsedVal.value != undefined &&
+                    parsedVal.value.requestOptions != undefined &&
+                    parsedVal.value.requestOptions.headers != undefined
+                        ? parsedVal.value.requestOptions.headers
+                        : null,
+                    parsedVal.value != undefined &&
+                    parsedVal.value.requestOptions != undefined &&
+                    parsedVal.value.requestOptions.body != undefined
+                        ? parsedVal.value.requestOptions.body
+                        : null,
+                ];
+
+                // Generate key value pairs in a container
+                var populateKeyValues = function ($container, values) {
+                    // Empty container
+                    $container.find('.http-key-value-container').empty();
+
+                    // Populate with the new values
+                    for (let i = 0; i < Object.keys(values).length; i++) {
+                        $container.find('.http-key-value-container').append(
+                            inputKeyValueElementTemplate({
+                                key: Object.keys(values)[i],
+                                value: Object.values(values)[i],
+                            })
+                        );
+                    }
+                };
+
+                // Update all the key-value/raw fields
+                var updateKeyValueRawFields = function (forceUpdateTextArea) {
+                    // Update text area even if the checkbox for raw is off
+                    forceUpdateTextArea =
+                        forceUpdateTextArea != undefined ? forceUpdateTextArea : false;
+
+                    var $parentContainer = $(this).parents('.request-section');
+
+                    // Get value from JSON string
+                    var parseJsonFromString = function (valueToParse) {
+                        var parsedValue;
+
+                        try {
+                            parsedValue = JSON.parse(valueToParse);
+                        } catch (error) {
+                            console.warn('Value not a JSON!');
+                        }
+
+                        return parsedValue;
+                    };
+
+                    // Create a JSON string from a key-value pair
+                    var createJSONStringFromKeyValue = function ($container) {
+                        var elementsObject = {};
+
+                        $container
+                            .find('.http-key-value-container .http-key-value-element')
+                            .each(function () {
+                                var $el = $(this);
+                                var elKey = $el.find('.http-key').val();
+                                var elValue = $el.find('.http-value').val();
+
+                                // Add to final command if all fields are correct
+                                if (![elKey, elValue].includes('')) {
+                                    elementsObject[elKey] = elValue;
+                                    $el.removeClass('invalid');
+                                } else {
+                                    $el.addClass('invalid');
+                                }
+                            });
+
+                        return JSON.stringify(elementsObject);
+                    };
+
+                    // 
+                    var decodeQueryString = function (valueToParse) {
+                        var parsedValue;
+
+                        try {
+                            parsedValue =
+                                '{"' +
+                                decodeURI(valueToParse.replace(/&/g, '","').replace(/=/g, '":"')) +
+                                '"}';
+                        } catch (error) {
+                            console.warn('Decode URI failed!');
+                        }
+
+                        return parsedValue;
+                    };
+
+                    // Create query string from a set of key values
+                    var createQueryStringFromKeyValues = function ($container) {
+                        var elementsObject = {};
+                        $container
+                            .find('.http-key-value-container .http-key-value-element')
+                            .each(function () {
+                                var $el = $(this);
+                                var elKey = $el.find('.http-key').val();
+                                var elValue = $el.find('.http-value').val();
+
+                                // Add to final command if all fields are correct
+                                if (![elKey, elValue].includes('')) {
+                                    elementsObject[elKey] = elValue;
+                                }
+                            });
+
+                        // Build body param string
+                        var paramsString = Object.keys(elementsObject)
+                            .map((key) => key + '=' + elementsObject[key])
+                            .join('&');
+
+                        return paramsString;
+                    };
+
+                    // Get current content type
+                    var contentType = $targetContainer.find('.http-contenttype').val();
+
+                    if ($(this).is(':checked') || forceUpdateTextArea) {
+                        // Create string from key value elements
+                        if (
+                            !$parentContainer.find('textarea').hasClass('http-data') ||
+                            contentType == 'application/json'
+                        ) {
+                            $parentContainer
+                                .find('textarea')
+                                .val(createJSONStringFromKeyValue($parentContainer));
+                        } else if (contentType == 'application/x-www-form-urlencoded') {
+                            $parentContainer
+                                .find('textarea')
+                                .val(createQueryStringFromKeyValues($parentContainer));
+                        }
+                    } else {
+                        // Update key value elements based on the textarea value
+                        var builtValue;
+
+                        if (
+                            !$parentContainer.find('textarea').hasClass('http-data') ||
+                            contentType == 'application/json'
+                        ) {
+                            // Parse JSON from textarea
+                            builtValue = parseJsonFromString(
+                                $parentContainer.find('textarea').val()
+                            );
+                        } else if (contentType == 'application/x-www-form-urlencoded') {
+                            builtValue = parseJsonFromString(
+                                decodeQueryString($parentContainer.find('textarea').val())
+                            );
+                        }
+
+                        // if value exists, populate key-value elements
+                        if (builtValue) {
+                            populateKeyValues($parentContainer, builtValue);
+                        }
+                    }
+                };
+
+                // Create key pair sections
+                for (let i = 0; i < sectionValues.length; i++) {
+                    var sectionValue = sectionValues[i];
+                    var $sectionContainer = $targetContainer.find(sectionClasses[i]);
+
+                    if (sectionValue != null) {
+                        populateKeyValues($sectionContainer, sectionValue);
+                    }
+
+                    // Handle Add extra element
+                    $sectionContainer.find('.http-key-value-add').on('click', function (el) {
+                        $(this)
+                            .parent()
+                            .find('.http-key-value-container')
+                            .append(inputKeyValueElementTemplate({}));
+                        updateValue(type);
+                    });
+
+                    // Handle Remove extra element
+                    $sectionContainer
+                        .off('click', '.http-key-value-remove')
+                        .on('click', '.http-key-value-remove', function (el) {
+                            $(this).parents('.http-key-value-element').remove();
+                            updateValue(type);
+                        });
+
+                    // Handle Raw checkbox input
+                    $sectionContainer
+                        .parent()
+                        .find('.form-check input[type="checkbox"]')
+                        .off('change')
+                        .on('change', function () {
+                            if (
+                                $(this).hasClass('show-raw-headers') ||
+                                $(this).hasClass('show-raw-data')
+                            ) {
+                                updateKeyValueRawFields.bind(this)();
+                            } else {
+                                updateValue(type);
+                            }
+
+                            // Toggle fields visibility
+                            var $parentContainer = $(this).parents('.request-section');
+                            $parentContainer
+                                .find($(this).data('toggleElement'))
+                                .toggleClass($(this).data('toggleClass'), $(this).is(':checked'));
+                            $parentContainer
+                                .find($(this).data('toggleElementReverse'))
+                                .toggleClass($(this).data('toggleClass'), !$(this).is(':checked'));
+                        });
+
+                    // Value change makes fields to be updated
+                    $sectionContainer
+                        .parent()
+                        .off('change', '.http-key-value-container .http-key-value-element input')
+                        .on(
+                            'change',
+                            '.http-key-value-container .http-key-value-element input',
+                            function () {
+                                updateKeyValueRawFields.bind(this)(true);
+                            }
+                        );
+
+                    // Call update when loading each section
+                    updateKeyValueRawFields.bind($sectionContainer)(true);
+                }
+
+                // Handle content type behaviour
+                $targetContainer
+                    .find('.http-contenttype')
+                    .off('change')
+                    .on('change', function () {
+                        var isPlainText = $(this).val() == 'text/plain';
+
+                        $targetContainer
+                            .find('.show-raw-data')
+                            .parent()
+                            .toggleClass('d-none', isPlainText);
+                        $targetContainer
+                            .find('.show-raw-data')
+                            .prop('checked', isPlainText)
+                            .trigger('change');
+
+                        // Update data raw field based on the contenttype
+                        if (!isPlainText) {
+                            updateKeyValueRawFields.bind($('.http-data-container'))(true);
+                        }
+                    });
             }
 
             // Bind input changes to the old input field
-            $targetContainer.change('input, select', function() {
-                updateValue(type);
-            });
+            $targetContainer
+                .off('change', 'input:not(.ignore-change), select, textarea')
+                .on('change', 'input:not(.ignore-change), select, textarea', function () {
+                    updateValue(type);
+                });
 
             updateValue(type);
         };
 
-        // Parse and set value to main input
-        var parseValue = function(value) {
+        // Parse command value and return object
+        var parseCommandValue = function (value) {
             var valueObj = {};
 
-            if(value == '' || value == undefined) {
+            if (value == '' || value == undefined) {
                 valueObj.type = 'freetext';
                 valueObj.value = '';
             } else {
                 var splitValue = value.split('|');
 
-                if(splitValue.length == 1) {
+                if (splitValue.length == 1) {
                     // free text
                     valueObj.type = 'freetext';
                     valueObj.value = value;
@@ -613,13 +901,14 @@ function XiboInitialise(scope) {
                             valueObj.value = {
                                 // <type|activity,service,broadcast>
                                 type: splitValue[1],
+                                name: splitValue[2],
                                 // [<extras>]
                                 //{
                                 //  "name": "<extra name>",
                                 //  "type": "<type|string,int,bool,intArray>",
                                 //  "value": <the value of the above type>
                                 //}
-                                extras: (splitValue.length > 3) ? JSON.parse(splitValue[3]) : []
+                                extras: splitValue.length > 3 ? JSON.parse(splitValue[3]) : [],
                             };
                             break;
                         case 'rs232':
@@ -632,20 +921,81 @@ function XiboInitialise(scope) {
                                 parity: connectionStringRaw[3],
                                 stopBits: connectionStringRaw[4],
                                 handshake: connectionStringRaw[5],
-                                hexSupport: connectionStringRaw[6]
+                                hexSupport: connectionStringRaw[6],
                             };
 
                             valueObj.value = {
                                 // <COM#>,<Baud Rate>,<Data Bits>,<Parity|None,Odd,Even,Mark,Space>,<StopBits|None,One,Two,OnePointFive>,<Handshake|None,XOnXOff,RequestToSend,RequestToSendXOnXOff>,<HexSupport|0,1,default 0>
                                 // <DeviceName>,<Baud Rate>,<Data Bits>,<Parity>,<StopBits>,<FlowControl>
                                 cs: connectionString,
-                                command: splitValue[2]
+                                command: splitValue[2],
                             };
                             break;
                         case 'tpv_led':
                             valueObj.type = 'tpv_led';
                             valueObj.value = splitValue[1];
-                            
+
+                            break;
+                        case 'http':
+                            var requestOptions = {};
+                            var contentType = splitValue[2];
+
+                            // try to parse JSON
+                            if (splitValue[3] != undefined) {
+                                try {
+                                    requestOptions = JSON.parse(splitValue[3]);
+                                } catch (error) {
+                                    console.warn('Skip JSON parse!');
+                                }
+                            }
+
+                            // parse headers
+                            if(requestOptions.headers != undefined) {
+                                try {
+                                    requestOptions.headers = JSON.parse(requestOptions.headers);
+                                } catch (error) {
+                                    console.warn('Skip headers JSON parse!');
+                                }
+                            }
+
+                            // parse body
+                            if (requestOptions.body != undefined) {
+                                try {
+                                    if (contentType) {
+                                        if (contentType == 'application/json') {
+                                            requestOptions.body = JSON.parse(requestOptions.body);
+                                        } else if (
+                                            contentType == 'application/x-www-form-urlencoded'
+                                        ) {
+                                            var bodyElements = decodeURI(requestOptions.body).split('&');
+                                            var newParsedElements = {}
+
+                                            bodyElements.forEach(element => {
+                                                var elementSplit = element.split('=');
+                                                if(elementSplit.length = 2) {
+                                                    newParsedElements[elementSplit[0]] = elementSplit[1];
+                                                }
+                                            });
+
+                                            requestOptions.body = newParsedElements;
+                                        }
+                                    }
+                                    
+                                } catch (error) {
+                                    console.warn('Skip body parse!');
+                                }
+                            }
+
+                            // http|url|<requestOptions>
+                            valueObj.type = 'http';
+                            valueObj.value = {
+                                // <url>
+                                url: splitValue[1],
+                                // <contentType|application/x-www-form-urlencoded|application/json|text/plain>
+                                contenttype: splitValue[2],
+                                // <requestOptions|{<method|GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS,TRACE,CONNECT>,<headers|{[key:value]}>,<body|based on content type>}>
+                                requestOptions: requestOptions,
+                            };
                             break;
                         default:
                             valueObj.type = 'freetext';
@@ -658,21 +1008,151 @@ function XiboInitialise(scope) {
             return valueObj;
         };
 
-        var updateValue = function(type) {
+        // Build command value
+        var updateValue = function (type) {
             var builtString = '';
             var invalidValue = false;
             var $container = $mainContainer.find('.command-inputs');
 
-            // Reset invalid class
-            $container.removeClass('invalid');
-
-            //$input.val();
             switch (type) {
                 case 'tpv_led':
                     builtString = 'tpv_led|' + $container.find('.tpv-led-command').val();
                     break;
-                case 'rs232':
+                case 'http':
+                    // URL
+                    var url = $container.find('.http-url').val();
+                    var paramsObj = {};
 
+                    // Validate URL
+                    if (url == '') {
+                        invalidValue = true;
+                        $container.find('.http-url').addClass('invalid');
+                    } else {
+                        $container.find('.http-url').removeClass('invalid');
+                    }
+
+                    // Query builder
+                    if ($container.find('.show-query-builder').is(':checked')) {
+                        // Check if url has params
+                        if (url.split('?').length == 2) {
+                            var urlParams = url.split('?')[1];
+                            var params = [];
+
+                            try {
+                                params = decodeURI(urlParams).split('&');
+                            } catch (e) {
+                                console.warn('malformed URI:' + e);
+                            }
+
+                            // Update URL
+                            url = url.split('?')[0];
+
+                            // Add params to query builder
+                            for (let i = 0; i < params.length; i++) {
+                                var param = params[i].split('=');
+                                if (param.length != 2) {
+                                    continue;
+                                }
+
+                                paramsObj[param[0]] = param[1];
+                            }
+                        }
+
+                        // Grab all the key-value pairs
+                        $container
+                            .find(
+                                '.query-builder-container .http-key-value-container .http-key-value-element'
+                            )
+                            .each(function () {
+                                var $el = $(this);
+                                $el.removeClass('invalid');
+                                var paramName = $el.find('.http-key').val();
+                                var paramValue = $el.find('.http-value').val();
+
+                                // encode uri
+                                try {
+                                    paramName = encodeURI(paramName);
+                                    paramValue = encodeURI(paramValue);
+                                } catch (error) {
+                                    console.warn('malformed URI:' + e);
+                                    paramName = '';
+                                    paramValue = '';
+                                }
+
+                                // Add to final command if all fields are correct
+                                if (![paramName, paramValue].includes('')) {
+                                    paramsObj[paramName] = paramValue;
+                                    $el.removeClass('invalid');
+                                } else {
+                                    invalidValue = true;
+                                    $el.addClass('invalid');
+                                }
+                            });
+
+                        // Build param string
+                        var paramsString = Object.keys(paramsObj)
+                            .map((key) => key + '=' + paramsObj[key])
+                            .join('&');
+
+                        // Append to url
+                        url += paramsString != '' ? '?' + encodeURI(paramsString) : '';
+                    }
+
+                    // Build request options
+                    var requestOptions = {};
+
+                    // Method
+                    requestOptions.method = $container.find('.http-method').val();
+
+                    // contenttype
+                    var contentType = $container.find('.http-contenttype').val();
+
+                    // Custom Headers
+                    var headers = $container.find('.http-headers').val();
+
+                    // validate headers
+                    $container.find('.http-headers').parent().removeClass('invalid');
+                    try {
+                        JSON.parse(headers);
+                        requestOptions.headers = headers;
+                    } catch (e) {
+                        console.warn('Invalid headers: ' + e);
+                        invalidValue = true;
+                        $container.find('.http-headers').parent().addClass('invalid');
+                    }
+
+                    // body data
+                    var bodyData = $container.find('.http-data').val();
+
+                    // validate body data
+                    $container.find('.http-data').parent().removeClass('invalid');
+                    try {
+                        if (contentType == 'application/json') {
+                            JSON.parse(bodyData);
+                        } else if (contentType == 'application/x-www-form-urlencoded') {
+                            decodeURI(bodyData);
+                        }
+
+                        requestOptions.body = bodyData;
+                    } catch (e) {
+                        console.warn('Invalid body: ' + e);
+                        invalidValue = true;
+                        $container.find('.http-data').parent().addClass('invalid');
+                    }
+
+                    // Create final JSON string
+                    if (typeof requestOptions == 'object') {
+                        requestOptions = JSON.stringify(requestOptions);
+                    }
+
+                    // Build final string
+                    builtString = 'http|';
+                    builtString += url + '|';
+                    builtString += contentType + '|';
+                    builtString += requestOptions;
+
+                    break;
+                case 'rs232':
                     // Get values
                     var deviceNameVal = $container.find('.rs232-device-name').val();
                     var baudRateVal = $container.find('.rs232-baud-rate').val();
@@ -683,28 +1163,47 @@ function XiboInitialise(scope) {
                     var hexSupportVal = $container.find('.rs232-hex-support').val();
                     var commandVal = $container.find('.rs232-command').val();
 
-                    if([deviceNameVal, baudRateVal, dataBitsVal].includes('')) {
-                        $container.addClass('invalid');
+                    $container
+                        .find('.rs232-device-name')
+                        .toggleClass('invalid', deviceNameVal == '');
+                    $container.find('.rs232-baud-rate').toggleClass('invalid', baudRateVal == '');
+                    $container.find('.rs232-data-bits').toggleClass('invalid', dataBitsVal == '');
+
+                    if ([deviceNameVal, baudRateVal, dataBitsVal].includes('')) {
                         invalidValue = true;
                     }
 
                     builtString = 'rs232|';
-                    builtString += (deviceNameVal != '') ? (deviceNameVal + ',') : '';
-                    builtString += (baudRateVal != '') ? (baudRateVal + ',') : '';
-                    builtString += (dataBitsVal != '') ? (dataBitsVal + ',') : '';
-                    builtString += (parityVal != '') ? (parityVal + ',') : '';
-                    builtString += (stopBitsVal != '') ? (stopBitsVal + ',') : '';
-                    builtString += (handshakeVal != '') ? (handshakeVal + ',') : '';
+                    builtString += deviceNameVal != '' ? deviceNameVal + ',' : '';
+                    builtString += baudRateVal != '' ? baudRateVal + ',' : '';
+                    builtString += dataBitsVal != '' ? dataBitsVal + ',' : '';
+                    builtString += parityVal != '' ? parityVal + ',' : '';
+                    builtString += stopBitsVal != '' ? stopBitsVal + ',' : '';
+                    builtString += handshakeVal != '' ? handshakeVal + ',' : '';
                     builtString += hexSupportVal;
                     builtString += '|' + commandVal;
                     break;
                 case 'intent':
-                    builtString = 'intent|' + $container.find('.intent-type').val() + '|activity';
+                    builtString =
+                        'intent|' +
+                        $container.find('.intent-type').val() +
+                        '|' +
+                        $container.find('.intent-name').val();
+
+                    var nameVal = $container.find('.intent-name').val();
+
+                    if (nameVal == '') {
+                        $container.find('.intent-name').addClass('invalid');
+                        invalidValue = true;
+                    } else {
+                        $container.find('.intent-name').removeClass('invalid');
+                    }
+
                     // Extra values array
                     var extraValues = [];
 
                     // Get values from input fields
-                    $container.find('.intent-extra-element').each(function() {
+                    $container.find('.intent-extra-element').each(function () {
                         var $el = $(this);
                         $el.removeClass('invalid');
                         var extraName = $el.find('.extra-name').val();
@@ -712,33 +1211,36 @@ function XiboInitialise(scope) {
                         var extraValue = $el.find('.extra-value').val();
 
                         // Validate values
-                        if(extraType == 'intArray') {
+                        if (extraType == 'intArray') {
                             // Transform the value into an array
-                            extraValue = extraValue.replace(' ', '').split(',').map(function(x) {
-                                return (x != '') ? Number(x) : '';
-                            });
-                            
+                            extraValue = extraValue
+                                .replace(' ', '')
+                                .split(',')
+                                .map(function (x) {
+                                    return x != '' ? Number(x) : '';
+                                });
+
                             // Check if all the array elements are numbers ( and non empty )
                             for (var index = 0; index < extraValue.length; index++) {
                                 var element = extraValue[index];
-                                
-                                if(isNaN(element) || element == '') {
+
+                                if (isNaN(element) || element == '') {
                                     extraValue = '';
                                     break;
                                 }
                             }
-                        } else if(extraType == 'int' && extraValue != '') {
+                        } else if (extraType == 'int' && extraValue != '') {
                             extraValue = isNaN(Number(extraValue)) ? '' : Number(extraValue);
-                        } else if(extraType == 'bool' && extraValue != '') {
-                            extraValue = (extraValue == 'true');
+                        } else if (extraType == 'bool' && extraValue != '') {
+                            extraValue = extraValue == 'true';
                         }
 
                         // Add to final command if all fields are correct
-                        if(![extraName, extraType, extraValue].includes('')) {
+                        if (![extraName, extraType, extraValue].includes('')) {
                             extraValues.push({
                                 name: extraName,
                                 type: extraType,
-                                value: extraValue
+                                value: extraValue,
                             });
                         } else {
                             invalidValue = true;
@@ -747,7 +1249,7 @@ function XiboInitialise(scope) {
                     });
 
                     // Append extra values array in JSON format
-                    if(extraValues.length > 0) {
+                    if (extraValues.length > 0) {
                         builtString += '|' + JSON.stringify(extraValues);
                     }
 
@@ -757,41 +1259,71 @@ function XiboInitialise(scope) {
                     break;
             }
 
-            if(invalidValue) {
+            // Update command preview
+            if (invalidValue) {
                 $input.val('');
-                $mainContainer.find('.command-preview').html($mainContainer.find('.command-preview').data('invalidMessage')).addClass('invalid');
+                $mainContainer
+                    .find('.command-preview code')
+                    .text($mainContainer.find('.command-preview').data('invalidMessage'));
+                $mainContainer.find('.command-preview').addClass('invalid');
             } else {
                 $input.val(builtString);
-                $mainContainer.find('.command-preview').html(builtString).removeClass('invalid');
+                $mainContainer.find('.command-preview code').text(builtString);
+                $mainContainer.find('.command-preview').removeClass('invalid');
             }
         };
 
         // Get init command type
-        var initType = parseValue($input.val()).type;
+        var initType = parseCommandValue($input.val()).type;
 
         // Create basic type element
         var optionsTemplate = Handlebars.compile($('#command-input-main-template').html());
-        $input.before(optionsTemplate({
-            types: commandTypes,
-            type: initType,
-            unique: new Date().valueOf()
-        }));
+        $input.before(
+            optionsTemplate({
+                types: commandTypes,
+                type: initType,
+                unique: new Date().valueOf(),
+            })
+        );
 
         // Set template on first run
-        changeTypeTemplate(initType);
+        loadTemplates(initType);
 
         // Set template on command type change
-        $(this).find('.command-type').change(function () {
-            changeTypeTemplate($(this).val());
-        });
+        $(this)
+            .find('.command-type')
+            .change(function () {
+                loadTemplates($(this).val());
+            });
 
         // Link checkbox to input preview
-        $(this).find('.show-command-preview').change(function () {
-            $mainContainer.find('.command-preview').toggle($(this).is(':checked'));
-        });
+        $(this)
+            .find('.show-command-preview')
+            .change(function () {
+                $mainContainer.find('.command-preview').toggle($(this).is(':checked'));
+            });
 
         // Disable main input
         $input.attr('readonly', 'readonly');
+    });
+
+    // Initialize color picker
+    $(scope + " .XiboColorPicker").each(function() {
+        // Create color picker
+        createColorPicker(this);
+    });
+
+    // Handle bootstrap error when a dropdown content renders offscreen
+    $(scope + ' .XiboData').on('shown.bs.dropdown', '.dropdown-menu-container', function(e) {
+        var $dropdownMenuShown = $(this).find('.dropdown-menu.show');
+        setTimeout(function() {
+            if ($dropdownMenuShown.offset().top < 0) {
+                $dropdownMenuShown.offset({
+                    top: 0,
+                    left: $dropdownMenuShown.offset().left
+                });
+            }
+        }, 200);
     });
 }
 
@@ -818,12 +1350,15 @@ function dataTableDraw(e, settings) {
     var target = $("#" + e.target.id);
 
     // Check to see if we have any buttons that are multi-select
-    var enabledButtons = target.find("div.dropdown-menu a[data-commit-url]");
+    var enabledButtons = target.find("div.dropdown-menu a.multi-select-button");
     
     // Check to see if we have tag filter for the current table
     var $tagsElement = target.closest(".XiboGrid").find('.FilterDiv #tags');
 
-    if (enabledButtons.length > 0 || $tagsElement.length > 0) {
+    // Check to see if we have a folder system for this table
+    var $folderController = target.closest(".XiboGrid").find('.folder-controller');
+
+    if (enabledButtons.length > 0) {
 
         var searchByKey = function(array, item, key) {
             // return Object from array where array[object].item matches key
@@ -847,13 +1382,30 @@ function dataTableDraw(e, settings) {
 
         // Get every enabled button
         $(enabledButtons).each(function () {
-            if (!searchByKey(buttons, "id", $(this).data("id")))
-                buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text"), customHandler: $(this).data("customHandler"), customHandlerUrl: $(this).data("customHandlerUrl"), contentIdName: $(this).data('contentIdName'), sortGroup: ($(this).data('sortGroup') != undefined) ? $(this).data('sortGroup') : 0})
+          if (!searchByKey(buttons, 'id', $(this).data('id'))) {
+            buttons.push({
+              id: $(this).data('id'),
+              gridId: e.target.id,
+              text: $(this).data('text'),
+              customHandler: $(this).data('customHandler'),
+              customHandlerUrl: $(this).data('customHandlerUrl'),
+              contentIdName: $(this).data('contentIdName'),
+              sortGroup: ($(this).data('sortGroup') != undefined) ? $(this).data('sortGroup') : 0
+            })
+          }
         });
 
         // Add tag button if exist in the filter ( and user has permissions)
         if($tagsElement.length > 0 && userRoutePermissions.tags == 1) {
-            buttons.push({id: $tagsElement.attr("id"), gridId: e.target.id, text: translations.editTags, contentType: target.data('contentType'), contentIdName: target.data('contentIdName'), customHandler: "XiboMultiSelectTagFormRender", sortGroup: 0});
+          buttons.push({
+            id: $tagsElement.attr('id'),
+            gridId: e.target.id,
+            text: translations.editTags,
+            contentType: target.data('contentType'),
+            contentIdName: target.data('contentIdName'),
+            customHandler: 'XiboMultiSelectTagFormRender',
+            sortGroup: 0
+          });
         }
         
         // Sort buttons by groups/importance
@@ -903,6 +1455,12 @@ function dataTableDraw(e, settings) {
               allRows.addClass('selected');
             }
         });
+    }
+
+    // Move and show folder controller if it's not inside of the table container
+    if ($folderController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .folder-controller').length == 0) {
+        $folderController.appendTo('.dataTables_folder');
+        $folderController.removeClass('d-none').addClass('d-inline-flex');
     }
 
     // Bind any buttons
@@ -1012,30 +1570,16 @@ function dataTableSpacingPreformatted(data, type, row) {
  * @returns {*}
  */
 function dataTableCreateTags(data, type) {
-
-    if (type !== "display")
+    if (type !== "display") {
         return data.tags;
+    }
 
     var returnData = '';
 
-    if(typeof data.tags != undefined && data.tags != null ) {
-        var arrayOfValues = [];
-        var arrayOfTags = data.tags.split(',');
-
-        if(typeof data.tagValues != undefined && data.tagValues != null) {
-            arrayOfValues = data.tagValues.split(',');
-        }
-
+    if (typeof data.tags !== undefined && data.tags != null ) {
         returnData += '<div id="tagDiv">';
-
-        for (var i = 0; i < arrayOfTags.length; i++) {
-            if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '</span></li>'
-            } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
-            }
-        }
-
+        var tagsArray = data.tags.split(',');
+        tagsArray.forEach((element) => returnData += '<li class="btn btn-sm btn-white btn-tag">' + element + '</span></li>')
         returnData += '</div>';
     }
 
@@ -1158,7 +1702,15 @@ function dataTableAddButtons(table, filter, allButtons) {
                                     return data;
                             }
                         }
+                    },
+                  customize: function (win) {
+                    let table = $(win.document.body).find('table');
+                    table.removeClass('nowrap responsive dataTable no-footer dtr-inline');
+                    if (table.find('th').length > 16) {
+                      table.addClass('table-sm');
+                      table.css('font-size', '6px');
                     }
+                  }
                 },
                 {
                     extend: 'csv',
@@ -1333,11 +1885,15 @@ function XiboFormRender(sourceObj, data) {
                 var id = new Date().getTime();
                 
                 // Create the dialog with our parameters
+                var size = 'large';
+                if (sourceObj && typeof sourceObj === 'object') {
+                  size = sourceObj.data().modalSize || 'large';
+                }
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
                         animate: false,
-                        size: 'large'
+                        size: size
                     }).attr("id", id);
 
                 // Store the extra
@@ -1505,20 +2061,6 @@ function XiboFormRender(sourceObj, data) {
                 // make bootstrap happy.
                 if ($('#folder-tree-form-modal').length != 0) {
                     $('#folder-tree-form-modal').remove();
-                }
-
-                // if there is no modal appended to body and we are on a form that needs this modal, then append it
-                if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length && $('#select-folder-button').length) {
-                    // compile tree folder modal and append it to Form
-                    var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                    var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
-
-                    // append to body, instead of the form as it was before to make it more bootstrap friendly
-                    $('body').append(folderTreeModal(treeConfig));
-
-                    $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
-                        $(this).data('bs.modal', null);
-                    });
                 }
 
                 // Call Xibo Init for this form
@@ -1914,20 +2456,13 @@ function XiboMultiSelectTagFormRender(button) {
             // Add match id to the array
             matchIds.push(rowData[elementIdName]);
 
-            var arrayOfValues = [];
-            if(typeof rowData.tagValues != undefined && rowData.tagValues != null) {
-                arrayOfValues = rowData.tagValues.split(',');
-            }
-
             // Add existing tags to the array
             if(['', null].indexOf(rowData.tags) === -1) {
                 var arrayOfTags = rowData.tags.split(',');
 
-                arrayOfTags.forEach(function(tag, index) {
-                    if(existingTags.indexOf(tag) === -1 && (arrayOfValues[index] == undefined || arrayOfValues[index] == 'NULL')) {
+                arrayOfTags.forEach(function(tag) {
+                    if (existingTags.indexOf(tag) === -1) {
                         existingTags.push(tag);
-                    } else if (existingTags.indexOf(tag) === -1 && (arrayOfValues[index] != '' || arrayOfValues[index] != 'NULL')) {
-                        existingTags.push(arrayOfTags[index] + '|' + arrayOfValues[index]);
                     }
                 });
             }
@@ -2391,7 +2926,7 @@ function LoginBox(message) {
 
     // Reload the page (appending the message)
     window.location.href = window.location.href;
-    location.reload(false);
+    location.reload();
 }
 
 /**
@@ -2565,10 +3100,16 @@ function makePagedSelect(element, parent) {
                 var $element = element;
 
                 $.each(data.data, function(index, el) {
-                    results.push({
+                    var result = {
                         "id": el[$element.data("idProperty")],
                         "text": el[$element.data("textProperty")]
-                    });
+                    };
+
+                    if ($element.data("thumbnail") !== undefined) {
+                        result.thumbnail = el[$element.data("thumbnail")];
+                    }
+
+                    results.push(result);
                 });
 
                 var page = params.page || 1;
@@ -2581,6 +3122,18 @@ function makePagedSelect(element, parent) {
                     }
                 };
             }
+        },
+        templateResult: function(state) {
+            var stateText = '';
+
+            // Add thumbnail if available
+            if (state.thumbnail) {
+                stateText += "<span class='option-thumbnail mr-3'><img style='width: 100px; height: 60px; object-fit: cover;' src='" + state.thumbnail + "' /></span>";
+            }
+
+            // Add option text
+            stateText += "<span class='option-text'>" + state.text + "</span></span>";
+            return $(stateText);
         }
     });
 
@@ -2622,15 +3175,30 @@ function makeLocalSelect(element, parent) {
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
+
+            var testElementFilter = function (filter, elementFilterClassName) {
+                var elementFilterClass = $(data.element).data()[elementFilterClassName];
+
+                // Get element class array ( one or more elements split by comma)
+                var elementClassArray = (elementFilterClass != undefined ) ? elementFilterClass.replace(' ', '').split(',') : [];
+
+                // If filter exists and it's not in one of the element filters, return empty data
+                return (filter != undefined && filter != '' && !elementClassArray.includes(filter));
+            };
+
             // If filterClass is defined, try to filter the elements by it
             var mainFilterClass = $(data.element.parentElement).data().filterClass;
 
-            // Get element class array ( one or more elements split by comma)
-            var elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
-
-            // If filter exists and it's not in one of the element filters, return empty data
-            if(mainFilterClass != undefined && mainFilterClass != '' && !elementClassArray.includes(mainFilterClass)) {
-                return null;
+            if(Array.isArray(mainFilterClass)) {
+                for(var index = 0;index < mainFilterClass.length; index++) {
+                    if (testElementFilter(mainFilterClass[index], 'filter' + index + 'Class')) {
+                        return null
+                    }
+                }
+            } else {
+                if (testElementFilter(mainFilterClass, 'filterClass')) {
+                    return null
+                }
             }
 
             // If there are no search terms, return all of the data
@@ -2658,7 +3226,7 @@ function makeLocalSelect(element, parent) {
             // Find by text
             for(var index = 0;index < queryText.length; index++) {
                 var text = queryText[index];
-                if(text != '' && data.text.indexOf(text) > -1) {
+                if(text != '' && data.text.toUpperCase().indexOf(text.toUpperCase()) > -1) {
                     return data;
                 }
             }
@@ -2666,7 +3234,7 @@ function makeLocalSelect(element, parent) {
             // Find by tag ( data-tag )
             for(var index = 0;index < queryTags.length;index++) {
                 var tag = queryTags[index];
-                if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').indexOf(tag) > -1) {
+                if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').toUpperCase().indexOf(tag.toUpperCase()) > -1) {
                     return data;
                 }
             }
@@ -2771,7 +3339,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             altInputClass: 'datePickerHelper ' + $element.attr('class'),
             altFormat: displayFormat,
             dateFormat: baseFormat,
-            locale: language,
+            locale: (language != 'en-GB') ? language : 'default',
             getWeek: function(dateObj) {
                 return moment(dateObj).week();
             },
@@ -2865,21 +3433,38 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, table, isForm, ttl)
+function initJsTreeAjax(container, id, isForm, ttl)
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
     ttl = (typeof ttl == 'undefined') ? false : ttl;
     
+
+    // if there is no modal appended to body and we are on a form that needs this modal, then append it
+    if ($('#folder-tree-form-modal').length === 0 && $('#' + id + ' #folderId').length && $('#select-folder-button').length) {
+        // compile tree folder modal and append it to Form
+        var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+        var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+
+        // append to body, instead of the form as it was before to make it more bootstrap friendly
+        $('body').append(folderTreeModal(treeConfig));
+
+        $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+            // Fix for 2nd/overlay modal
+            $('.modal:visible').length && $(document.body).addClass('modal-open');
+            $(this).data('bs.modal', null);
+        });
+    }
+
     var state = {};
     if ($(container).length) {
 
         // difference here is, that for grid trees we don't set ttl at all
         // add/edit forms have short ttl, multi select will be cached for couple of minutes
         if (isForm) {
-            state = {"key" : table + "_folder_tree", "ttl": ttl};
+            state = {"key" : id + "_folder_tree", "ttl": ttl};
         } else {
-            state = {"key" : table + "_folder_tree"}
+            state = {"key" : id + "_folder_tree"}
         }
 
         $(container).jstree({
@@ -2895,7 +3480,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
                     var buttonPermissions = null;
 
                     $.ajax({
-                        url: "/folders/contextButtons/"+$node.id,
+                        url: foldersUrl + "/contextButtons/"+$node.id,
                         method: "GET",
                         dataType: "json",
                         success: function (data) {
@@ -2942,7 +3527,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
                                     "label": translations.folderTreeShare,
                                     "_class": "XiboFormRender",
                                     "action": function (obj) {
-                                        XiboFormRender('/user/permissions/form/Folder/'+$node.id);
+                                        XiboFormRender(permissionsUrl.replace(":entity", "form/Folder/") + $node.id);
                                     }
                                 }
                             }
@@ -2967,16 +3552,36 @@ function initJsTreeAjax(container, table, isForm, ttl)
                     return true;
                 },
                 'data' : {
-                    "url": "/folders"
+                    "url": foldersUrl
                 }
             }
         });
 
         $(container).on('ready.jstree', function(e, data) {
+            // depending on the state of folder tree, hide/show as needed when we load the grid page
+            if (localStorage.getItem("hideFolderTree") !== undefined &&
+                localStorage.getItem("hideFolderTree") !== null &&
+                JSON.parse(localStorage.getItem("hideFolderTree")) !== $('#grid-folder-filter').is(":hidden")
+            ) {
+                adjustDatatableSize(false);
+            }
+            // if node has children and User does not have suitable permissions, disable the node
+            // If node does NOT have children and User does not have suitable permissions, hide the node completely
+            $.each(data.instance._model.data, function(index, e) {
+                if (e.li_attr !== undefined && e.li_attr.disabled) {
+                    var node = $(container).jstree().get_node(e.id);
+                    if (e.children.length === 0) {
+                        $(container).jstree().hide_node(node);
+                    } else {
+                        $(container).jstree().disable_node(node);
+                    }
+                }
+            });
+
             // if we are on the form, we need to select tree node (currentWorkingFolder)
             // this is set/passed to twigs on render time
             if (isForm) {
-                var folderIdInputSelector = '#'+table+' #folderId';
+                var folderIdInputSelector = '#'+id+' #folderId';
 
                 // for upload forms
                 if ($(folderIdInputSelector).length === 0) {
@@ -3005,7 +3610,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
             dataObject['text'] = data.text;
 
             $.ajax({
-                url: "/folders/"+folderId,
+                url: foldersUrl + "/" + folderId,
                 method: "PUT",
                 dataType: "json",
                 data: dataObject,
@@ -3020,16 +3625,18 @@ function initJsTreeAjax(container, table, isForm, ttl)
 
         $(container).on("create_node.jstree", function (e, data) {
 
+            var node = data.node;
+            node.text = translations.folderNew;
+
             var dataObject = {};
             dataObject['parentId'] = data.parent;
             dataObject['text'] = data.node.text;
-            var node = data.node;
 
             // when we create a new node, by default it will get jsTree default id
             // we need to change it to the folderId we have in our folder table
             // rename happens just after add, therefore this needs to be set as soon as possible
             $.ajax({
-                url: "/folders",
+                url: foldersUrl,
                 method: "POST",
                 dataType: "json",
                 data: dataObject,
@@ -3053,7 +3660,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
             // delete has a check built-in, if it fails to remove node, it will show suitable message in toast
             // and reload the tree
             $.ajax({
-                url: "/folders/"+folderId,
+                url: foldersUrl + "/"+folderId,
                 method: "DELETE",
                 dataType: "json",
                 data: dataObject,
@@ -3076,7 +3683,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
 
         $(container).on("changed.jstree", function (e, data) {
             var selectedFolderId = data.selected[0];
-            var folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
+            var folderIdInputSelector = (isForm) ? '#'+id+' #folderId' : '#folderId';
             var node = $(container).jstree("get_selected", true);
 
             // for upload and multi select forms.
@@ -3084,30 +3691,28 @@ function initJsTreeAjax(container, table, isForm, ttl)
                 folderIdInputSelector = '#formFolderId';
             }
 
+            if (selectedFolderId !== undefined && isForm === false) {
+                $("#breadcrumbs").text($(container).jstree().get_path(node[0], ' > ')).hide();
+                $('#folder-tree-clear-selection-button').prop('checked', false)
+            }
+
             // on grids, depending on the selected folder, we need to handle the breadcrumbs
             if ($(folderIdInputSelector).val() != selectedFolderId && isForm === false) {
-
                 if (selectedFolderId !== undefined) {
-                    $("#breadcrumbs").text($(container).jstree().get_path(node[0], ' > ')).hide();
-
-                    $('#folder-tree-clear-selection-button').prop('checked', false)
+                    $(folderIdInputSelector).val(selectedFolderId).trigger('change');
                 } else {
                     $("#breadcrumbs").text('');
                     $('#folder-tree-clear-selection-button').prop('checked', true)
                 }
-
-                $(folderIdInputSelector).val(selectedFolderId);
-                $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
             }
 
             // on form we always want to show the breadcrumbs to current and selected folder
-            if (isForm && $(folderIdInputSelector).val() != selectedFolderId && selectedFolderId !== undefined) {
+            if (isForm && selectedFolderId !== undefined) {
                 $(folderIdInputSelector).val(selectedFolderId).trigger('change');
                 if ($('#selectedFormFolder').length) {
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
                 }
             }
-
         });
 
         // on froms that have more than one modal active, this is needed to not confuse bootstrap
@@ -3121,44 +3726,47 @@ function initJsTreeAjax(container, table, isForm, ttl)
 
         // this handler for the search everywhere checkbox on grid pages
         $("#folder-tree-clear-selection-button").on('click', function() {
-
             if ($("#folder-tree-clear-selection-button").is(':checked')) {
-                $(this).prop('checked', true);
                 $(container).jstree("deselect_all");
+                $('.XiboFilter').find('#folderId').val(null).trigger('change');
             } else {
-                $(this).prop('checked', false);
                 $(container).jstree('select_node', 1)
             }
-
         });
 
         // this is handler for the hamburger button on grid pages
-        $('#folder-tree-select-folder-button').off("click").on('click', function() {
+        $('#folder-tree-select-folder-button').off("click").on('click', adjustDatatableSize)
+    }
+}
 
-            // Shrink table to ease animation
-            if($('#grid-folder-filter').is(":hidden")) {
-                $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+function adjustDatatableSize (reload) {
+    reload = (typeof reload == 'undefined') ? true : reload;
+    // Shrink table to ease animation
+    if($('#grid-folder-filter').is(":hidden")) {
+        $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+    }
+
+    $('#grid-folder-filter').toggle('fast', function() {
+        if ($(this).is(":hidden")) {
+            if (!$("#folder-tree-clear-selection-button").is(':checked')) {
+                // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
+                $("#breadcrumbs").show('slow');
             }
 
-            $('#grid-folder-filter').toggle('fast', function() {
-                if ($(this).is(":hidden")) {
+            // if the folder tree is hidden, then make it so datatable can take whole available width
+            $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
+        } else {
+            // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
+            $("#breadcrumbs").hide('slow');
+        }
 
-                    if (!$("#folder-tree-clear-selection-button").is(':checked')) {
-                        // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
-                        $("#breadcrumbs").show('slow');
-                    }
-
-                    // if the folder tree is hidden, then make it so datatable can take whole available width
-                    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
-                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
-                } else {
-                    // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
-                    $("#breadcrumbs").hide('slow');
-                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
-                }
-            });
-        })
-    }
+        if (reload) {
+            $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
+        }
+        // set current state of the folder tree visibility to local storage,
+        // this is then used to hide/show the tree when User navigates to a different grid or reloads this page
+        localStorage.setItem("hideFolderTree", JSON.stringify($('#grid-folder-filter').is(":hidden")));
+    });
 }
 
 function disableFolders () {
@@ -3223,8 +3831,8 @@ function createMiniLayoutPreview(previewUrl) {
         $layoutPreview.toggleClass('large');
 
         // Change icon based on size state
-        $(this).toggleClass('fa-minus-square', $layoutPreview.hasClass('large'));
-
+        $(this).toggleClass('fa-arrow-circle-down', $layoutPreview.hasClass('large'));
+        $(this).toggleClass('fa-arrow-circle-up', !$layoutPreview.hasClass('large'));
         // Re-show play button
         $layoutPreview.find('#playBtn').show();
     });
@@ -3246,5 +3854,31 @@ function formatBytes(size, precision){
 
     const c=0 > precision ? 0 : precision, d = Math.floor(Math.log(size)/Math.log(1024));
     return parseFloat((size/Math.pow(1024,d)).toFixed(c))+" "+["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"][d]
+}
+
+/**
+ * Create bootstrap colorpicker
+ * @param {object} element jquery object or CSS selector
+ * @param {object} options bootstrap-colorpicker options (https://itsjavi.com/bootstrap-colorpicker/v2/)
+ */
+function createColorPicker(element, options) {
+    var $self = $(element);
+
+    // Disable autocomplete
+    $self.attr('autocomplete', 'off');
+    
+    $self.colorpicker(Object.assign({
+        format: "hex"
+    }, options));
+}
+
+/**
+ * Destroy bootstrap colorpicker
+ * @param {object} element jquery object or CSS selector
+ */
+ function destroyColorPicker(element) {
+    var $self = $(element);
+
+    $self.colorpicker('destroy');
 }
 

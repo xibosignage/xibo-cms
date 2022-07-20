@@ -220,6 +220,7 @@ class Hls extends ModuleWidget
             ->appendJavaScriptFile('vendor/hls/hls.min.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.min.js')
+            ->appendJavaScript('xiboIC.lockAllInteractions();')
             ->appendJavaScript('
                 $(document).ready(function() {
             
@@ -237,7 +238,7 @@ class Hls extends ModuleWidget
                         hls.attachMedia(video);
                         hls.on(Hls.Events.MANIFEST_PARSED, function() {
                           // Play only when the visible flag is set to true
-                          const runOnVisible = function() { video.play(); };
+                          var runOnVisible = function() { video.play(); };
                           (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                         });
                         hls.on(Hls.Events.ERROR, function (event, data) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Middleware;
-
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -33,7 +31,7 @@ use Slim\Routing\RouteContext;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Environment;
-use Xibo\Helper\Translate;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Actions
@@ -54,7 +52,6 @@ class Actions implements Middleware
     {
         $app = $this->app;
         $container = $app->getContainer();
-        $container->get('configService')->setDependencies($container->get('store'), $container->get('rootUri'));
 
         // Get the current route pattern
         $routeContext = RouteContext::fromRequest($request);
@@ -64,20 +61,37 @@ class Actions implements Middleware
 
         // Process Actions
         if (!Environment::migrationPending() && $container->get('configService')->getSetting('DEFAULTS_IMPORTED') == 0) {
-
             $folder = $container->get('configService')->uri('layouts', true);
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {
                     try {
                         /** @var \Xibo\Entity\Layout $layout */
-                        $layout = $container->get('layoutFactory')->createFromZip($folder . '/' . $file, null,
-                            $container->get('userFactory')->getSystemUser()->getId(), false, false, true, false,
-                            true, $container->get('\Xibo\Controller\Library'), null, $routeContext->getRouteParser());
+                        $layout = $container->get('layoutFactory')->createFromZip(
+                            $folder . '/' . $file,
+                            null,
+                            $container->get('userFactory')->getSystemUser()->getId(),
+                            false,
+                            false,
+                            true,
+                            false,
+                            true,
+                            $container->get('dataSetFactory'),
+                            null,
+                            $routeContext->getRouteParser(),
+                            $container->get('mediaService'),
+                            1
+                        );
                         $layout->save([
                             'audit' => false,
                             'import' => true
                         ]);
+
+                        try {
+                            $container->get('layoutFactory')->getById($container->get('configService')->getSetting('DEFAULT_LAYOUT'));
+                        } catch (NotFoundException $exception) {
+                            $container->get('configService')->changeSetting('DEFAULT_LAYOUT', $layout->layoutId);
+                        }
                     } catch (\Exception $e) {
                         $container->get('logService')->error('Unable to import layout: ' . $file . '. E = ' . $e->getMessage());
                         $container->get('logService')->debug($e->getTraceAsString());
@@ -89,7 +103,7 @@ class Actions implements Middleware
             $container->get('configService')->changeSetting('DEFAULTS_IMPORTED', 1);
 
             // Install files
-            $container->get('\Xibo\Controller\Library')->installAllModuleFiles();
+            $container->get('\Xibo\Controller\Module')->installAllModuleFiles();
         }
 
         // Do not proceed unless we have completed an upgrade
@@ -132,13 +146,6 @@ class Actions implements Middleware
                             $extraNotifications++;
                         }
                     }
-                }
-
-                // Language match?
-                if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
-                    $notifications[] = $factory->create(__('Your requested language %s could not be loaded.',
-                        Translate::getRequestedLanguage()));
-                    $extraNotifications++;
                 }
 
                 // User notifications

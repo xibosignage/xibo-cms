@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,10 +28,7 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
@@ -108,6 +105,18 @@ class DisplayGroup implements \JsonSerializable
     public $dynamicCriteriaTags;
 
     /**
+     * @SWG\Property(description="Flag indicating whether to filter by exact Tag match")
+     * @var int
+     */
+    public $dynamicCriteriaExactTags;
+
+    /**
+     * @SWG\Property(description="Which logical operator should be used when filtering by multiple Tags? OR|AND")
+     * @var string
+     */
+    public $dynamicCriteriaLogicalOperator;
+
+    /**
      * @SWG\Property(
      *  description="The UserId who owns this display group",
      * )
@@ -120,7 +129,6 @@ class DisplayGroup implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The display bandwidth limit")
@@ -152,24 +160,13 @@ class DisplayGroup implements \JsonSerializable
      */
     public $permissionsFolderId;
 
-    /**
-     * Minimum save options
-     * @var array
-     */
-    public static $saveOptionsMinimum = [
-        'validate' => false,
-        'saveGroup' => true,
-        'manageLinks' => false,
-        'manageDisplayLinks' => false
-    ];
-
     // Child Items the Display Group is linked to
-    private $displays = [];
+    public $displays = [];
+    public $media = [];
+    public $layouts = [];
+    public $events = [];
     private $displayGroups = [];
-    private $layouts = [];
-    private $media = [];
     private $permissions = [];
-    private $events = [];
     private $unassignTags = [];
     private $jsonInclude = ['displayGroupId', 'displayGroup'];
 
@@ -209,21 +206,6 @@ class DisplayGroup implements \JsonSerializable
     private $permissionFactory;
 
     /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
-    /**
      * @var TagFactory
      */
     private $tagFactory;
@@ -232,39 +214,34 @@ class DisplayGroup implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param DisplayGroupFactory $displayGroupFactory
      * @param PermissionFactory $permissionFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $displayGroupFactory, $permissionFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $displayGroupFactory, $permissionFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->displayGroupFactory = $displayGroupFactory;
         $this->permissionFactory = $permissionFactory;
         $this->tagFactory = $tagFactory;
     }
 
+    public function setDisplayFactory(DisplayFactory $displayFactory)
+    {
+        $this->displayFactory = $displayFactory;
+    }
+
     public function __clone()
     {
         $this->displayGroupId = null;
-    }
+        $this->originalDisplayGroups = [];
+        $this->loaded = false;
 
-    /**
-     * Set child object dependencies
-     * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
-    {
-        $this->displayFactory = $displayFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        return $this;
+        if ($this->isDynamic) {
+            $this->clearDisplays()->clearDisplayGroups();
+        }
     }
 
     /**
@@ -328,6 +305,36 @@ class DisplayGroup implements \JsonSerializable
         $this->assignDisplay($display);
     }
 
+    public function clearDisplays(): DisplayGroup
+    {
+        $this->displays = [];
+        return $this;
+    }
+
+    public function clearDisplayGroups(): DisplayGroup
+    {
+        $this->displayGroups = [];
+        return $this;
+    }
+
+    public function clearTags(): DisplayGroup
+    {
+        $this->tags = [];
+        return $this;
+    }
+
+    public function clearLayouts(): DisplayGroup
+    {
+        $this->layouts = [];
+        return $this;
+    }
+
+    public function clearMedia(): DisplayGroup
+    {
+        $this->media = [];
+        return $this;
+    }
+
     /**
      * Set the Media Status to Incomplete
      * @param int[] $displayIds
@@ -358,8 +365,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignDisplay($display)
     {
-        $this->load();
-
         $found = false;
         foreach ($this->displays as $existingDisplay) {
             if ($existingDisplay->getId() === $display->getId()) {
@@ -379,8 +384,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignDisplay($display)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->displays);
 
@@ -404,8 +407,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignDisplayGroup($displayGroup)
     {
-        $this->load();
-
         if (!in_array($displayGroup, $this->displayGroups))
             $this->displayGroups[] = $displayGroup;
     }
@@ -417,8 +418,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignDisplayGroup($displayGroup)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->displayGroups);
 
@@ -442,8 +441,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignMedia($media)
     {
-        $this->load();
-
         if (!in_array($media, $this->media)) {
             $this->media[] = $media;
 
@@ -459,8 +456,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignMedia($media)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->media);
 
@@ -484,8 +479,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignLayout($layout)
     {
-        $this->load();
-
         if (!in_array($layout, $this->layouts)) {
             $this->layouts[] = $layout;
 
@@ -501,8 +494,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignLayout($layout)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->layouts);
 
@@ -544,26 +535,13 @@ class DisplayGroup implements \JsonSerializable
      * @return $this
      * @throws NotFoundException
      */
-    public function assignTag($tag)
+    public function assignTag($tag): DisplayGroup
     {
         $this->getLog()->debug('Assigning tag: ' . $tag->tag);
 
         $this->load();
-
-        if ($this->tags != [$tag]) {
-
-            if (!in_array($tag, $this->tags)) {
-                $this->tags[] = $tag;
-            } else {
-                foreach ($this->tags as $currentTag) {
-                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
-                        $this->tags[] = $tag;
-                    }
-                }
-            }
-        } else {
-            $this->getLog()->debug('No Tags to assign');
-        }
+        $this->handleTagAssign($tag);
+        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -587,7 +565,7 @@ class DisplayGroup implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
+        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -607,12 +585,12 @@ class DisplayGroup implements \JsonSerializable
                 return $a->tagId - $b->tagId;
             });
 
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
 
             // Replace the arrays
             $this->tags = $tags;
 
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
         } else {
             $this->getLog()->debug('Tags were not changed');
         }
@@ -629,27 +607,18 @@ class DisplayGroup implements \JsonSerializable
             'loadTags' => true
         ], $options);
 
-        if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
+        if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0) {
             return;
-
-        if ($this->permissionFactory == null || $this->displayFactory == null || $this->displayGroupFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null)
-            throw new \RuntimeException('Cannot load without first calling setChildObjectDependencies');
+        }
 
         $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->displayGroupId);
 
-        $this->displays = $this->displayFactory->getByDisplayGroupId($this->displayGroupId);
-
         $this->displayGroups = $this->displayGroupFactory->getByParentId($this->displayGroupId);
 
-        $this->layouts = $this->layoutFactory->getByDisplayGroupId($this->displayGroupId);
-
-        $this->media = $this->mediaFactory->getByDisplayGroupId($this->displayGroupId);
-
-        $this->events = $this->scheduleFactory->getByDisplayGroupId($this->displayGroupId);
-
         // Load all tags
-        if ($options['loadTags'])
+        if ($options['loadTags']) {
             $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
+        }
 
         // Set the originals
         $this->originalDisplayGroups = $this->displayGroups;
@@ -765,12 +734,13 @@ class DisplayGroup implements \JsonSerializable
             }
 
         } else if ($this->isDynamic == 1 && $options['manageDynamicDisplayLinks']) {
-            $this->manageDisplayLinks(true);
+            $this->manageDisplayLinks();
         }
 
         // Set media incomplete if necessary
-        if ($this->notifyRequired)
+        if ($this->notifyRequired) {
             $this->notify();
+        }
     }
 
     /**
@@ -840,8 +810,8 @@ class DisplayGroup implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `dynamicCriteriaExactTags`, `dynamicCriteriaLogicalOperator`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :dynamicCriteriaExactTags, :dynamicCriteriaLogicalOperator, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
@@ -849,6 +819,8 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
+            'dynamicCriteriaExactTags' => $this->dynamicCriteriaExactTags ?? 0,
+            'dynamicCriteriaLogicalOperator' => $this->dynamicCriteriaLogicalOperator ?? 'OR',
             'userId' => $this->userId,
             'createdDt' => $time,
             'modifiedDt' => $time,
@@ -874,6 +846,8 @@ class DisplayGroup implements \JsonSerializable
               `isDynamic` = :isDynamic,
               `dynamicCriteria` = :dynamicCriteria,
               `dynamicCriteriaTags` = :dynamicCriteriaTags,
+              `dynamicCriteriaExactTags` = :dynamicCriteriaExactTags,
+              `dynamicCriteriaLogicalOperator` = :dynamicCriteriaLogicalOperator,
               `bandwidthLimit` = :bandwidthLimit,
               `userId` = :userId,
               `modifiedDt` = :modifiedDt,
@@ -887,6 +861,8 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
+            'dynamicCriteriaExactTags' => $this->dynamicCriteriaExactTags ?? 0,
+            'dynamicCriteriaLogicalOperator' => $this->dynamicCriteriaLogicalOperator ?? 'OR',
             'bandwidthLimit' => $this->bandwidthLimit,
             'userId' => $this->userId,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
@@ -916,6 +892,8 @@ class DisplayGroup implements \JsonSerializable
             $this->displays = $this->displayFactory->query(null, [
                 'display' => $this->dynamicCriteria,
                 'tags' => $this->dynamicCriteriaTags,
+                'exactTags' => $this->dynamicCriteriaExactTags,
+                'logicalOperator' => $this->dynamicCriteriaLogicalOperator,
                 'userCheckUserId' => $this->getOwnerId(),
                 'useRegexForName' => true
             ]);
@@ -952,7 +930,11 @@ class DisplayGroup implements \JsonSerializable
         }
 
         // Unlink
-        $this->unlinkDisplays();
+        //  we never unlink from a display specific display group, unless we're deleting which does not call
+        //  manage display links.
+        if ($this->isDisplaySpecific == 0) {
+            $this->unlinkDisplays();
+        }
 
         // Don't do it again
         $this->notifyRequired = false;

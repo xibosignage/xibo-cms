@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="widgetDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("module.widget.delete", {id: module.widget.widgetId}) }}">
+            <form id="widgetDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("module.widget.delete", {id: widgetId}) }}">
                 {% set message %}{% trans "Are you sure you want to remove this widget?" %}{% endset %}
                 {{ forms.message(message) }}
 
@@ -47,6 +47,10 @@
                 {% if module.getModule().regionSpecific == 0 and module.widget.mediaIds|length > 0 %}
                     {% set message %}{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If the Library item should be deleted then please do so from the Library page." %}{% endset %}
                     {{ forms.message(message, "alert alert-info") }}
+                {% endif %}
+
+                {% if error %}
+                    <p class="alert alert-danger">{{ "There is an error the module used by your widget, we advise that you delete it."|trans }}</p>
                 {% endif %}
             </form>
         </div>

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Tag;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -38,22 +35,11 @@ use Xibo\Support\Exception\NotFoundException;
 class TagFactory extends BaseFactory
 {
     /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
-    /**
      * @return Tag
      */
     public function createEmpty()
     {
-        return new Tag($this->getStore(), $this->getLog(), $this);
+        return new Tag($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
     }
 
     /**
@@ -62,10 +48,10 @@ class TagFactory extends BaseFactory
      */
     public function create($name)
     {
-       $tag = $this->createEmpty();
-       $tag->tag = $name;
+        $tag = $this->createEmpty();
+        $tag->tag = trim($name);
 
-       return $tag;
+        return $tag;
     }
 
     /**
@@ -383,10 +369,9 @@ class TagFactory extends BaseFactory
         }
 
         //isSystem filter, by default hide tags with isSystem flag
-        if ($sanitizedFilter->getCheckbox('isSystem') === 1) {
-            $body .= " AND `tag`.isSystem = 1 ";
-        } else {
-            $body .= " AND `tag`.isSystem = 0 ";
+        if ($sanitizedFilter->getInt('allTags') !== 1) {
+            $body .= ' AND `tag`.isSystem = :isSystem ';
+            $params['isSystem'] = $sanitizedFilter->getCheckbox('isSystem');
         }
 
         // isRequired filter, by default hide tags with isSystem flag
@@ -406,7 +391,7 @@ class TagFactory extends BaseFactory
 
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -424,23 +409,5 @@ class TagFactory extends BaseFactory
             $this->_countLast = intval($results[0]['total']);
         }
         return $entries;
-    }
-
-    public function getTagsWithValues($entity)
-    {
-        $tags = '';
-        $arrayOfTags = array_filter(explode(',', $entity->tags));
-        $arrayOfTagValues = array_filter(explode(',', $entity->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
-        return $tags;
     }
 }

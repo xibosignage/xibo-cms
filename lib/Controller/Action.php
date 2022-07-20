@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,19 +24,12 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\ApplicationState;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\HelpServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -67,23 +60,14 @@ class Action  extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param ApplicationState $state
-     * @param User $user
-     * @param HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param ActionFactory $actionFactory
      * @param LayoutFactory $layoutFactory
      * @param RegionFactory $regionFactory
      * @param WidgetFactory $widgetFactory
      * @param ModuleFactory $moduleFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $actionFactory, $layoutFactory, $regionFactory, $widgetFactory, $moduleFactory, Twig $view)
+    public function __construct($actionFactory, $layoutFactory, $regionFactory, $widgetFactory, $moduleFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->actionFactory = $actionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->regionFactory = $regionFactory;

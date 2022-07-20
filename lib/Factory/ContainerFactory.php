@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -29,13 +29,18 @@ use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Xibo\Dependencies\Controllers;
+use Xibo\Dependencies\Factories;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
-use Xibo\Middleware\State;
+use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\ConfigService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
+use Xibo\Service\JwtService;
+use Xibo\Service\MediaService;
 use Xibo\Service\ModuleService;
 use Xibo\Storage\MySqlTimeSeriesStore;
 use Xibo\Storage\PdoStorageService;
@@ -65,21 +70,25 @@ class ContainerFactory
 
         $containerBuilder->addDefinitions([
             'basePath' => function (ContainerInterface $c) {
-                $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-                $uri = (string) parse_url('http://a' . $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-                if (stripos($uri, $_SERVER['SCRIPT_NAME']) === 0) {
-                    return $_SERVER['SCRIPT_NAME'];
-                } else if ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
-                    return $scriptDir;
-                } else {
+                // Server params
+                $scriptName = $_SERVER['SCRIPT_NAME'] ?? ''; // <-- "/foo/index.php"
+                $requestUri = $_SERVER['REQUEST_URI'] ?? ''; // <-- "/foo/bar?test=abc" or "/foo/index.php/bar?test=abc"
+
+                // Physical path
+                if (empty($scriptName) || empty($requestUri)) {
                     return '';
+                } else if (strpos($requestUri, $scriptName) !== false) {
+                    $physicalPath = $scriptName; // <-- Without rewriting
+                } else {
+                    $physicalPath = str_replace('\\', '', dirname($scriptName)); // <-- With rewriting
                 }
+                return rtrim($physicalPath, '/'); // <-- Remove trailing slashes
             },
             'rootUri' => function (ContainerInterface $c) {
                 // Work out whether we're in a folder, and what our base path is relative to that folder
                 // Static source, so remove index.php from the path
                 // this should only happen if rewrite is disabled
-                $basePath = str_replace('/index.php', '', $c->get('basePath'));
+                $basePath = str_replace('/index.php', '', $c->get('basePath') . '/');
 
                 // Replace out all of the entrypoints to get back to the root
                 $basePath = str_replace('/api/authorize', '', $basePath);
@@ -104,7 +113,7 @@ class ContainerFactory
                     PROJECT_ROOT . '/reports',
                     PROJECT_ROOT . '/custom'
                 ], [
-                    'cache' => PROJECT_ROOT . '/cache'
+                    'cache' => Environment::isDevMode() ? false : PROJECT_ROOT . '/cache'
                 ]);
                 $view->addExtension(new TransExtension());
                 $view->addExtension(new ByteFormatterTwigExtension());
@@ -112,13 +121,13 @@ class ContainerFactory
 
                 return $view;
             },
-            'sanitizerService' => function(ContainerInterface $c) {
+            'sanitizerService' => function (ContainerInterface $c) {
                 return new SanitizerService();
             },
-            'store' => function(ContainerInterface $c) {
+            'store' => function (ContainerInterface $c) {
                 return (new PdoStorageService($c->get('logService')))->setConnection();
             },
-            'timeSeriesStore' => function(ContainerInterface $c) {
+            'timeSeriesStore' => function (ContainerInterface $c) {
                 if ($c->get('configService')->timeSeriesStore == null) {
                     $timeSeriesStore = new MySqlTimeSeriesStore();
                 } else {
@@ -138,13 +147,10 @@ class ContainerFactory
                     )
                     ->setStore($c->get('store'));
             },
-            'state' => function() {
+            'state' => function () {
                 return new ApplicationState();
             },
-            'dispatcher' => function() {
-                return new EventDispatcher();
-            },
-            'moduleService' => function(ContainerInterface $c) {
+            'moduleService' => function (ContainerInterface $c) {
                 return new ModuleService(
                     $c->get('store'),
                     $c->get('pool'),
@@ -154,13 +160,14 @@ class ContainerFactory
                     $c->get('dispatcher')
                 );
             },
-            'configService' => function(ContainerInterface $c) {
+            'configService' => function (ContainerInterface $c) {
                 return ConfigService::Load($c, PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
                 return new User(
                     $c->get('store'),
                     $c->get('logService'),
+                    $c->get('dispatcher'),
                     $c->get('configService'),
                     $c->get('userFactory'),
                     $c->get('permissionFactory'),
@@ -168,25 +175,25 @@ class ContainerFactory
                     $c->get('applicationScopeFactory')
                 );
             },
-            'helpService' => function(ContainerInterface $c) {
+            'helpService' => function (ContainerInterface $c) {
                 return new HelpService(
                     $c->get('store'),
                     $c->get('configService'),
                     $c->get('pool'),
-                    '/'
+                    $c->get('rootUri')
                 );
             },
-            'pool' => function(ContainerInterface $c) {
+            'pool' => function (ContainerInterface $c) {
                 $drivers = [];
-
-                $c->get('configService')->setDependencies($c->get('store'), $c->get('rootUri'));
 
                 if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
                     $drivers = $c->get('configService')->getCacheDrivers();
                 } else {
                     // File System Driver
                     $realPath = realpath($c->get('configService')->getSetting('LIBRARY_LOCATION'));
-                    $cachePath = ($realPath) ? $realPath . '/cache/' : $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'cache/';
+                    $cachePath = ($realPath)
+                        ? $realPath . '/cache/'
+                        : $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'cache/';
 
                     $drivers[] = new \Stash\Driver\FileSystem(['path' => $cachePath]);
                 }
@@ -200,20 +207,59 @@ class ContainerFactory
                 $c->get('configService')->setPool($pool);
                 return $pool;
             },
-            'imageProcessingService' => function(ContainerInterface $c) {
+            'imageProcessingService' => function (ContainerInterface $c) {
                 $imageProcessingService = new ImageProcessingService();
                 $imageProcessingService->setDependencies(
                     $c->get('logService')
                 );
                 return $imageProcessingService;
             },
-            'httpCache' => function() {
+            'httpCache' => function () {
                 return new \Xibo\Helper\HttpCacheProvider();
+            },
+            'mediaService' => function (ContainerInterface $c) {
+                $mediaSevice = new MediaService(
+                    $c->get('configService'),
+                    $c->get('logService'),
+                    $c->get('store'),
+                    $c->get('sanitizerService'),
+                    $c->get('pool'),
+                    $c->get('mediaFactory')
+                );
+                $mediaSevice->setDispatcher($c->get('dispatcher'));
+                return $mediaSevice;
+            },
+            'ControllerBaseDependenciesService' => function (ContainerInterface $c) {
+                $controller = new BaseDependenciesService();
+                $controller->setLogger($c->get('logService'));
+                $controller->setSanitizer($c->get('sanitizerService'));
+                $controller->setState($c->get('state'));
+                $controller->setUser($c->get('user'));
+                $controller->setHelp($c->get('helpService'));
+                $controller->setConfig($c->get('configService'));
+                $controller->setView($c->get('view'));
+                $controller->setDispatcher($c->get('dispatcher'));
+                return $controller;
+            },
+            'RepositoryBaseDependenciesService' => function (ContainerInterface $c) {
+                $repository = new BaseDependenciesService();
+                $repository->setLogger($c->get('logService'));
+                $repository->setSanitizer($c->get('sanitizerService'));
+                $repository->setStore($c->get('store'));
+                $repository->setDispatcher($c->get('dispatcher'));
+                return $repository;
+            },
+            'dispatcher' => function (ContainerInterface $c) {
+                return new EventDispatcher();
+            },
+            'jwtService' => function (ContainerInterface $c) {
+                return (new JwtService())
+                    ->useKeys($c->get('configService')->getApiKeyDetails());
             }
         ]);
 
-        $containerBuilder->addDefinitions(State::registerControllersWithDi());
-        $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
+        $containerBuilder->addDefinitions(Controllers::registerControllersWithDi());
+        $containerBuilder->addDefinitions(Factories::registerFactoriesWithDi());
 
         // Should we compile the container?
         /*if (!Environment::isDevMode()) {

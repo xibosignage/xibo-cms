@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,9 +24,6 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class AuditLogFactory
@@ -35,22 +32,11 @@ use Xibo\Storage\StorageServiceInterface;
 class AuditLogFactory extends BaseFactory
 {
     /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
-    /**
      * @return AuditLog
      */
     public function create()
     {
-        return new AuditLog($this->getStore(), $this->getLog());
+        return new AuditLog($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
@@ -66,7 +52,7 @@ class AuditLogFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
+        $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId, auditlog.ipAddress ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
         if ($sanitizedFilter->getInt('fromTimeStamp') !== null) {
@@ -92,6 +78,11 @@ class AuditLogFactory extends BaseFactory
         if ($sanitizedFilter->getString('message') != null) {
             $body .= ' AND `auditlog`.message LIKE :message ';
             $params['message'] = '%' . $sanitizedFilter->getString('message') . '%';
+        }
+
+        if ($sanitizedFilter->getString('ipAddress') != null) {
+            $body .= ' AND `auditlog`.ipAddress LIKE :ipAddress ';
+            $params['ipAddress'] = '%' . $sanitizedFilter->getString('ipAddress') . '%';
         }
 
         if ($sanitizedFilter->getInt('entityId') !== null) {
@@ -130,7 +121,7 @@ class AuditLogFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

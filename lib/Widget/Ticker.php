@@ -34,8 +34,8 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
-use Xibo\Controller\Library;
 use Xibo\Helper\Environment;
+use Xibo\Service\MediaService;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -79,7 +79,7 @@ class Ticker extends ModuleWidget
      */
     public function settings(Request $request, Response $response): Response
     {
-        $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', 240);
+        $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', ['default' => 240]);
 
         if ($this->module->enabled != 0) {
             if ($updateIntervalImages < 0) {
@@ -95,10 +95,27 @@ class Ticker extends ModuleWidget
     /**
      * @inheritDoc
      */
+    private function getTemplateOptions($templateId = null)
+    {
+        $templateOptions = [];
+        $templateId = ($templateId) ? $templateId : $this->getOption('templateId');
+        $template = $this->getTemplateById($templateId);
+
+        if (isset($template)) {
+            $templateOptions = array_key_exists('options', $template) ? $template['options'] : [];
+        }
+
+        return $templateOptions;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getExtra()
     {
         return [
-            'templates' => $this->templatesAvailable(true),
+            'templateOptions' => $this->getTemplateOptions(),
+            'templates' => $this->templatesAvailable(true)
         ];
     }
 
@@ -374,6 +391,21 @@ class Ticker extends ModuleWidget
             $this->setRawNode('template', $request->getParam('ta_text', $request->getParam('template', null)));
             $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
             $this->setRawNode('css', $request->getParam('ta_css', $request->getParam('css', null)));
+        } else {
+            // Template options
+            $templateOptions = $this->getTemplateOptions();
+
+            foreach ($templateOptions as $key => $option) {
+                if ($option) {
+                    if ($key == 'font-size') {
+                        $optionValue = $sanitizedParams->getInt($key);
+                    } else {
+                        $optionValue = $sanitizedParams->getString($key);
+                    }
+
+                    $this->setOption($key, $optionValue);
+                }
+            }
         }
         
         // Save the widget
@@ -425,12 +457,17 @@ class Ticker extends ModuleWidget
         
         // Parse library references on the template
         $text = $this->parseLibraryReferences($this->isPreview(), $text);
-        
+
         // Parse translations
         $text = $this->parseTranslations($text);
 
         // Parse library references on the CSS Node
         $css = $this->parseLibraryReferences($this->isPreview(), $css);
+
+        // Parse stylesheet values using options
+        if ($this->getOption('overrideTemplate') == 0) {
+            $css = $this->parseCSSProperties($css);
+        }
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
@@ -537,6 +574,7 @@ class Ticker extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -545,7 +583,7 @@ class Ticker extends ModuleWidget
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { if(items != false) { $("#content").xiboTextRender(options, items); } }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { if(items != false) { $("#content").xiboTextRender(options, items); } }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';
@@ -555,6 +593,46 @@ class Ticker extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
         return $this->renderTemplate($data);
+    }
+
+    /**
+     * Parse CSS properties and build CSS based on them
+     * @return string
+     */
+    private function parseCSSProperties($css)
+    {
+        // Get template option property
+        $templateOptions = $this->getTemplateOptions();
+
+        // Build override rules based on other options
+        foreach ($templateOptions as $key => $option) {
+            if (!$option || $this->getOption($key) == '') {
+                continue;
+            }
+
+            switch ($key) {
+                case 'image-fit':
+                    $css .= ' .image img { object-fit: ' . $this->getOption($key) . ' !important; } ';
+                    break;
+                case 'background-color':
+                    $css .= ' .background { background-color: ' . $this->getOption($key) . ' !important; } ';
+                    break;
+                case 'title-color':
+                    $css .= ' .title { color: ' . $this->getOption($key) . ' !important; } ';
+                    break;
+                case 'description-color':
+                    $css .= ' .description { color: ' . $this->getOption($key) . ' !important; } ';
+                    break;
+                case 'name-color':
+                    $css .= ' .name { color: ' . $this->getOption($key) . ' !important; } ';
+                    break;
+                case 'font-size':
+                    $css .= ' html { font-size: ' . $this->getOption($key) . 'px !important; } ';
+                    break;
+            }
+        }
+
+        return $css;
     }
 
     /**
@@ -570,7 +648,7 @@ class Ticker extends ModuleWidget
         $items = [];
 
         // Make sure we have the cache location configured
-        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+        MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
@@ -830,8 +908,7 @@ class Ticker extends ModuleWidget
                             break;
 
                         case '[Date]':
-                            $replace = Carbon::createFromTimestamp($item->getDate()->format('U'))->format($dateFormat);
-
+                            $replace = Carbon::createFromTimestamp($item->getDate()->format('U'))->translatedFormat($dateFormat);
                             break;
 
                         case '[PermaLink]':

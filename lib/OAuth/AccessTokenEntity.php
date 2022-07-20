@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -33,6 +33,10 @@ use League\OAuth2\Server\Entities\Traits\AccessTokenTrait;
 use League\OAuth2\Server\Entities\Traits\EntityTrait;
 use League\OAuth2\Server\Entities\Traits\TokenEntityTrait;
 
+/**
+ * Class AccessTokenEntity
+ * @package Xibo\OAuth
+ */
 class AccessTokenEntity implements AccessTokenEntityInterface
 {
     use AccessTokenTrait, TokenEntityTrait, EntityTrait;
@@ -52,9 +56,9 @@ class AccessTokenEntity implements AccessTokenEntityInterface
             ->issuedBy('info@xibosignage.com')
             ->permittedFor($this->getClient()->getIdentifier())
             ->identifiedBy($this->getIdentifier())
-            ->issuedAt(Carbon::now()->format('U'))
-            ->canOnlyBeUsedAfter(Carbon::now()->format('U'))
-            ->expiresAt($this->getExpiryDateTime()->getTimestamp())
+            ->issuedAt(Carbon::now()->toDateTimeImmutable())
+            ->canOnlyBeUsedAfter(Carbon::now()->toDateTimeImmutable())
+            ->expiresAt($this->getExpiryDateTime())
             ->relatedTo($userId)
             ->withClaim('scopes', $this->getScopes())
             ->getToken(new Sha256(), new Key($privateKey->getKeyPath()))

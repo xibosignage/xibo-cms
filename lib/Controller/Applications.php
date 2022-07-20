@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,28 +21,23 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
-use League\OAuth2\Server\Util\RedirectUri;
-use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Xibo\Entity\Application;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ApplicationScope;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\SanitizerService;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Session;
 use Xibo\OAuth\AuthCodeRepository;
-use Xibo\OAuth\ClientRepository;
 use Xibo\OAuth\RefreshTokenRepository;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -56,9 +51,6 @@ class Applications extends Base
      * @var Session
      */
     private $session;
-
-    /** @var  StorageServiceInterface */
-    private $store;
 
     /**
      * @var ApplicationFactory
@@ -76,37 +68,25 @@ class Applications extends Base
     /** @var  UserFactory */
     private $userFactory;
 
-    /** @var ContainerInterface */
-    private $container;
+    /** @var PoolInterface */
+    private $pool;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param Session $session
-     * @param StorageServiceInterface $store
      * @param ApplicationFactory $applicationFactory
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      * @param $applicationScopeFactory
      * @param UserFactory $userFactory
-     * @param Twig $view
-     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view, ContainerInterface $container)
+    public function __construct($session, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, $pool)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->session = $session;
-        $this->store = $store;
         $this->applicationFactory = $applicationFactory;
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->userFactory = $userFactory;
-        $this->container = $container;
+        $this->pool = $pool;
     }
 
     /**
@@ -140,9 +120,9 @@ class Applications extends Base
         $applications = $this->applicationFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
 
         foreach ($applications as $application) {
-            /* @var Application $application */
-            if ($this->isApi($request))
-                return $response->write('Nope');
+            if ($this->isApi($request)) {
+                throw new AccessDeniedException();
+            }
 
             // Include the buttons property
             $application->includeProperty('buttons');
@@ -186,16 +166,54 @@ class Applications extends Base
     public function authorizeRequest(Request $request, Response $response)
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams'))
+        /** @var AuthorizationRequest $authParams */
+        $authParams = $this->session->get('authParams');
+        if (!$authParams) {
             throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
+        }
+
+        if ($this->applicationFactory->checkAuthorised($authParams->getClient()->getIdentifier(), $this->getUser()->userId)) {
+            return $this->authorize($request->withParsedBody(['authorization' => 'Approve']), $response);
+        }
+
+        $client = $this->applicationFactory->getClientEntity($authParams->getClient()->getIdentifier())->load();
+
+        // Process any scopes.
+        $scopes = [];
+        $authScopes = $authParams->getScopes();
+
+        // if we have scopes in the request, make sure we only add the valid ones.
+        // the default scope is all, if it's not set on the Application, $scopes will still be empty here.
+        if ($authScopes !== null) {
+            $validScopes = $this->applicationScopeFactory->finalizeScopes($authScopes, $authParams->getGrantTypeId(), $client);
+            // get all the valid scopes by their ID, we need to do this to present more details on the authorize form.
+            foreach ($validScopes as $scope) {
+                $scopes[] = $this->applicationScopeFactory->getById($scope->getIdentifier());
+            }
+        }
+
+        // if the request does not contain any valid scopes, default to all scopes assigned to this Application.
+        if (count($scopes) <= 0) {
+            $validScopes = $client->getScopes();
+            foreach ($validScopes as $scope) {
+                $scopes[] = $this->applicationScopeFactory->getById($scope->getIdentifier());
+            }
+        }
+
+        // update scopes in auth request in session to scopes we actually present for approval
+        $authParams->setScopes($validScopes);
+        $this->session->set('authParams', $authParams);
 
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
         $this->getState()->setData([
-            'authParams' => $authParams
+            'forceHide' => true,
+            'authParams' => $authParams,
+            'scopes' => $scopes,
+            'application' => $client
         ]);
 
-       return $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -208,25 +226,22 @@ class Applications extends Base
     public function authorize(Request $request, Response $response)
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams')) {
+        /** @var AuthorizationRequest $authRequest */
+        $authRequest = $this->session->get('authParams');
+        if (!$authRequest) {
             throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
         }
 
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
 
-        // get auth server
-        /** @var AuthorizationRequest $authRequest */
-        $authRequest = $this->session->get('authParams');
-
         $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
-
         $privateKey = $apiKeyPaths['privateKeyPath'];
-        $encryptionKey = $apiKeyPaths['publicKeyPath'];
+        $encryptionKey = $apiKeyPaths['encryptionKey'];
 
         $server = new AuthorizationServer(
-            new ClientRepository($this->container->get('store'), $this->container->get('logService')),
-            new \Xibo\OAuth\AccessTokenRepository($this->container->get('logService')),
-            new \Xibo\OAuth\ScopeRepository(),
+            $this->applicationFactory,
+            new \Xibo\OAuth\AccessTokenRepository($this->getLog(), $this->pool, $this->applicationFactory),
+            $this->applicationScopeFactory,
             $privateKey,
             $encryptionKey
         );
@@ -234,7 +249,7 @@ class Applications extends Base
         $server->enableGrantType(
             new AuthCodeGrant(
                 new AuthCodeRepository(),
-                new RefreshTokenRepository(),
+                new RefreshTokenRepository($this->getLog(), $this->pool),
                 new \DateInterval('PT10M')
             ),
             new \DateInterval('PT1H')
@@ -243,20 +258,32 @@ class Applications extends Base
         // Default scope
         $server->setDefaultScope('all');
 
+        // get oauth User Entity and set the UserId to the current web userId
+        $authRequest->setUser($this->getUser());
+
         // We are authorized
         if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
-
             $authRequest->setAuthorizationApproved(true);
 
-            // get oauth User Entity and set the UserId to the current web userId
-            $authRequest->setUser($this->getUser());
-
-            // Redirect back to the home page
-            return $server->completeAuthorizationRequest($authRequest, $response);
-        }
-        else {
+            $this->applicationFactory->setApplicationApproved(
+                $authRequest->getClient()->getIdentifier(),
+                $authRequest->getUser()->getIdentifier(),
+                Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+                $request->getAttribute('ip_address')
+            );
+        } else {
             $authRequest->setAuthorizationApproved(false);
+        }
+
+        // Redirect back to the specified redirect url
+        try {
             return $server->completeAuthorizationRequest($authRequest, $response);
+        } catch (OAuthServerException $exception) {
+            if ($exception->hasRedirect()) {
+                return $response->withRedirect($exception->getRedirectUri());
+            } else {
+                throw $exception;
+            }
         }
     }
 
@@ -344,8 +371,9 @@ class Applications extends Base
         // Get the client
         $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'applications-form-delete';
         $this->getState()->setData([
@@ -371,7 +399,7 @@ class Applications extends Base
         $application = $this->applicationFactory->create();
         $application->name = $sanitizedParams->getString('name');
 
-        if ($application->name == '' ) {
+        if ($application->name == '') {
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
         }
 
@@ -418,20 +446,20 @@ class Applications extends Base
      */
     public function addDooh(Request $request, Response $response)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());;
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $application = $this->applicationFactory->create();
         $application->name = $sanitizedParams->getString('name');
         $application->userId = $sanitizedParams->getInt('userId');
 
-        if ($application->name == '' ) {
+        if ($application->name == '') {
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
         }
 
-        if ($application->userId == null ) {
+        if ($application->userId == null) {
             throw new InvalidArgumentException(__('Please select user'), 'userId');
         }
 
-        if ($this->userFactory->getById($application->userId)->userTypeId != 4 ) {
+        if ($this->userFactory->getById($application->userId)->userTypeId != 4) {
             throw new InvalidArgumentException(__('Invalid user type'), 'userTypeId');
         }
 
@@ -478,13 +506,24 @@ class Applications extends Base
             throw new AccessDeniedException();
         }
 
-        $sanitizedParams = $this->getSanitizer($request->getParams());;
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $client->name = $sanitizedParams->getString('name');
         $client->authCode = $sanitizedParams->getCheckbox('authCode');
         $client->clientCredentials = $sanitizedParams->getCheckbox('clientCredentials');
+        $client->isConfidential = $sanitizedParams->getCheckbox('isConfidential');
 
         if ($sanitizedParams->getCheckbox('resetKeys') == 1) {
             $client->resetSecret();
+            $this->pool->getItem('C_' . $client->key)->clear();
+        }
+
+        if ($client->authCode === 1) {
+            $client->description = $sanitizedParams->getString('description');
+            $client->logo = $sanitizedParams->getString('logo');
+            $client->coverImage = $sanitizedParams->getString('coverImage');
+            $client->companyName = $sanitizedParams->getString('companyName');
+            $client->termsUrl = $sanitizedParams->getString('termsUrl');
+            $client->privacyUrl = $sanitizedParams->getString('privacyUrl');
         }
 
         // Delete all the redirect urls and add them again
@@ -509,27 +548,18 @@ class Applications extends Base
             $client->assignRedirectUri($redirect);
         }
 
+        // clear scopes
+        $client->scopes = [];
+
         // API Scopes
         foreach ($this->applicationScopeFactory->query() as $scope) {
             /** @var ApplicationScope $scope */
-
             // See if this has been checked this time
             $checked = $sanitizedParams->getCheckbox('scope_' . $scope->id);
 
-            // Does this scope already exist?
-            $found = false;
-            foreach ($client->scopes as $existingScope) {
-                if ($scope->id == $existingScope->id) {
-                    $found = true;
-                    break;
-                }
-            }
-
-            // Assign or unassign as necessary
-            if ($checked && !$found) {
+            // Assign scopes
+            if ($checked) {
                 $client->assignScope($scope);
-            } else if (!$checked && $found) {
-                $client->unassignScope($scope);
             }
         }
 
@@ -580,10 +610,36 @@ class Applications extends Base
         }
 
         $client->delete();
+        $this->pool->getItem('C_' . $client->key)->clear();
 
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $client->name)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function revokeAccess(Request $request, Response $response, $id, $userId)
+    {
+        if ($userId === null) {
+            throw new InvalidArgumentException(__('No User ID provided'));
+        }
+
+        if (empty($id)) {
+            throw new InvalidArgumentException(__('No Client id provided'));
+        }
+
+        $client = $this->applicationFactory->getClientEntity($id);
+
+        // remove record in lk table
+        $this->applicationFactory->revokeAuthorised($userId, $client->key);
+        // clear cache for this clientId/userId pair, this is how we know the application is no longer approved
+        $this->pool->getItem('C_' . $client->key . '/' . $userId)->clear();
+
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Access to %s revoked'), $client->name)
         ]);
 
         return $this->render($request, $response);

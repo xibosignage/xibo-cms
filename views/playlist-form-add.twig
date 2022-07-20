@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -164,8 +164,15 @@
 
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tag filter" %}{% endset %}
-                                        {{ forms.inputWithTags("filterMediaTag", title) }}
+                                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated set of tags to match against tags on library media." %}{% endset %}
+                                        {{ forms.inputWithTags("filterMediaTag", title, "", helpText, "", null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                     {% endif %}
+
+                                    {% set title %}{% trans "Max number of Items" %}{% endset %}
+                                    {% set helpText %}{% trans "The upper limit on number of Media items that can be dynamically assigned to this Playlist" %}{% endset %}
+                                    {{ forms.number("maxNumberOfItems", title, settings.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER, helpText, 'dynamic-message', '', '', settings.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT) }}
                                 </div>
 
                                 <div class="XiboData card pt-3">

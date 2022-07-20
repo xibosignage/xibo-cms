@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
- * This file (Log.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,9 +23,9 @@
 
 namespace Xibo\Service;
 
-
 use Carbon\Carbon;
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Storage\PdoStorageService;
 
@@ -52,6 +53,11 @@ class LogService implements LogServiceInterface
     private $userId = 0;
 
     /**
+     * The User IP Address
+     */
+    private $ipAddress;
+
+    /**
      * Audit Log Statement
      * @var \PDOStatement
      */
@@ -64,6 +70,20 @@ class LogService implements LogServiceInterface
     {
         $this->log = $logger;
         $this->mode = $mode;
+    }
+
+    /** @inheritDoc */
+    public function getLoggerInterface(): LoggerInterface
+    {
+        return $this->log;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setIpAddress($ip)
+    {
+        $this->ipAddress = $ip;
     }
 
     /**
@@ -87,19 +107,20 @@ class LogService implements LogServiceInterface
      */
     public function audit($entity, $entityId, $message, $object)
     {
-        $this->debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
+        $this->debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s from IP %s', $entity, $entityId, $message, $this->ipAddress));
 
         if ($this->_auditLogStatement == null) {
             $dbh = PdoStorageService::newConnection();
             $this->_auditLogStatement = $dbh->prepare('
-                INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter)
-                  VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter)
+                INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter, ipAddress)
+                  VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter, :ipAddress)
             ');
         }
 
         // If we aren't a string then encode
-        if (!is_string($object))
+        if (!is_string($object)) {
             $object = json_encode($object);
+        }
 
         PdoStorageService::incrementStatStatic('auditlog', 'insert');
 
@@ -109,6 +130,7 @@ class LogService implements LogServiceInterface
             'entity' => $entity,
             'message' => $message,
             'entityId' => $entityId,
+            'ipAddress' => $this->ipAddress,
             'objectAfter' => $object
         ]);
     }

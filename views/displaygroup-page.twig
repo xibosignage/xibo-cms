@@ -29,6 +29,7 @@
     {% if currentUser.featureEnabled("displaygroup.add") %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
     </div>
     {% endif %}
 {% endblock %}
@@ -83,8 +84,9 @@
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}
                                 {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                             {% endif %}
 
                             {{ inline.hidden("folderId") }}
@@ -92,20 +94,16 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
-                    </div>
-                    <div class="form-group col-sm-11" style="padding: 0">
-                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
+                    </div>
+                    <div class="folder-controller d-none">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
+                        <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
@@ -146,6 +144,7 @@
 
         var table = $("#displaygroups").DataTable({
             "language": dataTablesLanguage,
+            dom: dataTablesTemplate,
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
@@ -186,21 +185,27 @@
             ]
         });
 
+        $("#refreshGrid").click(function () {
+          table.ajax.reload();
+        });
+
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#displaygroups").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#displaygroups_wrapper').find('.col-md-6').eq(1));
+        dataTableAddButtons(table, $('#displaygroups_wrapper').find('.dataTables_buttons'));
 
         var displayTable;
         var criteria;
         var criteriaTag;
         var useRegexForName;
+        var exactTags;
+        var logicalOperator;
 
         function setDeleteMultiSelectFormOpen(dialog) {
             $(dialog).find('.save-button').prop('disabled', false);
-
-            var $input = $('<input type=checkbox id="confirmDelete" name="confirmDelete"> {% trans %} Check to confirm deletion {% endtrans %} </input>');
-            $input.on('change', function() {
+            var template = Handlebars.compile($('#template-display-group-multi-delete-checkbox').html());
+            var $input = $(template());
+            $input.find('input').on('change', function() {
                 $(dialog).find('.save-button').prop('disabled', !$(this).is(':checked'));
             });
             $(dialog).find('.modal-body').append($input);
@@ -230,7 +235,7 @@
                 displayGroupQueryDynamicMembers(dialog);
             }, 500));
 
-            $(dialog).find("input[name=dynamicCriteriaTags]").change(function() {
+            $(dialog).find("input[name=dynamicCriteriaTags], input[name=exactTags], select[name=logicalOperator]").change(function() {
                 displayGroupQueryDynamicMembers(dialog);
             });
 
@@ -247,6 +252,8 @@
                 criteria = $(dialog).find("input[name=dynamicCriteria]").val();
                 criteriaTag = $(dialog).find("input[name=dynamicCriteriaTags]").val();
                 useRegexForName = $(dialog).find("input[name=useRegexForName]").val();
+                exactTags = $(dialog).find("input[name=exactTags]").is(':checked');
+                logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
 
                 if (criteria === "" && criteriaTag === "") {
                     if (displayTable != null) {
@@ -271,9 +278,7 @@
                         ajax: {
                             "url": "{{ url_for("display.search") }}",
                             "data": function (d) {
-                                //console.log(criteria);
-                                //console.log(criteriaTag);
-                                $.extend(d, {display: criteria, tags: criteriaTag, useRegexForName: useRegexForName});
+                                $.extend(d, {display: criteria, tags: criteriaTag, useRegexForName: useRegexForName, exactTags: exactTags, logicalOperator: logicalOperator});
                             }
                         },
                         "columns": [
@@ -601,4 +606,24 @@
             }
         }
     </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% verbatim %}
+    <script type="text/x-handlebars-template" id="template-display-group-multi-delete-checkbox">
+        <div class="form-group row">
+            <div class="offset-sm-2 col-sm-10 mt-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="checkbox-confirmDelete" name="confirmDelete">
+                    <label class="form-check-label" for="checkbox-confirmDelete">
+                        {% endverbatim %}{{ "Are you sure you want to delete?"|trans }}{% verbatim %}
+                    </label>
+                </div>
+                <small class="form-text text-muted">{% endverbatim %}{{ "Check to confirm deletion of the selected records."|trans }}{% verbatim %}</small>
+            </div>
+        </div>
+    </script>
+    {% endverbatim %}
 {% endblock %}

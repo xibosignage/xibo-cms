@@ -1,0 +1,53 @@
+{#
+* Copyright (C) 2021 Xibo Signage Ltd
+*
+* Xibo - Digital Signage - http://www.xibo.org.uk
+*
+* This file is part of Xibo.
+*
+* Xibo is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* Xibo is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Purge all Media files" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayPurgeAllForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayPurgeAllForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("display.purge.all", {id: display.displayId}) }}">
+                {% set message %}{% trans "Caution! Trigerring this action will ask Player to remove every downloaded Media file from its storage." %}{% endset %}
+                {{ forms.alert(message, 'danger') }}
+
+                {% set message %}{% trans "This action will be immediately actioned. Player will remove all existing Media files from its local storage and request fresh copies of required files from the CMS" %}{% endset %}
+                {{ forms.alert(message, 'info') }}
+
+                {% if display.xmrChannel is empty %}
+                    <div class="alert alert-info">
+                        {% set message %}{% trans %}XMR is not working on this Player yet and therefore the licence check may not occur.{% endtrans %}{% endset %}
+                        {{ forms.message(message) }}
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -150,11 +150,11 @@
                             {{ forms.message(simpleTextEditorMessage, 'template-advanced-editor-hide inline-editor-hide') }}
 
                             {# Layout Designer messages #}
-                            {% set layoutDesignerMessage %}
+                            {% set layoutEditorMessage %}
                                 {% trans "Enter text to display using the inline editor which can be opened by clicking in the preview on the left." %}
                                 {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                             {% endset %}
-                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
+                            {{ forms.message(layoutEditorMessage, 'layout-designer-message inline-editor-show') }}
 
                             {# Playlist Editor messages #}
                             {% set playlistEditorMessage %}
@@ -166,15 +166,17 @@
 
                         <div class="form-group row ckeditor_controls inline-editor-hide" data-linked-to="template">
                             <div class="col-sm-6">
-                                <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                <div class="col-sm-8 ckeditor_select_container">
-                                    <select id="ckeditor_snippets_select" 
-                                    class="ckeditor_snippets_select form-control"
-                                    data-linked-to="template">
-                                        <option value=""></option>
-                                        <option value="Subject">Subject</option>
-                                        <option value="Body">Body</option>
-                                    </select>
+                                <div class="form-group row">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                        class="ckeditor_snippets_select form-control"
+                                        data-linked-to="template">
+                                            <option value=""></option>
+                                            <option value="Subject">Subject</option>
+                                            <option value="Body">Body</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>  
                         </div>  

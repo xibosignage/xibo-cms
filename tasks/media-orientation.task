@@ -1,0 +1,5 @@
+{
+  "name": "Media Orientation",
+  "class": "\\Xibo\\XTR\\MediaOrientationTask",
+  "options": []
+}

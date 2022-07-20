@@ -1,0 +1,332 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Calendar" %}
+{% endblock %}
+
+{% block extra %}{{ {"templates": module.templatesAvailable()}|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#triggerTab" role="tab" data-toggle="tab"><span>{% trans "Trigger" %}</span></a></li>
+        </ul>
+
+        <div class="col-md-12">
+            <form id="calendarFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+
+                    <div class="tab-pane active" id="generalTab">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Feed URL" %}{% endset %}
+                        {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
+                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
+
+                        {% set title %}{% trans "Calendar Type" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the type of calendar to display." %}{% endset %}
+                        {% set schedule %}{% trans "Schedule" %}{% endset %}
+                        {% set daily %}{% trans "Daily" %}{% endset %}
+                        {% set weekly %}{% trans "Weekly" %}{% endset %}
+                        {% set monthly %}{% trans "Monthly" %}{% endset %}
+                        {% set options = [
+                            { id: 1, value: schedule },
+                            { id: 2, value: daily },
+                            { id: 3, value: weekly },
+                            { id: 4, value: monthly }
+                        ] %}
+                        {{ forms.dropdown("calendarType", "single", title, module.getOption("calendarType"), options, "id", "value", helpText) }}
+                        
+                        {% set title %}{% trans "Start Time" %}{% endset %}
+                        {% set helpText %}{% trans %}Current view starting time.{% endtrans %}{% endset %}
+                        {{ forms.time("startTime", title, module.getOption("startTime"), helpText, "daily-control-group weekly-control-group") }}
+
+                        {% set title %}{% trans "End Time" %}{% endset %}
+                        {% set helpText %}{% trans %}Current view ending time.{% endtrans %}{% endset %}
+                        {{ forms.time("endTime", title, module.getOption("endTime"), helpText, "daily-control-group weekly-control-group") }}
+
+                        <section class="schedule-control-group">
+                            {% set title %}{% trans "No events message" %}{% endset %}
+                            {% set defaultMessage %}{% trans "No upcoming events" %}{% endset %}
+                            {% set helpText %}{% trans "Message to be shown if no events are returned" %}{% endset %}
+                            {{ forms.input("noEventsMessage", title, module.getOption("noEventsMessage", defaultMessage), helpText) }}
+
+                            {# What range are we looking to return #}
+                            {% set title %}{% trans "Interval" %}{% endset %}
+                            {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
+                            {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText, "interval")}}
+
+                            {% set title %}{% trans "Select a Date range to return events instead?" %}{% endset %}
+                            {% set helpText %}{% trans "Use the checkbox to return events within defined start and end dates" %}{% endset %}
+                            {{ forms.checkbox("useDateRange", title, module.getOption("useDateRange", 0), helpText) }}
+
+                            <div class="date-range" style="display: none">
+                                {% set title %}{% trans "Start Date" %}{% endset %}
+                                {{ forms.dateTime("rangeStart", title, module.getOption("rangeStart", null), "", "date-range") }}
+
+                                {% set title %}{% trans "End Date" %}{% endset %}
+                                {{ forms.dateTime("rangeEnd", title, module.getOption("rangeEnd", null, "", "date-range")) }}
+                            </div>
+                        </section>
+
+                        {% set title %}{% trans "Exclude all day events?" %}{% endset %}
+                        {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeAllDay", title, module.getOption("excludeAllDay"), helpText) }}
+
+                        {% set title %}{% trans "Exclude current events?" %}{% endset %}
+                        {% set helpText %}{% trans "When current events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeCurrent", title, module.getOption("excludeCurrent"), helpText) }}
+
+                        {% set title %}{% trans "Use event timezone?" %}{% endset %}
+                        {% set helpText %}{% trans "If an event specifies a timezone, should it be used. Deselection means the CMS timezone will be used." %}{% endset %}
+                        {{ forms.checkbox("useEventTimezone", title, module.getOption("useEventTimezone", 1), helpText) }}
+
+                        {% set title %}{% trans "Use calendar timezone?" %}{% endset %}
+                        {% set helpText %}{% trans "If your calendar feed specifies its own time zone, should this be used for events without their own timezone? Deselecting means the CMS timezone will be used." %}{% endset %}
+                        {{ forms.checkbox("useCalendarTimezone", title, module.getOption("useCalendarTimezone", 1), helpText) }}
+
+                        {% set title %}{% trans "Windows format Calendar?" %}{% endset %}
+                        {% set helpText %}{% trans "Does the calendar feed come from Windows - if unsure leave unselected." %}{% endset %}
+                        {{ forms.checkbox("windowsFormatCalendar", title, module.getOption("windowsFormatCalendar", 0), helpText) }}
+
+                        {% set title %}{% trans "Exclude weekend days?" %}{% endset %}
+                        {% set helpText %}{% trans "Saturdays and Sundays wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeWeekendDays", title, module.getOption("excludeWeekendDays"), helpText, "weekly-control-group monthly-control-group") }}
+                    </div>
+
+                    <div class="tab-pane" id="appearanceTab">
+                        {% set title %}{% trans "Time Format" %}{% endset %}
+                        {% set helpText %}{% trans %}The format to apply to event time (default HH:mm).{% endtrans %}{% endset %}
+                        {{ forms.input("timeFormat", title, module.getOption("timeFormat", "HH:mm"), helpText, "schedule-control-group daily-control-group weekly-control-group monthly-control-group") }}
+
+                        {% set title %}{% trans "Show header?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the selected template have a header?" %}{% endset %}
+                        {{ forms.checkbox("showHeader", title, module.getOption("showHeader", true), helpText, "monthly-control-group") }}
+
+                        {% set title %}{% trans "Show now marker?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the calendar show a marker for the current time?" %}{% endset %}
+                        {{ forms.checkbox("showNowMarker", title, module.getOption("showNowMarker", true), helpText, "schedule-control-group daily-control-group weekly-control-group") }}
+
+                        {% set title %}{% trans "Show event description?" %}{% endset %}
+                        {% set helpText %}{% trans "Should events with descriptions display them?" %}{% endset %}
+                        {{ forms.checkbox("showDescription", title, module.getOption("showDescription", true), helpText, "schedule-control-group") }}
+
+                        {% set title %}{% trans "Text scale" %}{% endset %}
+                        {% set helpText %}{% trans "Set the scale for the text element on the calendar." %}{% endset %}
+                        {{ forms.number("textScale", title, module.getOption("textScale", 1.0), helpText, "schedule-control-group daily-control-group weekly-control-group monthly-control-group") }}
+
+                        {% set title %}{% trans "Week name length" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the lenght for the week names." %}{% endset %}
+                        {% set short %}{% trans "Short" %}{% endset %}
+                        {% set medium %}{% trans "Medium" %}{% endset %}
+                        {% set long %}{% trans "Long" %}{% endset %}
+                        {% set options = [
+                            { id: 'short', value: short },
+                            { id: 'medium', value: medium },
+                            { id: 'long', value: long }
+                        ] %}
+                        {{ forms.dropdown("weekdayNameLength", "single", title, module.getOption("weekdayNameLength", "long"), options, "id", "value", helpText, "weekly-control-group monthly-control-group") }}
+
+                        {% set title %}{% trans "Grid step" %}{% endset %}
+                        {% set helpText %}{% trans "Duration, in minutes, for each row in the grid." %}{% endset %}
+                        {{ forms.number("gridStep", title, module.getOption("gridStep", 60), helpText, "daily-control-group weekly-control-group") }}
+
+                        <div id="template-colors" class="schedule-control-group daily-control-group weekly-control-group monthly-control-group">
+                            {% set title %}{% trans "Theme" %}{% endset %}
+                            {% set helpText %}{% trans "Please select the colours scheme." %}{% endset %}
+                            {% set light %}{% trans "Light" %}{% endset %}
+                            {% set dark %}{% trans "Dark" %}{% endset %}
+                            {% set options = [
+                                { id: 'light', value: light },
+                                { id: 'dark', value: dark },
+                            ] %}
+                            {{ forms.dropdown("templateTheme", "single", title, module.getOption("templateTheme"), options, "id", "value", helpText, "template-colors-select") }}
+
+                            {% set title %}{% trans "Override colour template?" %}{% endset %}
+                            {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                            {{ forms.checkbox("overrideColorTemplate", title, module.getOption("overrideColorTemplate"), helpText) }}
+
+                            <div id="template-custom-colors" class="template-colors-custom">
+                                {% set calendarColorsExplanation %}
+                                    {% trans "Use the colour pickers to override the element colours." %}<br>
+                                {% endset %}
+                                {{ forms.raw(calendarColorsExplanation, "h5 mt-3 mb-2") }}
+
+                                {% set title %}{% trans "Main Background Colour" %}{% endset %}
+                                {{ forms.colorPicker("mainBackgroundColor", title, module.getOption("mainBackgroundColor"), '', "col-sm-12 mb-2 schedule-control-group") }}
+
+                                {% set title %}{% trans "Grid Colour" %}{% endset %}
+                                {{ forms.colorPicker("gridColor", title, module.getOption("gridColor"), '', "col-sm-12 mb-2") }}
+
+                                {% set title %}{% trans "Grid Text Colour" %}{% endset %}
+                                {{ forms.colorPicker("gridTextColor", title, module.getOption("gridTextColor"), '', "col-sm-12 mb-2 daily-control-group weekly-control-group") }}
+
+                                <div class="card p-2 pt-3 mb-2 monthly-control-group">
+                                    <div class="card-title font-weight-bold text-info">Header (Month)</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("headerBgColor", title, module.getOption("headerBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("headerTextColor", title, module.getOption("headerTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2">
+                                    <div class="card-title font-weight-bold text-info">Header (Weekdays)</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("weekDaysHeaderBgColor", title, module.getOption("weekDaysHeaderBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("weekDaysHeaderTextColor", title, module.getOption("weekDaysHeaderTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2">
+                                    <div class="card-title font-weight-bold text-info">Calendar Days</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("dayBgColor", title, module.getOption("dayBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("dayTextColor", title, module.getOption("dayTextColor"), "", "daily-control-group weekly-control-group monthly-control-group") }}
+
+                                    {% set title %}{% trans "Current day text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("todayTextColor", title, module.getOption("todayTextColor")) }}
+
+                                    {% set title %}{% trans "Now marker Colour" %}{% endset %}
+                                    {{ forms.colorPicker("nowMarkerColor", title, module.getOption("nowMarkerColor"), "", "schedule-control-group daily-control-group weekly-control-group") }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2 monthly-control-group">
+                                    <div class="card-title font-weight-bold text-info">Other Month Days</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("dayOtherMonthBgColor", title, module.getOption("dayOtherMonthBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("dayOtherMonthTextColor", title, module.getOption("dayOtherMonthTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2">
+                                    <div class="card-title font-weight-bold text-info">Events</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("eventBgColor", title, module.getOption("eventBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("eventTextColor", title, module.getOption("eventTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2">
+                                    <div class="card-title font-weight-bold text-info">All day events</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("dailyEventBgColor", title, module.getOption("dailyEventBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("dailyEventTextColor", title, module.getOption("dailyEventTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2">
+                                    <div class="card-title font-weight-bold text-info">Multiple days events</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("multiDayEventBgColor", title, module.getOption("multiDayEventBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("multiDayEventTextColor", title, module.getOption("multiDayEventTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2 daily-control-group weekly-control-group monthly-control-group">
+                                    <div class="card-title font-weight-bold text-info">Aditional days container</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("aditionalEventsBgColor", title, module.getOption("aditionalEventsBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("aditionalEventsTextColor", title, module.getOption("aditionalEventsTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2 schedule-control-group">
+                                    <div class="card-title font-weight-bold text-info">No events message</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("noEventsBgColor", title, module.getOption("noEventsBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("noEventsTextColor", title, module.getOption("noEventsTextColor")) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="cachingTab">
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="triggerTab">
+                        {% set calendarTriggerExplanation %}
+                            {% trans "Web Hook triggers can be executed when certain conditions are detected. If you would like to execute a trigger, enter the trigger code below against each event." %}<br>
+                        {% endset %}
+                        {{ forms.message(calendarTriggerExplanation) }}
+
+                        {% set title %}{% trans "Current Event" %}{% endset %}
+                        {% set helpText %}{% trans "Code to be triggered when a event is currently ongoing." %}{% endset %}
+                        {{ forms.input("currentEventTrigger", title, module.getOption("currentEventTrigger"), helpText) }}
+
+                        {% set title %}{% trans "No Event" %}{% endset %}
+                        {% set helpText %}{% trans "Code to be triggered when no events are ongoing at the moment." %}{% endset %}
+                        {{ forms.input("noEventTrigger", title, module.getOption("noEventTrigger"), helpText) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

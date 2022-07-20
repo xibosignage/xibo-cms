@@ -43,7 +43,7 @@
                             <div class="col-sm-12">
                                 <div class="embed-responsive embed-responsive-4by3">
                                     <div class="embed-responsive-item preview-container"
-                                         data-url="{{ url_for('layout.preview', { "id": extendedLayout.layout.layoutId }) }}'">
+                                         data-url="{{ url_for('layout.preview', { "id": extendedLayout.layout.layoutId }) }}">
                                         {% include 'layout-preview-partial.twig' with {'layout': extendedLayout.layout, 'previewOptions': extendedLayout.previewOptions } %}
                                     </div>
                                 </div>
@@ -76,9 +76,16 @@
         var previewTranslations = {};
         // Translations we want always available
         {% autoescape "js" %}
-            previewTranslations.actionControllerTitle = "{{ "Action Controller"|trans }}";
+            previewTranslations.actionControllerTitle = "{{ "Webhook Controller"|trans }}";
             previewTranslations.navigateToLayout = "{{ "Navigate to layout with code [layoutTag]?"|trans }}";
             previewTranslations.emptyRegionMessage = "{{ "Empty Region"|trans }}";
+            previewTranslations.nextItem = "{{ "Next Item"|trans }}";
+            previewTranslations.previousItem = "{{ "Previous Item"|trans }}";
+            previewTranslations.navWidget = "{{ "Navigate to Widget"|trans }}";
+            previewTranslations.navLayout = "{{ "Navigate to Layout"|trans }}";
+            previewTranslations.widgetId = "{{ "Widget ID"|trans }}";
+            previewTranslations.layoutCode = "{{ "Layout Code"|trans }}";
+            previewTranslations.target = "{{ "Target"|trans }}";
         {% endautoescape %}
 
         (function($){

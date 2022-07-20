@@ -33,10 +33,6 @@
 
         // Set effect type input field, using the helper ()
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
-
-        // Setup editors
-        formHelpers.setupDualTypeTextArea(this, 'mainTemplate');
-        formHelpers.setupDualTypeTextArea(this, 'itemTemplate');
         
         // Setup template override
         formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
@@ -49,18 +45,23 @@
                 '#maxItemsPerPage': 'maxItemsPerPage'
             });
 
-        // Setup background color picker
-        $(this).find('#backgroundColor').colorpicker({format: 'rgba'});
-
         // Tidy up colorpickers on modal close
         if($(this).hasClass('modal')) {
             $(this).on("hide.bs.modal", function(e) {
                 if(e.namespace === 'bs.modal') {
                     // Remove colour pickers
-                    $(this).find("#backgroundColor").colorpicker('destroy');
+                    destroyColorPicker($(this).find(".XiboColorPicker"));
                 }
             });
         }
+
+        formHelpers.setupPhpDateFormatPopover($(this))
     }
 
 </script>
+
+<style>
+    .popover{
+        max-width: 100%;
+    }
+</style>

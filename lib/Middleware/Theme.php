@@ -23,7 +23,6 @@
 
 namespace Xibo\Middleware;
 
-
 use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -37,6 +36,7 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Theme
@@ -87,7 +87,7 @@ class Theme implements Middleware
         /* @var \Twig\Loader\FilesystemLoader $twig */
 
         // Append the module view paths
-        $twig->setPaths(array_merge($container->get('moduleFactory')->getViewPaths(), $twig->getPaths()));
+        $twig->setPaths(array_merge($twig->getPaths(), $container->get('moduleFactory')->getViewPaths()));
 
         // Does this theme provide an alternative view path?
         if ($container->get('configService')->getThemeConfig('view_path') != '') {
@@ -130,8 +130,23 @@ class Theme implements Middleware
             'validExt' => implode('|', $container->get('moduleFactory')->getValidExtensions()),
             'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image']))
         ];
-        $view['ckeditorConfig'] = $container->get('\Xibo\Controller\Library')->fontCKEditorConfig(RouteContext::fromRequest($request)->getRouteParser());
+        $view['ckeditorConfig'] = $container->get('mediaService')->setUser($container->get('user'))->fontCKEditorConfig(RouteContext::fromRequest($request)->getRouteParser());
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
         $view['revision'] = Environment::getGitCommit();
+        $samlSettings = $container->get('configService')->samlSettings;
+        if (isset($samlSettings['workflow'])
+            && isset($samlSettings['workflow']['slo'])
+            && $samlSettings['workflow']['slo'] == false) {
+            $view['hideLogout'] = true;
+        }
+
+        // Disable menu boards if the module isn't installed
+        try {
+            $menuBoard = $container->get('moduleFactory')->getByType('menuboard');
+            $view['hideMenuBoard'] = !$menuBoard->enabled;
+        } catch (NotFoundException $notFoundException) {
+            // Disable
+            $view['hideMenuBoard'] = true;
+        }
     }
 }

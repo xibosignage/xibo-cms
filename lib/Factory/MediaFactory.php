@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,12 +26,12 @@ namespace Xibo\Factory;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
+use Psr\Http\Message\ResponseInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
+use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -69,9 +69,6 @@ class MediaFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
@@ -79,9 +76,8 @@ class MediaFactory extends BaseFactory
      * @param TagFactory $tagFactory
      * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $permissionFactory, $tagFactory, $playlistFactory)
+    public function __construct($user, $userFactory, $config, $permissionFactory, $tagFactory, $playlistFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
@@ -96,7 +92,15 @@ class MediaFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Media($this->getStore(), $this->getLog(), $this->config, $this, $this->permissionFactory, $this->tagFactory, $this->playlistFactory);
+        return new Media(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->config,
+            $this,
+            $this->permissionFactory,
+            $this->tagFactory
+        );
     }
 
     /**
@@ -220,7 +224,7 @@ class MediaFactory extends BaseFactory
             $media->moduleSystemFile = 0;
             $media->isRemote = true;
             $media->urlDownload = true;
-            $media->extension = $requestOptions['extension'];
+            $media->extension = $requestOptions['extension'] ?? null;
             $media->enableStat = $requestOptions['enableStat'];
             $media->folderId = $requestOptions['folderId'];
             $media->permissionsFolderId = $requestOptions['permissionsFolderId'];
@@ -235,9 +239,9 @@ class MediaFactory extends BaseFactory
         $media->saveAsync(['requestOptions' => $requestOptions]);
 
         // Add to our collection of queued downloads
-        // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
+        // but only if it's not already in the queue (we might have tried to queue it multiple times in
+        // the same request)
         if ($media->isSaveRequired) {
-
             $this->getLog()->debug('We are required to download as this file is either expired or not existing');
 
             $queueItem = true;
@@ -252,9 +256,9 @@ class MediaFactory extends BaseFactory
                 }
             }
 
-            if ($queueItem)
+            if ($queueItem) {
                 $this->remoteDownloadQueue[] = $media;
-
+            }
         } else {
             // Queue in the not required download queue
             $this->getLog()->debug('Download not required as this file exists and is up to date. Expires = ' . $media->getOriginalValue('expires'));
@@ -271,8 +275,9 @@ class MediaFactory extends BaseFactory
                 }
             }
 
-            if ($queueItem)
+            if ($queueItem) {
                 $this->remoteDownloadNotRequiredQueue[] = $media;
+            }
         }
 
         // Return the media item
@@ -283,23 +288,37 @@ class MediaFactory extends BaseFactory
      * Process the queue of downloads
      * @param null|callable $success success callable
      * @param null|callable $failure failure callable
+     * @param null|callable $rejected rejected callable
      */
-    public function processDownloads($success = null, $failure = null)
+    public function processDownloads($success = null, $failure = null, $rejected = null)
     {
         if (count($this->remoteDownloadQueue) > 0) {
-
             $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
 
             // Create a generator and Pool
             $log = $this->getLog();
             $queue = $this->remoteDownloadQueue;
-            $client = new Client($this->config->getGuzzleProxy());
+            $client = new Client($this->config->getGuzzleProxy(['timeout' => 0]));
 
             $downloads = function () use ($client, $queue) {
                 foreach ($queue as $media) {
                     $url = $media->downloadUrl();
                     $sink = $media->downloadSink();
-                    $requestOptions = array_merge($media->downloadRequestOptions(),  ['save_to' => $sink]);
+                    $requestOptions = array_merge($media->downloadRequestOptions(), [
+                        'sink' => $sink,
+                        'on_headers' => function (ResponseInterface $response) {
+                            $this->getLog()->debug('DEBUG: ' . $response->getStatusCode());
+                            if ($response->getStatusCode() < 299) {
+                                $this->getLog()->debug('DEBUG: ' . var_export($response->getHeaders(), true));
+                                $contentLength = $response->getHeaderLine('Content-Length');
+                                if (empty($contentLength)
+                                    || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
+                                ) {
+                                    throw new \Exception(__('File too large'));
+                                }
+                            }
+                        }
+                    ]);
 
                     yield function () use ($client, $url, $requestOptions) {
                         return $client->getAsync($url, $requestOptions);
@@ -310,7 +329,6 @@ class MediaFactory extends BaseFactory
             $pool = new Pool($client, $downloads(), [
                 'concurrency' => 5,
                 'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure) {
-                    /** @var Media $item */
                     $item = $queue[$index];
 
                     // File is downloaded, call save to move it appropriately
@@ -318,9 +336,9 @@ class MediaFactory extends BaseFactory
                         $item->saveFile();
 
                         // If a success callback has been provided, call it
-                        if ($success !== null && is_callable($success))
+                        if ($success !== null && is_callable($success)) {
                             $success($item);
-
+                        }
                     } catch (\Exception $e) {
                         $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
 
@@ -328,13 +346,31 @@ class MediaFactory extends BaseFactory
                         $item->delete(['rollback' => true]);
 
                         // If a failure callback has been provided, call it
-                        if ($failure !== null && is_callable($failure))
+                        if ($failure !== null && is_callable($failure)) {
                             $failure($item);
+                        }
                     }
                 },
-                'rejected' => function ($reason, $index) use ($log) {
+                'rejected' => function ($reason, $index) use ($log, $rejected) {
                     /* @var RequestException $reason */
-                    $log->error(sprintf('Rejected Request %d to %s because %s', $index, $reason->getRequest()->getUri(), $reason->getMessage()));
+                    $log->error(
+                        sprintf(
+                            'Rejected Request %d to %s because %s',
+                            $index,
+                            $reason->getRequest()->getUri(),
+                            $reason->getMessage()
+                        )
+                    );
+
+                    // If a failure callback has been provided, call it
+                    if ($rejected !== null && is_callable($rejected)) {
+                        // Do we have a wrapped exception?
+                        $reasonMessage = $reason->getPrevious() !== null
+                            ? $reason->getPrevious()->getMessage()
+                            : $reason->getMessage();
+
+                        call_user_func($rejected, $reasonMessage);
+                    }
                 }
             ]);
 
@@ -348,8 +384,9 @@ class MediaFactory extends BaseFactory
 
             foreach ($this->remoteDownloadNotRequiredQueue as $item) {
                 // If a success callback has been provided, call it
-                if ($success !== null && is_callable($success))
+                if ($success !== null && is_callable($success)) {
                     $success($item);
+                }
             }
         }
 
@@ -368,8 +405,9 @@ class MediaFactory extends BaseFactory
     {
         $media = $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId, 'allModules' => 1));
 
-        if (count($media) <= 0)
+        if (count($media) <= 0) {
             throw new NotFoundException(__('Cannot find media'));
+        }
 
         return $media[0];
     }
@@ -384,8 +422,9 @@ class MediaFactory extends BaseFactory
     {
         $media = $this->query(null, array('disableUserCheck' => 1, 'parentMediaId' => $mediaId, 'allModules' => 1));
 
-        if (count($media) <= 0)
+        if (count($media) <= 0) {
             throw new NotFoundException(__('Cannot find media'));
+        }
 
         return $media[0];
     }
@@ -429,9 +468,9 @@ class MediaFactory extends BaseFactory
      * @return Media[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId, $allModules = 0)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1));
+        return $this->query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1, 'allModules' => $allModules]);
     }
 
     /**
@@ -453,6 +492,10 @@ class MediaFactory extends BaseFactory
      */
     public function getByDisplayGroupId($displayGroupId)
     {
+        if ($displayGroupId == null) {
+            return [];
+        }
+
         return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => $displayGroupId));
     }
 
@@ -467,6 +510,11 @@ class MediaFactory extends BaseFactory
     public function getByLayoutId($layoutId, $edited = -1, $excludeDynamicPlaylistMedia = 0)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited, 'excludeDynamicPlaylistMedia' => $excludeDynamicPlaylistMedia]);
+    }
+
+    public function getForMenuBoards()
+    {
+        return $this->query(null, ['onlyMenuBoardAllowed' => 1]);
     }
 
     /**
@@ -502,19 +550,19 @@ class MediaFactory extends BaseFactory
 
         $params = [];
         $select = '
-            SELECT  media.mediaId,
-               media.name,
-               media.type AS mediaType,
-               media.duration,
-               media.userId AS ownerId,
-               media.fileSize,
-               media.storedAs,
-               media.valid,
-               media.moduleSystemFile,
-               media.expires,
-               media.md5,
-               media.retired,
-               media.isEdited,
+            SELECT `media`.mediaId,
+               `media`.name,
+               `media`.type AS mediaType,
+               `media`.duration,
+               `media`.userId AS ownerId,
+               `media`.fileSize,
+               `media`.storedAs,
+               `media`.valid,
+               `media`.moduleSystemFile,
+               `media`.expires,
+               `media`.md5,
+               `media`.retired,
+               `media`.isEdited,
                IFNULL(parentmedia.mediaId, 0) AS parentId,
                `media`.released,
                `media`.apiRef,
@@ -523,11 +571,17 @@ class MediaFactory extends BaseFactory
                `media`.enableStat,
                `media`.folderId,
                `media`.permissionsFolderId,
+               `media`.orientation,
+               ( 
+                   SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                        FROM tag
+                        INNER JOIN lktagmedia
+                            ON lktagmedia.tagId = tag.tagId
+                            WHERE lktagmedia.mediaId = media.mediaId
+                        GROUP BY lktagmedia.mediaId
+               ) as tags,
+               `user`.UserName AS owner,
             ';
-
-        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaId GROUP BY lktagmedia.mediaId) AS tagValues, ";
-        $select .= "        `user`.UserName AS owner, ";
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
                                 INNER JOIN `permissionentity`
@@ -569,9 +623,6 @@ class MediaFactory extends BaseFactory
             $body .= ' AND media.type <> \'savedreport\' ';
         }
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, '`media`.permissionsFolderId');
-
         if ($sanitizedFilter->getInt('allModules') == 0) {
             $body .= ' AND media.type <> \'module\' ';
         }
@@ -600,6 +651,8 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
+                AND media.mediaId NOT IN (SELECT mediaId FROM `menu_category` WHERE mediaId IS NOT NULL)
+                AND media.mediaId NOT IN (SELECT mediaId FROM `menu_product` WHERE mediaId IS NOT NULL)
                 AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout` WHERE backgroundImageId IS NOT NULL)
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
@@ -657,7 +710,7 @@ class MediaFactory extends BaseFactory
         } else if ($sanitizedFilter->getInt('parentMediaId') !== null) {
             $body .= ' AND media.editedMediaId = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('parentMediaId');
-        } else if ($sanitizedFilter->getInt('isEdited') != -1) {
+        } else if ($sanitizedFilter->getInt('isEdited', ['default' => -1]) != -1) {
             $body .= ' AND media.isEdited <> -1 ';
         } else {
             $body .= ' AND media.isEdited = 0 ';
@@ -666,6 +719,20 @@ class MediaFactory extends BaseFactory
         if ($sanitizedFilter->getString('type') != '') {
             $body .= 'AND media.type = :type ';
             $params['type'] = $sanitizedFilter->getString('type');
+        }
+
+        if (!empty($sanitizedFilter->getArray('types'))) {
+            $body .= 'AND (';
+            foreach ($sanitizedFilter->getArray('types') as $key => $type) {
+                $body .= 'media.type = :types' . $key . ' ';
+
+                if ($key !== array_key_last($sanitizedFilter->getArray('types'))) {
+                    $body .= ' OR ';
+                }
+
+                $params['types' .  $key] = $type;
+            }
+            $body .= ') ';
         }
 
         if ($sanitizedFilter->getInt('imageProcessing') !== null) {
@@ -738,12 +805,16 @@ class MediaFactory extends BaseFactory
             $body .= '    )
                 AND media.type <> \'module\'
             ';
+
+            if ($sanitizedFilter->getInt('includeLayoutBackgroundImage') === 1) {
+                $body .= ' OR media.mediaId IN ( SELECT `layout`.backgroundImageId FROM `layout` WHERE `layout`.layoutId = :layoutId ) ';
+            }
+
             $params['layoutId'] = $sanitizedFilter->getInt('layoutId');
         }
 
         // Tags
         if ($sanitizedFilter->getString('tags') != '') {
-
             $tagFilter = $sanitizedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -756,16 +827,16 @@ class MediaFactory extends BaseFactory
                 ';
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `media`.mediaId IN (
+                $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
                   FROM tag
                     INNER JOIN `lktagmedia`
                     ON `lktagmedia`.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagmedia', 'lkTagMediaId', 'mediaId', $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -790,6 +861,22 @@ class MediaFactory extends BaseFactory
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
+        if ($sanitizedFilter->getInt('onlyMenuBoardAllowed') !== null) {
+            $body .= ' AND ( media.type = \'image\' OR media.type = \'video\' ) ';
+        }
+
+        if ($sanitizedFilter->getString('orientation') !== null) {
+            $body .= ' AND media.orientation = :orientation ';
+            $params['orientation'] = $sanitizedFilter->getString('orientation');
+        }
+
+        if ($sanitizedFilter->getInt('noOrientation') === 1) {
+            $body .= ' AND media.orientation IS NULL ';
+        }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, '`media`.permissionsFolderId');
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -797,18 +884,24 @@ class MediaFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length', ['default'=> 10]) !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default'=> 10]);
+        if ($sanitizedFilter->hasParam('start') && $sanitizedFilter->hasParam('length')) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0])
+                . ', ' . $sanitizedFilter->getInt('length', ['default'=> 10]);
         }
 
         $sql = $select . $body . $order . $limit;
         
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $media = $this->createEmpty()->hydrate($row, [
+            $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires'
+                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires', 'valid'
                 ]
             ]);
+            $media->excludeProperty('layoutBackgroundImages');
+            $media->excludeProperty('widgets');
+            $media->excludeProperty('displayGroups');
+
+            $entries[] = $media;
         }
 
         // Paging

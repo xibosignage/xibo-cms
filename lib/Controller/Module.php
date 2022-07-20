@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,13 +22,11 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
-use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
+use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetEditEvent;
 use Xibo\Factory\DataSetFactory;
@@ -36,20 +34,16 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -120,26 +114,14 @@ class Module extends Base
     /** @var  DisplayFactory */
     private $displayFactory;
 
-    /** @var ScheduleFactory  */
-    private $scheduleFactory;
-
     /** @var DataSetFactory */
     private $dataSetFactory;
 
-    /** @var PlayerVersionFactory  */
-    private $playerVersionFactory;
-
-    /** @var ContainerInterface */
-    private $container;
+    /** @var MenuBoardFactory */
+    private $menuBoardFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param ModuleFactory $moduleFactory
      * @param PlaylistFactory $playlistFactory
@@ -153,15 +135,26 @@ class Module extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param DisplayFactory $displayFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param $dataSetFactory
-     * @param Twig $view
-     * @param ContainerInterface $container
+     * @param DataSetFactory $dataSetFactory
+     * @param MenuBoardFactory $menuBoardFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view, ContainerInterface $container)
-    {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
+    public function __construct(
+        $store,
+        $moduleFactory,
+        $playlistFactory,
+        $mediaFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $widgetFactory,
+        $transitionFactory,
+        $regionFactory,
+        $layoutFactory,
+        $displayGroupFactory,
+        $widgetAudioFactory,
+        $displayFactory,
+        $dataSetFactory,
+        $menuBoardFactory
+    ) {
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
         $this->playlistFactory = $playlistFactory;
@@ -175,9 +168,8 @@ class Module extends Base
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->displayFactory = $displayFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->dataSetFactory = $dataSetFactory;
-        $this->container = $container;
+        $this->menuBoardFactory = $menuBoardFactory;
     }
 
     /**
@@ -222,15 +214,16 @@ class Module extends Base
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 break;
+            }
 
             $module->includeProperty('buttons');
 
             // Edit button
             $module->buttons[] = array(
                 'id' => 'module_button_edit',
-                'url' => $this->urlFor($request,'module.settings.form', ['id' => $module->moduleId]),
+                'url' => $this->urlFor($request, 'module.settings.form', ['id' => $module->moduleId]),
                 'text' => __('Edit')
             );
 
@@ -238,7 +231,7 @@ class Module extends Base
             if ($module->regionSpecific == 1) {
                 $module->buttons[] = array(
                     'id' => 'module_button_clear_cache',
-                    'url' => $this->urlFor($request,'module.clear.cache.form', ['id' => $module->moduleId]),
+                    'url' => $this->urlFor($request, 'module.clear.cache.form', ['id' => $module->moduleId]),
                     'text' => __('Clear Cache'),
                     'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
@@ -248,13 +241,35 @@ class Module extends Base
                 );
             }
 
-            // Create a module object and return any buttons it may require
-            $moduleObject = $this->moduleFactory->create($module->type);
+            // Uninstall button
+            if ($module->enabled === 0 && !empty($module->installName)) {
+                $module->buttons[] = ['divider' => true];
+                $module->buttons[] = [
+                    'id' => 'module_button_uninstall',
+                    'url' => $this->urlFor($request, 'module.uninstall.form', ['id' => $module->moduleId]),
+                    'text' => __('Uninstall')
+                ];
+            }
 
-            // Are there any buttons we need to provide as part of the module?
-            foreach ($moduleObject->settingsButtons() as $button) {
-                $button['text'] = __($button['text']);
-                $module->buttons[] = $button;
+            // Create a module object and return any buttons it may require
+            try {
+                $moduleObject = $this->moduleFactory->create($module->type)
+                    ->setUser($this->getUser())
+                    ->setPreview(
+                        true,
+                        RouteContext::fromRequest($request)->getRouteParser(),
+                        0,
+                        0
+                    );
+
+                // Are there any buttons we need to provide as part of the module?
+                foreach ($moduleObject->settingsButtons() as $button) {
+                    $button['text'] = __($button['text']);
+                    $module->buttons[] = $button;
+                }
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->notice('Error with module ' . $module->type
+                    . ', e: ' . $notFoundException->getMessage());
             }
         }
 
@@ -279,20 +294,31 @@ class Module extends Base
     public function settingsForm(Request $request, Response $response, $id)
     {
         // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
+        $moduleConfigLocked = $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1
+            || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked';
 
-        if (!$this->getUser()->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1) {
             throw new AccessDeniedException();
+        }
 
-        $module = $this->moduleFactory->createById($id);
-
-        $moduleFields = $module->settingsForm();
+        $module = null;
+        $moduleFields = null;
+        $error = false;
+        try {
+            $module = $this->moduleFactory->createById((int)$id);
+            $moduleFields = $module->settingsForm();
+        } catch (NotFoundException $notFoundException) {
+            // There is an error with this module.
+            $error = true;
+        }
 
         // Pass to view
         $this->getState()->template = ($moduleFields == null) ? 'module-form-settings' : $moduleFields;
         $this->getState()->setData([
             'moduleConfigLocked' => $moduleConfigLocked,
+            'moduleId' => $id,
             'module' => $module,
+            'error' => $error,
             'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
 
@@ -312,20 +338,31 @@ class Module extends Base
      */
     public function settings(Request $request, Response $response, $id)
     {
-        // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1
-            || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
-
-        $sanitizedPrams = $this->getSanitizer($request->getParams());
-
-        if (!$this->getUser()->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1) {
             throw new AccessDeniedException();
+        }
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $module = $this->moduleFactory->createById($id);
-        $module->getModule()->defaultDuration = $sanitizedPrams->getInt('defaultDuration');
-        $module->getModule()->validExtensions = $sanitizedPrams->getString('validExtensions');
-        $module->getModule()->enabled = $sanitizedPrams->getCheckbox('enabled');
-        $module->getModule()->previewEnabled = $sanitizedPrams->getCheckbox('previewEnabled');
+        try {
+            $module = $this->moduleFactory->createById((int)$id);
+        } catch (NotFoundException $notFoundException) {
+            // If we can't load the module, we should disable it.
+            $module = $this->moduleFactory->getById($id);
+            $module->enabled = 0;
+            $module->save();
+            return $this->render($request, $response);
+        }
+
+        // Module loaded, so continue with the normal edit procedure.
+        $module->getModule()->defaultDuration = $sanitizedParams->getInt('defaultDuration');
+        $module->getModule()->validExtensions = $sanitizedParams->getString('validExtensions');
+        $module->getModule()->enabled = $sanitizedParams->getCheckbox('enabled');
+        $module->getModule()->previewEnabled = $sanitizedParams->getCheckbox('previewEnabled');
+
+        // for Font Module set the User, needed for installing fonts in MediaService
+        if ($module->getModuleType() === 'font') {
+            $module->setUser($this->getUser());
+        }
 
         // Install Files for this module
         $module->installFiles();
@@ -379,8 +416,7 @@ class Module extends Base
         $this->store->update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
 
         // Install all files
-        /** @var Library $library */
-        $this->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
+        $this->installAllModuleFiles();
 
         // Successful
         $this->getState()->hydrate([
@@ -388,6 +424,31 @@ class Module extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Installs all files related to the enabled modules
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function installAllModuleFiles()
+    {
+        $this->getLog()->info('Installing all module files');
+
+        // Do this for all enabled modules
+        foreach ($this->moduleFactory->getEnabled() as $module) {
+            /* @var \Xibo\Entity\Module $module */
+
+            // Install Files for this module
+            $moduleObject = $this->moduleFactory->create($module->type);
+            $moduleObject->installFiles();
+        }
+
+        // Dump the cache on all displays
+        foreach ($this->displayFactory->query() as $display) {
+            /** @var \Xibo\Entity\Display $display */
+            $display->notify();
+        }
     }
 
     /**
@@ -493,6 +554,61 @@ class Module extends Base
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
+     * @param string $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function uninstallForm(Request $request, Response $response, $id)
+    {
+        $module = $this->moduleFactory->getById($id);
+        if (empty($module->installName)) {
+            throw new InvalidArgumentException(
+                __('Cannot uninstall a core module, please disable it instead.'),
+                'installName'
+            );
+        }
+        
+        $this->getState()->template = 'module-form-uninstall';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => $this->getHelp()->link('Module', 'Install')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Install Module
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function uninstall(Request $request, Response $response, $id)
+    {
+        $module = $this->moduleFactory->getById($id);
+        if (empty($module->installName)) {
+            throw new InvalidArgumentException(
+                __('Cannot uninstall a core module, please disable it instead.'),
+                'installName'
+            );
+        }
+        $module->delete();
+
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Uninstalled %s'), $module->name),
+        ]);
+        return $this->render($request, $response);
+    }
+
+    /**
      * Add Widget
      *
      * * @SWG\Post(
@@ -552,7 +668,7 @@ class Module extends Base
         $playlist = $this->playlistFactory->getById($id);
 
         if (!$this->getUser()->checkEditable($playlist)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Playlist is not shared with you with edit permission'));
         }
 
         // Check we have a permission factory
@@ -572,6 +688,17 @@ class Module extends Base
             'loadWidgets' => true,
             'loadTags' => false
         ]);
+
+        // Is this Playlist the drawer?
+        if ($playlist->isRegionPlaylist() && $type === 'subplaylist') {
+            $region = $this->regionFactory->getById($playlist->regionId);
+            if ($region->isDrawer == 1) {
+                throw new InvalidArgumentException(
+                    __('Sorry you cannot add a sub-playlist to the Drawer'),
+                    'type'
+                );
+            }
+        }
 
         // Create a module to use
         $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $id);
@@ -628,7 +755,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Media file?
@@ -654,7 +781,7 @@ class Module extends Base
         // Do we have templates to load?
         $templates = [];
         if ($module->hasTemplates()) {
-            $templates = $module->templatesAvailable();
+            $templates = $module->templatesAvailable(true);
         }
 
         // Pass to view
@@ -687,7 +814,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -730,19 +857,26 @@ class Module extends Base
      */
     public function deleteWidgetForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        $widget = $this->widgetFactory->loadByWidgetId($id);
 
-        if (!$this->getUser()->checkDeleteable($module->widget)) {
-            throw new AccessDeniedException();
+        if (!$this->getUser()->checkDeleteable($widget)) {
+            throw new AccessDeniedException(__('This Widget is not shared with you with delete permission'));
         }
 
-        // Set some dependencies that are used in the delete
-        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+        $error = false;
+        $module = null;
+        try {
+            $module = $this->moduleFactory->createWithWidget($widget);
+        } catch (NotFoundException $notFoundException) {
+            $error = true;
+        }
 
         // Pass to view
         $this->getState()->template = 'module-form-delete';
         $this->getState()->setData([
+            'widgetId' => $id,
             'module' => $module,
+            'error' => $error,
             'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
 
@@ -782,11 +916,22 @@ class Module extends Base
      */
     public function deleteWidget(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        $widget = $this->widgetFactory->loadByWidgetId($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkDeleteable($module->widget)) {
-            throw new AccessDeniedException();
+        if (!$this->getUser()->checkDeleteable($widget)) {
+            throw new AccessDeniedException(__('This Widget is not shared with you with delete permission'));
+        }
+
+        try {
+            $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        } catch (NotFoundException $notFoundException) {
+            // This module doesn't exist, so we just delete the widget.
+            $widget->delete();
+            $this->getState()->hydrate([
+                'message' => __('Deleted Widget')
+            ]);
+            return $this->render($request, $response);
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -796,9 +941,6 @@ class Module extends Base
         if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
-
-        // Set some dependencies that are used in the delete
-        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
         $moduleName = $module->getName();
         $widgetMedia = $module->widget->mediaIds;
@@ -822,7 +964,7 @@ class Module extends Base
                     throw new AccessDeniedException();
                 }
 
-                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+                $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
                 $media->delete();
             }
         }
@@ -852,7 +994,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Pass to view
@@ -951,7 +1093,7 @@ class Module extends Base
         $widget = $this->widgetFactory->getById($id);
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1012,7 +1154,12 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
+        }
+
+        // Are we allowed to do this?
+        if ($module->getModuleType() === 'subplaylist') {
+            throw new InvalidArgumentException(__('Audio cannot be attached to a Sub-Playlist Widget. Please attach it to the Widgets inside the Playlist'), 'type');
         }
 
         $audioAvailable = true;
@@ -1098,7 +1245,7 @@ class Module extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1107,6 +1254,11 @@ class Module extends Base
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
         if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Are we allowed to do this?
+        if ($widget->type === 'subplaylist') {
+            throw new InvalidArgumentException(__('Audio cannot be attached to a Sub-Playlist Widget. Please attach it to the Widgets inside the Playlist'), 'type');
         }
 
         $widget->load();
@@ -1178,7 +1330,7 @@ class Module extends Base
         $widget = $this->widgetFactory->getById($id);
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1224,7 +1376,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkViewable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you'));
         }
 
         $module
@@ -1301,7 +1453,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id), $this->regionFactory->getById($regionId));
 
         if (!$this->getUser()->checkViewable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you'));
         }
 
         $params = $this->getSanitizer($request->getParams());
@@ -1347,11 +1499,20 @@ class Module extends Base
      */
     public function customFormRender(Request $request, Response $response, $id, $name)
     {
-        $module = $this->moduleFactory->createById($id);
+        $module = $this->moduleFactory->createById((int)$id);
 
         if (!method_exists($module, $name)) {
             throw new ConfigurationException(__('Method does not exist'));
         }
+
+        $module
+            ->setUser($this->getUser())
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
 
         $formDetails = $module->$name();
 
@@ -1374,15 +1535,23 @@ class Module extends Base
      */
     public function customFormExecute(Request $request, Response $response, $id, $name)
     {
-        $module = $this->moduleFactory->createById($id);
+        $module = $this->moduleFactory->createById((int)$id);
 
         if (!method_exists($module, $name)) {
             throw new ConfigurationException(__('Method does not exist'));
         }
 
-        $module->$name();
-        $this->setNoOutput(true);
-        return $this->render($request, $response);
+        $module
+            ->setUser($this->getUser())
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
+
+        // Call the form named
+        return $module->$name($request, $response);
     }
 
     /**
@@ -1473,7 +1642,7 @@ class Module extends Base
      */
     public function clearCache(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createById($id);
+        $module = $this->moduleFactory->createById((int)$id);
         $module->dumpCacheForModule();
 
         $this->getState()->hydrate([
@@ -1499,7 +1668,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Pass to view
@@ -1578,7 +1747,7 @@ class Module extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1630,6 +1799,115 @@ class Module extends Base
         // Successful
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited Expiry')),
+            'id' => $widget->widgetId,
+            'data' => $widget
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function getMenuBoards(Request $request, Response $response)
+    {
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
+
+        $this->getState()->template = 'grid';
+        $filter = [
+            'name' => $this->getSanitizer($request->getParams())->getString('name')
+        ];
+
+        $this->getState()->setData($this->menuBoardFactory->query($this->gridRenderSort($parsedRequestParams), $this->gridRenderFilter($filter, $parsedRequestParams)));
+        $this->getState()->recordsTotal = $this->menuBoardFactory->countLast();
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}/region",
+     *  operationId="WidgetAssignedRegionSet",
+     *  tags={"widget"},
+     *  summary="Set Widget Region",
+     *  description="Set the Region this Widget is intended for - only suitable for Drawer Widgets",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="Id of the Widget to set region on",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="targetRegionId",
+     *      in="formData",
+     *      description="The target regionId",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function widgetSetRegion(Request $request, Response $response, $id)
+    {
+        $widget = $this->widgetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser()->checkEditable($widget)) {
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
+        }
+
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isRegionPlaylist() || !$playlist->isEditable()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Make sure we are on a Drawer Widget
+        $region = $this->regionFactory->getById($playlist->regionId);
+        if ($region->isDrawer !== 1) {
+            throw new InvalidArgumentException(__('You can only set a target region on a Widget in the drawer.'), 'widgetId');
+        }
+
+        // Store the target regionId
+        $widget->load();
+        $widget->setOptionValue('targetRegionId', 'attrib', $sanitizedParams->getInt('targetRegionId'));
+
+        // Save
+        $widget->save([
+            'saveWidgetOptions' => true,
+            'saveWidgetAudio' => false,
+            'saveWidgetMedia' => false,
+            'notify' => true,
+            'notifyPlaylists' => true,
+            'notifyDisplays' => false,
+            'audit' => true
+        ]);
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Target region set')),
             'id' => $widget->widgetId,
             'data' => $widget
         ]);

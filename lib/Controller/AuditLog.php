@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,17 +20,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -46,19 +43,10 @@ class AuditLog extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param AuditLogFactory $auditLogFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $auditLogFactory, Twig $view)
+    public function __construct($auditLogFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->auditLogFactory = $auditLogFactory;
     }
 
@@ -93,6 +81,7 @@ class AuditLog extends Base
         $filterEntity = $sanitizedParams->getString('entity');
         $filterEntityId = $sanitizedParams->getString('entityId');
         $filterMessage = $sanitizedParams->getString('message');
+        $filterIpAddress = $sanitizedParams->getString('ipAddress');
 
         $search = [];
 
@@ -126,6 +115,10 @@ class AuditLog extends Base
 
         if ($filterMessage != '') {
             $search['message'] = $filterMessage;
+        }
+
+        if ($filterIpAddress != '') {
+            $search['ipAddress'] = $filterIpAddress;
         }
 
         $rows = $this->auditLogFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($search, $sanitizedParams));

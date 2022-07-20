@@ -6,7 +6,7 @@
 {% block actionMenu %}
     {% if currentUser.featureEnabled("layout.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</button>
+        <button class="btn btn-success XiboFormButton" data-modal-size="extra-large" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</button>
         <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
     </div>
     {% endif %}
@@ -27,7 +27,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general-filter" role="tabpanel">
                                     {% set title %}{% trans "ID" %}{% endset %}
-                                    {{ inline.number("layoutId", title) }}
+                                    {{ inline.number("campaignId", title) }}
 
                                     <div class="form-group mr-1 mb-1">
                                         <label class="control-label mr-1" title="" for="layout" accesskey="">{% trans "Name" %}</label>
@@ -44,15 +44,25 @@
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tags" %}{% endset %}
                                         {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                         {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                     {% endif %}
+
+                                    {% set title %}{% trans "Code" %}{% endset %}
+                                    {{ inline.input('codeLike', title) }}
 
                                     {% set attributes = [
                                     { name: "data-allow-clear", value: "true" },
                                     { name: "data-placeholder--id", value: null },
                                     { name: "data-placeholder--value", value: "" }
                                     ] %}
+
+                                    {% if currentUser.featureEnabled("displaygroup.view") %}
+                                        {% set title %}{% trans "Display Group" %}{% endset %}
+                                        {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
+                                        {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% endif %}
 
                                     {% set title %}{% trans "Owner" %}{% endset %}
                                     {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
@@ -62,11 +72,12 @@
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
-                                    {% if currentUser.featureEnabled("displaygroup.view") %}
-                                        {% set title %}{% trans "Display Group" %}{% endset %}
-                                        {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
-                                        {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
-                                    {% endif %}
+                                    {% set title %}{% trans "Orientation" %}{% endset %}
+                                    {% set option1 = "All"|trans %}
+                                    {% set option2 = "Landscape"|trans %}
+                                    {% set option3 = "Portrait"|trans %}
+                                    {% set values = [{id: '', value: option1}, {id: 'landscape', value: option2}, {id: 'portrait', value: option3}] %}
+                                    {{ inline.dropdown("orientation", "single", title, '', values, "id", "value") }}
 
                                     {{ inline.hidden("folderId") }}
                                 </div>
@@ -96,17 +107,12 @@
                                         {% set title %}{% trans "Media" %}{% endset %}
                                         {{ inline.input("mediaLike", title) }}
                                     {% endif %}
+
+                                    {% set title %}{% trans "Layout ID" %}{% endset %}
+                                    {{ inline.number("layoutId", title) }}
                                 </div>
                             </div>
                         </form>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
-                    </div>
-                    <div class="form-group col-sm-11" style="padding: 0">
-                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
                     </div>
                 </div>
 
@@ -114,10 +120,16 @@
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
+
+                    <div class="folder-controller d-none">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
+                        <div id="breadcrumbs" class="mt-2 pl-2"></div>
+                    </div>
+                    
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="layouts" class="table table-striped responsive nowrap" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="layoutGrid" style="width: 100%;">
@@ -129,13 +141,15 @@
                                         <th>{% trans "Description" %}</th>
                                         <th>{% trans "Duration" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
+                                        <th>{% trans "Orientation" %}</th>
                                         <th>{% trans "Thumbnail" %}</th>
                                         <th>{% trans "Owner" %}</th>
-                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Valid?" %}</th>
                                         <th>{% trans "Stats?" %}</th>
                                         <th>{% trans "Created" %}</th>
                                         <th>{% trans "Modified" %}</th>
+                                        <th>{% trans "Layout ID" %}</th>
                                         <th>{% trans "Code" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
@@ -161,8 +175,9 @@
             {% endif %}
 
             table = $("#layouts").DataTable({
-                "language": dataTablesLanguage,
-                "lengthMenu": [10, 25, 50, 100, 250, 500],
+                language: dataTablesLanguage,
+                lengthMenu: [10, 25, 50, 100, 250, 500],
+                dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
@@ -172,15 +187,15 @@
                 filter: false,
                 searchDelay: 3000,
                 dataType: 'json',
-                "order": [[1, "asc"]],
+                order: [[1, "asc"]],
                 ajax: {
                     url: "{{ url_for("layout.search") }}",
-                    "data": function (d) {
+                    data: function (d) {
                         $.extend(d, $("#layouts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                "columns": [
-                    {"data": "layoutId", responsivePriority: 2},
+                columns: [
+                    {"data": "campaignId", responsivePriority: 1},
                     {
                         "data": "layout",
                         responsivePriority: 2,
@@ -197,9 +212,9 @@
                                 var momentDifference = moment(now).to(published);
 
                                 if (differenceMinutes < -5) {
-                                    return data.publishedStatus.concat(" - ", data.publishedStatusFailed);
+                                    return data.publishedStatus.concat(" - ", translations.publishedStatusFailed);
                                 } else {
-                                    return data.publishedStatus.concat(" - ", data.publishedStatusFuture.replace('%s', momentDifference));
+                                    return data.publishedStatus.concat(" - ", translations.publishedStatusFuture + " " + momentDifference);
                                 }
                             } else {
                                 return data.publishedStatus;
@@ -210,7 +225,7 @@
                     {
                         "name": "description",
                         "data": null,
-                        responsivePriority: 5,
+                        responsivePriority: 10,
                         "render": {"_": "description", "display": "descriptionFormatted", "sort": "description"}
                     },
                     {
@@ -229,11 +244,27 @@
                         responsivePriority: 3,
                         "data": dataTableCreateTags
                     },{% endif %}
+                    { data: 'orientation', responsivePriority: 10, visible: false},
                     {
-                        "name": "layoutId",
                         responsivePriority: 5,
-                        "data": null,
-                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "layoutId"}
+                        data: 'thumbnail',
+                        render: function(data, type, row) {
+                          if (type !== 'display') {
+                            return row.layoutId;
+                          }
+                          if (data) {
+                            return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
+                                '<img class="img-fluid" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />' +
+                                '</a>';
+                          } else {
+                            var addUrl = '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}'.replace(':id', row.layoutId);
+                            return '<a class="img-replace generate-layout-thumbnail" data-type="image" href="' + addUrl + '">' +
+                                '<img class="img-fluid" src="{{ theme.uri("img/thumbs/placeholder.png") }}" alt="{{ "Add Thumbnail"|trans }}" />' +
+                                '</a>';
+                          }
+                          return '';
+                        },
+                        sortable: false
                     },
                     {"data": "owner", responsivePriority: 4},
                     {
@@ -282,10 +313,15 @@
                         "visible": false
                     },
                     {
-                        "data": "modifiedDt",
+                        data: "modifiedDt",
                         responsivePriority: 6,
-                        "render": dataTableDateFromIso,
-                        "visible": false
+                        render: dataTableDateFromIso,
+                        visible: true
+                    },
+                    {
+                      data: "layoutId",
+                      visible: false,
+                      responsivePriority: 4
                     },
                     {"data": "code", "visible":false, responsivePriority: 4},
                     {
@@ -297,23 +333,37 @@
             });
 
             table.on('draw', dataTableDraw);
-            table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
+            table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+            table.on('draw', function(e, settings) {
+              $('#' + e.target.id + ' .generate-layout-thumbnail').on('click', function(e) {
+                e.preventDefault();
+                var $anchor = $(this);
+                $.ajax({
+                  url: $anchor.attr('href'),
+                  method: 'POST',
+                  success: function() {
+                    $anchor.find('img').attr('src', $anchor.attr('href'));
+                    $anchor.removeClass('generate-layout-thumbnail').attr('data-toggle', 'lightbox');
+                  }
+                });
+              });
+            });
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#layouts_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#layouts_wrapper').find('.dataTables_buttons'));
         });
 
         $("#layoutUploadForm").click(function(e) {
             e.preventDefault();
+            var currentWorkingFolderId = $('#folderId').val();
 
             // Open the upload dialog with our options.
             openUploadForm({
                 url: "{{ url_for("layout.import") }}",
-                title: "{% trans "Upload Layout" %}",
-                multi: true,
+                title: "{{ "Upload Layout"|trans }}",
                 videoImageCovers: false,
                 buttons: {
                     main: {
-                        label: "{% trans "Done" %}",
+                        label: "{{ "Done"|trans }}",
                         className: "btn-primary btn-bb-main",
                         callback: function () {
                             table.ajax.reload();
@@ -326,20 +376,25 @@
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %},
                     trans: {
-                        addFiles: "{% trans "Add Layout Export ZIP Files" %}",
-                        startUpload: "{% trans "Start Import" %}",
-                        cancelUpload: "{% trans "Cancel Import" %}",
-                        replaceExistingMediaMessage: "{% trans "Replace Existing Media?" %}",
-                        importTagsMessage: "{% trans "Import Tags?" %}",
-                        useExistingDataSetsMessage: "{% trans "Use existing DataSets matched by name?" %}",
-                        dataSetDataMessage: "{% trans "Import DataSet Data?" %}"
+                        addFiles: "{{ "Add Layout Export ZIP Files"|trans }}",
+                        startUpload: "{{ "Start Import"|trans }}",
+                        cancelUpload: "{{ "Cancel Import"|trans }}",
+                        replaceExistingMediaMessage: "{{ "Replace Existing Media?"|trans }}",
+                        importTagsMessage: "{{ "Import Tags?"|trans }}",
+                        useExistingDataSetsMessage: "{{ "Use existing DataSets matched by name?"|trans }}",
+                        dataSetDataMessage: "{{ "Import DataSet Data?"|trans }}",
+                        selectFolder: "{{ "Select Folder"|trans }}",
+                        selectFolderTitle: "{{ "Change Current Folder location"|trans }}",
+                        selectedFolder: "{{ "Current Folder"|trans }}:",
+                        selectedFolderTitle: "{{ "Upload files to this Folder"|trans }}"
                     },
                     upload: {
                         maxSize: {{ libraryUpload.maxSize }},
                         maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
                         validExt: "zip"
                     },
-                    folderSelector: false
+                    currentWorkingFolderId: currentWorkingFolderId,
+                    folderSelector: true
                 },
                 formOpenedEvent: function () {
                     // Configure the active behaviour of the checkboxes
@@ -354,48 +409,285 @@
             });
         });
 
-        function layoutAddFormOpen() {
-            if ($('#folder-tree-form-modal').length === 0) {
-                // compile tree folder modal and append it to Form
-                var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
-                $("body").append(folderTreeModal(treeConfig));
+        function layoutAddFormOpen(dialog) {
+          // Form
+          var $form = $('#layoutAddForm');
 
-                $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
-                    $(this).data('bs.modal', null);
-                });
+          // Popovers
+          $(dialog).find('[data-toggle="popover"]').popover();
+
+          // Stepper
+          var navListItems = $(dialog).find('div.stepper-nav div a'),
+              allWells = $(dialog).find('.stepper-panel'),
+              stepWizard = $(dialog).find('.stepwizard');
+
+          navListItems.click(function (e) {
+            e.preventDefault();
+            var $target = $($(this).attr('href')),
+                $item = $(this);
+
+            if (!$item.attr('disabled')) {
+              // Set all step links to inactive
+              navListItems
+                .removeClass('btn-success')
+                .addClass('btn-default');
+
+              // Activate this specific one
+              $item.addClass('btn-success');
+
+              // Hide all the panels and show this specific one
+              allWells.hide();
+              $target.show();
+              $target.find('input:eq(0)').focus();
+
+              // Set the active panel on the links
+              stepWizard.data('active', $target.prop('id'))
+
+              // Is the next action to finish?
+              if ($target.data('next') === 'finished') {
+                $(dialog).find('#layout-create-stepper-next-button').html("{{ "Save"|trans }}");
+              } else {
+                $(dialog).find('#layout-create-stepper-next-button').html("{{ "Next"|trans }}")
+              }
             }
+          });
 
-            // select current working folder if one is selected in the grid
-            if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined) {
-                $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
-            }
-
-            initJsTreeAjax('#container-folder-form-tree', 'layoutAddForm', true, 600);
-
-            $("#layoutAddForm").submit(function(e) {
+          // Add some buttons.
+          $(dialog).
+              find('.modal-footer').
+              append($('<a class="btn btn-white">').html("{{ "Help"|trans }}").click(function(e) {
                 e.preventDefault();
-                var form = $(this);
+                XiboHelpRender($form.data().helpUrl);
+              })).
+              append(
+                  $('<a class="btn btn-white">').html("{{ "Close"|trans }}").click(function(e) {
+                    e.preventDefault();
+                    XiboDialogClose();
+                  })).
+              append($('<a id="layout-create-stepper-next-button" class="btn btn-primary disabled">').
+                  html("{{ "Next"|trans }}").
+                  click(function(e) {
+                    e.preventDefault();
+                    var steps = $(dialog).find('.stepwizard'),
+                        curStep = $(dialog).find('#' + steps.data('active')),
+                        curInputs = curStep.find('input[type=\'text\'],input[type=\'url\']'),
+                        isValid = true;
 
-                var url = $(this).data().redirect;
+                    // What is the next step?
+                    if (curStep.data('next') === 'finished') {
+                      // add a progress spinning to the button
+                      var $button = $(this);
+                      $button.append(' <span class="saving fa fa-cog fa-spin"></span>');
+                      $button.addClass("disabled");
 
-                $.ajax({
-                    type: $(this).attr("method"),
-                    url: $(this).attr("action"),
-                    data: $(this).serialize(),
-                    cache: false,
-                    dataType:"json",
-                    success: function(xhr, textStatus, error) {
+                      // Submit the form thereby creating the layout
+                      $('#layoutAddForm').trigger('submit');
+                    } else {
+                      var nextStepWizard = steps.find('a[href=\'#' + curStep.data('next') + '\']');
 
-                        XiboSubmitResponse(xhr, form);
-
-                        if (xhr.success) {
-                            // Reload the designer
-                            XiboRedirect(url.replace(":id", xhr.id));
+                      $(dialog).find('.form-group').removeClass('has-error');
+                      for (var i = 0; i < curInputs.length; i++) {
+                        if (!curInputs[i].validity.valid) {
+                          isValid = false;
+                          $(curInputs[i]).closest('.form-group').addClass('has-error');
                         }
+                      }
+
+                      if (isValid) {
+                        nextStepWizard.removeAttr('disabled').trigger('click');
+                      }
                     }
-                });
+                  }));
+
+          // Card handling
+          // Get our template ready to roll.
+          var cardsTemplate = Handlebars.compile($('#template-layout-add-template-cards').html());
+          var cardColumn = $(dialog).find('#layout-add-templates');
+
+          // Initialise masonary - we do this after we've added our first card.
+          var masonry;
+          masonry = new Masonry('#layout-add-templates', {
+            percentPosition: true
+          });
+
+          // filter form
+          var $filter = $('#layout-add-templates-filter');
+          var filter = {
+            start: 0,
+            length: 15,
+          };
+          filter = $.extend(filter, $filter.serializeObject());
+
+          // track start/length
+          $filter.on('change', function() {
+            // Clear everything.
+            masonry.remove(cardColumn.find('.template-card'));
+
+            // Run a new query.
+            filter = $.extend(filter, $filter.serializeObject());
+
+            if (!filter.template && (filter.provider && (filter.provider === 'both' || filter.provider === 'local'))) {
+              loadPredefined(cardsTemplate, cardColumn, masonry, filter);
+            }
+
+            loadTemplates(cardsTemplate, cardColumn, masonry, filter, 'both');
+          });
+
+          if (filter.provider && (filter.provider === 'both' || filter.provider === 'local')) {
+            loadPredefined(cardsTemplate, cardColumn, masonry, filter);
+          }
+
+          cardColumn.imagesLoaded(function() {
+            // All images loaded
+            // Make a request to get our templates.
+            loadTemplates(cardsTemplate, cardColumn, masonry, filter, 'both');
+          }).progress(function() {
+            // Layout the image card we've loaded
+            masonry.layout();
+          });
+
+          // Add the more button
+          $(dialog).find('#layout-add-templates-more').on('click', function(e) {
+            e.preventDefault();
+            filter.start = filter.start + filter.length;
+            loadTemplates(cardsTemplate, cardColumn, masonry, filter, 'both');
+          });
+
+          // Folder selector.
+          if ($('#folder-tree-form-modal').length === 0) {
+            // compile tree folder modal and append it to Form
+            var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+            var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+            $("body").append(folderTreeModal(treeConfig));
+
+            $("#folder-tree-form-modal").on('hidden.bs.modal', function() {
+              // Fix for 2nd/overlay modal
+              $('.modal:visible').length && $(document.body).addClass('modal-open');
+
+              $(this).data('bs.modal', null);
             });
+          }
+
+          // select current working folder if one is selected in the grid
+          if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined) {
+            $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+          }
+
+          initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'layoutAddForm', true, 600);
+
+          // Add a submit handler
+          $('#layoutAddForm').submit(function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var url = $(this).data().redirect;
+            XiboFormSubmit($form, null, function(xhr, form) {
+              // Remove the cogs/disabled.
+              var $saveButton = $(this).find('.saving');
+              $saveButton.parent().removeClass('disabled');
+              $saveButton.find('.saving').remove();
+
+              if (xhr.success) {
+                // Reload the designer
+                XiboRedirect(url.replace(":id", xhr.id));
+              }
+            });
+          });
+        }
+
+        function loadPredefined(cardsTemplate, cardColumn, masonry, filter) {
+          // Add full screen, l-bar-right and l-bar-left
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Full screen"|trans }}',
+            description: '{{ "Full screen content"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/full-screen.png',
+            source: 'local',
+            id: '0|full-screen'
+          }));
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "L shape left"|trans }}',
+            description: '{{ "3 regions in an L shape, on the left"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-left.png',
+            source: 'local',
+            id: '0|l-bar-left'
+          }));
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "L shape right"|trans }}',
+            description: '{{ "3 regions in an L shape, on the right"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-right.png',
+            source: 'local',
+            id: '0|l-bar-right'
+          }));
+
+          // Add our blank resolution
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Blank"|trans }}',
+            description: '{{ "Add your own regions using the editor"|trans }}',
+            thumbnail: null,
+            source: 'local',
+            id: '0|blank'
+          }));
+        }
+
+        function loadTemplates(cardsTemplate, cardColumn, masonry, filter) {
+          var spinner = cardColumn.closest('.modal').find('.panel-footer .spinner-grow');
+          var moreButton = cardColumn.closest('.modal').find('#layout-add-templates-more');
+          spinner.removeClass('d-none');
+          moreButton.prop('disabled', true);
+          $.ajax({
+            method: 'GET',
+            url: '{{ url_for("template.search.all") }}',
+            data: filter,
+            success: function(response) {
+              if (response && response.data && response.data.length > 0) {
+                $.each(response.data, function(index, el) {
+                  masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, el));
+                });
+
+                cardColumn.imagesLoaded().progress(function () {
+                  masonry.layout();
+                });
+
+                moreButton.prop('disabled', false);
+              } else {
+                toastr.info('{{ "There are no more templates to show"|trans }}');
+              }
+              spinner.addClass('d-none');
+            }
+          });
+        }
+
+        function addTemplateCard(cardsTemplate, cardColumn, el) {
+          el.showFooter = el.orientation || (el.provider && el.provider.logoUrl) || (el.tags && el.tags.length > 0);
+          el.thumbnail = el.thumbnail || '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
+          var $element = $(cardsTemplate(el));
+          $element.find('.card').on('click', function(e) {
+            e.preventDefault();
+            // Remove all selections.
+            cardColumn.find('.border-success').removeClass('border-success');
+
+            // Select this one.
+            var $that = $(this);
+            $that.addClass('border-success');
+            $('#layout-create-stepper-next-button').removeClass('disabled');
+
+            // If source is local and layoutId is 0, then show the resolution filter otherwise don't
+            var layoutId = $(this).data('layout-id') + "";
+            var source = $(this).data('source');
+            var download = $(this).data('download');
+
+            var $form = $('#layoutAddForm');
+            $form.find('input[name="layoutId"]').val(layoutId);
+            $form.find('input[name="source"]').val(source);
+            $form.find('input[name="download"]').val(download);
+
+            if (layoutId.startsWith("0|")) {
+              $form.find('.resolution-group').removeClass('d-none');
+            } else {
+              $form.find('.resolution-group').addClass('d-none');
+            }
+          });
+          cardColumn.append($element);
+          return $element;
         }
 
         function layoutExportFormSubmit() {
@@ -415,7 +707,7 @@
             $.ajax({
                 type: form.attr("method"),
                 url: url,
-                data: {layoutId: [{layoutId: form.data().layoutId}]},
+                data: {layoutId: form.data().layoutId},
                 cache: false,
                 dataType:"json",
                 success: XiboSubmitResponse
@@ -423,8 +715,8 @@
         }
 
         function setEnableStatMultiSelectFormOpen(dialog) {
-            var $input = $('<input type=checkbox id="enableStat" name="enableStat"> {% trans %} Enable Stats Collection? {% endtrans %} </input>');
-            var $helpText = $('<span class="help-block">Check to enable the collection of Proof of Play statistics for the selected items. </span>');
+            var $input = $('<input type=checkbox id="enableStat" name="enableStat"> {{ "Enable Stats Collection?"|trans }} </input>');
+            var $helpText = $('<span class="help-block">{{ "Check to enable the collection of Proof of Play statistics for the selected items."|trans }}</span>');
 
             $input.on('change', function() {
                 dialog.data().commitData = {enableStat: $(this).val()};
@@ -434,5 +726,40 @@
             $(dialog).find('.modal-body').append($helpText);
         }
 
+        function layoutPublishFormOpen() {
+          // Nothing to do here, but we use the same form on the layout designer and have a callback registered there
+        }
+
     </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% verbatim %}
+    <script type="text/x-handlebars-template" id="template-layout-add-template-cards">
+        <div class="template-card w-25 p-2">
+            <div class="card" data-layout-id="{{ id }}" data-source="{{ source }}" data-download="{{ download }}">
+                {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
+                <div class="card-body">
+                    <h5 class="card-title">{{ title }}</h5>
+                    {{#if description}}<p class="card-text" style="max-height:200px; overflow-y: auto"><span class="text-muted">{{{description}}}</span></p>{{/if}}
+                </div>
+                {{#if showFooter }}
+                <div class="card-footer">
+                    {{#if orientation}}
+                        <span class="badge badge-pill badge-primary">{{orientation}}</span>
+                    {{/if}}
+                    {{#each tags}}
+                        <span class="badge badge-pill badge-info">{{this}}</span>
+                    {{/each}}
+                    {{#if provider.logoUrl}}
+                        <img class="provider-image" src="{% endverbatim %}{{ theme.rootUri() }}{% verbatim %}{{ provider.logoUrl }}" alt="{{ provider.message }}">
+                    {{/if}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </script>
+    {% endverbatim %}
 {% endblock %}

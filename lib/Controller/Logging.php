@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,14 +24,10 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
@@ -49,35 +45,19 @@ class Logging extends Base
     /** @var StorageServiceInterface  */
     private $store;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
     /** @var  UserFactory */
     private $userFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
-     * @param DisplayFactory $displayFactory
      * @param UserFactory $userFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $logFactory, $displayFactory, $userFactory, Twig $view)
+    public function __construct($store, $logFactory, $userFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->store = $store;
         $this->logFactory = $logFactory;
-        $this->displayFactory = $displayFactory;
         $this->userFactory = $userFactory;
     }
 

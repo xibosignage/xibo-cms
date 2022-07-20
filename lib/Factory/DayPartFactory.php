@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DayPart;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -38,15 +35,11 @@ class DayPartFactory extends BaseFactory
 {
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
     }
 
@@ -58,7 +51,8 @@ class DayPartFactory extends BaseFactory
     {
         return new DayPart(
             $this->getStore(),
-            $this->getLog()
+            $this->getLog(),
+            $this->getDispatcher()
         );
     }
 
@@ -72,8 +66,9 @@ class DayPartFactory extends BaseFactory
     {
         $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1]);
 
-        if (count($dayParts) <= 0)
+        if (count($dayParts) <= 0) {
             throw new NotFoundException();
+        }
 
         return $dayParts[0];
     }
@@ -87,8 +82,9 @@ class DayPartFactory extends BaseFactory
     {
         $dayParts = $this->query(null, ['disableUserCheck' => 1, 'isAlways' => 1]);
 
-        if (count($dayParts) <= 0)
+        if (count($dayParts) <= 0) {
             throw new NotFoundException();
+        }
 
         return $dayParts[0];
     }
@@ -102,8 +98,9 @@ class DayPartFactory extends BaseFactory
     {
         $dayParts = $this->query(null, ['disableUserCheck' => 1, 'isCustom' => 1]);
 
-        if (count($dayParts) <= 0)
+        if (count($dayParts) <= 0) {
             throw new NotFoundException();
+        }
 
         return $dayParts[0];
     }
@@ -121,6 +118,17 @@ class DayPartFactory extends BaseFactory
     }
 
     /**
+     * Get by OwnerId
+     * @param int $ownerId
+     * @return DayPart[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['userId' => $ownerId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Schedule]
@@ -131,18 +139,21 @@ class DayPartFactory extends BaseFactory
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['name'];
+        }
 
-        $params = array();
+        $params = [];
         $select = 'SELECT `daypart`.dayPartId, `name`, `description`, `isRetired`, `userId`, `startTime`, `endTime`, `exceptions`, `isCustom`, `isAlways` ';
 
         $body = ' FROM `daypart` ';
 
         $body .= ' WHERE 1 = 1 ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
+        // Always include Custom and Always Daypart for DOOH user.
+        if ($sanitizedFilter->getInt('disableUserCheck') == 0 && ($this->getUser()->userTypeId == 4 || ($this->getUser()->isSuperAdmin() && $this->getUser()->showContentFrom == 2))) {
+            $body .= ' OR `daypart`.isCustom = 1 OR `daypart`.isAlways = 1 ';
+        }
 
         if ($sanitizedFilter->getInt('dayPartId') !== null) {
             $body .= ' AND `daypart`.dayPartId = :dayPartId ';
@@ -164,6 +175,14 @@ class DayPartFactory extends BaseFactory
             $this->nameFilter('daypart', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `daypart`.userId = :userId ';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -172,7 +191,7 @@ class DayPartFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

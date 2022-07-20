@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,15 +25,11 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataTypeFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
 /**
@@ -59,23 +55,14 @@ class DataSetColumn extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      * @param DataTypeFactory $dataTypeFactory
      * @param PoolInterface $pool
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, $dataSetColumnTypeFactory, $dataTypeFactory, $pool, Twig $view)
+    public function __construct($dataSetFactory, $dataSetColumnFactory, $dataSetColumnTypeFactory, $dataTypeFactory, $pool)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
@@ -317,6 +304,27 @@ class DataSetColumn extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="tooltip",
+     *      in="formData",
+     *      description="Help text that should be displayed when entering data for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isRequired",
+     *      in="formData",
+     *      description="Flag indicating whether value must be provided for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="PHP date format for the dates in the source of the remote DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -347,10 +355,13 @@ class DataSetColumn extends Base
         $column->dataSetColumnTypeId = $sanitizedParams->getInt('dataSetColumnTypeId');
         $column->formula = $request->getParam('formula', null);
         $column->remoteField = $request->getParam('remoteField', null);
-        $column->showFilter =$sanitizedParams->getCheckbox('showFilter');
+        $column->showFilter = $sanitizedParams->getCheckbox('showFilter');
         $column->showSort = $sanitizedParams->getCheckbox('showSort');
+        $column->tooltip = $sanitizedParams->getString('tooltip');
+        $column->isRequired = $sanitizedParams->getCheckbox('isRequired', ['default' => 0]);
+        $column->dateFormat = $sanitizedParams->getString('dateFormat', ['default' => null]);
 
-        if ($column->dataSetColumnTypeId == 3){
+        if ($column->dataSetColumnTypeId == 3) {
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
             $this->getLog()->debug('New remote column detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
         }
@@ -502,6 +513,27 @@ class DataSetColumn extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="tooltip",
+     *      in="formData",
+     *      description="Help text that should be displayed when entering data for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isRequired",
+     *      in="formData",
+     *      description="Flag indicating whether value must be provided for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="PHP date format for the dates in the source of the remote DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -519,8 +551,9 @@ class DataSetColumn extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Column
         $column = $this->dataSetColumnFactory->getById($colId);
@@ -533,9 +566,12 @@ class DataSetColumn extends Base
         $column->remoteField = $request->getParam('remoteField', null);
         $column->showFilter = $sanitizedParams->getCheckbox('showFilter');
         $column->showSort = $sanitizedParams->getCheckbox('showSort');
+        $column->tooltip = $sanitizedParams->getString('tooltip');
+        $column->isRequired = $sanitizedParams->getCheckbox('isRequired');
+        $column->dateFormat = $sanitizedParams->getString('dateFormat', ['default' => null]);
         $column->save();
 
-        if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')){
+        if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')) {
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
             $this->getLog()->debug('Edited remoteField detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
         }

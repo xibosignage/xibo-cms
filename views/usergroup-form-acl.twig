@@ -53,7 +53,9 @@
         </td>
         <td><input class="feature-select-all" type="checkbox" /></td>
         {% if isUserSpecific == 1 %}
-            <td></td>
+            <td>
+                <input type="checkbox" class="inherit-group-all" disabled>
+            </td>
         {% endif %}
     </tr>
 {% endmacro %}
@@ -66,7 +68,7 @@
         </td>
         {% if isUserSpecific == 1 %}
             <td>
-                <input type="checkbox" disabled {{ flow.hasFeature(inheritedFeatures, feature) }}>
+                <input type="checkbox" class="inherit-group" disabled {{ flow.hasFeature(inheritedFeatures, feature) }}>
             </td>
         {% endif %}
     </tr>
@@ -135,18 +137,21 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Folders"|trans, "Organise content permissions with Folders"|trans, isUserSpecific) }}
+                                {{ flow.featureTitleRow("Folders"|trans, "Organise content sharing with Folders"|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("folders") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Library"|trans, "Media Library that stores file based content for use in Layouts, DataSets and Playlists"|trans, isUserSpecific) }}
+                                {{ flow.featureTitleRow("Library"|trans, "Media Library that stores file based content for use in Layouts, DataSets, Playlists and Menu Boards"|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("library") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("playlist-design") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("menuboard-design") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>

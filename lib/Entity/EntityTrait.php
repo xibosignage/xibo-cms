@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,8 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\ObjectVars;
 use Xibo\Service\LogServiceInterface;
@@ -56,16 +58,21 @@ trait EntityTrait
      */
     private $log;
 
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface */
+    private $dispatcher;
+
     /**
      * Set common dependencies.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param EventDispatcherInterface $dispatcher
      * @return $this
      */
-    protected function setCommonDependencies($store, $log)
+    protected function setCommonDependencies($store, $log, $dispatcher)
     {
         $this->store = $store;
         $this->log = $log;
+        $this->dispatcher = $dispatcher;
         return $this;
     }
 
@@ -88,6 +95,19 @@ trait EntityTrait
     }
 
     /**
+     * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
+     */
+    public function getDispatcher(): EventDispatcherInterface
+    {
+        if ($this->dispatcher === null) {
+            $this->getLog()->error('getDispatcher: [entity] No dispatcher found, returning an empty one');
+            $this->dispatcher = new EventDispatcher();
+        }
+
+        return $this->dispatcher;
+    }
+
+    /**
      * Hydrate an entity with properties
      *
      * @param array $properties
@@ -98,18 +118,22 @@ trait EntityTrait
     public function hydrate(array $properties, $options = [])
     {
         $intProperties = (array_key_exists('intProperties', $options)) ? $options['intProperties'] : [];
+        $doubleProperties = (array_key_exists('doubleProperties', $options)) ? $options['doubleProperties'] : [];
         $stringProperties = (array_key_exists('stringProperties', $options)) ? $options['stringProperties'] : [];
         $htmlStringProperties = (array_key_exists('htmlStringProperties', $options)) ? $options['htmlStringProperties'] : [];
 
         foreach ($properties as $prop => $val) {
             if (property_exists($this, $prop)) {
 
-                if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties))
+                if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties)) {
                     $val = intval($val);
-                else if (in_array($prop, $stringProperties))
+                } else if (in_array($prop, $doubleProperties)) {
+                    $val = doubleval($val);
+                } else if (in_array($prop, $stringProperties)) {
                     $val = filter_var($val, FILTER_SANITIZE_STRING);
-                else if (in_array($prop, $htmlStringProperties))
+                } else if (in_array($prop, $htmlStringProperties)) {
                     $val = htmlentities($val);
+                }
 
                 $this->{$prop} =  $val;
                 $this->originalValues[$prop] = $val;
@@ -140,6 +164,17 @@ trait EntityTrait
     }
 
     /**
+     * @param string $property
+     * @param mixed $value
+     * @return $this
+     */
+    public function setOriginalValue(string $property, $value)
+    {
+        $this->originalValues[$property] = $value;
+        return $this;
+    }
+
+    /**
      * Has the provided property been changed from its original value
      * @param string $property
      * @return bool
@@ -166,7 +201,7 @@ trait EntityTrait
      * @param bool $jsonEncodeArrays
      * @return array
      */
-    public function getChangedProperties($jsonEncodeArrays = false, $datesToFormat = [])
+    public function getChangedProperties($jsonEncodeArrays = false)
     {
         $changedProperties = [];
 
@@ -218,17 +253,17 @@ trait EntityTrait
     {
         $objectAsJson = $this->jsonSerialize();
 
-            foreach ($objectAsJson as $key => $value) {
-                if (in_array($key, $this->datesToFormat)) {
-                    $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
-                }
+        foreach ($objectAsJson as $key => $value) {
+            if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
+                $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+            }
 
-                if ($jsonEncodeArrays) {
-                    if (is_array($value)) {
-                        $objectAsJson[$key] = json_encode($value);
-                    }
+            if ($jsonEncodeArrays) {
+                if (is_array($value)) {
+                    $objectAsJson[$key] = json_encode($value);
                 }
             }
+        }
 
         return $objectAsJson;
     }
@@ -291,6 +326,7 @@ trait EntityTrait
      * @param $message
      * @param null $changedProperties
      * @param bool $jsonEncodeArrays
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     protected function audit($entityId, $message, $changedProperties = null, $jsonEncodeArrays = false)
     {
@@ -299,9 +335,11 @@ trait EntityTrait
         if ($changedProperties === null) {
             // No properties provided, so we should work them out
             // If we have originals, then get changed, otherwise get the current object state
-            $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray($jsonEncodeArrays) : $this->getChangedProperties($jsonEncodeArrays);
-        } else if (count($changedProperties) <= 0) {
-            // We provided changed properties, so we only audit if there are some
+            $changedProperties = (count($this->originalValues) <= 0)
+                ? $this->toArray($jsonEncodeArrays)
+                : $this->getChangedProperties($jsonEncodeArrays);
+        } else if ($changedProperties !== false && count($changedProperties) <= 0) {
+            // Only audit if properties have been provided
             return;
         }
 
@@ -335,5 +373,32 @@ trait EntityTrait
         }
 
         return $result;
+    }
+
+    public function handleTagAssign($tagToAssign)
+    {
+        if (!in_array($tagToAssign, $this->tags)) {
+            if (empty($this->tags)) {
+                // case when we do not have any Tags on our object
+                $this->tags[] = $tagToAssign;
+            } else {
+                // go through existing Tags and compare Tag values
+                // case for existing Tag, but with different value
+                foreach ($this->tags as $key => $currentTag) {
+                    if ($currentTag->tagId === $tagToAssign->tagId && $currentTag->value !== $tagToAssign->value) {
+                        array_splice($this->tags, $key, 1);
+                        $this->unassignTags[] = $currentTag;
+                        $this->tags[] = $tagToAssign;
+                    }
+                }
+                // if the Tag is still not in our array, add it now
+                // case for a new Tag
+                if (!in_array($tagToAssign, $this->tags)) {
+                    $this->tags[] = $tagToAssign;
+                }
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
+        }
     }
 }

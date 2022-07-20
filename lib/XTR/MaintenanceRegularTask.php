@@ -24,7 +24,7 @@
 namespace Xibo\XTR;
 use Carbon\Carbon;
 use Xibo\Controller\Display;
-use Xibo\Controller\Library;
+use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -34,6 +34,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\ModuleWidget;
 
@@ -48,8 +49,8 @@ class MaintenanceRegularTask implements TaskInterface
     /** @var Display */
     private $displayController;
 
-    /** @var Library */
-    private $libraryController;
+    /** @var MediaServiceInterface */
+    private $mediaService;
 
     /** @var DisplayFactory */
     private $displayFactory;
@@ -76,7 +77,7 @@ class MaintenanceRegularTask implements TaskInterface
     public function setFactories($container)
     {
         $this->displayController = $container->get('\Xibo\Controller\Display');
-        $this->libraryController = $container->get('\Xibo\Controller\Library');
+        $this->mediaService = $container->get('mediaService');
 
         $this->displayFactory = $container->get('displayFactory');
         $this->notificationFactory = $container->get('notificationFactory');
@@ -110,6 +111,13 @@ class MaintenanceRegularTask implements TaskInterface
         $this->checkOverRequestedFiles();
 
         $this->publishLayouts();
+
+        // Dispatch an event so that consumers can hook into regular maintenance.
+        $event = new MaintenanceRegularEvent();
+        $this->getDispatcher()->dispatch($event, MaintenanceRegularEvent::$NAME);
+        foreach ($event->getMessages() as $message) {
+            $this->appendRunMessage($message);
+        }
     }
 
     /**
@@ -148,7 +156,7 @@ class MaintenanceRegularTask implements TaskInterface
                     // We need to un-licence some displays
                     $difference = count($displays) - $maxDisplays;
 
-                    $this->log->alert('Max %d authorised displays exceeded, we need to un-authorise %d of %d displays', $maxDisplays, $difference, count($displays));
+                    $this->log->alert(sprintf('Max %d authorised displays exceeded, we need to un-authorise %d of %d displays', $maxDisplays, $difference, count($displays)));
 
                     $update = $dbh->prepare('UPDATE `display` SET licensed = 0 WHERE displayId = :displayId');
 
@@ -245,13 +253,18 @@ class MaintenanceRegularTask implements TaskInterface
         foreach ($this->layoutFactory->query(null, ['status' => 3, 'showDrafts' => 0, 'disableUserCheck' => 1]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             try {
-                $layout->xlfToDisk(['notify' => true]);
+                $layout = $this->layoutFactory->concurrentRequestLock($layout);
+                try {
+                    $layout->xlfToDisk(['notify' => true]);
 
-                // Commit after each build
-                // https://github.com/xibosignage/xibo/issues/1593
-                $this->store->commitIfNecessary();
+                    // Commit after each build
+                    // https://github.com/xibosignage/xibo/issues/1593
+                    $this->store->commitIfNecessary();
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
             } catch (\Exception $e) {
-                $this->log->error('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage());
+                $this->log->error(sprintf('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage()));
             }
         }
 
@@ -266,8 +279,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->runMessage .= '## ' . __('Tidy Library') . PHP_EOL;
 
         // Keep tidy
-        $this->libraryController->removeExpiredFiles();
-        $this->libraryController->removeTempFiles();
+        $this->mediaService->removeExpiredFiles();
+        $this->mediaService->removeTempFiles();
 
         $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
     }
@@ -396,30 +409,37 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Publishing layouts with set publish dates') . PHP_EOL;
 
-        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1, 'disableUserCheck' => 1]);
+        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1, 'disableUserCheck' => 1, 'excludeTemplates' => -1]);
 
         // check if we have any layouts with set publish date
         if (count($layouts) > 0) {
-
             foreach ($layouts as $layout) {
-
                 // check if the layout should be published now according to the date
                 if (Carbon::createFromTimestamp($layout->publishedDate)->format('U') < Carbon::now()->format('U')) {
                     try {
-                        // check if draft is valid
-                        if ($layout->status === ModuleWidget::$STATUS_INVALID && isset($layout->statusMessage)) {
-                            throw new GeneralException(__($layout->statusMessage));
-                        } else {
-                            // publish the layout
+                        // publish the layout
+                        $layout = $this->layoutFactory->concurrentRequestLock($layout, true);
+                        try {
                             $draft = $this->layoutFactory->getByParentId($layout->layoutId);
+                            if ($draft->status === ModuleWidget::$STATUS_INVALID
+                                && isset($draft->statusMessage)
+                                && (count($draft->getStatusMessage()) > 1 || count($draft->getStatusMessage()) === 1 && !$draft->checkForEmptyRegion())
+                            ) {
+                                throw new GeneralException(json_encode($draft->statusMessage));
+                            }
                             $draft->publishDraft();
                             $draft->load();
-                            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
-
-                            $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
+                            $draft->xlfToDisk([
+                                'notify' => true,
+                                'exceptionOnError' => true,
+                                'exceptionOnEmptyRegion' => false
+                            ]);
+                        } finally {
+                            $this->layoutFactory->concurrentRequestRelease($layout, true);
                         }
+                        $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
                     } catch (GeneralException $e) {
-                        $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' Failed with message: ' . $e->getMessage());
+                        $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' with name ' . $layout->layout . ' Failed with message: ' . $e->getMessage());
 
                         // create a notification
                         $subject = __(sprintf('Error publishing layout ID %d', $layout->layoutId));
@@ -429,8 +449,7 @@ class MaintenanceRegularTask implements TaskInterface
                                 $date->startOfDay()->format('U'),
                                 $date->addDay()->startOfDay()->format('U'))) <= 0) {
 
-                            $body = __(sprintf('Publishing layout ID %d failed. With message %s', $layout->layoutId,
-                                $e->getMessage()));
+                            $body = __(sprintf('Publishing layout ID %d with name %s failed. With message %s', $layout->layoutId, $layout->layout, $e->getMessage()));
 
                             $notification = $this->notificationFactory->createSystemNotification(
                                 $subject,

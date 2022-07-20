@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,9 +26,6 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\Notification;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -45,17 +42,13 @@ class NotificationFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $userGroupFactory, $displayGroupFactory)
+    public function __construct($user, $userFactory, $userGroupFactory, $displayGroupFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->userGroupFactory = $userGroupFactory;
@@ -67,7 +60,13 @@ class NotificationFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Notification($this->getStore(), $this->getLog(), $this->userGroupFactory, $this->displayGroupFactory);
+        return new Notification(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->userGroupFactory,
+            $this->displayGroupFactory
+        );
     }
 
     /**
@@ -132,6 +131,11 @@ class NotificationFactory extends BaseFactory
         return $this->query(null, ['subject' => $subject, 'createFromDt' => $fromDt, 'createToDt' => $toDt]);
     }
 
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['ownerId' => $ownerId, 'disableUserCheck' => 1]);
+    }
+
     /**
      * @param null $sortOrder
      * @param array $filterBy
@@ -164,8 +168,6 @@ class NotificationFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy);
-
         if ($sanitizedFilter->getInt('notificationId') !== null) {
             $body .= ' AND `notification`.notificationId = :notificationId ';
             $params['notificationId'] = $sanitizedFilter->getInt('notificationId');
@@ -189,6 +191,16 @@ class NotificationFactory extends BaseFactory
         if ($sanitizedFilter->getInt('createToDt') != null) {
             $body .= ' AND `notification`.createDt < :createToDt ';
             $params['createToDt'] = $sanitizedFilter->getInt('createToDt');
+        }
+
+        if ($sanitizedFilter->getInt('onlyReleased') === 1) {
+            $body .= ' AND `notification`.releaseDt <= :now ';
+            $params['now'] = Carbon::now()->format('U');
+        }
+
+        if ($sanitizedFilter->getInt('ownerId') !== null) {
+            $body .= ' AND `notification`.userId = :ownerId ';
+            $params['ownerId'] = $sanitizedFilter->getInt('ownerId');
         }
 
         // User Id?
@@ -215,6 +227,8 @@ class NotificationFactory extends BaseFactory
             $params['displayId'] = $sanitizedFilter->getInt('displayId');
         }
 
+        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy);
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -223,7 +237,7 @@ class NotificationFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

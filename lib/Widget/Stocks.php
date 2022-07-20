@@ -269,6 +269,20 @@ class Stocks extends AlphaVantageBase
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -296,6 +310,8 @@ class Stocks extends AlphaVantageBase
         $this->setOption('templateId', $sanitizedParams->getString('templateId'));
         $this->setOption('durationIsPerPage', $sanitizedParams->getCheckbox('durationIsPerPage'));
         $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
@@ -593,7 +609,9 @@ class Stocks extends AlphaVantageBase
             'originalHeight' => $this->region->height,
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'maxItemsPerPage' => $maxItemsPerPage
+            'maxItemsPerPage' => $maxItemsPerPage,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         ];
 
         $itemsPerPage = $options['maxItemsPerPage'];
@@ -611,8 +629,7 @@ class Stocks extends AlphaVantageBase
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
@@ -642,6 +659,7 @@ class Stocks extends AlphaVantageBase
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -651,7 +669,7 @@ class Stocks extends AlphaVantageBase
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboFinanceRender(options, items, body); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("#content").xiboFinanceRender(options, items, body); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';

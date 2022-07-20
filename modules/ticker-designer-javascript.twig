@@ -24,7 +24,28 @@
 
     // Runs after form opens
     function ticker_form_edit_open() {
-        
+        // Update form fields based on template options
+        var updateTemplateOptions = function() {
+            var templates = $(this).data().extra.templates;
+            var templateId = $(this).find('#templateId').val();
+            var $form = $(this);
+
+            // Hide all options first
+            $form.find('.template-option').addClass('d-none');
+
+            // Options from template handling
+            $.each(templates, function(templateIndex, template) {
+                if(template.id == templateId) {
+                    for (const key in template.options) {
+                        if (Object.hasOwnProperty.call(template.options, key)) {
+                            var element = template.options[key];
+                            $form.find('.template-option-' + key).toggleClass('d-none', !template.options[key]);
+                        }
+                    }
+                }
+            });
+        }.bind(this);
+
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
@@ -47,19 +68,22 @@
                 '#ta_text': 'template',
                 '#ta_css': 'css'
             });
-        
-        // Set colorpicker for the bg colour
-        $(this).find('#backgroundColor').colorpicker({format: 'rgba'});
 
         // Tidy up colorpickers on modal close
         if($(this).hasClass('modal')) {
             $(this).on("hide.bs.modal", function(e) {
                 if(e.namespace === 'bs.modal') {
                     // Remove colour pickers
-                    $(this).find("#backgroundColor").colorpicker('destroy');
+                    destroyColorPicker($(this).find(".XiboColorPicker"));
                 }
             });
         }
+
+        $(this).find('#templateId').on('change', updateTemplateOptions);
+
+        formHelpers.setupPhpDateFormatPopover($(this))
+
+        updateTemplateOptions();
     }
 
     // Runs before form submit
@@ -68,5 +92,10 @@
         // Update text callback fields
         formHelpers.updateCKEditor();
     }
-
 </script>
+
+<style>
+    .popover{
+        max-width: 100%;
+    }
+</style>

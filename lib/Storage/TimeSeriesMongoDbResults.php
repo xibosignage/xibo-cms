@@ -58,13 +58,14 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
     /** @inheritdoc */
     public function getArray()
     {
+        $this->object->setTypeMap(['root' => 'array']);
         return $this->object->toArray();
     }
 
     /** @inheritDoc */
     public function getIdFromRow($row)
     {
-        return $row['id'];
+        return (string)$row['id'];
     }
 
     /** @inheritDoc */
@@ -74,19 +75,23 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
     }
 
     /** @inheritDoc */
-    public function getEngagementsFromRow($row)
+    public function getEngagementsFromRow($row, $decoded = true)
     {
-        return isset($row['engagements']) ? $row['engagements'] : [];
+        if ($decoded) {
+            return $row['engagements'] ?? [];
+        } else {
+            return isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
+        }
     }
 
     /** @inheritDoc */
     public function getTagFilterFromRow($row)
     {
-        return isset($row['tagFilter']) ? $row['tagFilter'] : [
-            'dg' => [],
-            'layout' => [],
-            'media' => []
-        ];
+        return $row['tagFilter'] ?? [
+                'dg' => [],
+                'layout' => [],
+                'media' => []
+            ];
     }
 
     /**

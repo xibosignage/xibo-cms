@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -130,13 +130,14 @@ class SavedReport implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      * @param SavedReportFactory $savedReportFactory
      */
-    public function __construct($store, $log, $config, $mediaFactory, $savedReportFactory)
+    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $savedReportFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->mediaFactory = $mediaFactory;
@@ -206,7 +207,7 @@ class SavedReport implements \JsonSerializable
         // Update last saved report in report schedule
         $this->getLog()->debug('Update last saved report in report schedule');
         $this->getStore()->update('
-        UPDATE `reportschedule` SET lastSavedReportId = ( SELECT MAX(`savedReportId`) FROM `saved_report` WHERE `reportScheduleId`= :reportScheduleId) 
+        UPDATE `reportschedule` SET lastSavedReportId = ( SELECT IFNULL(MAX(`savedReportId`), 0) FROM `saved_report` WHERE `reportScheduleId`= :reportScheduleId) 
         WHERE `reportScheduleId` = :reportScheduleId',
             [
             'reportScheduleId' => $this->reportScheduleId

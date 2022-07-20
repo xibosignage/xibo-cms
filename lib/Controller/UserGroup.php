@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,16 +22,12 @@
 namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -58,21 +54,12 @@ class UserGroup extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param UserGroupFactory $userGroupFactory
      * @param PermissionFactory $permissionFactory
      * @param UserFactory $userFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userGroupFactory, $permissionFactory, $userFactory, Twig $view)
+    public function __construct($userGroupFactory, $permissionFactory, $userFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->userGroupFactory = $userGroupFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userFactory = $userFactory;
@@ -306,6 +293,13 @@ class UserGroup extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="decription",
+     *      in="formData",
+     *      description="A description of the User Group",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="libraryQuota",
      *      in="formData",
      *      description="The quota that should be applied (KiB). Provide 0 for no quota",
@@ -323,6 +317,20 @@ class UserGroup extends Base
      *      name="isDisplayNotification",
      *      in="formData",
      *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isShownForAddUser",
+     *      in="formData",
+     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="defaultHomePageId",
+     *      in="formData",
+     *      description="If this user has been created via the onboarding form, this should be the default home page",
      *      type="integer",
      *      required=false
      *   ),
@@ -356,15 +364,24 @@ class UserGroup extends Base
         // Build a user entity and save it
         $group = $this->userGroupFactory->createEmpty();
         $group->group = $sanitizedParams->getString('group');
+        $group->description = $sanitizedParams->getString('description');
         $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
         if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
+            $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
         }
 
         // Save
         $group->save();
+
+        // icondashboard does not need features, otherwise assign the feature matching selected homepage.
+        if ($group->defaultHomepageId !== 'icondashboard.view' && !empty($group->defaultHomepageId)) {
+            $group->features[] = $this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature;
+            $group->saveFeatures();
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -399,6 +416,13 @@ class UserGroup extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="decription",
+     *      in="formData",
+     *      description="A description of the User Group",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="libraryQuota",
      *      in="formData",
      *      description="The quota that should be applied (KiB). Provide 0 for no quota",
@@ -416,6 +440,20 @@ class UserGroup extends Base
      *      name="isDisplayNotification",
      *      in="formData",
      *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isShownForAddUser",
+     *      in="formData",
+     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="defaultHomePageId",
+     *      in="formData",
+     *      description="If this user has been created via the onboarding form, this should be the default home page",
      *      type="integer",
      *      required=false
      *   ),
@@ -457,11 +495,23 @@ class UserGroup extends Base
         $group->load();
 
         $group->group = $sanitizedParams->getString('group');
+        $group->description = $sanitizedParams->getString('description');
         $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
         if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
+            $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
+
+            // if we have homepage set assign matching feature if it does not already exist
+            if (!in_array($this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature, $group->features)
+                && $group->defaultHomepageId !== 'icondashboard.view'
+                && !empty($group->defaultHomepageId)
+            ) {
+                $group->features[] = $this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature;
+                $group->saveFeatures();
+            }
         }
 
         // Save
@@ -592,7 +642,7 @@ class UserGroup extends Base
         // Load the Group we are working on
         // Get the object
         if ($id == 0) {
-            throw new InvalidArgumentException(__('ACL form requested without a User Group'), 'id');
+            throw new InvalidArgumentException(__('Features form requested without a User Group'), 'id');
         }
 
         $features = $request->getParam('features', null);
@@ -607,7 +657,7 @@ class UserGroup extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('ACL set for %s'), $group->group),
+            'message' => sprintf(__('Features updated for %s'), $group->group),
             'id' => $group->groupId
         ]);
 
@@ -720,19 +770,21 @@ class UserGroup extends Base
     public function assignUser(Request $request, Response $response, $id)
     {
         $this->getLog()->debug(sprintf('Assign User for groupId %d', $id));
-        $sanitizedPaarams = $this->getSanitizer($request->getParams());
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $group = $this->userGroupFactory->getById($id);
-        $group->load();
-
         if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
-        $users = $sanitizedPaarams->getIntArray('userId', ['default' => []]);
+        // Load existing memberships.
+        $group->load();
+        $changesMade = false;
+
+        // Parse updated assignments from form.
+        $users = $sanitizedParams->getIntArray('userId', ['default' => []]);
 
         foreach ($users as $userId) {
-
             $this->getLog()->debug(sprintf('Assign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
@@ -742,14 +794,13 @@ class UserGroup extends Base
             }
 
             $group->assignUser($user);
-            $group->save(['validate' => false]);
+            $changesMade = true;
         }
 
         // Check to see if unassign has been provided.
-        $users = $sanitizedPaarams->getIntArray('unassignUserId', ['default' => []]);
+        $users = $sanitizedParams->getIntArray('unassignUserId', ['default' => []]);
 
         foreach ($users as $userId) {
-
             $this->getLog()->debug(sprintf('Unassign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
@@ -759,13 +810,19 @@ class UserGroup extends Base
             }
 
             $group->unassignUser($user);
-            $group->save(['validate' => false]);
+            $changesMade = true;
         }
 
+        if ($changesMade) {
+            $group->save(['validate' => false]);
+            $message = sprintf(__('Membership set for %s'), $group->group);
+        } else {
+            $message = sprintf(__('No changes for %s'), $group->group);
+        }
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Membership set for %s'), $group->group),
+            'message' => $message,
             'id' => $group->groupId
         ]);
 
@@ -896,6 +953,13 @@ class UserGroup extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="copyFeatures",
+     *      in="formData",
+     *      description="Flag indicating whether to copy group features",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -936,6 +1000,13 @@ class UserGroup extends Base
         $newGroup = clone $group;
         $newGroup->group = $sanitizedParams->getString('group');
         $newGroup->save();
+
+        // Save features?
+        if ($sanitizedParams->getCheckbox('copyFeatures')) {
+            $newGroup->saveFeatures();
+        } else {
+            $newGroup->features = [];
+        }
 
         // Copy permissions
         foreach ($this->permissionFactory->getByGroupId('Page', $group->groupId) as $permission) {

@@ -21,10 +21,56 @@
  */
 #}
 <script type="text/javascript">
-
     // Runs after form opens
     function forecastio_form_edit_open() {
-        
+        var $form = $(this);
+
+        // Update form fields based on template options
+        var updateTemplateOptions = function(updateImage) {
+            var templates = $(this).data().extra;
+            var templateId = $(this).find('#templateId').val();
+
+            // Hide all options first
+            $form.find('.template-option').addClass('d-none');
+
+            // Options from template handling
+            $.each(templates, function(templateIndex, template) {
+                if(template.id == templateId) {
+                    // Dynamic options
+                    for (const key in template.options) {
+                        if (Object.hasOwnProperty.call(template.options, key)) {
+                            var element = template.options[key];
+                            $form.find('.template-option-' + key).toggleClass('d-none', !template.options[key]);
+                        }
+                    }
+
+                    // Upgrade background image option based on
+                    if(updateImage) {
+                        $form.find('#background-image').val(template.background);
+                        handleBackgroundOverride();
+                    }
+                }
+            });
+        }.bind(this);
+
+        var filterTemplates = function (refresh) {
+            // Get filter value
+            var templateTypeValue = $(this).find('#templateType').val();
+            var templateOrientationValue = $(this).find('#templateOrientation').val();
+
+            // Set dropdown filter option
+            $(this).find('#templateId').data('filterClass', [templateTypeValue, templateOrientationValue]);
+
+            // Clear template id if it's not selected
+            if(refresh && $(this).find('#overrideTemplate').is(':checked') == false) {
+                $(this).find('#templateId').val(null).trigger('change');
+            }
+        }.bind(this);
+
+        var handleBackgroundOverride = function () {
+            $form.find('.background-select-list').toggle($(this).find('#background-image').val() != 'none');
+        }.bind(this);
+
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
@@ -35,8 +81,8 @@
         formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
 
         // Setup editors
-        formHelpers.setupDualTypeTextArea(this, 'currentTemplate');
-        formHelpers.setupDualTypeTextArea(this, 'dailyTemplate');
+        formHelpers.setupTextArea(this, 'currentTemplate');
+        formHelpers.setupTextArea(this, 'dailyTemplate');
 
         // Setup template override
         formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
@@ -48,17 +94,23 @@
                 '#widgetOriginalHeight': 'widgetOriginalHeight'
             });
 
-        // Setupd color picker
-        $(this).find('#color').colorpicker();
+        // Trigger set filter on weather type change
+        $(this).find('#templateOrientation, #templateType').on('change input', function () {
+            filterTemplates(true);
+            updateTemplateOptions();
+        });
 
-        // Tidy up colorpickers on modal close
-        if($(this).hasClass('modal')) {
-            $(this).on("hide.bs.modal", function(e) {
-                if(e.namespace === 'bs.modal') {
-                    // Remove colour pickers
-                    $(this).find("#color").colorpicker('destroy');
-                }
-            });
-        }
+        $(this).find('#templateId').on('change', function() {
+            updateTemplateOptions(true);
+        });
+
+        // Handle background size select
+        $(this).find('#background-image').on('change', function () {
+            handleBackgroundOverride();
+        });
+
+        filterTemplates(false);
+        updateTemplateOptions();
+        handleBackgroundOverride();
     }
 </script>

@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -68,8 +68,9 @@
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}
                                 {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                             {% endif %}
 
                             {% set attributes = [
@@ -94,27 +95,31 @@
                             {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
 
                             {{ inline.hidden("folderId") }}
+
+                            {% set title %}{% trans "Layout ID" %}{% endset %}
+                            {{ inline.number("layoutId", title, layoutId) }}
+
+                            {% set title %}{% trans "Orientation" %}{% endset %}
+                            {% set option1 = "All"|trans %}
+                            {% set option2 = "Landscape"|trans %}
+                            {% set option3 = "Portrait"|trans %}
+                            {% set values = [{id: '', value: option1}, {id: 'landscape', value: option2}, {id: 'portrait', value: option3}] %}
+                            {{ inline.dropdown("orientation", "single", title, '', values, "id", "value") }}
                         </form>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
-                    </div>
-                    <div class="form-group col-sm-11" style="padding: 0">
-                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
-                    </div>
-                </div>
-
-                <div class="row">
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-
+                    <div class="folder-controller d-none">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
+                        <div id="breadcrumbs" class="mt-2 pl-2"></div>
+                    </div>
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="libraryItems" class="table table-striped responsive nowrap" data-content-type="media" data-content-id-name="mediaId" data-state-preference-name="libraryGrid" style="width: 100%;">
@@ -130,7 +135,7 @@
                                     <th>{% trans "Size" %}</th>
                                     <th>{% trans "Size (bytes)" %}</th>
                                     <th>{% trans "Owner" %}</th>
-                                    <th>{% trans "Permissions" %}</th>
+                                    <th>{% trans "Sharing" %}</th>
                                     <th>{% trans "Revised" %}</th>
                                     <th>{% trans "Released" %}</th>
                                     <th>{% trans "File Name" %}</th>
@@ -164,6 +169,7 @@
 
             table = $("#libraryItems").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
                 responsive: true,
@@ -190,10 +196,20 @@
                         "data": dataTableCreateTags
                     },{% endif %}
                     {
-                        "name": "mediaId",
-                        responsivePriority: 3,
-                        "data": null,
-                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                        responsivePriority: 5,
+                        data: 'thumbnail',
+                        render: function(data, type, row) {
+                            if (type !== 'display') {
+                                return row.layoutId;
+                            }
+                            if (data) {
+                                return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
+                                    '<img class="img-fluid" src="' + data + '&isThumb=1" alt="{{ "Thumbnail"|trans }}" />' +
+                                    '</a>';
+                            }
+                            return '';
+                        },
+                        sortable: false
                     },
                     {
                         "name": "duration",
@@ -301,7 +317,7 @@
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#libraryItems_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#libraryItems_wrapper').find('.dataTables_buttons'));
         });
 
         $("#libraryUploadForm").click(function(e) {
@@ -364,7 +380,6 @@
                 openUploadForm({
                     url: "{{ url_for("library.add") }}",
                     title: "{% trans "Upload media" %}",
-                    multi: false,
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
@@ -376,6 +391,7 @@
                         }
                     },
                     templateOptions: {
+                        multi: false,
                         oldMediaId: mediaId,
                         oldFolderId: folderId,
                         updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
@@ -421,6 +437,7 @@
                 stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
+                responsive: true,
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ url_for("library.usage", {id: ':id'}) }}".replace(":id", $("#usageReportTable").data().mediaId),
@@ -446,6 +463,7 @@
                 stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
+                responsive: true,
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ url_for("library.usage.layouts", {id: ':id'}) }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)
@@ -467,12 +485,28 @@
 
         function setDefaultMultiSelectFormOpen(dialog) {
             {% set message = 'Force delete from any existing layouts, assignments, etc' %}
+            {% set message2 = 'Notify each Display that has this Media in its local storage to remove it immediately?' %}
 
-            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {{ message|trans|e }} </input>');
-            $input.on('change', function() {
-                dialog.data().commitData = {forceDelete: $(this).val()};
+            var $input = $(
+                '<div class="form-group">' +
+                 '<input type=checkbox id="forceDelete" name="forceDelete"> {{ message|trans|e }} </input>' +
+                '</div>'
+            );
+
+            var $input2 = $(
+                '<div class="form-group">' +
+                '<input type=checkbox id="purge" name="purge"> {{ message2|trans|e }} </input>' +
+                '</div>'
+            );
+
+            $(dialog).find('.modal-body').append($input, $input2);
+
+            $('#forceDelete, #purge').on('change', function() {
+                dialog.data().commitData = {
+                    forceDelete: $('#forceDelete').val(),
+                    purge: $('#purge').val()
+                };
             });
-            $(dialog).find('.modal-body').append($input);
         }
 
         function setEnableStatMultiSelectFormOpen(dialog) {

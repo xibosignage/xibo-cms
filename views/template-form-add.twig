@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -86,14 +86,6 @@
                         {% set title %}{% trans "Resolution" %}{% endset %}
                         {% set helpText %}{% trans "Choose the resolution this Template should be designed for." %}{% endset %}
                         {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
-
-                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
-                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Template. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
-                        {{ forms.checkbox("enableStat", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), helpText) }}
-
-                        {% set title %}{% trans "Automatically apply Transitions?" %}{% endset %}
-                        {% set helpText %}{% trans "When enabled, the default Transition type and duration will be applied to all widgets on this Template." %}{% endset %}
-                        {{ forms.checkbox("autoApplyTransitions", title, theme.getSetting("DEFAULT_TRANSITION_AUTO_APPLY"), helpText) }}
 
                         {{ forms.message("You can also add a template from an existing Layout from the Layout Designer."|trans, "alert alert-info") }}
                     </div>

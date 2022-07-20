@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,24 +25,10 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Help;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 class HelpFactory extends BaseFactory
 {
-    /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
     /**
      * @return Help
      */
@@ -50,7 +36,8 @@ class HelpFactory extends BaseFactory
     {
         return new Help(
             $this->getStore(),
-            $this->getLog()
+            $this->getLog(),
+            $this->getDispatcher()
         );
     }
 

@@ -172,6 +172,7 @@ class Text extends ModuleWidget
         $this->setRawNode('text', $request->getParam('ta_text', $request->getParam('text', null)));
         $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
         $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'top']));
 
         // Save the widget
         $this->isValid();
@@ -193,6 +194,7 @@ class Text extends ModuleWidget
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.min.js')
+            ->appendJavaScript('xiboIC.lockAllInteractions();')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
             ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
@@ -218,7 +220,8 @@ class Text extends ModuleWidget
             'speed' => $this->getOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
+            'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p'),
+            'alignmentV' => $this->getOption('alignV', 'top')
         ]);
 
         // Pull out our text
@@ -281,7 +284,7 @@ class Text extends ModuleWidget
         $javaScriptContent .= '     $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
+        $javaScriptContent .= '     var runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
         $javaScriptContent .= '     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         if ($clock)

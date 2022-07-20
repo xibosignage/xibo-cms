@@ -138,7 +138,7 @@ var text_callback = function(dialog, extraData) {
             }
 
             // Remove colour picker
-            $("#backgroundColor").colorpicker('destroy');
+            destroyColorPicker('#backgroundColor');
         }
     });
 
@@ -250,7 +250,7 @@ var text_callback = function(dialog, extraData) {
     }
 
     // Turn the background colour into a picker
-    $("#backgroundColor").colorpicker();
+    createColorPicker('#backgroundColor');
 
     return false;
 };
@@ -1175,6 +1175,20 @@ function tagsWithValues(formId) {
         tagN = tag.split('|')[0];
         tagV = tag.split('|')[1];
 
+        if ($(formSelector).val().indexOf(tagN) >= 0) {
+            // if we entered a Tag that already exists there are two options
+            // exists without value and entered without value - handled automatically allowDuplicates = false
+            // as we allow entering Tags with value, we need additional handling for that
+
+            // go through tagsinput items and return the one that matches Tag name about to be added
+            let item = $(formSelector).tagsinput('items').filter(item => {
+                return item.split('|')[0].toLowerCase() === tagN.toLowerCase()
+            });
+
+            // remove the existing Tag from tagsinput before adding the new one
+            $(formSelector).tagsinput('remove', item.toString());
+        }
+
         if ($(formSelector).val().indexOf(tagN) === -1 && tagV === undefined) {
             $.ajax({
                 url: $('form#'+formId).data().gettag,
@@ -1383,18 +1397,56 @@ function setFeatureGroupCheckboxState(triggerElement) {
     var $featureGroup = triggerElement.closest("tbody.feature-group");
     var countChecked = $featureGroup.find("input[name='features[]']:checked").length;
     var countTotal = $featureGroup.find("input[name='features[]']").length;
+    setCheckboxState(countChecked, countTotal, $featureGroup, '.feature-select-all')
 
-    if (countChecked <= 0) {
-        $featureGroup.find(".feature-select-all")
+    // collect up the inherit checkboxes belonging to the same group
+    var countInheritChecked = $featureGroup.find("input.inherit-group:checked").length;
+    var countInheritTotal = $featureGroup.find("input.inherit-group").length;
+    setCheckboxState(countInheritChecked, countInheritTotal, $featureGroup, '.inherit-group-all')
+}
+
+/**
+ * Set checkbox state helper function
+ * @param count
+ * @param countTotal
+ * @param $selector
+ * @param checkboxClass
+ */
+function setCheckboxState(count, countTotal, $selector, checkboxClass)
+{
+    if (count <= 0) {
+        $selector.find(checkboxClass)
             .prop("checked", false)
             .prop("indeterminate", false);
-    } else if (countChecked === countTotal) {
-        $featureGroup.find(".feature-select-all")
+    } else if (count === countTotal) {
+        $selector.find(checkboxClass)
             .prop("checked", true)
             .prop("indeterminate", false);
     } else {
-        $featureGroup.find(".feature-select-all")
+        $selector.find(checkboxClass)
             .prop("checked", false)
             .prop("indeterminate", true);
     }
+}
+
+function userApprovedApplicationsFormOpen(dialog) {
+    $('.revokeAccess').on('click', function (e) {
+        var $this = $(this);
+        var clientKey = $this.data('applicationKey');
+        var userId = $this.data('applicationUser');
+
+        $.ajax({
+            url: revokeApplicationAccess.replace(':id', clientKey).replace(':userId', userId),
+            type: "DELETE",
+            success: function (res) {
+                if (res.success) {
+                    $this.closest('tr').remove();
+                    toastr.success(res.message);
+                } else {
+                    toastr.error(res.message);
+                }
+            }
+        });
+    })
+
 }

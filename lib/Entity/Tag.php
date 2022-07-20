@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -118,11 +118,12 @@ class Tag implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->tagFactory = $tagFactory;
     }
@@ -328,7 +329,7 @@ class Tag implements \JsonSerializable
 
         foreach ($this->displayGroups as $id => $value) {
             if ($id == $displayGroupId) {
-                $v = implode("", $value);
+                $v = implode('', $value);
             }
         }
 
@@ -336,10 +337,9 @@ class Tag implements \JsonSerializable
 
         if (!array_key_exists($displayGroupId, $this->displayGroups)) {
             $this->displayGroups[$displayGroupId][] = $this->value;
-        } elseif (array_key_exists($displayGroupId, $this->displayGroups) && $v != $this->value) {
+        } else if (array_key_exists($displayGroupId, $this->displayGroups) && $v != $this->value) {
             $this->displayGroups[$displayGroupId] = [$this->value];
-        }
-        else {
+        } else {
             $this->getLog()->debug('Assignment already exists with the same value, no need to update');
         }
     }
@@ -758,13 +758,17 @@ class Tag implements \JsonSerializable
             $tagOptionsArray = explode(',', $tagOptionsString);
 
             if (isset($this->value) && !in_array($this->value, $tagOptionsArray)) {
-                throw new InvalidArgumentException(sprintf(__('Provided tag value %s, not found in tag %s options',
-                    $this->value, $this->tag)), 'tags');
+                throw new InvalidArgumentException(
+                    sprintf(__('Provided tag value %s, not found in tag %s options'), $this->value, $this->tag),
+                    'tags'
+                );
             }
 
             if (!isset($this->value) && $this->isRequired == 1) {
-                throw new InvalidArgumentException(sprintf(__('Provided Tag %s, requires a value', $this->tag)),
-                    'tags');
+                throw new InvalidArgumentException(
+                    sprintf(__('Provided Tag %s, requires a value'), $this->tag),
+                    'tags'
+                );
             }
         }
     }

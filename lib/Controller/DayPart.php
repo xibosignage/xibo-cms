@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,17 +23,11 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class DayPart
@@ -44,47 +38,23 @@ class DayPart extends Base
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
-    /** @var DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
+
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param DayPartFactory $dayPartFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param Twig $view
+     * @param \Xibo\Service\DisplayNotifyServiceInterface $displayNotifyService
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
+    public function __construct($dayPartFactory, $scheduleFactory, DisplayNotifyServiceInterface $displayNotifyService)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->dayPartFactory = $dayPartFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -213,6 +183,7 @@ class DayPart extends Base
                     'id' => 'daypart_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
                     'text' => __('Share'),
+                    'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])],
                         ['name' => 'commit-method', 'value' => 'post'],
@@ -408,7 +379,7 @@ class DayPart extends Base
         $this->handleCommonInputs($dayPart, $request);
 
         $dayPart
-            ->setScheduleFactory($this->scheduleFactory)
+            ->setScheduleFactory($this->scheduleFactory, $this->displayNotifyService)
             ->save();
 
         // Return
@@ -508,7 +479,6 @@ class DayPart extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $dayPart = $this->dayPartFactory->getById($id)
-            ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
         if (!$this->getUser()->checkEditable($dayPart)) {
@@ -521,7 +491,7 @@ class DayPart extends Base
 
         $this->handleCommonInputs($dayPart, $request);
         $dayPart
-            ->setScheduleFactory($this->scheduleFactory)
+            ->setScheduleFactory($this->scheduleFactory, $this->displayNotifyService)
             ->save();
 
         // Return
@@ -631,8 +601,12 @@ class DayPart extends Base
             throw new AccessDeniedException();
         }
 
+        if ($dayPart->isSystemDayPart()) {
+            throw new InvalidArgumentException(__('Cannot Delete system specific DayParts'));
+        }
+
         $dayPart
-            ->setScheduleFactory($this->scheduleFactory)
+            ->setScheduleFactory($this->scheduleFactory, $this->displayNotifyService)
             ->delete();
 
         // Return

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -89,11 +89,9 @@ $container->set('name', 'web');
 //
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
-// Handle additional Middleware
-\Xibo\Middleware\State::setMiddleWare($app);
-
-$app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
+$app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
+$app->add(new \Xibo\Middleware\ListenersMiddleware($app));
 $app->add(new \Xibo\Middleware\Theme($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 
@@ -102,6 +100,9 @@ $authentication = ($container->get('configService')->authentication != null)
     ? $container->get('configService')->authentication
     : (new \Xibo\Middleware\WebAuthentication());
 $app->add($authentication->setDependencies($app)->addRoutes());
+$app->add(new RKA\Middleware\IpAddress(true, []));
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
 
 // TODO reconfigure this and enable
 //$app->add(new Xibo\Middleware\HttpCache());
@@ -116,7 +117,11 @@ $app->addRoutingMiddleware();
 //
 
 // Add Error Middleware
-$app->addErrorMiddleware(false, true, true)
+$app->addErrorMiddleware(
+    \Xibo\Helper\Environment::isDevMode() || \Xibo\Helper\Environment::isForceDebugging(),
+    true,
+    true
+)
     ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container));
 
 // All application routes

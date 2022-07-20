@@ -27,14 +27,16 @@ var videoImageCovers = {};
  */
 function openUploadForm(options) {
 
-    options = $.extend({}, {
+    options = $.extend(true, {}, {
         templateId: "template-file-upload",
-        multi: true,
         videoImageCovers: true,
-        className: null,
+        className: "",
         animateDialog: true,
         formOpenedEvent: null,
-        layoutImport: false
+        templateOptions : {
+            layoutImport: false,
+            multi: true
+        }
     }, options);
 
     // Keep a cache of the upload template (unless we are a non-standard form)
@@ -47,7 +49,7 @@ function openUploadForm(options) {
         message: uploadTemplate(options.templateOptions),
         title: options.title,
         buttons: options.buttons,
-        className: options.className,
+        className: options.className + " upload-modal",
         animate: options.animateDialog,
         size: 'large'
     }).on('hidden.bs.modal', function () {
@@ -84,7 +86,7 @@ function openUploadForm(options) {
         }
 
         // If we are not a multi-upload, then limit to 1
-        if (!options.multi) {
+        if (!options.templateOptions.multi) {
             uploadOptions = $.extend({}, uploadOptions, {
                 maxNumberOfFiles: 1,
                 limitMultiFileUploads: 1
@@ -149,12 +151,14 @@ function openUploadForm(options) {
                         clearInterval(refreshSessionInterval);
                     }
 
-                    if (options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null) {
+                    // Run the callback function for done when we're processing the last uploading element
+                    var filesToUploadCount = form.find('tr.template-upload').length;
+                    if (filesToUploadCount == 1 && options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null && typeof options.uploadDoneEvent == 'function') {
                         // Run in a short while.
                         // this gives time for file-upload's own deferreds to run
                         setTimeout(function () {
-                            eval(options.uploadDoneEvent)(data);
-                        });
+                            options.uploadDoneEvent(data);
+                        }, 300);
                     }
                 })
             .bind('fileuploadprogressall', function (e, data) {
@@ -195,12 +199,15 @@ function openUploadForm(options) {
                 }));
 
                 $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    // Fix for 2nd/overlay modal
+                    $('.modal:visible').length && $(document.body).addClass('modal-open');
+                    
                     $(this).data('bs.modal', null);
                 });
             }
 
             // Init JS Tree
-            initJsTreeAjax('#container-folder-form-tree', options.initialisedBy, true, 600);
+            initJsTreeAjax($("#folder-tree-form-modal").find('#container-folder-form-tree'), options.initialisedBy, true, 600);
         }
 
         // Handle any form opened event
@@ -237,14 +244,16 @@ function handleVideoCoverImage(e, data) {
                     video.setAttribute('id', file.name);
                     video.preload = 'metadata';
 
-                    //show help text describing this feature.
-                    var helpText = translations.videoImageCoverHelpText;
-                    $('.template-upload').find('video').closest("tr").find("td.title")[0].append(helpText);
-
                     getVideoImage(video, 2);
                     video.addEventListener('seeked, pause', seekImage);
                 }
             });
+
+            //show help text describing this feature.
+            var helpText = translations.videoImageCoverHelpText;
+            var $helpTextSelector = $('.template-upload video:first').closest('tr').find('td span.info');
+            $helpTextSelector.empty();
+            $helpTextSelector.append(helpText);
 
             clearInterval(checkExist);
         }
@@ -298,9 +307,9 @@ function saveVideoCoverImage(data) {
         delete videoImageCovers[results.name];
 
         // this calls function in library controller that decodes the image and
-        // saves it to library as  "/{$mediaId}_videocover.{$type}".
+        // saves it to library as  "{libraryLocation}/{$mediaId}_{mediaType}cover.png".
         $.ajax({
-            url: "/library/thumbnail",
+            url: addMediaThumbnailUrl,
             type: "POST",
             data: thumbnailData
         });

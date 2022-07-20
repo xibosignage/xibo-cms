@@ -33,10 +33,10 @@ class FeaturesMigration extends AbstractMigration
     public function change()
     {
         $this->table('group')
-            ->addColumn('features', 'string', [
+            ->addColumn('features', 'text', [
                 'null' => true,
                 'default' => null,
-                'limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_MEDIUM
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_LONG
             ])
             ->save();
 

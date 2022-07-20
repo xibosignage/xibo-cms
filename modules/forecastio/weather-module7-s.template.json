@@ -1,0 +1,21 @@
+{
+    "id": "weather-module-7s",
+    "value": "Square - Forecast squared with background",
+    "main": "<div class=\"container\">\n    <div class=\"region-top\">\n        <div class=\"row-element-half\">\n            <div class=\"shadowed temp\">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>\n        </div><div class=\"row-element-half\">\n            <div class=\" main-icon shadowed\"><i class=\"wi [wicon]\"></i></div>\n        </div>\n    </div>\n    <div class=\"region-middle\">\n        <div class=\"date shadowed\"> [time|M] [time|d]</div>\n    </div>\n\n\n    <div class=\"region-bottom bg-footer\">\n        <div class=\"forecast-current\">[summary]</div>\n        <div class=\"forecast-second\">||Wind||: [windSpeed] [windSpeedUnit] [windDirection]</div>\n        <div class=\"forecast-second\">||Humidity||: [humidityPercent]%</div>\n    </div>\n</div><div class=\"weather-col col-12 powered\">[Attribution]<\/div>",
+    "daily": "",
+    "css": "#content {\n    color: #f9f9f9;\n}\n\n.shadowed {\ntext-shadow: 0px 0px 8px rgba(0, 0, 0, 0.6);\n    filter: dropshadow(color=rgba(0, 0, 0, 0.6), offx=8, offy=8);\n}\n\n.row-element-half {\n    display: inline-block;\n    width: 50%;\n    vertical-align: top;\n}\n\n.region-top {\n    height: 120px;\n}\n\n.region-bottom {\n    background-color: #111;\n    background-color: #111a;\n    border-radius: 0 12px 0 0;\n    padding: 6px;\n    bottom: 14px;\n    font-size: 14px;\n    width: 90%;\n    height: 70px;\n}\n\n.region-middle {\n    font-size: 24px;\n    line-height: 24px;\n    font-weight: bold;\n    padding: 0 4px;\n}\n\n.main-icon {\n    text-align: right;\n    font-size: 50px;\n    line-height: 78px;\n    padding: 8px;\n}\n\n.temp {\n    font-size: 60px;\n    padding: 8px;\n}\n\n.temp sup {\n font-size: 30px;\n }\n\n.forecast-current {\n    margin-bottom: 12px;\n    font-weight: bold;\n  }\n\n.forecast-second {\n    font-size: 12px;\n}\n\n.powered {\n  padding: 4px 0;\n  color: #000;\n  font-size: 13px;\n text-align: center;\n  background-color: white;\n  background-color: rgba(255, 255, 255, 0.787);\n}",
+    "widgetOriginalWidth": "250",
+    "widgetOriginalHeight": "250",
+    "image": "modules/forecastio/template-thumbs/weather7s.png",
+    "type": "forecast",
+    "orientation": "square",
+    "background": "fit",
+    "options": {
+        "text-color": true,
+        "icons-color": true,
+        "background-color": true,
+        "footer-color": true,
+        "footer-text-color": true,
+        "footer-icons-color": true
+    }
+}

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -29,6 +29,11 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
+/**
+ * Class Folder
+ * @package Xibo\Entity
+ * @SWG\Definition()
+ */
 class Folder
 {
     use EntityTrait;
@@ -79,12 +84,13 @@ class Folder
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param FolderFactory $folderFactory
      * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $folderFactory, $permissionFactory)
+    public function __construct($store, $log, $dispatcher, $folderFactory, $permissionFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->setPermissionsClass('Xibo\Entity\Folder');
         $this->folderFactory = $folderFactory;
         $this->permissionFactory = $permissionFactory;
@@ -100,13 +106,18 @@ class Folder
         return $this->permissionsFolderId;
     }
 
+    public function getPermissionFolderIdOrThis(): int
+    {
+        return $this->permissionsFolderId == null ? $this->id : $this->permissionsFolderId;
+    }
+
     /**
      * Get Owner Id
      * @return int
      */
     public function getOwnerId()
     {
-        return null;
+        return -1;
     }
 
     public function getParentId()
@@ -114,9 +125,9 @@ class Folder
         return $this->parentId;
     }
 
-    public function isRoot()
+    public function isRoot(): bool
     {
-        return ($this->isRoot === 1) ? true : false;
+        return $this->isRoot === 1;
     }
 
     public function getChildren()
@@ -131,6 +142,10 @@ class Folder
     {
         if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->text)) {
             throw new InvalidArgumentException(__('Folder needs to have a name, between 1 and 254 characters.'), 'folderName');
+        }
+
+        if (empty($this->parentId)) {
+            throw new InvalidArgumentException(__('Folder needs a specified parent Folder id'), 'parentId');
         }
     }
 
@@ -160,8 +175,6 @@ class Folder
         } else {
             $this->edit();
         }
-
-
     }
 
     public function delete()
@@ -221,7 +234,6 @@ class Folder
         $children = array_filter(explode(',', $this->children));
 
         if ($mode === 'delete') {
-
             // remove this folder from children of the parent
             foreach ($parentChildren as $index => $child) {
                 if ((int)$child === (int)$this->id) {
@@ -319,32 +331,37 @@ class Folder
 
     private function updateChildObjects($permissionFolderId, $folderId)
     {
-        $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE parentId = :folderId',[
+        $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE parentId = :folderId', [
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
 
-        $this->getStore()->update('UPDATE `media` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+        $this->getStore()->update('UPDATE `media` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
 
-        $this->getStore()->update('UPDATE `campaign` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+        $this->getStore()->update('UPDATE `campaign` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
 
-        $this->getStore()->update('UPDATE `displaygroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+        $this->getStore()->update('UPDATE `displaygroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
 
-        $this->getStore()->update('UPDATE `dataset` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+        $this->getStore()->update('UPDATE `dataset` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
 
-        $this->getStore()->update('UPDATE `playlist` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+        $this->getStore()->update('UPDATE `playlist` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
+            'permissionsFolderId' => $permissionFolderId,
+            'folderId' => $folderId
+        ]);
+
+        $this->getStore()->update('UPDATE `menu_board` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);

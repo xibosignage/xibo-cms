@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "2.2"
+        "version": "3.1"
     },
     "basePath": "/api",
     "schemes": [
@@ -251,6 +251,20 @@
                         "type": "string"
                     },
                     {
+                        "name": "exactTags",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "hasLayouts",
                         "in": "query",
                         "description": "Filter by has layouts",
@@ -284,6 +298,13 @@
                         "description": "Embed related data such as layouts, permissions, tags and events",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -312,6 +333,37 @@
                         "description": "Name for this Campaign",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutIds",
+                        "in": "formData",
+                        "description": "An array of layoutIds to assign to this Campaign, in order.",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cyclePlaybackEnabled",
+                        "in": "formData",
+                        "description": "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "playCount",
+                        "in": "formData",
+                        "description": "In cycle based playback, how many plays should each Layout have before moving on?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -352,6 +404,44 @@
                         "description": "Name for this Campaign",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "manageLayouts",
+                        "in": "formData",
+                        "description": "Flag indicating whether to manage layouts or not. Default to no.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutIds",
+                        "in": "formData",
+                        "description": "An array of layoutIds to assign to this Campaign, in order.",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cyclePlaybackEnabled",
+                        "in": "formData",
+                        "description": "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "playCount",
+                        "in": "formData",
+                        "description": "In cycle based playback, how many plays should each Layout have before moving on?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -391,8 +481,8 @@
                 "tags": [
                     "campaign"
                 ],
-                "summary": "Assign Layouts",
-                "description": "Assign Layouts to a Campaign",
+                "summary": "Assign Layout",
+                "description": "Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
                 "operationId": "campaignAssignLayout",
                 "parameters": [
                     {
@@ -405,27 +495,48 @@
                     {
                         "name": "layoutId",
                         "in": "formData",
-                        "description": "Array of Layout ID/Display Orders to Assign",
+                        "description": "Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
                         "required": true,
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/LayoutAssignmentArray"
-                        }
-                    },
-                    {
-                        "name": "unassignLayoutId",
-                        "in": "formData",
-                        "description": "Array of Layout ID/Display Orders to unassign",
-                        "required": false,
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/LayoutAssignmentArray"
-                        }
+                        "type": "integer"
                     }
                 ],
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/campaign/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "campaign"
+                ],
+                "summary": "Campaign Select folder",
+                "description": "Select Folder for Campaign, can also be used with Layout specific Campaign ID",
+                "operationId": "campaignSelectFolder",
+                "parameters": [
+                    {
+                        "name": "campaignId",
+                        "in": "path",
+                        "description": "The Campaign ID or Layout specific Campaign ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Campaign"
+                        }
                     }
                 }
             }
@@ -677,11 +788,25 @@
                         "type": "string"
                     },
                     {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "Filter by user Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "embed",
                         "in": "query",
                         "description": "Embed related data such as columns",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -782,6 +907,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "userAgent",
+                        "in": "formData",
+                        "description": "Custom user Agent value",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "refreshRate",
                         "in": "formData",
                         "description": "How often in seconds should this remote DataSet be refreshed",
@@ -792,6 +924,13 @@
                         "name": "clearRate",
                         "in": "formData",
                         "description": "How often in seconds should this remote DataSet be truncated",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "truncateOnEmpty",
+                        "in": "formData",
+                        "description": "Should the DataSet data be truncated even if no new data is pulled from the source?",
                         "required": false,
                         "type": "integer"
                     },
@@ -850,6 +989,20 @@
                         "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "csvSeparator",
+                        "in": "formData",
+                        "description": "Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -962,6 +1115,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "userAgent",
+                        "in": "formData",
+                        "description": "Custom user Agent value",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "refreshRate",
                         "in": "formData",
                         "description": "How often in seconds should this remote DataSet be refreshed",
@@ -972,6 +1132,13 @@
                         "name": "clearRate",
                         "in": "formData",
                         "description": "How often in seconds should this remote DataSet be truncated",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "truncateOnEmpty",
+                        "in": "formData",
+                        "description": "Should the DataSet data be truncated even if no new data is pulled from the source?",
                         "required": false,
                         "type": "integer"
                     },
@@ -1030,6 +1197,20 @@
                         "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "csvSeparator",
+                        "in": "formData",
+                        "description": "Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1204,6 +1385,30 @@
                 }
             }
         },
+        "/dataset/export/csv/{dataSetId}": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Export to CSV",
+                "description": "Export DataSet data to a csv file",
+                "operationId": "dataSetExportCsv",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID to export.",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/dataset/{dataSetId}/column": {
             "get": {
                 "tags": [
@@ -1317,6 +1522,27 @@
                         "description": "Flag indicating whether this column should allow sorting on DataEntry",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "tooltip",
+                        "in": "formData",
+                        "description": "Help text that should be displayed when entering data for this Column.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether value must be provided for this Column.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "PHP date format for the dates in the source of the remote DataSet",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1420,6 +1646,27 @@
                         "description": "Flag indicating whether this column should allow sorting on DataEntry",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "tooltip",
+                        "in": "formData",
+                        "description": "Help text that should be displayed when entering data for this Column.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether value must be provided for this Column.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "PHP date format for the dates in the source of the remote DataSet",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -2055,6 +2302,27 @@
                         "type": "string"
                     },
                     {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Filter by tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "macAddress",
                         "in": "query",
                         "description": "Filter by Mac Address",
@@ -2130,6 +2398,13 @@
                         "description": "Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2322,6 +2597,13 @@
                         "description": "The Webkey serial number for this Display, if applicable",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2516,6 +2798,30 @@
                 }
             }
         },
+        "/display/purgeAll/{displayId}": {
+            "put": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Purge All",
+                "description": "Ask this Player to purge all Media from its local storage and request fresh files from CMS.",
+                "operationId": "displayPurgeAll",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup": {
             "get": {
                 "tags": [
@@ -2560,6 +2866,27 @@
                         "type": "string"
                     },
                     {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Filter by tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "isDisplaySpecific",
                         "in": "query",
                         "description": "Filter by whether the Display Group belongs to a Display or is user created",
@@ -2570,6 +2897,13 @@
                         "name": "forSchedule",
                         "in": "query",
                         "description": "Should the list be refined for only those groups the User can Schedule against?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
                         "required": false,
                         "type": "integer"
                     }
@@ -2634,6 +2968,34 @@
                         "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "dynamicCriteriaTags",
+                        "in": "formData",
+                        "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2702,6 +3064,34 @@
                         "description": "The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "dynamicCriteriaTags",
+                        "in": "formData",
+                        "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3102,48 +3492,48 @@
                     "displayGroup"
                 ],
                 "summary": "Action: Change Layout",
-                "description": "Send the change layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
+                "description": "Send a change layout action to the provided Display Group. This will be sent to Displays in that Group via XMR.",
                 "operationId": "displayGroupActionChangeLayout",
                 "parameters": [
                     {
                         "name": "displayGroupId",
                         "in": "path",
-                        "description": "The Display Group Id",
+                        "description": "This can be either a Display Group or the Display specific Display Group",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "layoutId",
                         "in": "formData",
-                        "description": "The Layout Id",
-                        "required": true,
+                        "description": "The ID of the Layout to change to. Either this or a campaignId must be provided.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "campaignId",
                         "in": "formData",
-                        "description": "The layout specific Campaign Id",
+                        "description": "The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "duration",
                         "in": "formData",
-                        "description": "The duration in seconds for this Layout change to remain in effect",
+                        "description": "The duration in seconds for this Layout change to remain in effect, after which normal scheduling is resumed.",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "downloadRequired",
                         "in": "formData",
-                        "description": "Flag indicating whether the player should perform a collect before playing the Layout",
+                        "description": "Flag indicating whether the player should perform a collect before playing the Layout.",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "changeMode",
                         "in": "formData",
-                        "description": "Whether to queue or replace with this action",
+                        "description": "Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
                         "required": true,
                         "type": "string"
                     }
@@ -3167,7 +3557,7 @@
                     {
                         "name": "displayGroupId",
                         "in": "path",
-                        "description": "The display group id",
+                        "description": "This can be either a Display Group or the Display specific Display Group",
                         "required": true,
                         "type": "integer"
                     }
@@ -3191,21 +3581,21 @@
                     {
                         "name": "displayGroupId",
                         "in": "path",
-                        "description": "The Display Group Id",
+                        "description": "This can be either a Display Group or the Display specific Display Group",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "layoutId",
                         "in": "formData",
-                        "description": "The Layout Id",
+                        "description": "The ID of the Layout to change to. Either this or a campaignId must be provided.",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "campaignId",
                         "in": "formData",
-                        "description": "The layout specific Campaign Id",
+                        "description": "The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
                         "required": false,
                         "type": "integer"
                     },
@@ -3219,7 +3609,7 @@
                     {
                         "name": "downloadRequired",
                         "in": "formData",
-                        "description": "Flag indicating whether the player should perform a collect before adding the Overlay",
+                        "description": "Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
                         "required": false,
                         "type": "integer"
                     }
@@ -3326,6 +3716,71 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/displaygroup/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Display Group Select folder",
+                "description": "Select Folder for Display Group, can also be used with Display specific Display Group ID",
+                "operationId": "displayGroupSelectFolder",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group ID or Display specific Display Group ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DisplayGroup"
+                        }
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/triggerWebhook": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Trigger Web hook",
+                "description": "Send the trigger webhook action to this DisplayGroup",
+                "operationId": "displayGroupActionTriggerWebhook",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "triggerCode",
+                        "in": "formData",
+                        "description": "The trigger code that should be sent to the Player",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -3533,6 +3988,124 @@
                 }
             }
         },
+        "/folders": {
+            "get": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Search Folders",
+                "description": "Returns JSON representation of the Folder tree",
+                "operationId": "folderSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Add Folder",
+                "description": "Add a new Folder to the specified parent Folder",
+                "operationId": "folderAdd",
+                "parameters": [
+                    {
+                        "name": "text",
+                        "in": "formData",
+                        "description": "Folder Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "parentId",
+                        "in": "formData",
+                        "description": "The ID of the parent Folder, if not provided, Folder will be added under Root Folder",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/folders/{folderId}": {
+            "put": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Edit Folder",
+                "description": "Edit existing Folder",
+                "operationId": "folderEdit",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "Folder ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "text",
+                        "in": "formData",
+                        "description": "Folder Name",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Delete Folder",
+                "description": "Delete existing Folder",
+                "operationId": "folderDelete",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "Folder ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/layout": {
             "get": {
                 "tags": [
@@ -3599,6 +4172,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "ownerUserGroupId",
                         "in": "query",
                         "description": "Filter by users in this UserGroupId",
@@ -3623,6 +4203,13 @@
                         "name": "campaignId",
                         "in": "query",
                         "description": "Get all Layouts for a given campaignId",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
                         "required": false,
                         "type": "integer"
                     }
@@ -3688,6 +4275,13 @@
                         "description": "Code identifier for this Layout",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3762,6 +4356,13 @@
                         "description": "Code identifier for this Layout",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4269,6 +4870,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "duration",
                         "in": "query",
                         "description": "Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
@@ -4286,6 +4894,13 @@
                         "name": "ownerUserGroupId",
                         "in": "query",
                         "description": "Filter by users in this UserGroupId",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
                         "required": false,
                         "type": "integer"
                     }
@@ -4358,11 +4973,67 @@
                         "description": "Date in Y-m-d H:i:s format, will set expiration date on the uploaded Media",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "widgetFromDt",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s format, will set widget start date",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "widgetToDt",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s format, will set widget end date",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "deleteOnExpiry",
+                        "in": "formData",
+                        "description": "Flag (0, 1), set to 1 to remove the Widget from the Playlist when the widgetToDt has been reached",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "applyToMedia",
+                        "in": "formData",
+                        "description": "Flag (0, 1), set to 1 to apply the widgetFromDt as the expiry date on the Media",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/library/search": {
+            "get": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Library Search All",
+                "description": "Search all library files from local and connectors",
+                "operationId": "librarySearchAll",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResult"
+                            }
+                        }
                     }
                 }
             }
@@ -4424,6 +5095,13 @@
                         "description": "Date in Y-m-d H:i:s format, will set expiration date on the Media item",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this media should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4455,6 +5133,13 @@
                         "in": "formData",
                         "description": "If the media item has been used should it be force removed from items that uses it?",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "purge",
+                        "in": "formData",
+                        "description": "Should this Media be added to the Purge List for all Displays?",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -4779,6 +5464,13 @@
                         "description": "Date in Y-m-d H:i:s format, will set expiration date on the Media item",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this media should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4792,6 +5484,40 @@
                                 "description": "Location of the new record",
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/library/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Media Select folder",
+                "description": "Select Folder for Media",
+                "operationId": "librarySelectFolder",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Campaign"
                         }
                     }
                 }
@@ -4815,6 +5541,659 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/menuboards": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Boards",
+                "description": "Search all Menu Boards this user has access to",
+                "operationId": "menuBoardSearch",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "query",
+                        "description": "Filter by Menu board Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "Filter by Owner Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by code",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/MenuBoard"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Add Menu Board",
+                "description": "Add a new Menu Board",
+                "operationId": "menuBoardAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board code identifier",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Menu Board Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuId}": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Edit Menu Board",
+                "description": "Edit existing Menu Board",
+                "operationId": "menuBoardEdit",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board code identifier",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Menu Board Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Delete Menu Board",
+                "description": "Delete existing Menu Board",
+                "operationId": "menuBoardDelete",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/menuboard/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Menu Board Select folder",
+                "description": "Select Folder for Menu Board",
+                "operationId": "menuBoardSelectFolder",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuId}/categories": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Board Categories",
+                "description": "Search all Menu Boards Categories this user has access to",
+                "operationId": "menuBoardCategorySearch",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "Filter by Menu board Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "menuCategoryId",
+                        "in": "query",
+                        "description": "Filter by Menu Board Category Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by code",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/MenuBoard"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuId}/category": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Add Menu Board",
+                "description": "Add a new Menu Board Category",
+                "operationId": "menuBoardCategoryAdd",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to which we want to add this Category to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board Category name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID associated with this Menu Board Category",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Category code identifier",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuCategoryId}/category": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Edit Menu Board Category",
+                "description": "Edit existing Menu Board Category",
+                "operationId": "menuBoardCategoryEdit",
+                "parameters": [
+                    {
+                        "name": "menuCategoryId",
+                        "in": "path",
+                        "description": "The Menu Board Category ID to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID from CMS Library to associate with this Menu Board Category",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Category code identifier",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Delete Menu Board Category",
+                "description": "Delete existing Menu Board Category",
+                "operationId": "menuBoardCategoryDelete",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The menuId to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuCategoryId}/products": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Board Products",
+                "description": "Search all Menu Boards Products this user has access to",
+                "operationId": "menuBoardProductsSearch",
+                "parameters": [
+                    {
+                        "name": "menuCategoryId",
+                        "in": "path",
+                        "description": "Filter by Menu Board Category Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "menuId",
+                        "in": "query",
+                        "description": "Filter by Menu board Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by code",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/MenuBoard"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuCategoryId}/product": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Add Menu Board Product",
+                "description": "Add a new Menu Board Product",
+                "operationId": "menuBoardProductAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board Product name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board Product description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "price",
+                        "in": "formData",
+                        "description": "Menu Board Product price, including the currency symbol if needed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "allergyInfo",
+                        "in": "formData",
+                        "description": "Menu Board Product allergyInfo",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "availability",
+                        "in": "formData",
+                        "description": "Menu Board Product availability",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID from CMS Library to associate with this Menu Board Product",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Product code",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "productOptions",
+                        "in": "formData",
+                        "description": "An array of optional Product Option names",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productValues",
+                        "in": "formData",
+                        "description": "An array of optional Product Option values",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuProductId}/product": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Edit Menu Board Product",
+                "description": "Edit existing Menu Board Product",
+                "operationId": "menuBoardProductEdit",
+                "parameters": [
+                    {
+                        "name": "menuProductId",
+                        "in": "path",
+                        "description": "The Menu Board Product ID to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board Product name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board Product description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "price",
+                        "in": "formData",
+                        "description": "Menu Board Product price, including the currency symbol if needed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "allergyInfo",
+                        "in": "formData",
+                        "description": "Menu Board Product allergyInfo",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "availability",
+                        "in": "formData",
+                        "description": "Menu Board Product availability",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID from CMS Library to associate with this Menu Board Product",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Product code",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "productOptions",
+                        "in": "formData",
+                        "description": "An array of optional Product Option names",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productValues",
+                        "in": "formData",
+                        "description": "An array of optional Product Option values",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Delete Menu Board",
+                "description": "Delete existing Menu Board Product",
+                "operationId": "menuBoardProductDelete",
+                "parameters": [
+                    {
+                        "name": "menuProductId",
+                        "in": "path",
+                        "description": "The Menu Board Product ID to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -5074,6 +6453,37 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}/region": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Set Widget Region",
+                "description": "Set the Region this Widget is intended for - only suitable for Drawer Widgets",
+                "operationId": "WidgetAssignedRegionSet",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "Id of the Widget to set region on",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "targetRegionId",
+                        "in": "formData",
+                        "description": "The target regionId",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -5420,6 +6830,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "ownerUserGroupId",
                         "in": "query",
                         "description": "Filter by users in this UserGroupId",
@@ -5432,6 +6849,13 @@
                         "description": "Embed related data such as regions, widgets, permissions, tags",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5488,6 +6912,34 @@
                         "description": "Add Library Media matching the tag filter provided",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "maxNumberOfItems",
+                        "in": "formData",
+                        "description": "Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5556,6 +7008,56 @@
                         "description": "Add Library Media matching the tag filter provided",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "maxNumberOfItems",
+                        "in": "formData",
+                        "description": "Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Delete a Playlist",
+                "description": "Delete a Playlist",
+                "operationId": "playlistDelete",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The PlaylistId to delete",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5823,6 +7325,40 @@
                 }
             }
         },
+        "/playlist/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Playlist Select folder",
+                "description": "Select Folder for Playlist",
+                "operationId": "playlistSelectFolder",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Campaign"
+                        }
+                    }
+                }
+            }
+        },
         "/region/{id}": {
             "put": {
                 "tags": [
@@ -6034,6 +7570,45 @@
             }
         },
         "/region/drawer/{id}": {
+            "put": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Save Drawer",
+                "description": "Save Drawer",
+                "operationId": "regionDrawerSave",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Drawer ID to Save",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "width",
+                        "in": "formData",
+                        "description": "The Width, default 250",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "height",
+                        "in": "formData",
+                        "description": "The Height",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Region"
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "layout"
@@ -6090,9 +7665,30 @@
                         "type": "string"
                     },
                     {
+                        "name": "partialResolution",
+                        "in": "query",
+                        "description": "Filter by Partial Resolution Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "enabled",
                         "in": "query",
                         "description": "Filter by Enabled",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "width",
+                        "in": "query",
+                        "description": "Filter by Resolution width",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "height",
+                        "in": "query",
+                        "description": "Filter by Resolution height",
                         "required": false,
                         "type": "integer"
                     }
@@ -6312,7 +7908,7 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+                        "description": "The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
                         "required": true,
                         "type": "integer"
                     },
@@ -6452,6 +8048,34 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "geoLocationJson",
+                        "in": "formData",
+                        "description": "Valid GeoJSON string, use as an alternative to geoLocation parameter",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionType",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the type of the action - command or navLayout",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionTriggerCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the webhook trigger code for the Action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionLayoutCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId and navLayout actionType, the Layout Code identifier",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -6513,7 +8137,7 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+                        "description": "The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
                         "required": true,
                         "type": "integer"
                     },
@@ -6653,6 +8277,34 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "geoLocationJson",
+                        "in": "formData",
+                        "description": "Valid GeoJSON string, use as an alternative to geoLocation parameter",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionType",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the type of the action - command or navLayout",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionTriggerCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the webhook trigger code for the Action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionLayoutCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId and navLayout actionType, the Layout Code identifier",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -7099,6 +8751,79 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/Layout"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template"
+                ],
+                "summary": "Add a Template",
+                "description": "Add a new Template to the CMS",
+                "operationId": "templateAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The layout name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "The layout description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "resolutionId",
+                        "in": "formData",
+                        "description": "If a Template is not provided, provide the resolutionId for this Layout.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "returnDraft",
+                        "in": "formData",
+                        "description": "Should we return the Draft Layout or the Published Layout on Success?",
+                        "required": false,
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/template/search": {
+            "get": {
+                "tags": [
+                    "template"
+                ],
+                "summary": "Template Search All",
+                "description": "Search all templates from local and connectors",
+                "operationId": "templateSearchAll",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResult"
                             }
                         }
                     }
@@ -7676,6 +9401,91 @@
                 }
             }
         },
+        "/user/permissions/{entity}": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Permission Data",
+                "description": "Permission data for the multiple Entities and Objects Provided.",
+                "operationId": "userPermissionsMultiSearch",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "description": "The Entity",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "description": "The IDs of the Objects to return permissions for",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Permission"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/permissions/{entity}/multiple": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Multiple Permission Set",
+                "description": "Set Permissions to users/groups for multiple provided entities.",
+                "operationId": "userPermissionsMultiSet",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "description": "The Entity type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ids",
+                        "in": "formData",
+                        "description": "Array of object IDs",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "groupIds",
+                        "in": "formData",
+                        "description": "Array of permissions with groupId as the key",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "ownerId",
+                        "in": "formData",
+                        "description": "Change the owner of this item. Leave empty to keep the current owner",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/user/pref": {
             "get": {
                 "tags": [
@@ -7817,6 +9627,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "decription",
+                        "in": "formData",
+                        "description": "A description of the User Group",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "libraryQuota",
                         "in": "formData",
                         "description": "The quota that should be applied (KiB). Provide 0 for no quota",
@@ -7834,6 +9651,20 @@
                         "name": "isDisplayNotification",
                         "in": "formData",
                         "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isShownForAddUser",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "defaultHomePageId",
+                        "in": "formData",
+                        "description": "If this user has been created via the onboarding form, this should be the default home page",
                         "required": false,
                         "type": "integer"
                     }
@@ -7875,6 +9706,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "decription",
+                        "in": "formData",
+                        "description": "A description of the User Group",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "libraryQuota",
                         "in": "formData",
                         "description": "The quota that should be applied (KiB). Provide 0 for no quota",
@@ -7892,6 +9730,20 @@
                         "name": "isDisplayNotification",
                         "in": "formData",
                         "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isShownForAddUser",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "defaultHomePageId",
+                        "in": "formData",
+                        "description": "If this user has been created via the onboarding form, this should be the default home page",
                         "required": false,
                         "type": "integer"
                     }
@@ -8040,6 +9892,13 @@
                         "description": "Flag indicating whether to copy group members",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "copyFeatures",
+                        "in": "formData",
+                        "description": "Flag indicating whether to copy group features",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -8054,6 +9913,261 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}?agenda": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit an Agenda Widget",
+                "description": "Edit an Agenda Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "widgetCalendarEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "The Link for the iCal Feed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "customInterval",
+                        "in": "formData",
+                        "description": "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "The date format to apply to all dates returned",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "numItems",
+                        "in": "formData",
+                        "description": "he number of items you want to display",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "itemsPerPage",
+                        "in": "formData",
+                        "description": "When in single mode, how many items per page should be shown",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "itemsSideBySide",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should items be shown side by side",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useCurrentTemplate",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should current event use different template?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "excludeOnlyCurrent",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude no current events results?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "excludeCurrent",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude current event from results?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "excludeAllDay",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude all day events from results?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "template",
+                        "in": "formData",
+                        "description": "Template to use",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "template_advanced",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "currentEventTemplate",
+                        "in": "formData",
+                        "description": "Template to use for current Event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "currentEventTemplate_advanced",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "noDataMessage",
+                        "in": "formData",
+                        "description": "Message to show when no notifications are available",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noDataMessage_advanced",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useEventTimezone",
+                        "in": "formData",
+                        "description": "A flag (0,1), Should we use Event Timezone?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useCalendarTimezone",
+                        "in": "formData",
+                        "description": "A flag (0,1), Should we use Calendar Timezone?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "windowsFormatCalendar",
+                        "in": "formData",
+                        "description": "Does the calendar feed come from Windows - if unsure leave unselected.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDateRange",
+                        "in": "formData",
+                        "description": "Should we look for events with provided date range?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rangeStart",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "rangeEnd",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a no event action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "currentEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a current event action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -8185,67 +10299,18 @@
                         "type": "string"
                     },
                     {
+                        "name": "noEventsMessage",
+                        "in": "formData",
+                        "description": "No upcoming events message",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "customInterval",
                         "in": "formData",
                         "description": "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.",
                         "required": false,
                         "type": "string"
-                    },
-                    {
-                        "name": "dateFormat",
-                        "in": "formData",
-                        "description": "The date format to apply to all dates returned",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "numItems",
-                        "in": "formData",
-                        "description": "he number of items you want to display",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "itemsPerPage",
-                        "in": "formData",
-                        "description": "When in single mode, how many items per page should be shown",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "effect",
-                        "in": "formData",
-                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "durationIsPerItem",
-                        "in": "formData",
-                        "description": "A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "itemsSideBySide",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should items be shown side by side",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "useCurrentTemplate",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should current event use different template?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "excludeCurrent",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Exclude current event from results?",
-                        "required": false,
-                        "type": "integer"
                     },
                     {
                         "name": "excludeAllDay",
@@ -8255,60 +10320,18 @@
                         "type": "integer"
                     },
                     {
+                        "name": "excludeWeekendDays",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude Saturdays and Sundays from the view?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "updateInterval",
                         "in": "formData",
                         "description": "Update interval in minutes",
                         "required": false,
                         "type": "integer"
-                    },
-                    {
-                        "name": "template",
-                        "in": "formData",
-                        "description": "Template to use",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "template_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "currentEventTemplate",
-                        "in": "formData",
-                        "description": "Template to use for current Event",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "currentEventTemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "noDataMessage",
-                        "in": "formData",
-                        "description": "Message to show when no notifications are available",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "noDataMessage_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "styleSheet",
-                        "in": "formData",
-                        "description": "Optional StyleSheet",
-                        "required": false,
-                        "type": "string"
                     },
                     {
                         "name": "useEventTimezone",
@@ -8330,6 +10353,286 @@
                         "description": "Does the calendar feed come from Windows - if unsure leave unselected.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "useDateRange",
+                        "in": "formData",
+                        "description": "Should we look for events with provided date range?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rangeStart",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "rangeEnd",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a no event action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "currentEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a current event action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "calendarType",
+                        "in": "formData",
+                        "description": "Calendar Type (0:custom ; 1:schedule ; 2:daily ; 3:weekly ; 4:monthly )",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showHeader",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the calendar template have a header?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showNowMarker",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the calendar show a marker for the current time?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showDescription",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the event description if exists?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "timeFormat",
+                        "in": "formData",
+                        "description": "Moment time format",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "formData",
+                        "description": "The start time for the calendar view",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "formData",
+                        "description": "The end time for the calendar view",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "textScale",
+                        "in": "formData",
+                        "description": "Scale for the text elements on calendar templates, defaults to 1.",
+                        "required": false,
+                        "type": "number"
+                    },
+                    {
+                        "name": "weekdayNameLength",
+                        "in": "formData",
+                        "description": "Week day name length",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "gridStep",
+                        "in": "formData",
+                        "description": "Weekly/Daily grid step in minutes.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "templateTheme",
+                        "in": "formData",
+                        "description": "Template color theme dark/light",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideColorTemplate",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the template colors be overriden?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "gridColor",
+                        "in": "formData",
+                        "description": "Colour for the grid between days/hours",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mainBackgroundColor",
+                        "in": "formData",
+                        "description": "Colour for the main template",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "gridTextColor",
+                        "in": "formData",
+                        "description": "Colour for the grid text",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayBgColor",
+                        "in": "formData",
+                        "description": "Background colour for day elements on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayTextColor",
+                        "in": "formData",
+                        "description": "Text colour for day elements on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "todayTextColor",
+                        "in": "formData",
+                        "description": "Text colour for current day element on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "nowMarkerColor",
+                        "in": "formData",
+                        "description": "Background colour for the current time marker",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayOtherMonthBgColor",
+                        "in": "formData",
+                        "description": "Background colour for unfocused month day elements on monthly calendar",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayOtherMonthTextColor",
+                        "in": "formData",
+                        "description": "Text colour for unfocused month day elements on monthly calendar",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "headerBgColor",
+                        "in": "formData",
+                        "description": "Background colour for main header",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "headerTextColor",
+                        "in": "formData",
+                        "description": "Text colour for main header",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "weekDaysHeaderBgColor",
+                        "in": "formData",
+                        "description": "Background colour for week days label on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "weekDaysHeaderTextColor",
+                        "in": "formData",
+                        "description": "Text colour for week days label on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "eventBgColor",
+                        "in": "formData",
+                        "description": "Background colour for a single day timed event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "eventTextColor",
+                        "in": "formData",
+                        "description": "Text colour for a single day timed event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dailyEventBgColor",
+                        "in": "formData",
+                        "description": "Background colour for a all day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dailyEventTextColor",
+                        "in": "formData",
+                        "description": "Text colour for a all day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "multiDayEventBgColor",
+                        "in": "formData",
+                        "description": "Background colour for a multiple day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "multiDayEventTextColor",
+                        "in": "formData",
+                        "description": "Text colour for a multiple day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "aditionalEventsBgColor",
+                        "in": "formData",
+                        "description": "Background colour for the extra element counter label",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "aditionalEventsTextColor",
+                        "in": "formData",
+                        "description": "Text colour for the extra element counter label",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventsBgColor",
+                        "in": "formData",
+                        "description": "Background colour for the no events message",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventsTextColor",
+                        "in": "formData",
+                        "description": "Text colour for the no events message",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8737,6 +11040,20 @@
                         "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8903,25 +11220,11 @@
                         "type": "string"
                     },
                     {
-                        "name": "mainTemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
                         "name": "itemtemplate",
                         "in": "formData",
                         "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
-                    },
-                    {
-                        "name": "itemtemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
                     },
                     {
                         "name": "styleSheet",
@@ -8934,6 +11237,20 @@
                         "name": "javaScript",
                         "in": "formData",
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
                     }
@@ -9011,6 +11328,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "freshnessTimeout",
+                        "in": "formData",
+                        "description": "How long should a Player in minutes show content before switching to the No Data Template?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "effect",
                         "in": "formData",
                         "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
@@ -9083,7 +11407,7 @@
                     {
                         "name": "template",
                         "in": "formData",
-                        "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+                        "description": "Template for each item",
                         "required": false,
                         "type": "string"
                     },
@@ -9223,6 +11547,13 @@
                         "name": "updateInterval",
                         "in": "formData",
                         "description": "Update interval in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "freshnessTimeout",
+                        "in": "formData",
+                        "description": "How long should a Player in minutes show content before switching to the No Data Template?",
                         "required": false,
                         "type": "integer"
                     },
@@ -9377,6 +11708,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "isPreNavigate",
+                        "in": "formData",
+                        "description": "Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "embedHtml",
                         "in": "formData",
                         "description": "HTML to embed",
@@ -9478,9 +11816,23 @@
                         "type": "number"
                     },
                     {
+                        "name": "templateOrientation",
+                        "in": "formData",
+                        "description": "Filter templates by orientation, available options: all, squared, landscape, portrait, scale",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "templateType",
+                        "in": "formData",
+                        "description": "Filter templates by weather type, available options: all, current, forecast",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "templateId",
                         "in": "formData",
-                        "description": "Use pre-configured templates, available options: weather-module0-5day, weather-module0-singleday, weather-module0-singleday2, weather-module1l, weather-module1p, weather-module2l, weather-module2p, weather-module3l, weather-module3p, weather-module4l, weather-module4p, weather-module5l, weather-module6v, weather-module6h",
+                        "description": "Use pre-configured templates",
                         "required": false,
                         "type": "string"
                     },
@@ -9541,25 +11893,11 @@
                         "type": "string"
                     },
                     {
-                        "name": "currentTemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
                         "name": "dailyTemplate",
                         "in": "formData",
                         "description": "Replaces [dailyForecast] in main template, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
-                    },
-                    {
-                        "name": "dailyTemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
                     },
                     {
                         "name": "styleSheet",
@@ -9572,6 +11910,20 @@
                         "name": "styleSheet",
                         "in": "formData",
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
                     }
@@ -9960,6 +12312,72 @@
                 }
             }
         },
+        "/playlist/widget/{widgetId}?menuboard": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a Menu Board Widget",
+                "description": "Edit Menu Board Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "WidgetMenuBoardEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Select only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playlist/widget/{widgetId}?notificationView": {
             "put": {
                 "tags": [
@@ -10095,6 +12513,13 @@
                         "name": "duration",
                         "in": "formData",
                         "description": "Edit Only - The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per item, otherwise it is per feed",
                         "required": false,
                         "type": "integer"
                     },
@@ -10421,6 +12846,20 @@
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -10499,6 +12938,27 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "cyclePlaybackEnabled",
+                        "in": "formData",
+                        "description": "Enable cycle based playback?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "playCount",
+                        "in": "formData",
+                        "description": "In cycle based playback, how many plays should each Widget have before moving on?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "cycleRandomWidget",
+                        "in": "formData",
+                        "description": "In cycle based playback, a random Widget will be selected at the start of each cycle and shown until its play count has been met.",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -11042,13 +13502,6 @@
                         "type": "string"
                     },
                     {
-                        "name": "ta_text_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
                         "name": "styleSheet",
                         "in": "formData",
                         "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
@@ -11059,6 +13512,20 @@
                         "name": "javaScript",
                         "in": "formData",
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
                     }
@@ -11403,159 +13870,6 @@
                 }
             }
         },
-        "/playlist/widget/{widgetId}?weatherTiles": {
-            "put": {
-                "tags": [
-                    "widget"
-                ],
-                "summary": "Edit Weather Tiles Widget",
-                "description": "Edit Weather Tiles Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
-                "operationId": "WidgetWeatherTilesEdit",
-                "parameters": [
-                    {
-                        "name": "widgetId",
-                        "in": "path",
-                        "description": "The WidgetId to Edit",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "name",
-                        "in": "formData",
-                        "description": "Optional Widget Name",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "duration",
-                        "in": "formData",
-                        "description": "Widget Duration",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "useDuration",
-                        "in": "formData",
-                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "enableStat",
-                        "in": "formData",
-                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "useDisplayLocation",
-                        "in": "formData",
-                        "description": "Flag (0, 1) Use the location configured on display",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "longitude",
-                        "in": "formData",
-                        "description": "The longitude for this weather widget, only pass if useDisplayLocation set to 0",
-                        "required": false,
-                        "type": "number"
-                    },
-                    {
-                        "name": "latitude",
-                        "in": "formData",
-                        "description": "The latitude for this weather widget, only pass if useDisplayLocation set to 0",
-                        "required": false,
-                        "type": "number"
-                    },
-                    {
-                        "name": "templateId",
-                        "in": "formData",
-                        "description": "Use pre-configured templates, available options: weather-module0-5day, weather-module0-singleday, weather-module0-singleday2, weather-module1l, weather-module1p, weather-module2l, weather-module2p, weather-module3l, weather-module3p, weather-module4l, weather-module4p, weather-module5l, weather-module6v, weather-module6h",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "units",
-                        "in": "formData",
-                        "description": "Units you would like to use, available options: auto, ca, si, uk2, us",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "updateInterval",
-                        "in": "formData",
-                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "lang",
-                        "in": "formData",
-                        "description": "Language you'd like to use, supported languages ar, az, be, bs, cs, de, en, el, es, fr, hr, hu, id, it, is, kw, nb, nl, pl, pt, ru, sk, sr, sv, tet, tr, uk, x-pig-latin, zh, zh-tw",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "dayConditionsOnly",
-                        "in": "formData",
-                        "description": "Flag (0, 1) Would you like to only show the Daytime weather conditions",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "overrideTemplate",
-                        "in": "formData",
-                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "widgetOriginalWidth",
-                        "in": "formData",
-                        "description": "This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "widgetOriginalHeight",
-                        "in": "formData",
-                        "description": "This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "template",
-                        "in": "formData",
-                        "description": "Current template, Pass only with overrideTemplate set to 1 ",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "styleSheet",
-                        "in": "formData",
-                        "description": "Optional StyleSheet, Pass only with overrideTemplate set to 1 ",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "styleSheet",
-                        "in": "formData",
-                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
-                        "required": false,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/Widget"
-                        }
-                    }
-                }
-            }
-        },
         "/playlist/widget/{widgetId}?webpage": {
             "put": {
                 "tags": [
@@ -11655,6 +13969,13 @@
                         "description": "The mode option for Web page, 1- Open Natively, 2- Manual Position, 3- Best Ft",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "isPreNavigate",
+                        "in": "formData",
+                        "description": "Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -11669,18 +13990,6 @@
         }
     },
     "definitions": {
-        "LayoutAssignmentArray": {
-            "properties": {
-                "layoutId": {
-                    "description": "Model to use for supplying key/value pairs to arrays",
-                    "type": "integer"
-                },
-                "displayOrder": {
-                    "description": "Model to use for supplying key/value pairs to arrays",
-                    "type": "integer"
-                }
-            }
-        },
         "importJsonSchema": {
             "properties": {
                 "uniqueKeys": {
@@ -11932,6 +14241,30 @@
                 "isConfidential": {
                     "description": "Flag indicating whether this Application will be confidential or not (can it keep a secret?)",
                     "type": "integer"
+                },
+                "description": {
+                    "description": "Application description",
+                    "type": "string"
+                },
+                "logo": {
+                    "description": "Path to Application logo",
+                    "type": "string"
+                },
+                "coverImage": {
+                    "description": "Path to Application Cover Image",
+                    "type": "string"
+                },
+                "companyName": {
+                    "description": "Company name associated with this Application",
+                    "type": "string"
+                },
+                "termsUrl": {
+                    "description": "URL to Application terms",
+                    "type": "string"
+                },
+                "privacyUrl": {
+                    "description": "URL to Application privacy policy",
+                    "type": "string"
                 }
             }
         },
@@ -11968,6 +14301,10 @@
                 "userName": {
                     "description": "The User Name of the User that took this action",
                     "type": "string"
+                },
+                "ipAddress": {
+                    "description": "The IP Address of the User that took this action",
+                    "type": "string"
                 }
             }
         },
@@ -11995,6 +14332,22 @@
                 },
                 "totalDuration": {
                     "description": "The total duration of the campaign (sum of layout's durations)",
+                    "type": "integer"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Campaign belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Campaign",
+                    "type": "integer"
+                },
+                "cyclePlaybackEnabled": {
+                    "description": "Flag indicating whether this Campaign has cycle based playback enabled",
+                    "type": "integer"
+                },
+                "playCount": {
+                    "description": "In cycle based playback, how many plays should each Layout have before moving on?",
                     "type": "integer"
                 }
             }
@@ -12051,6 +14404,7 @@
                 }
             }
         },
+        "Connector": {},
         "DataSet": {
             "properties": {
                 "dataSetId": {
@@ -12121,12 +14475,20 @@
                     "description": "Comma separated string of custom HTTP headers",
                     "type": "string"
                 },
+                "userAgent": {
+                    "description": "Custom User agent",
+                    "type": "string"
+                },
                 "refreshRate": {
                     "description": "Time in seconds this DataSet should fetch new Datas from the remote host",
                     "type": "integer"
                 },
                 "clearRate": {
                     "description": "Time in seconds when this Dataset should be cleared. If here is a lower value than in RefreshRate it will be cleared when the data is refreshed",
+                    "type": "integer"
+                },
+                "truncateOnEmpty": {
+                    "description": "Flag whether to truncate DataSet data if no new data is pulled from remote source",
                     "type": "integer"
                 },
                 "runsAfter": {
@@ -12168,6 +14530,18 @@
                 "limitPolicy": {
                     "description": "Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate",
                     "type": "string"
+                },
+                "csvSeparator": {
+                    "description": "Custom separator for CSV source, comma will be used by default",
+                    "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this DataSet belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this DataSet",
+                    "type": "integer"
                 }
             }
         },
@@ -12223,6 +14597,18 @@
                 },
                 "dataSetColumnType": {
                     "description": "The column type for this Column",
+                    "type": "string"
+                },
+                "tooltip": {
+                    "description": "Help text that should be displayed when entering data for this Column.",
+                    "type": "string"
+                },
+                "isRequired": {
+                    "description": "Flag indicating whether value must be provided for this Column.",
+                    "type": "integer"
+                },
+                "dateFormat": {
+                    "description": "Date format of dates in the source for remote DataSet.",
                     "type": "string"
                 }
             }
@@ -12484,6 +14870,26 @@
                 "webkeySerial": {
                     "description": "The Webkey serial number for this Display",
                     "type": "string"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime this entity was last modified",
+                    "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Display belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Display",
+                    "type": "integer"
+                },
+                "countFaults": {
+                    "description": "The count of Player reported faults",
+                    "type": "integer"
                 }
             }
         },
@@ -12517,6 +14923,14 @@
                     "description": "Criteria for this dynamic group. A comma separated set of tags to apply",
                     "type": "string"
                 },
+                "dynamicCriteriaExactTags": {
+                    "description": "Flag indicating whether to filter by exact Tag match",
+                    "type": "integer"
+                },
+                "dynamicCriteriaLogicalOperator": {
+                    "description": "Which logical operator should be used when filtering by multiple Tags? OR|AND",
+                    "type": "string"
+                },
                 "userId": {
                     "description": "The UserId who owns this display group",
                     "type": "integer"
@@ -12530,6 +14944,22 @@
                 },
                 "bandwidthLimit": {
                     "description": "The display bandwidth limit",
+                    "type": "integer"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime this entity was last modified",
+                    "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Display Group belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Display Group",
                     "type": "integer"
                 }
             }
@@ -12569,6 +14999,30 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "Folder": {
+            "properties": {
+                "id": {
+                    "description": "The ID of this Folder",
+                    "type": "integer"
+                },
+                "text": {
+                    "description": "The name of this Folder",
+                    "type": "string"
+                },
+                "parentId": {
+                    "description": "The folderId of the parent of this Folder",
+                    "type": "integer"
+                },
+                "isRoot": {
+                    "description": "Flag indicating whether this is root Folder",
+                    "type": "integer"
+                },
+                "children": {
+                    "description": "An array of children folderIds",
+                    "type": "string"
                 }
             }
         },
@@ -12672,6 +15126,10 @@
                     "type": "number",
                     "format": "double"
                 },
+                "orientation": {
+                    "description": "The Layout Orientation",
+                    "type": "string"
+                },
                 "displayOrder": {
                     "description": "If this Layout has been requested by Campaign, then this is the display order of the Layout within the Campaign",
                     "type": "integer"
@@ -12709,6 +15167,14 @@
                     "items": {
                         "$ref": "#/definitions/Tag"
                     }
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Layout belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Layout",
+                    "type": "integer"
                 }
             }
         },
@@ -12852,6 +15318,149 @@
                 "enableStat": {
                     "description": "The option to enable the collection of Media Proof of Play statistics",
                     "type": "string"
+                },
+                "orientation": {
+                    "description": "The orientation of the Media file",
+                    "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Media belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Media",
+                    "type": "integer"
+                }
+            }
+        },
+        "MenuBoard": {
+            "properties": {
+                "menuId": {
+                    "description": "The Menu Board Id",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Menu Board name",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The Menu Board description",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "The Menu Board code identifier",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "The Menu Board owner Id",
+                    "type": "integer"
+                },
+                "modifiedDt": {
+                    "description": "The Menu Board last modified date",
+                    "type": "integer"
+                },
+                "folderId": {
+                    "description": "The Id of the Folder this Menu Board belongs to",
+                    "type": "string"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Menu Board",
+                    "type": "integer"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of Groups/Users that have permission to this menu Board",
+                    "type": "string"
+                }
+            }
+        },
+        "MenuBoardCategory": {
+            "properties": {
+                "menuCategoryId": {
+                    "description": "The Menu Board Category Id",
+                    "type": "integer"
+                },
+                "menuId": {
+                    "description": "The Menu Board Id",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Menu Board Category name",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "The Menu Board Category code identifier",
+                    "type": "string"
+                },
+                "mediaId": {
+                    "description": "The Menu Board Category associated mediaId",
+                    "type": "integer"
+                }
+            }
+        },
+        "MenuBoardProduct": {
+            "properties": {
+                "menuProductId": {
+                    "description": "The Menu Board Product Id",
+                    "type": "integer"
+                },
+                "menuCategoryId": {
+                    "description": "The Menu Board Category Id",
+                    "type": "integer"
+                },
+                "menuId": {
+                    "description": "The Menu Board Id",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Menu Board Category name",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "The Menu Board Product price",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The Menu Board Product description",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "The Menu Board Product code identifier",
+                    "type": "string"
+                },
+                "availability": {
+                    "description": "The Menu Board Product availability",
+                    "type": "string"
+                },
+                "allergyInfo": {
+                    "description": "The Menu Board Product allergy information",
+                    "type": "string"
+                },
+                "mediaId": {
+                    "description": "The Menu Board Product associated mediaId",
+                    "type": "integer"
+                },
+                "productOptions": {
+                    "description": "The Menu Board Product array of options",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "MenuBoardProductOption": {
+            "properties": {
+                "menuProductId": {
+                    "description": "The Menu Product ID that this Option belongs to",
+                    "type": "integer"
+                },
+                "option": {
+                    "description": "The option name",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The option value",
+                    "type": "string"
                 }
             }
         },
@@ -12992,26 +15601,6 @@
                 }
             }
         },
-        "Page": {
-            "properties": {
-                "pageId": {
-                    "description": "The ID of the Page",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "A code name for the page",
-                    "type": "string"
-                },
-                "title": {
-                    "description": "A user friendly title for this page",
-                    "type": "string"
-                },
-                "asHome": {
-                    "description": "Flag indicating if the page can be used as a homepage",
-                    "type": "integer"
-                }
-            }
-        },
         "Permission": {
             "properties": {
                 "permissionId": {
@@ -13060,6 +15649,54 @@
                 },
                 "modifyPermissions": {
                     "description": "A flag indicating whether modify permission permission is granted.",
+                    "type": "integer"
+                }
+            }
+        },
+        "PlayerFault": {
+            "properties": {
+                "playerFaultId": {
+                    "description": "The Fault Id",
+                    "type": "integer"
+                },
+                "displayId": {
+                    "description": "The Display Id",
+                    "type": "integer"
+                },
+                "incidentDt": {
+                    "description": "The Date the error occured",
+                    "type": "string"
+                },
+                "expires": {
+                    "description": "The Date the error expires",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "The Code associated with the fault",
+                    "type": "integer"
+                },
+                "reason": {
+                    "description": "The Reason for the fault",
+                    "type": "string"
+                },
+                "layoutId": {
+                    "description": "The Layout Id",
+                    "type": "integer"
+                },
+                "regionId": {
+                    "description": "The Region Id",
+                    "type": "integer"
+                },
+                "scheduleId": {
+                    "description": "The Schedule Id",
+                    "type": "integer"
+                },
+                "widgetId": {
+                    "description": "The Widget Id",
+                    "type": "integer"
+                },
+                "mediaId": {
+                    "description": "The Media Id",
                     "type": "integer"
                 }
             }
@@ -13134,12 +15771,24 @@
                     "description": "Filter Tags for a Dynamic Playlist",
                     "type": "string"
                 },
+                "filterExactTags": {
+                    "description": "Flag indicating whether to filter by exact Tag match",
+                    "type": "integer"
+                },
+                "filterLogicalOperator": {
+                    "description": "Which logical operator should be used when filtering by multiple Tags? OR|AND",
+                    "type": "string"
+                },
+                "maxNumberOfItems": {
+                    "description": "Maximum number of Media items matching dynamic Playlist filters",
+                    "type": "integer"
+                },
                 "createdDt": {
-                    "description": "The datetime the Layout was created",
+                    "description": "The datetime this entity was created",
                     "type": "string"
                 },
                 "modifiedDt": {
-                    "description": "The datetime the Layout was last modified",
+                    "description": "The datetime this entity was last modified",
                     "type": "string"
                 },
                 "duration": {
@@ -13174,6 +15823,14 @@
                     "items": {
                         "$ref": "#/definitions/Permission"
                     }
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Playlist belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Playlist",
+                    "type": "integer"
                 }
             }
         },
@@ -13493,6 +16150,18 @@
                 "geoLocation": {
                     "description": "Geo JSON representing the area of this event",
                     "type": "string"
+                },
+                "actionTriggerCode": {
+                    "description": "For Action event type, Action trigger code",
+                    "type": "string"
+                },
+                "actionType": {
+                    "description": "For Action event type, the type of the Action (navigate to Layout or Command)",
+                    "type": "string"
+                },
+                "actionLayoutCode": {
+                    "description": "For Action event type and navigate to Layout Action type, the Layout code",
+                    "type": "string"
                 }
             }
         },
@@ -13552,6 +16221,8 @@
                 }
             }
         },
+        "SearchResult": {},
+        "SearchResults": {},
         "Tag": {
             "properties": {
                 "tagId": {
@@ -13778,9 +16449,19 @@
                         "$ref": "#/definitions/Playlist"
                     }
                 },
-                "homePage": {
-                    "description": "The name of home page",
-                    "type": "string"
+                "displayGroups": {
+                    "description": "An array of Display Groups owned by this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DisplayGroup"
+                    }
+                },
+                "dayParts": {
+                    "description": "An array of Dayparts owned by this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DayPart"
+                    }
                 },
                 "isSystemNotification": {
                     "description": "Does this Group receive system notifications.",
@@ -13829,6 +16510,10 @@
                     "description": "A flag indicating the special everyone group",
                     "type": "integer"
                 },
+                "description": {
+                    "description": "Description of this User Group",
+                    "type": "string"
+                },
                 "libraryQuota": {
                     "description": "This users library quota in bytes. 0 = unlimited",
                     "type": "integer"
@@ -13840,6 +16525,21 @@
                 "isDisplayNotification": {
                     "description": "Does this Group receive display notifications.",
                     "type": "integer"
+                },
+                "isShownForAddUser": {
+                    "description": "Is this Group shown in the list of choices when onboarding a new user",
+                    "type": "integer"
+                },
+                "defaultHomepageId": {
+                    "description": "Default Home page for new users",
+                    "type": "string"
+                },
+                "features": {
+                    "description": "Features this User Group has direct access to",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -14254,6 +16954,10 @@
         {
             "name": "actions",
             "description": "Actions"
+        },
+        {
+            "name": "menuBoard",
+            "description": "Menu Boards - feature preview, please do not use in production."
         }
     ],
     "externalDocs": {

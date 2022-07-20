@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,34 +22,35 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use GuzzleHttp\Psr7\Stream;
+use Illuminate\Support\Str;
+use Intervention\Image\ImageManagerStatic as Img;
+use Mimey\MimeTypes;
 use Parsedown;
-use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
-use Xibo\Factory\ActionFactory;
+use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
-use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\MediaService;
+use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -89,11 +90,6 @@ class Layout extends Base
     private $moduleFactory;
 
     /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
      * @var UserGroupFactory
      */
     private $userGroupFactory;
@@ -117,58 +113,41 @@ class Layout extends Base
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
 
-    /** @var  ActionFactory */
-    private $actionFactory;
-
-    /** @var ContainerInterface */
-    private $container;
-
     /** @var PoolInterface */
     private $pool;
 
+    /** @var MediaServiceInterface */
+    private $mediaService;
+
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param Session $session
      * @param UserFactory $userFactory
      * @param ResolutionFactory $resolutionFactory
      * @param LayoutFactory $layoutFactory
      * @param ModuleFactory $moduleFactory
-     * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param CampaignFactory $campaignFactory
      * @param $displayGroupFactory
-     * @param Twig $view
-     * @param ContainerInterface $container
-     * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container, $actionFactory, $pool)
+    public function __construct($session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, $pool, MediaServiceInterface $mediaService)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->resolutionFactory = $resolutionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->moduleFactory = $moduleFactory;
-        $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->campaignFactory = $campaignFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->actionFactory = $actionFactory;
-        $this->container = $container;
         $this->pool = $pool;
+        $this->mediaService = $mediaService;
     }
 
     /**
@@ -234,17 +213,27 @@ class Layout extends Base
             $layout = $this->layoutFactory->getByParentId($id);
         }
 
-        // Work out our resolution
-        if ($layout->schemaVersion < 2)
-            $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
-        else
-            $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        // Work out our resolution, if it does not exist, create it.
+        try {
+            if ($layout->schemaVersion < 2) {
+                $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+            } else {
+                $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+            }
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->info('Layout Designer with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+
+            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
+            $resolution->userId = $this->userFactory->getSystemUser()->userId;
+            $resolution->save();
+        }
 
         $moduleFactory = $this->moduleFactory;
         $isTemplate = $layout->hasTag('template');
 
         // Set up any JavaScript translations
         $data = [
+            'publishedLayoutId' => $id,
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
@@ -348,8 +337,6 @@ class Layout extends Base
 
         $name = $sanitizedParams->getString('name');
         $description = $sanitizedParams->getString('description');
-        $templateId = $sanitizedParams->getInt('layoutId');
-        $resolutionId = $sanitizedParams->getInt('resolutionId');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
@@ -361,43 +348,129 @@ class Layout extends Base
             $tags = [];
         }
 
+        $templateId = $sanitizedParams->getString('layoutId');
+        $resolutionId = $sanitizedParams->getInt('resolutionId');
         $template = null;
 
-        if ($templateId != 0) {
-            // Load the template
-            $template = $this->layoutFactory->loadById($templateId);
-            $template->load();
+        // Source?
+        $source = $sanitizedParams->getString('source');
+        if ($source === 'remote') {
+            // Hand off to the connector
+            $event = new TemplateProviderImportEvent(
+                $sanitizedParams->getString('download'),
+                $templateId,
+                $this->getConfig()->getSetting('LIBRARY_LOCATION')
+            );
 
-            // Empty all of the ID's
-            $layout = clone $template;
+            $this->getLog()->debug('Dispatching event. ' . $event->getName());
+            try {
+                $this->getDispatcher()->dispatch($event->getName(), $event);
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
 
-            // Overwrite our new properties
-            $layout->layout = $name;
+            $layout = $this->getLayoutFactory()->createFromZip(
+                $event->getFilePath(),
+                $name,
+                $this->getUser()->userId,
+                0,
+                0,
+                0,
+                0,
+                1,
+                $this->getDataSetFactory(),
+                '',
+                RouteContext::fromRequest($request)->getRouteParser(),
+                $this->mediaService,
+                $folderId
+            );
+
+            $layout->managePlaylistClosureTable();
+            $layout->manageActions();
+
             $layout->description = $description;
             $layout->code = $code;
+            $layout->tags = $tags;
 
-            // Create some tags (overwriting the old ones)
-            if ($this->getUser()->featureEnabled('tag.tagging')) {
-                $layout->tags = $tags;
-            }
-
-            // Set the owner
-            $layout->setOwner($this->getUser()->userId);
-
-            // Ensure we have Playlists for each region
-            foreach ($layout->regions as $region) {
-                // Set the ownership of this region to the user creating from template
-                $region->setOwner($this->getUser()->userId, true);
-            }
+            @unlink($event->getFilePath());
         } else {
-            $layout = $this->layoutFactory->createFromResolution(
-                $resolutionId,
-                $this->getUser()->userId,
-                $name,
-                $description,
-                $tags,
-                $code
-            );
+            // Template or Resolution?
+            $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
+
+            if (!$isResolution) {
+                // Load the template
+                $template = $this->layoutFactory->loadById($templateId);
+
+                // Empty all of the ID's
+                $layout = clone $template;
+
+                // Overwrite our new properties
+                $layout->layout = $name;
+                $layout->description = $description;
+                $layout->code = $code;
+
+                // Create some tags (overwriting the old ones)
+                if ($this->getUser()->featureEnabled('tag.tagging')) {
+                    $layout->tags = $tags;
+                }
+
+                // Set the owner
+                $layout->setOwner($this->getUser()->userId, true);
+            } else {
+                // Validate that a resolution has been selected.
+                if (empty($resolutionId)) {
+                    throw new InvalidArgumentException(__('Please select a resolution'), 'resolutionId');
+                }
+
+                $layout = $this->layoutFactory->createFromResolution(
+                    $resolutionId,
+                    $this->getUser()->userId,
+                    $name,
+                    $description,
+                    $tags,
+                    $code,
+                    false
+                );
+
+                // Handle our various templateId's
+                switch ($templateId) {
+                    case '0|blank':
+                        // Do nothing
+                        break;
+
+                    case '0|l-bar-left':
+                        // Main window - 80%
+                        $mainWidth = $layout->width * 0.8;
+                        $mainHeight = $layout->height * 0.8;
+                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, $layout->width - $mainWidth);
+
+                        // Bottom bar
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+
+                        // Left bar
+                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, 0);
+                        break;
+
+                    case '0|l-bar-right':
+                        // Main window - 80%
+                        $mainWidth = $layout->width * 0.8;
+                        $mainHeight = $layout->height * 0.8;
+                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, 0);
+
+                        // Bottom bar
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+
+                        // Right bar
+                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, $mainWidth);
+                        break;
+
+                    case '0|full-screen':
+                    default:
+                        // Maintain backwards compatibility by creating an empty full screen region
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height, 0, 0);
+                }
+            }
         }
 
         // Set layout enableStat flag
@@ -412,15 +485,36 @@ class Layout extends Base
         // Save
         $layout->save();
 
-        foreach ($layout->regions as $region) {
+        // for remote source, we import the Layout and save the thumbnail to temporary file
+        // after save we can move the image to correct library folder, as we have campaignId
+        if ($source === 'remote' && !empty($layout->thumbnail)) {
+            $campaignThumb = $layout->getThumbnailUri();
+            rename($layout->thumbnail, $campaignThumb);
+        }
+
+        if ($templateId != null && $template !== null) {
+            $layout->copyActions($layout, $template);
+            // set Layout original values to current values
+            $layout->setOriginals();
+        }
+
+        $allRegions = array_merge($layout->regions, $layout->drawers);
+        foreach ($allRegions as $region) {
             /* @var Region $region */
 
             if ($templateId != null && $template !== null) {
                 // Match our original region id to the id in the parent layout
-                $original = $template->getRegion($region->getOriginalValue('regionId'));
+                $original = $template->getRegionOrDrawer($region->getOriginalValue('regionId'));
 
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+
+                // set Region original values to current values
+                $region->setOriginals();
+                foreach ($region->regionPlaylist->widgets as $widget) {
+                    // set Widget original values to current values
+                    $widget->setOriginals();
+                }
             }
             $campaign = $this->campaignFactory->getById($layout->campaignId);
 
@@ -434,6 +528,11 @@ class Layout extends Base
 
         // Automatically checkout the new layout for edit
         $layout = $this->layoutFactory->checkoutLayout($layout, $sanitizedParams->getCheckbox('returnDraft'));
+
+        // After checkout, if we imported remote sourced Layout, copy the thumb
+        if ($source === 'remote' && !empty($campaignThumb)) {
+            copy($campaignThumb, $layout->getThumbnailUri());
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -531,6 +630,7 @@ class Layout extends Base
         $isTemplate = false;
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $folderChanged = false;
+        $nameChanged = false;
 
         // check if we're dealing with the template
         $currentTags = explode(',', $layout->tags);
@@ -576,6 +676,10 @@ class Layout extends Base
             $folderChanged = true;
         }
 
+        if ($layout->hasPropertyChanged('layout')) {
+            $nameChanged = true;
+        }
+
         // Save
         $layout->save([
             'saveLayout' => true,
@@ -585,15 +689,37 @@ class Layout extends Base
             'notify' => false
         ]);
 
-        if ($folderChanged) {
-            $savedLayout = $this->layoutFactory->getById($layout->layoutId);
-            $savedLayout->load();
-            foreach ($savedLayout->regions as $region) {
-                /* @var Region $region */
-                $playlist = $region->getPlaylist();
-                $playlist->folderId = $savedLayout->folderId;
-                $playlist->permissionsFolderId = $savedLayout->permissionsFolderId;
-                $playlist->save();
+        if ($folderChanged || $nameChanged) {
+            // permissionsFolderId depends on the Campaign, hence why we need to get the edited Layout back here
+            $editedLayout = $this->layoutFactory->getById($layout->layoutId);
+
+            // this will return the original Layout we edited and its draft
+            $layouts = $this->layoutFactory->getByCampaignId($layout->campaignId, true, true);
+
+            foreach ($layouts as $savedLayout) {
+                // if we changed the name of the original Layout, updated its draft name as well
+                if ($savedLayout->isChild() && $nameChanged) {
+                    $savedLayout->layout =  $editedLayout->layout;
+                    $savedLayout->save([
+                        'saveLayout' => true,
+                        'saveRegions' => false,
+                        'saveTags' => false,
+                        'setBuildRequired' => false,
+                        'notify' => false
+                    ]);
+                }
+
+                // if the folder changed on original Layout, make sure we keep its regionPlaylists and draft regionPlaylists updated
+                if ($folderChanged) {
+                    $savedLayout->load();
+                    $allRegions = array_merge($savedLayout->regions, $savedLayout->drawers);
+                    foreach ($allRegions as $region) {
+                        $playlist = $region->getPlaylist();
+                        $playlist->folderId = $editedLayout->folderId;
+                        $playlist->permissionsFolderId = $editedLayout->permissionsFolderId;
+                        $playlist->save();
+                    }
+                }
             }
         }
 
@@ -1152,6 +1278,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
      *      in="query",
@@ -1208,7 +1341,7 @@ class Layout extends Base
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
 
@@ -1242,7 +1375,11 @@ class Layout extends Base
             'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
-            'folderId' => $parsedQueryParams->getInt('folderId')
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'codeLike' => $parsedQueryParams->getString('codeLike'),
+            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
+            'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
@@ -1261,16 +1398,24 @@ class Layout extends Base
 
             // Populate the status message
             $layout->getStatusMessage();
-            /** @var $locked Item */
-            $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
-            $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
 
+            // Add Locking information
+            $layout = $this->layoutFactory->decorateLockedProperties($layout);
 
             // Annotate each Widget with its validity, tags and permissions
-            if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
+            if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) {
                 foreach ($layout->getAllWidgets() as $widget) {
-                    /* @var Widget $widget */
-                    $module = $this->moduleFactory->createWithWidget($widget);
+                    try {
+                        $module = $this->moduleFactory->createWithWidget($widget);
+                    } catch (NotFoundException $notFoundException) {
+                        // This module isn't available, mark it as invalid.
+                        $widget->isValid = 0;
+                        $widget->moduleName = __('Invalid Module');
+                        $widget->name = __('Invalid Module');
+                        $widget->tags = [];
+                        $widget->isDeletable = 1;
+                        continue;
+                    }
 
                     $widget->name = $module->getName();
 
@@ -1279,6 +1424,10 @@ class Layout extends Base
 
                     // Add widget module type name
                     $widget->moduleName = $module->getModuleName();
+
+                    if ($widget->type === 'subplaylist') {
+                        $widget->calculateDuration($module);
+                    }
 
                     // apply default transitions to a dynamic parameters on widget object.
                     if ($layout->autoApplyTransitions == 1) {
@@ -1311,7 +1460,7 @@ class Layout extends Base
 
                     if (in_array('widget_validity', $embed)) {
                         try {
-                            $widget->isValid = (int)$module->isValid();
+                            $widget->isValid = $module->isValid();
                         } catch (GeneralException $xiboException) {
                             $widget->isValid = 0;
                         }
@@ -1333,7 +1482,6 @@ class Layout extends Base
                         $region->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($region);
                     }
                 }
-
             }
 
             if ($this->isApi($request)) {
@@ -1341,13 +1489,11 @@ class Layout extends Base
             }
 
             $layout->includeProperty('buttons');
-            //$layout->excludeProperty('regions');
 
+            // Thumbnail
             $layout->thumbnail = '';
-
-            if ($layout->backgroundImageId != 0) {
-                $download = $this->urlFor($request,'layout.download.background', ['id' => $layout->layoutId]) . '?preview=1' . '&backgroundImageId=' . $layout->backgroundImageId;
-                $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+            if (file_exists($layout->getThumbnailUri())) {
+                $layout->thumbnail = $this->urlFor($request, 'layout.download.thumbnail', ['id' => $layout->layoutId]);
             }
 
             // Fix up the description
@@ -1373,12 +1519,13 @@ class Layout extends Base
                 }
 
                 // provide our layout object to a template to render immediately
-                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist',
-                    (array)$layout);
+                $layout->descriptionFormatted = $this->renderTemplateToString(
+                    'layout-page-grid-widgetlist',
+                    (array)$layout
+                );
             }
 
             switch ($layout->status) {
-
                 case ModuleWidget::$STATUS_VALID:
                     $layout->statusDescription = __('This Layout is ready to play');
                     break;
@@ -1396,7 +1543,6 @@ class Layout extends Base
             }
 
             switch ($layout->enableStat) {
-
                 case 1:
                     $layout->enableStatDescription = __('This Layout has enable stat collection set to ON');
                     break;
@@ -1405,9 +1551,8 @@ class Layout extends Base
                     $layout->enableStatDescription = __('This Layout has enable stat collection set to OFF');
             }
 
-            // Published status, draft with set publishedDate
-            $layout->publishedStatusFuture = __('Publishing %s');
-            $layout->publishedStatusFailed = __('Publish failed ');
+            // Check if user has delete permissions - for layout designer to show/hide Delete button
+            $layout->deletePermission = $this->getUser()->featureEnabled('layout.modify');
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
             $layout->scheduleNowPermission = $this->getUser()->featureEnabled('schedule.now');
@@ -1420,24 +1565,23 @@ class Layout extends Base
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'layout.designer', array('id' => $layout->layoutId)),
+                    'url' => $this->urlFor($request, 'layout.designer', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
 
                 // Should we show a publish/discard button?
                 if ($layout->isEditable()) {
-
                     $layout->buttons[] = ['divider' => true];
 
                     $layout->buttons[] = array(
                         'id' => 'layout_button_publish',
-                        'url' => $this->urlFor($request,'layout.publish.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.publish.form', ['id' => $layout->layoutId]),
                         'text' => __('Publish')
                     );
 
                     $layout->buttons[] = array(
                         'id' => 'layout_button_discard',
-                        'url' => $this->urlFor($request,'layout.discard.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.discard.form', ['id' => $layout->layoutId]),
                         'text' => __('Discard')
                     );
 
@@ -1448,11 +1592,11 @@ class Layout extends Base
                     // Checkout Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_checkout',
-                        'url' => $this->urlFor($request,'layout.checkout.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.checkout.form', ['id' => $layout->layoutId]),
                         'text' => __('Checkout'),
                         'dataAttributes' => [
                             ['name' => 'auto-submit', 'value' => true],
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.checkout', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.checkout', ['id' => $layout->layoutId])],
                             ['name' => 'commit-method', 'value' => 'PUT']
                         ]
                     );
@@ -1471,6 +1615,17 @@ class Layout extends Base
                     'text' => __('Preview Layout')
                 );
 
+                // Also offer a way to preview the draft layout.
+                if ($layout->hasDraft()) {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_preview_draft',
+                        'external' => true,
+                        'url' => '#',
+                        'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true");',
+                        'text' => __('Preview Draft Layout')
+                    );
+                }
+
                 $layout->buttons[] = ['divider' => true];
             }
 
@@ -1478,7 +1633,7 @@ class Layout extends Base
             if ($this->getUser()->featureEnabled('schedule.now')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
+                    'url' => $this->urlFor($request, 'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
                     'text' => __('Schedule Now')
                 );
             }
@@ -1487,9 +1642,38 @@ class Layout extends Base
             if ($this->getUser()->featureEnabled('campaign.modify')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_assignTo_campaign',
-                    'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
                     'text' => __('Assign to Campaign')
                 );
+            }
+
+            $layout->buttons[] = ['divider' => true];
+
+            if ($this->getUser()->featureEnabled('playlist.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_playlist_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request, 'playlist.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Playlists included on this Layout')
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('campaign.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_campaign_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request, 'campaign.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Campaigns containing this Layout')
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('library.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_media_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request, 'library.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Media included on this Layout')
+                ];
             }
 
             $layout->buttons[] = ['divider' => true];
@@ -1501,7 +1685,7 @@ class Layout extends Base
                 // Edit Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => $this->urlFor($request,'layout.edit.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.edit.form', ['id' => $layout->layoutId]),
                     'text' => __('Edit')
                 );
 
@@ -1509,11 +1693,11 @@ class Layout extends Base
                     // Select Folder
                     $layout->buttons[] = [
                         'id' => 'campaign_button_selectfolder',
-                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $layout->campaignId]),
+                        'url' => $this->urlFor($request, 'campaign.selectfolder.form', ['id' => $layout->campaignId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $layout->campaignId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'campaign.selectfolder', ['id' => $layout->campaignId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -1526,7 +1710,7 @@ class Layout extends Base
                 // Copy Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor($request,'layout.copy.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.copy.form', ['id' => $layout->layoutId]),
                     'text' => __('Copy')
                 );
 
@@ -1534,11 +1718,11 @@ class Layout extends Base
                 if ($layout->retired == 0) {
                     $layout->buttons[] = [
                         'id' => 'layout_button_retire',
-                        'url' => $this->urlFor($request,'layout.retire.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.retire.form', ['id' => $layout->layoutId]),
                         'text' => __('Retire'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.retire', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.retire', ['id' => $layout->layoutId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'layout_button_retire'],
                             ['name' => 'text', 'value' => __('Retire')],
@@ -1549,7 +1733,7 @@ class Layout extends Base
                 } else {
                     $layout->buttons[] = array(
                         'id' => 'layout_button_unretire',
-                        'url' => $this->urlFor($request,'layout.unretire.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.unretire.form', ['id' => $layout->layoutId]),
                         'text' => __('Unretire'),
                     );
                 }
@@ -1559,11 +1743,11 @@ class Layout extends Base
                     // Delete Button
                     $layout->buttons[] = [
                         'id' => 'layout_button_delete',
-                        'url' => $this->urlFor($request,'layout.delete.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.delete.form', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.delete', ['id' => $layout->layoutId])],
                             ['name' => 'commit-method', 'value' => 'delete'],
                             ['name' => 'id', 'value' => 'layout_button_delete'],
                             ['name' => 'text', 'value' => __('Delete')],
@@ -1576,11 +1760,11 @@ class Layout extends Base
                 // Set Enable Stat
                 $layout->buttons[] = [
                     'id' => 'layout_button_setenablestat',
-                    'url' => $this->urlFor($request,'layout.setenablestat.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.setenablestat.form', ['id' => $layout->layoutId]),
                     'text' => __('Enable stats collection?'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.setenablestat', ['id' => $layout->layoutId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.setenablestat', ['id' => $layout->layoutId])],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'layout_button_setenablestat'],
                         ['name' => 'text', 'value' => __('Enable stats collection?')],
@@ -1595,7 +1779,7 @@ class Layout extends Base
                     // Save template button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_save_template',
-                        'url' => $this->urlFor($request,'template.from.layout.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'template.from.layout.form', ['id' => $layout->layoutId]),
                         'text' => __('Save Template')
                     );
                 }
@@ -1614,18 +1798,18 @@ class Layout extends Base
                     // Permissions button
                     $layout->buttons[] = [
                         'id' => 'layout_button_permissions',
-                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
+                        'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
                         'text' => __('Share'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])],
                             ['name' => 'commit-method', 'value' => 'post'],
                             ['name' => 'id', 'value' => 'layout_button_permissions'],
                             ['name' => 'text', 'value' => __('Share')],
                             ['name' => 'rowtitle', 'value' => $layout->layout],
                             ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'Campaign'])],
                             ['name' => 'content-id-name', 'value' => 'campaignId']
                         ]
                     ];
@@ -1653,8 +1837,6 @@ class Layout extends Base
     {
         $this->getState()->template = 'layout-form-add';
         $this->getState()->setData([
-            'layouts' => $this->layoutFactory->query(['layout'], ['excludeTemplates' => 0, 'tags' => 'template']),
-            'resolutions' => $this->resolutionFactory->query(['resolution']),
             'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
 
@@ -1685,7 +1867,6 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
-            'tags' => $this->tagFactory->getTagsWithValues($layout),
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
 
@@ -1828,30 +2009,30 @@ class Layout extends Base
     public function copy(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($id);
+        $originalLayout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($originalLayout)) {
             throw new AccessDeniedException();
         }
 
         // Make sure we're not a draft
-        if ($layout->isChild()) {
+        if ($originalLayout->isChild()) {
             throw new InvalidArgumentException(__('Cannot copy a Draft Layout'), 'layoutId');
         }
 
         // Load the layout for Copy
-        $layout->load(['loadTags' => false]);
-        $originalLayout = $layout;
+        $originalLayout->load(['loadTags' => false]);
 
         // Clone
-        $layout = clone $layout;
-        $tags = $this->tagFactory->getTagsWithValues($layout);
+        $layout = clone $originalLayout;
+
+        $this->getLog()->debug('Tag values from original layout: ' . $originalLayout->tags);
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
-        $layout->replaceTags($this->tagFactory->tagsFromString($tags));
+        $layout->replaceTags($this->tagFactory->tagsFromString($originalLayout->tags));
         $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.
@@ -2116,19 +2297,16 @@ class Layout extends Base
     public function status(Request $request, Response $response, $id)
     {
         // Get the layout
-        /* @var \Xibo\Entity\Layout $layout */
-        $layout = $this->layoutFactory->getById($id);
-        $layout->xlfToDisk();
-
-        /** @var $locked Item */
-        $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
-        $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
-        if(!empty($layout->isLocked)) {
-            $layout->isLocked->lockedUser = ($layout->isLocked->userId != $this->getUser()->userId);
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
+        try {
+            $layout = $this->layoutFactory->decorateLockedProperties($layout);
+            $layout->xlfToDisk();
+        } finally {
+            // Release lock
+            $this->layoutFactory->concurrentRequestRelease($layout);
         }
 
         switch ($layout->status) {
-
             case ModuleWidget::$STATUS_VALID:
                 $status = __('This Layout is ready to play');
                 break;
@@ -2147,16 +2325,13 @@ class Layout extends Base
 
         // We want a different return depending on whether we are arriving through the API or WEB routes
         if ($this->isApi($request)) {
-
             $this->getState()->hydrate([
                 'httpStatus' => 200,
                 'message' => $status,
                 'id' => $layout->status,
                 'data' => $layout
             ]);
-
         } else {
-
             $this->getState()->html = $status;
             $this->getState()->extra = [
                 'status' => $layout->status,
@@ -2194,8 +2369,9 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
-        if ($layout->isChild())
-            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
+        if ($layout->isChild()) {
+            throw new InvalidArgumentException(__('Cannot export Draft Layout'), 'layoutId');
+        }
 
         // Render the form
         $this->getState()->template = 'layout-form-export';
@@ -2232,7 +2408,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild()) {
-            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
+            throw new InvalidArgumentException(__('Cannot export Draft Layout'), 'layoutId');
         }
 
         // Save As?
@@ -2289,27 +2465,27 @@ class Layout extends Base
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+        MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         // Make sure there is room in the library
-        /** @var Library $libraryController */
-        $libraryController = $this->container->get('\Xibo\Controller\Library');
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
-        $options = array(
+        $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'libraryController' => $libraryController,
+            'dataSetFactory' => $this->getDataSetFactory(),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => $this->urlFor($request,'layout.import'),
             'upload_url' => $this->urlFor($request,'layout.import'),
-            'image_versions' => array(),
+            'image_versions' => [],
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit),
-            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
-        );
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->mediaService->libraryUsage() > $libraryLimit),
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser(),
+            'mediaService' => $this->mediaService,
+            'sanitizerService' => $this->getSanitizerService()
+        ];
 
         $this->setNoOutput(true);
 
@@ -2559,46 +2735,55 @@ class Layout extends Base
      */
     public function publish(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($id);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $publishDate = $sanitizedParams->getDate('publishDate');
-        $publishNow = $sanitizedParams->getCheckbox('publishNow');
+        Profiler::start('Layout::publish', $this->getLog());
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id), true);
+        try {
+            $sanitizedParams = $this->getSanitizer($request->getParams());
+            $publishDate = $sanitizedParams->getDate('publishDate');
+            $publishNow = $sanitizedParams->getCheckbox('publishNow');
 
-        // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout)) {
-            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+            // Make sure we have permission
+            if (!$this->getUser()->checkEditable($layout)) {
+                throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+            }
+
+            // if we have publish date update it in database
+            if (isset($publishDate) && !$publishNow) {
+                $layout->setPublishedDate($publishDate);
+            }
+
+            // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
+            // parent.
+            if ($publishNow || (isset($publishDate) && $publishDate->format('U') < Carbon::now()->format('U'))) {
+                $draft = $this->layoutFactory->getByParentId($id);
+                $draft->publishDraft();
+                $draft->load();
+
+                // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
+                // error message
+                $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+
+                // Return
+                $this->getState()->hydrate([
+                    'httpStatus' => 200,
+                    'message' => sprintf(__('Published %s'), $draft->layout),
+                    'data' => $draft
+                ]);
+            } else {
+                // Return
+                $this->getState()->hydrate([
+                    'httpStatus' => 200,
+                    'message' => sprintf(__('Layout will be published on %s'), $publishDate),
+                    'data' => $layout
+                ]);
+            }
+
+            Profiler::end('Layout::publish', $this->getLog());
+        } finally {
+            // Release lock
+            $this->layoutFactory->concurrentRequestRelease($layout, true);
         }
 
-        // if we have publish date update it in database
-        if (isset($publishDate) && !$publishNow) {
-            $layout->setPublishedDate($publishDate);
-        }
-
-        // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
-        // parent.
-        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  Carbon::now()->format('U')) ) {
-            $draft = $this->layoutFactory->getByParentId($id);
-            $draft->publishDraft();
-            $draft->load();
-
-            // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
-            // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false, 'publishing' => true]);
-
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 200,
-                'message' => sprintf(__('Published %s'), $draft->layout),
-                'data' => $draft
-            ]);
-        } else {
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 200,
-                'message' => sprintf(__('Layout will be published on %s'), $publishDate),
-                'data' => $layout
-            ]);
-        }
         return $this->render($request, $response);
     }
 
@@ -2704,10 +2889,14 @@ class Layout extends Base
      */
     public function getLayoutCodes(Request $request, Response $response)
     {
-        $this->getState()->template = 'grid';
-        $codes = $this->layoutFactory->getLayoutCodes($this->gridRenderFilter([], $request));
+        $parsedParams = $this->getSanitizer($request->getQueryParams());
+
+        $codes = $this->layoutFactory->getLayoutCodes($this->gridRenderFilter([
+            'code' => $parsedParams->getString('code')
+        ], $parsedParams));
 
         // Store the table rows
+        $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($codes);
 
@@ -2715,7 +2904,8 @@ class Layout extends Base
     }
 
     /**
-     * Release the Layout Lock on specified layoutId, Super Admin only.
+     * Release the Layout Lock on specified layoutId
+     * Available only to the User that currently has the Layout locked.
      *
      * @param Request $request
      * @param Response $response
@@ -2727,15 +2917,238 @@ class Layout extends Base
      */
     public function releaseLock(Request $request, Response $response, $id)
     {
-        if (!$this->getUser()->isSuperAdmin()) {
-            throw new InvalidArgumentException(__('This function is available only to Super Admins.'));
+        /** @var Item $lock */
+        $lock = $this->pool->getItem('locks/layout/' . $id);
+        $lockUserId = $lock->get()->userId;
+
+        if ($this->getUser()->userId !== $lockUserId) {
+            throw new InvalidArgumentException(__('This function is available only to User who originally locked this Layout.'));
         }
 
-        /** @var Item $lock */
-        $lock = $this->container->get('pool')->getItem('locks/layout/' . $id);
         $lock->set([]);
         $lock->save();
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Add a thumbnail
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     */
+    public function addThumbnail(Request $request, Response $response, $id): Response
+    {
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        MediaService::ensureLibraryExists($libraryLocation);
+
+        // Check the Layout
+        $layout = $this->layoutFactory->getById($id);
+
+        // Make sure we have edit permissions
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Where would we save this to?
+        if ($layout->isChild()) {
+            // A draft
+            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_layout_thumb.png';
+        } else {
+            // Published
+            // we would usually expect this to be copied over when published.
+            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_campaign_thumb.png';
+        }
+
+        // Load this Layout
+        $layout->load();
+
+        // Create a thumbnail image
+        try {
+            Img::configure(['driver' => 'gd']);
+
+            if ($layout->backgroundImageId !== null && $layout->backgroundImageId !== 0) {
+                // Start from a background image
+                $media = $this->mediaFactory->getById($layout->backgroundImageId);
+                $image = Img::make($libraryLocation . $media->storedAs);
+
+                // Resize this image (without cropping it) to the size of this layout
+                $image->resize($layout->width, $layout->height);
+            } else {
+                // Start from a Canvas
+                $image = Img::canvas($layout->width, $layout->height, $layout->backgroundColor);
+            }
+
+            // Draw some regions on it.
+            foreach ($layout->regions as $region) {
+                try {
+                    // Get widgets in this region
+                    $widgets = $region->regionPlaylist->expandWidgets();
+
+                    if (count($widgets) <= 0) {
+                        // Render the region (draw a grey box)
+                        $image->rectangle(
+                            $region->left,
+                            $region->top,
+                            $region->left + $region->width,
+                            $region->top + $region->height,
+                            function ($draw) {
+                                $draw->background('rgba(196, 196, 196, 0.6)');
+                            }
+                        );
+                        if ($region->width >= 400) {
+                            $image->text(
+                                __('Empty Region'),
+                                $region->left + ($region->width / 2),
+                                $region->top + ($region->height / 2),
+                                function ($font) {
+                                    $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                    $font->size(84);
+                                    $font->color('#000000');
+                                    $font->align('center');
+                                    $font->valign('center');
+                                }
+                            );
+                        }
+                    } else {
+                        // Render just the first widget in the appropriate place
+                        $module = $this->moduleFactory->createWithWidget($widgets[0], $region);
+                        if ($module->getModuleType() === 'image') {
+                            $cover = Img::make($libraryLocation . $module->getMedia()->storedAs);
+                            $proportional = $module->getOption('scaleType') !== 'stretch';
+                            $fit = $module->getOption('scaleType') === 'fit';
+
+                            if ($fit) {
+                                $cover->fit($region->width, $region->height);
+                            } else {
+                                $cover->resize(
+                                    $region->width,
+                                    $region->height,
+                                    function ($constraint) use ($proportional) {
+                                        if ($proportional) {
+                                            $constraint->aspectRatio();
+                                        }
+                                    }
+                                );
+                            }
+                            if ($proportional) {
+                                $cover->resizeCanvas($region->width, $region->height);
+                            }
+                            $image->insert($cover, 'top-left', $region->left, $region->top);
+                        } else if ($module->getModuleType() === 'video'
+                            && file_exists($libraryLocation . $module->getMediaId() . '_videocover.png')
+                        ) {
+                            // Render the video cover
+                            $cover = Img::make($libraryLocation . $module->getMediaId() . '_videocover.png');
+                            $cover->resize($region->width, $region->height, function ($constraint) {
+                                $constraint->aspectRatio();
+                            });
+                            $cover->resizeCanvas($region->width, $region->height);
+                            $image->insert($cover, 'top-left', $region->left, $region->top);
+                        } else {
+                            // Draw the region in the widget colouring
+                            $image->rectangle(
+                                $region->left,
+                                $region->top,
+                                $region->left + $region->width,
+                                $region->top + $region->height,
+                                function ($draw) {
+                                    $draw->background('rgba(196, 196, 196, 0.6)');
+                                }
+                            );
+
+                            if ($region->width >= 400) {
+                                $image->text(
+                                    $module->getModule()->name,
+                                    $region->left + ($region->width / 2),
+                                    $region->top + ($region->height / 2),
+                                    function ($font) {
+                                        $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                        $font->size(84);
+                                        $font->color('#000000');
+                                        $font->align('center');
+                                        $font->valign('center');
+                                    }
+                                );
+                            }
+                        }
+
+                        // Put a number of widgets counter in the bottom
+                        $image->text(
+                            '1 / ' . count($widgets),
+                            $region->left + $region->width - 10,
+                            $region->top + $region->height - 10,
+                            function ($font) {
+                                $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                $font->size(36);
+                                $font->color('#000000');
+                                $font->align('right');
+                                $font->valign('bottom');
+                            }
+                        );
+                    }
+                } catch (\Exception $e) {
+                    $this->getLog()->error('Problem generating region in thumbnail. e: ' . $e->getMessage());
+                }
+            }
+
+            // Resize the entire layout down to a thumbnail
+            $image->widen(1080);
+
+            // Save the file
+            $image->save($saveTo);
+
+            return $response->withStatus(204);
+        } catch (\Exception $e) {
+            $this->getLog()->error('Exception adding thumbnail to Layout. e = ' . $e->getMessage());
+            throw new InvalidArgumentException(__('Incorrect image data'));
+        }
+    }
+
+    /**
+     * Download the Layout Thumbnail
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function downloadThumbnail(Request $request, Response $response, $id)
+    {
+        $this->getLog()->debug('Layout thumbnail request for layoutId ' . $id);
+
+        $layout = $this->layoutFactory->getById($id);
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Get thumbnail uri
+        $uri = $layout->getThumbnailUri();
+
+        if (!file_exists($uri)) {
+            throw new NotFoundException(__('Thumbnail not found for Layout'));
+        }
+
+        $response = $response
+            ->withHeader('Content-Length', filesize($uri))
+            ->withHeader('Content-Type', (new MimeTypes())->getMimeType('png'));
+
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
+        if ($sendFileMode == 'Apache') {
+            $response = $response->withHeader('X-Sendfile', $uri);
+        } else if ($sendFileMode == 'Nginx') {
+            $response = $response->withHeader('X-Accel-Redirect', '/download/thumbs/' . basename($uri));
+        } else {
+            // Return the file with PHP
+            $response = $response->withBody(new Stream(fopen($uri, 'r')));
+        }
+
+        $this->setNoOutput();
         return $this->render($request, $response);
     }
 }

@@ -1,57 +1,110 @@
+<div class="back-button">
+    <a id="backBtn" class="btn btn-primary" href="{{ exitURL }}">
+        <i class="fa fa-angle-left"></i>
+        <span>{{trans.exit}}</span>
+    </a>
+</div>
+
 <div id="layout-editor-topbar" class="editor-toolbar editor-top-bar">
     <!--TOPBAR-->
 </div>
 
-<div id="layout-editor-main">
-    <div id="layout-top-region" class="container-designer">
-        <div class="row">
-            <div class="col-md-6 col-lg-7 layout-module">
+<div class="container-designer layout-editor-flex">
+    <div class="flex-h flex-grow-0">
+        <div id="layout-editor-toolbar" class="editor-toolbar editor-side-bar">
+            <!--TOOLBAR-->
+        </div>
+    </div>
+
+    <div class="flex-v justify-content-between min-fix">
+        <div class="flex-h overflow-hidden">
+            <div class="main-panel">
                 <div id="layout-viewer-container">
-                    <div id="layout-viewer">
-                        <!--VIEWER-->
-                    </div>
-                    <div id="layout-viewer-navbar">
-                        <!--VIEWER NAVBAR-->
+                    <div class="main-panel-wrapper">
+                        <div id="layout-viewer">
+                            <!--VIEWER-->
+                        </div>
+
+                        {{! Inline Editor templates }}
+                        <div id="inline-editor-templates" class="inline-editor-opened"></div>
+
+                        {{!-- Full screen button --}}
+                        <button type="button" id="fullscreenBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.toggleFullscreen }}">
+                            <i class="fas fa-arrows-alt hide-on-fs"></i>
+                            <i class="fas fa-compress-arrows-alt show-on-fs"></i>
+                        </button>
+
+                        <button type="button" id="goBackBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.backToLayout }}">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
                     </div>
                 </div>
 
                 <div id="layout-navigator">
-                    <div id="layout-navigator-content">
-                        <!--NAVIGATOR RENDER AREA-->
-                    </div>
-                    <div id="layout-navigator-navbar">
-                        <!--NAVIGATOR NAVBAR-->
+                    <div class="main-panel-wrapper">
+                        <div id="layout-navigator-content">
+                            <!--NAVIGATOR RENDER AREA-->
+                        </div>
+
+                        {{!-- Full screen button --}}
+                        <button type="button" id="fullscreenBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.toggleFullscreen }}">
+                            <i class="fas fa-arrows-alt hide-on-fs"></i>
+                            <i class="fas fa-compress-arrows-alt show-on-fs"></i>
+                        </button>
+
+                        <button type="button" id="goBackBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.backToLayout }}">
+                            <i class="fas fa-arrow-left hide-on-fs"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div id="properties-panel-parent" class="col-md-6 col-lg-5 layout-module">
-                <div id="properties-panel" class="bootbox">
+                <div id="layout-editor-bottombar" class="editor-toolbar editor-bottom-bar">
+                    <!--BOTTOMBAR-->
+                </div>
+            </div>  
+
+            <div class="properties-panel-container layout-module toggle-panel toggle-flex opened">
+                <div class="toggle-container text-center">
+                        <div class="toggle">
+                            <i class="fa fa-chevron-left hide-closed"></i>
+                            <i class="fa fa-chevron-right hide-opened"></i>
+                        </div>
+                    </div>
+                <div id="properties-panel" class="bootbox properties-panel">
                     <!--PROPERTIES PANEL-->
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="layout-center-region" class="container-designer">
-        <div class="row">
-            <div class="col-md-12 layout-module">
-                <div id="layout-timeline">
-                    <!--TIMELINE-->
-                </div>
+        <div class="flex-h flex-grow-0 toggle-flex">
+            <div class="timeline-panel toggle-panel min-fix">
+                <div class="">
+                    <div class="toggle-container text-center">
+                        <div class="toggle">
+                            <i class="fa fa-chevron-up hide-closed"></i>
+                            <i class="fa fa-chevron-down hide-opened"></i>
+                        </div>
+                    </div>
+                    <div class="flex-h">
+                        <div id="layout-timeline" class="flex-grow-1">
+                            <!--TIMELINE-->
+                        </div>
 
-                <div id="actions-drawer" class="text-center">
-                    <!--ACTION DRAWER-->
+                        <div id="actions-drawer" class="text-center flex-grow-0 hide-closed">
+                            <!--ACTION DRAWER-->
+                        </div>
+                    </div>
                 </div>
+            </div>
         </div>
     </div>
 </div>
 
 <div id="layout-manager">
     <!--MANAGER-->
-</div>
-
-<div id="layout-editor-toolbar" class="editor-toolbar editor-bottom-bar">
-    <!--TOOLBAR-->
 </div>
 
 <div class="custom-overlay"></div>

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,18 +22,22 @@
 
 namespace Xibo\Controller;
 use Carbon\Carbon;
-use Slim\App;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use Xibo\Entity\User;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\SanitizerService;
+use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -50,25 +54,23 @@ class Base
     use DataTablesDotNetTrait;
 
     /**
-     * @var App
-     */
-    protected $app;
-
-    /**
      * @var LogServiceInterface
      */
     private $log;
 
-    /** @var  SanitizerService */
+    /**
+     * @Inject
+     * @var  SanitizerService
+     */
     private $sanitizerService;
 
     /**
-     * @var \Xibo\Helper\ApplicationState
+     * @var ApplicationState
      */
     private $state;
 
     /**
-     * @var \Xibo\Service\HelpServiceInterface
+     * @var HelpServiceInterface
      */
     private $helpService;
 
@@ -100,31 +102,20 @@ class Base
      */
     private $noOutput = false;
 
-    /** @var Twig */
+    /**
+     * @var Twig
+     */
     private $view;
 
-    /**
-     * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param Twig $view
-     * @return $this
-     */
-    protected function setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, Twig $view = null)
-    {
-        $this->log = $log;
-        $this->sanitizerService = $sanitizerService;
-        $this->state = $state;
-        $this->user = $user;
-        $this->helpService = $help;
-        $this->configService = $config;
-        $this->view = $view;
+    /** @var EventDispatcher */
+    private $dispatcher;
 
-        return $this;
+    /** @var BaseDependenciesService */
+    private $baseDependenciesService;
+
+    public function useBaseDependenciesService(BaseDependenciesService $baseDependenciesService)
+    {
+        $this->baseDependenciesService = $baseDependenciesService;
     }
 
     /**
@@ -133,16 +124,16 @@ class Base
      */
     public function getUser()
     {
-        return $this->user;
+        return $this->baseDependenciesService->getUser();
     }
 
     /**
      * Get the Application State
-     * @return \Xibo\Helper\ApplicationState
+     * @return ApplicationState
      */
     public function getState()
     {
-        return $this->state;
+        return $this->baseDependenciesService->getState();
     }
 
     /**
@@ -151,7 +142,7 @@ class Base
      */
     public function getLog()
     {
-        return $this->log;
+        return $this->baseDependenciesService->getLogger();
     }
 
     /**
@@ -160,16 +151,22 @@ class Base
      */
     protected function getSanitizer($array)
     {
-        return $this->sanitizerService->getSanitizer($array);
+        $sanitizerService = $this->getSanitizerService();
+        return $sanitizerService->getSanitizer($array);
+    }
+
+    public function getSanitizerService(): SanitizerService
+    {
+        return $this->baseDependenciesService->getSanitizer();
     }
 
     /**
      * Get Help
-     * @return \Xibo\Service\HelpServiceInterface
+     * @return HelpServiceInterface
      */
     protected function getHelp()
     {
-        return $this->helpService;
+        return $this->baseDependenciesService->getHelp();
     }
 
     /**
@@ -178,7 +175,7 @@ class Base
      */
     public function getConfig()
     {
-        return $this->configService;
+        return $this->baseDependenciesService->getConfig();
     }
 
     /**
@@ -186,7 +183,15 @@ class Base
      */
     public function getView()
     {
-        return $this->view;
+        return $this->baseDependenciesService->getView();
+    }
+
+    /**
+     * @return EventDispatcherInterface
+     */
+    public function getDispatcher(): EventDispatcherInterface
+    {
+        return $this->baseDependenciesService->getDispatcher();
     }
 
     /**
@@ -311,7 +316,7 @@ class Base
             $data['currentUser'] = $this->getUser();
 
             try {
-                $response = $this->view->render($response, $state->template . '.twig', $data);
+                $response = $this->getView()->render($response, $state->template . '.twig', $data);
             } catch (LoaderError | RuntimeError | SyntaxError $e) {
                 throw new GeneralException(__('Twig Error ') . $e->getMessage());
             }
@@ -337,7 +342,7 @@ class Base
 
         // Render the view manually with Twig, parse it and pull out various bits
         try {
-            $view = $this->view->render($response,$state->template . '.twig', $data);
+            $view = $this->getView()->render($response, $state->template . '.twig', $data);
         } catch (LoaderError | RuntimeError | SyntaxError $e) {
             throw new GeneralException(__('Twig Error ') . $e->getMessage());
         }
@@ -406,7 +411,7 @@ class Base
      */
     public function renderTemplateToString($template, $data)
     {
-        return $this->view->fetch($template . '.twig', $data);
+        return $this->getView()->fetch($template . '.twig', $data);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,14 +21,14 @@
  */
 namespace Xibo\Controller;
 
+use Parsedown;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
+use Xibo\Entity\SearchResult;
+use Xibo\Entity\SearchResults;
+use Xibo\Event\TemplateProviderEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -57,21 +57,12 @@ class Template extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
      * @param TagFactory $tagFactory
-     * @param Twig $view
      * @param \Xibo\Factory\ResolutionFactory $resolutionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $tagFactory, Twig $view, $resolutionFactory)
+    public function __construct($layoutFactory, $tagFactory, $resolutionFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
         $this->resolutionFactory = $resolutionFactory;
@@ -118,7 +109,7 @@ class Template extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
@@ -145,20 +136,20 @@ class Template extends Base
                 ]);
             }
 
-            if ($this->isApi($request))
-                break;
+            if ($this->isApi($request)) {
+                continue;
+            }
 
             $template->includeProperty('buttons');
 
+            // Thumbnail
             $template->thumbnail = '';
-
-            if ($template->backgroundImageId != 0) {
-                $download = $this->urlFor($request,'layout.download.background', ['id' => $template->layoutId]) . '?preview=1';
-                $template->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+            if (file_exists($template->getThumbnailUri())) {
+                $template->thumbnail = $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId]);
             }
 
             // Parse down for description
-            $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
+            $template->descriptionWithMarkup = Parsedown::instance()->text($template->description);
 
             if ($this->getUser()->featureEnabled('template.modify')
                 && $this->getUser()->checkEditable($template)
@@ -167,21 +158,73 @@ class Template extends Base
                 $template->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'layout.designer', array('id' => $template->layoutId)),
+                    'url' => $this->urlFor($request, 'layout.designer', array('id' => $template->layoutId)),
                     'text' => __('Alter Template')
                 );
+
+                if ($template->isEditable()) {
+                    $template->buttons[] = ['divider' => true];
+
+                    $template->buttons[] = array(
+                        'id' => 'layout_button_publish',
+                        'url' => $this->urlFor($request, 'layout.publish.form', ['id' => $template->layoutId]),
+                        'text' => __('Publish')
+                    );
+
+                    $template->buttons[] = array(
+                        'id' => 'layout_button_discard',
+                        'url' => $this->urlFor($request, 'layout.discard.form', ['id' => $template->layoutId]),
+                        'text' => __('Discard')
+                    );
+
+                    $template->buttons[] = ['divider' => true];
+                } else {
+                    $template->buttons[] = ['divider' => true];
+
+                    // Checkout Button
+                    $template->buttons[] = array(
+                        'id' => 'layout_button_checkout',
+                        'url' => $this->urlFor($request, 'layout.checkout.form', ['id' => $template->layoutId]),
+                        'text' => __('Checkout'),
+                        'dataAttributes' => [
+                            ['name' => 'auto-submit', 'value' => true],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.checkout', ['id' => $template->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'PUT']
+                        ]
+                    );
+
+                    $template->buttons[] = ['divider' => true];
+                }
 
                 // Edit Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => $this->urlFor($request,'layout.edit.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request, 'template.edit.form', ['id' => $template->layoutId]),
                     'text' => __('Edit')
                 );
+
+                // Select Folder
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    $template->buttons[] = [
+                        'id' => 'campaign_button_selectfolder',
+                        'url' => $this->urlFor($request, 'campaign.selectfolder.form', ['id' => $template->campaignId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'campaign.selectfolder', ['id' => $template->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $template->layout],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Copy Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor($request,'layout.copy.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.copy.form', ['id' => $template->layoutId]),
                     'text' => __('Copy')
                 );
             }
@@ -192,11 +235,11 @@ class Template extends Base
                 // Delete Button
                 $template->buttons[] = [
                     'id' => 'layout_button_delete',
-                    'url' => $this->urlFor($request,'layout.delete.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.delete.form', ['id' => $template->layoutId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $template->layoutId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.delete', ['id' => $template->layoutId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'layout_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -214,18 +257,18 @@ class Template extends Base
                 // Permissions button
                 $template->buttons[] = [
                     'id' => 'layout_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]),
+                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]) . '?nameOverride=' . __('Template'),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $template->campaignId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'Campaign', 'id' => $template->campaignId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'layout_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $template->layout],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'Campaign'])],
                         ['name' => 'content-id-name', 'value' => 'campaignId']
                     ]
                 ];
@@ -253,6 +296,101 @@ class Template extends Base
     }
 
     /**
+     * Data grid
+     *
+     * @SWG\Get(
+     *  path="/template/search",
+     *  operationId="templateSearchAll",
+     *  tags={"template"},
+     *  summary="Template Search All",
+     *  description="Search all templates from local and connectors",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/SearchResult")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function search(Request $request, Response $response)
+    {
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $provider = $sanitizedQueryParams->getString('provider', ['default' => 'both']);
+
+        $searchResults = new SearchResults();
+        if ($provider === 'both' || $provider === 'local') {
+            $templates = $this->layoutFactory->query(['layout'], $this->gridRenderFilter([
+                'excludeTemplates' => 0,
+                'layout' => $sanitizedQueryParams->getString('template'),
+                'folderId' => $sanitizedQueryParams->getInt('folderId'),
+                'publishedStatusId' => 1
+            ], $sanitizedQueryParams));
+
+            foreach ($templates as $template) {
+                $searchResult = new SearchResult();
+                $searchResult->id = $template->layoutId;
+                $searchResult->source = 'local';
+                $searchResult->title = $template->layout;
+
+                // Handle the description
+                $searchResult->description = '';
+                if (!empty($template->description)) {
+                    $searchResult->description = Parsedown::instance()->line($template->description);
+                }
+                $searchResult->orientation = $template->orientation;
+                $searchResult->width = $template->width;
+                $searchResult->height = $template->height;
+
+                if (!empty($template->tags)) {
+                    foreach ($template->getTags() as $tag) {
+                        if ($tag->tag === 'template') {
+                            continue;
+                        }
+                        $searchResult->tags[] = $tag->tag;
+                    }
+                }
+
+                // Thumbnail
+                $searchResult->thumbnail = '';
+                if (file_exists($template->getThumbnailUri())) {
+                    $searchResult->thumbnail = $this->urlFor(
+                        $request,
+                        'layout.download.thumbnail',
+                        ['id' => $template->layoutId]
+                    );
+                }
+
+                $searchResults->data[] = $searchResult;
+            }
+        }
+
+        if ($provider === 'both' || $provider === 'remote') {
+            // Hand off to any other providers that may want to provide results.
+            $event = new TemplateProviderEvent(
+                $searchResults,
+                $sanitizedQueryParams->getInt('start', ['default' => 0]),
+                $sanitizedQueryParams->getInt('length', ['default' => 15]),
+                $sanitizedQueryParams->getString('template')
+            );
+
+            $this->getLog()->debug('Dispatching event. ' . $event->getName());
+            try {
+                $this->getDispatcher()->dispatch($event, $event->getName());
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
+        }
+        return $response->withJson($searchResults);
+    }
+
+    /**
      * Template Form
      * @param Request $request
      * @param Response $response
@@ -276,7 +414,6 @@ class Template extends Base
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
             'layout' => $layout,
-            'tags' => $this->tagFactory->getTagsWithValues($layout),
             'help' => $this->getHelp()->link('Template', 'Add')
         ]);
 
@@ -530,6 +667,36 @@ class Template extends Base
         $this->getState()->setData([
             'resolutions' => $this->resolutionFactory->query(['resolution']),
             'help' => $this->getHelp()->link('Layout', 'Add')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Edit form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function editForm(Request $request, Response $response, $id)
+    {
+        // Get the layout
+        $template = $this->layoutFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($template)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'template-form-edit';
+        $this->getState()->setData([
+            'layout' => $template,
+            'help' => $this->getHelp()->link('Template', 'Edit')
         ]);
 
         return $this->render($request, $response);

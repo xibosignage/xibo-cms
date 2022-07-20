@@ -57,38 +57,72 @@
     </div>
 {% endmacro %}
 
+{% macro colorPicker(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group row {{ groupClass }}">
+        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="col-sm-10 colorpicker-input">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <i class="input-group-text input-group-addon" id="{{ name }}_label"></i>
+                </div>
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" aria-describedby="{{ name }}_label" value="{{ value }}" {{ validation }} />
+            </div>
+            <small class="form-text text-muted">{{ helpText }}</small>
+        </div>
+    </div>
+{% endmacro %}
+
 {% macro inputWithButton(name, title, value, helpText, groupClass, validation, accessKey, buttonId, buttonTitle, buttonType, buttonLink) %}
     <div class="form-group row {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-8" style="padding-right: 0;">
-            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
-            <small class="form-text text-muted">{{ helpText }}</small>
+        <div class="input-group col-sm-10">
+            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} aria-describedby="{{ buttonId }}" />
+
+            <div class="input-group-append">
+                {% if buttonType == "link" %}
+                    <a class="btn btn-white" href="{{ link }}">{{ buttonTitle }}</a>
+                {% else %}
+                    <button id="{{ buttonId }}" class="btn btn-white" type="{{ buttonType }}">{{ buttonTitle }}</button>
+                {% endif %}
+            </div>
         </div>
-        <div class="col-sm-2 text-right" style="padding-left: 0;">
-            {% if buttonType == "link" %}
-                <a class="btn btn-white" style="width:100%; padding: 6px 0px;" href="{{ link }}">{{ buttonTitle }}</a>
-            {% else %}
-                <button id="{{ buttonId }}" class="btn btn-white" style="width:100%; padding: 6px 0px;" type="{{ buttonType }}">{{ buttonTitle }}</button>
-            {% endif %}
-        </div>
+        <small class="form-text offset-2 px-4 text-muted">{{ helpText }}</small>
     </div>
 {% endmacro %}
 
-{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group tags-input-wide row {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
-            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
-            <small class="form-text text-muted">{{ helpText }}</small>
-        </div>
+{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle, logicalOperatorTitle, exactTagValue, logicalOperatorValue, autoCompleteEnabled = 1) %}
+        {% if exactTag %}
+            <div class="form-group tags-input-addons-wide row {{ groupClass }}">
+            <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+            <div class="input-group input-group-tags-exact col-sm-10">
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %} {{ validation }} />
+                <div class="input-group-append input-group-addon">
+                    <div class="input-group-text">
+                        <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}" {% if exactTagValue %}checked{% endif %}>
+                    </div>
+                    <select class="custom-select" id="logicalOperator" name="logicalOperator" title="{{ logicalOperatorTitle }}" >
+                        <option value="OR" {% if logicalOperatorValue != "AND" %}selected{% endif %}>OR</option>
+                        <option value="AND" {% if logicalOperatorValue == "AND" %}selected{% endif %}>AND</option>
+                    </select>
+                </div>
+                <small class="form-text text-muted">{{ helpText }}</small>
+            </div>
+        {% else %}
+            <div class="form-group tags-input-wide row {{ groupClass }}">
+            <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+            <div class="col-sm-10">
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %}  {{ validation }} />
+                <small class="form-text text-muted">{{ helpText }}</small>
+            </div>
+        {% endif %}
     </div>
 {% endmacro %}
 
-{% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
+{% macro number(name, title, value, helpText, groupClass, validation, accessKey, maxNumber) %}
     <div class="form-group row {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
+            <input class="form-control" name="{{ name }}" {% if maxNumber %}max="{{maxNumber}}"{% else %}max="526000"{% endif %} type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
             <small class="form-text text-muted">{{ helpText }}</small>
         </div>
     </div>
@@ -114,21 +148,31 @@
     </div>
 {% endmacro %}
 
-{% macro textarea(name, title, value, helpText, groupClass, validation, rows) %}
-    <div class="form-group row {{ groupClass }}">
-        <div class="col-sm-12">
-            <small class="form-text text-muted">{{ helpText }}</small>
-            <textarea class="form-control" name="{{ name }}" id="{{ name }}" rows="{{ rows }}" {{ validation }}>{{ value }}</textarea>
+{% macro textarea(name, title, value, helpText, groupClass, validation, rows, inline) %}
+    {% if inline == true %}
+        <div class="form-group row {{ groupClass }}">
+            <label class="col-sm-2 control-label" for="{{ name }}">{{ title }}</label>
+            <div class="col-sm-10">
+                <textarea class="form-control" name="{{ name }}" id="{{ name }}" rows="{{ rows }}" {{ validation }}>{{ value }}</textarea>
+                <small class="form-text text-muted">{{ helpText }}</small>
+            </div>
         </div>
-    </div>
+    {% else %}
+        <div class="form-group row {{ groupClass }}">
+            <div class="col-sm-12">
+                <small class="form-text text-muted">{{ helpText }}</small>
+                <textarea class="form-control" name="{{ name }}" id="{{ name }}" rows="{{ rows }}" {{ validation }}>{{ value }}</textarea>
+            </div>
+        </div>
+    {% endif %}
 {% endmacro %}
 
-{% macro checkbox(name, title, value, helpText, groupClass, accessKey, disabled) %}
+{% macro checkbox(name, title, value, helpText, groupClass, accessKey, disabled, id) %}
     <div class="form-group row {{ groupClass }}">
         <div class="offset-sm-2 col-sm-10">
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %} {% if disabled == 1 %}disabled{% endif %}>
-                <label class="form-check-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+                <input class="form-check-input" type="checkbox" {% if id %} id="{{ id }}" {% else %} id="{{ name }}" {% endif %} name="{{ name }}" {% if value == 1 %}checked{% endif %} {% if disabled == 1 %}disabled{% endif %}>
+                <label class="form-check-label" {% if id %} for="{{ id }}" {% else %} for="{{ name }}" {% endif %} accesskey="{{ accessKey }}">{{ title }}</label>
             </div>
             <small class="form-text text-muted">{{ helpText }}</small>
         </div>
@@ -156,7 +200,8 @@
                     {% for attribute in dataAttributes %}
                         {{ attribute.name }}="{{ attribute.value }}"
                     {% endfor %}
-                {% endif %}>
+                {% endif %}
+            {{ validation }}>
 
             {% set hasGroups = optionGroups|length > 0 %}
             {% if not hasGroups %}
@@ -187,10 +232,6 @@
                         {% endif %}
                     {% endif %}
 
-                    {% if optionFilter %}
-                        {% set itemOptionType = attribute(option, optionFilter) %}
-                    {% endif %}
-
                     {% if type == "dropdownmulti" %}
                         {% set selected = (itemOptionId in value) %}
                     {% else %}
@@ -199,10 +240,17 @@
 
                     <option value="{{ itemOptionId }}" {% if selected %}selected{% endif %}
                             {% if itemOptionImageValue %}
-                                data-content="<span class='media'><span class='media-left'><img style='max-width: 100px' src='{{ itemOptionImageValue }}' /></span> <span class='media-body'>{{ itemOptionValue }}</span></span>"
+                                data-content="<span class='media'><span class='media-left mr-2'><img style='max-width: 100px; max-height: 80px;' src='{{ itemOptionImageValue }}' /></span> <span class='media-body'>{{ itemOptionValue }}</span></span>"
                             {% endif %}
-                            {% if itemOptionType %}
-                                data-filter-class="{{ itemOptionType }}"
+
+                            {% if optionFilter %}
+                                {% if optionFilter[0] is not defined %}
+                                    data-filter-class="{{ attribute(option, optionFilter) }}" 
+                                {% else %}
+                                    {% for filter in optionFilter %}
+                                        data-filter{{ loop.index0 }}-class="{{  attribute(option, filter) }}" 
+                                    {% endfor %}
+                                {% endif %}
                             {% endif %}
                     >{{ itemOptionValue }}</option>
                 {% endfor %}
@@ -293,9 +341,9 @@
     </div>
 {% endmacro %}
 
-{% macro playerCompat(android, linux, tizen, webos, windows) %}
+{% macro playerCompat(android, linux, tizen, webos, windows, message) %}
     <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-html="true"
-          data-content='<ul class="player-compatibility">
+          data-content='{% if message %}<p>{{ message }}</p>{% endif %}<ul class="player-compatibility">
                 {% if android %}<li><span class="fa fa-android"></span> {{ android }}</li>{% endif %}
                 {% if linux %}<li><span class="fa fa-linux"></span> {{ linux }}</li>{% endif %}
                 {% if tizen %}<li>Tizen: {{ tizen }}</li>{% endif %}

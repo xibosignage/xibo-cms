@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetColumn;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -44,16 +41,11 @@ class DataSetColumnFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param DataTypeFactory $dataTypeFactory
      * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      */
-    public function __construct($store, $log, $sanitizerService, $dataTypeFactory, $dataSetColumnTypeFactory)
+    public function __construct($dataTypeFactory, $dataSetColumnTypeFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-
         $this->dataTypeFactory = $dataTypeFactory;
         $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
     }
@@ -66,6 +58,7 @@ class DataSetColumnFactory extends BaseFactory
         return new DataSetColumn(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this,
             $this->dataTypeFactory,
             $this->dataSetColumnTypeFactory
@@ -120,7 +113,10 @@ class DataSetColumnFactory extends BaseFactory
                 formula,
                 remoteField, 
                 showFilter, 
-                showSort
+                showSort,
+                tooltip,
+                isRequired,
+                dateFormat
             ';
 
         $body = '
@@ -154,7 +150,7 @@ class DataSetColumnFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

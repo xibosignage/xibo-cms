@@ -1,5 +1,5 @@
 // PLAYLIST Module
-const Widget = require('../designer/widget.js');
+const Widget = require('../editor-core/widget.js');
 
 /**
  * Playlist contructor
@@ -13,6 +13,7 @@ let Playlist = function(id, data) {
 
     //  properties
     this.playlistId = id;
+    this.folderId = data.folderId;
     this.isEmpty = true;
 
     this.widgets = {};
@@ -46,7 +47,7 @@ Playlist.prototype.createDataStructure = function(data) {
         );
 
         if(newWidget.subType == 'image') {
-            newWidget.previewTemplate = '<div class="tooltip playlist-widget-preview" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner-image"><img src=' + imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) + '></div></div>';
+            newWidget.previewTemplate = '<div class="tooltip playlist-widget-preview" role="tooltip"><div class="arrow"></div><div class="tooltip-inner-image"><img src=' + imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) + '></div></div>';
         }
 
 
@@ -54,6 +55,9 @@ Playlist.prototype.createDataStructure = function(data) {
 
         // calculate expire status
         newWidget.calculateExpireStatus();
+
+        // Check if widget is enabled
+        newWidget.checkIfEnabled();
         
         // Add newWidget to the playlist widget object
         this.widgets[newWidget.id] = newWidget;
@@ -121,7 +125,15 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
 
     // Add dragged item to region
     if(draggableType == 'media') { // Adding media from search tab to a region
-        this.addMedia($(draggable).data('mediaId'), addToPosition);
+        if($(draggable).hasClass('from-provider')) {
+            pE.importFromProvider([$(draggable).data('providerData')]).then((res) =>  {
+                this.addMedia(res, addToPosition);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
+            });
+        } else {
+            this.addMedia($(draggable).data('mediaId'), addToPosition);
+        }
     } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
@@ -276,7 +288,7 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
     // Get media Id
     let mediaToAdd = {};
 
-    if($.isArray(media)) {
+    if(Array.isArray(media)) {
         mediaToAdd = {
             media: media
         };

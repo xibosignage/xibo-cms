@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,8 +26,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
-use Xibo\Entity\Permission;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -36,10 +34,7 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -53,22 +48,12 @@ use Xibo\Support\Exception\NotFoundException;
 class Region extends Base
 {
     /**
-     * @var Session
-     */
-    private $session;
-
-    /**
      * @var RegionFactory
      */
     private $regionFactory;
 
     /** @var WidgetFactory */
     private $widgetFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
 
     /**
      * @var ModuleFactory
@@ -85,48 +70,22 @@ class Region extends Base
      */
     private $transitionFactory;
 
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
-    /**
-     * @var ActionFactory
-     */
-    private $actionFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param Session $session
      * @param RegionFactory $regionFactory
      * @param WidgetFactory $widgetFactory
-     * @param PermissionFactory $permissionFactory
      * @param TransitionFactory $transitionFactory
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param Twig $view
-     * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $regionFactory, $widgetFactory, $permissionFactory, $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory, Twig $view, $actionFactory)
+    public function __construct($regionFactory, $widgetFactory, $transitionFactory, $moduleFactory, $layoutFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
-        $this->session = $session;
         $this->regionFactory = $regionFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->permissionFactory = $permissionFactory;
         $this->transitionFactory = $transitionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->moduleFactory = $moduleFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -766,8 +725,6 @@ class Region extends Base
     public function addDrawer(Request $request, Response $response, $id) :Response
     {
         $layout = $this->layoutFactory->getById($id);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
         if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
         }
@@ -784,12 +741,13 @@ class Region extends Base
         ]);
 
         // Add a new region
+        // we default to layout width/height/0/0
         $drawer = $this->regionFactory->create(
             $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1 . ' - drawer'),
-            $sanitizedParams->getInt('width', ['default' => 250]),
-            $sanitizedParams->getInt('height', ['default' => 250]),
-            $sanitizedParams->getInt('top', ['default' => 50]),
-            $sanitizedParams->getInt('left', ['default' => 50]),
+            $layout->width,
+            $layout->height,
+            0,
+            0,
             0,
             1
         );
@@ -805,6 +763,83 @@ class Region extends Base
             'message' => sprintf(__('Added drawer %s'), $drawer->name),
             'id' => $drawer->regionId,
             'data' => $drawer
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws ControllerNotImplemented
+     *
+     * @SWG\Put(
+     *  path="/region/drawer/{id}",
+     *  operationId="regionDrawerSave",
+     *  tags={"layout"},
+     *  summary="Save Drawer",
+     *  description="Save Drawer",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Drawer ID to Save",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="width",
+     *      in="formData",
+     *      description="The Width, default 250",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="height",
+     *      in="formData",
+     *      description="The Height",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Region")
+     *  )
+     * )
+     */
+    public function saveDrawer(Request $request, Response $response, $id)
+    {
+        $region = $this->regionFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser()->checkEditable($region)) {
+            throw new AccessDeniedException();
+        }
+
+        // Check that this Regions Layout is in an editable state
+        $layout = $this->layoutFactory->getById($region->layoutId);
+
+        if (!$layout->isChild()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Save
+        $region->load();
+        $region->width = $sanitizedParams->getDouble('width', ['default' => $layout->width]);
+        $region->height = $sanitizedParams->getDouble('height', ['default' => $layout->height]);
+        $region->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited Drawer %s'), $region->name),
+            'id' => $region->regionId,
+            'data' => $region
         ]);
 
         return $this->render($request, $response);

@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -78,7 +78,7 @@
                         ] %}
                         {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
 
-                        {% set message %}{% trans "This Module is compatible with webOS and Tizen Players only" %}{% endset %}
+                        {% set message %}{% trans "This Module is compatible with webOS, Tizen and Philips SOC Players only" %}{% endset %}
                         {{ forms.message(message, "alert alert-info") }}
                     </div>
 

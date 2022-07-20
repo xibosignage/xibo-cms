@@ -35,9 +35,9 @@
     <div class="widget">
         <div class="widget-title">
             <i class="fa fa-list"></i>
-            {{ savedReport.saveAs }}
-                <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span>
-            <div><span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span></div>
+            {{ metadata.title }}
+                <span class="small">({% trans "Generated on: " %}{{ metadata.generatedOn }})</span>
+            <div><span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span></div>
             <div class="clearfix"></div>
         </div>
 
@@ -80,9 +80,9 @@
                 <div class="XiboData card pt-3">
                     <table id="" class="">
                         <tbody>
-                        {% for key,displayStat in resultObj.timeConnected %}
+                        {% for key,displayStat in table.timeConnected %}
                             <tr>
-                                {% for option in resultObj.displays[key] %}
+                                {% for option in table.displays[key] %}
                                     <th colspan="2">{{ option }} </th>
                                 {% endfor %}
                             </tr>

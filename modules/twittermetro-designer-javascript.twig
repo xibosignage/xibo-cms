@@ -45,18 +45,17 @@
             configureColoursForm(dialog, dialog.data().extra);
         });
 
-        // Turn the background colour into a picker
-        $(this).find('#backgroundColor').colorpicker();
-
         // Tidy up colorpickers on modal close
         if(dialog.hasClass('modal')) {
             dialog.on("hide.bs.modal", function(e) {
                 if(e.namespace === 'bs.modal') {
                     // Remove colour pickers
-                    dialog.find(".colorpicker-element").colorpicker('destroy');
+                    destroyColorPicker($(this).find(".XiboColorPicker"));
                 }
             });
         }
+
+        formHelpers.setupPhpDateFormatPopover($(this))
     }
 
     function configureColoursForm(dialog, extra) {
@@ -100,7 +99,7 @@
             templateColorsFields.append(twittermetroColorsTemplate(context));
 
             // Transform to a color picker field
-            $('#color1').colorpicker();
+            createColorPicker('#color1');
         } else {
 
             for(var i = 0;i < colorsUsed.length;i++) {
@@ -111,7 +110,7 @@
                 templateColorsFields.append(twittermetroColorsTemplate(context));
 
                 // Transform to a color picker field
-                $(dialog).find('#' + colorId).colorpicker();
+                createColorPicker($(dialog).find('#' + colorId));
                 $(dialog).find('#' + colorId).css('background-color', colorsUsed[i]);
             }
         }
@@ -134,7 +133,7 @@
                 templateColorsFields.append(twittermetroColorsTemplate(context));
 
                 // Transform to a color picker field
-                $(dialog).find('#' + colorId).colorpicker();
+                createColorPicker($(dialog).find('#' + colorId));
 
                 // Create an event for the new button
                 $(dialog).find('#' + colorId).focusout(function(e) {
@@ -155,3 +154,9 @@
     };
 
 </script>
+
+<style>
+    .popover{
+        max-width: 100%;
+    }
+</style>

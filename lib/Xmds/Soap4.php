@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -276,6 +276,9 @@ class Soap4 extends Soap
 
         // Audit our return
         $this->getLog()->debug($returnXml);
+        
+        // Phone Home?
+        $this->phoneHome();
 
         return $returnXml;
     }
@@ -355,8 +358,12 @@ class Soap4 extends Soap
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = $this->layoutFactory->getById($fileId);
-                $path = $layout->xlfToDisk();
+                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($fileId));
+                try {
+                    $path = $layout->xlfToDisk();
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
 
                 $file = file_get_contents($path);
                 $chunkSize = filesize($path);
@@ -581,10 +588,15 @@ class Soap4 extends Soap
         }
 
         // Current Layout
-        $currentLayoutId = $sanitizedStatus->getInt('currentLayoutId');
+        // don't fail: xibosignage/xibo#2517
+        try {
+            $currentLayoutId = $sanitizedStatus->getInt('currentLayoutId');
 
-        if ($currentLayoutId !== null) {
-            $this->display->setCurrentLayoutId($this->getPool(), $currentLayoutId);
+            if ($currentLayoutId !== null) {
+                $this->display->setCurrentLayoutId($this->getPool(), $currentLayoutId);
+            }
+        } catch (\Exception $exception) {
+            $this->getLog()->debug('Ignoring currentLayout due to a validation error.');
         }
 
         // Status Dialog

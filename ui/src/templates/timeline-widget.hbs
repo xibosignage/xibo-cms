@@ -30,15 +30,21 @@ width: {{ durationPercentage }}%;">
         {{/if}}
 
         {{#if actions }}
-            <i class="fa fa-paper-plane editProperty" data-property="Action" data-content="tooltip" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.widgetActions}} {{ actions.length}}" ></i>
+            <i class="fa fa-paper-plane editProperty tooltip-always-on" data-property="Action" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.widgetActions}} {{ actions.length}}" ></i>
         {{/if}}
 
         {{#gt expireStatus 0}}
-            <i class="fa {{expireStatusIcon}} editProperty" 
+            <i class="fa {{expireStatusIcon}} editProperty tooltip-always-on" 
             data-toggle="tooltip" data-container="#layout-timeline" data-html="true" 
             data-title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}
+
+        {{#each transitions}}
+            <i class="fa fa-sign-{{@key}} editProperty d-none"
+            data-property="Transition"
+            data-property-type="{{@key}}"></i>
+        {{/each}}
     </div>
 </div>
 

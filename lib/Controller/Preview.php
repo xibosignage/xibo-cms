@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,15 +21,9 @@
  */
 namespace Xibo\Controller;
 
-use baseDAO;
-use database;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
 /**
@@ -45,19 +39,10 @@ class Preview extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, Twig $view)
+    public function __construct($layoutFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->layoutFactory = $layoutFactory;
     }
 
@@ -75,9 +60,9 @@ class Preview extends Base
     public function show(Request $request, Response $response, $id )
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $findByCode = $sanitizedParams->getInt('findByCode');
-        
-        if($findByCode == 1) {
+
+        // Get the layout
+        if ($sanitizedParams->getInt('findByCode') === 1) {
             $layout = $this->layoutFactory->getByCode($id);
         } else {
             $layout = $this->layoutFactory->getById($id);
@@ -87,6 +72,11 @@ class Preview extends Base
             || !$this->getUser()->featureEnabled(['layout.view', 'playlist.view'])
         ) {
             throw new AccessDeniedException();
+        }
+
+        // Do we want to preview the draft version of this Layout?
+        if ($sanitizedParams->getCheckbox('isPreviewDraft') && $layout->hasDraft()) {
+            $layout = $this->layoutFactory->getByParentId($layout->layoutId);
         }
 
         $this->getState()->template = 'layout-preview';
@@ -117,17 +107,24 @@ class Preview extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function getXlf(Request $request, Response $response, $id )
+    public function getXlf(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($id);
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
+        try {
+            if (!$this->getUser()->checkViewable($layout)) {
+                throw new AccessDeniedException();
+            }
 
-        if (!$this->getUser()->checkViewable($layout)) {
-            throw new AccessDeniedException();
+            echo file_get_contents($layout->xlfToDisk([
+                'notify' => false,
+                'collectNow' => false,
+            ]));
+
+            $this->setNoOutput();
+        } finally {
+            // Release lock
+            $this->layoutFactory->concurrentRequestRelease($layout);
         }
-
-        echo file_get_contents($layout->xlfToDisk());
-
-        $this->setNoOutput(true);
         return $this->render($request, $response);
     }
 }

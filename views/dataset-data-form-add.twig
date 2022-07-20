@@ -40,12 +40,17 @@
                 {% for col in dataSet.getColumn() %}
                     {% if col.dataSetColumnTypeId == 1 %}
                         {% set fieldId = "dataSetColumnId_#{col.dataSetColumnId}" %}
+                        {% if col.isRequired == 1 %}
+                            {% set validation = "required" %}
+                        {% else %}
+                            {% set validation = "" %}
+                        {% endif %}
 
                         {# Field depending on what data type we have #}
                         {% if col.dataTypeId == 2 %}
-                            {{ forms.number(fieldId, col.heading) }}
+                            {{ forms.number(fieldId, col.heading, "", col.tooltip, "", validation) }}
                         {% elseif col.dataTypeId == 3 %}
-                            {{ forms.dateTime(fieldId, col.heading) }}
+                            {{ forms.dateTime(fieldId, col.heading, "", col.tooltip, "", validation) }}
                         {% elseif col.dataTypeId == 5 %}
                             {% set selectImage %}{% trans "Select an Image" %}{% endset %}
                             {% set attributes = [
@@ -58,11 +63,11 @@
                                 { name: "data-allow-clear", value: "true"},
                                 { name: "data-placeholder", value: selectImage}
                             ] %}
-                            {{ forms.dropdown(fieldId, "single", col.heading, "", null, "mediaId", "name", "", "pagedSelect", "", "", "", attributes) }}
+                            {{ forms.dropdown(fieldId, "single", col.heading, "", null, "mediaId", "name", col.tooltip, "pagedSelect", validation, "", "", attributes) }}
                         {% elseif col.listContent != "" %}
-                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [""]|merge(col.listContentArray())) }}
+                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [""]|merge(col.listContentArray()), "", "", col.tooltip, "", validation) }}
                         {% else %}
-                            {{ forms.input(fieldId, col.heading) }}
+                            {{ forms.input(fieldId, col.heading, "", col.tooltip, "", validation) }}
                         {% endif %}
                     {% endif %}
                 {% endfor %}

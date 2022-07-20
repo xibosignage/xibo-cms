@@ -1,0 +1,71 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Select your Menu Board" %}
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="menuBoardEditFormStep1" class="XiboForm pt-4 form-horizontal" data-form-step="1" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
+                  data-next-form-url="{{ url_for("module.widget.edit.form", {id: module.widget.widgetId}) }}?step=2">
+
+                {% set message %}{% trans "Choose a menu and template for this Menu Board Widget" %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set title %}{% trans "Menu" %}{% endset %}
+                {% set helpText %}{% trans "Please select the menu to use" %}{% endset %}
+                {% set attributes = [
+                    { name: "data-width", value: "200px" },
+                    { name: "data-allow-clear", value: "true" },
+                    { name: "data-placeholder--id", value: null },
+                    { name: "data-placeholder--value", value: "" },
+                    { name: "data-search-url", value: url_for("module.widget.menuboard.search") },
+                    { name: "data-search-term", value: "name" },
+                    { name: "data-id-property", value: "menuId" },
+                    { name: "data-text-property", value: "name" }
+                ] %}
+                {{ forms.dropdown("menuId", "single", title, "", module.getMenuBoard(), "menuId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                {% set title %}{% trans "Orientation" %}{% endset %}
+                {% set helpText %}{% trans "Set intended orientation for the Menu, this is for filtering templates only." %}{% endset %}
+                {% set option1 = "Landscape"|trans %}
+                {% set option2 = "Portrait"|trans %}
+                {% set values = [{id: 'landscape', value: option1}, {id: 'portrait', value: option2}] %}
+                {{ forms.dropdown("orientation", "single", title, module.getOption("orientation"), values, "id", "value", helpText) }}
+
+                {% set title %}{% trans "Template" %}{% endset %}
+                {% set helpText %}{% trans "Select the template you would like to apply." %}{% endset %}
+                {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.getTemplatesWithInfo, "id", "value", helpText, "template-selector-control localSelect selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image", "orientation") }}
+
+                {% set message %}{% trans "(Legacy) Templates are compatible with older Player/Browser versions!" %}{% endset %}
+                {{ forms.message(message, 'p-3 rounded', 'alert-info') }}
+
+                <input type="hidden" name="step" value="1" />
+            </form>
+        </div>
+    </div>
+{% endblock %}

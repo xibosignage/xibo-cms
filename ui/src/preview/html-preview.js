@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,7 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.8.3";
+var VERSION = "3.1";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
@@ -94,6 +94,7 @@ function timestamp() {
     var hours = currentTime.getHours();
     var minutes = currentTime.getMinutes();
     var seconds = currentTime.getSeconds();
+    var milliseconds = currentTime.getMilliseconds();
 
     if (minutes < 10) {
         minutes = "0" + minutes
@@ -102,7 +103,8 @@ function timestamp() {
         seconds = "0" + seconds
     }
     str += day + "/" + month + "/" + year + " ";
-    str += hours + ":" + minutes + ":" + seconds;
+    str += hours + ":" + minutes + ":" + seconds + "'" + milliseconds;
+
     return str;
 }
 
@@ -233,13 +235,13 @@ function Layout(id, options, preload, layoutPreview) {
         self.actionController = new ActionController(self, actions, options);
 
         // Create drawer
-        $(self.layoutNode).find("drawer").each(function() {
+        $($.parseXML(self.layoutNode)).find("drawer").each(function() {
             playLog(4, "debug", "Creating drawer " + $(this).attr('id'), false);
             self.drawer = this;
         });
 
         // Create regions
-        $(self.layoutNode).find("region").each(function() {
+        $($.parseXML(self.layoutNode)).find("region").each(function() {
             playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
             self.regionObjects.push(new Region(self, $(this).attr('id'), this, options, preload));
         });
@@ -247,7 +249,7 @@ function Layout(id, options, preload, layoutPreview) {
 
         self.actionController.initTouchActions();
 
-        self.ready = true;
+        self.ready = false;
         preload.addFiles(options.loaderUrl);
 
         if (layoutPreview){
@@ -271,11 +273,16 @@ function Layout(id, options, preload, layoutPreview) {
             }
         }
         else {
-            playLog(4, "error", "Attempted to run Layout ID " + self.id + " before it was ready.", false);
+            self.checkReadyState(40, self.run, function(){
+                playLog(4, "error", "Attempted to run Layout ID " + self.id + " before it was ready.", false);
+            });
         }
     };
     
     self.end = function() {
+        // Send message to parent window
+        parent.postMessage('viewerStoppedPlaying');
+
         /* Ask the layout to gracefully stop running now */
         for (var i = 0; i < self.regionObjects.length; i++) {
             self.regionObjects[i].end();
@@ -296,7 +303,7 @@ function Layout(id, options, preload, layoutPreview) {
         self.allExpired = true;
         
         for (var i = 0; i < self.regionObjects.length; i++) {
-            playLog(4, "debug", "Region " + self.regionObjects[i].id + ": " + self.regionObjects[i].complete, false);
+            playLog(4, "debug", "Region " + self.regionObjects[i].id + " expired? " + self.regionObjects[i].complete, false);
             if (! self.regionObjects[i].complete) {
                 self.allExpired = false;
             }
@@ -346,6 +353,35 @@ function Layout(id, options, preload, layoutPreview) {
             }
         }
     };
+
+    // Check layout state
+    self.checkReadyState = function(numTries, success, failure) {
+        self.ready = true;
+
+        // Check every region
+        for (var i = 0; i < self.regionObjects.length; i++) {
+            var region = self.regionObjects[i];
+            region.checkReadyState();
+            if (!region.ready) {
+                self.ready = false;
+            }
+        }
+
+        if (!self.ready) {
+            numTries--;
+
+            if (numTries <= 0) {
+                failure();
+            } else {
+                // Not ready, check every 250ms
+                setTimeout(function() {
+                    self.checkReadyState(numTries, success, failure)
+                }, 250);
+            }
+        } else {
+            success();
+        }
+    };
     
     self.ready = false;
     self.id = id;
@@ -376,7 +412,9 @@ function Region(parent, id, xml, options, preload) {
     self.oneMedia = false;
     self.oldMedia = undefined;
     self.curMedia = undefined;
-    
+    self.totalMediaObjects = $(self.xml).children("media").length;
+    self.ready = false;
+
     self.finished = function() {
         // Remove temporary media elements
         self.mediaObjects = self.mediaObjects.filter(function(media) { return !media.singlePlay; });
@@ -393,9 +431,11 @@ function Region(parent, id, xml, options, preload) {
     };
     
     self.end = function() {
+        playLog(8, "debug", "Region " + self.id + " has ended!");
         self.ending = true;
         /* The Layout has finished running */
         /* Do any region exit transition then clean up */
+
         self.exitTransition();
     };
     
@@ -406,11 +446,23 @@ function Region(parent, id, xml, options, preload) {
     
     self.transitionNodes = function(oldMedia, newMedia) {
         /* TODO: Actually support the transition */
-        
-        if (oldMedia == newMedia) {
+
+        var loop =
+            newMedia.options['loop'] == '1' ||
+            (newMedia.region.options['loop'] == '1' && newMedia.region.totalMediaObjects == 1);
+
+        if (oldMedia) {
+            oldMedia.pause();
+        }
+
+        if (oldMedia == newMedia && !loop) {
             return;
         }
-        
+
+        if(loop && oldMedia == newMedia) {
+            oldMedia.reset();
+        }
+
         if (oldMedia) {
             oldMedia.stop();
         }
@@ -482,10 +534,32 @@ function Region(parent, id, xml, options, preload) {
         /* Do the transition */
         self.transitionNodes(self.oldMedia, self.curMedia);
     };
+
+    // Check if region is ready to play
+    self.checkReadyState = function() {
+        for (var index = 0; index < self.mediaObjects.length; index++) {
+            var media = self.mediaObjects[index];
+            if(!media.ready) {
+                self.ready = false;
+                return;
+            }
+        }
+
+        self.ready = true;
+    };
     
     self.run = function() {
-        self.nextMedia();
+        if (self.totalMediaObjects > 0) {
+            self.nextMedia();
+        }
     };
+
+    /* Build Region Options */
+    self.options = [];
+    $(self.xml).children('options').children().each(function() {
+        playLog(9, "debug", "Option " + this.nodeName.toLowerCase() + " -> " + $(this).text(), false);
+        self.options[this.nodeName.toLowerCase()] = $(this).text();
+    });
     
     self.sWidth = $(xml).attr("width") * self.layout.scaleFactor;
     self.sHeight = $(xml).attr("height") * self.layout.scaleFactor;
@@ -515,7 +589,7 @@ function Region(parent, id, xml, options, preload) {
     playLog(7, "debug", "Render will be (" + self.sWidth + "x" + self.sHeight + ") pixels");
     playLog(7, "debug", "Offset will be (" + self.offsetX + "," + self.offsetY + ") pixels");
     
-    $(self.xml).find("media").each(function() { 
+    $(self.xml).children("media").each(function() { 
         playLog(5, "debug", "Creating media " + $(this).attr('id'), false);
         self.mediaObjects.push(new media(self, $(this).attr('id'), this, options, preload));
     });
@@ -535,8 +609,11 @@ function Region(parent, id, xml, options, preload) {
     }
     
     // If the regions does not have any media change its background to transparent red
-    if ($(self.xml).find("media").length == 0) {
+    if ($(self.xml).children("media").length == 0) {
         $self = $("#" + self.containerName);
+
+        // Mark empty region as complete
+        self.complete = true;
         
         messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;
         
@@ -564,14 +641,21 @@ function media(parent, id, xml, options, preload) {
     self.attachedAudio = false;
     self.singlePlay = false;
     self.timeoutId = undefined;
+    self.ready = true;
+    self.checkIframeStatus = false;
 
     if (self.render == undefined)
         self.render = "module";
     
     self.run = function() {
-
-        if(self.iframe != undefined) {
-            $("#" + self.containerName).empty().append(self.iframe);
+        if (self.iframe) {
+            if(self.checkIframeStatus) {
+                // Reload iframe
+                var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
+                iframeDOM[0].src = iframeDOM[0].src;
+            } else {
+                $("#" + self.containerName).empty().append(self.iframe);
+            }
         }
 
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds");
@@ -607,33 +691,48 @@ function media(parent, id, xml, options, preload) {
             self.timeoutId = setTimeout(self.region.nextMedia, self.duration * 1000);
         }
     };
-    
-    self.stop = function() {
-        playLog(5, "debug", "Stop media " + self.id);
 
-        // Clear timeout
-        clearTimeout(self.timeoutId);
+    self.reset = function() {
+        playLog(5, "debug", "Reset media " + self.id);
 
-        // Hide container
-        $("#" + self.containerName).css("display", "none");
+        // Reset video
+        if(self.mediaType == "video") {
+            $("#" + self.containerName + "-vid").get(0).currentTime = 0;
+        }
 
+        // Reset audio
+        if(self.mediaType == "audio") {
+            $("#" + self.containerName + "-aud").get(0).currentTime = 0;
+        }
+
+        // Reset attached audio
+        if(self.attachedAudio) {
+            $("#" + self.containerName + "-attached-aud").get(0).currentTime = 0;
+        }
+    };
+
+    self.pause = function() {
         // Stop video
         if(self.mediaType == "video") {
             $("#" + self.containerName + "-vid").get(0).pause();
-            $("#" + self.containerName + "-vid").get(0).currentTime = 0;
         }
 
         // Stop audio
         if(self.mediaType == "audio") {
             $("#" + self.containerName + "-aud").get(0).pause();
-            $("#" + self.containerName + "-aud").get(0).currentTime = 0;
         }
 
         // Stop attached audio
         if(self.attachedAudio) {
             $("#" + self.containerName + "-attached-aud").get(0).pause();
-            $("#" + self.containerName + "-attached-aud").get(0).currentTime = 0;
         }
+    };
+    
+    self.stop = function() {
+        playLog(5, "debug", "Stop media " + self.id);
+
+        // Hide container
+        $("#" + self.containerName).css("display", "none");
     };
     
     /* Build Media Options */
@@ -678,7 +777,13 @@ function media(parent, id, xml, options, preload) {
 
     var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1&layoutPreview=1&scale_override=' + self.region.layout.scaleFactor;
     
+    // Loop if media has loop, or if region has loop and a single media
+    var loop =
+        self.options['loop'] == '1' ||
+        (self.region.options['loop'] == '1' && self.region.totalMediaObjects == 1);
+
     if (self.render == "html" || self.mediaType == "ticker") {
+        self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if(self.options['durationisperitem'] == '1' || self.options['durationisperpage'] == '1') {
@@ -697,12 +802,14 @@ function media(parent, id, xml, options, preload) {
             });
         }
     }
-    else if (self.mediaType == "image") {
+    else if (self.mediaType === "image") {
         preload.addFiles(tmpUrl);
         media.css("background-image", "url('" + tmpUrl + "')");
-        if (self.options['scaletype'] == 'stretch')
-            media.css("background-size", "cover");
-        else {
+        if (self.options['scaletype'] === 'stretch') {
+          media.css('background-size', '100% 100%');
+        } else if (self.options['scaletype'] === 'fit') {
+          media.css('background-size', 'cover');
+        } else {
             // Center scale type, do we have align or valign?
             var align = (self.options['align'] == "") ? "center" : self.options['align'];
             var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
@@ -710,12 +817,14 @@ function media(parent, id, xml, options, preload) {
         }
     }
     else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
+        self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
-        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + ((self.options["loop"] == 1) ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
         
+        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + (loop ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
+
         // Stretch video?
         if(self.options['scaletype'] == 'stretch') {
             self.iframe.css("object-fit", "fill");
@@ -723,7 +832,8 @@ function media(parent, id, xml, options, preload) {
     }
      else if(self.mediaType == "audio") {
         preload.addFiles(tmpUrl);
-        media.append('<audio id="' + self.containerName + '-aud" preload="auto" ' + ((self.options["loop"] == 1) ? 'loop' : '') + ' ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Audio</audio>');
+        
+        media.append('<audio id="' + self.containerName + '-aud" preload="auto" ' + (loop ? 'loop' : '') + ' ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Audio</audio>');
     }
     else if (self.mediaType == "flash") {
         var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
@@ -734,7 +844,21 @@ function media(parent, id, xml, options, preload) {
     else {
         media.css("outline", "red solid thin");
     }
+
+    // Check/set iframe based widgets play status
+    if(self.iframe && self.checkIframeStatus) {
+        // Set state as false ( for now )
+        self.ready = false;
+
+        // Append iframe
+        $("#" + self.containerName).empty().append(self.iframe);
     
+        // On iframe load, set state as ready to play full preview
+        $(self.iframe).on('load', function(){
+            self.ready = true;
+        });
+    }
+
     // Attached audio
     if($(self.xml).find('audio').length > 0) {
         var $audioObj = $(self.xml).find('audio');
@@ -780,8 +904,9 @@ function ActionController(parent, actions, options) {
     self.parent = parent;
     self.actions = [];
 
-    $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
-    $container.append($('<div class="action-controller-title"><span class="title">' + previewTranslations.actionControllerTitle.toUpperCase() + '</span><button class="toggle"></button></div>'));
+    var $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
+    $container.append($('<div class="action-controller-title"><button class="toggle"></button><span class="title">' + previewTranslations.actionControllerTitle + '</span></div>'));
+    var $actionsContainer = $('<div class="actions-container"></div>').appendTo($container);
 
     for (var index = 0; index < actions.length; index++) {
         var newAction = actions[index];
@@ -800,12 +925,33 @@ function ActionController(parent, actions, options) {
             $newActionHTML.attr(this.name, this.value);
         });
 
+        // Build HTML for the new action
+        var html = '';
+
+        // Add action type
+        html += '<span class="action-row-title">' + previewTranslations[$newActionHTML.attr('actiontype')];
+        if ($newActionHTML.attr('actiontype') == 'navWidget') {
+            html += ' <span title="' + previewTranslations.widgetId + '">[' + $newActionHTML.attr('widgetId') + ']</span>';
+        } else if ($newActionHTML.attr('actiontype') == 'navLayout') {
+            html += ' <span title="' + previewTranslations.layoutCode + '">[' + $newActionHTML.attr('layoutCode') + ']</span>';
+        }
+        html += '</span>';
+
+        // Add target
+        html += '<span class="action-row-target" title="' + previewTranslations.target + '">' + $newActionHTML.attr('target');
+        if ($newActionHTML.attr('targetid') != '') {
+            html += '(' + $newActionHTML.attr('targetid') + $newActionHTML.attr('layoutcode') + ')';
+        }
+        html += '</span>';
+        
+        // Add HTML string to the action
+        $newActionHTML.html(html);
+
         // Append new action to the controller
-        $newActionHTML.html('<span class="action-row-title">' + $newActionHTML.attr('actiontype') + '</span>' + (($newActionHTML.attr('triggertype') != 'webhook') ? ($newActionHTML.attr('source') + '(' + $newActionHTML.attr('sourceid') + ') > ') : '') + $newActionHTML.attr('target') + '(' + $newActionHTML.attr('targetid') + $newActionHTML.attr('layoutcode') + ')');
         $newActionHTML.addClass('action', newAction.id);
         $newActionHTML.attr('originalId', newAction.id);
         $newActionHTML.attr('id', 'A-' + newAction.id + '-' + nextId());
-        $newActionHTML.appendTo($container);
+        $newActionHTML.appendTo($actionsContainer);
     }
 
     // Enable dragging
@@ -872,6 +1018,15 @@ function ActionController(parent, actions, options) {
 
         // Mark media as temporary ( removed after region stop playing or loops )
         targetMedia.singlePlay = true;
+
+        // If region is empty, remove the background colour and empty message
+        if(targetRegion.mediaObjects.length === 0) {
+            $('#' + targetRegion.containerName).find('.empty-message').remove();
+            $('#' + targetRegion.containerName).css('background-color', '');
+
+            // Mark empty region as incomplete
+            self.complete = false;
+        }
         
         // Create media in region and play it next
         targetRegion.mediaObjects.splice(targetRegion.currentMedia + 1, 0, targetMedia);
@@ -938,10 +1093,13 @@ function ActionController(parent, actions, options) {
             }
 
             // Handle source click
-            $sourceObj.click(function(event) {
-                event.stopPropagation();
-                runAction(data);
-            }).addClass('clickable');
+            // FIXME: We need to handle the case where a drawer widget has an action and it has been loaded to the preview
+            if($sourceObj != undefined) {
+                $sourceObj.on('click', function(event) {
+                    event.stopPropagation();
+                    runAction(data);
+                }).addClass('clickable');
+            }
         });
     };
 }

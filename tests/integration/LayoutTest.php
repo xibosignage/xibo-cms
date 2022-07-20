@@ -338,11 +338,21 @@ class LayoutTest extends LocalWebTestCase
             }
         }
         # Load in a known layout if it's not there already
-        if ($flag)
-            (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', $this->getResolutionId('landscape'));
+        $landscapeId = $this->getResolutionId('landscape');
+
+        if ($flag) {
+            (new XiboLayout($this->getEntityProvider()))->create(
+                'phpunit layout',
+                'phpunit layout',
+                '',
+                $landscapeId
+            );
+        }
+
         $response = $this->sendRequest('POST','/layout', [
             'name' => 'phpunit layout',
-            'description' => 'phpunit layout'
+            'description' => 'phpunit layout',
+            'resolutionId' => $landscapeId
         ]);
         $this->assertSame(409, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode() . '. Body = ' . $response->getBody());
         $object = json_decode($response->getBody());
@@ -441,11 +451,13 @@ class LayoutTest extends LocalWebTestCase
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout assigned', 'phpunit layout', '', $this->getResolutionId('landscape'));
         // Make a campaign with a known name
         $name = Random::generateString(8, 'phpunit');
-        /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
 
         // Assign layout to campaign
-        $campaign->assignLayout([$layout->layoutId], [1]);
+        $this->getEntityProvider()->post('/campaign/layout/assign/' . $campaign->campaignId, [
+            'layoutId' => $layout->layoutId
+        ]);
+
         # Check if it's assigned 
         $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame(1, $campaignCheck->numberLayouts);
@@ -601,6 +613,7 @@ class LayoutTest extends LocalWebTestCase
 
         # Edit region
         $response = $this->sendRequest('PUT','/region/' . $region->regionId, [
+            'name' => $layout->layout . ' edited',
             'width' => 700,
             'height' => 500,
             'top' => 400,
@@ -828,5 +841,61 @@ class LayoutTest extends LocalWebTestCase
         $object = json_decode($response->getBody());
         $this->assertSame(false, $object->success);
         $this->assertSame(422, $object->httpStatus);
+    }
+
+    /**
+     * Add a Drawer to the Layout
+     */
+    public function testAddDrawer()
+    {
+        // Create a Layout and Checkout
+        $layout = $this->createLayout();
+        $layout = $this->getDraft($layout);
+
+        // Add Drawer
+        $response = $this->sendRequest('POST', '/region/drawer/' . $layout->layoutId);
+
+        // Check if successful
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+
+        // Check if drawer has the right values
+        $this->assertSame($layout->width, $object->data->width);
+        $this->assertSame($layout->height, $object->data->height);
+        $this->assertSame(0, $object->data->top);
+        $this->assertSame(0, $object->data->left);
+    }
+
+    /**
+     * Edit a Drawer to the Layout
+     */
+    public function testSaveDrawer()
+    {
+        // Create a Layout and Checkout
+        $layout = $this->createLayout();
+        $layout = $this->getDraft($layout);
+
+        // Add Drawer
+        $drawer = $this->getEntityProvider()->post('/region/drawer/' . $layout->layoutId);
+
+        // Save drawer
+        $response = $this->sendRequest('PUT', '/region/drawer/' . $drawer['regionId'], [
+            'width' => 1280,
+            'height' => 720
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        // Check if successful
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+
+        // Check if drawer has the right values
+        $this->assertSame(1280, $object->data->width);
+        $this->assertSame(720, $object->data->height);
+        $this->assertSame(0, $object->data->top);
+        $this->assertSame(0, $object->data->left);
     }
 }

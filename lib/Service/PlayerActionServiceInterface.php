@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -48,6 +48,11 @@ interface PlayerActionServiceInterface
      * @throws GeneralException
      */
     public function sendAction($displays, $action);
+
+    /**
+     * Get the queue
+     */
+    public function getQueue(): array;
 
     /**
      * Process the Queue of Actions

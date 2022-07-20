@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,11 +22,11 @@
 
 
 namespace Xibo\Service;
+
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
 use Xibo\Support\Exception\DeadlockException;
-use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\CollectNowAction;
@@ -55,9 +55,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
-    /** @var  DayPartFactory */
-    private $dayPartFactory;
-
     /** @var bool */
     private $collectRequired = false;
 
@@ -71,7 +68,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     private $keysProcessed = [];
 
     /** @inheritdoc */
-    public function __construct($config, $log, $store, $pool, $playerActionService, $scheduleFactory, $dayPartFactory)
+    public function __construct($config, $log, $store, $pool, $playerActionService, $scheduleFactory)
     {
         $this->config = $config;
         $this->log = $log;
@@ -79,7 +76,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $this->pool = $pool;
         $this->playerActionService = $playerActionService;
         $this->scheduleFactory = $scheduleFactory;
-        $this->dayPartFactory = $dayPartFactory;
     }
 
     /** @inheritdoc */
@@ -106,8 +102,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @inheritdoc */
     public function processQueue()
     {
-        if (count($this->displayIds) <= 0)
+        if (count($this->displayIds) <= 0) {
             return;
+        }
 
         $this->log->debug('Process queue of ' . count($this->displayIds) . ' display notifications');
 
@@ -123,7 +120,10 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $qmarks = str_repeat('?,', count($displayIds) - 1) . '?';
 
         try {
-            $this->store->updateWithDeadlockLoop('UPDATE `display` SET mediaInventoryStatus = 3 WHERE displayId IN (' . $qmarks . ')', $displayIds);
+            $this->store->updateWithDeadlockLoop(
+                'UPDATE `display` SET mediaInventoryStatus = 3 WHERE displayId IN (' . $qmarks . ')',
+                $displayIds
+            );
         } catch (DeadlockException $deadlockException) {
             $this->log->error('Failed to update media inventory status: ' . $deadlockException->getMessage());
         }
@@ -142,14 +142,18 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
      */
     private function processPlayerActions()
     {
-        if (count($this->displayIdsRequiringActions) <= 0)
+        if (count($this->displayIdsRequiringActions) <= 0) {
             return;
+        }
 
         $this->log->debug('Process queue of ' . count($this->displayIdsRequiringActions) . ' display actions');
 
         $displayIdsRequiringActions = array_values(array_unique($this->displayIdsRequiringActions, SORT_NUMERIC));
         $qmarks = str_repeat('?,', count($displayIdsRequiringActions) - 1) . '?';
-        $displays = $this->store->select('SELECT displayId, xmrChannel, xmrPubKey FROM `display` WHERE displayId IN (' . $qmarks . ')', $displayIdsRequiringActions);
+        $displays = $this->store->select(
+            'SELECT displayId, xmrChannel, xmrPubKey FROM `display` WHERE displayId IN (' . $qmarks . ')',
+            $displayIdsRequiringActions
+        );
 
         foreach ($displays as $display) {
             $stdObj = new \stdClass();
@@ -160,7 +164,11 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             try {
                 $this->playerActionService->sendAction($stdObj, new CollectNowAction());
             } catch (\Exception $e) {
-                $this->log->notice('DisplayId ' . $display['displayId'] . ' Save would have triggered Player Action, but the action failed with message: ' . $e->getMessage());
+                $this->log->notice(
+                    'DisplayId ' .
+                    $display['displayId'] .
+                    ' Save would have triggered Player Action, but the action failed with message: ' . $e->getMessage()
+                );
             }
         }
     }
@@ -178,8 +186,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         $this->displayIds[] = $displayId;
 
-        if ($this->collectRequired)
+        if ($this->collectRequired) {
             $this->displayIdsRequiringActions[] = $displayId;
+        }
     }
 
     /** @inheritdoc */
@@ -201,7 +210,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ';
 
         foreach ($this->store->select($sql, ['displayGroupId' => $displayGroupId]) as $row) {
-
             // Don't process if the displayId is already in the collection
             if (in_array($row['displayId'], $this->displayIds)) {
                 continue;
@@ -209,10 +217,14 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
             $this->displayIds[] = $row['displayId'];
 
-            $this->log->debug('DisplayGroup[' . $displayGroupId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+            $this->log->debug(
+                'DisplayGroup[' . $displayGroupId .'] change caused notify on displayId[' .
+                $row['displayId'] . ']'
+            );
 
-            if ($this->collectRequired)
+            if ($this->collectRequired) {
                 $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
         }
 
         $this->keysProcessed[] = 'displayGroup_' . $displayGroupId;
@@ -314,7 +326,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
-
             // Don't process if the displayId is already in the collection (there is little point in running the
             // extra query)
             if (in_array($row['displayId'], $this->displayIds)) {
@@ -329,12 +340,18 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     ->getEvents($currentDate, $rfLookAhead);
 
                 if (count($scheduleEvents) <= 0) {
-                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    $this->log->debug(
+                        'Skipping eventId ' . $row['eventId'] .
+                        ' because it doesnt have any active events in the window'
+                    );
                     continue;
                 }
             }
 
-            $this->log->debug('Campaign[' . $campaignId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+            $this->log->debug(
+                'Campaign[' . $campaignId .'] 
+                change caused notify on displayId[' . $row['displayId'] . ']'
+            );
 
             $this->displayIds[] = $row['displayId'];
 
@@ -464,7 +481,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
-
             // Don't process if the displayId is already in the collection (there is little point in running the
             // extra query)
             if (in_array($row['displayId'], $this->displayIds)) {
@@ -480,17 +496,24 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     ->getEvents($currentDate, $rfLookAhead);
 
                 if (count($scheduleEvents) <= 0) {
-                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    $this->log->debug(
+                        'Skipping eventId ' . $row['eventId'] .
+                        ' because it doesnt have any active events in the window'
+                    );
                     continue;
                 }
             }
 
-            $this->log->debug('DataSet[' . $dataSetId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+            $this->log->debug(
+                'DataSet[' . $dataSetId .'] change caused notify on displayId[' .
+                $row['displayId'] . ']'
+            );
 
             $this->displayIds[] = $row['displayId'];
 
-            if ($this->collectRequired)
+            if ($this->collectRequired) {
                 $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
         }
 
         $this->keysProcessed[] = 'dataSet_' . $dataSetId;
@@ -594,7 +617,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
-
             // Don't process if the displayId is already in the collection (there is little point in running the
             // extra query)
             if (in_array($row['displayId'], $this->displayIds)) {
@@ -609,17 +631,24 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     ->getEvents($currentDate, $rfLookAhead);
 
                 if (count($scheduleEvents) <= 0) {
-                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    $this->log->debug(
+                        'Skipping eventId ' . $row['eventId'] .
+                        ' because it doesnt have any active events in the window'
+                    );
                     continue;
                 }
             }
 
-            $this->log->debug('Playlist[' . $playlistId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+            $this->log->debug(
+                'Playlist[' . $playlistId .'] change caused notify on displayId[' .
+                $row['displayId'] . ']'
+            );
 
             $this->displayIds[] = $row['displayId'];
 
-            if ($this->collectRequired)
+            if ($this->collectRequired) {
                 $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
         }
 
         $this->keysProcessed[] = 'playlist_' . $playlistId;
@@ -779,7 +808,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
-
             // Don't process if the displayId is already in the collection (there is little point in running the
             // extra query)
             if (in_array($row['displayId'], $this->displayIds)) {
@@ -794,12 +822,19 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     ->getEvents($currentDate, $rfLookAhead);
 
                 if (count($scheduleEvents) <= 0) {
-                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    $this->log->debug(
+                        'Skipping eventId ' . $row['eventId'] .
+                        ' because it doesnt have any active events in the window'
+                    );
                     continue;
                 }
             }
 
-            $this->log->debug(sprintf('Saving Layout with code %s, caused notify on displayId[' . $row['displayId'] . ']', $code));
+            $this->log->debug(sprintf(
+                'Saving Layout with code %s, caused notify on
+                 displayId[' . $row['displayId'] . ']',
+                $code
+            ));
 
             $this->displayIds[] = $row['displayId'];
 
@@ -809,5 +844,160 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         }
 
         $this->keysProcessed[] = 'layoutCode_' . $code;
+    }
+
+    /** @inheritdoc */
+    public function notifyByMenuBoardId($menuId)
+    {
+        $this->log->debug('Notify by MenuBoard ID ' . $menuId);
+
+        if (in_array('menuBoard_' . $menuId, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $menuId . ' skipping this time.');
+            return;
+        }
+
+        $sql = '
+           SELECT DISTINCT display.displayId, 
+                schedule.eventId, 
+                schedule.fromDt, 
+                schedule.toDt, 
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
+                schedule.dayPartId
+             FROM `schedule`
+               INNER JOIN `lkscheduledisplaygroup`
+               ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+               INNER JOIN `lkdgdg`
+               ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+               INNER JOIN `lkdisplaydg`
+               ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+               INNER JOIN `display`
+               ON lkdisplaydg.DisplayID = display.displayID
+               INNER JOIN `lkcampaignlayout`
+               ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
+               INNER JOIN `region`
+               ON `region`.layoutId = `lkcampaignlayout`.layoutId
+               INNER JOIN `playlist`
+               ON `playlist`.regionId = `region`.regionId
+               INNER JOIN `widget`
+               ON `widget`.playlistId = `playlist`.playlistId
+               INNER JOIN `widgetoption`
+               ON `widgetoption`.widgetId = `widget`.widgetId
+                    AND `widgetoption`.type = \'attrib\'
+                    AND `widgetoption`.option = \'menuId\'
+                    AND `widgetoption`.value = :activeMenuId
+            WHERE (
+               (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+               )
+           UNION
+           SELECT DISTINCT display.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
+                NULL AS dayPartId
+             FROM `display`
+               INNER JOIN `lkcampaignlayout`
+               ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
+               INNER JOIN `region`
+               ON `region`.layoutId = `lkcampaignlayout`.layoutId
+               INNER JOIN `playlist`
+               ON `playlist`.regionId = `region`.regionId
+               INNER JOIN `widget`
+               ON `widget`.playlistId = `playlist`.playlistId
+               INNER JOIN `widgetoption`
+               ON `widgetoption`.widgetId = `widget`.widgetId
+                    AND `widgetoption`.type = \'attrib\'
+                    AND `widgetoption`.option = \'menuId\'
+                    AND `widgetoption`.value = :activeMenuId2
+           UNION
+           SELECT DISTINCT `lkdisplaydg`.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
+                NULL AS dayPartId
+              FROM `lklayoutdisplaygroup`
+                INNER JOIN `lkdgdg`
+                ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
+                INNER JOIN `lkdisplaydg`
+                ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                INNER JOIN `lkcampaignlayout`
+                ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
+                INNER JOIN `region`
+                ON `region`.layoutId = `lkcampaignlayout`.layoutId
+                INNER JOIN `playlist`
+               ON `playlist`.regionId = `region`.regionId
+                INNER JOIN `widget`
+                ON `widget`.playlistId = `playlist`.playlistId
+                INNER JOIN `widgetoption`
+                ON `widgetoption`.widgetId = `widget`.widgetId
+                    AND `widgetoption`.type = \'attrib\'
+                    AND `widgetoption`.option = \'menuId\'
+                    AND `widgetoption`.value = :activeMenuId3
+        ';
+
+        $currentDate = Carbon::now();
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
+
+        $params = [
+            'fromDt' => $currentDate->subHour()->format('U'),
+            'toDt' => $rfLookAhead->format('U'),
+            'activeMenuId' => $menuId,
+            'activeMenuId2' => $menuId,
+            'activeMenuId3' => $menuId
+        ];
+
+        foreach ($this->store->select($sql, $params) as $row) {
+            // Don't process if the displayId is already in the collection (there is little point in running the
+            // extra query)
+            if (in_array($row['displayId'], $this->displayIds)) {
+                $this->log->debug('displayId ' . $row['displayId'] . ' already in collection, skipping.');
+                continue;
+            }
+
+            // Is this schedule active?
+            if ($row['eventId'] != 0) {
+                $scheduleEvents = $this->scheduleFactory
+                    ->createEmpty()
+                    ->hydrate($row)
+                    ->getEvents($currentDate, $rfLookAhead);
+
+                if (count($scheduleEvents) <= 0) {
+                    $this->log->debug(
+                        'Skipping eventId ' . $row['eventId'] .
+                        ' because it doesnt have any active events in the window'
+                    );
+                    continue;
+                }
+            }
+
+            $this->log->debug('MenuBoard[' . $menuId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+
+            $this->displayIds[] = $row['displayId'];
+
+            if ($this->collectRequired) {
+                $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
+        }
+
+        $this->keysProcessed[] = 'menuBoard_' . $menuId;
+
+        $this->log->debug('Finished notify for Menu Board ID ' . $menuId);
     }
 }

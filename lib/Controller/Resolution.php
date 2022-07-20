@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,16 +21,9 @@
  */
 namespace Xibo\Controller;
 
-use baseDAO;
-use Kit;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\ResolutionFactory;
-use Xibo\Helper\Form;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
 /**
@@ -46,19 +39,10 @@ class Resolution extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param ResolutionFactory $resolutionFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $resolutionFactory, Twig $view)
+    public function __construct($resolutionFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->resolutionFactory = $resolutionFactory;
     }
 
@@ -101,9 +85,30 @@ class Resolution extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="partialResolution",
+     *      in="query",
+     *      description="Filter by Partial Resolution Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="enabled",
      *      in="query",
      *      description="Filter by Enabled",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="width",
+     *      in="query",
+     *      description="Filter by Resolution width",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="height",
+     *      in="query",
+     *      description="Filter by Resolution height",
      *      type="integer",
      *      required=false
      *   ),
@@ -129,7 +134,11 @@ class Resolution extends Base
         $filter = [
             'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
             'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
-            'resolution' => $sanitizedQueryParams->getString('resolution')
+            'resolution' => $sanitizedQueryParams->getString('resolution'),
+            'partialResolution' => $sanitizedQueryParams->getString('partialResolution'),
+            'width' => $sanitizedQueryParams->getInt('width'),
+            'height' => $sanitizedQueryParams->getInt('height'),
+            'orientation' => $sanitizedQueryParams->getString('orientation')
         ];
 
         $resolutions = $this->resolutionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));

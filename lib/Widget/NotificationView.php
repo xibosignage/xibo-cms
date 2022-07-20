@@ -26,7 +26,6 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Factory\NotificationFactory;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -193,14 +192,6 @@ class NotificationView extends ModuleWidget
     }
 
     /**
-     * @return NotificationFactory
-     */
-    private function getNotificationFactory()
-    {
-        return $this->container->get('notificationFactory');
-    }
-
-    /**
      * @param $isPreview
      * @param $displayId
      * @return array
@@ -219,16 +210,19 @@ class NotificationView extends ModuleWidget
 
         $items = [];
 
-        if ($isPreview)
-            $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
+        if ($isPreview) {
+            $notifications = $this->notificationFactory->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
+                'onlyReleased' => 1,
                 'userId' => $this->getUser()->userId
             ]);
-        else
-            $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
+        } else {
+            $notifications = $this->notificationFactory->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
+                'onlyReleased' => 1,
                 'displayId' => $displayId
             ]);
+        }
 
         $this->getLog()->debug('There are ' . count($notifications) . ' to render.');
 
@@ -254,13 +248,12 @@ class NotificationView extends ModuleWidget
                         break;
 
                     case '[Date]':
-                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->format($dateFormat);
+                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->translatedFormat($dateFormat);
                         break;
                 }
 
                 // Substitute the replacement we have found (it might be '')
                 $rowString = str_replace($sub, $replace, $rowString);
-
             }
 
             $items[] = $rowString;
@@ -291,14 +284,17 @@ class NotificationView extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';// Need the marquee plugin?
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';
 
         $effect = $this->getOption('effect');
-        if (stripos($effect, 'marquee') !== false)
+        if (stripos($effect, 'marquee') !== false) {
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
+        }
 
         // Need the cycle plugin?
-        if ($effect != 'none')
+        if ($effect != 'none') {
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
+        }
 
         // Get the Style Sheet
         $styleSheetContent = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null));
@@ -326,7 +322,7 @@ class NotificationView extends ModuleWidget
         $javaScriptContent .= '     $("body").xiboLayoutScaler(options); ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
+        $javaScriptContent .= '     var runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
         $javaScriptContent .= '     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   });';
@@ -354,9 +350,10 @@ class NotificationView extends ModuleWidget
         $age = $this->getOption('age', 0);
 
         // Get the date/time of the last notification drawn by this Widget
-        $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC'], [
+        $notifications = $this->notificationFactory->query(['releaseDt DESC', 'createDt DESC'], [
             'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
             'displayId' => $displayId,
+            'onlyReleased' => 1,
             'length' => 1
         ]);
 

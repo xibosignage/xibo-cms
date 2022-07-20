@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,8 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Tests\integration\Cache;
 
 use Carbon\Carbon;
@@ -132,20 +130,15 @@ class CampaignLayoutAssignTest extends LocalWebTestCase
     public function testInvalidateCache()
     {
         // Make sure our Display is already DONE
-        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt Done as expected');
 
         // Add the Layout we have prepared to the existing Campaign
-        $this->sendRequest('POST','/campaign/layout/assign/' . $this->campaign->campaignId, [
-            'layoutId' => [
-                [
-                    'layoutId' => $this->layout->layoutId,
-                    'displayOrder' => 1
-                ]
-            ]
+        $this->sendRequest('POST', '/campaign/layout/assign/' . $this->campaign->campaignId, [
+            'layoutId' => $this->layout->layoutId
         ]);
 
         // Validate the display status afterwards
-        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt Pending as expected');
 
         // Validate that XMR has been called.
         $this->assertTrue(in_array($this->display->displayId, $this->getPlayerActionQueue()), 'Player action not present');

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -29,9 +29,10 @@ use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -153,6 +154,12 @@ class DataSet implements \JsonSerializable
     public $customHeaders;
 
     /**
+     * @SWG\Property(description="Custom User agent")
+     * @var string
+     */
+    public $userAgent;
+
+    /**
      * @SWG\Property(description="Time in seconds this DataSet should fetch new Datas from the remote host")
      * @var int
      */
@@ -163,6 +170,12 @@ class DataSet implements \JsonSerializable
      * @var int
      */
     public $clearRate;
+
+    /**
+     * @SWG\Property(description="Flag whether to truncate DataSet data if no new data is pulled from remote source")
+     * @var int
+     */
+    public $truncateOnEmpty;
 
     /**
      * @SWG\Property(description="DataSetID of the DataSet which should be fetched and present before the Data from this DataSet are fetched")
@@ -225,6 +238,12 @@ class DataSet implements \JsonSerializable
     public $limitPolicy;
 
     /**
+     * @SWG\Property(description="Custom separator for CSV source, comma will be used by default")
+     * @var string
+     */
+    public $csvSeparator;
+
+    /**
      * @SWG\Property(description="The id of the Folder this DataSet belongs to")
      * @var int
      */
@@ -267,31 +286,32 @@ class DataSet implements \JsonSerializable
     /** @var  PermissionFactory */
     private $permissionFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param $sanitizerService
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $dispatcher, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayNotifyService)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->sanitizerService = $sanitizerService;
         $this->config = $config;
         $this->pool = $pool;
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -350,6 +370,15 @@ class DataSet implements \JsonSerializable
     public function countLast()
     {
         return $this->countLast;
+    }
+
+    /**
+     * Get the Display Notify Service
+     * @return DisplayNotifyServiceInterface
+     */
+    public function getDisplayNotifyService(): DisplayNotifyServiceInterface
+    {
+        return $this->displayNotifyService->init();
     }
 
     /**
@@ -447,7 +476,7 @@ class DataSet implements \JsonSerializable
 
         $start = $sanitizer->getInt('start', ['default' => 0]);
         $size = $sanitizer->getInt('size', ['default' => 0]);
-        $filter = $sanitizer->getString('filter');
+        $filter = $filterBy['filter'] ?? '';
         $ordering = $sanitizer->getString('order');
         $displayId = $sanitizer->getInt('displayId', ['default' => 0]);
 
@@ -919,8 +948,9 @@ class DataSet implements \JsonSerializable
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
-        $this->getStore()->isolated('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
-        $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->commitIfNecessary();
     }
 
     /**
@@ -946,8 +976,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `truncateOnEmpty`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`, `csvSeparator`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :userAgent, :refreshRate, :clearRate, :truncateOnEmpty, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy, :csvSeparator';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -956,8 +986,10 @@ class DataSet implements \JsonSerializable
             $params['username'] = $this->username;
             $params['password'] = $this->password;
             $params['customHeaders'] = $this->customHeaders;
+            $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
+            $params['truncateOnEmpty'] = $this->truncateOnEmpty;
             $params['runsAfter'] = $this->runsAfter;
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;
@@ -967,6 +999,7 @@ class DataSet implements \JsonSerializable
             $params['lastSync'] = 0;
             $params['rowLimit'] = $this->rowLimit;
             $params['limitPolicy'] = $this->limitPolicy;
+            $params['csvSeparator'] = $this->csvSeparator;
         }
 
         // Do the insert
@@ -996,7 +1029,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, truncateOnEmpty = :truncateOnEmpty, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy, `csvSeparator` = :csvSeparator ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -1005,8 +1038,10 @@ class DataSet implements \JsonSerializable
             $params['username'] = $this->username;
             $params['password'] = $this->password;
             $params['customHeaders'] = $this->customHeaders;
+            $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
+            $params['truncateOnEmpty'] = $this->truncateOnEmpty;
             $params['runsAfter'] = $this->runsAfter;
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;
@@ -1015,6 +1050,7 @@ class DataSet implements \JsonSerializable
             $params['ignoreFirstRow'] = $this->ignoreFirstRow;
             $params['rowLimit'] = $this->rowLimit;
             $params['limitPolicy'] = $this->limitPolicy;
+            $params['csvSeparator'] = $this->csvSeparator;
         }
 
         $this->getStore()->update('UPDATE dataset SET ' . $sql . '  WHERE DataSetID = :dataSetId', $params);
@@ -1067,7 +1103,7 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('DataSet ' . $this->dataSetId . ' wants to notify');
 
-        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDataSetId($this->dataSetId);
+        $this->getDisplayNotifyService()->collectNow()->notifyByDataSetId($this->dataSetId);
     }
 
     /**

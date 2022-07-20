@@ -39,17 +39,27 @@ interface ReportServiceInterface
     /**
      * ReportServiceInterface constructor.
      * @param \Psr\Container\ContainerInterface $app
-     * @param \Xibo\Helper\ApplicationState $state
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param SanitizerService $sanitizer
      * @param SavedReportFactory $savedReportFactory
- */
-    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory);
+     */
+    public function __construct(
+        $app,
+        $store,
+        $timeSeriesStore,
+        $log,
+        $config,
+        $sanitizer,
+        $savedReportFactory
+    );
 
-    // List all reports that are available
+    /**
+     * List all reports that are available
+     * @return array
+     */
     public function listReports();
 
     /**
@@ -123,11 +133,11 @@ interface ReportServiceInterface
      * Run the report
      * @param string $reportName
      * @param string $filterCriteria
-     * @param int $userId
+     * @param \Xibo\Entity\User $user
      * @throws GeneralException
      * @return array
      */
-    public function runReport($reportName, $filterCriteria, $userId);
+    public function runReport($reportName, $filterCriteria, $user);
 
     /**
      * Get report email template twig file name
@@ -138,11 +148,19 @@ interface ReportServiceInterface
     public function getReportEmailTemplate($reportName);
 
     /**
+     * Get report email template twig file name
+     * @param string $reportName
+     * @throws GeneralException
+     * @return string
+     */
+    public function getSavedReportTemplate($reportName);
+
+    /**
      * Get chart script
      * @param int $savedreportId
      * @param string $reportName
      * @throws GeneralException
-     * @return array
+     * @return string
      */
     public function getReportChartScript($savedreportId, $reportName);
 }

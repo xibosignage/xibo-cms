@@ -86,6 +86,9 @@ class Soap3 extends Soap
             $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($active));
 
             $this->getLog()->debug($active, $display->displayId);
+            
+            // Phone Home?
+            $this->phoneHome();
 
             return $active;
 
@@ -184,8 +187,12 @@ class Soap3 extends Soap
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = $this->layoutFactory->getById($fileId);
-                $path = $layout->xlfToDisk();
+                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($fileId));
+                try {
+                    $path = $layout->xlfToDisk();
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
 
                 $file = file_get_contents($path);
                 $chunkSize = filesize($path);

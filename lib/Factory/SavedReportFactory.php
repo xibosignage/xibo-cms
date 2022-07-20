@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,10 +24,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\SavedReport;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -48,22 +45,17 @@ class SavedReportFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $mediaFactory)
+    public function __construct($user, $userFactory, $config, $mediaFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
         $this->mediaFactory = $mediaFactory;
-
     }
 
     /**
@@ -72,7 +64,14 @@ class SavedReportFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new SavedReport($this->getStore(), $this->getLog(), $this->config, $this->mediaFactory, $this);
+        return new SavedReport(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->config,
+            $this->mediaFactory,
+            $this
+        );
     }
 
     /**
@@ -107,10 +106,21 @@ class SavedReportFactory extends BaseFactory
     {
         $savedReports = $this->query(null, array('disableUserCheck' => 1, 'savedReportId' => $savedReportId));
 
-        if (count($savedReports) <= 0)
+        if (count($savedReports) <= 0) {
             throw new NotFoundException(__('Cannot find saved report'));
+        }
 
         return $savedReports[0];
+    }
+
+    /**
+     * @param $ownerId
+     * @return SavedReport[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
     }
 
     /**
@@ -157,9 +167,6 @@ class SavedReportFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
-
         // Like
         if ($sanitizedFilter->getString('saveAs') != '') {
             $terms = explode(',', $sanitizedFilter->getString('saveAs'));
@@ -181,6 +188,7 @@ class SavedReportFactory extends BaseFactory
             $params['generatedOn'] = $sanitizedFilter->getInt('generatedOn');
         }
 
+        // Owner filter
         if ($sanitizedFilter->getInt('userId') !== null) {
             $body .= ' AND `saved_report`.userId = :userId ';
             $params['userId'] = $sanitizedFilter->getInt('userId');
@@ -195,25 +203,22 @@ class SavedReportFactory extends BaseFactory
         // User Group filter
         if ($sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
             $body .= ' AND `saved_report`.userId IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
-            $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId',  ['default' => 0]);
+            $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]);
         }
 
         // by media ID
-        if ($sanitizedFilter->getInt('mediaId',  ['default' => -1]) != -1) {
+        if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
-        // Owner filter
-        if ($sanitizedFilter->getInt('userId',  ['default' => 0]) != 0) {
-            $body .= " AND `saved_report`.userid = :userId ";
-            $params['userId'] = $sanitizedFilter->getInt('userId',  ['default' => 0]);
-        }
-
-        if ( $sanitizedFilter->getCheckbox('onlyMyReport') == 1) {
+        if ($sanitizedFilter->getCheckbox('onlyMyReport') == 1) {
             $body .= ' AND `saved_report`.userId = :currentUserId ';
             $params['currentUserId'] = $this->getUser()->userId;
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
 
         // Sorting?
         $order = '';
@@ -224,7 +229,7 @@ class SavedReportFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length',  ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

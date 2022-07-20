@@ -1,7 +1,7 @@
 # Multi-stage build
 # Stage 0
 # Compile xsendfile apache module
-FROM alpine:3.11 as sendfile
+FROM alpine:3.15 as sendfile
 ADD docker/mod_xsendfile.c /mod_xsendfile.c
 RUN apk update && apk upgrade && apk add \
     gcc \
@@ -55,12 +55,15 @@ RUN npm install --only=prod
 # Copy ui folder
 COPY ./ui ./ui
 
+# Copy modules source folder
+COPY ./modules/src ./modules/src
+
 # Build webpack
 RUN npm run publish
 
 # Stage 3
 # Build the CMS container
-FROM alpine:3.11
+FROM alpine:3.15
 MAINTAINER Xibo Signage <support@xibosignage.com>
 
 # Install apache, PHP, and supplimentary programs.
@@ -81,6 +84,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-iconv \
     php7-curl \
     php7-session \
+    php7-sockets \
     php7-ctype \
     php7-fileinfo \
     php7-xml \
@@ -89,6 +93,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-tokenizer \
     php7-mbstring \
     php7-memcached \
+    php7-pecl-mongodb \
     php7-zlib \
     mysql-client \
     msmtp \
@@ -98,11 +103,6 @@ RUN apk update && apk upgrade && apk add tar \
     tzdata \
     openssl \
     && rm -rf /var/cache/apk/*
-
-RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
-    && pecl install mongodb-1.6.1 \
-    && apk del build-base php7-dev \
-    && echo extension=mongodb.so > /etc/php7/conf.d/51_mongodb.ini
 
 # Add all necessary config files in one layer
 ADD docker/ /
@@ -122,6 +122,7 @@ ARG GIT_COMMIT=prod
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
+    INSTALL_TYPE=docker \
     XMR_HOST=xmr \
     CMS_SERVER_NAME=localhost \
     MYSQL_HOST=mysql \
@@ -130,6 +131,8 @@ ENV CMS_DEV_MODE=false \
     MYSQL_PORT=3306 \
     MYSQL_DATABASE=cms \
     MYSQL_BACKUP_ENABLED=true \
+    MYSQL_ATTR_SSL_CA=none \
+    MYSQL_ATTR_SSL_VERIFY_SERVER_CERT=true \
     CMS_SMTP_SERVER=smtp.gmail.com:587 \
     CMS_SMTP_USERNAME=none \
     CMS_SMTP_PASSWORD=none \
@@ -138,6 +141,7 @@ ENV CMS_DEV_MODE=false \
     CMS_SMTP_REWRITE_DOMAIN=gmail.com \
     CMS_SMTP_HOSTNAME=none \
     CMS_SMTP_FROM_LINE_OVERRIDE=YES \
+    CMS_SMTP_FROM=none \
     CMS_ALIAS=none \
     CMS_PHP_SESSION_GC_MAXLIFETIME=1440 \
     CMS_PHP_POST_MAX_SIZE=2G \
@@ -155,6 +159,10 @@ ENV CMS_DEV_MODE=false \
     CMS_APACHE_TIMEOUT=30 \
     CMS_APACHE_OPTIONS_INDEXES=false \
     CMS_QUICK_CHART_URL=http://cms-quickchart:3400 \
+    CMS_USE_MEMCACHED=false \
+    MEMCACHED_HOST=memcached \
+    MEMCACHED_PORT=11211 \
+    CMS_USAGE_REPORT=true \
     XTR_ENABLED=true \
     GIT_COMMIT=$GIT_COMMIT
 
@@ -170,6 +178,9 @@ COPY --from=composer /app /var/www/cms
 # Copy dist built webpack app folder to web
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
+# Copy modules built webpack app folder to cms modules
+COPY --from=webpack /app/modules /var/www/cms/modules
+
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY --chown=apache:apache . /var/www/cms
 
@@ -181,7 +192,7 @@ RUN rm /var/www/cms/composer.* && \
     rm /var/www/cms/phpunit.xml && \
     rm /var/www/cms/package.json && \
     rm /var/www/cms/package-lock.json && \
-    rm /var/www/cms/cypress.json && \
+    rm /var/www/cms/cypress.config.js && \
     rm -r /var/www/cms/cypress && \
     rm -r /var/www/cms/ui && \
     rm /var/www/cms/webpack.config.js

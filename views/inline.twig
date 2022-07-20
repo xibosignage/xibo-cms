@@ -45,28 +45,32 @@
     </div>
 {% endmacro %}
 
-{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle) %}
+{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle, logicalOperatorTitle, autoCompleteEnabled = 1) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         {% if exactTag %}
             <div class="input-group input-group-tags-exact">
-                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %}  {{ validation }} />
                 <div class="input-group-append input-group-addon">
                     <div class="input-group-text">
                         <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}">
                     </div>
+                    <select class="custom-select" id="logicalOperator" name="logicalOperator" title="{{ logicalOperatorTitle }}" style="min-width:auto!important">
+                        <option value="OR" selected>OR</option>
+                        <option value="AND">AND</option>
+                    </select>
                 </div>
             </div>
         {% else %}
-            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
+            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %}  {{ validation }} />
         {% endif %}
     </div>
 {% endmacro %}
 
-{% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
+{% macro number(name, title, value, helpText, groupClass, validation, accessKey, maxNumber) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
+        <input class="form-control" name="{{ name }}" {% if maxNumber %}max="{{maxNumber}}"{% else %}max="526000"{% endif %} type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
@@ -224,5 +228,12 @@
                     {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
             >
         </div>
+    </div>
+{% endmacro %}
+
+{% macro color(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <input class="form-control XiboColorPicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}

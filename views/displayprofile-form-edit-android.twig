@@ -91,6 +91,10 @@
                     ] %}
                     {{ forms.dropdown("aggregationLevel", "single", title, displayProfile.getSetting("aggregationLevel"), options, "id", "value", helpText, "aggregation-level") }}
 
+                    {% set title = "Record geolocation on each Proof of Play?"|trans %}
+                    {% set helpText = "If the geolocation of the Display is known, enable to record that location against each proof of play record."|trans %}
+                    {{ forms.checkbox("isRecordGeoLocationOnProofOfPlay", title, displayProfile.getSetting("isRecordGeoLocationOnProofOfPlay"), helpText) }}
+
                     {% set title = "Player Version"|trans %}
                     {% set helpText = "Set the Player Version to install, making sure that the selected version is suitable for your device"|trans %}
                     {% set attributes = [
@@ -159,7 +163,7 @@
                     {{ forms.dropdown("orientation", "single", title, displayProfile.getSetting("orientation"), options, "id", "value", helpText) }}
 
                     {% set title = "Screen Dimensions"|trans %}
-                    {% set helpText = "Set dimensions to be used for the Player window ensuring that they do not exceed the actual screen size. Enter a comma separated string representing the pixel sizings for; Left,Top,Width,Height. eg:\"100,100,720,480\". This requires a Player Restart to action."|trans %}
+                    {% set helpText = "Set dimensions to be used for the Player window ensuring that they do not exceed the actual screen size. Enter the following values representing the pixel sizings for; Left,Top,Width,Height. This requires a Player Restart to action."|trans %}
                     {{ forms.input("screenDimensions", title, displayProfile.getSetting("screenDimensions"), helpText) }}
 
                 </div>
@@ -294,6 +298,18 @@
                     {% set title = "Maximum Region Count"|trans %}
                     {% set helpText = "This setting is a memory limit protection setting which will stop rendering regions beyond the limit set. Leave at 0 for no limit."|trans %}
                     {{ forms.number("maxRegionCount", title, displayProfile.getSetting("maxRegionCount"), helpText) }}
+
+                    {% set title = "Video Engine"|trans %}
+                    {% set helpText = "Select which video engine should be used to playback video. ExoPlayer is usually better, but if you experience issues you can revert back to Android Media Player. HLS always uses ExoPlayer. Available from v3 R300."|trans %}
+                    {% set options = [
+                        { id: 'exoplayer', value: "ExoPlayer"|trans },
+                        { id: 'mediaplayer', value: "Android Media Player"|trans },
+                    ] %}
+                    {{ forms.dropdown("videoEngine", "single", title, displayProfile.getSetting("videoEngine"), options, "id", "value", helpText) }}
+
+                    {% set title = "Enable touch capabilities on the device?"|trans %}
+                    {% set helpText = "If this device will be used as a touch screen check this option. Checking this option will cause a message to appear on the player which needs to be manually dismissed once. If this option is disabled, touching the screen will show the action bar according to the Action Bar Mode option. Available from v3 R300."|trans %}
+                    {{ forms.checkbox("isTouchEnabled", title, displayProfile.getSetting("isTouchEnabled"), helpText) }}
                 </div>
 
                 {% if commands|length > 0 %}

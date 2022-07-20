@@ -33,7 +33,7 @@ class CreateLayoutHistoryTableMigration extends AbstractMigration
         $table = $this->table('layouthistory', ['id' => 'layoutHistoryId']);
         $table->addColumn('campaignId', 'integer')
             ->addColumn('layoutId', 'integer')
-            ->addColumn('publishedDate', 'datetime')
+            ->addColumn('publishedDate', 'datetime', ['null' => true, 'default' => null])
             ->addForeignKey('campaignId', 'campaign', 'campaignId')
             ->create();
 

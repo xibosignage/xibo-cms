@@ -1,5 +1,4 @@
 <nav class="navbar">
-
     <div class="container-toolbar container-fluid">
         {{!-- Menu items/tabs --}}
         <div id="layoutInfo" class="navbar-text layout-info">
@@ -25,7 +24,8 @@
                 data-placement="bottom"
                 data-container=".editor-top-bar" 
                 data-title="{{trans.durationDetail}}">
-                <i class="fa fa-clock-o layout-info-icon"></i><span class="layout-info-label">{{trans.duration}}:</span>{{mainObject.duration}}s
+                <i class="fa fa-clock-o layout-info-icon"></i><span class="layout-info-label">{{trans.duration}}:</span>
+                <span class="layout-info-duration-value">{{mainObject.duration}}</span>s
             </span>
 
             <span class="layout-info-dimensions"
@@ -35,6 +35,16 @@
                 data-title="{{trans.dimensionsDetail}}">
                 <i class="fa fa-arrows layout-info-icon"></i><span class="layout-info-label">{{trans.dimensions}}:</span>{{mainObject.width}}x{{mainObject.height}}
             </span>
+
+            {{#if mainObject.actions }}
+                <span class="layout-info-actions"
+                    data-toggle="tooltip" 
+                    data-placement="bottom"
+                    data-container=".editor-top-bar" 
+                    data-title="{{trans.layoutActions}} {{ mainObject.actions.length}}">
+                    <i class="fa fa-paper-plane layout-info-icon"></i><span class="layout-info-label">{{trans.layoutActions}} {{ mainObject.actions.length}}
+                </span>
+            {{/if}}
         </div>
 
         {{!-- Right menu --}}
@@ -47,13 +57,16 @@
                 </div>
             </li>
 
-            {{!-- Buttons --}}
-            {{#if customDropdownOptions}}
-                <li id="actionsSubmenu" class="nav-item dropdown navbar-submenu hide-on-lock">
-                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                        aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
-
-                    <div class="dropdown-menu dropdown-menu-right navbar-submenu-container">
+            {{!-- Options menu --}}
+            {{#if showOptions}}
+                <li class="nav-item dropdown navbar-submenu navbar-submenu-options hide-on-lock" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="top"
+                    data-title="{{trans.options}}">
+                    <a id="optionsContainerTop" class="nav-link dropdown-toggle option-container" data-toggle="dropdown" role="button"
+                        aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </a>
+                
+                    <div class="dropdown-menu dropdown-menu-right navbar-submenu-container navbar-submenu-options-container" aria-labelledby="optionsContainerTop">
                         {{#each customDropdownOptions}}
                             <a class="dropdown-item">
                                 <div id="{{id}}" class="navbar-submenu-item {{class}}" href="#">
@@ -64,20 +77,11 @@
                                 </div>
                             </a>
                         {{/each}}
-                    </div>
-                </li>
-            {{/if}}
 
-            {{!-- Options menu --}}
-            {{#if showOptions}}
-                <li class="nav-item dropdown navbar-submenu navbar-submenu-options hide-on-lock" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="top"
-                    data-title="{{trans.options}}">
-                    <a id="optionsContainer" href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button"
-                        aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-cog"></i>
-                    </a>
-                
-                    <div class="dropdown-menu dropdown-menu-right navbar-submenu-container navbar-submenu-options-container">
+                        {{#if customDropdownOptions}}
+                            <div class="dropdown-divider"></div>
+                        {{/if}}
+                        
                         <a class="dropdown-item">
                             <label class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
                                 for="displayTooltips" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"

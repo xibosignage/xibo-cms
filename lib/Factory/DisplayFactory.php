@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,11 +25,8 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -61,9 +58,6 @@ class DisplayFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
@@ -72,9 +66,8 @@ class DisplayFactory extends BaseFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory, $folderFactory)
+    public function __construct($user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory, $folderFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->displayNotifyService = $displayNotifyService;
@@ -99,7 +92,16 @@ class DisplayFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Display($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory, $this->displayProfileFactory, $this, $this->folderFactory);
+        return new Display(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->config,
+            $this->displayGroupFactory,
+            $this->displayProfileFactory,
+            $this,
+            $this->folderFactory
+        );
     }
 
     /**
@@ -125,6 +127,10 @@ class DisplayFactory extends BaseFactory
      */
     public function getByLicence($licence)
     {
+        if (empty($licence)) {
+            throw new NotFoundException(__('Hardware key cannot be empty'));
+        }
+
         $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
 
         if (count($displays) <= 0)
@@ -169,6 +175,16 @@ class DisplayFactory extends BaseFactory
                 $newSortOrder[] = '`clientType` DESC';
                 $newSortOrder[] = '`clientCode` DESC';
                 $newSortOrder[] = '`clientVersion` DESC';
+                continue;
+            }
+
+            if ($sort == '`isCmsTransferInProgress`') {
+                $newSortOrder[] = '`newCmsAddress`';
+                continue;
+            }
+
+            if ($sort == '`isCmsTransferInProgress` DESC') {
+                $newSortOrder[] = '`newCmsAddress` DESC';
                 continue;
             }
             $newSortOrder[] = $sort;
@@ -236,31 +252,21 @@ class DisplayFactory extends BaseFactory
                   `display`.resolution,
                   `display`.commercialLicence,
                   `display`.teamViewerSerial,
-                  `display`.webkeySerial
+                  `display`.webkeySerial,
+                  (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults
               ';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
-            $select .= ', 
-                (
-                  SELECT GROUP_CONCAT(DISTINCT tag) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tags
+            $select .= ',
+                   (
+                     SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                       FROM tag
+                       INNER JOIN lktagdisplaygroup
+                       ON lktagdisplaygroup.tagId = tag.tagId
+                       WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
+                       GROUP BY lktagdisplaygroup.displayGroupId
+                   ) as tags
             ';
-
-            $select .= ", 
-                (
-                  SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tagValues
-            ";
         }
 
         $body = '
@@ -286,8 +292,6 @@ class DisplayFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
-
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
 
         // Filter by Display ID?
         if ($parsedBody->getInt('displayId') !== null) {
@@ -318,7 +322,7 @@ class DisplayFactory extends BaseFactory
         }
 
         // Filter by Licence?
-        if ($parsedBody->getString('license') != null) {
+        if ($parsedBody->getString('license') !== null) {
             $body .= ' AND display.license = :license ';
             $params['license'] = $parsedBody->getString('license');
         }
@@ -441,7 +445,6 @@ class DisplayFactory extends BaseFactory
 
         // Tags
         if ($parsedBody->getString('tags') != '') {
-
             $tagFilter = $parsedBody->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -454,16 +457,16 @@ class DisplayFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `displaygroup`.displaygroupId IN (
+                $logicalOperator = $parsedBody->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagdisplaygroup', 'lkTagDisplayGroupId', 'displayGroupId', $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -471,7 +474,7 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getInt('displayGroupIdMembers') !== null && ($sortOrder == ['`member`'] || $sortOrder == ['`member` DESC'] )) {
             $members = [];
             $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
-            
+
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
                 $displayId = $this->getSanitizer($row)->getInt('displayId');
 
@@ -505,6 +508,8 @@ class DisplayFactory extends BaseFactory
             $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
+
         // Sorting?
         $order = '';
 
@@ -531,7 +536,7 @@ class DisplayFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedBody->getInt('start', ['default' => 0]), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $parsedBody->getInt('start', ['default' => 0]) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -552,7 +557,8 @@ class DisplayFactory extends BaseFactory
                     'clientCode',
                     'screenShotRequested',
                     'lastCommandSuccess',
-                    'bandwidthLimit'
+                    'bandwidthLimit',
+                    'countFaults'
                 ]
             ]);
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);

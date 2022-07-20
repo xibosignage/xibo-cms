@@ -60,9 +60,10 @@ interface TimeSeriesResultsInterface
 
     /**
      * @param $row
+     * @param bool $decoded Should the engagements be decoded or strings?
      * @return array
      */
-    public function getEngagementsFromRow($row);
+    public function getEngagementsFromRow($row, $decoded = true);
 
     /**
      * @param $row

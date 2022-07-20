@@ -23,8 +23,8 @@
 
 namespace Xibo\Storage;
 
-use Xibo\Support\Exception\DeadlockException;
 use Xibo\Service\LogService;
+use Xibo\Support\Exception\DeadlockException;
 
 /**
  * Interface StorageInterface
@@ -62,10 +62,12 @@ interface StorageServiceInterface
      * @param string $host
      * @param string $user
      * @param string $pass
-     * @param string[Optional] $name
+     * @param string|null $name
+     * @param string|null $ssl
+     * @param boolean $sslVerify
      * @return \PDO
      */
-    public function connect($host, $user, $pass, $name = null);
+    public function connect($host, $user, $pass, $name = null, $ssl = null, $sslVerify = true);
 
     /**
      * Get the Raw Connection

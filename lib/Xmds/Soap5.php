@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -262,6 +262,14 @@ class Soap5 extends Soap4
                 }
                 $displayElement->appendChild($node);
 
+                // Adspace Enabled CMS?
+                $isAdspaceEnabled = intval($this->getConfig()->getSetting('isAdspaceEnabled', 0));
+                if ($isAdspaceEnabled === 1) {
+                    $node = $return->createElement('isAdspaceEnabled', 1);
+                    $node->setAttribute('type', 'checkbox');
+                    $displayElement->appendChild($node);
+                }
+
                 if (!empty($display->timeZone)) {
                     // Calculate local time
                     $dateNow->timezone($display->timeZone);
@@ -287,8 +295,12 @@ class Soap5 extends Soap4
                             }
 
                             $node = $return->createElement($command->code);
-                            $commandString = $return->createElement('commandString', $command->getCommandString());
-                            $validationString = $return->createElement('validationString', $command->getValidationString());
+                            $commandString = $return->createElement('commandString');
+                            $commandStringCData = $return->createCDATASection($command->getCommandString());
+                            $commandString->appendChild($commandStringCData);
+                            $validationString = $return->createElement('validationString');
+                            $validationStringCData = $return->createCDATASection($command->getValidationString());
+                            $validationString->appendChild($validationStringCData);
 
                             $node->appendChild($commandString);
                             $node->appendChild($validationString);
@@ -372,6 +384,9 @@ class Soap5 extends Soap4
 
         // Audit our return
         $this->getLog()->debug($returnXml);
+
+        // Phone Home?
+        $this->phoneHome();
 
         return $returnXml;
     }

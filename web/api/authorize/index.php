@@ -45,7 +45,7 @@ try {
 }
 
 $container->set('logger', function () {
-    $logger = new Logger('API');
+    $logger = new Logger('AUTH');
 
     $uidProcessor = new UidProcessor();
     // db
@@ -59,6 +59,7 @@ $container->set('logger', function () {
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
+$app->setBasePath($container->get('basePath'));
 
 // Config
 $app->config = $container->get('configService');
@@ -71,10 +72,14 @@ $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->addRoutingMiddleware();
-$app->setBasePath($container->get('basePath'));
+$app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
 
 // Define Custom Error Handler
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(
+    \Xibo\Helper\Environment::isDevMode() || \Xibo\Helper\Environment::isForceDebugging(),
+    true,
+    true
+);
 $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
 // Auth Routes
@@ -82,12 +87,10 @@ $app->get('/', function(Request $request, Response $response) use ($app) {
     /** @var \League\OAuth2\Server\AuthorizationServer $server */
     $server = $app->getContainer()->get('server');
     $authRequest = $server->validateAuthorizationRequest($request);
-    $app->getContainer()->get('session')->set('authParams', $authRequest);
+
     // Redirect the user to the UI - save the auth params in the session.
-    //$app->getContainer()->get('session')->set('authParams', $authParams);
-    //$app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
-    // We know we are at /api/authorize, so convert that to /application/authorize
-    return $response->withRedirect('/application/authorize');
+    $app->getContainer()->get('session')->set('authParams', $authRequest);
+    return $response->withRedirect(str_replace('/api/authorize/', '/application/authorize', $request->getUri()->getPath()));
 
 })->setName('home');
 
@@ -97,13 +100,8 @@ $app->post('/access_token', function(Request $request, Response $response) use (
     $app->getContainer()->get('logService')->debug('Request for access token using grant_type: %s', $request->getParam('grant_type'));
     $server = $app->getContainer()->get('server');
 
-    try {
-        // Try to respond to the request
-        return $server->respondToAccessTokenRequest($request, $response);
-    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
-        // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($response);
-    }
+    // Try to respond to the request
+    return $server->respondToAccessTokenRequest($request, $response);
 });
 
 // Run app

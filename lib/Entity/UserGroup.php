@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -68,6 +68,12 @@ class UserGroup
     public $isEveryone = 0;
 
     /**
+     * @SWG\Property(description="Description of this User Group")
+     * @var string
+     */
+    public $description;
+
+    /**
      * @SWG\Property(description="This users library quota in bytes. 0 = unlimited")
      * @var int
      */
@@ -86,7 +92,19 @@ class UserGroup
     public $isDisplayNotification = 0;
 
     /**
-     * @SWG\Property(description="Features this User Group has direct access to")
+     * @SWG\Property(description="Is this Group shown in the list of choices when onboarding a new user")
+     * @var int
+     */
+    public $isShownForAddUser = 0;
+
+    /**
+     * @SWG\Property(description="Default Home page for new users")
+     * @var string
+     */
+    public $defaultHomepageId;
+
+    /**
+     * @SWG\Property(description="Features this User Group has direct access to", @SWG\Items(type="string"))
      * @var array
      */
     public $features = [];
@@ -104,16 +122,20 @@ class UserGroup
      */
     private $userFactory;
 
+    private $assignedUserIds = [];
+    private $unassignedUserIds = [];
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param UserGroupFactory $userGroupFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $userGroupFactory, $userFactory)
+    public function __construct($store, $log, $dispatcher, $userGroupFactory, $userFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->userGroupFactory = $userGroupFactory;
         $this->userFactory = $userFactory;
@@ -181,8 +203,10 @@ class UserGroup
     {
         $this->load();
 
-        if (!in_array($user, $this->users))
+        if (!in_array($user, $this->users)) {
             $this->users[] = $user;
+            $this->assignedUserIds[] = $user->userId;
+        }
     }
 
     /**
@@ -192,7 +216,7 @@ class UserGroup
     public function unassignUser($user)
     {
         $this->load();
-
+        $this->unassignedUserIds[] = $user->userId;
         $this->users = array_udiff($this->users, [$user], function($a, $b) {
             /**
              * @var User $a
@@ -234,13 +258,11 @@ class UserGroup
             'loadUsers' => true
         ], $options);
 
-        if ($this->loaded || $this->groupId == 0)
+        if ($this->loaded || $this->groupId == 0) {
             return;
+        }
 
         if ($options['loadUsers']) {
-            if ($this->userFactory == null)
-                throw new \RuntimeException('Cannot load without first calling setChildObjectDependencies');
-
             // Load all assigned users
             $this->users = $this->userFactory->getByGroupId($this->groupId);
         }
@@ -266,14 +288,25 @@ class UserGroup
         if ($options['validate'])
             $this->validate();
 
-        if ($this->groupId == null || $this->groupId == 0)
+        if ($this->groupId == null || $this->groupId == 0) {
             $this->add();
-        else if ($this->hash() != $this->hash)
+            $this->audit($this->groupId, 'User Group added', ['group' => $this->group]);
+        } else if ($this->hash() != $this->hash) {
             $this->edit();
+            $this->audit($this->groupId, 'User Group edited');
+        }
 
         if ($options['linkUsers']) {
             $this->linkUsers();
             $this->unlinkUsers();
+
+            if (count($this->assignedUserIds) > 0) {
+                $this->audit($this->groupId, 'Users assigned', ['userIds' => implode(',', $this->assignedUserIds)]);
+            }
+
+            if (count($this->unassignedUserIds) > 0) {
+                $this->audit($this->groupId, 'Users unassigned', ['userIds' => implode(',', $this->unassignedUserIds)]);
+            }
         }
     }
 
@@ -290,6 +323,10 @@ class UserGroup
             'features' => json_encode($this->features)
         ]);
 
+        $this->audit($this->groupId, 'User Group feature access modified', [
+            'features' => json_encode($this->features)
+        ]);
+
         return $this;
     }
 
@@ -299,14 +336,17 @@ class UserGroup
     public function delete()
     {
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if ($this->hash == null) {
             $this->load();
+        }
 
         // Unlink users
         $this->removeAssignments();
 
         $this->getStore()->update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
         $this->getStore()->update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+
+        $this->audit($this->groupId, 'User group deleted.', false);
     }
 
     /**
@@ -331,13 +371,36 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota, `isSystemNotification`, `isDisplayNotification`)
-              VALUES (:group, :isUserSpecific, :libraryQuota, :isSystemNotification, :isDisplayNotification)', [
+        $this->groupId = $this->getStore()->insert('
+            INSERT INTO `group` (
+                 `group`, 
+                 IsUserSpecific,
+                 `description`,
+                 libraryQuota, 
+                 `isSystemNotification`, 
+                 `isDisplayNotification`,
+                 `isShownForAddUser`,
+                 `defaultHomepageId`
+              )
+              VALUES (
+                      :group, 
+                      :isUserSpecific, 
+                      :description, 
+                      :libraryQuota, 
+                      :isSystemNotification, 
+                      :isDisplayNotification,
+                      :isShownForAddUser,
+                      :defaultHomepageId
+              )
+        ', [
             'group' => $this->group,
             'isUserSpecific' => $this->isUserSpecific,
+            'description' => $this->description,
             'libraryQuota' => $this->libraryQuota,
             'isSystemNotification' => $this->isSystemNotification,
-            'isDisplayNotification' => $this->isDisplayNotification
+            'isDisplayNotification' => $this->isDisplayNotification,
+            'isShownForAddUser' => $this->isShownForAddUser,
+            'defaultHomepageId' => $this->defaultHomepageId
         ]);
     }
 
@@ -349,16 +412,22 @@ class UserGroup
         $this->getStore()->update('
           UPDATE `group` SET 
             `group` = :group, 
+            `description` = :description, 
             libraryQuota = :libraryQuota, 
             `isSystemNotification` = :isSystemNotification,
-            `isDisplayNotification` = :isDisplayNotification 
+            `isDisplayNotification` = :isDisplayNotification,
+            `isShownForAddUser` = :isShownForAddUser,
+            `defaultHomepageId` = :defaultHomepageId
            WHERE groupId = :groupId
         ', [
             'groupId' => $this->groupId,
             'group' => $this->group,
+            'description' => $this->description,
             'libraryQuota' => $this->libraryQuota,
             'isSystemNotification' => $this->isSystemNotification,
-            'isDisplayNotification' => $this->isDisplayNotification
+            'isDisplayNotification' => $this->isDisplayNotification,
+            'isShownForAddUser' => $this->isShownForAddUser,
+            'defaultHomepageId' => $this->defaultHomepageId
         ]);
     }
 
@@ -398,8 +467,6 @@ class UserGroup
         }
 
         $sql .= ')';
-
-
 
         $this->getStore()->update($sql, $params);
     }

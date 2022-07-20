@@ -1,5 +1,5 @@
 {#
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -64,8 +64,9 @@
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tags" %}{% endset %}
                                         {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                         {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                     {% endif %}
 
                                     {% set attributes = [
@@ -82,6 +83,9 @@
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
                                     {{ inline.hidden("folderId") }}
+
+                                    {% set title %}{% trans "Layout ID" %}{% endset %}
+                                    {{ inline.number("layoutId", title, layoutId) }}
                                 </div>
                                 <div class="tab-pane" id="advanced-filter">
 
@@ -98,22 +102,18 @@
                         </form>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
-                    </div>
-                    <div class="form-group col-sm-11" style="padding: 0">
-                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
-                    </div>
-                </div>
 
                 <div class="row">
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
+                    </div>
+                    <div class="folder-controller d-none">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
+                        <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
@@ -127,7 +127,7 @@
                                     {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                     <th>{% trans "Dynamic?" %}</th>
                                     <th>{% trans "Owner" %}</th>
-                                    <th>{% trans "Permissions" %}</th>
+                                    <th>{% trans "Sharing" %}</th>
                                     <th>{% trans "Created" %}</th>
                                     <th>{% trans "Modified" %}</th>
                                     <th>{% trans "Stats?" %}</th>
@@ -180,6 +180,7 @@
             // Configure the DataTable
             table = $("#playlists").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 "lengthMenu": [10, 25, 50, 100, 250, 500],
                 serverSide: true,
                 stateSave: true,
@@ -270,7 +271,7 @@
             table.on('draw', dataTableDraw);
             table.on('draw', {form: $("#playlists").closest(".XiboGrid").find(".FilterDiv form")}, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#playlists_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#playlists_wrapper').find('.dataTables_buttons'));
         });
 
         // Playlist Add Form
@@ -279,6 +280,8 @@
         var mediaTable;
         var nameFilter;
         var tagFilter;
+        var exactTags;
+        var logicalOperator;
 
         function playlistEditorFormOpen(formData) {
 
@@ -296,7 +299,7 @@
                 playlistFormPopulateMediaTable(dialog);
             }, 500));
 
-            $(dialog).find("input[name=filterMediaTag]").on("change", function () {
+            $(dialog).find("input[name=filterMediaTag], input[name=exactTags], select[name=logicalOperator]").on("change", function () {
                 playlistFormPopulateMediaTable(dialog);
             });
 
@@ -318,6 +321,7 @@
                 stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
+                responsive: true,
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ url_for("playlist.usage", {id:':id'}) }}".replace(":id", $("#usageReportTable").data().playlistId),
@@ -343,6 +347,7 @@
                 stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
+                responsive: true,
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ url_for("playlist.usage.layouts", {id:':id'}) }}".replace(":id", $("#usageReportLayoutsTable").data().playlistId)
@@ -365,6 +370,8 @@
         function playlistFormPopulateMediaTable(dialog) {
             nameFilter = $(dialog).find("input[name=filterMediaName]").val();
             tagFilter = $(dialog).find("input[name=filterMediaTag]").val();
+            exactTags = $(dialog).find("input[name=exactTags]").is(':checked')
+            logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
 
             if (nameFilter === "" && tagFilter === "") {
                 if (mediaTable != null) {
@@ -385,12 +392,13 @@
                     stateSave: true,
                     stateDuration: 0,
                     filter: false,
+                    responsive: true,
                     searchDelay: 3000,
                     "order": [[1, "asc"]],
                     ajax: {
                         "url": "{{ url_for("library.search") }}",
                         "data": function (d) {
-                            $.extend(d, {media: nameFilter, tags: tagFilter, assignable: 1});
+                            $.extend(d, {media: nameFilter, tags: tagFilter, assignable: 1, exactTags: exactTags, logicalOperator: logicalOperator});
                         }
                     },
                     "columns": [
@@ -470,7 +478,7 @@
                     // Login Form needed?
                     if (res.login) {
                         window.location.href = window.location.href;
-                        location.reload(false);
+                        location.reload();
                     } else {
                         // Just an error we dont know about
                         if (res.message == undefined) {

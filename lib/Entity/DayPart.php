@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,15 +23,10 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -77,61 +72,31 @@ class DayPart implements \JsonSerializable
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
-    /** @var DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
-    /** @var  DayPartFactory */
-    private $dayPartFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $dispatcher)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
     /**
      * @param ScheduleFactory $scheduleFactory
+     * @param \Xibo\Service\DisplayNotifyServiceInterface $displayNotifyService
      * @return $this
      */
-    public function setScheduleFactory($scheduleFactory)
+    public function setScheduleFactory($scheduleFactory, DisplayNotifyServiceInterface $displayNotifyService)
     {
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayNotifyService = $displayNotifyService;
         return $this;
     }
-
-    /**
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param DayPartFactory $dayPartFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $dayPartFactory)
-    {
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        $this->dayPartFactory = $dayPartFactory;
-        return $this;
-    }
-
     /**
      * Calculate time hash
      * @return string
@@ -145,6 +110,11 @@ class DayPart implements \JsonSerializable
         }
 
         return md5($hash);
+    }
+
+    public function isSystemDayPart(): bool
+    {
+        return ($this->isAlways || $this->isCustom);
     }
 
     /**
@@ -213,23 +183,31 @@ class DayPart implements \JsonSerializable
     public function save($options = [])
     {
         $options = array_merge([
-            'validate' => true
+            'validate' => true,
+            'recalculateHash' => true
         ], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
-        if ($this->dayPartId == 0)
+        if ($this->dayPartId == 0) {
             $this->add();
-        else {
+        } else {
             // Update
             $this->update();
 
-            // Compare the time hash with a new time hash to see if we need to update associated schedules
-            if ($this->timeHash != $this->calculateTimeHash())
-                $this->handleEffectedSchedules();
-            else
-                $this->getLog()->debug('Daypart hash identical, no need to update schedules. ' . $this->timeHash . ' vs ' . $this->calculateTimeHash());
+            // When we change user on reassignAllTo, we do save dayPart,
+            // however it will not have required childObjectDependencies to run the below checks
+            // it is also not needed to run them when we just changed the owner.
+            if ($options['recalculateHash']) {
+                // Compare the time hash with a new time hash to see if we need to update associated schedules
+                if ($this->timeHash != $this->calculateTimeHash()) {
+                    $this->handleEffectedSchedules();
+                } else {
+                    $this->getLog()->debug('Daypart hash identical, no need to update schedules. ' . $this->timeHash . ' vs ' . $this->calculateTimeHash());
+                }
+            }
         }
     }
 
@@ -238,6 +216,10 @@ class DayPart implements \JsonSerializable
      */
     public function delete()
     {
+        if ($this->isSystemDayPart()) {
+            throw new InvalidArgumentException('Cannot delete system dayParts');
+        }
+
         // Delete all events using this daypart
         $schedules = $this->scheduleFactory->getByDayPartId($this->dayPartId);
 
@@ -312,7 +294,7 @@ class DayPart implements \JsonSerializable
         foreach ($schedules as $schedule) {
             /** @var Schedule $schedule */
             $schedule
-                ->setDisplayFactory($this->displayFactory)
+                ->setDisplayNotifyService($this->displayNotifyService)
                 ->load();
 
             // Is this schedule a recurring event?

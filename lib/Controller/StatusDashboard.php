@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,7 +19,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Controller;
+
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
@@ -27,16 +29,13 @@ use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\MediaService;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -77,24 +76,15 @@ class StatusDashboard extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param UserFactory $userFactory
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param MediaFactory $mediaFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
+    public function __construct($store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->store = $store;
         $this->pool = $pool;
         $this->userFactory = $userFactory;
@@ -133,7 +123,7 @@ class StatusDashboard extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function displayPage(Request $request, Response $response)
+    public function displayPage(Request $request, Response $response)
     {
         $data = [];
         // Set up some suffixes
@@ -182,7 +172,7 @@ class StatusDashboard extends Base
             $sql .= '
                     ) grp
                 GROUP BY month
-                ORDER BY month_order
+                ORDER BY MIN(month_order)
             ';
 
             // Run the SQL
@@ -254,8 +244,7 @@ class StatusDashboard extends Base
             // We would also like a library usage pie chart!
             if ($this->getUser()->libraryQuota != 0) {
                 $libraryLimit = $this->getUser()->libraryQuota * 1024;
-            }
-            else {
+            } else {
                 $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
 
@@ -320,7 +309,7 @@ class StatusDashboard extends Base
 
             // Get a count of active layouts, only for display groups we have permission for
             $displayGroups = $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]);
-            $displayGroupIds = array_map(function($element) {
+            $displayGroupIds = array_map(function ($element) {
                 return $element->displayGroupId;
             }, $displayGroups);
             // Add an empty one
@@ -356,7 +345,7 @@ class StatusDashboard extends Base
             // Latest news
             if ($this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))) {
                 // Make sure we have the cache location configured
-                Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+                MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
                 try {
                     $feedUrl = $this->getConfig()->getSetting('LATEST_NEWS_URL');
@@ -366,7 +355,6 @@ class StatusDashboard extends Base
 
                     // Check the cache
                     if ($cache->isMiss()) {
-
                         // Create a Guzzle Client to get the Feed XML
                         $client = new Client();
                         $responseGuzzle = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
@@ -414,8 +402,7 @@ class StatusDashboard extends Base
                     }
 
                     $data['latestNews'] = $latestNews;
-                }
-                catch (PicoFeedException $e) {
+                } catch (PicoFeedException $e) {
                     $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
                     $this->getLog()->debug($e->getTraceAsString());
 
@@ -462,9 +449,7 @@ class StatusDashboard extends Base
             $data['displayStatus'] = json_encode([$displaysOnline, $displaysOffline]);
             $data['displayMediaStatus'] = json_encode([$displaysMediaUpToDate, $displaysMediaNotUpToDate]);
             $data['displayLabels'] = json_encode($displayNames);
-        }
-        catch (Exception $e) {
-
+        } catch (Exception $e) {
             $this->getLog()->error($e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
 
@@ -489,7 +474,7 @@ class StatusDashboard extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function displayGroups(Request $request, Response $response)
+    public function displayGroups(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         $status = null;
@@ -553,7 +538,6 @@ class StatusDashboard extends Base
                 $displayGroupNames[] = $row['displayGroup'];
                 $displayGroupIds[] = $row['DisplayGroupID'];
                 $displaysAssigned[] = count($this->displayFactory->query(['displayGroup'], ['displayGroupId' => $row['DisplayGroupID'], 'mediaInventoryStatus' => $inventoryStatus, 'loggedIn' => $status]));
-                $displaysAssigned[] = 0;
             }
 
             $data['displayGroupNames'] = json_encode($displayGroupNames);
@@ -561,7 +545,6 @@ class StatusDashboard extends Base
             $data['displayGroupMembers'] = json_encode($displaysAssigned);
 
             $this->getState()->setData($data);
-
         } catch (Exception $e) {
             $this->getLog()->error($e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());

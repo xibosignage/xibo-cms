@@ -24,13 +24,17 @@
 
 {% block content %}
     {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
-    {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
-    <div {% if hideNavigation == "0" and not horizontalNav %}id="page-wrapper"{% endif %} class="active">
 
-        {% if hideNavigation == "0" %}
+    {% if not hideNavigation %}
+        {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
+    {% endif %}
+
+    <div {% if hideNavigation == "0" and not horizontalNav and not forceHide %}id="page-wrapper"{% endif %} class="active">
+
+        {% if hideNavigation == "0" and not forceHide %}
             {% if horizontalNav %}
                 <nav class="navbar navbar-default navbar-expand-lg">
-                    <a class="navbar-brand" href="#">
+                    <a class="navbar-brand xibo-logo-container" href="#">
                         <img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}">
                     </a>
 
@@ -59,26 +63,31 @@
             {% endif %}
         {% endif %}
 
+
         <div id="content-wrapper">
             <div class="page-content">
-                {% if not horizontalNav %}
+                {% if not horizontalNav or hideNavigation == "1" or forceHide %}
                 <div class="row header header-side">
                     <div class="col-sm-12">
-                        <div class="meta pull-left">
+                        <div class="meta pull-left xibo-logo-container">
                             <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
                         </div>
-                        <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
-                            <span class="fa fa-bars"></span>
-                        </button>
-                        <div class="user pull-right">
-                            {% include "authed-user-menu.twig" %}
-                        </div>
-                        {% if currentUser.featureEnabled("drawer") %}
-                        <div class="user user-notif pull-right">
-                            {% include "authed-notification-drawer.twig" %}
-                        </div>
+                        {% if not forceHide %}
+                            {% if not hideNavigation == "1" %}
+                                <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
+                                    <span class="fa fa-bars"></span>
+                                </button>
+                            {% endif %}
+                            <div class="user pull-right">
+                                {% include "authed-user-menu.twig" %}
+                            </div>
+                            {% if currentUser.featureEnabled("drawer") %}
+                            <div class="user user-notif pull-right">
+                                {% include "authed-notification-drawer.twig" %}
+                            </div>
+                            {% endif %}
+                            {% include "authed-theme-topbar.twig" ignore missing %}
                         {% endif %}
-                        {% include "authed-theme-topbar.twig" ignore missing %}
                     </div>
                 </div>
                 {% endif %}
@@ -128,7 +137,7 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="buttons-template">
-        <div class="btn-group pull-right" title="{% endverbatim %}{% trans "Row Menu" %}{% verbatim %}">
+        <div class="btn-group pull-right dropdown-menu-container" title="{% endverbatim %}{% trans "Row Menu" %}{% verbatim %}">
             <button class="btn btn-white dropdown-toggle" data-toggle="dropdown"></button>
             <div class="dropdown-menu dropdown-menu-right">
                 {{#each buttons}}
@@ -138,7 +147,7 @@
                         <a {{#each dataAttributes}}
                             data-{{ name }}="{{ value }}"
                             {{/each}}
-                            class="dropdown-item {{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;" tabindex="-1" href="#">
+                            class="dropdown-item multi-select-button {{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;" tabindex="-1" href="#">
                             {{ text }}
                         </a>
                     {{else}}
@@ -150,7 +159,7 @@
                             <a {{#each dataAttributes}}
                                 data-{{ name }}="{{ value }}"
                                 {{/each}}
-                                class="dropdown-item {{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}} tabindex="-1" href="#">
+                                class="dropdown-item {{#if multi-select}}multi-select-button{{/if}} {{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}} tabindex="-1" href="#">
                                 {{ text }}
                             </a>
                         {{/unless}}
@@ -161,7 +170,7 @@
     </script>
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
-        <div class="btn-group dropup">
+        <div class="btn-group dropup mr-2">
             <button class="btn btn-primary select-all" data-toggle="selectAll">
                 {{ selectAll }}
             </button>
@@ -181,8 +190,11 @@
     </script>
 
     <script type="text/x-handlebars-template" id="command-input-main-template">
-        <input type="checkbox" class="show-command-preview pull-right" id="showCommandPreview{{ unique }}" name="showCommandPreview{{ unique }}" title="{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}">
-        <label for="showCommandPreview{{ unique }}" class="pull-right show-command-preview-label">{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}</label>
+
+        <div class="form-check pull-right">
+            <input type="checkbox" class="show-command-preview form-check-input" id="showCommandPreview{{ unique }}" name="showCommandPreview{{ unique }}" title="{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}">
+            <label for="showCommandPreview{{ unique }}" class="show-command-preview-label form-check-label">{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}</label>
+        </div>
 
         <select class="command-type form-control form-control-inline">
             {{#each types}}
@@ -191,11 +203,9 @@
         </select>
         <div class="command-inputs panel panel-default"></div>
 
-        <pre class="command-preview" data-invalid-message="{% endverbatim %}{% trans 'Invalid command!' %}{% verbatim %}">
-            <code>
-            <!-- your code here -->
-            </code>
-        </pre>
+        <div disabled="disabled" class="command-preview bg-primary p-2 w-100" data-invalid-message="{% endverbatim %}{% trans 'Invalid command!' %}{% verbatim %}">
+          <code class="text-white"></code>
+        </div>
     </script>
 
     <script type="text/x-handlebars-template" id="command-input-freetext-template">
@@ -213,10 +223,10 @@
     </script>
 
     <script type="text/x-handlebars-template" id="command-input-rs232-template">
-        <div class="form-group-command form-group-rs232">
-            <input class="form-control form-control-inline rs232-text-input rs232-device-name" placeholder="{% endverbatim %}{% trans "Device Name/COM" %}{% verbatim %}" value="{{ value.cs.deviceName }}">
-            <input class="form-control form-control-inline rs232-text-input rs232-baud-rate" placeholder="{% endverbatim %}{% trans "Baud Rate" %}{% verbatim %}" value="{{ value.cs.baudRate }}">
-            <input class="form-control form-control-inline rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
+        <div class="form-group-command form-group-device form-group-rs232">
+            <input class="form-control form-control-inline validated-element rs232-text-input rs232-device-name" placeholder="{% endverbatim %}{% trans "Device Name/COM" %}{% verbatim %}" value="{{ value.cs.deviceName }}">
+            <input class="form-control form-control-inline validated-element rs232-text-input rs232-baud-rate" placeholder="{% endverbatim %}{% trans "Baud Rate" %}{% verbatim %}" value="{{ value.cs.baudRate }}">
+            <input class="form-control form-control-inline validated-element rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
         </div>
         <div class="form-group-command form-group-rs232">
             <div class="col-12 col-sm-6">
@@ -274,6 +284,8 @@
             </select>
         </div>
 
+        <input name="intentName{{ unique }}" id="intentName{{ unique }}" class="intent-name form-control validated-element form-control-inline" placeholder="{% endverbatim %}{% trans "Intent" %}{% verbatim %}" value="{{ value.name }}">
+
         <div class="form-group-command">
             <label for="intentExtraContainer{{ unique }}" class="intent-extra-container-label">{% endverbatim %}{% trans "Extra:" %}{% verbatim %}</label>
             <button class="intent-add-extra btn btn-info btn-sm pull-right" type="button">
@@ -286,15 +298,106 @@
 
     <script type="text/x-handlebars-template" id="command-input-intent-extra-template">
         <div class="intent-extra-element">
-            <input class="form-control form-control-inline extra-name" placeholder="{% endverbatim %}{% trans "Name" %}{% verbatim %}" value="{{ name }}">
+            <input class="form-control form-control-inline validated-element extra-name" placeholder="{% endverbatim %}{% trans "Name" %}{% verbatim %}" value="{{ name }}">
             <select class="form-control form-control-inline extra-type">
                 <option value="string" {{#eq type "string"}}selected="selected"{{/eq}}>string</option>
                 <option value="int" {{#eq type "int"}}selected="selected"{{/eq}}>int</option>
                 <option value="bool" {{#eq type "bool"}}selected="selected"{{/eq}}>bool</option>
                 <option value="intArray" {{#eq type "intArray"}}selected="selected"{{/eq}}>intArray</option
             </select>
-            <input class="form-control form-control-inline extra-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
+            <input class="form-control form-control-inline validated-element extra-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
             <button type="button" class="btn btn-sm btn-warning pull-right intent-remove-extra"><i class="fa fa-minus fa-plus"></i></button>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-http-template">
+        {{! URL }}
+        <label for="httpURL{{ unique }}" class="http-url-label form-check-label">{% endverbatim %}{% trans "URL" %}{% verbatim %}</label>
+        <input name="httpURL{{ unique }}" id="httpURL{{ unique }}" class="http-url w-100 validated-element form-control form-control-inline" placeholder="{% endverbatim %}{% trans "URL" %}{% verbatim %}" value="{{ value.url }}">
+
+        {{! Query params }}
+        <div class="request-params request-section mt-2">
+            <div class="form-check w-100">
+                <input type="checkbox" data-toggle-element=".query-builder-container"  data-toggle-class="d-inline-block" class="show-query-builder ignore-change form-check-input" id="queryParamsBuilder{{ unique }}" name="queryParamsBuilder{{ unique }}" title="{% endverbatim %}{% trans "Query params builder" %}{% verbatim %}" checked>
+                <label for="queryParamsBuilder{{ unique }}" class="show-query-builder-label form-check-label">{% endverbatim %}{% trans "Query builder" %}{% verbatim %}</label>
+            </div>
+            <div class="form-group-command query-builder-container w-100 bg-white p-2 d-none d-inline-block">
+                <label for="queryBuilderContainer{{ unique }}" class="http-key-value-container-label">{% endverbatim %}{% trans "Query params:" %}{% verbatim %}</label>
+                <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+                    <i class="fa fa-plus"></i>
+                </button>
+
+                <div id="queryBuilderContainer{{ unique }}" class="http-key-value-container"></div>
+            </div>
+        </div>
+
+        {{! Method }}
+        <div class="form-group-command mt-2">
+            <label for="httpMethod{{ unique }}">{% endverbatim %}{% trans "Request method:" %}{% verbatim %}</label>
+            <select name="httpMethod{{ unique }}" id="httpMethod{{ unique }}" class="http-method pl-1 form-control form-control-inline">
+                <option value="GET" {{#eq value.requestOptions.method "GET"}}selected="selected"{{/eq}}>GET</option>
+                <option value="POST" {{#eq value.requestOptions.method "POST"}}selected="selected"{{/eq}}>POST</option>
+                <option value="PUT" {{#eq value.requestOptions.method "PUT"}}selected="selected"{{/eq}}>PUT</option>
+                <option value="DELETE" {{#eq value.requestOptions.method "DELETE"}}selected="selected"{{/eq}}>DELETE</option>
+                <option value="CONNECT" {{#eq value.requestOptions.method "CONNECT"}}selected="selected"{{/eq}}>CONNECT</option>
+                <option value="HEAD" {{#eq value.requestOptions.method "HEAD"}}selected="selected"{{/eq}}>HEAD</option>
+                <option value="OPTIONS" {{#eq value.requestOptions.method "OPTIONS"}}selected="selected"{{/eq}}>OPTIONS</option>
+                <option value="PATCH" {{#eq value.requestOptions.method "PATCH"}}selected="selected"{{/eq}}>PATCH</option>
+                <option value="TRACE" {{#eq value.requestOptions.method "TRACE"}}selected="selected"{{/eq}}>TRACE</option>
+            </select>
+        </div>
+
+        {{! Headers }}
+        <div class="request-headers request-section mt-2">
+          <div class="form-check w-100">
+              <input type="checkbox" data-toggle-element=".http-headers" data-toggle-element-reverse=".http-headers-container" data-toggle-class="d-inline-block" class="show-raw-headers ignore-change form-check-input" id="showRawHeaders{{ unique }}" name="showRawHeaders{{ unique }}" title="{% endverbatim %}{% trans "Show raw headers" %}{% verbatim %}">
+              <label for="showRawHeaders{{ unique }}" class="show-raw-headers-label form-check-label">{% endverbatim %}{% trans "Show raw headers" %}{% verbatim %}</label>
+          </div>
+          <textarea name="httpHeaders{{ unique }}" id="httpHeaders{{ unique }}" class="http-headers w-100 d-none form-control validated-element form-control-inline" placeholder="{% endverbatim %}{% trans "Headers" %}{% verbatim %}"></textarea>
+          <div class="form-group-command http-headers-container w-100 bg-white p-2 d-none d-inline-block">
+              <label for="httpHeadersContainer{{ unique }}" class="http-key-value-container-label">{% endverbatim %}{% trans "Headers" %}{% verbatim %}</label>
+              <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+                  <i class="fa fa-plus"></i>
+              </button>
+
+              <div id="httpHeadersContainer{{ unique }}" class="http-key-value-container"></div>
+          </div>
+        </div>
+
+        {{! Body }}
+        <div class="request-body request-section mt-2">
+            {{! Content type }}
+            <div class="form-group-command">
+                <label for="httpContentType{{ unique }}" class="pl-1">{% endverbatim %}{% trans "Content Type:" %}{% verbatim %}</label>
+                <select name="httpContentType{{ unique }}" id="httpContentType{{ unique }}" class="http-contenttype form-control form-control-inline">
+                    <option value="application/x-www-form-urlencoded" {{#eq value.contenttype "application/x-www-form-urlencoded"}}selected="selected"{{/eq}}>urlencoded</option>
+                    <option value="application/json" {{#eq value.contenttype "application/json"}}selected="selected"{{/eq}}>json</option>
+                    <option value="text/plain" {{#eq value.contenttype "text/plain"}}selected="selected"{{/eq}}>textplain</option>
+                </select>
+            </div>
+
+            {{! Body data }}
+            <div class="form-check w-100 mt-2">
+                <input type="checkbox" data-toggle-element=".http-data" data-toggle-element-reverse=".http-data-container" data-toggle-class="d-inline-block" class="show-raw-data ignore-change form-check-input" id="showRawData{{ unique }}" name="showRawData{{ unique }}" title="{% endverbatim %}{% trans "Show raw body data" %}{% verbatim %}">
+                <label for="showRawData{{ unique }}" class="show-raw-data-label form-check-label">{% endverbatim %}{% trans "Show raw data" %}{% verbatim %}</label>
+            </div>
+            <textarea name="httpData{{ unique }}" id="httpData{{ unique }}" class="http-data w-100 validated-element d-none form-control form-control-inline" placeholder="{% endverbatim %}{% trans "Body data" %}{% verbatim %}"></textarea>
+            <div class="form-group-command http-data-container w-100 bg-white p-2 d-none d-inline-block">
+                <label for="httpDataContainer{{ unique }}" class="http-key-value-container-label">{% endverbatim %}{% trans "Body data" %}{% verbatim %}</label>
+                <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+                    <i class="fa fa-plus"></i>
+                </button>
+
+                <div id="httpDataContainer{{ unique }}" class="http-key-value-container"></div>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-http-key-value-template">
+        <div class="http-key-value-element mt-1">
+            <input class="form-control validated-element form-control-inline http-key" placeholder="{% endverbatim %}{% trans "Key" %}{% verbatim %}" value="{{ key }}">
+            <input class="form-control validated-element form-control-inline http-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
+            <button type="button" class="btn btn-sm btn-warning pull-right http-key-value-remove"><i class="fa fa-minus fa-plus"></i></button>
         </div>
     </script>
     {% endverbatim %}
@@ -414,6 +517,239 @@
             <div id="sizeBtn" class="fa fa-plus-square preview-button" title="{% trans "Change window size" %}"></div>
             <div id="newTabBtn" class="fa fa-external-link-square preview-button" title="{% trans "Preview in new window" %}"></div>
             <div id="content"></div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="php-date-format-table">
+        <div class="popover-content-container">
+            <div class="scrollable-popover-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Format character</th>
+                        <th>Description</th>
+                        <th>Example returned values</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Day</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>d</td>
+                        <td>Day of the month, 2 digits with leading zeros</td>
+                        <td>01 to 31</td>
+                    </tr>
+                    <tr>
+                        <td>D</td>
+                        <td>A textual representation of a day, three letters</td>
+                        <td>Mon through Sun</td>
+                    </tr>
+                    <tr>
+                        <td>j</td>
+                        <td>Day of the month without leading zeros</td>
+                        <td>1 to 31</td>
+                    </tr>
+                    <tr>
+                        <td>l</td>
+                        <td>(lowercase ‘L’) A full textual representation of the day of the week</td>
+                        <td>Sunday through Saturday</td>
+                    </tr>
+                    <tr>
+                        <td>N</td>
+                        <td>ISO-8601 numeric representation of the day of the week (added in PHP 5.1.0)</td>
+                        <td>1 (for Monday) through 7 (for Sunday)</td>
+                    </tr>
+                    <tr>
+                        <td>S</td>
+                        <td>English ordinal suffix for the day of the month, 2 characters</td>
+                        <td>st, nd, rd or th. Works well with j</td>
+                    </tr>
+                    <tr>
+                        <td>w</td>
+                        <td>Numeric representation of the day of the week</td>
+                        <td>0 (for Sunday) through 6 (for Saturday)</td>
+                    </tr>
+                    <tr>
+                        <td>z</td>
+                        <td>The day of the year (starting from 0)</td>
+                        <td>0 through 365</td>
+                    </tr>
+                    <tr>
+                        <td>Week</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>W</td>
+                        <td>ISO-8601 week number of year, weeks starting on Monday (added in PHP 4.1.0)</td>
+                        <td>42 (the 42nd week in the year)</td>
+                    </tr>
+                    <tr>
+                        <td>Month</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>F</td>
+                        <td>A full textual representation of a month, such as January or March</td>
+                        <td>January through December</td>
+                    </tr>
+                    <tr>
+                        <td>m</td>
+                        <td>Numeric representation of a month, with leading zeros</td>
+                        <td>01 through 12</td>
+                    </tr>
+                    <tr>
+                        <td>M</td>
+                        <td>A short textual representation of a month, three letters</td>
+                        <td>Jan through Dec</td>
+                    </tr>
+                    <tr>
+                        <td>n</td>
+                        <td>Numeric representation of a month, without leading zeros</td>
+                        <td>1 through 12</td>
+                    </tr>
+                    <tr>
+                        <td>t</td>
+                        <td>Number of days in the given month</td>
+                        <td>28 through 31</td>
+                    </tr>
+                    <tr>
+                        <td>Year</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>L</td>
+                        <td>Whether it’s a leap year</td>
+                        <td>1 if it is a leap year, 0 otherwise.</td>
+                    </tr>
+                    <tr>
+                        <td>o</td>
+                        <td>ISO-8601 year number. This has the same value as Y, except that if the ISO week number (W) belongs to the previous or next year, that year is used instead. (added in PHP 5.1.0)</td>
+                        <td>1999 or 2003</td>
+                    </tr>
+                    <tr>
+                        <td>Y</td>
+                        <td>A full numeric representation of a year, 4 digits</td>
+                        <td>1999 or 2003</td>
+                    </tr>
+                    <tr>
+                        <td>y</td>
+                        <td>A two digit representation of a year</td>
+                        <td>99 or 03</td>
+                    </tr>
+                    <tr>
+                        <td>Time</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>a</td>
+                        <td>Lowercase Ante meridiem and Post meridiem</td>
+                        <td>am or pm</td>
+                    </tr>
+                    <tr>
+                        <td>A</td>
+                        <td>Uppercase Ante meridiem and Post meridiem</td>
+                        <td>AM or PM</td>
+                    </tr>
+                    <tr>
+                        <td>B</td>
+                        <td>Swatch Internet time</td>
+                        <td>000 through 999</td>
+                    </tr>
+                    <tr>
+                        <td>g</td>
+                        <td>12-hour format of an hour without leading zeros</td>
+                        <td>1 through 12</td>
+                    </tr>
+                    <tr>
+                        <td>G</td>
+                        <td>24-hour format of an hour without leading zeros</td>
+                        <td>0 through 23</td>
+                    </tr>
+                    <tr>
+                        <td>h</td>
+                        <td>12-hour format of an hour with leading zeros</td>
+                        <td>01 through 12</td>
+                    </tr>
+                    <tr>
+                        <td>H</td>
+                        <td>24-hour format of an hour with leading zeros</td>
+                        <td>00 through 23</td>
+                    </tr>
+                    <tr>
+                        <td>i</td>
+                        <td>Minutes with leading zeros</td>
+                        <td>00 to 59</td>
+                    </tr>
+                    <tr>
+                        <td>s</td>
+                        <td>Seconds, with leading zeros</td>
+                        <td>00 through 59</td>
+                    </tr>
+                    <tr>
+                        <td>u</td>
+                        <td>Microseconds (added in PHP 5.2.2). Note that date() will always generate 000000 since it takes an integer parameter, whereas DateTime::format() does support microseconds if DateTime was created with microseconds.</td>
+                        <td>654321</td>
+                    </tr>
+                    <tr>
+                        <td>Timezone</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>e</td>
+                        <td>Timezone identifier (added in PHP 5.1.0)</td>
+                        <td>UTC, GMT, Atlantic/Azores</td>
+                    </tr>
+                    <tr>
+                        <td>I</td>
+                        <td>(capital i) Whether or not the date is in daylight saving time</td>
+                        <td>1 if Daylight Saving Time, 0 otherwise.</td>
+                    </tr>
+                    <tr>
+                        <td>O</td>
+                        <td>Difference to Greenwich time (GMT) in hours</td>
+                        <td>+0200</td>
+                    </tr>
+                    <tr>
+                        <td>P</td>
+                        <td>Difference to Greenwich time (GMT) with colon between hours and minutes (added in PHP 5.1.3)</td>
+                        <td>+02:00</td>
+                    </tr>
+                    <tr>
+                        <td>T</td>
+                        <td>Timezone abbreviation</td>
+                        <td>EST, MDT …</td>
+                    </tr>
+                    <tr>
+                        <td>Z</td>
+                        <td>Timezone offset in seconds. The offset for timezones west of UTC is always negative, and for those east of UTC is always positive.</td>
+                        <td>-43200 through 50400</td>
+                    </tr>
+                    <tr>
+                        <td>Full Date/Time</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>c</td>
+                        <td>ISO 8601 date (added in PHP 5)</td>
+                        <td>2004-02-12T15:19:21+00:00</td>
+                    </tr>
+                    <tr>
+                        <td>r</td>
+                        <td>» RFC 2822 formatted date</td>
+                        <td>Thu, 21 Dec 2000 16:01:07 +0200</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </script>
 

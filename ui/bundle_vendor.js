@@ -116,9 +116,6 @@ var dt_extras = [
      ];
 dt_extras.forEach(function(e) {e(window, window.$);});
 
-// bootstrap-tour
-require('bootstrap-tourist/bootstrap-tourist.js');
-
 //--- Add Local JS files ---
 // jquery-message-queuing
 require('./src/vendor/jquery-message-queuing/jquery.ba-jqmq.min.js');
@@ -137,3 +134,11 @@ require('corejs-typeahead/dist/typeahead.jquery.min.js');
 // jsTree
 require('jstree/dist/jstree.min.js');
 require('jstree/dist/themes/default/style.min.css');
+
+// Masonry
+window.Masonry = require('masonry-layout');
+
+// images loaded
+var imagesLoaded = require('imagesloaded');
+// provide jQuery argument
+imagesLoaded.makeJQueryPlugin( window.$ );

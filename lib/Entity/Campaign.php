@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,14 +24,12 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -82,7 +80,6 @@ class Campaign implements \JsonSerializable
     public $totalDuration;
 
     public $tags = [];
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The id of the Folder this Campaign belongs to")
@@ -97,9 +94,22 @@ class Campaign implements \JsonSerializable
     public $permissionsFolderId;
 
     /**
+     * @SWG\Property(description="Flag indicating whether this Campaign has cycle based playback enabled")
+     * @var int
+     */
+    public $cyclePlaybackEnabled;
+
+
+    /**
+     * @SWG\Property(description="In cycle based playback, how many plays should each Layout have before moving on?")
+     * @var int
+     */
+    public $playCount;
+
+    /**
      * @var Layout[]
      */
-    private $layouts = [];
+    public $layouts = [];
 
     /**
      * @var Permission[]
@@ -121,11 +131,6 @@ class Campaign implements \JsonSerializable
      * @var PermissionFactory
      */
     private $permissionFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
     
     /**
      * @var TagFactory
@@ -137,39 +142,26 @@ class Campaign implements \JsonSerializable
      */
     private $scheduleFactory;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->tagFactory = $tagFactory;
-    }
-
-    /**
-     * Set Child Object Depencendies
-     *  must be set before calling Load with all objects
-     * @param LayoutFactory $layoutFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($layoutFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
-        return $this;
     }
 
     public function __clone()
@@ -225,27 +217,18 @@ class Campaign implements \JsonSerializable
     {
         $options = array_merge([
             'loadPermissions' => true,
-            'loadLayouts' => true,
             'loadTags' => true,
             'loadEvents' => true
         ], $options);
         
         // If we are already loaded, then don't do it again
-        if ($this->campaignId == null || $this->loaded)
+        if ($this->campaignId == null || $this->loaded) {
             return;
-
-        if ($this->layoutFactory == null) {
-            throw new \RuntimeException('Cannot load campaign with all objects without first calling setChildObjectDependencies');
         }
 
         // Permissions
         if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId('Campaign', $this->campaignId);
-        }
-
-        // Layouts
-        if ($options['loadLayouts']) {
-            $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId, false);
         }
 
         // Load all tags
@@ -268,6 +251,10 @@ class Campaign implements \JsonSerializable
     {
         if (!v::stringType()->notEmpty()->validate($this->campaign)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
+        }
+
+        if ($this->cyclePlaybackEnabled === 1 && empty($this->playCount)) {
+            throw new InvalidArgumentException(__('Please enter play count'), 'playCount');
         }
     }
     
@@ -297,24 +284,11 @@ class Campaign implements \JsonSerializable
      * @return $this
      * @throws NotFoundException
      */
-    public function assignTag($tag)
+    public function assignTag($tag): Campaign
     {
         $this->load();
-
-        if ($this->tags != [$tag]) {
-
-            if (!in_array($tag, $this->tags)) {
-                $this->tags[] = $tag;
-            } else {
-                foreach ($this->tags as $currentTag) {
-                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
-                        $this->tags[] = $tag;
-                    }
-                }
-            }
-        } else {
-            $this->getLog()->debug('No Tags to assign');
-        }
+        $this->handleTagAssign($tag);
+        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -336,7 +310,7 @@ class Campaign implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
+        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -356,12 +330,12 @@ class Campaign implements \JsonSerializable
                 return $a->tagId - $b->tagId;
             });
 
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
 
             // Replace the arrays
             $this->tags = $tags;
 
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
         } else {
             $this->getLog()->debug('Tags were not changed');
         }
@@ -384,15 +358,16 @@ class Campaign implements \JsonSerializable
 
         $this->getLog()->debug('Saving ' . $this);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         if ($this->campaignId == null || $this->campaignId == 0) {
             $this->add();
             $this->loaded = true;
-        }
-        else
+        } else {
             $this->update();
+        }
 
         if ($options['saveTags']) {
             // Remove unwanted ones
@@ -418,11 +393,8 @@ class Campaign implements \JsonSerializable
                 }
             }
         }
-
-        if ($this->loaded) {
-            // Manage assignments
-            $this->manageAssignments();
-        }
+        // Manage assignments
+        $this->manageAssignments();
 
         // Notify anyone interested of the changes
         $this->notify($options);
@@ -462,7 +434,7 @@ class Campaign implements \JsonSerializable
         // Delete all events
         foreach ($this->events as $event) {
             /* @var Schedule $event */
-            $event->setDisplayFactory($this->displayFactory);
+            $event->setDisplayNotifyService($this->displayNotifyService);
             $event->delete();
         }
 
@@ -471,19 +443,46 @@ class Campaign implements \JsonSerializable
     }
 
     /**
+     * @return \Xibo\Entity\Layout[]
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getLayouts(): array
+    {
+        return $this->layouts;
+    }
+
+    /**
      * Assign Layout
      * @param Layout $layout
      * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function assignLayout($layout)
     {
+        // Validate if we're a full campaign
+        if ($this->isLayoutSpecific === 0) {
+            // Make sure we're not a draft
+            if ($layout->isChild()) {
+                throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
+            }
+
+            // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
+            if ($layout->isTemplate()) {
+                throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
+            }
+        }
+
         $this->load();
 
-        $layout->displayOrder = ($layout->displayOrder == null || $layout->displayOrder == 0) ? count($this->layouts) + 1 : $layout->displayOrder;
+        $layout->displayOrder = ($layout->displayOrder == null || $layout->displayOrder == 0)
+            ? count($this->layouts) + 1
+            : $layout->displayOrder;
 
         $found = false;
         foreach ($this->layouts as $existingLayout) {
-            if ($existingLayout->getId() === $layout->getId() && $existingLayout->displayOrder === $layout->displayOrder && $this->isLayoutSpecific !== 1) {
+            if ($existingLayout->getId() === $layout->getId()
+                    && $existingLayout->displayOrder === $layout->displayOrder
+                    && $this->isLayoutSpecific !== 1) {
                 $found = true;
                 break;
             }
@@ -493,6 +492,7 @@ class Campaign implements \JsonSerializable
             $this->getLog()->debug('Layout assignment doesnt exist, adding it. ' . $layout . ', display order ' . $layout->displayOrder);
             $this->layoutAssignmentsChanged = true;
             $this->layouts[] = $layout;
+            $this->numberLayouts++;
         }
     }
 
@@ -551,49 +551,50 @@ class Campaign implements \JsonSerializable
         $countAfter = count($this->layouts);
         $this->getLog()->debug('Count after unassign ' . $countAfter);
 
-        if ($countBefore !== $countAfter)
+        if ($countBefore !== $countAfter) {
             $this->layoutAssignmentsChanged = true;
+            $this->numberLayouts = $countAfter;
+        }
     }
 
     /**
-     * Is the provided layout already assigned to this campaign
-     * @param Layout $checkLayout
-     * @return bool
-     * @throws GeneralException
+     * @return $this
      */
-    public function isLayoutAssigned($checkLayout)
+    public function unassignAllLayouts()
     {
-        $assigned = false;
-
-        $this->load();
-
-        foreach ($this->layouts as $layout) {
-            if ($layout->layoutId === $checkLayout->layoutId) {
-                $assigned = true;
-                break;
-            }
-        }
-
-        return $assigned;
+        $this->layoutAssignmentsChanged = true;
+        $this->numberLayouts = 0;
+        $this->layouts = [];
+        return $this;
     }
 
+    /**
+     * Add
+     */
     private function add()
     {
-        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :folderId, :permissionsFolderId)', array(
+        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, cyclePlaybackEnabled, playCount, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :cyclePlaybackEnabled, :playCount, :folderId, :permissionsFolderId)', array(
             'campaign' => $this->campaign,
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
+            'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
+            'playCount' => $this->playCount,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ));
     }
 
+    /**
+     * Update
+     */
     private function update()
     {
-        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, cyclePlaybackEnabled = :cyclePlaybackEnabled, playCount = :playCount, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
             'userId' => $this->ownerId,
+            'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
+            'playCount' => $this->playCount,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ]);
@@ -639,14 +640,13 @@ class Campaign implements \JsonSerializable
         // Update the layouts, in order to have display order 1 to n
         $i = 0;
         $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES ';
-        $params = [];
+        $params = ['campaignId' => $this->campaignId];
 
         foreach ($this->layouts as $layout) {
             $i++;
             $layout->displayOrder = $i;
 
-            $sql .= '(:campaignId_' . $i . ', :layoutId_' . $i . ', :displayOrder_' . $i . '),';
-            $params['campaignId_' . $i] = $this->campaignId;
+            $sql .= '(:campaignId, :layoutId_' . $i . ', :displayOrder_' . $i . '),';
             $params['layoutId_' . $i] = $layout->layoutId;
             $params['displayOrder_' . $i] = $layout->displayOrder;
         }
@@ -680,7 +680,7 @@ class Campaign implements \JsonSerializable
         if ($options['notify']) {
             $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
 
-            $notify = $this->displayFactory->getDisplayNotifyService();
+            $notify = $this->displayNotifyService->init();
 
             // Should we collect immediately
             if ($options['collectNow']) {

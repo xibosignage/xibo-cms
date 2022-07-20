@@ -1,0 +1,17 @@
+{
+    "id": "weather-module-9",
+    "value": "Scale - Weather background only",
+    "main": "<div class=\"container main-container\"></div><div class=\"weather-col col-12 powered bg-footer\">[Attribution]<\/div>",
+    "daily":"",
+    "css": "#content, .main-container {\n width: 100%;\n height: 100%;\n}\n\n.powered {\n  position: absolute;\n bottom: 0;\n width: 100%;\n padding: 4px 0;\n  color: #000;\n  font-size: 13px;\n text-align: center;\n  background-color: white;\n  background-color: rgba(255, 255, 255, 0.787);\n}",
+    "widgetOriginalWidth": "",
+    "widgetOriginalHeight": "",
+    "image": "modules/forecastio/template-thumbs/weather9.png",
+    "type": "current",
+    "orientation": "scale",
+    "background": "fit",
+    "options": {
+        "footer-color": true,
+        "footer-text-color": true
+    }
+}

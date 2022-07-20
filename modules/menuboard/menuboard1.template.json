@@ -1,0 +1,66 @@
+{
+  "id": "menuBoard1",
+  "value": "3 Categories - Minimal green",
+  "css": "body {\n  width: 1920px !important;\n height: 1080px !important;\n background: [background-color];\n }\n\n#content, .menu-board-parent-container {\n  position: relative;\n width: 1920px;\nheight: 1080px;\n}\n\n.menu-board-parent-container {\n  display: flex;\n  flex-direction: column;\n}\n\n.menu-board-name {\n  color: [header-font-color];\n  background: [primary-color];\n  font-weight: bold;\n  font-size: 3rem;\n  text-align: left;\n  padding: 20px 0px 20px 30px;\n height: 50px;\n  border-bottom: 20px solid [secondary-color];\n}\n\n.menu-board-categories-container {\n color: [font-color];\n }\n\n.menu-board-zone {\n  font-size: 1.4rem;\n  padding: 1rem;\n  border-style: solid;\n  border-color: [secondary-color];\n  border-width: 0 0.5rem;\n overflow: hidden;\n max-height: 100%;\n }\n\n.menu-board-zone:last-of-type {\n  border-right: none;\n}\n\n.menu-board-zone:first-of-type {\n  border-left: none;\n}\n\n.menu-board-category-header {\n  font-size: 2.5rem;\n  color: [primary-color];\n  border-bottom: 10px solid [secondary-color];\n  font-weight: bold;\n}\n\n.menu-board-products-container {\n height: calc(100% - 55px);\n}\n\n .menu-board-product {\n  padding-top: 2rem;\n  display: grid;\n  grid-template: \"f a b\"\"f c b\"\"f d d\"\"f e e\" / 0fr 1fr 1fr;\n align-content: start;\n row-gap: 2px;\n}\n\n.menu-board-product-page {\n  width: 100%;\n}\n\n.menu-board-product-name {\n  grid-area: a;\n  font-size: 1.5rem;\n  font-weight: bold;\n}\n\n.menu-board-product-price {\n  grid-area: b;\n  font-size: 1.6rem;\n  text-align: right;\n}\n\n.menu-board-product-description {\n  grid-area: d;\n  font-size: 1.2rem;\n padding-bottom: 0.25rem;\n min-height: 1.2rem;\n}\n\n.menu-board-product-allergy {\n  grid-area: c;\n  color: [secondary-color];\n}\n\n.menu-board-product-options-container {\n  grid-area: e;}\n\n.menu-board-product-options { font-size: 1.2rem;\n  color: [primary-color]; display: block;\n margin-right: 2rem;\n}\n\n.menu-board-product.product-unavailable .menu-board-product-name, .menu-board-product.product-unavailable .menu-board-product-price, .menu-board-product.product-unavailable .menu-board-product-description, .menu-board-product.product-unavailable .menu-board-product-allergy, .menu-board-product.product-unavailable .menu-board-product-options {\n  color: [disabled-color];\n}\n\n.menu-board-product.product-highlight .menu-board-product-name, .menu-board-product.product-highlight .menu-board-product-price {\n  font-size: 1.8rem;\n color: [highlight-color];\n  font-weight: bold;\n}\n\n.menu-board-product-image {\n  grid-area: f; width: 120px;\n  height: 100px;\n margin-right: 0.5rem;\n object-fit: cover;\n  object-position: center;\n}",
+  "image": "modules/menuboard/template-thumbs/menuBoard1.png",
+  "widgetOriginalWidth": "1920",
+  "widgetOriginalHeight": "1080",
+  "orientation": "landscape",
+  "legacy": false,
+  "info": {
+    "zones": 3,
+    "productImage": true,
+    "grid-template": "\"z1 z2 z3\" \/ 1fr 1fr 1fr",
+    "options": {
+      "primary-color": {
+        "name": "Primary",
+        "type": "colorPicker",
+        "default": "#235d57"
+      },
+      "secondary-color": {
+        "name": "Secondary",
+        "type": "colorPicker",
+        "default": "#4b9a92"
+      },
+      "background-color": {
+        "name": "Background",
+        "type": "colorPicker",
+        "default": "#f3eff9"
+      },
+      "font-color": {
+        "name": "Text",
+        "type": "colorPicker",
+        "default": "#333"
+      },
+      "header-font-color": {
+        "name": "Header text",
+        "type": "colorPicker",
+        "default": "white"
+      },
+      "disabled-color": {
+        "name": "Disabled item text",
+        "type": "colorPicker",
+        "default": "#a4a4a4"
+      },
+      "highlight-color": {
+        "name": "Highlighted item text",
+        "type": "colorPicker",
+        "default": "#4b9a92"
+      },
+      "show-product-images": {
+        "name": "Show product images?",
+        "query": ".menu-board-product-image",
+        "type": "switch",
+        "rule": "display",
+        "default": "0"
+      },
+      "show-header": {
+        "name": "Show header?",
+        "query": ".menu-board-name",
+        "type": "switch",
+        "rule": "display",
+        "default": "1"
+      }
+    }
+  }
+}

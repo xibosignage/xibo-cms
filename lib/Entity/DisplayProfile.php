@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,9 +22,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Event\DisplayProfileLoadedEvent;
 use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -89,6 +88,8 @@ class DisplayProfile implements \JsonSerializable
      */
     public $commands = [];
 
+    public $isCustom;
+
     /** @var  string the client type */
     private $clientType;
 
@@ -100,34 +101,37 @@ class DisplayProfile implements \JsonSerializable
      */
     private $configService;
 
-    /** @var EventDispatcherInterface  */
-    private $dispatcher;
-
     /**
      * @var CommandFactory
      */
     private $commandFactory;
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
-     * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
+     * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($store, $log, $config, $dispatcher, $commandFactory)
+    public function __construct($store, $log, $dispatcher, $config, $commandFactory, $displayProfileFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->configService = $config;
-        $this->dispatcher = $dispatcher;
         $this->commandFactory = $commandFactory;
+        $this->displayProfileFactory = $displayProfileFactory;
     }
 
     public function __clone()
     {
         $this->displayProfileId = null;
+        $this->commands = [];
         $this->isDefault = 0;
     }
 
@@ -266,6 +270,14 @@ class DisplayProfile implements \JsonSerializable
     }
 
     /**
+     * @return bool
+     */
+    public function isCustom(): bool
+    {
+        return $this->isCustom;
+    }
+
+    /**
      * Get the client type
      * @return string
      */
@@ -318,6 +330,15 @@ class DisplayProfile implements \JsonSerializable
     }
 
     /**
+     * Sets the Owner
+     * @param int $ownerId
+     */
+    public function setOwner($ownerId)
+    {
+        $this->userId = $ownerId;
+    }
+
+    /**
      * Load
      * @param array $options
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -334,9 +355,9 @@ class DisplayProfile implements \JsonSerializable
         }
 
         // Load in our default config from this class, based on the client type we are
-        $this->configDefault = $this->loadForType();
+        $this->configDefault = $this->displayProfileFactory->loadForType($this->getClientType());
 
-        $this->getLog()->debug('Config Default is: ' . json_encode($this->configDefault, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Config Default is: ' . json_encode($this->configDefault, JSON_PRETTY_PRINT) . ' for ' . $this->getClientType());
 
         // Get our combined config
         $this->configCombined = [];
@@ -347,11 +368,6 @@ class DisplayProfile implements \JsonSerializable
                 $this->config = json_decode($this->config, true);
             }
             $this->getLog()->debug('Config loaded: ' . json_encode($this->config, JSON_PRETTY_PRINT));
-
-            // We've loaded a profile
-            // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
-            // continue further.
-            $this->dispatcher->dispatch(DisplayProfileLoadedEvent::NAME, new DisplayProfileLoadedEvent($this));
 
             // Populate our combined config accordingly
             $this->configCombined = $this->mergeConfigs($this->configDefault, $this->config);
@@ -442,6 +458,10 @@ class DisplayProfile implements \JsonSerializable
             throw new InvalidArgumentException(__('This Display Profile is currently assigned to one or more Displays'), 'displayProfileId');
         }
 
+        if ($this->isDefault === 1) {
+            throw new InvalidArgumentException(__('Cannot delete default Display Profile.'), 'isDefault');
+        }
+
         $this->getStore()->update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
     }
 
@@ -489,14 +509,15 @@ class DisplayProfile implements \JsonSerializable
     private function add()
     {
         $this->displayProfileId = $this->getStore()->insert('
-            INSERT INTO `displayprofile` (`name`, type, config, isdefault, userid)
-              VALUES (:name, :type, :config, :isDefault, :userId)
+            INSERT INTO `displayprofile` (`name`, type, config, isdefault, userid, isCustom)
+              VALUES (:name, :type, :config, :isDefault, :userId, :isCustom)
         ', [
             'name' => $this->name,
             'type' => $this->type,
             'config' => ($this->config == '') ? '[]' : json_encode($this->config),
             'isDefault' => $this->isDefault,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'isCustom' => $this->isCustom ?? 0
         ]);
     }
 
@@ -504,12 +525,13 @@ class DisplayProfile implements \JsonSerializable
     {
         $this->getStore()->update('
           UPDATE `displayprofile`
-            SET `name` = :name, type = :type, config = :config, isdefault = :isDefault
+            SET `name` = :name, type = :type, config = :config, isdefault = :isDefault, isCustom = :isCustom
            WHERE displayprofileid = :displayProfileId', [
             'name' => $this->name,
             'type' => $this->type,
             'config' => ($this->config == '') ? '[]' : json_encode($this->config),
             'isDefault' => $this->isDefault,
+            'isCustom' => $this->isCustom ?? 0,
             'displayProfileId' => $this->displayProfileId
         ]);
     }
@@ -522,169 +544,18 @@ class DisplayProfile implements \JsonSerializable
         return $this->configCombined;
     }
 
-    /**
-     * Load the config from the file
-     */
-    private function loadForType()
+    public function getCustomEditTemplate()
     {
-        $config = array(
-            'unknown' => [],
-            'windows' => [
-                ['name' => 'collectInterval', 'default' => 300, 'type' => 'int'],
-                ['name' => 'downloadStartWindow', 'default' => '00:00', 'type' => 'string'],
-                ['name' => 'downloadEndWindow', 'default' => '00:00', 'type' => 'string'],
-                ['name' => 'dayPartId', 'default' => null],
-                ['name' => 'xmrNetworkAddress', 'default' => '', 'type' => 'string'],
-                ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
-                ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
-                ['name' => 'powerpointEnabled', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'sizeX', 'default' => 0, 'type' => 'double'],
-                ['name' => 'sizeY', 'default' => 0, 'type' => 'double'],
-                ['name' => 'offsetX', 'default' => 0, 'type' => 'double'],
-                ['name' => 'offsetY', 'default' => 0, 'type' => 'double'],
-                ['name' => 'clientInfomationCtrlKey', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'clientInformationKeyCode', 'default' => 'I', 'type' => 'string'],
-                ['name' => 'logLevel', 'default' => 'error', 'type' => 'string'],
-                ['name' => 'logToDiskLocation', 'default' => '', 'type' => 'string'],
-                ['name' => 'showInTaskbar', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'cursorStartPosition', 'default' => 'Unchanged', 'type' => 'string'],
-                ['name' => 'doubleBuffering', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'emptyLayoutDuration', 'default' => 10, 'type' => 'int'],
-                ['name' => 'enableMouse', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'enableShellCommands', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'expireModifiedLayouts', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'maxConcurrentDownloads', 'default' => 2, 'type' => 'int'],
-                ['name' => 'shellCommandAllowList', 'default' => '', 'type' => 'string'],
-                ['name' => 'sendCurrentLayoutAsStatusUpdate', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
-                ['name' => 'screenShotSize', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200), 'type' => 'int'],
-                ['name' => 'maxLogFileUploads', 'default' => 3, 'type' => 'int'],
-                ['name' => 'embeddedServerPort', 'default' => 9696, 'type' => 'int'],
-                ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'authServerWhitelist', 'default' => null, 'type' => 'string'],
-                ['name' => 'edgeBrowserWhitelist', 'default' => null, 'type' => 'string'],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
-            ],
-            'android' => [
-                ['name' => 'emailAddress', 'default' => ''],
-                ['name' => 'settingsPassword', 'default' => ''],
-                ['name' => 'collectInterval', 'default' => 300],
-                ['name' => 'downloadStartWindow', 'default' => '00:00'],
-                ['name' => 'downloadEndWindow', 'default' => '00:00'],
-                ['name' => 'xmrNetworkAddress', 'default' => ''],
-                ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
-                ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
-                ['name' => 'orientation', 'default' => 0],
-                ['name' => 'screenDimensions', 'default' => ''],
-                ['name' => 'blacklistVideo', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'storeHtmlOnInternal', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'useSurfaceVideoView', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'logLevel', 'default' => 'error'],
-                ['name' => 'versionMediaId', 'default' => null],
-                ['name' => 'startOnBoot', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'actionBarMode', 'default' => 1],
-                ['name' => 'actionBarDisplayDuration', 'default' => 30],
-                ['name' => 'actionBarIntent', 'default' => ''],
-                ['name' => 'autoRestart', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'startOnBootDelay', 'default' => 60],
-                ['name' => 'sendCurrentLayoutAsStatusUpdate', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'screenShotRequestInterval', 'default' => 0],
-                ['name' => 'expireModifiedLayouts', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'screenShotIntent', 'default' => ''],
-                ['name' => 'screenShotSize', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200)],
-                ['name' => 'updateStartWindow', 'default' => '00:00'],
-                ['name' => 'updateEndWindow', 'default' => '00:00'],
-                ['name' => 'dayPartId', 'default' => null],
-                ['name' => 'webViewPluginState', 'default' => 'DEMAND'],
-                ['name' => 'hardwareAccelerateWebViewMode', 'default' => '2'],
-                ['name' => 'timeSyncFromCms', 'default' => 0],
-                ['name' => 'webCacheEnabled', 'default' => 0],
-                ['name' => 'serverPort', 'default' => 9696],
-                ['name' => 'installWithLoadedLinkLibraries', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'isUseMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
-                ['name' => 'maxRegionCount', 'default' => 0],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
-            ],
-            'linux' => [
-                ['name' => 'collectInterval', 'default' => 300],
-                ['name' => 'downloadStartWindow', 'default' => '00:00'],
-                ['name' => 'downloadEndWindow', 'default' => '00:00'],
-                ['name' => 'dayPartId', 'default' => null],
-                ['name' => 'xmrNetworkAddress', 'default' => ''],
-                ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
-                ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
-                ['name' => 'sizeX', 'default' => 0],
-                ['name' => 'sizeY', 'default' => 0],
-                ['name' => 'offsetX', 'default' => 0],
-                ['name' => 'offsetY', 'default' => 0],
-                ['name' => 'logLevel', 'default' => 'error'],
-                ['name' => 'enableShellCommands', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'expireModifiedLayouts', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'maxConcurrentDownloads', 'default' => 2],
-                ['name' => 'shellCommandAllowList', 'default' => ''],
-                ['name' => 'sendCurrentLayoutAsStatusUpdate', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'screenShotRequestInterval', 'default' => 0],
-                ['name' => 'screenShotSize', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200)],
-                ['name' => 'maxLogFileUploads', 'default' => 3],
-                ['name' => 'embeddedServerPort', 'default' => 9696],
-                ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
-            ],
-            'lg' => [
-                ['name' => 'emailAddress', 'default' => ''],
-                ['name' => 'collectInterval', 'default' => 300],
-                ['name' => 'downloadStartWindow', 'default' => '00:00'],
-                ['name' => 'downloadEndWindow', 'default' => '00:00'],
-                ['name' => 'dayPartId', 'default' => null],
-                ['name' => 'xmrNetworkAddress', 'default' => ''],
-                ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
-                ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
-                ['name' => 'orientation', 'default' => 0],
-                ['name' => 'logLevel', 'default' => 'error'],
-                ['name' => 'versionMediaId', 'default' => null],
-                ['name' => 'actionBarMode', 'default' => 1],
-                ['name' => 'actionBarDisplayDuration', 'default' => 30],
-                ['name' => 'sendCurrentLayoutAsStatusUpdate', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'mediaInventoryTimer', 'default' => 0],
-                ['name' => 'screenShotSize', 'default' => 1],
-                ['name' => 'timers', 'default' => '{}'],
-                ['name' => 'pictureOptions', 'default' => '{}'],
-                ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'updateStartWindow', 'default' => '00:00'],
-                ['name' => 'updateEndWindow', 'default' => '00:00'],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
-            ],
-            'sssp' => [
-                ['name' => 'emailAddress', 'default' => ''],
-                ['name' => 'collectInterval', 'default' => 300],
-                ['name' => 'downloadStartWindow', 'default' => '00:00'],
-                ['name' => 'downloadEndWindow', 'default' => '00:00'],
-                ['name' => 'dayPartId', 'default' => null],
-                ['name' => 'xmrNetworkAddress', 'default' => ''],
-                ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
-                ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
-                ['name' => 'orientation', 'default' => 0],
-                ['name' => 'logLevel', 'default' => 'error'],
-                ['name' => 'versionMediaId', 'default' => null],
-                ['name' => 'actionBarMode', 'default' => 1],
-                ['name' => 'actionBarDisplayDuration', 'default' => 30],
-                ['name' => 'sendCurrentLayoutAsStatusUpdate', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'mediaInventoryTimer', 'default' => 0],
-                ['name' => 'screenShotSize', 'default' => 1],
-                ['name' => 'timers', 'default' => '{}'],
-                ['name' => 'pictureOptions', 'default' => '{}'],
-                ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'updateStartWindow', 'default' => '00:00'],
-                ['name' => 'updateEndWindow', 'default' => '00:00'],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
-            ]
-        );
+        if ($this->isCustom()) {
+            return $this->displayProfileFactory->getCustomEditTemplate($this->getClientType());
+        } else {
+            $this->getLog()->error('Attempting to get Custom Edit template for Display Profile ' . $this->getClientType() . ' that is not custom');
+            return null;
+        }
+    }
 
-        return $config[$this->getClientType()];
+    public function handleCustomFields($sanitizedParams, $config = null, $display = null)
+    {
+        return $this->displayProfileFactory->handleCustomFields($this, $sanitizedParams, $config, $display);
     }
 }

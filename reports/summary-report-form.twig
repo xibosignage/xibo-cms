@@ -1,7 +1,7 @@
 {#
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -20,16 +20,13 @@
  *
  */
 #}
-
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{% trans "Report: Summary by Layout, Media or Event" %} | {% endblock %}
+
 {% block actionMenu %}
-    <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
-        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=summaryReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
-        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=summaryReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
-    </div>
+    {% include "report-schedule-buttons.twig" %}
 {% endblock %}
 
 {% block pageContent %}
@@ -39,23 +36,9 @@
             <span>{% trans "Summary by Layout, Media or Event" %}</span>
             <span class="fa fa-info-circle widget-title-info px-1" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below.  Where the Range crosses period boundaries a new period is generated - i.e 1 week grouped by hourly produces 24 x 7 periods." %}"></span>
         </div>
-        <div class="widget-navigation-menu">
-            <ul class="nav nav-pills">
-                <li role="presentation" class="nav-item"><a class="nav-link" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
-                <li role="presentation" class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
-                    <div class="dropdown-menu">
-                        {% for reports in defaults.availableReports %}
-                            {% for report in reports %}
-                                {% if report.hidden == 0 and report.category == 'Proof of Play' %}
-                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                                {% endif %}
-                            {% endfor %}
-                        {% endfor %}
-                    </div>
-                </li>
-            </ul>
-        </div>
+
+        {% include "report-selector.twig" %}
+
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilterCustom card bg-light mb-3">
@@ -146,6 +129,20 @@
                             {% set helpText %}{% trans "This field is required when the Type selected is Event" %}{% endset %}
                             {{ inline.input("eventTag", title, "", helpText, "tag-text") }}
 
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
@@ -195,7 +192,7 @@
                         reportChart.destroy();
                     }
 
-                    if (!response.extra.hasData) {
+                    if (!response.extra.hasChartData) {
                         return;
                     }
 
@@ -221,7 +218,6 @@
             // Calculate the difference of number of days of a selected range
             var calculateDaysShowHideWarn = function() {
 
-                console.log('m i here');
                 var fromDt = moment($("#statsFromDt").val());
                 var toDt = moment($("#statsToDt").val());
 

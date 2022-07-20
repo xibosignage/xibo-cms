@@ -304,8 +304,8 @@ class InstallMigration extends AbstractMigration
             ->addColumn('expires', 'integer', ['default' => null, 'null' => true])
             ->addColumn('released', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
             ->addColumn('apiRef', 'string', ['limit' => 254, 'default' => null, 'null' => true])
-            ->addColumn('createdDt', 'datetime')
-            ->addColumn('modifiedDt', 'datetime')
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addForeignKey('userId', 'user', 'userId')
             ->save();
 
@@ -348,8 +348,8 @@ class InstallMigration extends AbstractMigration
         $layout
             ->addColumn('layout', 'string', ['limit' => 254])
             ->addColumn('userId', 'integer')
-            ->addColumn('createdDt', 'datetime')
-            ->addColumn('modifiedDt', 'datetime')
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('description', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addColumn('retired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('duration', 'integer')
@@ -840,7 +840,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('name', 'string', ['limit' => 254])
             ->addColumn('class', 'string', ['limit' => 254])
             ->addColumn('status', 'integer', ['default' => 2, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
-            ->addColumn('pid', 'integer', ['null' => true])
+            ->addColumn('pid', 'integer', ['default' => null, 'null' => true])
             ->addColumn('options', 'text', ['default' => null, 'null' => true])
             ->addColumn('schedule', 'string', ['limit' => 254])
             ->addColumn('lastRunDt', 'integer', ['default' => 0])
@@ -885,6 +885,7 @@ class InstallMigration extends AbstractMigration
                 ['tag' => 'template'],
                 ['tag' => 'background'],
                 ['tag' => 'thumbnail'],
+                ['tag' => 'imported'],
             ])
             ->save();
 
@@ -945,13 +946,13 @@ class InstallMigration extends AbstractMigration
         $stat = $this->table('stat', ['id' => 'statId']);
         $stat
             ->addColumn('type', 'string', ['limit' => 20])
-            ->addColumn('statDate', 'datetime')
+            ->addColumn('statDate', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('scheduleId', 'integer')
             ->addColumn('displayId', 'integer')
             ->addColumn('layoutId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('mediaId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('widgetId', 'integer', ['default' => null, 'null' => true])
-            ->addColumn('start', 'datetime')
+            ->addColumn('start', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('end', 'datetime', ['default' => null, 'null' => true])
             ->addColumn('tag', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addIndex('statDate')
@@ -973,7 +974,7 @@ class InstallMigration extends AbstractMigration
         $log = $this->table('log', ['id' => 'logId']);
         $log
             ->addColumn('runNo', 'string', ['limit' => 10])
-            ->addColumn('logDate', 'datetime')
+            ->addColumn('logDate', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('channel', 'string', ['limit' => 20])
             ->addColumn('type', 'string', ['limit' => 254])
             ->addColumn('page', 'string', ['limit' => 50])
@@ -1008,7 +1009,7 @@ class InstallMigration extends AbstractMigration
                 ['bandwidthTypeId' => 7, 'name' => 'Notify Status'],
                 ['bandwidthTypeId' => 8, 'name' => 'Submit Stats'],
                 ['bandwidthTypeId' => 9, 'name' => 'Submit Log'],
-                ['bandwidthTypeId' => 10, 'name' => 'Blacklist'],
+                ['bandwidthTypeId' => 10, 'name' => 'Report Fault'],
                 ['bandwidthTypeId' => 11, 'name' => 'Screen Shot'],
             ])
             ->save();
@@ -1019,19 +1020,6 @@ class InstallMigration extends AbstractMigration
             ->addColumn('month', 'integer')
             ->addColumn('size', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG])
             ->addForeignKey('type', 'bandwidthtype', 'bandwidthTypeId')
-            ->save();
-
-        // Blacklist
-        $blacklist = $this->table('blacklist', ['id' => 'blacklistId']);
-        $blacklist
-            ->addColumn('mediaId', 'integer')
-            ->addColumn('displayId', 'integer')
-            ->addColumn('userId', 'integer', ['null' => true])
-            ->addColumn('reportingDisplayId', 'integer', ['null' => true])
-            ->addColumn('reason', 'text')
-            ->addColumn('isIgnored', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
-            ->addForeignKey('mediaId', 'media', 'mediaId')
-            ->addForeignKey('displayId', 'display', 'displayId')
             ->save();
 
         // Help
@@ -1057,9 +1045,9 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (33, \'LIBRARY_LOCATION\', \'\', \'text\', \'The fully qualified path to the CMS library location.\', NULL, \'configuration\', 1, \'Library Location\', \'required\', 10, \'\', 1, \'string\'),
 (34, \'SERVER_KEY\', \'\', \'text\', NULL, NULL, \'configuration\', 1, \'CMS Secret Key\', \'required\', 20, \'\', 1, \'string\'),
 (35, \'HELP_BASE\', \'http://www.xibo.org.uk/manual/en/\', \'text\', NULL, NULL, \'general\', 1, \'Location of the Manual\', \'required\', 10, \'http://www.xibo.org.uk/manual/\', 1, \'string\'),
-(36, \'PHONE_HOME\', \'On\', \'dropdown\', \'Should the server send anonymous statistics back to the Xibo project?\', \'On|Off\', \'general\', 1, \'Allow usage tracking?\', \'\', 10, \'On\', 1, \'word\'),
+(36, \'PHONE_HOME\', \'1\', \'checkbox\', \'Should the server send anonymous statistics back to the Xibo project?\', NULL, \'general\', 1, \'Allow usage tracking?\', \'\', 10, \'1\', 1, \'checkbox\'),
 (37, \'PHONE_HOME_KEY\', \'\', \'text\', \'Key used to distinguish each Xibo instance. This is generated randomly based on the time you first installed Xibo, and is completely untraceable.\', NULL, \'general\', 0, \'Phone home key\', \'\', 20, \'\', 0, \'string\'),
-(38, \'PHONE_HOME_URL\', \'http://www.xibo.org.uk/stats/track.php\', \'text\', \'The URL to connect to to PHONE_HOME (if enabled)\', NULL, \'network\', 0, \'Phone home URL\', \'\', 60, \'http://www.xibo.org.uk/stats/track.php\', 0, \'string\'),
+(38, \'PHONE_HOME_URL\', \'https://xibo.org.uk/api/stats/track\', \'text\', \'The URL to connect to to PHONE_HOME (if enabled)\', NULL, \'network\', 0, \'Phone home URL\', \'\', 60, \'https://xibo.org.uk/api/stats/track\', 0, \'string\'),
 (39, \'PHONE_HOME_DATE\', \'0\', \'text\', \'The last time we PHONED_HOME in seconds since the epoch\', NULL, \'general\', 0, \'Phone home time\', \'\', 30, \'0\', 0, \'int\'),
 (40, \'SERVER_MODE\', \'Production\', \'dropdown\', \'This should only be set if you want to display the maximum allowed error messaging through the user interface. <br /> Useful for capturing critical php errors and environment issues.\', \'Production|Test\', \'troubleshooting\', 1, \'Server Mode\', \'\', 30, \'Production\', 1, \'word\'),
 (41, \'MAINTENANCE_ENABLED\', \'Off\', \'dropdown\', \'Allow the maintenance script to run if it is called?\', \'Protected|On|Off\', \'maintenance\', 1, \'Enable Maintenance?\', \'\', 10, \'Off\', 1, \'word\'),

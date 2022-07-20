@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2018 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,10 +24,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -48,17 +45,13 @@ class PlayerVersionFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $mediaFactory)
+    public function __construct($user, $userFactory, $config, $mediaFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
@@ -72,7 +65,14 @@ class PlayerVersionFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new PlayerVersion($this->getStore(), $this->getLog(), $this->config, $this->mediaFactory, $this);
+        return new PlayerVersion(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->config,
+            $this->mediaFactory,
+            $this
+        );
     }
 
     /**
@@ -191,10 +191,6 @@ class PlayerVersionFactory extends BaseFactory
                   WHERE 1 = 1 
             ';
 
-
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
-
         // by media ID
         if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
@@ -226,6 +222,9 @@ class PlayerVersionFactory extends BaseFactory
             $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder)) {
@@ -235,7 +234,7 @@ class PlayerVersionFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

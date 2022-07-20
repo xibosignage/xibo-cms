@@ -131,12 +131,12 @@ class TwitterMetro extends TwitterBase
         
         $templateArray = array(
             array(  'template' => '<div class="cell-[itemType] [ShadowType] cell" id="item-[itemId]" style="[Photo]"> <div class="item-container [ShadowType]" style="[Color]"> <div class="item-text">[Tweet]</div> <div class="userData"> <div class="tweet-profilePic">[ProfileImage|normal]</div> <div class="tweet-userData"> <div class="user">[User]</div> <small>[Date]</small></div> </div> </div> </div>',
-                    'styleSheet' => 'body { font-family: "Helvetica", "Arial", sans-serif; line-height: 1; margin: 0; } #content { width: 1920px !important; height: 1080px !important; background: rgba(255, 255, 255, 0.6); color: rgba(255, 255, 255, 1); } .row-1 { height: 360px; } .page { float: left; margin: 0; padding: 0; } .cell-1 { width: 310px; } .cell-2 { width: 630px; } .cell-3 { width: 950px; } .cell-1, .cell-2, .cell-3 { float: left; height: inherit; margin: 5px; background-repeat: no-repeat; background-size: cover; background-position-x: 50%; background-position-y: 50%; } .item-container { padding: 10px; color: #fff; height: 350px; } .userData { height: 50px; } .darken-container { background-color: rgba(0, 0, 0, 0.4); } .tweet-profilePic { width: 20%; float: left; } .tweet-profilePic img { width: 48px; } .tweet-userData { width: 80%; float: left; text-align: right; } .item-text { padding: 10px; color: #fff; } .emojione { width: 26px; height: 26px; } .cell-1 .item-text { line-height: 30px; font-size: 25px; height: 280px; } .cell-2 .item-text { line-height: 40px; font-size: 40px; height: 280px; } .cell-3 .item-text { line-height: 53px; font-size: 50px; height: 280px; } .user { font-size: 14px; font-weight: bold; padding-top: 20px; } .shadow { text-shadow: 1px 1px 2px rgba(0, 0, 3, 1); } .no-shadow { text-shadow: none !important; } small { font-size: 70%; }',
+                    'styleSheet' => '* { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; } body { font-family: "Helvetica", "Arial", sans-serif; line-height: 1; margin: 0; } #content { width: 1920px !important; height: 1080px !important; background: rgba(255, 255, 255, 0.6); color: rgba(255, 255, 255, 1); } .row-1 { height: 360px; } .page { float: left; margin: 0; padding: 0; } .cell-1 { width: 310px; } .cell-2 { width: 630px; } .cell-3 { width: 950px; } .cell-1, .cell-2, .cell-3 { float: left; height: inherit; margin: 5px; background-repeat: no-repeat; background-size: cover; background-position-x: 50%; background-position-y: 50%; } .item-container { padding: 10px; color: #fff; height: 350px; } .userData { height: 50px; } .darken-container { background-color: rgba(0, 0, 0, 0.4); } .tweet-profilePic { width: 20%; float: left; } .tweet-profilePic img { width: 48px; } .tweet-userData { width: 80%; float: left; text-align: right; } .item-text { padding: 8px 6px 12px 6px; color: #fff; overflow: hidden; } .emojione { width: 26px; height: 26px; } .cell-1 .item-text { line-height: 30px; font-size: 25px; height: 280px; } .cell-2 .item-text { line-height: 34px; font-size: 32px; height: 280px; } .cell-3 .item-text { line-height: 38px; font-size: 36px; height: 280px; } .user { font-size: 14px; font-weight: bold; padding-top: 20px; } .shadow { text-shadow: 1px 1px 2px rgba(0, 0, 3, 1); } .no-shadow { text-shadow: none !important; } small { font-size: 70%; }',
                     'originalWidth' => '1920',
                     'originalHeight' => '1080'
             ),
             array(  'template' => '<div class="cell-[itemType] [ShadowType] cell" id="item-[itemId]" style="[Photo]"> <div class="item-container [ShadowType]" style="[Color]"> <div class="item-text">[Tweet]</div> <div class="userData"> <div class="tweet-profilePic">[ProfileImage|normal]</div> <div class="tweet-userData"> <div class="user">[User]</div> <small>[Date]</small></div> </div> </div> </div>',
-                    'styleSheet' => 'body { font-family: "Helvetica", "Arial", sans-serif; line-height: 1; margin: 0; } #content { width: 1080px !important; height: 1920px !important; background: rgba(255, 255, 255, 0.6); color: rgba(255, 255, 255, 1); } .row-1 { height: 320px; } .page { float: left; margin: 0; padding: 0; } .cell-1 { width: 350px; } .cell-2 { width: 710px; } .cell-3 { width: 1070px; } .cell-1, .cell-2, .cell-3 { float: left; height: inherit; margin: 5px; background-repeat: no-repeat; background-size: cover; background-position-x: 50%; background-position-y: 50%; } .item-container { padding: 10px; color: #fff; height: 310px; } .userData { height: 50px; } .darken-container { background-color: rgba(0, 0, 0, 0.4); } .tweet-profilePic { width: 20%; float: left; } .tweet-profilePic img { width: 48px; } .tweet-userData { width: 80%; float: left; text-align: right; } .item-text { padding: 10px; color: #fff; } .emojione { width: 26px; height: 26px; } .cell-1 .item-text { line-height: 30px; font-size: 25px; height: 240px; } .cell-2 .item-text { line-height: 40px; font-size: 40px; height: 240px; } .cell-3 .item-text { line-height: 53px; font-size: 50px; height: 240px; } .user { font-size: 14px; font-weight: bold; padding-top: 20px; } .shadow { text-shadow: 1px 1px 2px rgba(0, 0, 3, 1); } .no-shadow { text-shadow: none !important; } small { font-size: 70%; }',
+                    'styleSheet' => '* { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; } body { font-family: "Helvetica", "Arial", sans-serif; line-height: 1; margin: 0; } #content { width: 1080px !important; height: 1920px !important; background: rgba(255, 255, 255, 0.6); color: rgba(255, 255, 255, 1); } .row-1 { height: 320px; } .page { float: left; margin: 0; padding: 0; } .cell-1 { width: 350px; } .cell-2 { width: 710px; } .cell-3 { width: 1070px; } .cell-1, .cell-2, .cell-3 { float: left; height: inherit; margin: 5px; background-repeat: no-repeat; background-size: cover; background-position-x: 50%; background-position-y: 50%; } .item-container { padding: 10px; color: #fff; height: 310px; } .userData { height: 50px; } .darken-container { background-color: rgba(0, 0, 0, 0.4); } .tweet-profilePic { width: 20%; float: left; } .tweet-profilePic img { width: 48px; } .tweet-userData { width: 80%; float: left; text-align: right; } .item-text { padding: 8px 6px 12px 6px; color: #fff; overflow: hidden; } .emojione { width: 26px; height: 26px; } .cell-1 .item-text { line-height: 30px; font-size: 25px; height: 240px; } .cell-2 .item-text { line-height: 34px; font-size: 32px; height: 240px; } .cell-3 .item-text { line-height: 38px; font-size: 36px; height: 240px; } .user { font-size: 14px; font-weight: bold; padding-top: 20px; } .shadow { text-shadow: 1px 1px 2px rgba(0, 0, 3, 1); } .no-shadow { text-shadow: none !important; } small { font-size: 70%; }',
                     'originalWidth' => '1080',
                     'originalHeight' => '1920'
             )
@@ -597,7 +597,7 @@ class TwitterMetro extends TwitterBase
 
                     case 'Date':
                         if($tweet->created_at != '')
-                            $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
+                            $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->translatedFormat($dateFormat);
                         break;
   
                     case 'Location':
@@ -619,7 +619,7 @@ class TwitterMetro extends TwitterBase
                             $tweet->user->profile_image_url = str_replace('_normal', $imageSizeType, $tweet->user->profile_image_url);
                             
                             // Grab the profile image
-                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
+                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id_str ?? $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
                             $replace = ($isPreview)
                                 ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
@@ -668,7 +668,8 @@ class TwitterMetro extends TwitterBase
                             $photoUrl = $mediaObject->media_url;
                             
                             if ($photoUrl != '') {
-                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
+                                $tweetUserId = $tweet->user->id_str ?? $tweet->user->id;
+                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweetUserId . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 $replace = "background-image: url(" 
                                     . (($isPreview) ? $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) : $file->storedAs)
@@ -728,7 +729,7 @@ class TwitterMetro extends TwitterBase
         // Information from the Module
         $duration = $this->getCalculatedDurationForGetResource();
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($displayId);
+        $items = $this->getTwitterFeed($displayId, $this->isPreview());
         // Get the template data
         $templateData = $this->getTemplateData();
         
@@ -759,7 +760,6 @@ class TwitterMetro extends TwitterBase
         // Add our fonts.css file
         $headContent .= '
             <link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css')  . '" rel="stylesheet" media="screen">
         ';
         
@@ -805,6 +805,7 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -814,7 +815,7 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options);';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   }); ';

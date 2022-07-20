@@ -1,0 +1,21 @@
+{
+    "id": "weather-module-8s",
+    "value": "Square - Detailed weather",
+    "main": "<div class=\"main-container container\">\n    <div class=\"top-content\">\n        <div class=\"row-element-half\">\n            <div class=\"date shadowed\"> [time|M] [time|d]</div>\n            <div class=\"shadowed temp\">\n                [temperatureRound]<sup>&deg;[temperatureUnit]</sup>\n            </div>\n        </div><div class=\"row-element-half\">\n            <div class=\"main-icon shadowed\"><i class=\"wi [wicon]\"></i></div>\n        </div>\n    </div>\n\n    <div class=\"bottom-content bg-footer\">\n        <div class=\"row-element-full forecast-current\"><strong>[summary]</strong></div>\n        <div class=\"row-element-full forecast-second\">||Maximum temperature||: [temperatureMaxRound]&deg;[temperatureUnit]</div>\n        <div class=\"row-element-full forecast-second\">||Minimum temperature||: [temperatureMinRound]&deg;[temperatureUnit]</div>\n <div class=\"row-element-full forecast-second\">||Humidity||: [humidityPercent]%</div>\n        <div class=\"row-element-full forecast-second\">||Wind||: [windSpeed] [windSpeedUnit] [windDirection]</div>\n    </div>\n</div></div>\n</div><div class=\"weather-col col-12 powered\">[Attribution]<\/div>",
+    "daily": "",
+    "css": "body {\n width: 250px !important;\n height: 250px !important;\n }\n\n#content {\n    color: #f9f9f9;\n}\n\n.shadowed {\ntext-shadow: 0px 0px 6px rgba(0, 0, 0, 0.6);\n    filter: dropshadow(color=rgba(0, 0, 0, 0.6), offx=6, offy=6);\n}\n\n.main-container {\n padding-bottom: 8px;\n }\n\n.top-content {\n height: 110px;\n}\n\n.bottom-content {\n height: 90px;\n}\n\n.row-element-half {\n    display: inline-block;\n    width: 50%;\n    vertical-align: top;\n}\n\n.date {\n    font-weight: 900;\n    font-size: 20px;\n    text-transform: uppercase;\n    padding: 12px 0px 0px 12px;\n}\n\n.temp {\n    font-size: 35px;\n    font-weight: 900;\n    padding: 12px 0px 0px 12px;\n}\n\n.temp sup {\n font-size: 15px;\n }\n\n.main-icon {\n    line-height: 84px;\n    font-size: 60px;\n    text-align: right;\n    padding: 12px;\n}\n\n.bg-footer {\n    background-color: #111;\n    background-color: #111a;\n    padding: 10px 8px;\n    font-size: 13px;\n}\n\n.forecast-current {\n    margin-bottom: 4px;\n    font-size: 14px;\n    overflow: hidden;\n}\n\n.powered {\n  padding: 4px 0;\n  color: white;\n  font-size: 13px;\n text-align: center;\n  background-color: #222;\n}",
+    "widgetOriginalWidth": "250",
+    "widgetOriginalHeight": "250",
+    "image": "modules/forecastio/template-thumbs/weather8s.png",
+    "type": "current",
+    "orientation": "square",
+    "background": "fit",
+    "options": {
+        "text-color": true,
+        "icons-color": true,
+        "background-color": true,
+        "footer-color": true,
+        "footer-text-color": true,
+        "footer-icons-color": true
+    }
+}

@@ -23,6 +23,7 @@
 namespace Xibo\XTR;
 
 use Stash\Interfaces\PoolInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
@@ -54,6 +55,9 @@ trait TaskTrait
 
     /** @var  PoolInterface */
     private $pool;
+
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface */
+    private $dispatcher;
 
     /** @var  User */
     private $user;
@@ -129,6 +133,24 @@ trait TaskTrait
     {
         $this->pool = $pool;
         return $this;
+    }
+
+    /**
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     * @return $this
+     */
+    public function setDispatcher($dispatcher)
+    {
+        $this->dispatcher = $dispatcher;
+        return $this;
+    }
+
+    /**
+     * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
+     */
+    protected function getDispatcher(): EventDispatcherInterface
+    {
+        return $this->dispatcher;
     }
 
     /** @inheritdoc */

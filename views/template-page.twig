@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -47,8 +47,9 @@
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}
                                 {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                             {% endif %}
 
                             {{ inline.hidden("folderId") }}
@@ -56,33 +57,30 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
-                    </div>
-                    <div class="form-group col-sm-11" style="padding: 0">
-                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
-                    </div>
-                </div>
-
-                <div class="row">
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
+                    <div class="folder-controller d-none">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
+                        <div id="breadcrumbs" class="mt-2 pl-2"></div>
+                    </div>
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
-                        <div class="XiboData card pt-3">
+                        <div class="XiboData">
                             <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
                                 <thead>
                                     <tr>
                                         <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Status" %}</th>
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Description" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
+                                        <th>{% trans "Orientation" %}</th>
                                         <th>{% trans "Thumbnail" %}</th>
-                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Sharing" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -105,6 +103,7 @@
         {% endif %}
         var table = $("#templates").DataTable({
             "language": dataTablesLanguage,
+            dom: dataTablesTemplate,
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
@@ -122,16 +121,67 @@
             },
             "columns": [
                 { "data": "layout", responsivePriority: 2},
+                {
+                    "name": "publishedStatus",
+                    responsivePriority: 2,
+                    "data": function (data, type) {
+                        if (data.publishedDate != null) {
+                            var now = moment();
+                            var published = moment(data.publishedDate);
+                            var differenceMinutes = published.diff(now, 'minutes');
+                            var momentDifference = moment(now).to(published);
+
+                            if (differenceMinutes < -5) {
+                                return data.publishedStatus.concat(" - ", translations.publishedStatusFailed);
+                            } else {
+                                return data.publishedStatus.concat(" - ", translations.publishedStatusFuture + " " + momentDifference);
+                            }
+                        } else {
+                            return data.publishedStatus;
+                        }
+
+                    }
+                },
                 { "data": "owner", responsivePriority: 3},
-                { "data": "descriptionWithMarkup", responsivePriority: 4},
+                {
+                    "name": "description",
+                    "data": null,
+                    responsivePriority: 3,
+                    "render": {"_": "description", "display": "descriptionWithMarkup", "sort": "description"}
+                },
                 {% if currentUser.featureEnabled("tag.tagging") %}{
                     "sortable": false,
                     "visible": false,
                     "data": dataTableCreateTags,
                     responsivePriority: 3
                 },{% endif %}
-                { "data": "thumbnail", responsivePriority: 3},
-                { "data": "permissions", "sortable": false, responsivePriority: 3},
+                { data: 'orientation', responsivePriority: 10, visible: false},
+                {
+                    responsivePriority: 3,
+                    data: 'thumbnail',
+                    render: function (data, type, row) {
+                        if (type !== 'display') {
+                            return row.layoutId;
+                        }
+                        if (data) {
+                            return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
+                                '<img class="img-fluid" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />' +
+                                '</a>';
+                        } else {
+                          var addUrl = '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}'.replace(':id', row.layoutId);
+                          return '<a class="img-replace generate-layout-thumbnail" href="' + addUrl + '">' +
+                              '<img class="img-fluid" src="{{ theme.uri("img/thumbs/placeholder.png") }}" alt="{{ "Add Thumbnail"|trans }}" />' +
+                              '</a>';
+                        }
+                        return '';
+                    },
+                    sortable: false
+                },
+                {
+                    "data": "groupsWithPermissions",
+                    responsivePriority: 4,
+                    "render": dataTableCreatePermissions
+                },
                 {
                     "orderable": false,
                     responsivePriority: 1,
@@ -142,8 +192,22 @@
 
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#templates").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
+        table.on('draw', function(e, settings) {
+          $('#' + e.target.id + ' .generate-layout-thumbnail').on('click', function(e) {
+            e.preventDefault();
+            var $anchor = $(this);
+            $.ajax({
+              url: $anchor.attr('href'),
+              method: 'POST',
+              success: function() {
+                $anchor.find('img').attr('src', $anchor.attr('href'));
+                $anchor.removeClass('generate-layout-thumbnail').attr('data-toggle', 'lightbox');
+              }
+            });
+          });
+        });
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#templates_wrapper').find('.col-md-6').eq(1));
+        dataTableAddButtons(table, $('#templates_wrapper').find('.dataTables_buttons'));
 
         function templateFormOpen() {
             if ($('#folder-tree-form-modal').length === 0) {
@@ -153,6 +217,9 @@
                 $("body").append(folderTreeModal(treeConfig));
 
                 $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    // Fix for 2nd/overlay modal
+                    $('.modal:visible').length && $(document.body).addClass('modal-open');
+                    
                     $(this).data('bs.modal', null);
                 });
             }
@@ -162,7 +229,7 @@
                 $('#templateAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
             }
 
-            initJsTreeAjax('#container-folder-form-tree', 'templateAddForm', true, 600);
+            initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'templateAddForm', true, 600);
 
             $("#templateAddForm").submit(function(e) {
                 e.preventDefault();

@@ -1,0 +1,159 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set menuName = module.getExtra().menuBoard.name %}
+    {% trans %}Edit Menu Board Widget: Menu Board is {{ menuName }}{% endtrans %}
+{% endblock %}
+
+{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    {% set templateOptions = module.getExtra().templateOptions %}
+    
+    <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            {% if templateOptions %}
+                <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            {% endif %}
+            <li class="nav-item"><a class="nav-link" href="#cachingTab" role="tab"
+                                    data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+        </ul>
+        <div class="col-md-12">
+            <form id="menuBoardEditFormStep3" class="XiboForm form-horizontal" data-form-step="3" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Show Unavailable Products?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the currently unavailable products appear in the menu?" %}{% endset %}
+                        {{ forms.checkbox('showUnavailable', title, module.getOption("showUnavailable"), helpText) }}
+
+                        {% set title %}{% trans "Font" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value: url_for("library.font.list") },
+                            { name: "data-value", value: module.getOption("fontFamily") }
+                        ] %}
+                        {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
+                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "template-selector-control", "", "", "", attributes) }}
+
+
+                        {% set products = module.getExtra().products %}
+                        {% if products %}
+                            {% set attributes = [
+                                { name: "data-search-url", value: url_for("menuBoard.product.search.widget") },
+                                { name: "data-search-term", value: "name" },
+                                { name: "data-id-property", value: "menuProductId" },
+                                { name: "data-text-property", value: "name" },
+                                { name: "data-filter-options", value: '{"availability":"1","menuId":"' ~  module.getOption("menuId") ~ '", "categories":"' ~  module.getOption("categories") ~ '"}'  },
+                                { name: "data-allow-clear", value: "true"},
+                                { name: "data-placeholder", value: "Select a Product"}
+                            ] %}
+                            {% set title %}{% trans "Highlight Products" %}{% endset %}
+                            {% set helpText %}{% trans "Please select one or more Products that should be highlighted." %}{% endset %}
+                            {{ forms.dropdown("productsHighlight[]", "dropdownmulti", title, module.getExtra().highlightProducts, products, "menuProductId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
+                        {% endif %}
+
+                        {% set title %}{% trans "Horizontal Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be aligned?" %}{% endset %}
+                        {% set left %}{% trans "Left" %}{% endset %}
+                        {% set center %}{% trans "Centre" %}{% endset %}
+                        {% set right %}{% trans "Right" %}{% endset %}
+                        {% set options = [
+                        { alignH: "left", align: left },
+                        { alignH: "center", align: center },
+                        { alignH: "right", align: right }
+                        ] %}
+                        {{ forms.dropdown("alignH", "single", title, module.getOption("alignH","center"), options, "alignH", "align", helpText, "align-fields") }}
+
+                        {% set title %}{% trans "Vertical Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be vertically aligned?" %}{% endset %}
+                        {% set top %}{% trans "Top" %}{% endset %}
+                        {% set middle %}{% trans "Middle" %}{% endset %}
+                        {% set bottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                        { alignV: "top", valign: top },
+                        { alignV: "middle", valign: middle },
+                        { alignV: "bottom", valign: bottom }
+                        ] %}
+                        {{ forms.dropdown("alignV", "single", title, module.getoption("alignV", "middle"), options, "alignV", "valign", helpText, "align-fields") }}
+                    </div>
+
+                    {% if templateOptions %}
+                        <div class="tab-pane" id="appearanceTab">
+                            {% for key, option in templateOptions %}
+                                {% if option.type == "switch" %}
+                                    {{ forms.switch(key, option.name, module.getOption(key, option.default)) }}
+                                {% elseif option.type == "checkbox" %}
+                                    {{ forms.checkbox(key, option.name, module.getOption(key, option.default)) }}
+                                {% elseif option.type == "colorPicker" %}
+                                    {{ forms.colorPicker(key, option.name, module.getOption(key, option.default)) }}
+                                {% endif %}
+                            {% else %}
+                                <p>No options</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="tab-pane" id="cachingTab">
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
+                    </div>
+                </div>
+
+                <input type="hidden" name="step" value="3"/>
+            </form>
+        </div>
+    </div>
+{% endblock %}

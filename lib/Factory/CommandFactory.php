@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Command;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -37,29 +34,13 @@ use Xibo\Support\Exception\NotFoundException;
 class CommandFactory extends BaseFactory
 {
     /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory)
+    public function __construct($user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
-        $this->permissionFactory = $permissionFactory;
     }
 
     /**
@@ -68,7 +49,7 @@ class CommandFactory extends BaseFactory
      */
     public function create()
     {
-        return new Command($this->getStore(), $this->getLog(), $this->permissionFactory);
+        return new Command($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
@@ -92,7 +73,7 @@ class CommandFactory extends BaseFactory
      * Get by Display Profile Id
      * @param int $displayProfileId
      * @param string $type
-     * @return array[Command]
+     * @return Command[]
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getByDisplayProfileId($displayProfileId, $type)
@@ -104,9 +85,19 @@ class CommandFactory extends BaseFactory
     }
 
     /**
+     * @param $ownerId
+     * @return Command[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId): array
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array
+     * @return Command[]
      * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
@@ -161,8 +152,6 @@ class CommandFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
-
         if ($sanitizedFilter->getInt('commandId') !== null) {
             $body .= ' AND `command`.commandId = :commandId ';
             $params['commandId'] = $sanitizedFilter->getInt('commandId');
@@ -183,23 +172,29 @@ class CommandFactory extends BaseFactory
             $params['type'] = '%' . $sanitizedFilter->getString('type') . '%';
         }
 
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `command`.userId = :userId ';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
+        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
+
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start', $filterBy) !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
-
-
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Command($this->getStore(), $this->getLog(), $this->displayProfileFactory))->hydrate($row);
+            $entries[] = (new Command($this->getStore(), $this->getLog(), $this->getDispatcher()))->hydrate($row);
         }
 
         // Paging

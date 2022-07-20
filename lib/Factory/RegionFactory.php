@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Region;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -60,17 +57,13 @@ class RegionFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
+    public function __construct($permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
         $this->playlistFactory = $playlistFactory;
@@ -86,6 +79,7 @@ class RegionFactory extends BaseFactory
         return new Region(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this,
             $this->permissionFactory,
             $this->regionOptionFactory,
@@ -123,17 +117,16 @@ class RegionFactory extends BaseFactory
             throw new InvalidArgumentException(__('Height must be greater than 0'));
         }
 
-        $region = $this->createEmpty();
-        $region->ownerId = $ownerId;
-        $region->name = $name;
-        $region->width = $width;
-        $region->height = $height;
-        $region->top = $top;
-        $region->left = $left;
-        $region->zIndex = $zIndex;
-        $region->isDrawer = $isDrawer;
-
-        return $region;
+        return $this->hydrate($this->createEmpty(), [
+            'ownerId' => $ownerId,
+            'name' => $name,
+            'width' => $width,
+            'height' => $height,
+            'top' => $top,
+            'left' => $left,
+            'zIndex' => $zIndex,
+            'isDrawer' => $isDrawer,
+        ]);
     }
 
     /**
@@ -200,9 +193,18 @@ class RegionFactory extends BaseFactory
     }
 
     /**
+     * @param $ownerId
+     * @return Region[]
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Region]
+     * @return Region[]
      */
     public function query($sortOrder = [], $filterBy = [])
     {
@@ -250,13 +252,31 @@ class RegionFactory extends BaseFactory
             $params['isDrawer'] = $sanitizedFilter->getInt('isDrawer');
         }
 
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $sql .= ' AND region.ownerId = :userId ';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
         // Order by Name
         $sql .= ' ORDER BY `region`.name ';
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['zIndex', 'duration', 'isDrawer']]);
+            $entries[] = $this->hydrate($this->createEmpty(), $row);
         }
 
         return $entries;
+    }
+
+    /**
+     * @param Region $region
+     * @param array $row
+     * @return Region
+     */
+    private function hydrate($region, $row)
+    {
+        return $region->hydrate($row, [
+            'intProperties' => ['zIndex', 'duration', 'isDrawer'],
+            'doubleProperties' => ['width', 'height', 'top', 'left']
+        ]);
     }
 }

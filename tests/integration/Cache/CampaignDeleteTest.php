@@ -82,7 +82,9 @@ class CampaignDeleteTest extends LocalWebTestCase
         $this->campaign = (new XiboCampaign($this->getEntityProvider()))->create(Random::generateString());
 
         // Assign the Layout to the Campaign
-        $this->campaign->assignLayout([$this->layout->layoutId], [1]);
+        $this->getEntityProvider()->post('/campaign/layout/assign/' . $this->campaign->campaignId, [
+            'layoutId' => $this->layout->layoutId
+        ]);
 
         // Create a Display
         $this->display = $this->createDisplay();

@@ -37,7 +37,7 @@ class Random
     public static function generateString($length = 10, $prefix = '')
     {
         if (function_exists('random_bytes')) {
-            return $prefix . bin2hex(random_bytes($length));
+            return substr($prefix . bin2hex(random_bytes($length)), 0, $length + strlen($prefix));
         } else {
             $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
             $charactersLength = strlen($characters);

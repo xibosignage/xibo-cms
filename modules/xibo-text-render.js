@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2020 Xibo Signage Ltd
+ * Copyright (C) 2009-2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -34,7 +34,8 @@ jQuery.fn.extend({
             "previewHeight": 0,
             "scaleOverride": 0,
             "randomiseItems": 0,
-            "marqueeInlineSelector": ".item, .item p"
+            "marqueeInlineSelector": ".item, .item p",
+            "alignmentV": "top"
         };
 
         options = $.extend({}, defaults, options);
@@ -206,15 +207,18 @@ jQuery.fn.extend({
                 });
 
                 var timeout = duration * 1000;
+                var noTransitionSpeed = 10;
 
                 if (options.fx !== "noTransition") {
-                    timeout = timeout - (options.speed * 0.7);
+                    timeout = timeout - options.speed;
+                } else {
+                    timeout = timeout - noTransitionSpeed;
                 }
 
                 // Cycle handles this for us
                 $(this).cycle({
                     fx: (options.fx === "noTransition") ? "none" : options.fx,
-                    speed: (options.fx === "noTransition") ? 1 : options.speed,
+                    speed: (options.fx === "noTransition") ? noTransitionSpeed : options.speed,
                     timeout: timeout,
                     slides: "> " + slides
                 });
@@ -244,10 +248,14 @@ jQuery.fn.extend({
             if (marquee) {
                 // Which marquee to use?
                 var nua = navigator.userAgent;
+                /* The intention was to allow Chrome based android to benefit from the new marquee
+                   unfortunately though, it doesn't appear to work.
+                   Maybe this is due to Chrome verison? Android tends to have quite an old version.
                 var is_android = ((nua.indexOf('Mozilla/5.0') > -1
-                    && nua.indexOf('Android ') > -1
+                    && nua.indexOf('Android') > -1
                     && nua.indexOf('AppleWebKit') > -1)
-                    && !(nua.indexOf('Chrome') > -1));
+                    && !(nua.indexOf('Chrome') > -1));*/
+                var is_android = nua.indexOf('Android') > -1;
 
                 // Create a DIV to scroll, and put this inside the body
                 var scroller = $("<div/>")
@@ -277,16 +285,17 @@ jQuery.fn.extend({
 
                 $(this).wrapInner(scroller);
 
+                // Correct for up / down
+                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
+                    $(this).css('height', '100%');
+                    $(this).find('.scroll').css('height', '100%').children().css({"white-space": "normal", float: "none"});
+                }
+
                 // Set some options on the extra DIV and make it a marquee
                 if (!is_android) {
                     $(this).find('.scroll').marquee();
                 } else {
                     $(this).find('.scroll').overflowMarquee();
-                }
-
-                // Correct for up / down
-                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
-                    $(this).children().children().css({"white-space": "normal", float: "none"});
                 }
             }
 
@@ -299,6 +308,19 @@ jQuery.fn.extend({
                 $(".page .item:last-child").css("padding", 0);
                 $("#content .item:last-child").css("padding", 0);
             }
+
+          // Align the whole thing according to vAlignment
+          if (options.type && options.type === 'text') {
+            var $textContent = $(this);
+            // The timeout just yields a bit to let our content get rendered
+            setTimeout(function () {
+              if (options.alignmentV === 'bottom') {
+                $textContent.css('margin-top', $(window).height() - ($textContent.height() * $('body').data().ratio));
+              } else if (options.alignmentV === 'middle') {
+                $textContent.css('margin-top', ($(window).height() - ($textContent.height() * $('body').data().ratio)) / 2);
+              }
+            }, 500);
+          }
         });
 
         return $(this);

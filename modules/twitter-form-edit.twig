@@ -127,7 +127,7 @@
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+                        {{ forms.colorPicker("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
 
                         {% set title %}{% trans "Count" %}{% endset %}
                         {% set helpText %}{% trans "The number of Tweets to return (default = 15)." %}{% endset %}
@@ -136,9 +136,14 @@
                         {% set title %}{% trans "Tweets Per Page" %}{% endset %}
                         {% set helpText %}{% trans "The number of Tweets to show per page (default = 5)." %}{% endset %}
                         {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText) }}
-                            
-                        {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set helpText %}{% trans "Enter the date format to apply to all dates returned: d - day in numbers; 01 to 31 / D - day of the week as text; Mon to Sun: m - month in numbers; 01 to 12 /M - month in text; Jan to Dec - year in two digits; 19 / Y - year in four digits; 2019" %}{% endset %}
+
+                        {% set title %}{% trans "Date Format" %}
+                            <span class="fa fa-info-circle date-format-table"
+                                  data-toggle="popover"
+                                  data-trigger="hover">
+                            </span>
+                        {% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the Widget." %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
@@ -170,6 +175,29 @@
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
+                        {% set title %}{% trans "Horizontal Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be aligned?" %}{% endset %}
+                        {% set left %}{% trans "Left" %}{% endset %}
+                        {% set center %}{% trans "Centre" %}{% endset %}
+                        {% set right %}{% trans "Right" %}{% endset %}
+                        {% set options = [
+                        { alignH: "left", align: left },
+                        { alignH: "center", align: center },
+                        { alignH: "right", align: right }
+                        ] %}
+                        {{ forms.dropdown("alignH", "single", title, module.getOption("alignH","center"), options, "alignH", "align", helpText, "align-fields") }}
+
+                        {% set title %}{% trans "Vertical Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be vertically aligned?" %}{% endset %}
+                        {% set top %}{% trans "Top" %}{% endset %}
+                        {% set middle %}{% trans "Middle" %}{% endset %}
+                        {% set bottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                        { alignV: "top", valign: top },
+                        { alignV: "middle", valign: middle },
+                        { alignV: "bottom", valign: bottom }
+                        ] %}
+                        {{ forms.dropdown("alignV", "single", title, module.getoption("alignV", "middle"), options, "alignV", "valign", helpText, "align-fields") }}                        
                     </div>
 
                     
@@ -218,39 +246,17 @@
 
                     <div class="tab-pane" id="templateTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Main Template" %}</h4>
                         </div>
 
                         <div class="editor-messages">
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
-
-                            {# Layout Designer messages #}
-                            {% set layoutDesignerMessage %}
-                                {% trans "Enter text to display using the inline editor which can be opened by clicking in the preview on the left." %}
-                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
-
-                            {# Playlist Editor messages #}
-                            {% set playlistEditorMessage %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
-                        <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="ta_text">
-                            <div class="col-sm-6">
+                        <div class="ckeditor_controls inline-editor-hide container-fluid p-0" data-linked-to="ta_text">
+                            <div class="col-sm-12 p-0">
                                 <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">

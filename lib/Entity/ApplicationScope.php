@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,6 @@
 
 namespace Xibo\Entity;
 
-use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -31,7 +30,7 @@ use Xibo\Support\Exception\AccessDeniedException;
  * Class ApplicationScope
  * @package Xibo\Entity
  */
-class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
+class ApplicationScope implements \JsonSerializable
 {
     use EntityTrait;
 
@@ -46,13 +45,19 @@ class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
     public $description;
 
     /**
+     * @var int
+     */
+    public $useRegex;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $dispatcher)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
     /**
@@ -64,6 +69,11 @@ class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
         return $this->id;
     }
 
+    public function getSqlOperator()
+    {
+        return ($this->useRegex) ? 'RLIKE' : '=';
+    }
+
     /**
      * Check whether this scope has permission for this route
      * @param $method
@@ -72,25 +82,24 @@ class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
      */
     public function checkRoute($method, $route)
     {
+        $operator = $this->getSqlOperator();
+
         $route = $this->getStore()->select('
             SELECT *
               FROM `oauth_scope_routes`
              WHERE scopeId = :scope
-              AND method = :method
-              AND route = :route
+              AND method '.$operator.' :method
+              AND route '.$operator.' :route
         ', [
             'scope' => $this->getId(),
             'method' => $method,
             'route' => $route
         ]);
 
-        if (count($route) <= 0)
-            throw new AccessDeniedException(__('Access to this route is denied for this scope'));
-    }
-
-    /** @inheritDoc */
-    public function getIdentifier()
-    {
-        return $this->getId();
+        if (count($route) <= 0) {
+            throw new AccessDeniedException();
+        } else {
+            return true;
+        }
     }
 }

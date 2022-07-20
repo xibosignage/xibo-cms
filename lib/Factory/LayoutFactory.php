@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,23 +20,21 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Factory;
 
-
 use Carbon\Carbon;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Stash\Invalidation;
+use Stash\Pool;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Entity\Folder;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -53,8 +51,8 @@ class LayoutFactory extends BaseFactory
      */
     private $config;
 
-    /** @var  EventDispatcherInterface */
-    private $dispatcher;
+    /** @var \Stash\Interfaces\PoolInterface */
+    private $pool;
 
     /**
      * @var PermissionFactory
@@ -115,13 +113,9 @@ class LayoutFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
-     * @param EventDispatcherInterface $dispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -134,15 +128,28 @@ class LayoutFactory extends BaseFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param ActionFactory $actionFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dispatcher, $permissionFactory,
-                                $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
-                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory, $folderFactory)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
+    public function __construct(
+        $user,
+        $userFactory,
+        $config,
+        $permissionFactory,
+        $regionFactory,
+        $tagFactory,
+        $campaignFactory,
+        $mediaFactory,
+        $moduleFactory,
+        $resolutionFactory,
+        $widgetFactory,
+        $widgetOptionFactory,
+        $playlistFactory,
+        $widgetAudioFactory,
+        $actionFactory,
+        $folderFactory
+    ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
-        $this->dispatcher = $dispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -167,8 +174,8 @@ class LayoutFactory extends BaseFactory
         return new Layout(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->config,
-            $this->dispatcher,
             $this->permissionFactory,
             $this->regionFactory,
             $this->tagFactory,
@@ -190,13 +197,14 @@ class LayoutFactory extends BaseFactory
      * @param string $description
      * @param string|array $tags
      * @param string $code
+     * @param bool $addRegion
      * @return Layout
      *
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code)
+    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code, $addRegion = true)
     {
         $resolution = $this->resolutionFactory->getById($resolutionId);
 
@@ -204,6 +212,7 @@ class LayoutFactory extends BaseFactory
         $layout = $this->createEmpty();
         $layout->width = $resolution->width;
         $layout->height = $resolution->height;
+        $layout->orientation = ($layout->width >= $layout->height) ? 'landscape' : 'portrait';
 
         // Set the properties
         $layout->layout = $name;
@@ -223,7 +232,39 @@ class LayoutFactory extends BaseFactory
         }
 
         // Add a blank, full screen region
-        $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
+        if ($addRegion) {
+            $layout->regions[] = $this->regionFactory->create(
+                $ownerId,
+                $name . '-1',
+                $layout->width,
+                $layout->height,
+                0,
+                0
+            );
+        }
+
+        return $layout;
+    }
+
+    /**
+     * @param \Xibo\Entity\Layout $layout
+     * @param int $width
+     * @param int $height
+     * @param int $top
+     * @param int $left
+     * @return \Xibo\Entity\Layout
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function addRegion(Layout $layout, int $width, int $height, int $top, int $left): Layout
+    {
+        $layout->regions[] = $this->regionFactory->create(
+            $layout->ownerId,
+            $layout->layout . '-' . count($layout->regions),
+            $width,
+            $height,
+            $top,
+            $left
+        );
 
         return $layout;
     }
@@ -437,6 +478,10 @@ class LayoutFactory extends BaseFactory
      */
     public function getByDisplayGroupId($displayGroupId)
     {
+        if ($displayGroupId == null) {
+            return [];
+        }
+
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
@@ -501,7 +546,9 @@ class LayoutFactory extends BaseFactory
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
-        $document->loadXML($layoutXlf);
+        if ($document->loadXML($layoutXlf) === false) {
+            throw new InvalidArgumentException(__('Layout import failed, invalid xlf supplied'));
+        }
 
         $layout->schemaVersion = (int)$document->documentElement->getAttribute('schemaVersion');
         $layout->width = $document->documentElement->getAttribute('width');
@@ -519,9 +566,9 @@ class LayoutFactory extends BaseFactory
 
             // Get the ownerId
             $regionOwnerId = $regionNode->getAttribute('userId');
-            if ($regionOwnerId == null)
+            if ($regionOwnerId == null) {
                 $regionOwnerId = $layout->ownerId;
-
+            }
             // Create the region
             $region = $this->regionFactory->create(
                 $regionOwnerId,
@@ -531,7 +578,7 @@ class LayoutFactory extends BaseFactory
                 (double)$regionNode->getAttribute('top'),
                 (double)$regionNode->getAttribute('left'),
                 (int)$regionNode->getAttribute('zindex')
-                );
+            );
 
             // Use the regionId locally to parse the rest of the XLF
             $region->tempId = $regionNode->getAttribute('id');
@@ -545,14 +592,23 @@ class LayoutFactory extends BaseFactory
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
+            // Populate region options.
+            foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/options') as $regionOptionsNode) {
+                /* @var \DOMElement $regionOptionsNode */
+                foreach ($regionOptionsNode->childNodes as $regionOption) {
+                    /* @var \DOMElement $regionOption */
+                    $region->setOptionValue($regionOption->nodeName, $regionOption->textContent);
+                }
+            }
+
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
 
                 $mediaOwnerId = $mediaNode->getAttribute('userId');
-                if ($mediaOwnerId == null)
+                if ($mediaOwnerId == null) {
                     $mediaOwnerId = $regionOwnerId;
-
+                }
                 $widget = $this->widgetFactory->createEmpty();
                 $widget->type = $mediaNode->getAttribute('type');
                 $widget->ownerId = $mediaOwnerId;
@@ -629,9 +685,9 @@ class LayoutFactory extends BaseFactory
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
-                        if ($mediaOption->textContent == null)
+                        if ($mediaOption->textContent == null) {
                             continue;
-
+                        }
                         $widgetOption = $this->widgetOptionFactory->createEmpty();
                         $widgetOption->type = 'cdata';
                         $widgetOption->option = $mediaOption->nodeName;
@@ -649,9 +705,9 @@ class LayoutFactory extends BaseFactory
                     // Get children
                     foreach ($rawNode->childNodes as $audioNode) {
                         /* @var \DOMElement $audioNode */
-                        if ($audioNode->textContent == null)
+                        if ($audioNode->textContent == null) {
                             continue;
-
+                        }
                         $audioMediaId = $audioNode->getAttribute('mediaId');
 
                         if (empty($audioMediaId)) {
@@ -688,9 +744,9 @@ class LayoutFactory extends BaseFactory
 
         foreach ($xpath->query('//tags/tag') as $tagNode) {
             /* @var \DOMElement $tagNode */
-            if (trim($tagNode->textContent) == '')
+            if (trim($tagNode->textContent) == '') {
                 continue;
-
+            }
             $layout->tags[] = $this->tagFactory->tagFromString($tagNode->textContent);
         }
 
@@ -700,27 +756,24 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param $layoutJson
+     * @param $playlistJson
+     * @param $nestedPlaylistJson
+     * @param Folder $folder
      * @param null $layout
-     * @param null $playlistJson
-     * @param null $nestedPlaylistJson
-     * @param bool $useJson
      * @param bool $importTags
      * @return array
      * @throws DuplicateEntityException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false)
+    public function loadByJson($layoutJson, $playlistJson, $nestedPlaylistJson, Folder $folder, $layout = null, $importTags = false): array
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
         // New Layout
         if ($layout == null) {
             $layout = $this->createEmpty();
-        }
-
-        if ($useJson == false) {
-            throw new InvalidArgumentException(__('playlist.json not found in the archive'), 'playlistJson');
         }
 
         $playlists = [];
@@ -736,7 +789,8 @@ class LayoutFactory extends BaseFactory
         $layout->backgroundColor = $layoutJson['layoutDefinitions']['backgroundColor'];
         $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
         $layout->actions = [];
-        $actions = $layoutJson['layoutDefinitions']['actions'];
+        $layout->autoApplyTransitions = $layoutJson['layoutDefinitions']['autoApplyTransitions'] ?? 0;
+        $actions = $layoutJson['layoutDefinitions']['actions'] ?? [];
 
         foreach ($actions as $action) {
             $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importLayout', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
@@ -766,7 +820,7 @@ class LayoutFactory extends BaseFactory
                 $oldIds[] = $newPlaylist->playlistId;
                 $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
-                $this->setOwnerAndSavePlaylist($newPlaylist);
+                $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
 
                 $newIds[] = $newPlaylist->playlistId;
             }
@@ -783,7 +837,7 @@ class LayoutFactory extends BaseFactory
         $drawers = (array_key_exists('drawers', $layoutJson['layoutDefinitions'])) ? $layoutJson['layoutDefinitions']['drawers'] : [];
 
         // merge Layout Regions and Drawers into one array.
-        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $drawers );
+        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $drawers);
 
         // Populate Region Nodes
         foreach ($allRegions as $regionJson) {
@@ -804,7 +858,7 @@ class LayoutFactory extends BaseFactory
                 (double)$regionJson['top'],
                 (double)$regionJson['left'],
                 (int)$regionJson['zIndex'],
-                (int)$regionJson['isDrawer']
+                isset($regionJson['isDrawer']) ? (int)$regionJson['isDrawer'] : 0
             );
 
             // Use the regionId locally to parse the rest of the JSON
@@ -821,15 +875,18 @@ class LayoutFactory extends BaseFactory
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
             // interactive Actions
-            $actions = $regionJson['actions'];
+            $actions = $regionJson['actions'] ?? [];
             foreach ($actions as $action) {
                 $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                 $newAction->save(['validate' => false]);
             }
 
+            foreach ($regionJson['regionOptions'] as $regionOption) {
+                $region->setOptionValue($regionOption['option'], $regionOption['value']);
+            }
+
             // Get all widgets
             foreach ($regionJson['regionPlaylist']['widgets'] as $mediaNode) {
-
                 $mediaOwnerId = $mediaNode['ownerId'];
                 if ($mediaOwnerId == null) {
                     $mediaOwnerId = $regionOwnerId;
@@ -840,7 +897,7 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode['duration'];
                 $widget->useDuration = $mediaNode['useDuration'];
-                $widget->mediaIds = $mediaNode['mediaIds'];
+                $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
 
                 // Widget from/to dates.
@@ -858,13 +915,13 @@ class LayoutFactory extends BaseFactory
                 }
 
                 /* @var \Xibo\Entity\Module $module */
+                $module = $modules[$widget->type];
 
                 //
                 // Get all widget options
                 //
                 $layoutSubPlaylistId = null;
                 foreach ($mediaNode['widgetOptions'] as $optionsNode) {
-
                     if ($optionsNode['option'] == 'subPlaylistOptions') {
                         $subPlaylistOptions = json_decode($optionsNode['value']);
                     }
@@ -887,6 +944,16 @@ class LayoutFactory extends BaseFactory
                 }
 
                 //
+                // Get the MediaId associated with this widget
+                //
+                if ($module->regionSpecific == 0) {
+                    $this->getLog()->debug('Library Widget, getting mediaId');
+
+                    $this->getLog()->debug(sprintf('Assigning mediaId %d', $widget->tempId));
+                    $widget->assignMedia($widget->tempId);
+                }
+
+                //
                 // Audio
                 //
                 foreach ($mediaNode['audio'] as $audioNode) {
@@ -894,26 +961,21 @@ class LayoutFactory extends BaseFactory
                         continue;
                     }
 
-                    $audioMediaId = implode(',', $audioNode);
-
                     $widgetAudio = $this->widgetAudioFactory->createEmpty();
-                    $widgetAudio->mediaId = $audioMediaId;
-                    $widgetAudio->volume = $mediaNode['volume'];;
-                    $widgetAudio->loop = $mediaNode['loop'];;
-
+                    $widgetAudio->mediaId = $audioNode['mediaId'];
+                    $widgetAudio->volume = $audioNode['volume'];
+                    $widgetAudio->loop = $audioNode['loop'];
                     $widget->assignAudio($widgetAudio);
                 }
 
                 // Sub-Playlist widgets with Playlists
                 if ($widget->type == 'subplaylist') {
-
                     $layoutSubPlaylistIds = [];
                     $subPlaylistOptionsUpdated = [];
                     $widgets = [];
                     $this->getLog()->debug('Layout import, creating layout Playlists from JSON, there are ' . count($playlistJson) . ' Playlists to create');
 
                     foreach ($playlistJson as $playlistDetail) {
-
                         $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($playlistDetail);
                         $newPlaylist->tags = [];
 
@@ -928,7 +990,6 @@ class LayoutFactory extends BaseFactory
 
                         // Check to see if it matches our Sub-Playlist widget config
                         if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
-
                             // Store the oldId to swap permissions later
                             $oldIds[] = $newPlaylist->playlistId;
 
@@ -936,7 +997,7 @@ class LayoutFactory extends BaseFactory
                             $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
                             // Save a new Playlist and capture the Id
-                            $this->setOwnerAndSavePlaylist($newPlaylist);
+                            $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
 
                             $newIds[] = $newPlaylist->playlistId;
                         }
@@ -956,9 +1017,7 @@ class LayoutFactory extends BaseFactory
                     $widget->setOptionValue('subPlaylistIds', 'attrib', json_encode($layoutSubPlaylistIds));
 
                     foreach ($layoutSubPlaylistIds as $value) {
-
                         foreach ($subPlaylistOptions as $playlistId => $options) {
-
                             foreach ($options as $optionName => $optionValue) {
                                 if ($optionName == 'subPlaylistIdSpots') {
                                     $spots = $optionValue;
@@ -984,7 +1043,7 @@ class LayoutFactory extends BaseFactory
                 $playlist->assignWidget($widget);
 
                 // interactive Actions
-                $actions = $mediaNode['actions'];
+                $actions = $mediaNode['actions'] ?? [];
                 foreach ($actions as $action) {
                     $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importWidget', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                     $newAction->save(['validate' => false]);
@@ -1015,7 +1074,6 @@ class LayoutFactory extends BaseFactory
                 $layout->tags[] = $this->tagFactory->tagFromString(
                     $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
                 );
-
             }
         }
 
@@ -1033,9 +1091,11 @@ class LayoutFactory extends BaseFactory
      * @param int $importTags
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
-     * @param \Xibo\Controller\Library $libraryController
+     * @param DataSetFactory $dataSetFactory
      * @param string $tags
      * @param \Slim\Interfaces\RouteParserInterface $routeParser $routeParser
+     * @param MediaServiceInterface $mediaService
+     * @param int $folderId
      * @return Layout
      * @throws DuplicateEntityException
      * @throws GeneralException
@@ -1043,7 +1103,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags, $routeParser)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $dataSetFactory, $tags, $routeParser, MediaServiceInterface $mediaService, int $folderId)
     {
         $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
@@ -1066,38 +1126,10 @@ class LayoutFactory extends BaseFactory
         // Get the Playlist details
         $playlistDetails = $zip->getFromName('playlist.json');
         $nestedPlaylistDetails = $zip->getFromName('nestedPlaylist.json');
-        $regionActions = false;
-        $widgetActions = false;
+        $folder = $this->folderFactory->getById($folderId);
 
-        $actionsExist = !empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions;
-
-        // should we use json import?
-        $useJsonImport = !empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist;
-
-        if ($useJsonImport) {
-            // check if we have any actions in regions and/or widgets.
-            if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
-                $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
-            } else {
-                $allRegions = $layoutDetails['layoutDefinitions']['regions'];
-            }
-
-            foreach ($allRegions as $region) {
-                $regionActions = (!empty($region['actions'])) ? true : false;
-
-                if ($regionActions) {
-                    break;
-                }
-
-                foreach ($region['regionPlaylist']['widgets'] as $widget) {
-                    $widgetActions = (!empty($widget['actions'])) ? true : false;
-
-                    if ($widgetActions) {
-                        break;
-                    }
-                }
-            }
-
+        // for old imports it may not exist and would error out without this check.
+        if (array_key_exists('layoutDefinitions', $layoutDetails)) {
             // Construct the Layout
             if ($playlistDetails !== false) {
                 $playlistDetails = json_decode(($playlistDetails), true);
@@ -1107,17 +1139,19 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags);
+            $jsonResults = $this->loadByJson($layoutDetails, $playlistDetails, $nestedPlaylistDetails, $folder, null, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
-            // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
-            // if the code does not exist, then persist it on import.
-            try {
-                $this->getByCode($layoutDetails['layoutDefinitions']['code']);
-                $layout->code = null;
-            } catch (NotFoundException $exception) {
-                $layout->code = $layoutDetails['layoutDefinitions']['code'];
+            if (array_key_exists('code', $layoutDetails['layoutDefinitions'])) {
+                // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
+                // if the code does not exist, then persist it on import.
+                try {
+                    $this->getByCode($layoutDetails['layoutDefinitions']['code']);
+                    $layout->code = null;
+                } catch (NotFoundException $exception) {
+                    $layout->code = $layoutDetails['layoutDefinitions']['code'];
+                }
             }
         } else {
             $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
@@ -1148,7 +1182,7 @@ class LayoutFactory extends BaseFactory
         } catch (NotFoundException $notFoundException) {
             $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
-            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, $layout->width, $layout->height);
+            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
             $resolution->userId = $userId;
             $resolution->save();
         }
@@ -1208,7 +1242,8 @@ class LayoutFactory extends BaseFactory
 
         // Go through each region and add the media (updating the media ids)
         $mappings = json_decode($zip->getFromName('mapping.json'), true);
-
+        $oldMediaIds = [];
+        $newMediaIds = [];
         foreach ($mappings as $file) {
             // Import the Media File
             $intendedMediaName = $file['name'];
@@ -1256,7 +1291,6 @@ class LayoutFactory extends BaseFactory
                     $intendedMediaName = 'import_' . $layout->layout . '_' . uniqid();
                     throw new NotFoundException();
                 }
-
             } catch (NotFoundException $e) {
                 // Create it instead
                 $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
@@ -1272,12 +1306,13 @@ class LayoutFactory extends BaseFactory
                         $media->tags[] = $this->tagFactory->tagFromString(
                             $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
                         );
-
                     }
                 }
 
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
-
+                $media->folderId = $folder->id;
+                $media->permissionsFolderId =
+                    ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
                 // Get global stat setting of media to set to on/off/inherit
                 $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 $media->save();
@@ -1288,6 +1323,8 @@ class LayoutFactory extends BaseFactory
             // Find where this is used and swap for the real mediaId
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
+            $oldMediaIds[] = $oldMediaId;
+            $newMediaIds[] = $newMediaId;
 
             if ($file['background'] == 1) {
                 // Set the background image on the new layout
@@ -1304,11 +1341,10 @@ class LayoutFactory extends BaseFactory
                     /* @var Widget $widget */
                     $audioIds = $widget->getAudioIds();
 
-                    $this->getLog()->debug('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds));
+                    $this->getLog()->debug(sprintf('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds)));
 
                     if (in_array($oldMediaId, $widget->mediaIds)) {
-
-                        $this->getLog()->debug('Removing %d and replacing with %d', $oldMediaId, $newMediaId);
+                        $this->getLog()->debug(sprintf('Removing %d and replacing with %d', $oldMediaId, $newMediaId));
 
                         // Are we an audio record?
                         if (in_array($oldMediaId, $audioIds)) {
@@ -1319,7 +1355,6 @@ class LayoutFactory extends BaseFactory
                                     break;
                                 }
                             }
-
                         } else {
                             // Non audio
                             $widget->setOptionValue('uri', 'attrib', $media->storedAs);
@@ -1332,66 +1367,68 @@ class LayoutFactory extends BaseFactory
                         // Assign the new ID
                         $widget->assignMedia($newMediaId);
                     }
-
-                    // change mediaId references in applicable widgets, outside of the if condition, because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
+                    // change mediaId references in applicable widgets, outside of the if condition,
+                    // because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
                     // the mediaIds array for Widgets with Library references will be correctly populated on getResource call from Player/CMS.
                     // if the Layout was loadByJson then it will already have correct mediaIds array at this point.
                     $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
                 }
             }
+        }
+        $uploadedMediaIds = array_combine($oldMediaIds, $newMediaIds);
 
-            // Playlists with media widgets
-            // We will iterate through all Playlists we've created during layout import here and replace any mediaIds if needed
-            if (isset($playlists) && $playlistDetails !== false) {
-                foreach ($playlists as $playlist) {
-                    /** @var $playlist Playlist */
-                    foreach ($playlist->widgets as $widget) {
-                        $audioIds = $widget->getAudioIds();
+        // Playlists with media widgets
+        // We will iterate through all Playlists we've created during layout import here and
+        // replace any mediaIds if needed
+        if (isset($playlists) && $playlistDetails !== false) {
+            foreach ($playlists as $playlist) {
+                /** @var $playlist Playlist */
+                foreach ($playlist->widgets as $widget) {
+                    $audioIds = $widget->getAudioIds();
 
-                        if (in_array($oldMediaId, $widget->mediaIds)) {
-
-                            $this->getLog()->debug('Playlist import Removing %d and replacing with %d', $oldMediaId, $newMediaId);
-
-                            // Are we an audio record?
-                            if (in_array($oldMediaId, $audioIds)) {
-                                // Swap the mediaId on the audio record
-                                foreach ($widget->audio as $widgetAudio) {
-                                    if ($widgetAudio->mediaId == $oldMediaId) {
-                                        $widgetAudio->mediaId = $newMediaId;
-                                        break;
+                    foreach ($widget->mediaIds as $mediaId) {
+                        foreach ($uploadedMediaIds as $old => $new) {
+                            if ($mediaId == $old) {
+                                $this->getLog()->debug(sprintf('Playlist import Removing %d and replacing with %d', $old, $new));
+                                // Are we an audio record?
+                                if (in_array($old, $audioIds)) {
+                                    // Swap the mediaId on the audio record
+                                    foreach ($widget->audio as $widgetAudio) {
+                                        if ($widgetAudio->mediaId == $old) {
+                                            $widgetAudio->mediaId = $new;
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    $addedMedia = $this->mediaFactory->getById($new);
+                                    // Non audio
+                                    $widget->setOptionValue('uri', 'attrib', $addedMedia->storedAs);
                                 }
 
-                            } else {
-                                // Non audio
-                                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
-                            }
+                                // Always manage the assignments
+                                // Unassign the old ID
+                                $widget->unassignMedia($old);
 
-                            // Always manage the assignments
-                            // Unassign the old ID
-                            $widget->unassignMedia($oldMediaId);
+                                // Assign the new ID
+                                $widget->assignMedia($new);
 
-                            // Assign the new ID
-                            $widget->assignMedia($newMediaId);
-
-                            // change mediaId references in applicable widgets in all Playlists we have created on this import.
-                            $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
-
-                            $widget->save();
-
-                            if (!in_array($widget, $playlist->widgets)) {
-                                $playlist->assignWidget($widget);
-                                $playlist->requiresDurationUpdate = 1;
-                                $playlist->save();
+                                // change mediaId references in applicable widgets in all Playlists we have created on this import.
+                                $this->handleWidgetMediaIdReferences($widget, $new, $old);
                             }
                         }
+                    }
+                    $widget->save();
 
-                        // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
-                        // this will be needed if any Playlist has widgets with dataSets
-                        if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
-                            $widgets[] = $widget;
-                            $playlistWidgets[] = $widget;
-                        }
+                    if (!in_array($widget, $playlist->widgets)) {
+                        $playlist->assignWidget($widget);
+                        $playlist->requiresDurationUpdate = 1;
+                        $playlist->save();
+                    }
+                    // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
+                    // this will be needed if any Playlist has widgets with dataSets
+                    if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
+                        $widgets[] = $widget;
+                        $playlistWidgets[] = $widget;
                     }
                 }
             }
@@ -1401,24 +1438,26 @@ class LayoutFactory extends BaseFactory
         $dataSets = $zip->getFromName('dataSet.json');
 
         if ($dataSets !== false) {
-
             $dataSets = json_decode($dataSets, true);
 
             $this->getLog()->debug('There are ' . count($dataSets) . ' DataSets to import.');
 
             foreach ($dataSets as $item) {
                 // Hydrate a new dataset object with this json object
-                $dataSet = $libraryController->getDataSetFactory()->createEmpty()->hydrate($item);
+                $dataSet = $dataSetFactory->createEmpty()->hydrate($item);
                 $dataSet->columns = [];
                 $dataSetId = $dataSet->dataSetId;
-
+                $columnWithImages = [];
                 // We must null the ID so that we don't try to load the dataset when we assign columns
                 $dataSet->dataSetId = null;
                 
                 // Hydrate the columns
                 foreach ($item['columns'] as $columnItem) {
-                    $this->getLog()->debug('Assigning column: %s', json_encode($columnItem));
-                    $dataSet->assignColumn($libraryController->getDataSetFactory()->getDataSetColumnFactory()->createEmpty()->hydrate($columnItem));
+                    $this->getLog()->debug(sprintf('Assigning column: %s', json_encode($columnItem)));
+                    if ($columnItem['dataTypeId'] === 5) {
+                        $columnWithImages[] = $columnItem['heading'];
+                    }
+                    $dataSet->assignColumn($dataSetFactory->getDataSetColumnFactory()->createEmpty()->hydrate($columnItem));
                 }
 
                 /** @var DataSet $existingDataSet */
@@ -1430,49 +1469,56 @@ class LayoutFactory extends BaseFactory
                     if ($dataSet->code != '') {
                         try {
                             // try and get by code
-                            $existingDataSet = $libraryController->getDataSetFactory()->getByCode($dataSet->code);
+                            $existingDataSet = $dataSetFactory->getByCode($dataSet->code);
                         } catch (NotFoundException $e) {
-                            $this->getLog()->debug('Existing dataset not found with code %s', $dataSet->code);
-
+                            $this->getLog()->debug(sprintf('Existing dataset not found with code %s', $dataSet->code));
                         }
                     }
 
                     if ($existingDataSet === null) {
                         // try by name
                         try {
-                            $existingDataSet = $libraryController->getDataSetFactory()->getByName($dataSet->dataSet);
+                            $existingDataSet = $dataSetFactory->getByName($dataSet->dataSet);
                         } catch (NotFoundException $e) {
-                            $this->getLog()->debug('Existing dataset not found with name %s', $dataSet->code);
+                            $this->getLog()->debug(sprintf('Existing dataset not found with name %s', $dataSet->code));
                         }
                     }
                 }
 
                 if ($existingDataSet === null) {
-
-                    $this->getLog()->debug('Matching DataSet not found, will need to add one. useExistingDataSets = %s', $useExistingDataSets);
+                    $this->getLog()->debug(sprintf('Matching DataSet not found, will need to add one. useExistingDataSets = %s', $useExistingDataSets));
 
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
                     $existingDataSet = clone $dataSet;
                     $existingDataSet->userId = $this->getUser()->userId;
+                    $existingDataSet->folderId = $folder->id;
+                    $existingDataSet->permissionsFolderId =
+                        ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
                     $existingDataSet->save();
 
                     // Do we need to add data
                     if ($importDataSetData) {
-
                         // Import the data here
-                        $this->getLog()->debug('Importing data into new DataSet %d', $existingDataSet->dataSetId);
+                        $this->getLog()->debug(sprintf('Importing data into new DataSet %d', $existingDataSet->dataSetId));
 
                         foreach ($item['data'] as $itemData) {
-                            if (isset($itemData['id']))
+                            if (isset($itemData['id'])) {
                                 unset($itemData['id']);
+                            }
+
+                            foreach ($columnWithImages as $columnHeading) {
+                                foreach ($uploadedMediaIds as $old => $new) {
+                                    if ($itemData[$columnHeading] == $old) {
+                                        $itemData[$columnHeading] = $new;
+                                    }
+                                }
+                            }
 
                             $existingDataSet->addRow($itemData);
                         }
                     }
-
                 } else {
-
                     $this->getLog()->debug('Matching DataSet found, validating the columns');
 
                     // Load the existing dataset
@@ -1480,7 +1526,7 @@ class LayoutFactory extends BaseFactory
 
                     // Validate that the columns are the same
                     if (count($dataSet->columns) != count($existingDataSet->columns)) {
-                        $this->getLog()->debug('Columns for Imported DataSet = %s', json_encode($dataSet->columns));
+                        $this->getLog()->debug(sprintf('Columns for Imported DataSet = %s', json_encode($dataSet->columns)));
                         throw new InvalidArgumentException(sprintf(__('DataSets have different number of columns imported = %d, existing = %d'), count($dataSet->columns), count($existingDataSet->columns)));
                     }
 
@@ -1527,7 +1573,7 @@ class LayoutFactory extends BaseFactory
                                 // Get the columns option
                                 $columns = explode(',', $widget->getOptionValue('columns', ''));
 
-                                $this->getLog()->debug('Looking to replace columns from %s', json_encode($columns));
+                                $this->getLog()->debug(sprintf('Looking to replace columns from %s', json_encode($columns)));
 
                                 foreach ($existingDataSet->columns as $column) {
                                     foreach ($columns as $index => $col) {
@@ -1541,13 +1587,12 @@ class LayoutFactory extends BaseFactory
 
                                 $widget->setOptionValue('columns', 'attrib', $columns);
 
-                                $this->getLog()->debug('Replaced columns with %s', $columns);
-
+                                $this->getLog()->debug(sprintf('Replaced columns with %s', $columns));
                             } else if ($widget->type == 'datasetticker') {
                                 // Get the template option
                                 $template = $widget->getOptionValue('template', '');
 
-                                $this->getLog()->debug('Looking to replace columns from %s', $template);
+                                $this->getLog()->debug(sprintf('Looking to replace columns from %s', $template));
 
                                 foreach ($existingDataSet->columns as $column) {
                                     // We replace with the |%d] so that we dont experience double replacements
@@ -1556,20 +1601,18 @@ class LayoutFactory extends BaseFactory
 
                                 $widget->setOptionValue('template', 'cdata', $template);
 
-                                $this->getLog()->debug('Replaced columns with %s', $template);
+                                $this->getLog()->debug(sprintf('Replaced columns with %s', $template));
                             } else if ($widget->type == 'chart') {
                                 // get the config for the chart widget
                                 $oldConfig = json_decode($widget->getOptionValue('config', '[]'), true);
                                 $newConfig = [];
-                                $this->getLog()->debug('Looking to replace config from %s', json_encode($oldConfig));
+                                $this->getLog()->debug(sprintf('Looking to replace config from %s', json_encode($oldConfig)));
 
                                 // go through the chart config and our dataSet
                                 foreach ($oldConfig as $config) {
                                     foreach ($existingDataSet->columns as $column) {
-
                                         // replace with this condition to avoid double replacements
                                         if ($config['dataSetColumnId'] == $column->priorDatasetColumnId) {
-
                                             // create our new config, with replaced dataSetColumnIds
                                             $newConfig[] = [
                                                 'columnType' => $config['columnType'],
@@ -1579,7 +1622,7 @@ class LayoutFactory extends BaseFactory
                                     }
                                 }
 
-                                $this->getLog()->debug('Replaced config with %s', json_encode($newConfig));
+                                $this->getLog()->debug(sprintf('Replaced config with %s', json_encode($newConfig)));
 
                                 // json encode our newConfig and set it as config attribute in the imported chart widget.
                                 $widget->setOptionValue('config', 'attrib', json_encode($newConfig));
@@ -1595,6 +1638,13 @@ class LayoutFactory extends BaseFactory
             }
         }
 
+        $image_path = $zip->getFromName('library/thumbs/campaign_thumb.png');
+        if ($image_path !== false) {
+            $temporaryLayoutThumb = $libraryLocation . $layout->layout . '-campaign_thumb.png';
+            $layout->thumbnail = $temporaryLayoutThumb;
+            $image = imagecreatefromstring($image_path);
+            imagepng($image, $temporaryLayoutThumb);
+        }
 
         $this->getLog()->debug('Finished creating from Zip');
 
@@ -1612,7 +1662,7 @@ class LayoutFactory extends BaseFactory
 
         if ($fontsAdded && $routeParser != null) {
             $this->getLog()->debug('Fonts have been added');
-            $libraryController->installFonts($routeParser);
+            $mediaService->setUser($this->getUser())->installFonts($routeParser);
         }
 
         return $layout;
@@ -1629,8 +1679,7 @@ class LayoutFactory extends BaseFactory
      */
     public function createNestedPlaylistWidgets($widgets, $combined, &$playlists)
     {
-        foreach ($widgets as $playlistId => $widgetsDetails ) {
-
+        foreach ($widgets as $playlistId => $widgetsDetails) {
             foreach ($combined as $old => $new) {
                 if ($old == $playlistId) {
                     $playlistId = $new;
@@ -1640,7 +1689,6 @@ class LayoutFactory extends BaseFactory
             $playlist = $this->playlistFactory->getById($playlistId);
 
             foreach ($widgetsDetails as $widgetsDetail) {
-
                 $modules = $this->moduleFactory->get();
                 $playlistWidget = $this->widgetFactory->createEmpty();
                 $playlistWidget->playlistId = $playlistId;
@@ -1662,7 +1710,6 @@ class LayoutFactory extends BaseFactory
 
                 foreach ($widgetsDetail['widgetOptions'] as $widgetOptionE) {
                     if ($playlistWidget->type == 'subplaylist') {
-
                         if ($widgetOptionE['option'] == 'subPlaylistOptions') {
                             $nestedSubPlaylistOptions = json_decode($widgetOptionE['value']);
                         }
@@ -1696,19 +1743,16 @@ class LayoutFactory extends BaseFactory
                     $playlistWidget->setOptionValue('subPlaylistIds', 'attrib', json_encode($subPlaylistIds));
 
                     foreach ($subPlaylistIds as $value) {
-
                         foreach ($nestedSubPlaylistOptions as $playlistId => $options) {
-
-                                foreach ($options as $optionName => $optionValue) {
-                                    if ($optionName == 'subPlaylistIdSpots') {
-                                        $spots = $optionValue;
-                                    } elseif ($optionName == 'subPlaylistIdSpotLength') {
-                                        $spotsLength = $optionValue;
-                                    } elseif ($optionName == 'subPlaylistIdSpotFill') {
-                                        $spotFill = $optionValue;
-                                    }
+                            foreach ($options as $optionName => $optionValue) {
+                                if ($optionName == 'subPlaylistIdSpots') {
+                                    $spots = $optionValue;
+                                } elseif ($optionName == 'subPlaylistIdSpotLength') {
+                                    $spotsLength = $optionValue;
+                                } elseif ($optionName == 'subPlaylistIdSpotFill') {
+                                    $spotFill = $optionValue;
                                 }
-
+                            }
                         }
 
                         $nestedPlaylistOptionsUpdated[$value] = [
@@ -1751,21 +1795,29 @@ class LayoutFactory extends BaseFactory
      * @param array $filterBy
      * @return array
      */
-    public function getLayoutCodes($filterBy = [])
+    public function getLayoutCodes($filterBy = []): array
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $params = [];
         $select = 'SELECT DISTINCT code ';
-        $body = ' FROM layout WHERE code IS NOT NULL ORDER BY code';
+        $body = ' FROM layout WHERE code IS NOT NULL ';
+
+        // get by Code
+        if ($parsedFilter->getString('code') != '') {
+            $body.= ' AND layout.code LIKE :code ';
+            $params['code'] = '%' . $parsedFilter->getString('code') . '%';
+        }
+
+        $order = ' ORDER BY code';
 
         // Paging
         $limit = '';
         if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
-        $sql = $select . $body . $limit;
-        $entries = $this->getStore()->select($sql, []);
+        $sql = $select . $body . $order . $limit;
+        $entries = $this->getStore()->select($sql, $params);
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
@@ -1793,36 +1845,41 @@ class LayoutFactory extends BaseFactory
             $sortOrder = ['layout'];
         }
 
-        $select  = "";
-        $select .= "SELECT layout.layoutID, ";
-        $select .= "        layout.parentId, ";
-        $select .= "        layout.layout, ";
-        $select .= "        layout.description, ";
-        $select .= "        layout.duration, ";
-        $select .= "        layout.userID, ";
-        $select .= "        `user`.UserName AS owner, ";
-        $select .= "        campaign.CampaignID, ";
-        $select .= "        layout.status, ";
-        $select .= "        layout.statusMessage, ";
-        $select .= "        layout.enableStat, ";
-        $select .= "        layout.width, ";
-        $select .= "        layout.height, ";
-        $select .= "        layout.retired, ";
-        $select .= "        layout.createdDt, ";
-        $select .= "        layout.modifiedDt, ";
-        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
-        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tagValues, ";
-        $select .= "        layout.backgroundImageId, ";
-        $select .= "        layout.backgroundColor, ";
-        $select .= "        layout.backgroundzIndex, ";
-        $select .= "        layout.schemaVersion, ";
-        $select .= "        layout.publishedStatusId, ";
-        $select .= "        `status`.status AS publishedStatus, ";
-        $select .= "        layout.publishedDate, ";
-        $select .= "        layout.autoApplyTransitions, ";
-        $select .= "        layout.code, ";
-        $select .= "        campaign.folderId,  ";
-        $select .= "        campaign.permissionsFolderId,  ";
+        $select  = 'SELECT `layout`.layoutID, 
+                        `layout`.parentId,
+                        `layout`.layout,
+                        `layout`.description,
+                        `layout`.duration,
+                        `layout`.userID,
+                        `user`.userName as owner,
+                        `campaign`.CampaignID,
+                        `layout`.status,
+                        `layout`.statusMessage,
+                        `layout`.enableStat,
+                        `layout`.width,
+                        `layout`.height,
+                        `layout`.retired,
+                        `layout`.createdDt,
+                        `layout`.modifiedDt,
+                        ( SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                                    FROM tag
+                                    INNER JOIN lktaglayout
+                                        ON lktaglayout.tagId = tag.tagId
+                                        WHERE lktaglayout.layoutId = layout.layoutId
+                                    GROUP BY lktaglayout.layoutId
+                        ) as tags,
+                        `layout`.backgroundImageId,
+                        `layout`.backgroundColor,
+                        `layout`.backgroundzIndex,
+                        `layout`.schemaVersion,
+                        `layout`.publishedStatusId,
+                        `status`.status AS publishedStatus,
+                        `layout`.publishedDate,
+                        `layout`.autoApplyTransitions,
+                        `layout`.code,
+                        `campaign`.folderId,
+                        `campaign`.permissionsFolderId,
+                   ';
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1879,7 +1936,7 @@ class LayoutFactory extends BaseFactory
             $sql = 'SELECT display.displayId FROM display INNER JOIN lkdisplaydg ON lkdisplaydg.displayId = display.displayId INNER JOIN displaygroup ON displaygroup.displayGroupId = lkdisplaydg.displayGroupId WHERE displaygroup.displayGroupId = :displayGroupId AND displaygroup.isDisplaySpecific = 1';
 
             foreach ($this->getStore()->select($sql, ['displayGroupId' => $parsedFilter->getInt('activeDisplayGroupId')]) as $row) {
-                $displayId = $row['displayId'];
+                $displayId = $this->getSanitizer($row)->getInt('displayId');
             }
 
             // if we have displayId, get all displayGroups to which the display is a member of
@@ -1887,7 +1944,7 @@ class LayoutFactory extends BaseFactory
                 $sql = 'SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId';
 
                 foreach ($this->getStore()->select($sql, ['displayId' => $displayId]) as $row) {
-                    $displayGroupIds[] = $parsedFilter->getInt($row['displayGroupId']);
+                    $displayGroupIds[] = $this->getSanitizer($row)->getInt('displayGroupId');
                 }
             }
 
@@ -1949,18 +2006,7 @@ class LayoutFactory extends BaseFactory
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
         }
 
-        // LayoutHistoryID
-        if ($parsedFilter->getInt('layoutHistoryId') !== null) {
-            $body .= '
-                INNER JOIN `layouthistory`
-                ON `layouthistory`.layoutId = `layout`.layoutId
-            ';
-        }
-
         $body .= " WHERE 1 = 1 ";
-
-        // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
@@ -1968,7 +2014,7 @@ class LayoutFactory extends BaseFactory
             $this->nameFilter('layout', 'layout', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
-        if ($parsedFilter->getString('layoutExact', $filterBy) != '') {
+        if ($parsedFilter->getString('layoutExact') != '') {
             $body.= " AND layout.layout = :exact ";
             $params['exact'] = $parsedFilter->getString('layoutExact');
         }
@@ -2026,6 +2072,11 @@ class LayoutFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId', ['default' => 0]);
         }
 
+        if ($parsedFilter->getCheckbox('onlyMyLayouts') === 1) {
+            $body .= ' AND layout.userid = :userId ';
+            $params['userId'] = $this->getUser()->userId;
+        }
+
         // User Group filter
         if ($parsedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
             $body .= ' AND layout.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
@@ -2045,8 +2096,12 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($parsedFilter->getInt('layoutHistoryId') !== null) {
-            $body .= " AND `layouthistory`.layoutId = :layoutHistoryId ";
-            $params['layoutHistoryId'] = $parsedFilter->getInt('layoutHistoryId', ['default' => 0]);
+            $body .= ' AND `campaign`.campaignId IN (
+                SELECT MAX(campaignId) 
+                  FROM `layouthistory` 
+                 WHERE `layouthistory`.layoutId = :layoutHistoryId
+                ) ';
+            $params['layoutHistoryId'] = $parsedFilter->getInt('layoutHistoryId');
         }
 
         // Get by regionId
@@ -2057,14 +2112,18 @@ class LayoutFactory extends BaseFactory
         }
 
         // get by Code
-        if ($parsedFilter->getString('code', $filterBy) != '') {
+        if ($parsedFilter->getString('code') != '') {
             $body.= " AND layout.code = :code ";
             $params['code'] = $parsedFilter->getString('code');
         }
 
+        if ($parsedFilter->getString('codeLike') != '') {
+            $body.= ' AND layout.code LIKE :codeLike ';
+            $params['codeLike'] = '%' . $parsedFilter->getString('codeLike') . '%';
+        }
+
         // Tags
         if ($parsedFilter->getString('tags') != '') {
-
             $tagFilter = $parsedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -2077,16 +2136,16 @@ class LayoutFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND layout.layoutID IN (
+                $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktaglayout', 'lkTagLayoutId', 'layoutId', $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -2158,6 +2217,17 @@ class LayoutFactory extends BaseFactory
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
+        if ($parsedFilter->getString('orientation') !== null) {
+            if ($parsedFilter->getString('orientation') === 'portrait') {
+                $body .= ' AND layout.width < layout.height ';
+            } else {
+                $body .= ' AND layout.width >= layout.height ';
+            }
+        }
+
+        // Logged in user view permissions
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
+
         // Sorting?
         $order = '';
 
@@ -2168,7 +2238,7 @@ class LayoutFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements
@@ -2187,7 +2257,6 @@ class LayoutFactory extends BaseFactory
             $layout->description = $parsedRow->getString('description');
             $layout->duration = $parsedRow->getInt('duration');
             $layout->tags = $parsedRow->getString('tags');
-            $layout->tagValues = $parsedRow->getString('tagValues');
             $layout->backgroundColor = $parsedRow->getString('backgroundColor');
             $layout->owner = $parsedRow->getString('owner');
             $layout->ownerId = $parsedRow->getInt('userID');
@@ -2198,6 +2267,7 @@ class LayoutFactory extends BaseFactory
             $layout->backgroundzIndex = $parsedRow->getInt('backgroundzIndex');
             $layout->width = $parsedRow->getDouble('width');
             $layout->height = $parsedRow->getDouble('height');
+            $layout->orientation = $layout->width >= $layout->height ? 'landscape' : 'portrait';
             $layout->createdDt = $parsedRow->getDate('createdDt');
             $layout->modifiedDt = $parsedRow->getDate('modifiedDt');
             $layout->displayOrder = $parsedRow->getInt('displayOrder');
@@ -2238,19 +2308,23 @@ class LayoutFactory extends BaseFactory
         $maxSubYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
         $maxAddYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
 
+        // if we are importing from layout.json the Widget from/to expiry dates are already timestamps
+        // for old Layouts when the Widget from/to dt are missing we set them to timestamps as well.
+        $timestampFromDt = is_integer($widget->fromDt) ? $widget->fromDt : Carbon::createFromTimeString($widget->fromDt)->format('U');
+        $timestampToDt =  is_integer($widget->toDt) ? $widget->toDt : Carbon::createFromTimeString($widget->toDt)->format('U');
+
         // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
         // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
-
-        if ($widget->fromDt === Widget::$DATE_MIN || (Carbon::createFromTimeString($widget->fromDt)->format('U') > $minSubYear && Carbon::createFromTimeString($widget->fromDt)->format('U') < $minAddYear)) {
+        if ($widget->fromDt === Widget::$DATE_MIN || ($timestampFromDt > $minSubYear && $timestampFromDt < $minAddYear)) {
             $widget->fromDt = Widget::$DATE_MIN;
         } else {
-            $widget->fromDt = Carbon::createFromTimeString($widget->fromDt)->format('U');
+            $widget->fromDt = $timestampFromDt;
         }
 
-        if ($widget->toDt === Widget::$DATE_MAX || (Carbon::createFromTimeString($widget->toDt)->format('U') > $maxSubYear && Carbon::createFromTimeString($widget->toDt)->format('U') < $maxAddYear)) {
+        if ($widget->toDt === Widget::$DATE_MAX || ($timestampToDt > $maxSubYear && $timestampToDt < $maxAddYear)) {
             $widget->toDt = Widget::$DATE_MAX;
         } else {
-            $widget->toDt = Carbon::createFromTimeString($widget->toDt)->format('U');
+            $widget->toDt = $timestampToDt;
         }
 
         return $widget;
@@ -2258,12 +2332,13 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Playlist $newPlaylist
+     * @param Folder $folder
      * @return \Xibo\Entity\Playlist
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    private function setOwnerAndSavePlaylist($newPlaylist)
+    private function setOwnerAndSavePlaylist($newPlaylist, Folder $folder)
     {
         // try to save with the name from import, if it already exists add "imported - "  to the name
         try {
@@ -2271,6 +2346,9 @@ class LayoutFactory extends BaseFactory
             $newPlaylist->ownerId = $this->getUser()->getId();
             $newPlaylist->playlistId = null;
             $newPlaylist->widgets = [];
+            $newPlaylist->folderId = $folder->id;
+            $newPlaylist->permissionsFolderId =
+                ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
             $newPlaylist->save();
         } catch (DuplicateEntityException $e) {
             $newPlaylist->name = 'imported - ' . $newPlaylist->name;
@@ -2388,4 +2466,201 @@ class LayoutFactory extends BaseFactory
             }
         }
     }
+
+    /**
+     * @param int $layoutId
+     * @return array
+     */
+    public function getActionPublishedLayoutIds($layoutId): array
+    {
+        $actionLayoutIds = [];
+
+        // Get Layout Codes set in Actions on this Layout
+        // Actions directly on this Layout
+        $sql = '
+            SELECT DISTINCT `action`.layoutCode
+              FROM `action`
+                INNER JOIN `layout`
+                ON `layout`.layoutId = `action`.sourceId
+             WHERE `action`.actionType = :actionType
+                AND `layout`.layoutId = :layoutId
+                AND `layout`.parentId IS NULL
+        ';
+
+        // Actions on this Layout's Regions
+        $sql .= '
+            UNION
+            SELECT DISTINCT `action`.layoutCode
+              FROM `action`
+                INNER JOIN `region`
+                ON `region`.regionId = `action`.sourceId
+                INNER JOIN `layout`
+                ON `layout`.layoutId = `region`.layoutId
+             WHERE `action`.actionType = :actionType
+                AND `layout`.layoutId = :layoutId
+                AND `layout`.parentId IS NULL
+        ';
+
+        // Actions on this Layout's Widgets
+        $sql .= '
+            UNION
+            SELECT DISTINCT `action`.layoutCode
+              FROM `action`
+                INNER JOIN `widget`
+                ON `widget`.widgetId = `action`.sourceId
+                INNER JOIN `playlist`
+                ON `playlist`.playlistId = `widget`.playlistId
+                INNER JOIN `region`
+                ON `region`.regionId = `playlist`.regionId
+                INNER JOIN `layout`
+                ON `layout`.layoutId = `region`.layoutId
+             WHERE `action`.actionType = :actionType
+                AND `layout`.layoutId = :layoutId
+                AND `layout`.parentId IS NULL
+        ';
+
+        // Join them together and get the Layout's referenced by those codes
+        $actionLayoutCodes = $this->getStore()->select('
+            SELECT `layout`.layoutId
+              FROM `layout`
+             WHERE `layout`.code IN (
+                 ' . $sql . '
+             )
+        ', [
+            'actionType' => 'navLayout',
+            'layoutId' => $layoutId,
+        ]);
+
+        foreach ($actionLayoutCodes as $row) {
+            $actionLayoutIds[] = $row['layoutId'];
+        }
+
+        return $actionLayoutIds;
+    }
+
+    // <editor-fold desc="Concurrency Locking">
+
+    /**
+     * @param \Stash\Interfaces\PoolInterface|null $pool
+     * @return $this
+     */
+    public function usePool($pool)
+    {
+        $this->pool = $pool;
+        return $this;
+    }
+
+    /**
+     * @return \Stash\Interfaces\PoolInterface|\Stash\Pool
+     */
+    private function getPool()
+    {
+        if ($this->pool === null) {
+            $this->pool = new Pool();
+        }
+        return $this->pool;
+    }
+
+    /**
+     * @param \Xibo\Entity\Layout $layout
+     * @return \Xibo\Entity\Layout
+     */
+    public function decorateLockedProperties(Layout $layout): Layout
+    {
+        $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
+        $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
+        if (!empty($layout->isLocked)) {
+            $layout->isLocked->lockedUser = ($layout->isLocked->userId != $this->getUser()->userId);
+        }
+
+        return $layout;
+    }
+
+    /**
+     * Hold a lock on concurrent requests
+     *  blocks if the request is locked
+     * @param int $ttl seconds
+     * @param int $wait seconds
+     * @param int $tries
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function concurrentRequestLock(Layout $layout, $force = false, $pass = 1, $ttl = 300, $wait = 6, $tries = 10): Layout
+    {
+        // Does this layout require building?
+        if (!$force && !$layout->isBuildRequired()) {
+            return $layout;
+        }
+
+        $lock = $this->getPool()->getItem('locks/layout_build/' . $layout->campaignId);
+
+        // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
+        // isMiss() returns false if the item is missing or expired, no exceptions.
+        $lock->setInvalidationMethod(Invalidation::NONE);
+
+        // Get the lock
+        // other requests will wait here until we're done, or we've timed out
+        $locked = $lock->get();
+
+        // Did we get a lock?
+        // if we're a miss, then we're not already locked
+        if ($lock->isMiss() || $locked === false) {
+            $this->getLog()->debug('Lock miss or false. Locking for ' . $ttl . ' seconds. $locked is '. var_export($locked, true));
+
+            // so lock now
+            $lock->set(true);
+            $lock->expiresAfter($ttl);
+            $lock->save();
+
+            // If we have been locked previously, then reload our layout before passing back out.
+            if ($pass > 1) {
+                $layout = $this->getById($layout->layoutId);
+            }
+
+            return $layout;
+        } else {
+            // We are a hit - we must be locked
+            $this->getLog()->debug('LOCK hit for ' . $layout->campaignId . ' expires '
+                . $lock->getExpiration()->format('Y-m-d H:i:s') . ', created '
+                . $lock->getCreation()->format('Y-m-d H:i:s'));
+
+            // Try again?
+            $tries--;
+
+            if ($tries <= 0) {
+                // We've waited long enough
+                throw new GeneralException('Concurrent record locked, time out.');
+            } else {
+                $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
+
+                // Hang about waiting for the lock to be released.
+                sleep($wait);
+
+                // Recursive request (we've decremented the number of tries)
+                $pass++;
+                return $this->concurrentRequestLock($layout, $force, $pass, $ttl, $wait, $tries);
+            }
+        }
+    }
+
+    /**
+     * Release a lock on concurrent requests
+     */
+    public function concurrentRequestRelease(Layout $layout, bool $force = false)
+    {
+        if (!$force && !$layout->hasBuilt()) {
+            return;
+        }
+
+        $this->getLog()->debug('Releasing lock ' . $layout->campaignId);
+
+        $lock = $this->getPool()->getItem('locks/layout_build/' . $layout->campaignId);
+
+        // Release lock
+        $lock->set(false);
+        $lock->expiresAfter(10); // Expire straight away (but give it time to save the thing)
+
+        $this->getPool()->save($lock);
+    }
+
+    // </editor-fold>
 }

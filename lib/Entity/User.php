@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,6 +27,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -44,7 +45,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -227,6 +227,18 @@ class User implements \JsonSerializable, UserEntityInterface
     public $playlists = [];
 
     /**
+     * @SWG\Property(description="An array of Display Groups owned by this User")
+     * @var DisplayGroup[]
+     */
+    public $displayGroups = [];
+
+    /**
+     * @SWG\Property(description="An array of Dayparts owned by this User")
+     * @var DayPart[]
+     */
+    public $dayParts = [];
+
+    /**
      * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
@@ -354,25 +366,31 @@ class User implements \JsonSerializable, UserEntityInterface
     /** @var DataSetFactory */
     private $dataSetFactory;
 
+    /** @var DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $configService
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
      * @param ApplicationScopeFactory $applicationScopeFactory
      */
-    public function __construct($store,
-                                $log,
-                                $configService,
-                                $userFactory,
-                                $permissionFactory,
-                                $userOptionFactory,
-                                $applicationScopeFactory)
-    {
-        $this->setCommonDependencies($store, $log);
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $configService,
+        $userFactory,
+        $permissionFactory,
+        $userOptionFactory,
+        $applicationScopeFactory
+    ) {
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->configService = $configService;
         $this->userFactory = $userFactory;
@@ -395,36 +413,6 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->userFactory->setAclDependencies($this, $this->userFactory);
 
         $this->userGroupFactory = $userGroupFactory;
-        return $this;
-    }
-
-    /**
-     * Set Child Object Depencendies
-     *  must be set before calling Load with all objects
-     * @param CampaignFactory $campaignFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param DisplayFactory $displayFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param WidgetFactory $widgetFactory
-     * @param PlayerVersionFactory $playerVersionFactory
-     * @param PlaylistFactory $playlistFactory
-     * @param $dataSetFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory)
-    {
-        $this->campaignFactory = $campaignFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        $this->displayFactory = $displayFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->widgetFactory = $widgetFactory;
-        $this->playerVersionFactory = $playerVersionFactory;
-        $this->playlistFactory = $playlistFactory;
-        $this->dataSetFactory = $dataSetFactory;
         return $this;
     }
 
@@ -463,7 +451,7 @@ class User implements \JsonSerializable, UserEntityInterface
     /** @inheritDoc */
     public function getIdentifier()
     {
-        return $this->getLog();
+        return $this->userId;
     }
 
     /**
@@ -570,6 +558,11 @@ class User implements \JsonSerializable, UserEntityInterface
         // Validate the old password if one is provided
         if ($oldPassword != null) {
             $this->checkPassword($oldPassword);
+        }
+
+        // Basic validation
+        if (!v::stringType()->notEmpty()->validate($password)) {
+            throw new InvalidArgumentException(__('Please enter a Password.'), 'password');
         }
 
         // Test against a policy if one exists
@@ -686,18 +679,6 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->getLog()->debug(sprintf('Loading %d. All Objects = %d', $this->userId, $all));
 
         $this->groups = $this->userGroupFactory->getByUserId($this->userId);
-
-        if ($all) {
-            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null || $this->playlistFactory == null)
-                throw new \RuntimeException('Cannot load user with all objects without first calling setChildObjectDependencies');
-
-            $this->campaigns = $this->campaignFactory->getByOwnerId($this->userId);
-            $this->layouts = $this->layoutFactory->getByOwnerId($this->userId);
-            $this->media = $this->mediaFactory->getByOwnerId($this->userId);
-            $this->events = $this->scheduleFactory->getByOwnerId($this->userId);
-            $this->playlists = $this->playlistFactory->getByOwnerId($this->userId);
-        }
-
         $this->userOptions = $this->userOptionFactory->getByUserId($this->userId);
 
         // Set the hash
@@ -707,140 +688,16 @@ class User implements \JsonSerializable, UserEntityInterface
     }
 
     /**
-     * Does this User have any children
-     * @return int
-     * @throws NotFoundException
-     */
-    public function countChildren()
-    {
-        $this->load(true);
-
-        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events) + count($this->playlists);
-        $this->getLog()->debug('Counted Children on %d, there are %d', $this->userId, $count);
-
-        return $count;
-    }
-
-    /**
-     * Reassign all
-     * @param User $user
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function reassignAllTo($user)
-    {
-        $this->getLog()->debug('Reassign all to %s', $user->userName);
-
-        $this->load(true);
-
-        $this->getLog()->debug('There are %d children', $this->countChildren());
-
-        // Reassign media
-        $this->getStore()->update('UPDATE `media` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign events
-        $this->getStore()->update('UPDATE `schedule` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign layouts
-        $this->getStore()->update('UPDATE `layout` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign regions
-        $this->getStore()->update('UPDATE `region` SET ownerId = :userId WHERE ownerId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign widgets
-        $this->getStore()->update('UPDATE `widget` SET ownerId = :userId WHERE ownerId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign campaigns
-        $this->getStore()->update('UPDATE `campaign` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign playlists
-        $this->getStore()->update('UPDATE `playlist` SET ownerId = :userId WHERE ownerId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign display groups
-        $this->getStore()->update('UPDATE `displaygroup` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign display profiles
-        $this->getStore()->update('UPDATE `displayprofile` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign datasets
-        $this->getStore()->update('UPDATE `dataset` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign resolutions
-        $this->getStore()->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign Dayparts
-        $this->getStore()->update('UPDATE `daypart` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign saved_resports
-        $this->getStore()->update('UPDATE `saved_report` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Reassign Actions
-        $this->getStore()->update('UPDATE `action` SET ownerId = :userId WHERE ownerId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
-
-        // Delete oAuth Clients - security concern
-        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
-
-        // Load again
-        $this->loaded = false;
-        $this->load(true);
-
-        $this->getLog()->debug('Reassign and reload complete, there are %d children', $this->countChildren());
-    }
-
-    /**
      * Validate
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      */
     public function validate()
     {
+        $this->getLog()->debug('Validate User');
+
         if (!v::alnum('_.-')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
-
-        if (!v::stringType()->notEmpty()->validate($this->password))
-            throw new InvalidArgumentException(__('Please enter a Password.'), 'password');
 
         if (!v::intType()->validate($this->libraryQuota))
             throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
@@ -885,17 +742,21 @@ class User implements \JsonSerializable, UserEntityInterface
             'saveUserOptions' => true
         ], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         $this->getLog()->debug('Saving user. ' . $this);
 
         if ($this->userId == 0) {
             $this->add();
+            $this->audit($this->userId, 'New user added', ['userName' => $this->userName]);
         } else if ($options['passwordUpdate']) {
             $this->updatePassword();
+            $this->audit($this->userId, 'User updated password', false);
         } else if ($this->hash() != $this->hash || $this->hasPropertyChanged('twoFactorRecoveryCodes')) {
             $this->update();
+            $this->audit($this->userId, 'User updated');
         }
 
         // Save user options
@@ -907,7 +768,6 @@ class User implements \JsonSerializable, UserEntityInterface
 
             // Save all Options
             foreach ($this->userOptions as $userOption) {
-                /* @var UserOption $userOption */
                 $userOption->userId = $this->userId;
                 $userOption->save();
             }
@@ -916,15 +776,11 @@ class User implements \JsonSerializable, UserEntityInterface
 
     /**
      * Delete User
-     * @throws ConfigurationException
-     * @throws DuplicateEntityException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function delete()
     {
-        $this->getLog()->debug('Deleting %d', $this->userId);
+        $this->getLog()->debug(sprintf('Deleting %d', $this->userId));
 
         // We must ensure everything is loaded before we delete
         if ($this->hash == null) {
@@ -943,62 +799,13 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Remove any assignments to groups
         foreach ($this->groups as $group) {
-            /* @var UserGroup $group */
             $group->unassignUser($this);
             $group->save(['validate' => false]);
         }
 
-        // Delete any layouts
-        foreach ($this->layouts as $layout) {
-            /* @var Layout $layout */
-            $layout->delete();
-        }
-
-        // Delete any Campaigns
-        foreach ($this->campaigns as $campaign) {
-            /* @var Campaign $campaign */
-            $campaign->setChildObjectDependencies($this->layoutFactory);
-            $campaign->delete();
-        }
-
-        // Delete any scheduled events
-        foreach ($this->events as $event) {
-            /* @var Schedule $event */
-            $event->delete();
-        }
-
-        // Delete any media
-        foreach ($this->media as $media) {
-            /* @var Media $media */
-            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
-            $media->delete();
-        }
-
-        // Delete Playlists owned by this user
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-            $playlist->delete();
-        }
-
-        // Display Groups owned by this user
-        foreach($this->displayGroupFactory->getByOwnerId($this->userId) as $displayGroup) {
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $displayGroup->delete();
-        }
-
-        foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
-            $dataSet->delete();
-        }
-
-        // Delete Actions
-        $this->getStore()->update('DELETE FROM `action` WHERE ownerId = :userId', ['userId' => $this->userId]);
-        // Delete oAuth clients
-        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
-        // Delete user specific entities
-        $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
-        $this->getStore()->update('DELETE FROM `daypart` WHERE userId = :userId', ['userId' => $this->userId]);
-        $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
+
+        $this->audit($this->userId, 'User deleted', false);
     }
 
     /**
@@ -1030,12 +837,15 @@ class User implements \JsonSerializable, UserEntityInterface
         ]);
 
         // Add the user group
-        /* @var UserGroup $group */
         $group = $this->userGroupFactory->create($this->userName, $this->libraryQuota);
         $group->setOwner($this);
         $group->isSystemNotification = $this->isSystemNotification;
         $group->isDisplayNotification = $this->isDisplayNotification;
         $group->save();
+
+        // Assert the groupIds on the user (we do this so we have group in the API return)
+        $this->groupId = $group->getId();
+        $this->group = $group->group;
     }
 
     /**

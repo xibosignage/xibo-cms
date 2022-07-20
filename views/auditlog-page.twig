@@ -56,6 +56,9 @@
                             {% set title %}{% trans "Entity ID" %}{% endset %}
                             {{ inline.input("entityId", title) }}
 
+                            {% set title %}{% trans "IP Address" %}{% endset %}
+                            {{ inline.input("ipAddress", title) }}
+
                             {% set title %}{% trans "Message" %}{% endset %}
                             {{ inline.input("message", title) }}
                         </form>
@@ -70,6 +73,7 @@
                                 <th>{% trans "User" %}</th>
                                 <th>{% trans "Entity" %}</th>
                                 <th>{% trans "Entity ID" %}</th>
+                                <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Message" %}</th>
                                 <th>{% trans "Object" %}</th>
                             </tr>
@@ -113,6 +117,7 @@
 
             var table = $("#logs").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
                 responsive: true,
@@ -133,7 +138,18 @@
                     {"data": "logDate", "render": dataTableDateFromUnix, responsivePriority: 2},
                     {"data": "userName", responsivePriority: 2},
                     {"data": "entity", responsivePriority: 2},
-                    {"data": "entityId", responsivePriority: 2},
+                    {
+                        "name": "entityId",
+                        responsivePriority: 2,
+                        "data" : function (data) {
+                            if (data.entityId === 0) {
+                                return ''
+                            }
+
+                            return data.entityId;
+                        }
+                    },
+                    {"data": "ipAddress", responsivePriority: 2},
                     {"data": "message", responsivePriority: 1},
                     {
                         "data": function (data, type, row, meta) {
@@ -156,7 +172,7 @@
                 });
             });
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#logs_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#logs_wrapper').find('.dataTables_buttons'));
 
             $("#refreshLog").click(function () {
                 table.ajax.reload();

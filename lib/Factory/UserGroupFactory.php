@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,9 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Homepage;
 use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -45,15 +42,11 @@ class UserGroupFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
     }
 
@@ -63,7 +56,7 @@ class UserGroupFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new UserGroup($this->getStore(), $this->getLog(), $this, $this->getUserFactory());
+        return new UserGroup($this->getStore(), $this->getLog(), $this->getDispatcher(), $this, $this->getUserFactory());
     }
 
     /**
@@ -135,7 +128,7 @@ class UserGroupFactory extends BaseFactory
      */
     public function getSystemNotificationGroups()
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1, 'isUserSpecific' => -1]);
+        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1, 'isUserSpecific' => -1, 'checkRetired' => 1]);
     }
 
     /**
@@ -149,7 +142,8 @@ class UserGroupFactory extends BaseFactory
             'disableUserCheck' => 1,
             'isDisplayNotification' => 1,
             'isUserSpecific' => -1,
-            'displayGroupId' => $displayGroupId
+            'displayGroupId' => $displayGroupId,
+            'checkRetired' => 1
         ]);
     }
 
@@ -200,12 +194,15 @@ class UserGroupFactory extends BaseFactory
 
         $select = '
         SELECT 	`group`.group,
+            `group`.description,
             `group`.groupId,
             `group`.isUserSpecific,
             `group`.isEveryone,
             `group`.libraryQuota,
             `group`.isSystemNotification,
             `group`.isDisplayNotification,
+            `group`.isShownForAddUser,
+            `group`.defaultHomepageId,
             `group`.features
         ';
 
@@ -230,6 +227,21 @@ class UserGroupFactory extends BaseFactory
                 ';
                 $params['currentUserId'] = $this->getUser()->userId;
             }
+        }
+
+        if ($parsedFilter->getInt('checkRetired') === 1) {
+            $body .= '
+                AND `group`.groupId NOT IN (
+                    SELECT `group`.groupId 
+                      FROM `user`
+                        INNER JOIN `lkusergroup`
+                            ON `lkusergroup`.userId = `user`.userId
+                        INNER JOIN `group`
+                            ON `group`.groupId = `lkusergroup`.groupId
+                            AND isUserSpecific = 1
+                      WHERE user.retired = 1
+                )
+                ';
         }
 
         // Filter by Group Id
@@ -279,6 +291,11 @@ class UserGroupFactory extends BaseFactory
             $params['notificationId'] = $parsedFilter->getInt('notificationId');
         }
 
+        if ($parsedFilter->getInt('isShownForAddUser') !== null) {
+            $body .= ' AND `group`.isShownForAddUser = :isShownForAddUser ';
+            $params['isShownForAddUser'] = $parsedFilter->getInt('isShownForAddUser');
+        }
+
         if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= ' 
                 AND `group`.groupId IN (
@@ -301,8 +318,9 @@ class UserGroupFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $parsedFilter->getInt('start', ['default' => 0]) !== null && $parsedFilter->getInt('length', ['default' => 10]) !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start', ['default' => 0]), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        if ($parsedFilter->hasParam('start') && $parsedFilter->hasParam('length')) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0])
+                . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -310,7 +328,10 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $group = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification'
+                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser'
+                ],
+                'stringProperties' => [
+                    'defaultHomepageId'
                 ]
             ]);
 
@@ -402,7 +423,7 @@ class UserGroupFactory extends BaseFactory
                 'schedule.modify' => [
                     'feature' => 'schedule.modify',
                     'group' => 'scheduling',
-                    'title' => __('Allow edits including deletion of exsiting Scheduled Events')
+                    'title' => __('Allow edits including deletion of existing Scheduled Events')
                 ],
                 'schedule.now' => [
                     'feature' => 'schedule.now',
@@ -432,7 +453,7 @@ class UserGroupFactory extends BaseFactory
                 'library.add' => [
                     'feature' => 'library.add',
                     'group' => 'library',
-                    'title' => __('Include "Add Media" buttons to allow for addtional content to be uploaded to the Media Library')
+                    'title' => __('Include "Add Media" buttons to allow for additional content to be uploaded to the Media Library')
                 ],
                 'library.modify' => [
                     'feature' => 'library.modify',
@@ -447,17 +468,17 @@ class UserGroupFactory extends BaseFactory
                 'dataset.add' => [
                     'feature' => 'dataset.add',
                     'group' => 'library',
-                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created independantly to Layouts')
+                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created independently to Layouts')
                 ],
                 'dataset.modify' => [
                     'feature' => 'dataset.modify',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all created DataSets independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all created DataSets independently to Layouts')
                 ],
                 'dataset.data' => [
                     'feature' => 'dataset.data',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all data contained within a DataSet independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all data contained within a DataSet independently to Layouts')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',
@@ -477,7 +498,7 @@ class UserGroupFactory extends BaseFactory
                 'layout.export' => [
                     'feature' => 'layout.export',
                     'group' => 'layout-design',
-                    'title' => __('Add "Export" function for all Layouts')
+                    'title' => __('Include the Export function for all editable Layouts to allow a User to export a Layout and its contents regardless of the share options that have been set')
                 ],
                 'campaign.view' => [
                     'feature' => 'campaign.view',
@@ -517,7 +538,7 @@ class UserGroupFactory extends BaseFactory
                 'resolution.add' => [
                     'feature' => 'resolution.add',
                     'group' => 'layout-design',
-                    'title' => __('Add Resolution button to allow for addtional Resolutions to be added')
+                    'title' => __('Add Resolution button to allow for additional Resolutions to be added')
                 ],
                 'resolution.modify' => [
                     'feature' => 'resolution.modify',
@@ -542,12 +563,12 @@ class UserGroupFactory extends BaseFactory
                 'playlist.add' => [
                     'feature' => 'playlist.add',
                     'group' => 'playlist-design',
-                    'title' => __('Include "Add Playlist" button to allow for additional Layouts to be created independantly to Layouts')
+                    'title' => __('Include "Add Playlist" button to allow for additional Playlists to be created independently to Layouts')
                 ],
                 'playlist.modify' => [
                     'feature' => 'playlist.modify',
                     'group' => 'playlist-design',
-                    'title' => __('Allow edits including deletion to all created Playlists independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all created Playlists independently to Layouts')
                 ],
                 'user.profile' => [
                     'feature' => 'user.profile',
@@ -597,17 +618,12 @@ class UserGroupFactory extends BaseFactory
                 'users.modify' => [
                     'feature' => 'users.modify',
                     'group' => 'users-management',
-                    'title' => __('Allow edits including deletion for all added Users')
+                    'title' => __('Allow Group Admins to edit including deletion, for all added Users within their group')
                 ],
                 'usergroup.view' => [
                     'feature' => 'usergroup.view',
                     'group' => 'users-management',
                     'title' => __('Page which shows all User Groups that have been created')
-                ],
-                'usergroup.add' => [
-                    'feature' => 'usergroup.add',
-                    'group' => 'users-management',
-                    'title' => __('Include "Add User Group" button to allow for additional User Groups to be added')
                 ],
                 'usergroup.modify' => [
                     'feature' => 'usergroup.modify',
@@ -667,7 +683,7 @@ class UserGroupFactory extends BaseFactory
                 'displayprofile.add' => [
                     'feature' => 'displayprofile.add',
                     'group' => 'displays',
-                    'title' => __('Include "Add Profile" button to allow for addtional Display Setting Profiles to be added to the platform')
+                    'title' => __('Include "Add Profile" button to allow for additional Display Setting Profiles to be added to the platform')
                 ],
                 'displayprofile.modify' => [
                     'feature' => 'displayprofile.modify',
@@ -763,6 +779,21 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'folder.modify',
                     'group' => 'folders',
                     'title' => __('Rename and Delete existing Folders')
+                ],
+                'menuBoard.view' => [
+                    'feature' => 'menuBoard.view',
+                    'group' => 'menuboard-design',
+                    'title' => __('View the Menu Board page')
+                ],
+                'menuBoard.add' => [
+                    'feature' => 'menuBoard.add',
+                    'group' => 'menuboard-design',
+                    'title' => __('Include "Add Menu Board" button to allow for additional Menu Boards to be added to the platform')
+                ],
+                'menuBoard.modify' => [
+                    'feature' => 'menuBoard.modify',
+                    'group' => 'menuboard-design',
+                    'title' => __('Allow edits, creation of Menu Board Categories and Products including deletion for all created Menu Board content')
                 ],
             ];
         }

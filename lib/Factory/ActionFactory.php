@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,10 +24,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Action;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -37,21 +33,12 @@ use Xibo\Support\Exception\NotFoundException;
 class ActionFactory  extends BaseFactory
 {
     /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
     }
 
@@ -64,7 +51,7 @@ class ActionFactory  extends BaseFactory
         return new Action(
             $this->getStore(),
             $this->getLog(),
-            $this->permissionFactory
+            $this->getDispatcher()
         );
     }
 
@@ -129,6 +116,15 @@ class ActionFactory  extends BaseFactory
         $actions = $this->query(null, ['disableUserCheck' => 1, 'source' => $source, 'sourceId' => $sourceId]);
 
         return $actions;
+    }
+
+    /**
+     * @param int $ownerId
+     * @return Action[]
+     */
+    public function getByOwnerId(int $ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
     }
 
     /**
@@ -275,7 +271,7 @@ class ActionFactory  extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

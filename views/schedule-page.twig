@@ -157,10 +157,11 @@
                     <li class="event-success"><span class="fa fa-desktop"></span> {% trans "Multi Display" %}</li>
                     <li class="event-important"><span class="fa fa-bullseye"></span> {% trans "Priority" %}</li>
                     <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
-                    <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
+                    <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Only" %}</li>
                     <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
                     <li class="event-interrupt"><span class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
                     <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
+                    <li class="event-action"><span class="fa fa-paper-plane "></span> {% trans "Interactive Action" %}</li>
                 </ul>
             </div>
         </div>
@@ -265,6 +266,7 @@
                     var title = event.title;
                     var eventIcon = "fa-desktop";
                     var eventClass = "event-warning";
+                    var eventPriority = "";
 
                     if (event.event.isAlways != 1) {
                     if (event.event.eventTypeId == 2) {
@@ -296,8 +298,9 @@
                     }
 
                     if (event.event.isPriority >= 1) {
-                    eventClass = "event-important";
-                    eventIcon = "fa-bullseye";
+                        eventClass = "event-important";
+                        eventIcon = "fa-bullseye";
+                        eventPriority = event.event.isPriority;
                     }
 
                     if (event.event.eventTypeId == 2) {
@@ -312,6 +315,10 @@
                         eventIcon = "fa-map-marker";
                     }
 
+                    if (event.event.eventTypeId == 6) {
+                        eventIcon = "fa-paper-plane";
+                    }
+
                     if (!event.editable) {
                     event.url = null;
                     eventIcon = "fa-lock";
@@ -323,7 +330,7 @@
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
                            data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= eventClass %>" class="event-item">
-                            <span class="fa <%= eventIcon %>"></span> <%= title %></a>
+                            <span class="fa <%= eventIcon %>"><span class="event-priority"><%= eventPriority %></span></span> <%= title %></a>
                     </li>
                     <% }) %>
                 </ul>
@@ -367,6 +374,7 @@
                     var title = event.title;
                     var eventIcon = "fa-desktop";
                     var eventClass = "event-warning";
+                    var eventPriority = "";
 
                     if (event.event.isAlways != 1) {
                     if (event.event.eventTypeId == 2) {
@@ -398,8 +406,9 @@
                     }
 
                     if (event.event.isPriority >= 1) {
-                    eventClass = "event-important";
-                    eventIcon = "fa-bullseye";
+                        eventClass = "event-important";
+                        eventIcon = "fa-bullseye";
+                        eventPriority = event.event.isPriority;
                     }
 
                     if (event.event.eventTypeId == 2) {
@@ -414,6 +423,10 @@
                         eventIcon = "fa-map-marker";
                     }
 
+                    if (event.event.eventTypeId == 6) {
+                        eventIcon = "fa-paper-plane";
+                    }
+
                     if (!event.editable) {
                     event.url = null;
                     eventIcon = "fa-lock";
@@ -424,7 +437,7 @@
                        data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= eventClass %>"
                        class="pull-left event <%= eventClass %>" data-toggle="tooltip"
-                       title="<%= event.title %>"><span class="fa <%= eventIcon %>"></span></a>
+                       title="<%= event.title %>"><span class="fa <%= eventIcon %>"><span class="event-priority"><%= eventPriority %></span></span></a>
                     <% }); %>
                 </div>
                 <% } %>
@@ -458,6 +471,7 @@
             var title = event.title;
             var eventIcon = "fa-desktop";
             var eventClass = "event-warning";
+            var eventPriority = "";
 
             if (event.event.isAlways != 1) {
             if (event.event.eventTypeId == 2) {
@@ -488,9 +502,10 @@
             eventIcon = "fa-repeat";
             }
 
-            if (event.event.isPriority == 1) {
-            eventClass = "event-important";
-            eventIcon = "fa-bullseye";
+            if (event.event.isPriority >= 1) {
+                eventClass = "event-important";
+                eventIcon = "fa-bullseye";
+                eventPriority = event.event.isPriority;
             }
 
             if (event.event.eventTypeId == 4) {
@@ -499,6 +514,10 @@
 
             if (event.event.isGeoAware === 1) {
                 eventIcon = "fa-map-marker";
+            }
+
+            if (event.event.eventTypeId == 6) {
+                eventIcon = "fa-paper-plane";
             }
 
             if (!event.editable) {
@@ -512,7 +531,7 @@
                     <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
                        data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= eventClass %>"
-                       class="cal-event-week event<%= event.id %>"><span class="fa <%= eventIcon %>"></span> <%= title %></a>
+                       class="cal-event-week event<%= event.id %>"><span class="fa <%= eventIcon %>"><span class="event-priority"><%= eventPriority %></span></span> <%= title %></a>
                 </div>
             </div>
             <% }); %>
@@ -660,7 +679,11 @@
             <table class="table agenda-table agenda-table-layouts" data-type="layouts" style="width: 100%;">
                 <thead>
                     <tr class="table-title">
+                     <% if (layouts.type == 4) { %>
+                        <th colspan="11" class="pr-2">
+                     <% } else { %>
                         <th colspan="10" class="pr-2">
+                     <% } %>
                             <% if (layouts.type == 1) { %>
                                 {% endverbatim %}{% trans "Layouts" %}{% verbatim %}</span>
                             <% } else if (layouts.type == 3) { %>
@@ -668,7 +691,7 @@
                             <% } else if (layouts.type == 4) { %>
                                 {% endverbatim %}{% trans "Interrupt Layouts" %}{% verbatim %}
                             <% } else if (layouts.type == 5) { %>
-                                {% endraw %}{% trans "Campaign Layouts" %}{% raw %}
+                                {% endverbatim %}{% trans "Campaign Layouts" %}{% verbatim %}
                             <% } %>
                             
                             <span class="pull-right badge badge-light" title="{% endverbatim %}{% trans "Number of Layouts" %}{% verbatim %}" data-toggle="tooltip" data-placement="top">
@@ -685,6 +708,9 @@
                         <th>{% trans "From Date" %}</th>
                         <th>{% trans "To Date" %}</th>
                         <th>{% trans "Layout Duration" %}</th>
+                        {%  verbatim %}<% if (layouts.type == 4) { %>{% endverbatim %}
+                        <th>{% trans "Share of Voice" %}</th>
+                        {% verbatim %}<% } %>{% endverbatim %}
                         <th>{% trans "Display Order" %}</th>
                         <th>{% trans "Priority" %}</th>
                         <th>{% trans "Visible" %}</th>
@@ -726,6 +752,9 @@
                             <% } %> 
                             
                             <td><%= layout.layoutDuration %></td>
+                            <% if (layouts.type == 4) { %>
+                            <td><%= layout.shareOfVoice %></td>
+                            <% } %>
                             <td><%= layout.layoutDisplayOrder %></td>
                             <td><%= layout.eventPriority %></td>
                             <%
@@ -778,12 +807,13 @@
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
-                        <th colspan="3">{% trans "Campaigns" %}</th>
+                        <th colspan="4">{% trans "Campaigns" %}</th>
                     </tr>
                     <tr>
                         <th></th>
                         <th>{% trans "ID" %}</th>
                         <th>{% trans "Name" %}</th>
+                        <th>{% trans "Cycle Playback?" %}</th>
                     </tr>
                 </thead>
                 {% verbatim %}
@@ -793,6 +823,14 @@
                             <td></td>
                             <td><%= campaign.campaignId %></td>
                             <td><%= campaign.campaign %></td>
+                            <%
+                                var icon = "";
+                                if (campaign.cyclePlaybackEnabled == 0)
+                                    icon = "fa-times";
+                                else
+                                    icon = "fa-check";
+                            %>
+                            <td><span class="fa <%= icon %>"></span></td>
                         </tr>
                     <% }); %>
                 </tbody>

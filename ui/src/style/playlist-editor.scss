@@ -1,3 +1,4 @@
+// Imports
 @import "variables";
 @import "mixins";
 
@@ -9,11 +10,11 @@ $playlist-editor-max-content-height: 65vh;
 
 $playlist-editor-widget-bg-color: $xibo-color-white;
 $playlist-editor-widget-fg-color:$xibo-color-black;
-$playlist-editor-widget-fg-color2: $xibo-color-gray;
+$playlist-editor-widget-fg-color2: $xibo-color-gray-dark;
 $playlist-editor-widget-selected-color: $xibo-color-green;
-$playlist-editor-widget-multi-selected-color: $xibo-color-purple;
+$playlist-editor-widget-multi-selected-color: lighten($xibo-color-purple, 20%);
 $playlist-editor-widget-hover-bg-color: lighten($xibo-color-green, 20%);
-$playlist-editor-widget-border-color: $xibo-color-gray;
+$playlist-editor-widget-border-color: $xibo-color-gray-dark;
 $playlist-editor-playlist-hover-color-color: lighten($xibo-color-primary, 20%);
 
 $playlist-editor-z-index-background: 1011;
@@ -31,6 +32,10 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     overflow: auto;
     @include set-transparent-color(background, $xibo-color-black, 0.6);
 
+    &.toolbar-opened {
+        padding-left: 410px;
+    }
+
     .editor-modal-content {
         background: $playlist-editor-main-background-color;
         margin-bottom: 60px;
@@ -45,23 +50,27 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         font-weight: bold;
         color: $playlist-editor-main-fb-color;
     }
-
-    .editor-modal-header .editor-modal-close i {
-        color: $xibo-color-red;
-    }
 }
 
 // Bootbox custom dialogs
 .second-dialog {
     z-index:  3100;
+
+    & + .in.modal-backdrop {
+        z-index:  3000;
+    }
+
+    & ~ .select2-container.select2-container--open {
+        z-index:  3200;
+    }
 }
 
-.second-dialog + .in.modal-backdrop {
-    z-index:  3000;
+.inner-modal {
+    z-index: 3101;
 }
 
-.second-dialog ~ .select2-container.select2-container--open {
-    z-index:  3200;
+.vakata-context {
+    z-index: 3102;
 }
 
 .playlist-widget-preview {
@@ -101,13 +110,40 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         padding-left: 0;
     }
 
+    /* width */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+        background: $xibo-color-white;
+        @include border-radius(6px);
+    }
+    
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+        background: $xibo-color-blue-darker;
+        @include border-radius(4px);
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: lighten($xibo-color-blue-darker, 20%);
+    }
+
+    ::-webkit-scrollbar-corner {
+        @include box-shadow(inset 0 0 5px $xibo-color-gray-dark);
+    }
+
     #playlist-timeline {
         background: $xibo-color-white;
         @include border-radius(4px);
         border: 2px solid $playlist-editor-timeline-fg-color;
         margin-bottom: 10px;
         
-        #timeline-container{
+        #timeline-container {
             padding: 5px;
             height: $playlist-editor-max-content-height;
             overflow: auto;
@@ -158,7 +194,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
             #timeline-overlay-container {
                 display: block;
                 @include z-index-set($playlist-editor-z-index-select);
-                @include background-stripes(45deg, darken($playlist-editor-playlist-hover-color-color, 20%), $playlist-editor-playlist-hover-color-color, 10px, 4px);
+                background: darken($playlist-editor-playlist-hover-color-color, 20%);
             }
         }
 
@@ -166,7 +202,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         &.ui-droppable-active:hover {
             #timeline-overlay-container {
                 display: block;
-                @include background-stripes(45deg, darken($playlist-editor-playlist-hover-color-color, 10%), lighten($playlist-editor-playlist-hover-color-color, 20%), 10px, 4px);
+                background: darken($playlist-editor-playlist-hover-color-color, 10%);
             }
         }
     }
@@ -205,7 +241,12 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     #properties-panel-container .button-container {
         padding: 5px;
         bottom: 0;
+        font-size: 0;
         width: 100%;
+
+        & > button {
+            margin: 0 2px;
+        }
     }
 
     #dropzone-container {
@@ -228,12 +269,12 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     #dropzone-container {
         &.ui-droppable-active {
             @include z-index-set($playlist-editor-z-index-select);
-            @include background-stripes(45deg, darken($playlist-editor-main-background-color, 30%), darken($playlist-editor-main-background-color, 40%), 10px, 4px);
+            background: darken($playlist-editor-main-background-color, 30%);
         }
 
         &.ui-droppable-active.ui-droppable-hover,
         &.ui-droppable-active:hover {
-            @include background-stripes(45deg, darken($playlist-editor-main-background-color, 10%), darken($playlist-editor-main-background-color, 20%), 10px, 4px);
+            background: darken($playlist-editor-main-background-color, 10%);
         }
     }
 
@@ -246,7 +287,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         font-weight: bold;
         font-size: 1.2em;
         color: $xibo-color-white;
-        background: $xibo-color-dark-blue;
+        background: $xibo-color-primary;
         border-width: 0 0 4px 0;
         border-style: solid;
         height: 30px;
@@ -254,10 +295,6 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         &.unsuccessMessage {
             margin: 20px 0;
             background-color: $playlist-editor-unsuccess-message-bg-color;
-        }
-
-        &.form-title-widget {
-            border-color: $playlist-editor-widget-bg-color;
         }
     }
 
@@ -275,89 +312,91 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         text-overflow: ellipsis;
         white-space: nowrap;
         padding: 0 4px;
-    }
 
-    .playlist-widget:not(.editable) {
-        @include box-shadow(inset 0 0 4px 2px $xibo-color-gray);
-    }
+        &:not(.editable) {
+            @include box-shadow(inset 0 0 4px 2px $xibo-color-gray-dark);
+        }
 
-    .playlist-widget.selectable {
-        @include user-select-none();
-    }
+        &.selectable {
+            @include user-select-none();
+        }
 
-    .playlist-widget.selected {
-        background: $playlist-editor-widget-selected-color !important;
-    }
+        &.selected {
+            background: $playlist-editor-widget-selected-color !important;
+        }
 
-    .playlist-widget.selectable:hover {
-        background: $playlist-editor-widget-hover-bg-color !important;
-    }
+        &.selectable:hover {
+            background: $playlist-editor-widget-hover-bg-color !important;
+        }
 
-    .playlist-widget.ui-droppable-active {
-        @include z-index-set($playlist-editor-z-index-select);
-        @include background-stripes(45deg, darken($playlist-editor-widget-hover-bg-color, 30%), darken($playlist-editor-widget-hover-bg-color, 40%), 10px, 4px);
-    }
+        &.ui-droppable-active {
+            @include z-index-set($playlist-editor-z-index-select);
+            background: darken($playlist-editor-widget-hover-bg-color, 30%);
+        }
 
-    .playlist-widget.ui-droppable-active.ui-droppable-hover,
-    .playlist-widget.ui-droppable-active:hover {
-        @include background-stripes(45deg, darken($playlist-editor-widget-hover-bg-color, 50%), darken($playlist-editor-widget-hover-bg-color, 60%), 10px, 4px);
-    }
+        &.ui-droppable-active.ui-droppable-hover,
+        &.ui-droppable-active:hover {
+            background: darken($playlist-editor-widget-hover-bg-color, 50%);
+        }
 
-    .playlist-widget.ui-droppable-active * {
-        visibility: hidden;
-    }
+        &.ui-droppable-active * {
+            visibility: hidden;
+        }
 
-    .playlist-widget i.editProperty {
-        float: right;
-        cursor: pointer;
-        padding: 2px;
-        color: $playlist-editor-widget-fg-color;
-    }
+        i.editProperty {
+            float: right;
+            cursor: pointer;
+            padding: 2px;
+            color: $playlist-editor-widget-fg-color;
+        }
 
-    .playlist-widget .widgetLabel {
-        color: $playlist-editor-main-background-color;
-        width: 25px;
-        height: 100%;
-        text-align: center;
-        float: left;
+        .widgetLabel {
+            color: $playlist-editor-main-background-color;
+            width: 30px;
+            height: 100%;
+            text-align: center;
+            float: left;
 
-        .widgetDuration {
+            .widgetDuration {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+                padding: 0 2px;
+            }
+        }
+
+        .widgetName {
+            font-style: italic;
+            color: $playlist-editor-widget-fg-color;
+            overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            overflow: hidden;
-            padding: 0 2px;
+            max-width: 90%;
+            padding-left: 4px;
         }
-    }
 
-    .playlist-widget .widgetName {
-        font-style: italic;
-        color: $playlist-editor-widget-fg-color;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 90%;
-        padding-left: 4px;
-    }
+        .widgetProperties {
+            float: right;
+        }
 
-    .playlist-widget .widgetProperties {
-        float: right;
-    }
+        i.editProperty:hover {
+            color: lighten($playlist-editor-widget-fg-color, 20%);
+        }
 
-    .playlist-widget i.editProperty:hover {
-        color: lighten($playlist-editor-widget-fg-color, 20%);
-    }
-
-    .playlist-widget.invalid-widget {
-        @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
+        &.invalid-widget {
+            @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
+        }
     }
 
     &.multi-select {
-        .playlist-widget:hover {
+        .playlist-widget {
+            &:hover {
                 background: lighten($playlist-editor-widget-multi-selected-color, 20%) !important;
-        }
+            }
 
-        .playlist-widget.multi-selected {
-                background: $playlist-editor-widget-multi-selected-color !important;
+            &.multi-selected {
+                    background: $playlist-editor-widget-multi-selected-color !important;
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -46,7 +46,7 @@
                         <li class="nav-item"><a class="nav-link" href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Sharing" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
@@ -233,6 +233,39 @@
                                         {{ forms.number("DATASET_HARD_ROW_LIMIT", title, theme.getSetting("DATASET_HARD_ROW_LIMIT", 0), helpText) }}
                                     {% else %}
                                         {{ forms.disabled("DATASET_HARD_ROW_LIMIT", title, theme.getSetting("DATASET_HARD_ROW_LIMIT", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_PURGE_LIST_TTL") %}
+                                    {% set title %}{% trans "Default ttl, in days, for records in purge_list table" %}{% endset %}
+                                    {% set helpText %}{% trans "Entries in purge_list table with expiry date older than specified ttl will be removed." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_PURGE_LIST_TTL") %}
+                                        {{ forms.number("DEFAULT_PURGE_LIST_TTL", title, theme.getSetting("DEFAULT_PURGE_LIST_TTL", 7), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_PURGE_LIST_TTL", title, theme.getSetting("DEFAULT_PURGE_LIST_TTL", 7), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER") %}
+                                    {% set title %}{% trans "The default value for max number of items on a new dynamic Playlist" %}{% endset %}
+                                    {% set helpText %}{% trans "This value can be adjusted on a per dynamic Playlist basis, it cannot exceed value set in the Limit below" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER") %}
+                                        {{ forms.number("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", 30), helpText, "", "", "", theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", 100)) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", 30), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT") %}
+                                    {% set title %}{% trans "The default upper limit of items that can be assigned to a dynamic Playlist" %}{% endset %}
+                                    {% set helpText %}{% trans "When matching Media by Tags and name to a dynamic Playlist, this is the maximum number of allowed items that can be assigned to a dynamic Playlist" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT") %}
+                                        {{ forms.number("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", 100), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", 100), helpText) }}
                                     {% endif %}
                                 {% endif %}
                             </div>
@@ -526,9 +559,9 @@
                                     {% set helpText %}{% trans "The URL to connect to to PHONE_HOME (if enabled)" %}{% endset %}
 
                                     {% if theme.isSettingEditable("PHONE_HOME_URL") %}
-                                        {{ forms.input("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "http://www.xibo.org.uk/stats/track.php"), helpText) }}
+                                        {{ forms.input("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
                                     {% else %}
-                                        {{ forms.disabled("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "http://www.xibo.org.uk/stats/track.php"), helpText) }}
+                                        {{ forms.disabled("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 
@@ -611,6 +644,13 @@
                                         {{ forms.disabled("LATEST_NEWS_URL", title, theme.getSetting("LATEST_NEWS_URL"), helpText) }}
                                     {% endif %}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("REPORTS_EXPORT_SHOW_LOGO") %}
+                                    {% set title %}{% trans "Show the Logo on report exports?" %}{% endset %}
+                                    {% set helpText %}{% trans "When exporting a saved report to PDF, should the logo be shown on the PDF?" %}{% endset %}
+
+                                    {{ forms.checkbox("REPORTS_EXPORT_SHOW_LOGO", title, theme.getSetting("REPORTS_EXPORT_SHOW_LOGO", 0), helpText, "", "", not theme.isSettingEditable("REPORTS_EXPORT_SHOW_LOGO")) }}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_maint">
                                 <h3 class="section-heading">{% trans "Maintenance" %}</h3>
@@ -641,17 +681,6 @@
                                     {{ forms.checkbox("MAINTENANCE_EMAIL_ALERTS", title, theme.getSetting("MAINTENANCE_EMAIL_ALERTS", 1), helpText, "", "", not theme.isSettingEditable("MAINTENANCE_EMAIL_ALERTS")) }}
                                 {% endif %}
 
-                                {% if theme.isSettingVisible("MAINTENANCE_KEY") %}
-                                    {% set title %}{% trans "Maintenance Key" %}{% endset %}
-                                    {% set helpText %}{% trans "String appended to the maintenance script to prevent malicious calls to the script." %}{% endset %}
-
-                                    {% if theme.isSettingEditable("MAINTENANCE_KEY") %}
-                                        {{ forms.input("MAINTENANCE_KEY", title, theme.getSetting("MAINTENANCE_KEY", "changeme"), helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("MAINTENANCE_KEY", title, theme.getSetting("MAINTENANCE_KEY", "changeme"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
                                 {% if theme.isSettingVisible("MAINTENANCE_LOG_MAXAGE") %}
                                     {% set title %}{% trans "Max Log Age" %}{% endset %}
                                     {% set helpText %}{% trans "Maximum age for log entries in days. Set to 0 to keep logs indefinitely." %}{% endset %}
@@ -665,7 +694,7 @@
 
                                 {% if theme.isSettingVisible("MAINTENANCE_STAT_MAXAGE") %}
                                     {% set title %}{% trans "Max Statistics Age" %}{% endset %}
-                                    {% set helpText %}{% trans "Maximum age for statistics entries in days. Set to 0 to keep statistics indefinitely." %}{% endset %}
+                                    {% set helpText %}{% trans "Maximum age for statistics entries in days. Entries older than this will not be processed and existing entries will be removed. Set to 0 to keep statistics indefinitely." %}{% endset %}
 
                                     {% if theme.isSettingEditable("MAINTENANCE_STAT_MAXAGE") %}
                                         {{ forms.number("MAINTENANCE_STAT_MAXAGE", title, theme.getSetting("MAINTENANCE_STAT_MAXAGE", 30), helpText) }}
@@ -842,7 +871,7 @@
                                     {% set helpText %}{% trans "The Time to Live (maxage) of the STS header expressed in seconds." %}{% endset %}
 
                                     {% if theme.isSettingEditable("STS_TTL") %}
-                                        {{ forms.number("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
+                                        {{ forms.number("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText, "", "", "", 999999999) }}
                                     {% else %}
                                         {{ forms.disabled("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
                                     {% endif %}
@@ -860,16 +889,16 @@
                                 {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_permissions">
-                                <h3 class="section-heading">{% trans "Permissions" %}</h3>
+                                <h3 class="section-heading">{% trans "Sharing" %}</h3>
 
                                 {% if theme.isSettingVisible("REGION_OPTIONS_COLOURING") %}
                                     {% set title %}{% trans "How to colour Media on the Region Timeline" %}{% endset %}
 
                                     {% set privateOption %}{% trans "Media Colouring" %}{% endset %}
-                                    {% set groupOption %}{% trans "Permissions Colouring" %}{% endset %}
+                                    {% set groupOption %}{% trans "Sharing Colouring" %}{% endset %}
                                     {% set options = [
                                         { id: "Media Colouring", value: privateOption },
-                                        { id: "Permissions Colouring", value: groupOption }
+                                        { id: "Sharing Colouring", value: groupOption }
                                     ] %}
                                     {% if theme.isSettingEditable("REGION_OPTIONS_COLOURING") %}
                                         {{ forms.dropdown("REGION_OPTIONS_COLOURING", "single", title, theme.getSetting("REGION_OPTIONS_COLOURING", "Media Colouring"), options, "id", "value") }}
@@ -879,8 +908,8 @@
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("SCHEDULE_WITH_VIEW_PERMISSION") %}
-                                    {% set title %}{% trans "Schedule with view permissions?" %}{% endset %}
-                                    {% set helpText %}{% trans "Should users with View permissions on displays be allowed to schedule to them?" %}{% endset %}
+                                    {% set title %}{% trans "Schedule with view sharing?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should users with View sharing on displays be allowed to schedule to them?" %}{% endset %}
                                     {{ forms.checkbox("SCHEDULE_WITH_VIEW_PERMISSION", title, theme.getSetting("SCHEDULE_WITH_VIEW_PERMISSION", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_WITH_VIEW_PERMISSION")) }}
                                 {% endif %}
 
@@ -935,8 +964,14 @@
 
                                 {% if theme.isSettingVisible("DATE_FORMAT") %}
                                     {% set title %}{% trans "Date Format" %}{% endset %}
-                                    {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
-                                    {% set helpText %}{% trans %}The Date Format to use when displaying dates in the CMS. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
+                                    {% set helpText %}{% trans %}The Date Format to use when displaying dates in the CMS.{% endtrans %}
+                                        <span id="date-format-table"
+                                              class="fa fa-info-circle"
+                                              data-toggle="popover"
+                                              data-trigger="hover"
+                                              data-placement="right">
+                                        </span>
+                                    {% endset %}
 
                                     {% if theme.isSettingEditable("DATE_FORMAT") %}
                                         {{ forms.input("DATE_FORMAT", title, theme.getSetting("DATE_FORMAT", "Y-m-d"), helpText, "required") }}
@@ -1168,4 +1203,37 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(function () {
+            var phpDateFormatTable = Handlebars.compile($('#php-date-format-table').html());
+            $('#date-format-table').popover({
+                content: phpDateFormatTable,
+                html: true,
+                placement: "right",
+                sanitize: false,
+                trigger: "manual",
+                container: "form"
+            }).on("mouseenter", function() {
+                $(this).popover("show");
+                $(".popover").on("mouseleave", function() {
+                    $(this).popover('hide');
+                });
+            }).on("mouseleave", function() {
+                setTimeout(function() {
+                    if (!$(".popover:hover").length) {
+                        $(this).popover("hide");
+                    }
+                }, 300);
+            });
+        })
+    </script>
+
+    <style>
+        .popover{
+            max-width: 25%;
+        }
+    </style>
 {% endblock %}

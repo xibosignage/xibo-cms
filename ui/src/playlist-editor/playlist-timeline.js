@@ -18,7 +18,7 @@ let PlaylistTimeline = function(container) {
 PlaylistTimeline.prototype.render = function() {
 
     // Render timeline template
-    const html = timelineTemplate(pE.playlist);
+    const html = timelineTemplate($.extend({}, pE.playlist, {trans: editorsTrans}));
 
     // Append html to the main div
     this.DOMObject.html(html);
@@ -33,6 +33,7 @@ PlaylistTimeline.prototype.render = function() {
 
     this.DOMObject.find('.timeline-overlay-step').droppable({
         greedy: true,
+        tolerance: 'pointer',
         accept: '[drop-to="region"]',
         drop: function(event, ui) {
             const position = parseInt($(event.target).data('position')) + 1;
@@ -52,6 +53,7 @@ PlaylistTimeline.prototype.render = function() {
 
     this.DOMObject.find('.playlist-widget').droppable({
         greedy: true,
+        tolerance: 'pointer',
         accept: function(el) {
             return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
                 ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');

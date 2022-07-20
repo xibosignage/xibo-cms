@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -246,6 +245,21 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $this->handleChangedSettings('isRecordGeoLocationOnProofOfPlay', ($ownConfig) ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay') : $display->getSetting('isRecordGeoLocationOnProofOfPlay'), $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $changedSettings);
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('videoEngine')) {
+                    $this->handleChangedSettings('videoEngine', ($ownConfig) ? $displayProfile->getSetting('videoEngine') : $display->getSetting('videoEngine'), $sanitizedParams->getString('videoEngine'), $changedSettings);
+                    $displayProfile->setSetting('videoEngine', $sanitizedParams->getString('videoEngine'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('isTouchEnabled')) {
+                    $this->handleChangedSettings('isTouchEnabled', ($ownConfig) ? $displayProfile->getSetting('isTouchEnabled') : $display->getSetting('isTouchEnabled'), $sanitizedParams->getCheckbox('isTouchEnabled'), $changedSettings);
+                    $displayProfile->setSetting('isTouchEnabled', $sanitizedParams->getCheckbox('isTouchEnabled'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
@@ -422,6 +436,11 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('embeddedServerAllowWan')) {
                     $this->handleChangedSettings('embeddedServerAllowWan', ($ownConfig) ? $displayProfile->getSetting('embeddedServerAllowWan') : $display->getSetting('embeddedServerAllowWan'), $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $changedSettings);
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $this->handleChangedSettings('isRecordGeoLocationOnProofOfPlay', ($ownConfig) ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay') : $display->getSetting('isRecordGeoLocationOnProofOfPlay'), $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $changedSettings);
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
                 }
 
                 break;
@@ -652,6 +671,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('screenShotRequestInterval')) {
+                    $this->handleChangedSettings('screenShotRequestInterval', ($ownConfig) ? $displayProfile->getSetting('screenShotRequestInterval') : $display->getSetting('screenShotRequestInterval'), $sanitizedParams->getInt('screenShotRequestInterval'), $changedSettings);
+                    $displayProfile->setSetting('screenShotRequestInterval', $sanitizedParams->getInt('screenShotRequestInterval'), $ownConfig, $config);
+                }
+
                 if ($sanitizedParams->hasParam('timers')) {
                     // Options object to be converted to a JSON string
                     $timerOptions = (object)[];
@@ -778,7 +802,12 @@ trait DisplayProfileConfigFields
                 break;
 
             default:
-                $this->getLog()->info('Edit for unknown type ' . $displayProfile->getClientType());
+                if ($displayProfile->isCustom()) {
+                    $this->getLog()->info('Edit for custom Display profile type ' . $displayProfile->getClientType());
+                    $config = $displayProfile->handleCustomFields($sanitizedParams, $config, $display);
+                } else {
+                    $this->getLog()->info('Edit for unknown type ' . $displayProfile->getClientType());
+                }
         }
 
         if ($changedSettings != []) {

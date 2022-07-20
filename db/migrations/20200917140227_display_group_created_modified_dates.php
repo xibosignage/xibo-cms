@@ -34,8 +34,8 @@ class DisplayGroupCreatedModifiedDates extends AbstractMigration
     {
         $table = $this->table('displaygroup');
         $table
-            ->addColumn('createdDt', 'datetime')
-            ->addColumn('modifiedDt', 'datetime')
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->save();
     }
 }

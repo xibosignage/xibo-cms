@@ -55,7 +55,9 @@
                                 <th>{% trans "DataType" %}</th>
                                 <th>{% trans "Column Type" %}</th>
                                 <th>{% trans "List Content" %}</th>
+                                <th>{% trans "Tooltip" %}</th>
                                 <th>{% trans "Order" %}</th>
+                                <th>{% trans "Required?" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -73,6 +75,7 @@
     <script type="text/javascript">
         var table = $("#datasets").DataTable({
             "language": dataTablesLanguage,
+            dom: dataTablesTemplate,
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
@@ -93,7 +96,14 @@
                 { "data": "dataType" },
                 { "data": "dataSetColumnType" },
                 { "data": "listContent" },
+                { "data": "tooltip" },
                 { "data": "columnOrder" },
+                {
+                    "data": "isRequired",
+                    "render": dataTableTickCrossColumn,
+                    "visible": false,
+                    "name": "isRequired"
+                },
                 {
                     "orderable": false,
                     responsivePriority: 1,
@@ -104,6 +114,35 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
+        dataTableAddButtons(table, $('#datasets_wrapper').find('.dataTables_buttons'));
+
+        function dataSetColumnFormOpen(dialog) {
+            formHelpers.setupPhpDateFormatPopover(dialog)
+
+            // remote DataSet source
+            onDataTypeChanged(dialog);
+            $(dialog).find('#dataTypeId, #dataSetColumnTypeId').on('change', function() {
+                onDataTypeChanged(dialog);
+            });
+        }
+
+        function onDataTypeChanged(dialog)
+        {
+            var dataTypeId = $(dialog).find('#dataTypeId').val();
+            var dataSetColumnTypeId = $(dialog).find('#dataSetColumnTypeId').val();
+            var $dateFormat = $(dialog).find('.dateFormat');
+
+            if (dataSetColumnTypeId == 3 && dataTypeId == 3) {
+                $dateFormat.removeClass('d-none')
+            } else {
+                $dateFormat.addClass('d-none')
+            }
+        }
     </script>
+
+    <style>
+        .popover{
+            max-width: 70%;
+        }
+    </style>
 {% endblock %}

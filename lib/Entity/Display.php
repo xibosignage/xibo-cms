@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,14 +25,14 @@ namespace Xibo\Entity;
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Profiler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -314,7 +314,6 @@ class Display implements \JsonSerializable
      * @var Tag[]
      */
     public $tags;
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
@@ -394,6 +393,12 @@ class Display implements \JsonSerializable
      */
     public $permissionsFolderId;
 
+    /**
+     * @SWG\Property(description="The count of Player reported faults")
+     * @var int
+     */
+    public $countFaults;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -438,16 +443,6 @@ class Display implements \JsonSerializable
      */
     private $layoutFactory;
 
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
     /** @var FolderFactory */
     private $folderFactory;
 
@@ -455,14 +450,15 @@ class Display implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory, $folderFactory)
+    public function __construct($store, $log, $dispatcher, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory, $folderFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->excludeProperty('mediaInventoryXml');
         $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
         $this->setCanChangeOwner(false);
@@ -475,21 +471,6 @@ class Display implements \JsonSerializable
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
-    }
-
-    /**
-     * Set child object dependencies
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($layoutFactory, $mediaFactory, $scheduleFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        return $this;
     }
 
     /**
@@ -644,12 +625,12 @@ class Display implements \JsonSerializable
 
         // Check the number of licensed displays
         if ($maxDisplays > 0) {
-            $this->getLog()->debug('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
+            $this->getLog()->debug(sprintf('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed));
 
             if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
                 $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
-                $this->getLog()->debug('There are %d authorised displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
+                $this->getLog()->debug(sprintf('There are %d authorised displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays));
 
                 if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
                     return false;
@@ -705,16 +686,19 @@ class Display implements \JsonSerializable
 
         $allowNotify = true;
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         if ($options['checkDisplaySlotAvailability']) {
             // Check if there are display slots available
             $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
             if (!$this->isDisplaySlotAvailable()) {
-                throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of authorised displays. %d'),
-                    $maxDisplays), 'maxDisplays');
+                throw new InvalidArgumentException(sprintf(
+                    __('You have exceeded your maximum number of authorised displays. %d'),
+                    $maxDisplays
+                ), 'maxDisplays');
             }
         }
 
@@ -723,8 +707,7 @@ class Display implements \JsonSerializable
 
             // Never notify on add (there is little point, we've only just added).
             $allowNotify = false;
-        }
-        else {
+        } else {
             $this->edit();
         }
 
@@ -732,13 +715,24 @@ class Display implements \JsonSerializable
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
         }
 
-        // Trigger an update of all dynamic DisplayGroups
+        // Trigger an update of all dynamic DisplayGroups?
         if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags')) {
+            // TODO: Can we trigger a task to run which does this in the background?
+            Profiler::start('Display::save::dynamic', $this->getLog());
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                /* @var DisplayGroup $group */
-                $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => $allowNotify]);
+                $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($group), DisplayGroupLoadEvent::$NAME);
+                $group->load();
+                $group->save([
+                    'validate' => false,
+                    'saveGroup' => false,
+                    'saveTags' => false,
+                    'manageLinks' => false,
+                    'manageDisplayLinks' => true,
+                    'manageDynamicDisplayLinks' => true,
+                    'allowNotify' => $allowNotify
+                ]);
             }
+            Profiler::end('Display::save::dynamic', $this->getLog());
         }
     }
 
@@ -756,18 +750,19 @@ class Display implements \JsonSerializable
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $displayGroup->load();
             $displayGroup->unassignDisplay($this);
             $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
         }
 
         // Delete our display specific group
         $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->delete();
 
         // Delete the display
-        $this->getStore()->update('DELETE FROM `blacklist` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        $this->getStore()->update('DELETE FROM `player_faults` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
         $this->getStore()->update('DELETE FROM `display` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
 
         $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
@@ -879,7 +874,7 @@ class Display implements \JsonSerializable
         ', [
             'display' => $this->display,
             'defaultLayoutId' => $this->defaultLayoutId,
-            'incSchedule' => $this->incSchedule,
+            'incSchedule' => ($this->incSchedule == null) ? 0 : $this->incSchedule,
             'license' => $this->license,
             'licensed' => $this->licensed,
             'auditingUntil' => ($this->auditingUntil == null) ? 0 : $this->auditingUntil,
@@ -924,26 +919,45 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags') || $this->hasPropertyChanged('bandwidthLimit') || $this->hasPropertyChanged('folderId')) {
+        if ($this->hasPropertyChanged('display')
+            || $this->hasPropertyChanged('description')
+            || $this->hasPropertyChanged('tags')
+            || $this->hasPropertyChanged('bandwidthLimit')
+            || $this->hasPropertyChanged('folderId')
+        ) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
             $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
+            $displayGroup->load();
             $displayGroup->displayGroup = $this->display;
             $displayGroup->description = $this->description;
-            $displayGroup->replaceTags($this->tags);
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
-            $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
 
-            // if user has disabled folder feature, presumably said user also has no permissions to folder
-            // getById would fail here and prevent submitting edit form in web ui
-            try {
-                $folder = $this->folderFactory->getById($displayGroup->folderId);
-                $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-            } catch (NotFoundException $exception) {
-                $displayGroup->permissionsFolderId = 1;
+            // Tags
+            $saveTags = false;
+            if ($this->hasPropertyChanged('tags')) {
+                $saveTags = true;
+                $displayGroup->replaceTags($this->tags);
             }
 
-            $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
+            // If the folderId has changed, we should check this user has permissions to the new folderId
+            $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+            if ($this->hasPropertyChanged('folderId')) {
+                $folder = $this->folderFactory->getById($displayGroup->folderId);
+                // We have permission, so assert the new folder's permission id
+                $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
+            }
+
+            // manageDisplayLinks is false because we never update a display specific display group's display links
+            $displayGroup->save([
+                'validate' => false,
+                'saveGroup' => true,
+                'manageLinks' => false,
+                'manageDisplayLinks' => false,
+                'manageDynamicDisplayLinks' => false,
+                'allowNotify' => true,
+                'saveTags' => $saveTags
+            ]);
         } else {
             $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [
                 'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
@@ -1097,7 +1111,7 @@ class Display implements \JsonSerializable
      * @param PoolInterface $pool
      * @return int|null
      */
-    public function getCurrentLayoutId($pool)
+    public function getCurrentLayoutId($pool, LayoutFactory $layoutFactory)
     {
         $item = $pool->getItem('/currentLayoutId/' . $this->displayId);
 
@@ -1107,7 +1121,7 @@ class Display implements \JsonSerializable
             $this->currentLayoutId = $data;
 
             try {
-                $this->currentLayout = $this->layoutFactory->getById($this->currentLayoutId)->layout;
+                $this->currentLayout = $layoutFactory->getById($this->currentLayoutId)->layout;
             }
             catch (NotFoundException $notFoundException) {
                 // This is ok

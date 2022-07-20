@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -115,7 +115,13 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $handlers = [];
         if (isset($_SERVER['PHPUNIT_LOG_TO_FILE']) && $_SERVER['PHPUNIT_LOG_TO_FILE']) {
             $handlers[] = new StreamHandler(PROJECT_ROOT . '/library/log.txt', Logger::DEBUG);
-        } else {
+        }
+
+        if (isset($_SERVER['PHPUNIT_LOG_WEB_TO_CONSOLE']) && $_SERVER['PHPUNIT_LOG_WEB_TO_CONSOLE']) {
+            $handlers[] = new StreamHandler(STDERR, Logger::DEBUG);
+        }
+
+        if (count($handlers) <= 0) {
             $handlers[] = new NullHandler();
         }
 
@@ -139,6 +145,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         \Xibo\Middleware\State::setState($app, $this->createRequest('GET', '/'));
 
         // Setting Middleware
+        $app->add(new \Xibo\Middleware\ListenersMiddleware($app));
         $app->add(new TestAuthMiddleware($app));
         $app->add(new State($app));
         $app->add($twigMiddleware);
@@ -279,8 +286,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
                     $c->get('store'),
                     $c->get('pool'),
                     $c->get('playerActionService'),
-                    $c->get('scheduleFactory'),
-                    $c->get('dayPartFactory')
+                    $c->get('scheduleFactory')
                 );
             });
 
@@ -288,7 +294,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
             $container->set('reportService', function (ContainerInterface $c) {
                 return new ReportService(
                     $c,
-                    $c->get('state'),
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
                     $c->get('logService'),
@@ -359,7 +364,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
             $provider = new \Xibo\OAuth2\Client\Provider\Xibo([
                 'clientId' => $application->key,
                 'clientSecret' => $application->secret,
-                'redirectUri' => '',
+                'redirectUri' => null,
                 'baseUrl' => 'http://localhost'
             ]);
 
@@ -439,7 +444,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         // Create if necessary
         if (self::$logger === null) {
             if (isset($_SERVER['PHPUNIT_LOG_TO_CONSOLE']) && $_SERVER['PHPUNIT_LOG_TO_CONSOLE']) {
-                self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+                self::$logger = new Logger('TESTS', [new StreamHandler(STDERR, Logger::DEBUG)]);
             } else {
                 self::$logger = new NullLogger();
             }
@@ -449,20 +454,19 @@ class LocalWebTestCase extends PHPUnit_TestCase
     }
 
     /**
-     * This function is using MockPlayerActionService, which returns an array of displayId on processQueue
-     *
+     * Get the queue of actions.
      * @return int[]
-     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function getPlayerActionQueue()
     {
-        /** @var MockPlayerActionService $service */
+        /** @var \Xibo\Service\PlayerActionServiceInterface $service */
         $service = $this->app->getContainer()->get('playerActionService');
 
-        if ($service === null)
-            $this->fail('Test hasnt used the client and therefore cannot determine XMR activity');
+        if ($service === null) {
+            $this->fail('Test has not used the client and therefore cannot determine XMR activity');
+        }
 
-        return $service->processQueue();
+        return $service->getQueue();
     }
 
     /**

@@ -139,7 +139,8 @@ Cypress.Commands.add('createLayout', function(name) {
             Authorization: 'Bearer ' + Cypress.env('accessToken')
         },
         body: {
-            name: name
+            name: name,
+            resolutionId: 1 // HD landscape on the testing build
         }
     }).then((res) => {
         return res.body.layoutId;

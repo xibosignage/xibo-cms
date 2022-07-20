@@ -1,0 +1,5 @@
+<div class="widget-action-menu pull-right">
+    <button class="btn btn-success XiboFormButton" title="{{ reportAddBtnTitle }}" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName={{ reportName }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+    <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName={{ reportName }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+    <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName={{ reportName }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+</div>

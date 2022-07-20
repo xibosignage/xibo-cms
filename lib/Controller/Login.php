@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,23 +20,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Psr\Container\ContainerInterface;
+
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Flash\Messages;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
 use Xibo\Entity\User;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\ExpiredException;
@@ -44,52 +40,38 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
-
 /**
  * Class Login
  * @package Xibo\Controller
  */
 class Login extends Base
 {
+    use LogoutTrait;
+
     /** @var Session */
     private $session;
-
-    /** @var StorageServiceInterface  */
-    private $store;
 
     /** @var UserFactory */
     private $userFactory;
 
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
-
-    /** @var ContainerInterface */
-    private $container;
+    /**
+     * @var Messages
+     */
+    private $flash;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param Session $session
      * @param UserFactory $userFactory
      * @param \Stash\Interfaces\PoolInterface $pool
-     * @param StorageServiceInterface $store
-     * @param Twig $view
-     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $pool, $store, $view, ContainerInterface $container)
+    public function __construct($session, $userFactory, $pool)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->pool = $pool;
-        $this->store = $store;
-        $this->container = $container;
     }
 
     /**
@@ -99,7 +81,12 @@ class Login extends Base
      */
     protected function getFlash()
     {
-        return $this->container->get('flash');
+        return $this->flash;
+    }
+
+    public function setFlash(Messages $messages)
+    {
+        $this->flash = $messages;
     }
 
     /**
@@ -153,6 +140,7 @@ class Login extends Base
 
                     // Set the userId on the log object
                     $this->getLog()->setUserId($user->userId);
+                    $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
 
                     // Expire all sessions
                     $session = $this->session;
@@ -168,7 +156,6 @@ class Login extends Base
 
                     // Audit Log
                     $this->getLog()->audit('User', $user->userId, 'Login Granted via token', [
-                        'IPAddress' => $request->getAttribute('ip_address'),
                         'UserAgent' => $request->getHeader('User-Agent')
                     ]);
 
@@ -338,8 +325,9 @@ class Login extends Base
             $mail->From = $mailFrom;
             $msgFromName = $this->getConfig()->getSetting('mail_from_name');
 
-            if ($msgFromName != null)
+            if ($msgFromName != null) {
                 $mail->FromName = $msgFromName;
+            }
 
             $mail->Subject = __('Password Reset');
             $mail->addAddress($user->email);
@@ -356,10 +344,8 @@ class Login extends Base
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Password Reset Link Granted', [
-                'IPAddress' => $request->getAttribute('ip_address'),
                 'UserAgent' => $request->getHeader('User-Agent')
             ]);
-
         } catch (GeneralException $xiboException) {
             $this->getLog()->debug($xiboException->getMessage());
             $this->getFlash()->addMessage('login_message', __('User not found'));
@@ -377,25 +363,16 @@ class Login extends Base
      */
     public function logout(Request $request, Response $response)
     {
-        $parsedRequestParams = $this->getSanitizer($request->getQueryParams());
         $redirect = true;
 
         if ($request->getQueryParam('redirect') != null) {
             $redirect = $request->getQueryParam('redirect');
         }
 
-        $this->getUser()->touch();
-
-        // to log out a user we need only to clear out some session vars
-        unset($_SESSION['userid']);
-        unset($_SESSION['username']);
-        unset($_SESSION['password']);
-
-        $session = $this->session;
-        $session->setIsExpired(1);
+        $this->completeLogoutFlow($this->getUser(), $this->session, $this->getLog(), $request);
 
         if ($redirect) {
-            return $response->withRedirect('login');
+            return $response->withRedirect($this->urlFor($request, 'home'));
         }
 
         return $response->withStatus(200);
@@ -445,14 +422,13 @@ class Login extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function about(Request $request, Response $response)
+    public function about(Request $request, Response $response)
     {
         $state = $this->getState();
 
         if ($request->isXhr()) {
             $state->template = 'about-text';
-        }
-        else {
+        } else {
             $state->template = 'about-page';
         }
 
@@ -472,7 +448,7 @@ class Login extends Base
      */
     private function generateEmailBody($subject, $body)
     {
-        return $this->renderTemplateToString('email-template.twig', [
+        return $this->renderTemplateToString('email-template', [
             'config' => $this->getConfig(),
             'subject' => $subject, 'body' => $body
         ]);
@@ -572,7 +548,6 @@ class Login extends Base
 
                 // Audit Log
                 $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
-                    'IPAddress' => $request->getAttribute('ip_address'),
                     'UserAgent' => $request->getHeader('User-Agent')
                 ]);
             }
@@ -616,9 +591,9 @@ class Login extends Base
             $tfa = new TwoFactorAuth($issuer);
 
             if ($user->twoFactorTypeId === 1 && $user->email !== '') {
-                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 8);
+                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 9);
             } else {
-                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 2);
+                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 3);
             }
         } elseif (isset($_POST['recoveryCode'])) {
             // get the array of recovery codes, go through them and try to match provided code
@@ -671,7 +646,7 @@ class Login extends Base
 
         // Set the userId on the log object
         $this->getLog()->setUserId($user->userId);
-
+        $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
 
         // Switch Session ID's
         $session = $this->session;
@@ -681,7 +656,6 @@ class Login extends Base
 
         // Audit Log
         $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                'IPAddress' => $request->getAttribute('ip_address'),
                 'UserAgent' => $request->getHeader('User-Agent')
         ]);
     }

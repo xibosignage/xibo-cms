@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -32,7 +32,7 @@
 
         <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
 
-        <!-- Copyright 2006-2020 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-2021 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <style type="text/css">
             body {
                 padding-top: 40px;
@@ -69,10 +69,7 @@
                 {% block content %}{% endblock %}
             </div>
 
-            <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}
-                | <a id="source-link" href="{{ theme.getThemeConfig("cms_source_url") }}">{% trans "Source" %}</a>
-                | <a id="about-link" class="XiboFormButton" href="{{ aboutUrl }}" title="{% trans "About" %}">{% trans "About" %}</a>
-            </p>
+            <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}</p>
         </div> <!-- /container -->
         <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
     </body>

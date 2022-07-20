@@ -1,27 +1,39 @@
 <?php
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Report;
 
 use Carbon\Carbon;
-use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
-use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\ReportForm;
+use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\SavedReportFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
-use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class TimeConnected
@@ -29,33 +41,12 @@ use Xibo\Support\Exception\InvalidArgumentException;
  */
 class TimeConnected implements ReportInterface
 {
-
-    use ReportTrait;
+    use ReportDefaultTrait;
 
     /**
      * @var DisplayFactory
      */
     private $displayFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
 
     /**
      * @var DisplayGroupFactory
@@ -67,28 +58,10 @@ class TimeConnected implements ReportInterface
      */
     private $reportService;
 
-    /**
-     * Report Constructor.
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param StorageServiceInterface $store
-     * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizer
-     */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
-    {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
-    }
-
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
     {
         $this->displayFactory = $container->get('displayFactory');
-        $this->mediaFactory = $container->get('mediaFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
-        $this->savedReportFactory = $container->get('savedReportFactory');
-        $this->userFactory = $container->get('userFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
         $this->reportService = $container->get('reportService');
 
@@ -96,15 +69,15 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
-    {
-        return null;
-    }
-
-    /** @inheritdoc */
     public function getReportEmailTemplate()
     {
         return 'timeconnected-email-template.twig';
+    }
+
+    /** @inheritdoc */
+    public function getSavedReportTemplate()
+    {
+        return 'timeconnected-report-preview';
     }
 
     /** @inheritdoc */
@@ -123,29 +96,24 @@ class TimeConnected implements ReportInterface
             }
         }
 
-        return [
-            'template' => 'timeconnected-report-form',
-            'data' =>  [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+        return new ReportForm(
+            'timeconnected-report-form',
+            'timeconnected',
+            'Display',
+            [
+                'displays' => $displays,
+                'displayGroups' => $groups,
                 'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
                 'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-                'availableReports' => $this->reportService->listReports(),
-                'displays' => $displays,
-                'displayGroups' => $groups
-            ]
-        ];
+            ],
+            __('Select a type and an item (i.e., layout/media/tag)')
+        );
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(Request $request)
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $data = [];
-
-        $data['formTitle'] = 'Add Report Schedule';
-
-        $data['hiddenFields'] =  json_encode([
-        ]);
-
+        $data['hiddenFields'] = '{}';
         $data['reportName'] = 'timeconnected';
 
         $groups = [];
@@ -169,15 +137,12 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(Request $request)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
         $filter = $sanitizedParams->getString('filter');
         $groupByFilter = $sanitizedParams->getString('groupByFilter');
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds');
         $hiddenFields = json_decode($sanitizedParams->getString('hiddenFields'), true);
-
 
         $filterCriteria['displayGroupIds'] = $displayGroupIds;
         $filterCriteria['filter'] = $filter;
@@ -187,18 +152,15 @@ class TimeConnected implements ReportInterface
             $schedule = ReportSchedule::$SCHEDULE_DAILY;
             $filterCriteria['reportFilter'] = 'yesterday';
             $filterCriteria['groupByFilter'] = $groupByFilter;
-
-        } else if ($filter == 'weekly') {
+        } elseif ($filter == 'weekly') {
             $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
             $filterCriteria['reportFilter'] = 'lastweek';
             $filterCriteria['groupByFilter'] = $groupByFilter;
-
-        } else if ($filter == 'monthly') {
+        } elseif ($filter == 'monthly') {
             $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
             $filterCriteria['reportFilter'] = 'lastmonth';
             $filterCriteria['groupByFilter'] = $groupByFilter;
-
-        } else if ($filter == 'yearly') {
+        } elseif ($filter == 'yearly') {
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
             $filterCriteria['groupByFilter'] = $groupByFilter;
@@ -215,52 +177,52 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName($filterCriteria)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
     {
-        return sprintf(__('%s report for Display', ucfirst($filterCriteria['filter'])));
+        return sprintf(__('%s report for Display', ucfirst($sanitizedParams->getString('filter'))));
+    }
+
+    /** @inheritdoc */
+    public function restructureSavedReportOldJson($result)
+    {
+        return $result;
     }
 
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
-        // Return data to build chart
-        return array_merge($json, [
-            'template' => 'timeconnected-report-preview',
-            'savedReport' => $savedReport,
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
-            'resultObj' => $json['table'],
-        ]);
+        // Report result object
+        return new ReportResult(
+            [
+                'periodStart' => $json['metadata']['periodStart'],
+                'periodEnd' => $json['metadata']['periodEnd'],
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                    ->format(DateFormatHelper::getSystemFormat()),
+                'title' => $savedReport->saveAs,
+            ],
+            $json['table'],
+            $json['recordsTotal'],
+            $json['chart'],
+            $json['hasChartData']
+        );
     }
 
     /** @inheritdoc */
-    public function getResults($filterCriteria)
+    public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
-
-        $sanitizedParams = $this->getSanitizer($filterCriteria);
-
-        $campaignId = $sanitizedParams->getInt('campaignId');
-        $type = strtolower($sanitizedParams->getString('type'));
-        $layoutId = $sanitizedParams->getInt('layoutId');
-        $mediaId = $sanitizedParams->getInt('mediaId');
-        $eventTag = $sanitizedParams->getString('eventTag');
-        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds',  ['default' => [] ]);
-
-        $accessibleDisplayIds = [];
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         $displayIds = [];
 
         // Get an array of display id this user has access to.
-        foreach ($this->displayFactory->query() as $display) {
-            $accessibleDisplayIds[] = $display->displayId;
-        }
+        $accessibleDisplayIds = $this->getDisplayIdFilter($sanitizedParams);
 
-        if(count($displayGroupIds) > 0) {
+        if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
-
                 // Get all displays by Display Group
                 $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
                 foreach ($displays as $display) {
-                    if (in_array($display->displayId, $accessibleDisplayIds)) { // User has access to the display
+                    if (in_array($display->displayId, $accessibleDisplayIds)) {
+                        // User has access to the display
                         $displayIds[] = $display->displayId;
                     }
                 }
@@ -273,18 +235,15 @@ class TimeConnected implements ReportInterface
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
         }
 
-        //
-
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // Our report has a range filter which determines whether the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
         $reportFilter = $sanitizedParams->getString('reportFilter');
         // Use the current date as a helper
         $now = Carbon::now();
 
         switch ($reportFilter) {
-
             case 'today':
                 $fromDt = $now->copy()->startOfDay();
                 $toDt = $fromDt->copy()->addDay();
@@ -356,7 +315,7 @@ class TimeConnected implements ReportInterface
         // Get Results!
         // with keys "result", "periods", "periodStart", "periodEnd"
         // -------------
-        $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $campaignId, $type, $layoutId, $mediaId, $eventTag);
+        $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds);
 
         //
         // Output Results
@@ -368,7 +327,6 @@ class TimeConnected implements ReportInterface
         foreach ($result['periods'] as $resPeriods) {
             foreach ($displayIdsArrayChunk as $key => $display) {
                 foreach ($display as $displayId) {
-
                     $temp = $resPeriods['customLabel'];
                     if (empty($timeConnected[$temp][$displayId]['percent'])) {
                         $timeConnected[$key][$temp][$displayId]['percent'] = 100;
@@ -396,15 +354,23 @@ class TimeConnected implements ReportInterface
             }
         }
 
-        // Return data to build chart
-        return [
-            'table' => [
+        // ----
+        // No grid
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
+        return new ReportResult(
+            [
+                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            ],
+            [
                 'timeConnected' => $timeConnected,
                 'displays' => $displays
             ],
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-        ];
+            0,
+            [],
+            true // to set state->extra
+        );
     }
 
     /**
@@ -412,15 +378,10 @@ class TimeConnected implements ReportInterface
      * @param Carbon $fromDt The filter range from date
      * @param Carbon $toDt The filter range to date
      * @param string $groupByFilter Grouping, byhour, bydayofweek and bydayofmonth
-     * @param $displayIds
-     * @param $displayGroupIds
-     * @param $type
-     * @param $layoutId
-     * @param $mediaId
-     * @param $eventTag
+     * @param array $displayIds
      * @return array
      */
-    private function getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
+    private function getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds)
     {
 
         if ($groupByFilter == 'bydayofmonth') {
@@ -445,7 +406,9 @@ class TimeConnected implements ReportInterface
         // Join in stats
         // -------------
         $query = '
-            SELECT periods.id,
+            SELECT periods.id,               
+               periods.start,
+               periods.end,
                periods.label,
                periods.customLabel,
                display,
@@ -483,21 +446,18 @@ class TimeConnected implements ReportInterface
         GROUP BY periods.id,
              periods.start,
              periods.end,
-             joined.display
+             periods.label,
+             periods.customLabel,
+             joined.display,
+             joined.displayId
         ORDER BY id, display
             ';
 
         return [
             'result' => $this->getStore()->select($query, []),
-            'periods' => $this->getStore()->select('SELECT * from '.$periods, []),
+            'periods' => $this->getStore()->select('SELECT * from ' . $periods, []),
             'periodStart' => $fromDt->format('Y-m-d H:i:s'),
             'periodEnd' => $toDt->format('Y-m-d H:i:s')
         ];
-    }
-
-    /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
-    {
-        return $result;
     }
 }

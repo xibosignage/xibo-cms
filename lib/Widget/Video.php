@@ -25,7 +25,6 @@ use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Helper\HttpCacheProvider;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -53,6 +52,7 @@ class Video extends ModuleWidget
     {
         // Process any module settings you asked for.
         $this->module->settings['defaultMute'] = $this->getSanitizer($request->getParams())->getCheckbox('defaultMute');
+        $this->module->settings['defaultScaleType'] = $this->getSanitizer($request->getParams())->getString('defaultScaleType');
 
         if ($this->getModule()->defaultDuration !== 0) {
             throw new InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
@@ -215,8 +215,9 @@ class Video extends ModuleWidget
     public function determineDuration($fileName = null)
     {
         // If we don't have a file name, then we use the default duration of 0 (end-detect)
-        if ($fileName === null)
+        if ($fileName === null) {
             return 0;
+        }
 
         $this->getLog()->debug('Determine Duration from ' . $fileName);
         $info = new \getID3();
@@ -229,6 +230,7 @@ class Video extends ModuleWidget
     {
         parent::setDefaultWidgetOptions();
         $this->setOption('mute', $this->getSetting('defaultMute', 0));
+        $this->setOption('scaleType', $this->getSetting('defaultScaleType', 'aspect'));
     }
 
     /** @inheritdoc */
@@ -300,8 +302,7 @@ class Video extends ModuleWidget
                     $this->getLog()->debug('Outputting Image Response');
 
                     // Output Etags
-                    /** @var $httpCache HttpCacheProvider*/
-                    $httpCache = $this->container->get('httpCache');
+                    $httpCache = $this->cacheProvider;
                     $response = $httpCache->withEtag($response, $media->md5 . $width . $height . $proportional . $preview);
                     $response = $httpCache->withExpires($response,'+1 week');
 

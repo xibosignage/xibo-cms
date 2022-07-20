@@ -42,10 +42,10 @@ class WebAuthentication extends AuthenticationBase
     public function redirectToLogin(Request $request)
     {
         if ($this->isAjax($request)) {
-            return $this->createResponse()
+            return $this->createResponse($request)
                 ->withJson(ApplicationState::asRequiresLogin());
         } else {
-            return $this->createResponse()->withRedirect($this->getRouteParser()->urlFor('login'));
+            return $this->createResponse($request)->withRedirect($this->getRouteParser()->urlFor('login'));
         }
     }
 

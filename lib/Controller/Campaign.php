@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,17 +23,11 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Xibo\Entity\Permission;
+use Xibo\Event\CampaignLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -61,42 +55,20 @@ class Campaign extends Base
      */
     private $tagFactory;
 
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
     /** @var FolderFactory */
     private $folderFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param CampaignFactory $campaignFactory
      * @param LayoutFactory $layoutFactory
-     * @param PermissionFactory $permissionFactory
-     * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
-     * @param Twig $view
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view, $folderFactory)
+    public function __construct($campaignFactory, $layoutFactory, $tagFactory, $folderFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
         $this->folderFactory = $folderFactory;
     }
@@ -142,6 +114,20 @@ class Campaign extends Base
      *      name="tags",
      *      in="query",
      *      description="Filter by Tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="exactTags",
+     *      in="query",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
      *      type="string",
      *      required=false
      *   ),
@@ -211,28 +197,30 @@ class Campaign extends Base
             'name' => $parsedParams->getString('name'),
             'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
             'tags' => $parsedParams->getString('tags'),
+            'exactTags' => $parsedParams->getCheckbox('exactTags'),
             'hasLayouts' => $parsedParams->getInt('hasLayouts'),
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
             'retired' => $parsedParams->getInt('retired'),
-            'folderId' => $parsedParams->getInt('folderId')
-        ];
-
-        $options = [
+            'folderId' => $parsedParams->getInt('folderId'),
             'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
+            'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
+            'layoutId' => $parsedParams->getInt('layoutId'),
+            'logicalOperator' => $parsedParams->getString('logicalOperator'),
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams), $options);
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
-
             if (count($embed) > 0) {
-                $campaign->setChildObjectDependencies($this->layoutFactory);
+                if (in_array('layouts', $embed)) {
+                    $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+                }
+
                 $campaign->load([
                     'loadPermissions' => in_array('permissions', $embed),
-                    'loadLayouts' => in_array('layouts', $embed),
                     'loadTags' => in_array('tags', $embed),
                     'loadEvents' => in_array('events', $embed)
                 ]);
@@ -241,7 +229,7 @@ class Campaign extends Base
             }
 
             if ($this->isApi($request)) {
-                break;
+                continue;
             }
 
             $campaign->includeProperty('buttons');
@@ -406,6 +394,28 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="layoutIds",
+     *      in="formData",
+     *      description="An array of layoutIds to assign to this Campaign, in order.",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="cyclePlaybackEnabled",
+     *      in="formData",
+     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="playCount",
+     *      in="formData",
+     *      description="In cycle based playback, how many plays should each Layout have before moving on?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -420,7 +430,6 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -431,7 +440,12 @@ class Campaign extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'), $sanitizedParams->getInt('folderId', ['default' => 1]));
+        $campaign = $this->campaignFactory->create(
+            $sanitizedParams->getString('name'),
+            $this->getUser()->userId,
+            $sanitizedParams->getString('tags'),
+            $sanitizedParams->getInt('folderId', ['default' => 1])
+        );
 
         if ($this->getUser()->featureEnabled('folder.view')) {
             $folder = $this->folderFactory->getById($campaign->folderId);
@@ -440,10 +454,25 @@ class Campaign extends Base
             $campaign->permissionsFolderId = 1;
         }
 
-        $campaign->save();
+        // Cycle based playback
+        $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
+        $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
 
-        // Assign layouts
-        $this->assignLayout($request, $response, $campaign->campaignId);
+        // Assign layouts?
+        foreach ($sanitizedParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+            // Check permissions.
+            $layout = $this->layoutFactory->getById($layoutId);
+
+            if (!$this->getUser()->checkViewable($layout)) {
+                throw new AccessDeniedException(__('You do not have permission to assign this Layout'));
+            }
+
+            // Assign.
+            $campaign->assignLayout($layout);
+        }
+
+        // All done, save.
+        $campaign->save();
 
         // Return
         $this->getState()->hydrate([
@@ -495,8 +524,7 @@ class Campaign extends Base
         $this->getState()->setData([
             'campaign' => $campaign,
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Edit'),
-            'tags' => $this->tagFactory->getTagsWithValues($campaign)
+            'help' => $this->getHelp()->link('Campaign', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -541,6 +569,35 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="manageLayouts",
+     *      in="formData",
+     *      description="Flag indicating whether to manage layouts or not. Default to no.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutIds",
+     *      in="formData",
+     *      description="An array of layoutIds to assign to this Campaign, in order.",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="cyclePlaybackEnabled",
+     *      in="formData",
+     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="playCount",
+     *      in="formData",
+     *      description="In cycle based playback, how many plays should each Layout have before moving on?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -565,6 +622,35 @@ class Campaign extends Base
             $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
         }
 
+        // Cycle based playback
+        $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
+        $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
+
+        // Assign layouts?
+        if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
+            // Fully decorate our Campaign
+            $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+
+            // Remove all we've currently got assigned, keeping track of them for sharing check
+            $originalLayoutAssignments = array_map(function ($element) {
+                return $element->layoutId;
+            }, $campaign->getLayouts());
+
+            $campaign->unassignAllLayouts();
+
+            foreach ($parsedRequestParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+                // Check permissions.
+                $layout = $this->layoutFactory->getById($layoutId);
+
+                if (!$this->getUser()->checkViewable($layout) && !in_array($layoutId, $originalLayoutAssignments)) {
+                    throw new AccessDeniedException(__('You are trying to assign a Layout that is not shared with you.'));
+                }
+
+                // Assign.
+                $campaign->assignLayout($layout);
+            }
+        }
+
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
             $campaign->save([
@@ -575,9 +661,6 @@ class Campaign extends Base
                 'saveTags' => false
             ]);
         }
-
-        // Assign layouts
-        $this->assignLayout($request, $response, $campaign->campaignId);
 
         // Return
         $this->getState()->hydrate([
@@ -655,8 +738,6 @@ class Campaign extends Base
             throw new AccessDeniedException();
         }
 
-        $campaign->setChildObjectDependencies($this->layoutFactory);
-
         $campaign->delete();
 
         // Return
@@ -713,21 +794,6 @@ class Campaign extends Base
     }
 
     /**
-     * Model to use for supplying key/value pairs to arrays
-     * @SWG\Definition(
-     *  definition="LayoutAssignmentArray",
-     *  @SWG\Property(
-     *      property="layoutId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="displayOrder",
-     *      type="integer"
-     *  )
-     * )
-     */
-
-    /**
      * Assigns a layout to a Campaign
      * @param Request $request
      * @param Response $response
@@ -743,8 +809,8 @@ class Campaign extends Base
      *  path="/campaign/layout/assign/{campaignId}",
      *  operationId="campaignAssignLayout",
      *  tags={"campaign"},
-     *  summary="Assign Layouts",
-     *  description="Assign Layouts to a Campaign",
+     *  summary="Assign Layout",
+     *  description="Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
      *  @SWG\Parameter(
      *      name="campaignId",
      *      in="path",
@@ -755,22 +821,9 @@ class Campaign extends Base
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
-     *      description="Array of Layout ID/Display Orders to Assign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(
-     *          ref="#/definitions/LayoutAssignmentArray"
-     *      )
-     *   ),
-     *  @SWG\Parameter(
-     *      name="unassignLayoutId",
-     *      in="formData",
-     *      description="Array of Layout ID/Display Orders to unassign",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(
-     *          ref="#/definitions/LayoutAssignmentArray"
-     *      )
+     *      description="Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
+     *      type="integer",
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -793,146 +846,30 @@ class Campaign extends Base
             throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'), 'campaignId');
         }
 
-        $campaign->setChildObjectDependencies($this->layoutFactory);
+        $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
 
-        // Track whether we've made any changes.
-        $changesMade = false;
-
-        // Check our permissions to see each one
-        $layouts = $request->getParam('layoutId', null);
-        $layouts = is_array($layouts) ? $layouts : [];
-
-        $this->getLog()->debug(sprintf('There are %d Layouts to assign', count($layouts)));
-
-        foreach ($layouts as $object) {
-            $sanitizedObject = $this->getSanitizer($object);
-            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
-
-            // Check to see if this layout is already assigned
-            // if it is, then we have permission to move it around
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
-                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
-
-            // Make sure we're not a draft
-            if ($layout->isChild())
-                throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
-
-            // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
-            $tags = $layout->tags;
-            $tagsArray = explode(',', $tags);
-
-            foreach ($tagsArray as $tag) {
-                if ($tag === 'template') {
-                    throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
+        // Get the layout we want to add
+        $params = $this->getSanitizer($request->getParams());
+        $layout = $this->layoutFactory->getById(
+            $params->getInt('layoutId', [
+                'throw' => function () {
+                    throw new InvalidArgumentException(__('Please select a Layout to assign.'), 'layoutId');
                 }
-            }
+            ])
+        );
 
-            // Set the Display Order
-            $layout->displayOrder = $sanitizedObject->getInt('displayOrder');
-
-            // Assign it
-            $campaign->assignLayout($layout);
-
-            $changesMade = true;
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
         }
 
-        // Run through the layouts to unassign
-        $layouts = $request->getParam('unassignLayoutId', null);
-        $layouts = is_array($layouts) ? $layouts : [];
-        
-        $this->getLog()->debug(sprintf('There are %d Layouts to unassign', count($layouts)));
-        
-        foreach ($layouts as $object) {
-            $sanitizedObject = $this->getSanitizer($object);
-            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
-
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout)) {
-                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
-            }
-
-            // Set the Display Order
-            $layout->displayOrder = $sanitizedObject->getInt('displayOrder');
-
-            // Unassign it
-            $campaign->unassignLayout($layout);
-
-            $changesMade = true;
-        }
-
-        // Save the campaign
-        if ($changesMade) {
-            $campaign->save(['validate' => false, 'saveTags' => false]);
-        }
+        // Assign to the campaign
+        $campaign->assignLayout($layout);
+        $campaign->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Unassign a layout to a Campaign
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function unassignLayout(Request $request, Response $response, $id)
-    {
-        $campaign = $this->campaignFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($campaign)) {
-            throw new AccessDeniedException();
-        }
-
-        // Make sure this is a non-layout specific campaign
-        if ($campaign->isLayoutSpecific == 1) {
-            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'),
-                'campaignId');
-        }
-
-        $campaign->setChildObjectDependencies($this->layoutFactory);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $layouts = $sanitizedParams->getIntArray('layoutId');
-
-        if (count($layouts) <= 0) {
-            throw new InvalidArgumentException(__('Layouts not provided'), 'layoutId');
-        }
-
-        // Check our permissions to see each one
-        $layouts = $request->getParam('layoutId', null);
-        $layouts = is_array($layouts) ? $layouts : [];
-        foreach ($layouts as $object) {
-            $sanitizedObject = $this->getSanitizer($object);
-            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
-
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout)) {
-                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
-            }
-
-            // Set the Display Order
-            $layout->displayOrder = $sanitizedParams->getInt('displayOrder', $object);
-
-            // Unassign it
-            $campaign->unassignLayout($layout);
-        }
-
-        $campaign->save(['validate' => false]);
-
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
         ]);
 
         return $this->render($request, $response);
@@ -1145,12 +1082,13 @@ class Campaign extends Base
         $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
 
         if ($campaign->isLayoutSpecific === 1) {
-            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, true, true);
 
             foreach ($layouts as $layout) {
                 $layout->load();
-                foreach ($layout->regions as $region) {
-                    /* @var Region $region */
+                $allRegions = array_merge($layout->regions, $layout->drawers);
+
+                foreach ($allRegions as $region) {
                     $playlist = $region->getPlaylist();
                     $playlist->folderId = $campaign->folderId;
                     $playlist->permissionsFolderId = $campaign->permissionsFolderId;

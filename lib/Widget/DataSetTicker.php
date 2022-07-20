@@ -26,6 +26,7 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -287,7 +288,7 @@ class DataSetTicker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="template",
      *      in="formData",
-     *      description="Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+     *      description="Template for each item",
      *      type="string",
      *      required=false
      *   ),
@@ -483,6 +484,7 @@ class DataSetTicker extends ModuleWidget
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.min.js')
+            ->appendJavaScript('xiboIC.lockAllInteractions();')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
         ;
@@ -560,11 +562,6 @@ class DataSetTicker extends ModuleWidget
             $headContent .= ' body { background-color: ' . $this->getOption('backgroundColor') . '; }';
         }
 
-        // Add the CSS if it isn't empty
-        if ($css != '') {
-            $headContent .= '<style type="text/css">' . $css . '</style>';
-        }
-
         $this
             ->appendControlMeta('NUMITEMS', $pages)
             ->appendControlMeta('DURATION', $totalDuration)
@@ -591,7 +588,7 @@ class DataSetTicker extends ModuleWidget
                     $("body").xiboLayoutScaler(options);
                     $("#content").find("img").xiboImageRender(options);
 
-                    const runOnVisible = function() { $("#content").xiboTextRender(options, items); };
+                    var runOnVisible = function() { $("#content").xiboTextRender(options, items); };
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?
@@ -607,6 +604,11 @@ class DataSetTicker extends ModuleWidget
                 });
             ')
             ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')));
+
+        // Add the CSS if it isn't empty
+        if ($css != '') {
+            $this->appendCss($css);
+        }
 
         return $this->finaliseGetResource();
     }
@@ -815,10 +817,22 @@ class DataSetTicker extends ModuleWidget
                                 } else {
                                     $replace = '';
                                 }
-                            }
-                            catch (NotFoundException $e) {
+                            } catch (NotFoundException $e) {
                                 $this->getLog()->error(sprintf('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId));
                                 $replace = '';
+                            }
+                        } else if ($mappings[$header]['dataTypeId'] === 3) {
+                            // We have a date
+                            // see if a format has been provided.
+                            if (isset($subs[2])) {
+                                try {
+                                    $replace = Carbon::createFromFormat(
+                                        DateFormatHelper::getSystemFormat(),
+                                        $replace
+                                    )->format($subs[2]);
+                                } catch (\Exception $exception) {
+                                    $this->getLog()->debug('widgetId: ' . $this->getWidgetId() . '. Invalid date format sub: ' . $sub[2]);
+                                }
                             }
                         }
                     }
@@ -910,13 +924,13 @@ class DataSetTicker extends ModuleWidget
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        if ($displayId === 0 || $this->getOption('sourceId', 1) == 2) {
-            // DataSets might use Display
-            return $this->getWidgetId() . '_' . $displayId;
-        } else {
-            // Tickers are non-display specific
-            return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
-        }
+        return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return true;
     }
 
     /** @inheritdoc */

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -86,6 +86,8 @@ if (\Xibo\Helper\Environment::migrationPending()) {
 
 $twigMiddleware = TwigMiddleware::createFromContainer($app);
 
+$app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
+$app->add(new \Xibo\Middleware\ListenersMiddleware($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xtr($app));
 $app->add(new \Xibo\Middleware\State($app));
@@ -94,7 +96,11 @@ $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 
 $app->addRoutingMiddleware();
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(
+    \Xibo\Helper\Environment::isDevMode() || \Xibo\Helper\Environment::isForceDebugging(),
+    true,
+    true
+);
 $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
 // All routes

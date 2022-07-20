@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -44,18 +44,13 @@ try {
 } catch (Exception $e) {
     die($e->getMessage());
 }
-$uidProcessor =  new \Monolog\Processor\UidProcessor(7);
-$container->set('logger', function () use($uidProcessor) {
-    $logger = new Logger('XMDS');
 
-    // db
-    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
-
-    $logger->pushProcessor($uidProcessor);
-
-    $logger->pushHandler($dbhandler);
-
-    return $logger;
+// Logger
+$uidProcessor = new \Monolog\Processor\UidProcessor(7);
+$container->set('logger', function () use ($uidProcessor) {
+    return (new Logger('XMDS'))
+        ->pushProcessor($uidProcessor)
+        ->pushHandler(new \Xibo\Helper\DatabaseLogHandler());
 });
 
 // Create a Slim application
@@ -75,6 +70,12 @@ $startTime = microtime(true);
 
 // Set XMR
 \Xibo\Middleware\Xmr::setXmr($app, false);
+
+// Set listeners
+\Xibo\Middleware\ListenersMiddleware::setListeners($app);
+
+// Set connectors
+\Xibo\Middleware\ConnectorMiddleware::setConnectors($app);
 
 $container->get('configService')->setDependencies($container->get('store'), '/');
 $container->get('configService')->loadTheme();
@@ -250,6 +251,52 @@ if (isset($_GET['file'])) {
     exit;
 }
 
+// Connector request?
+if (isset($_GET['connector'])) {
+    try {
+        if (!isset($_GET['token'])) {
+            header('HTTP/1.0 403 Forbidden');
+            exit;
+        }
+
+        // Dispatch an event to check the token
+        $tokenEvent = new \Xibo\Event\XmdsConnectorTokenEvent();
+        $tokenEvent->setToken($_GET['token']);
+        $container->get('dispatcher')->dispatch($tokenEvent, \Xibo\Event\XmdsConnectorTokenEvent::$NAME);
+
+        if (empty($tokenEvent->getWidgetId())) {
+            header('HTTP/1.0 403 Forbidden');
+            exit;
+        }
+
+        // Check the widgetId is permissible, and in required files for the display.
+        /** @var \Xibo\Entity\RequiredFile $file */
+        $file = $container->get('requiredFileFactory')->getByDisplayAndWidget(
+            $tokenEvent->getDisplayId(),
+            $tokenEvent->getWidgetId()
+        );
+
+        // Get the widget
+        $widget = $container->get('widgetFactory')->getById($tokenEvent->getWidgetId());
+
+        // It has been found, so we raise an event here to see if any connector can provide a file for it.
+        $event = new \Xibo\Event\XmdsConnectorFileEvent($widget);
+        $container->get('dispatcher')->dispatch($event, \Xibo\Event\XmdsConnectorFileEvent::$NAME);
+
+        // What now?
+        $emitter = new \Slim\ResponseEmitter();
+        $emitter->emit($event->getResponse());
+    } catch (\Xibo\Support\Exception\GeneralException $e) {
+        header('HTTP/1.0 500 Internal Server Error');
+        echo $e->getMessage();
+    } catch (Exception $e) {
+        $container->get('logService')->error('Unknown Error: ' . $e->getMessage());
+        $container->get('logService')->debug($e->getTraceAsString());
+        header('HTTP/1.0 500 Internal Server Error');
+    }
+    exit;
+}
+
 // Town down all logging
 $container->get('logService')->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
@@ -264,8 +311,13 @@ try {
     $container->get('logger')->pushProcessor($logProcessor);
 
     // Create a SoapServer
-    $soap = new SoapServer($wsdl);
-    //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+    // explicitly define caching.
+    if (\Xibo\Helper\Environment::isDevMode()) {
+        // No cache - our WSDL might change in development
+        $soap = new SoapServer($wsdl, ['cache_wsdl' => WSDL_CACHE_NONE]);
+    } else {
+        $soap = new SoapServer($wsdl, ['cache_wsdl' => WSDL_CACHE_MEMORY]);
+    }
     $soap->setClass('\Xibo\Xmds\Soap' . $version,
         $logProcessor,
         $container->get('pool'),
@@ -288,9 +340,11 @@ try {
         $container->get('displayEventFactory'),
         $container->get('scheduleFactory'),
         $container->get('dayPartFactory'),
-        $container->get('playerVersionFactory')
+        $container->get('playerVersionFactory'),
+        $container->get('dispatcher')
     );
-    $soap->handle();
+    // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.
+    $soap->handle(file_get_contents('php://input'));
 
     // Get the stats for this connection
     $stats = $container->get('store')->stats();

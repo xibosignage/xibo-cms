@@ -118,9 +118,13 @@
                         {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
                         {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
 
-                        {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
-                        {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
+                        {% set title %}{% trans "Date Format" %}
+                            <span class="fa fa-info-circle date-format-table"
+                                  data-toggle="popover"
+                                  data-trigger="hover">
+                            </span>
+                        {% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the Widget." %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Allowable Attributes" %}{% endset %}
@@ -143,8 +147,7 @@
                     <div class="tab-pane" id="appearanceTab">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
-
+                        {{ forms.colorPicker("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
@@ -230,6 +233,39 @@
                            {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}                     
                         {% endset %}
                         {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
+
+                        <div class="template-options template-selector-control">
+                            {% set useTemplatesOptionsMessage %}
+                            {% trans "You can change the appearance of this template using the options below." %}                     
+                            {% endset %}
+                            {{ forms.message(useTemplatesOptionsMessage, '') }}
+
+                            {% set name %}{% trans "Background" %}{% endset %}
+                            {{ forms.colorPicker("background-color", name, module.getOption("background-color"), "", "template-option template-option-background-color d-none") }}
+
+                            {% set name %}{% trans "Title" %}{% endset %}
+                            {{ forms.colorPicker("title-color", name, module.getOption("title-color"), "", "template-option template-option-title-color d-none") }}
+
+                            {% set name %}{% trans "Name" %}{% endset %}
+                            {{ forms.colorPicker("name-color", name, module.getOption("name-color"), "", "template-option template-option-name-color d-none") }}
+
+                            {% set name %}{% trans "Description" %}{% endset %}
+                            {{ forms.colorPicker("description-color", name, module.getOption("description-color"), "", "template-option template-option-description-color d-none") }}
+
+                            {% set name %}{% trans "Font Size" %}{% endset %}
+                            {{ forms.number("font-size", name, module.getOption("font-size"), "", "template-option template-option-font-size d-none") }}
+
+                            {% set title %}{% trans "Image Fit" %}{% endset %}
+                            {% set containText %}{% trans "Contain" %}{% endset %}
+                            {% set coverText %}{% trans "Cover" %}{% endset %}
+                            {% set fillText %}{% trans "Fill" %}{% endset %}
+                            {% set options = [
+                                { id: "contain", value: containText },
+                                { id: "cover", value: coverText },
+                                { id: "fill", value: fillText }
+                            ] %}
+                            {{ forms.dropdown("image-fit", "single", title, module.getOption("image-fit", "contain"), options, "id", "value", "", "template-option template-option-image-fit d-none") }}
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="templateTab">
@@ -252,11 +288,11 @@
                             {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
 
                             {# Layout Designer messages #}
-                            {% set layoutDesignerMessage %}
+                            {% set layoutEditorMessage %}
                                 {% trans "Enter text to display using the inline editor which can be opened by clicking in the preview on the left." %}
                                 {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                             {% endset %}
-                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
+                            {{ forms.message(layoutEditorMessage, 'layout-designer-message inline-editor-show') }}
 
                             {# Playlist Editor messages #}
                             {% set playlistEditorMessage %}

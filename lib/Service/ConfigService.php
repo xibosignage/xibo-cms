@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -81,6 +81,7 @@ class ConfigService implements ConfigServiceInterface
     public $timeSeriesStore = null;
     public $cacheNamespace = 'Xibo';
     private $apiKeyPaths = null;
+    private $connectorSettings = null;
 
     /**
      * Theme Specific Config
@@ -180,6 +181,18 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getConnectorSettings(string $connector): array
+    {
+        if ($this->connectorSettings !== null && array_key_exists($connector, $this->connectorSettings)) {
+            return $this->connectorSettings[$connector];
+        } else {
+            return [];
+        }
+    }
+
+    /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
      * @param \Psr\Container\ContainerInterface $container DI container which may be used in settings.php
@@ -198,7 +211,9 @@ class ConfigService implements ConfigServiceInterface
             'host' => $dbhost,
             'user' => $dbuser,
             'password' => $dbpass,
-            'name' => $dbname
+            'name' => $dbname,
+            'ssl' => $dbssl ?? null,
+            'sslVerify' => $dbsslverify ?? null
         ];
 
         // Pull in other settings
@@ -240,6 +255,11 @@ class ConfigService implements ConfigServiceInterface
 
         if (isset($apiKeyPaths))
             $config->apiKeyPaths = $apiKeyPaths;
+
+        // Connector settings
+        if (isset($connectorSettings)) {
+            $config->connectorSettings = $connectorSettings;
+        }
 
         // Set this as the global config
         return $config;
@@ -549,6 +569,18 @@ class ConfigService implements ConfigServiceInterface
             }
         }
 
+        // Global timeout
+        // All outbound HTTP should have a timeout as they tie up a PHP process while the request completes (if
+        // triggered from an incoming request)
+        // https://github.com/xibosignage/xibo/issues/2631
+        if (!array_key_exists('timeout', $httpOptions)) {
+            $httpOptions['timeout'] = 20;
+        }
+
+        if (!array_key_exists('connect_timeout', $httpOptions)) {
+            $httpOptions['connect_timeout'] = 5;
+        }
+
         return $httpOptions;
     }
 
@@ -563,9 +595,9 @@ class ConfigService implements ConfigServiceInterface
 
             // We use the defaults
             $this->apiKeyPaths = [
-                'publicKeyPath' => $libraryLocation . '/certs/public.key',
-                'privateKeyPath' => $libraryLocation . '/certs/private.key',
-                'encryptionKey' => file_get_contents($libraryLocation . '/certs/encryption.key')
+                'publicKeyPath' => $libraryLocation . 'certs/public.key',
+                'privateKeyPath' => $libraryLocation . 'certs/private.key',
+                'encryptionKey' => file_get_contents($libraryLocation . 'certs/encryption.key')
             ];
         }
 
@@ -603,12 +635,6 @@ class ConfigService implements ConfigServiceInterface
         $this->testItem($rows, __('PHP Version'),
             Environment::checkPHP(),
             sprintf(__("PHP version %s or later required."), Environment::$VERSION_REQUIRED) . ' Detected ' . phpversion()
-        );
-
-        $this->testItem($rows, __('Settings File System Permissions'),
-            Environment::checkSettingsFileSystemPermissions(),
-            __('Write permissions are required for web/settings.php'),
-            false
         );
 
         $this->testItem($rows, __('Cache File System Permissions'),
@@ -723,20 +749,20 @@ class ConfigService implements ConfigServiceInterface
      * Is there an environment fault
      * @return bool
      */
-    public function EnvironmentFault()
+    public function environmentFault()
     {
         if (!$this->envTested) {
             $this->checkEnvironment();
         }
 
-        return $this->envFault;
+        return $this->envFault || !Environment::checkSettingsFileSystemPermissions();
     }
 
     /**
      * Is there an environment warning
      * @return bool
      */
-    public function EnvironmentWarning()
+    public function environmentWarning()
     {
         if (!$this->envTested) {
             $this->checkEnvironment();

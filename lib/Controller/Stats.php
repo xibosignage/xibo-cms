@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,20 +24,15 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -71,56 +66,18 @@ class Stats extends Base
     private $displayFactory;
 
     /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  UserFactory */
-    private $userFactory;
-
-    /** @var  UserGroupFactory */
-    private $userGroupFactory;
-
-    /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param ReportServiceInterface $reportService
      * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param UserFactory $userFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
+    public function __construct($store, $timeSeriesStore, $reportService, $displayFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
         $this->reportService = $reportService;
         $this->displayFactory = $displayFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->userFactory = $userFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -411,7 +368,7 @@ class Stats extends Base
 
             // Core details
             $entry['id'] = $resultSet->getIdFromRow($row);
-            $entry['type'] = $sanitizedRow->getString('type');
+            $entry['type'] = strtolower($sanitizedRow->getString('type'));
             $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
 
             // Get the start/end date
@@ -436,11 +393,8 @@ class Stats extends Base
             $widgetName = $sanitizedRow->getString('media');
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
-            $displayName = isset($row['display']) ? $sanitizedRow->getString('display') : '';
-            $layoutName = isset($row['layout']) ? $sanitizedRow->getString('layout') : '';
-
-            $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
-            $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
+            $entry['display'] = $sanitizedRow->getString('display', ['default' => __('Not Found')]);
+            $entry['layout'] = $sanitizedRow->getString('layout', ['default' => __('Not Found')]);
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $sanitizedRow->getInt('count');
             $entry['duration'] = $sanitizedRow->getInt('duration');
@@ -524,8 +478,11 @@ class Stats extends Base
         if ($displayId != 0)
             $SQL .= ', bandwidthtype.name AS type ';
 
-        $SQL .= ' FROM `bandwidth`
-                LEFT OUTER JOIN `display`
+        // For user with limited access, return only data for displays this user has permissions to.
+        $joinType = ($this->getUser()->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
+
+        $SQL .= ' FROM `bandwidth` ' .
+                $joinType . ' `display`
                 ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0)
@@ -786,35 +743,23 @@ class Stats extends Base
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
-
             $sanitizedRow = $this->getSanitizer($row);
-            $displayName = isset($row['display']) ? $sanitizedRow->getString('display') : '';
-            $layoutName = isset($row['layout']) ? $sanitizedRow->getString('layout') : '';
+            $sanitizedRow->setDefaultOptions(['defaultIfNotExists' => true]);
 
             // Read the columns
-            $type = $sanitizedRow->getString('type');
-            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime())->format(DateFormatHelper::getSystemFormat()) : null;
-                $fromDt = Carbon::createFromTimestamp($row['start']->toDateTime())->format(DateFormatHelper::getSystemFormat());
-                $toDt = Carbon::createFromTimestamp($row['end']->toDateTime())->format(DateFormatHelper::getSystemFormat());
-                $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
-            } else {
-
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
-                $fromDt = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
-                $toDt = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
-                $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
-            }
-
-            $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
-            $display = ($displayName != '') ? $displayName : __('Not Found');
-            $media = isset($row['media']) ? $sanitizedRow->getString('media'): '';
-            $tag = isset($row['tag']) ? $sanitizedRow->getString('tag'): '';
-
-            // TODO string?
-            $duration = isset($row['duration']) ? $sanitizedRow->getString('duration'): '';
-            $count = isset($row['count']) ? $sanitizedRow->getString('count'): '';
+            $type = strtolower($sanitizedRow->getString('type'));
+            $statDate = isset($row['statDate'])
+                ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat())
+                : null;
+            $fromDt = $resultSet->getDateFromValue($row['start'])->format(DateFormatHelper::getSystemFormat());
+            $toDt = $resultSet->getDateFromValue($row['end'])->format(DateFormatHelper::getSystemFormat());
+            $engagements = $resultSet->getEngagementsFromRow($row, false);
+            $layout = $sanitizedRow->getString('layout', ['default' => __('Not Found')]);
+            $display = $sanitizedRow->getString('display', ['default' => __('Not Found')]);
+            $media = $sanitizedRow->getString('media', ['default' => '']);
+            $tag = $sanitizedRow->getString('tag', ['default' => '']);
+            $duration = $sanitizedRow->getInt('duration', ['default' => 0]);
+            $count = $sanitizedRow->getInt('count', ['default' => 0]);
 
             fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
         }

@@ -62,7 +62,7 @@
             </div>
         {% endif %}
 
-        {% if currentUser.featureEnabled("user.view") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
+        {% if currentUser.featureEnabled("users.view") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
             <div class="dashicons">
                 <a href="{{ url_for("user.view") }}">
                     <img src="{{ theme.uri("img/dashboard/users.png") }}" class="dash_button" />

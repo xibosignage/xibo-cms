@@ -1,8 +1,16 @@
 {
  "id":"media-rss-with-title",
  "value":"Image overlaid with the Title",
- "template":"<div class=\"image\">[Link|image]<div class=\"cycle-overlay\"><p style=\"font-family: Arial, Verdana, sans-serif; font-size:48px; color:#Color#;\">[Title]<\/p><\/div><\/div>",
- "css":".image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}",
+ "template":"<div class=\"image\">\n  [Link|image]\n  <div class=\"cycle-overlay background\">\n    <div class=\"title\">[Title]</div>\n  </div>\n</div>",
+ "css":"html {\n /* Global font size, change for font scale */\n font-size: 16px;\n }\n\n #content, .item, .image, .image img {\n  width: 100%;\n  height: 100%;\n}\n\n.image img {\n  object-fit: cover;\n}\n\n.cycle-overlay {\n color: white;\n  background: black;\n  opacity: .6;\n  filter: alpha(opacity=60);\n  position: absolute;\n  bottom: 0;\n  width: 100%;\n  padding: 2rem 0;\n text-align: center;\n }\n\n.cycle-overlay > div {\n  font-family: Arial, Verdana, sans-serif;\n}\n\n.cycle-overlay .title {\n  font-size: 1.2rem;\n  color: white;\n  font-weight: bold;\n}",
  "image":"modules/ticker/media-rss-with-title.png",
- "defaultVisualEditor": false
+ "defaultVisualEditor": false,
+ "options": {
+   "title-color": true,
+   "description-color": false,
+   "background-color": true,
+   "name-color": false,
+   "image-fit": true,
+   "font-size": true
+ }
 }

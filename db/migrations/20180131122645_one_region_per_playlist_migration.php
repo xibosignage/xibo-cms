@@ -13,8 +13,8 @@ class OneRegionPerPlaylistMigration extends AbstractMigration
         $playlist = $this->table('playlist');
         $playlist
             ->addColumn('regionId', 'integer', ['null' => true])
-            ->addColumn('createdDt', 'datetime')
-            ->addColumn('modifiedDt', 'datetime')
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('duration', 'integer', ['default' => 0])
             ->addColumn('requiresDurationUpdate', 'integer', ['default' => 0, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->save();

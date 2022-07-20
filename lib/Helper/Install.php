@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -44,10 +44,14 @@ class Install
     public $new_db_user;
     public $new_db_pass;
     public $new_db_name;
+    public $new_ssl_ca;
+    public $new_ssl_verify;
     public $existing_db_host;
     public $existing_db_user;
     public $existing_db_pass;
     public $existing_db_name;
+    public $existing_ssl_ca;
+    public $existing_ssl_verify;
 
     /** @var ContainerInterface */
     private $container;
@@ -77,17 +81,18 @@ class Install
     /**
      * @return array
      */
-    public function Step1()
+    public function step1(): array
     {
         return [
-            'config' => $this->container->get('configService')
+            'config' => $this->container->get('configService'),
+            'isSettingsPathWriteable' => Environment::checkSettingsFileSystemPermissions()
         ];
     }
 
     /**
      * @return array
      */
-    public function Step2()
+    public function step2(): array
     {
         return [];
     }
@@ -95,10 +100,9 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step3(Request $request, Response $response) : Response
+    public function step3(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -116,11 +120,15 @@ class Install
         $this->new_db_user = $sanitizedParams->getString('db_username');
         $this->new_db_pass = $sanitizedParams->getString('db_password');
         $this->new_db_name = $sanitizedParams->getString('db_name');
+        $this->new_ssl_ca = $sanitizedParams->getString('ssl_ca');
+        $this->new_ssl_verify = $sanitizedParams->getCheckbox('ssl_verify') == 1;
 
         $this->existing_db_host = $sanitizedParams->getString('existing_host');
         $this->existing_db_user = $sanitizedParams->getString('existing_db_username');
         $this->existing_db_pass = $sanitizedParams->getString('existing_db_password');
         $this->existing_db_name = $sanitizedParams->getString('existing_db_name');
+        $this->existing_ssl_ca = $sanitizedParams->getString('existing_ssl_ca');
+        $this->existing_ssl_verify = $sanitizedParams->getCheckbox('existing_ssl_verify') == 1;
 
         // If an administrator user name / password has been specified then we should create a new DB
         if ($this->db_create == 1) {
@@ -148,9 +156,19 @@ class Install
             // Try to create the new database
             // Try and connect using these details and create the new database
             try {
-                $store->connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
+                $store->connect(
+                    $this->new_db_host,
+                    $this->db_admin_user,
+                    $this->db_admin_pass,
+                    null,
+                    empty($this->new_ssl_ca) ? null : $this->new_ssl_ca,
+                    $this->new_ssl_verify
+                );
             } catch (\PDOException $e) {
-                throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+                throw new InstallationError(sprintf(
+                    __('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'),
+                    $e->getMessage()
+                ));
             }
 
             // Try to create the new database
@@ -162,33 +180,37 @@ class Install
             }
 
             // Try to create the new user
+            $sql = null;
             try {
                 $dbh = $store->getConnection();
 
                 // Create the user and grant privileges
                 if ($this->new_db_host == 'localhost') {
-                    $sql = sprintf('GRANT ALL PRIVILEGES ON `%s`.* to %s@%s IDENTIFIED BY %s',
+                    $sql = sprintf(
+                        'GRANT ALL PRIVILEGES ON `%s`.* to %s@%s IDENTIFIED BY %s',
                         $this->new_db_name,
                         $dbh->quote($this->new_db_user),
                         $dbh->quote($this->new_db_host),
                         $dbh->quote($this->new_db_pass)
                     );
-
-                    $dbh->exec($sql);
                 } else {
-                    $sql = sprintf('GRANT ALL PRIVILEGES ON `%s`.* to %s@\'%%\' IDENTIFIED BY %s',
+                    $sql = sprintf(
+                        'GRANT ALL PRIVILEGES ON `%s`.* to %s@\'%%\' IDENTIFIED BY %s',
                         $this->new_db_name,
                         $dbh->quote($this->new_db_user),
                         $dbh->quote($this->new_db_pass)
                     );
-
-                    $dbh->exec($sql);
                 }
+                $dbh->exec($sql);
 
                 // Flush
                 $dbh->exec('FLUSH PRIVILEGES');
             } catch (\PDOException $e) {
-                throw new InstallationError(sprintf(__('Could not create a new user with the administrator details. Please check and try again. Error Message = [%s]. SQL = [%s].'), $e->getMessage(), $sql));
+                throw new InstallationError(sprintf(
+                    __('Could not create a new user with the administrator details. Please check and try again. Error Message = [%s]. SQL = [%s].'),
+                    $e->getMessage(),
+                    $sql
+                ));
             }
 
             // Set our DB details
@@ -196,10 +218,11 @@ class Install
             $this->existing_db_user = $this->new_db_user;
             $this->existing_db_pass = $this->new_db_pass;
             $this->existing_db_name = $this->new_db_name;
+            $this->existing_ssl_ca = $this->new_ssl_ca;
+            $this->existing_ssl_verify = $this->new_ssl_verify;
 
             // Close the connection
             $store->close();
-
         } else {
             // Check details for a new database
             if ($this->existing_db_host == '') {
@@ -221,16 +244,28 @@ class Install
 
         // Try and make a connection with this database
         try {
-            $store->connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
+            $store->connect(
+                $this->existing_db_host,
+                $this->existing_db_user,
+                $this->existing_db_pass,
+                $this->existing_db_name,
+                empty($this->existing_ssl_ca) ? null : $this->existing_ssl_ca,
+                $this->existing_ssl_verify
+            );
         } catch (\PDOException $e) {
-            throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+            throw new InstallationError(sprintf(
+                __('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'),
+                $e->getMessage()
+            ));
         }
 
         // Write out a new settings.php
         $fh = fopen(PROJECT_ROOT . '/web/settings.php', 'wt');
 
         if (!$fh) {
-            throw new InstallationError(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
+            throw new InstallationError(
+                __('Unable to write to settings.php. We already checked this was possible earlier, so something changed.')
+            );
         }
 
         // Get the settings template and issue replacements
@@ -241,6 +276,8 @@ class Install
         $settings = str_replace('$_SERVER[\'MYSQL_USER\']', '\'' . $this->existing_db_user . '\'', $settings);
         $settings = str_replace('$_SERVER[\'MYSQL_PASSWORD\']', '\'' . addslashes($this->existing_db_pass) . '\'', $settings);
         $settings = str_replace('$_SERVER[\'MYSQL_DATABASE\']', '\'' . $this->existing_db_name . '\'', $settings);
+        $settings = str_replace('$_SERVER[\'MYSQL_ATTR_SSL_CA\']', '\'' . $this->existing_ssl_ca . '\'', $settings);
+        $settings = str_replace('$_SERVER[\'MYSQL_ATTR_SSL_VERIFY_SERVER_CERT\']', '\'' . $this->existing_ssl_verify . '\'', $settings);
         $settings = str_replace('define(\'SECRET_KEY\',\'\')', 'define(\'SECRET_KEY\',\'' . Install::generateSecret() . '\');', $settings);
 
         if (!fwrite($fh, $settings)) {
@@ -261,7 +298,7 @@ class Install
     /**
      * @return array
      */
-    public function Step4()
+    public function step4(): array
     {
         return [];
     }
@@ -269,13 +306,11 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step5(Request $request, Response $response) : Response
+    public function step5(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
         /** @var StorageServiceInterface $store */
         $store = $this->container->get('store');
         // Configure the user account
@@ -316,7 +351,7 @@ class Install
     /**
      * @return array
      */
-    public function Step6()
+    public function step6(): array
     {
         return [
             'serverKey' => Install::generateSecret(6)
@@ -326,10 +361,9 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step7(Request $request, Response $response) : Response
+    public function step7(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -397,11 +431,9 @@ class Install
 
             // Phone Home
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'PHONE_HOME\' LIMIT 1');
-            $sth->execute(array('value' => (($stats == 1) ? 'On' : 'Off')));
-
-            // Phone Home Key
-            $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'PHONE_HOME_KEY\' LIMIT 1');
-            $sth->execute(array('value' => md5(uniqid(rand(), true))));
+            $sth->execute([
+                'value' => $stats
+            ]);
         } catch (\PDOException $e) {
             throw new InstallationError(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
@@ -425,7 +457,7 @@ class Install
      *                    $options - An array of values 'return_files' or 'return_folders' or both
      * Returns       : A flat list with the path of all the files(no folders) that matches the condition given.
      */
-    public static function ls($pattern = "*", $folder = "", $recursivly = false, $options = array('return_files', 'return_folders'))
+    public static function ls($pattern = '*', $folder = '', $recursivly = false, $options = ['return_files', 'return_folders']): array
     {
         if ($folder) {
             $current_folder = realpath('.');
@@ -480,7 +512,7 @@ class Install
      * @param int $length
      * @return string
      */
-    public static function generateSecret($length = 12)
+    public static function generateSecret($length = 12): string
     {
         # Generates a random 12 character alphanumeric string to use as a salt
         mt_srand((double)microtime() * 1000000);
@@ -518,11 +550,15 @@ global \$dbhost;
 global \$dbuser;
 global \$dbpass;
 global \$dbname;
+global \$dbssl;
+global \$dbsslverify;
 
 \$dbhost = \$_SERVER['MYSQL_HOST'] . ':' . \$_SERVER['MYSQL_PORT'];
 \$dbuser = \$_SERVER['MYSQL_USER'];
 \$dbpass = \$_SERVER['MYSQL_PASSWORD'];
 \$dbname = \$_SERVER['MYSQL_DATABASE'];
+\$dbssl = \$_SERVER['MYSQL_ATTR_SSL_CA'];
+\$dbsslverify = \$_SERVER['MYSQL_ATTR_SSL_VERIFY_SERVER_CERT'];
 
 if (!defined('SECRET_KEY'))
     define('SECRET_KEY','');

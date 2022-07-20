@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -77,9 +77,11 @@
                 {% set message %}{% trans "Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button." %}{% endset %}
                 {{ forms.message(message) }}
 
-                {% set title %}{% trans "Delete all items owned by this User?" %}{% endset %}
-                {% set helpText %}{% trans "Check to delete all items owned by this user, including Layouts, Media, Schedules, etc." %}{% endset %}
-                {{ forms.checkbox("deleteAllItems", title, 0, helpText) }}
+                {% if not user.isSuperAdmin() %}
+                    {% set title %}{% trans "Delete all items owned by this User?" %}{% endset %}
+                    {% set helpText %}{% trans "Check to delete all items owned by this user, including Layouts, Media, Schedules, etc." %}{% endset %}
+                    {{ forms.checkbox("deleteAllItems", title, 0, helpText) }}
+                {% endif %}
 
                 {% set title %}{% trans "Reassign items to another User" %}{% endset %}
                 {% set helpText %}{% trans "Reassign all items this User owns to the selected User." %}{% endset %}

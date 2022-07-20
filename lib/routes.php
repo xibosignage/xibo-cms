@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -46,7 +46,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *  description="Xibo CMS API.
        Using HTTP formData requests.
        All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
- *  version="2.2",
+ *  version="3.1",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
@@ -157,6 +157,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/layout/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
     $group->put('/layout/retire/{id}', ['\Xibo\Controller\Layout','retire'])->setName('layout.retire');
     $group->put('/layout/unretire/{id}', ['\Xibo\Controller\Layout','unretire'])->setName('layout.unretire');
+    $group->post('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout','addThumbnail'])->setName('layout.thumbnail.add');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));
 
@@ -180,6 +181,7 @@ $app->group('/region', function (RouteCollectorProxy $group) {
     $group->delete('/{id}', ['\Xibo\Controller\Region','delete'])->setName('region.delete');
     $group->put('/position/all/{id}', ['\Xibo\Controller\Region','positionAll'])->setName('region.position.all');
     $group->post('/drawer/{id}', ['\Xibo\Controller\Region','addDrawer'])->setName('region.add.drawer');
+    $group->put('/drawer/{id}', ['\Xibo\Controller\Region','saveDrawer'])->setName('region.save.drawer');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));
@@ -205,11 +207,15 @@ $app->group('', function (RouteCollectorProxy $group) use ($app) {
     $group->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName('playlist.copy');
     $group->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
     $group->put('/playlist/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolder'])->setName('playlist.selectfolder');
-    $group->group('', function (RouteCollectorProxy $group) {
-        $group->post('/playlist/order/{id}', ['\Xibo\Controller\Playlist','order'])->setName('playlist.order');
-        $group->post('/playlist/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssign'])->setName('playlist.library.assign');
-    })->addMiddleware(new LayoutLock($app));
+
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->post('/playlist/order/{id}', ['\Xibo\Controller\Playlist','order'])->setName('playlist.order');
+    $group->post('/playlist/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssign'])->setName('playlist.library.assign');
+})
+    ->addMiddleware(new LayoutLock($app))
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/playlist/usage/{id}', ['\Xibo\Controller\Playlist','usage'])->setName('playlist.usage');
@@ -230,6 +236,9 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->put('/{id}/audio', ['\Xibo\Controller\Module','widgetAudio'])->setName('module.widget.audio');
     $group->delete('/{id}/audio', ['\Xibo\Controller\Module','widgetAudioDelete']);
     $group->put('/{id}/expiry', ['\Xibo\Controller\Module','widgetExpiry'])->setName('module.widget.expiry');
+
+    // Drawer widgets Region
+    $group->put('/{id}/target', ['\Xibo\Controller\Module','widgetSetRegion'])->setName('module.widget.set.region');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']))
     ->addMiddleware(new LayoutLock($app));
@@ -251,9 +260,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
     $group->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->setName('campaign.copy');
     $group->put('/campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
-    // We use POST requests so that we can support multiple records
     $group->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');
-    $group->post('/campaign/layout/unassign/{id}', ['\Xibo\Controller\Campaign','unassignLayout'])->setName('campaign.unassign.layout');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
 
 /**
@@ -263,7 +270,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  *  description="Templates"
  * )
  */
-$app->get('/template', ['\Xibo\Controller\Template','grid'])->setName('template.search');
+$app->get('/template', ['\Xibo\Controller\Template', 'grid'])->setName('template.search');
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/template', ['\Xibo\Controller\Template', 'add'])->setName('template.add');
     $group->post('/template/{id}', ['\Xibo\Controller\Template', 'addFromLayout'])->setName('template.add.from.layout');
@@ -317,7 +324,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/library/{id}', ['\Xibo\Controller\Library','delete'])->setName('library.delete');
     $group->post('/library/copy/{id}', ['\Xibo\Controller\Library','copy'])->setName('library.copy');
     $group->put('/library/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolder'])->setName('library.selectfolder');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']));
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.modify']));
 
 // Tagging
 $app->group('', function (RouteCollectorProxy $group) {
@@ -337,8 +344,10 @@ $app->get('/display', ['\Xibo\Controller\Display', 'grid'])->setName('display.se
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/requestscreenshot/{id}', ['\Xibo\Controller\Display','requestScreenShot'])->setName('display.requestscreenshot');
     $group->put('/display/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicence'])->setName('display.licencecheck');
+    $group->put('/display/purgeAll/{id}', ['\Xibo\Controller\Display','purgeAll'])->setName('display.purge.all');
     $group->get('/display/screenshot/{id}', ['\Xibo\Controller\Display','screenShot'])->setName('display.screenShot');
     $group->get('/display/status/{id}', ['\Xibo\Controller\Display','statusWindow'])->setName('display.statusWindow');
+    $group->get('/display/faults[/{displayId}]', ['\Xibo\Controller\PlayerFault','grid'])->setName('display.faults.search');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.view']));
 
 $app->group('', function (RouteCollectorProxy $group) {
@@ -438,6 +447,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/dataset/import/{id}', ['\Xibo\Controller\DataSet','import'])->setName('dataSet.import');
     $group->post('/dataset/importjson/{id}', ['\Xibo\Controller\DataSet','importJson'])->setName('dataSet.import.json');
     $group->post('/dataset/remote/test', ['\Xibo\Controller\DataSet','testRemoteRequest'])->setName('dataSet.test.remote');
+    $group->get('/dataset/export/csv/{id}', ['\Xibo\Controller\DataSet', 'exportToCsv'])->setName('dataSet.export.csv');
 
     // Columns
     $group->get('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','grid'])->setName('dataSet.column.search');
@@ -466,7 +476,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  *  Folders
  */
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.edit');
+    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
     $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
 
@@ -530,18 +540,18 @@ $app->put('/user/password/forceChange', ['\Xibo\Controller\User','forceChangePas
 // permissions
 $app->get('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissionsGrid'])->setName('user.permissions');
 $app->get('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMultiGrid'])->setName('user.permissions.multi');
-$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions']);
-$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti']);
+$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions'])->setName('user.set.permissions');
+$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti'])->setName('user.set.permissions.multi');
 
 $app->post('/user', ['\Xibo\Controller\User','add'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['user.add']))
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.add']))
     ->setName('user.add');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/user/{id}', ['\Xibo\Controller\User','edit'])->setName('user.edit');
     $group->delete('/user/{id}', ['\Xibo\Controller\User','delete'])->setName('user.delete');
     $group->post('/user/{id}/usergroup/assign', ['\Xibo\Controller\User','assignUserGroup'])->setName('user.assign.userGroup');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['user.modify']));
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.modify']));
 
 /**
  * User Group
@@ -552,9 +562,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  */
 $app->get('/group', ['\Xibo\Controller\UserGroup','grid'])->setName('group.search');
 
-$app->post('/group', ['\Xibo\Controller\UserGroup','add'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['usergroup.add']))
-    ->setName('group.add');
+$app->post('/group', ['\Xibo\Controller\UserGroup','add'])->setName('group.add');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/group/{id}', ['\Xibo\Controller\UserGroup','edit'])->setName('group.edit');
@@ -703,21 +711,22 @@ $app->group('', function (RouteCollectorProxy $group) {
  * )
  */
 
-$app->get('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleGrid'])->setName('reportschedule.search');
+$app->get('/report/reportschedule', ['\Xibo\Controller\ScheduleReport','reportScheduleGrid'])->setName('reportschedule.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleAdd'])->setName('reportschedule.add');
-    $group->put('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleEdit'])->setName('reportschedule.edit');
-    $group->delete('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleDelete'])->setName('reportschedule.delete');
-    $group->post('/report/reportschedule/{id}/deletesavedreport', ['\Xibo\Controller\Report','reportScheduleDeleteAllSavedReport'])->setName('reportschedule.deleteall');
-    $group->post('/report/reportschedule/{id}/toggleactive', ['\Xibo\Controller\Report','reportScheduleToggleActive'])->setName('reportschedule.toggleactive');
-    $group->post('/report/reportschedule/{id}/reset', ['\Xibo\Controller\Report','reportScheduleReset'])->setName('reportschedule.reset');
+    $group->post('/report/reportschedule', ['\Xibo\Controller\ScheduleReport','reportScheduleAdd'])->setName('reportschedule.add');
+    $group->put('/report/reportschedule/{id}', ['\Xibo\Controller\ScheduleReport','reportScheduleEdit'])->setName('reportschedule.edit');
+    $group->delete('/report/reportschedule/{id}', ['\Xibo\Controller\ScheduleReport','reportScheduleDelete'])->setName('reportschedule.delete');
+    $group->post('/report/reportschedule/{id}/deletesavedreport', ['\Xibo\Controller\ScheduleReport','reportScheduleDeleteAllSavedReport'])->setName('reportschedule.deleteall');
+    $group->post('/report/reportschedule/{id}/toggleactive', ['\Xibo\Controller\ScheduleReport','reportScheduleToggleActive'])->setName('reportschedule.toggleactive');
+    $group->post('/report/reportschedule/{id}/reset', ['\Xibo\Controller\ScheduleReport','reportScheduleReset'])->setName('reportschedule.reset');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.scheduling']));
 
 //
 // Saved reports
 //
-$app->get('/report/savedreport', ['\Xibo\Controller\Report','savedReportGrid'])->setName('savedreport.search');
-$app->delete('/report/savedreport/{id}', ['\Xibo\Controller\Report','savedReportDelete'])
+$app->get('/report/savedreport', ['\Xibo\Controller\SavedReport','savedReportGrid'])
+    ->setName('savedreport.search');
+$app->delete('/report/savedreport/{id}', ['\Xibo\Controller\SavedReport','savedReportDelete'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.saving']))
     ->setName('savedreport.delete');
 
@@ -769,3 +778,31 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/action/{id}', ['\Xibo\Controller\Action', 'edit'])->setName('action.edit');
     $group->delete('/action/{id}', ['\Xibo\Controller\Action', 'delete'])->setName('action.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
+
+/**
+ * Menu Boards
+ * @SWG\Tag(
+ *  name="menuBoard",
+ *  description="Menu Boards - feature preview, please do not use in production."
+ * )
+ */
+$app->get('/menuboards', ['\Xibo\Controller\MenuBoard', 'grid'])->setName('menuBoard.search');
+$app->post('/menuboard', ['\Xibo\Controller\MenuBoard', 'add'])->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.add']))->setName('menuBoard.add');
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->put('/menuboard/{id}', ['\Xibo\Controller\MenuBoard', 'edit'])->setName('menuBoard.edit');
+    $group->delete('/menuboard/{id}', ['\Xibo\Controller\MenuBoard', 'delete'])->setName('menuBoard.delete');
+    $group->put('/menuboard/{id}/selectfolder', ['\Xibo\Controller\MenuBoard', 'selectFolder'])->setName('menuBoard.selectfolder');
+
+    $group->get('/menuboard/{id}/categories', ['\Xibo\Controller\MenuBoardCategory', 'grid'])->setName('menuBoard.category.search');
+    $group->post('/menuboard/{id}/category', ['\Xibo\Controller\MenuBoardCategory', 'add'])->setName('menuBoard.category.add');
+    $group->put('/menuboard/{id}/category', ['\Xibo\Controller\MenuBoardCategory', 'edit'])->setName('menuBoard.category.edit');
+    $group->delete('/menuboard/{id}/category', ['\Xibo\Controller\MenuBoardCategory', 'delete'])->setName('menuBoard.category.delete');
+
+    $group->get('/menuboard/{id}/products', ['\Xibo\Controller\MenuBoardProduct', 'grid'])->setName('menuBoard.product.search');
+    $group->get('/menuboard/products', ['\Xibo\Controller\MenuBoardProduct', 'productsForWidget'])->setName('menuBoard.product.search.widget');
+    $group->post('/menuboard/{id}/product', ['\Xibo\Controller\MenuBoardProduct', 'add'])->setName('menuBoard.product.add');
+    $group->put('/menuboard/{id}/product', ['\Xibo\Controller\MenuBoardProduct', 'edit'])->setName('menuBoard.product.edit');
+    $group->delete('/menuboard/{id}/product', ['\Xibo\Controller\MenuBoardProduct', 'delete'])->setName('menuBoard.product.delete');
+})
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.modify']));

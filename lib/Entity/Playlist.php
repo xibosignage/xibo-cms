@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,7 +21,6 @@
  */
 namespace Xibo\Entity;
 
-
 use Carbon\Carbon;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -29,6 +28,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Profiler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -89,6 +89,24 @@ class Playlist implements \JsonSerializable
      * @var string
      */
     public $filterMediaTags;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether to filter by exact Tag match")
+     * @var int
+     */
+    public $filterExactTags;
+
+    /**
+     * @SWG\Property(description="Which logical operator should be used when filtering by multiple Tags? OR|AND")
+     * @var string
+     */
+    public $filterLogicalOperator;
+
+    /**
+     * @SWG\Property(description="Maximum number of Media items matching dynamic Playlist filters")
+     * @var int
+     */
+    public $maxNumberOfItems;
 
     /**
      * @var string
@@ -154,8 +172,6 @@ class Playlist implements \JsonSerializable
      */
     public $tempId = null;
 
-    public $tagValues;
-
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
@@ -209,6 +225,7 @@ class Playlist implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
@@ -216,9 +233,9 @@ class Playlist implements \JsonSerializable
      * @param TagFactory $tagFactory
 
      */
-    public function __construct($store, $log, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
@@ -323,7 +340,7 @@ class Playlist implements \JsonSerializable
     {
         // check for duplicates,
         // we check for empty playlist name due to layouts existing in the CMS before upgrade to v2
-        if ($this->name != '') {
+        if ($this->name != '' && !$this->isRegionPlaylist()) {
             $duplicates = $this->playlistFactory->query(null, [
                 'userId' => $this->ownerId,
                 'playlistExact' => $this->name,
@@ -335,6 +352,10 @@ class Playlist implements \JsonSerializable
             if (count($duplicates) > 0) {
                 throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
             }
+        }
+
+        if ($this->isDynamic === 1 && $this->maxNumberOfItems > $this->config->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')) {
+            throw new InvalidArgumentException(__('Maximum number of items cannot exceed the limit set in CMS Settings'), 'maxNumberOfItems');
         }
     }
 
@@ -507,21 +528,8 @@ class Playlist implements \JsonSerializable
     public function assignTag($tag)
     {
         $this->load();
-
-        if ($this->tags != [$tag]) {
-
-            if (!in_array($tag, $this->tags)) {
-                $this->tags[] = $tag;
-            } else {
-                foreach ($this->tags as $currentTag) {
-                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
-                        $this->tags[] = $tag;
-                    }
-                }
-            }
-        } else {
-            $this->getLog()->debug('No Tags to assign');
-        }
+        $this->handleTagAssign($tag);
+        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -806,8 +814,8 @@ class Playlist implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `filterExactTags`, `filterLogicalOperator`, `maxNumberOfItems`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :filterExactTags, :filterLogicalOperator, :maxNumberOfItems, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -816,6 +824,9 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
+            'filterExactTags' => $this->filterExactTags ?? 0,
+            'filterLogicalOperator' => $this->filterLogicalOperator ?? 'OR',
+            'maxNumberOfItems' => $this->isDynamic == 0 ? null : $this->maxNumberOfItems,
             'createdDt' => $time,
             'modifiedDt' => $time,
             'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
@@ -848,6 +859,9 @@ class Playlist implements \JsonSerializable
                 `isDynamic` = :isDynamic,
                 `filterMediaName` = :filterMediaName,
                 `filterMediaTags` = :filterMediaTags,
+                `filterExactTags` = :filterExactTags,
+                `filterLogicalOperator` = :filterLogicalOperator,
+                `maxNumberOfItems` = :maxNumberOfItems,
                 `requiresDurationUpdate` = :requiresDurationUpdate,
                 `enableStat` = :enableStat,
                 `folderId` = :folderId,
@@ -864,6 +878,9 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
+            'filterExactTags' => $this->filterExactTags ?? 0,
+            'filterLogicalOperator' => $this->filterLogicalOperator ?? 'OR',
+            'maxNumberOfItems' => $this->maxNumberOfItems,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
             'enableStat' => $this->enableStat,
@@ -913,20 +930,21 @@ class Playlist implements \JsonSerializable
      */
     public function expandWidgets($parentWidgetId = 0, $expandSubplaylists = true)
     {
+        Profiler::start('Playlist::expandWidgets:' . $this->playlistId, $this->getLog());
         $this->load();
 
         $widgets = [];
 
         // Start with our own Widgets
         foreach ($this->widgets as $widget) {
-
-            // some basic checking on whether this widets date/time are conductive to it being added to the
+            // some basic checking on whether this widgets date/time are conductive to it being added to the
             // list. This is really an "expires" check, because we will rely on the player otherwise
-            if ($widget->isExpired())
+            if ($widget->isExpired()) {
                 continue;
+            }
 
             // Persist the parentWidgetId in a temporary variable
-            // if we have a parentWidgetId of 0, then we are top-level and we should use our widgetId
+            // if we have a parentWidgetId of 0, then we are top-level, and we should use our widgetId
             $widget->tempId = $parentWidgetId == 0 ? $widget->widgetId : $parentWidgetId;
 
             // If we're a standard widget, add right away
@@ -934,15 +952,54 @@ class Playlist implements \JsonSerializable
                 $widgets[] = $widget;
             } else {
                 if ($expandSubplaylists === true) {
+                    $this->getLog()->debug('expandWidgets: processing sub-playlist ' . $widget->widgetId
+                        . ', parentWidgetId is ' . $parentWidgetId);
+
                     /** @var SubPlaylist $module */
                     $module = $this->moduleFactory->createWithWidget($widget);
                     $module->isValid();
 
-                    $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
+                    // Get the sub-playlist widgets
+                    $subPlaylistWidgets = $module->getSubPlaylistResolvedWidgets($widget->tempId);
+
+                    // Are we the top level sub-playlist, and do we have cycle playback enabled?
+                    if ($parentWidgetId === 0 && $module->getOption('cyclePlaybackEnabled', 0) === 1) {
+                        $this->getLog()->debug('expandWidgets: cyclePlaybackEnabled on ' . $widget->widgetId);
+
+                        // Work out the average duration
+                        $totalDuration = 0.0;
+                        foreach ($subPlaylistWidgets as $subPlaylistWidget) {
+                            $totalDuration += $subPlaylistWidget->calculatedDuration;
+                        }
+
+                        // We split the average across all widgets so that when we add them up again it works out.
+                        // Dividing twice is a little confusing
+                        // Assume a playlist with 5 items, and an equal 10 seconds per item
+                        // That "spot" with cycle playback enabled should take up 10 seconds in total, but the XLF
+                        // still contains all 5 items.
+                        // averageDuration = 50 / 5 = 10
+                        // cycleDuration = 10 / 5 = 2
+                        // When our 5 items are added up to make region duration, it will be 2+2+2+2+2=10
+                        $averageDuration = $totalDuration / count($subPlaylistWidgets);
+                        $cycleDuration = $averageDuration / count($subPlaylistWidgets);
+
+                        $this->getLog()->debug('expandWidgets: cycleDuration is ' . $cycleDuration
+                            . ', averageDuration is ' . $averageDuration
+                            . ', totalDuration is ' . $totalDuration);
+
+                        foreach ($subPlaylistWidgets as $subPlaylistWidget) {
+                            $subPlaylistWidget->tempCyclePlaybackAverageDuration = $cycleDuration;
+                            $widgets[] = $subPlaylistWidget;
+                        }
+                    } else {
+                        // Join the sub playlist widgets to the current list we have
+                        $widgets = array_merge($widgets, $subPlaylistWidgets);
+                    }
                 }
             }
         }
 
+        Profiler::end('Playlist::expandWidgets:' . $this->playlistId, $this->getLog());
         return $widgets;
     }
 

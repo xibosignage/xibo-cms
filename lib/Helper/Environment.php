@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -29,8 +29,8 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '3.0.0-alpha';
-    public static $XMDS_VERSION = '5';
+    public static $WEBSITE_VERSION_NAME = '3.1.4';
+    public static $XMDS_VERSION = '6';
     public static $XLF_VERSION = 3;
     public static $VERSION_REQUIRED = '7.2.9';
     public static $VERSION_UNSUPPORTED = '8.0';

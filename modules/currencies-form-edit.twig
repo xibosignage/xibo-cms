@@ -106,10 +106,15 @@
                     <div class="tab-pane" id="appearanceTab">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
-                        
-                        {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set helpText %}{% trans "Enter the date format to apply to all dates returned: d - day in numbers; 01 to 31 / D - day of the week as text; Mon to Sun: m - month in numbers; 01 to 12 /M - month in text; Jan to Dec - year in two digits; 19 / Y - year in four digits; 2019" %}{% endset %}
+                        {{ forms.colorPicker("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+
+                        {% set title %}{% trans "Date Format" %}
+                            <span class="fa fa-info-circle date-format-table"
+                                  data-toggle="popover"
+                                  data-trigger="hover">
+                            </span>
+                        {% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the Widget." %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
@@ -145,6 +150,30 @@
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
+
+                        {% set title %}{% trans "Horizontal Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be aligned?" %}{% endset %}
+                        {% set left %}{% trans "Left" %}{% endset %}
+                        {% set center %}{% trans "Centre" %}{% endset %}
+                        {% set right %}{% trans "Right" %}{% endset %}
+                        {% set options = [
+                        { alignH: "left", align: left },
+                        { alignH: "center", align: center },
+                        { alignH: "right", align: right }
+                        ] %}
+                        {{ forms.dropdown("alignH", "single", title, module.getOption("alignH","center"), options, "alignH", "align", helpText, "align-fields") }}
+
+                        {% set title %}{% trans "Vertical Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be vertically aligned?" %}{% endset %}
+                        {% set top %}{% trans "Top" %}{% endset %}
+                        {% set middle %}{% trans "Middle" %}{% endset %}
+                        {% set bottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                        { alignV: "top", valign: top },
+                        { alignV: "middle", valign: middle },
+                        { alignV: "bottom", valign: bottom }
+                        ] %}
+                        {{ forms.dropdown("alignV", "single", title, module.getoption("alignV", "middle"), options, "alignV", "valign", helpText, "align-fields") }}
                     </div>
 
                     <div class="tab-pane" id="templatePreset">
@@ -176,28 +205,14 @@
 
                     <div class="tab-pane" id="templateTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="mainTemplate_advanced" name="mainTemplate_advanced" {% if module.getOption("mainTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Main Template" %}</h4>
                         </div>
                         
                         <div class="editor-messages">
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'mainTemplate-advanced-editor-hide') }}
-
-                            {% set simpleTextEditorMessage2 %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage2, 'mainTemplate-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
 
                         {{ forms.textarea("mainTemplate", "",  module.getRawNode("mainTemplate"), "", "", "", 10) }}
@@ -205,28 +220,14 @@
 
                     <div class="tab-pane" id="itemTemplateTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Item Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="itemTemplate_advanced" name="itemTemplate_advanced" {% if module.getOption("itemTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Item Template" %}</h4>
                         </div>
 
                         <div class="editor-messages">
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'itemTemplate-advanced-editor-hide') }}
-
-                            {% set simpleTextEditorMessage2 %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage2, 'itemTemplate-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
 
                         {% set helpText %}{% trans "Enter the template for each item. Replaces [itemsTemplate] in main template." %}{% endset %}

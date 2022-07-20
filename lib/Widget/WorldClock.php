@@ -56,10 +56,10 @@ class WorldClock extends ModuleWidget
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'WorldClock';
+            $module->name = 'World Clock';
             $module->type = 'worldclock';
             $module->class = 'Xibo\Widget\WorldClock';
-            $module->description = 'WorldClock Module';
+            $module->description = 'World Clock Module';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;
@@ -116,6 +116,8 @@ class WorldClock extends ModuleWidget
         $this->setOption('clockType', $sanitizedParams->getInt('clockType', ['default' => 1]));
         $this->setOption('clockCols', $sanitizedParams->getInt('clockCols', ['default' => 1]));
         $this->setOption('clockRows', $sanitizedParams->getInt('clockRows', ['default' => 1]));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         // Clocks
         $clockTimezones = $sanitizedParams->getArray('clockTimezone');
@@ -155,6 +157,7 @@ class WorldClock extends ModuleWidget
         } elseif ($this->getOption('clockType') == 2) {
             // Analogue clock
             $this->setOption('bgColor', $sanitizedParams->getString('bgColor'));
+            $this->setOption('faceColor', $sanitizedParams->getString('faceColor'));
             $this->setOption('caseColor', $sanitizedParams->getString('caseColor'));
             $this->setOption('hourHandColor', $sanitizedParams->getString('hourHandColor'));
             $this->setOption('minuteHandColor', $sanitizedParams->getString('minuteHandColor'));
@@ -290,8 +293,12 @@ class WorldClock extends ModuleWidget
             // Build stylesheet
             // Main clock CSS
             $styleSheet = '
-                .analogue-clock {
+                body {
                     background: ' . $this->getOption('bgColor') . ';
+                }
+
+                .analogue-clock {
+                    background: ' . $this->getOption('faceColor') . ';
                     position: relative;
                     text-align: center;
                     box-sizing: border-box;
@@ -308,6 +315,7 @@ class WorldClock extends ModuleWidget
                     position: absolute;
                     top: 50%;
                     left: 50%;
+                    -webkit-transform: translate(-50%, -50%);
                     transform: translate(-50%, -50%);
                     border-radius: 50%;
                     background: ' . $this->getOption('dialColor') . ';
@@ -380,6 +388,7 @@ class WorldClock extends ModuleWidget
                             position: relative;
                             left: 50%;
                             width: 70px;
+                            -webkit-transform: translateX(-50%);
                             transform: translateX(-50%);
                             line-height: 22px;
                         }';
@@ -469,6 +478,7 @@ class WorldClock extends ModuleWidget
                         $styleSheet .= '
                             .analogue-steps > div:nth-child(' . ($i + 1) .') {
                                 transform: rotate(' . ($i * 30) . 'deg);
+                                -webkit-transform: rotate(' . ($i * 30) . 'deg);
                             }';
                     }
                 }
@@ -511,7 +521,9 @@ class WorldClock extends ModuleWidget
             'widgetDesignHeight'=> $widgetOriginalHeight,
             'worldClocks' => $worldClocks,
             'numCols' => $clockCols,
-            'numRows' => $clockRows
+            'numRows' => $clockRows,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         // Replace the head content
@@ -538,6 +550,7 @@ class WorldClock extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -546,7 +559,7 @@ class WorldClock extends ModuleWidget
         $javaScriptContent .= '   $(document).ready(function() { ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   }); ';

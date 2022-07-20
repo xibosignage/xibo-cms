@@ -58,7 +58,7 @@ class SearchFilterTest extends LocalWebTestCase
 
         $this->getLogger()->debug('Setup test for  ' . get_class() . ' Test');
 
-        // Create 5 layouts to test with
+        // Create 6 layouts to test with
         $this->layout = (new XiboLayout($this->getEntityProvider()))
             ->create(
                 'integration layout 1',
@@ -122,7 +122,6 @@ class SearchFilterTest extends LocalWebTestCase
         $this->deleteLayout($this->layout6);
 
         parent::tearDown();
-
     }
     // </editor-fold>
 
@@ -133,7 +132,7 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearch()
     {
-        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration']);
+        $response = $this->sendRequest('GET', '/layout', ['layout' => 'integration']);
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
@@ -148,7 +147,7 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchCommaSeparated()
     {
-        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration,example']);
+        $response = $this->sendRequest('GET', '/layout', ['layout' => 'integration,example']);
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
@@ -159,31 +158,16 @@ class SearchFilterTest extends LocalWebTestCase
     /**
      * Search filter test
      *
-     * Comma separated with spaces and not RLIKE
-     */
-    public function testSearchCommaSeparatedWithSpaces()
-    {
-        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration layout, -3']);
-        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
-        $this->assertNotEmpty($response->getBody());
-        $object = json_decode($response->getBody());
-        $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $this->assertSame(2, $object->data->recordsFiltered);
-    }
-
-    /**
-     * Search filter test
-     *
      * Comma separated with not RLIKE filter
      */
     public function testSearchCommaSeparatedWithNotRlike()
     {
-        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration, -example']);
+        $response = $this->sendRequest('GET', '/layout', ['layout' => 'integration layout, -example']);
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $this->assertSame(2, $object->data->recordsFiltered);
+        $this->assertSame(4, $object->data->recordsFiltered);
     }
 
     /**
@@ -193,22 +177,7 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchCommaSeparatedWithNotRlike2()
     {
-        $response = $this->sendRequest('GET','/layout', ['layout' => 'example, -layout']);
-        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
-        $this->assertNotEmpty($response->getBody());
-        $object = json_decode($response->getBody());
-        $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $this->assertSame(1, $object->data->recordsFiltered);
-    }
-
-    /**
-     * Search filter test.
-     *
-     * partial match filter
-     */
-    public function testSearchPartialMatch()
-    {
-        $response = $this->sendRequest('GET','/layout', ['layout' => 'inte, exa, -5']);
+        $response = $this->sendRequest('GET', '/layout', ['layout' => 'example, -layout']);
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
@@ -219,15 +188,45 @@ class SearchFilterTest extends LocalWebTestCase
     /**
      * Search filter test.
      *
-     * slightly more complex filter, with RLIKE, not RLIKE and spaces
+     * partial match filter
      */
-    public function testSearchComplex()
+    public function testSearchPartialMatch()
     {
-        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration, -1, -3, different name']);
+        $response = $this->sendRequest('GET', '/layout', ['layout' => 'inte, exa']);
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $this->assertSame(3, $object->data->recordsFiltered);
+        $this->assertSame(5, $object->data->recordsFiltered);
+    }
+
+    /**
+     * Search filter test.
+     *
+     * using regexp
+     */
+    public function testSearchWithRegEx()
+    {
+        $response = $this->sendRequest('GET', '/layout', ['layout' => 'name$', 'useRegexForName' => 1]);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
+        $this->assertSame(1, $object->data->recordsFiltered);
+    }
+
+    /**
+     * Search filter test.
+     *
+     * using regexp
+     */
+    public function testSearchWithRegEx2()
+    {
+        $response = $this->sendRequest('GET', '/layout', ['layout' => '^example, ^disp', 'useRegexForName' => 1]);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
+        $this->assertSame(2, $object->data->recordsFiltered);
     }
 }

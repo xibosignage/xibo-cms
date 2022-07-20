@@ -1,0 +1,31 @@
+<nav class="navbar navigator-navbar designer-{{element.type}}">
+    <div class="pull-left">
+        <button type="button" id="add-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+            data-title="{{trans.addRegionDesc}}">
+            <i class="fa fa-plus"></i>
+        </button>
+
+        {{#if element.isPermissionsModifiable}}
+            <button type="button" id="permissions-btn" class="properties-btn btn btn-sm" data-type="tool" data-property="Permissions" 
+                data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="bottom" data-title="{{trans.tools.permissions.description}}">
+                <i class="fa tool-icon-permissions card-icon"></i>
+            </button>
+        {{/if}}
+    </div>
+
+    <div class="pull-right">
+        {{#if undoActive}}
+            <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                data-title="{{trans.undoActiveTitle}}">
+                <i class="fa fa-undo"></i>
+            </button>
+        {{/if}}
+
+        {{#if trashActive}}
+            <button type="button" id="delete-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                data-title="{{trans.trashBinActiveTitle}}">
+                <i class="fa fa-trash"></i>
+            </button>
+        {{/if}}
+    </div>
+</nav>

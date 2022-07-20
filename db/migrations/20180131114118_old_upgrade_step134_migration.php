@@ -37,8 +37,8 @@ class OldUpgradeStep134Migration extends AbstractMigration
 
                 $media = $this->table('media');
                 $media
-                    ->addColumn('createdDt', 'datetime')
-                    ->addColumn('modifiedDt', 'datetime')
+                    ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+                    ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
                     ->save();
 
                 $this->execute('UPDATE `module` SET validextensions = CONCAT(validextensions, \',ipk\') WHERE module = \'genericfile\' LIMIT 1;');

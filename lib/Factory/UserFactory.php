@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,12 +23,8 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -58,22 +54,13 @@ class UserFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $configService
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
      * @param ApplicationScopeFactory $applicationScopeFactory
      */
-    public function __construct($store, $log, $sanitizerService,
-                                $configService,
-                                $permissionFactory,
-                                $userOptionFactory,
-                                $applicationScopeFactory)
+    public function __construct($configService, $permissionFactory, $userOptionFactory, $applicationScopeFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-
         $this->configService = $configService;
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;
@@ -88,6 +75,7 @@ class UserFactory extends BaseFactory
     {
         return new User($this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->configService,
             $this,
             $this->permissionFactory,
@@ -198,9 +186,7 @@ class UserFactory extends BaseFactory
      */
     public function getSystemUser()
     {
-        $user = $this->getById($this->configService->getSetting('SYSTEM_USER'));
-
-        return $user;
+        return $this->getById($this->configService->getSetting('SYSTEM_USER'));
     }
 
     /**
@@ -264,7 +250,7 @@ class UserFactory extends BaseFactory
         if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see themselves
             if ($this->getUser()->userTypeId == 3) {
-                $filterBy['userId'] = $this->getUser()->userId;
+                $params['userId'] = $this->getUser()->userId;
             }
             // Group admins can only see users from their groups.
             else if ($this->getUser()->userTypeId == 2) {
@@ -290,7 +276,9 @@ class UserFactory extends BaseFactory
         }
 
         // User Id Provided?
-        if ($parsedFilter->getInt('userId') !== null) {
+        if (isset($params['userId'])) {
+            $body .= ' AND user.userId = :userId ';
+        } else if ($parsedFilter->getInt('userId') !== null) {
             $body .= " AND user.userId = :userId ";
             $params['userId'] = $parsedFilter->getInt('userId');
         }
@@ -299,7 +287,7 @@ class UserFactory extends BaseFactory
         $groups = $parsedFilter->getIntArray('groupIds');
 
         if ($groups !== null && count($groups) > 0) {
-            $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
+            $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode(',', $groups) . ')) ';
         }
 
         // User Type Provided
@@ -344,7 +332,7 @@ class UserFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

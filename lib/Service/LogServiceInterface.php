@@ -1,14 +1,30 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (LogServiceInterface.php)
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Service;
 
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 
 /**
  * Interface LogServiceInterface
@@ -24,10 +40,24 @@ interface LogServiceInterface
     public function __construct($logger, $mode = 'production');
 
     /**
+     * Get the underlying logger interface
+     *  useful for custom code and modules which may not want to know about the full Xibo LogServiceInterface
+     * @return \Psr\Log\LoggerInterface
+     */
+    public function getLoggerInterface(): LoggerInterface;
+
+    /**
      * Set the user Id
      * @param int $userId
      */
     public function setUserId($userId);
+
+    /**
+     * Set the User IP Address
+     * @param $ip
+     * @return mixed
+     */
+    public function setIpAddress($ip);
 
     /**
      * @param $mode

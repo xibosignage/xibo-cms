@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -46,10 +44,8 @@ class CampaignFactory extends BaseFactory
      */
     private $scheduleFactory;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
     
     /**
      * @var TagFactory
@@ -58,23 +54,19 @@ class CampaignFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param $tagFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
+    public function __construct($user, $userFactory, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->tagFactory = $tagFactory;
     }
 
@@ -83,7 +75,15 @@ class CampaignFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Campaign($this->getStore(), $this->getLog(), $this->permissionFactory, $this->scheduleFactory, $this->displayFactory, $this->tagFactory);
+        return new Campaign(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->permissionFactory,
+            $this->scheduleFactory,
+            $this->displayNotifyService,
+            $this->tagFactory
+        );
     }
 
     /**
@@ -116,12 +116,12 @@ class CampaignFactory extends BaseFactory
      */
     public function getById($campaignId)
     {
-        $this->getLog()->debug('CampaignFactory getById(%d)', $campaignId);
+        $this->getLog()->debug(sprintf('CampaignFactory getById(%d)', $campaignId));
 
         $campaigns = $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1]);
 
         if (count($campaigns) <= 0) {
-            $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
+            $this->getLog()->debug(sprintf('Campaign not found with ID %d', $campaignId));
             throw new NotFoundException(__('Campaign not found'));
         }
 
@@ -159,7 +159,7 @@ class CampaignFactory extends BaseFactory
      * @return array[Campaign]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [], $options = [])
+    public function query($sortOrder = null, $filterBy = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
@@ -171,26 +171,20 @@ class CampaignFactory extends BaseFactory
         $params = [];
 
         $select = '
-        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId, `campaign`.folderId, campaign.permissionsFolderId,
+        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId, `campaign`.folderId, campaign.permissionsFolderId, campaign.cyclePlaybackEnabled, campaign.playCount,
             (
                 SELECT COUNT(*)
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
             ) AS numberLayouts,
             MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired,
-            (
-                SELECT GROUP_CONCAT(DISTINCT tag) 
-                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                GROUP BY lktagcampaign.campaignId
-            ) AS tags,
-            
-            (
-                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                GROUP BY lktagcampaign.campaignId
-            ) AS tagValues
+            ( SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                            FROM tag
+                            INNER JOIN lktagcampaign
+                            ON lktagcampaign.tagId = tag.tagId
+                            WHERE lktagcampaign.campaignId = campaign.campaignId
+                            GROUP BY lktagcampaign.campaignId
+            ) as tags
         ';
 
         $body  = '
@@ -203,9 +197,6 @@ class CampaignFactory extends BaseFactory
               ON user.userId = campaign.userId 
            WHERE 1 = 1
         ';
-
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy, '`campaign`.permissionsFolderId');
 
         if ($sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]) != -1) {
             // Exclude layout specific campaigns
@@ -244,7 +235,6 @@ class CampaignFactory extends BaseFactory
 
         // Tags
         if ($sanitizedFilter->getString('tags') != '') {
-
             $tagFilter = $sanitizedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -257,16 +247,16 @@ class CampaignFactory extends BaseFactory
                 ';
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND campaign.campaignID IN (
+                $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND campaign.campaignID IN (
                 SELECT lktagcampaign.campaignId
                   FROM tag
                     INNER JOIN lktagcampaign
                     ON lktagcampaign.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagcampaign', 'lkTagCampaignId', 'campaignId', $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -289,6 +279,9 @@ class CampaignFactory extends BaseFactory
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy, '`campaign`.permissionsFolderId');
+
         $group = 'GROUP BY `campaign`.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';
 
         if ($sanitizedFilter->getInt('retired', ['default' => -1]) != -1) {
@@ -301,6 +294,11 @@ class CampaignFactory extends BaseFactory
             }
         }
 
+        if ($sanitizedFilter->getInt('cyclePlaybackEnabled') != null) {
+            $body .= ' AND `campaign`.cyclePlaybackEnabled = :cyclePlaybackEnabled ';
+            $params['cyclePlaybackEnabled'] = $sanitizedFilter->getInt('cyclePlaybackEnabled');
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -309,22 +307,27 @@ class CampaignFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
-
-        $intProperties = ['intProperties' => ['numberLayouts', 'isLayoutSpecific']];
 
         // Layout durations
         if ($sanitizedFilter->getInt('totalDuration', ['default' => 0]) != 0) {
             $select .= ", SUM(`layout`.duration) AS totalDuration";
-            $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration', 'displayOrder']];
         }
 
         $sql = $select . $body . $group . $order . $limit;
 
-
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $campaigns[] = $this->createEmpty()->hydrate($row, $intProperties);
+            $campaigns[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'numberLayouts',
+                    'isLayoutSpecific',
+                    'totalDuration',
+                    'displayOrder',
+                    'cyclePlaybackEnabled',
+                    'playCount'
+                ]
+            ]);
         }
 
         // Paging
@@ -339,5 +342,4 @@ class CampaignFactory extends BaseFactory
 
         return $campaigns;
     }
-
 }

@@ -1,30 +1,30 @@
 <?php
-/**
-* Copyright (C) 2020 Xibo Signage Ltd
-*
-* Xibo - Digital Signage - http://www.xibo.org.uk
-*
-* This file is part of Xibo.
-*
-* Xibo is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* any later version.
-*
-* Xibo is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -34,11 +34,8 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -86,18 +83,8 @@ class Tag extends Base
     /** @var UserFactory */
     private $userFactory;
 
-    /** @var StorageServiceInterface */
-    private $store;
-
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param StorageServiceInterface $store
      * @param DisplayGroupFactory $displayGroupFactory
      * @param LayoutFactory $layoutFactory
      * @param TagFactory $tagFactory
@@ -107,12 +94,9 @@ class Tag extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param CampaignFactory $campaignFactory
      * @param PlaylistFactory $playlistFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory, Twig $view) {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
-        $this->store = $store;
+    public function __construct($displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory)
+    {
         $this->displayGroupFactory = $displayGroupFactory;
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
@@ -217,7 +201,8 @@ class Tag extends Base
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
             'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
-            'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions')
+            'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions'),
+            'allTags' => $sanitizedQueryParams->getInt('allTags')
         ];
 
         $tags = $this->tagFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
@@ -612,7 +597,6 @@ class Tag extends Base
         // go through each linked displayGroup and unassign the tag
         foreach ($linkedDisplayGroupsIds as $displayGroupId => $value) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $tag->unassignDisplayGroup($displayGroupId);
             $displayGroup->save();
         }
@@ -620,7 +604,6 @@ class Tag extends Base
         // go through each linked campaign and unassign the tag
         foreach ($linkedCampaignsIds as $campaignId => $value) {
             $campaign = $this->campaignFactory->getById($campaignId);
-            $campaign->setChildObjectDependencies($this->layoutFactory);
             $tag->unassignCampaign($campaignId);
             $campaign->save();
         }
@@ -726,27 +709,25 @@ class Tag extends Base
                 case 'campaign':
                     $entityFactory = $this->campaignFactory;
                     break;
+                case 'displayGroup':
                 case 'display':
                     $entityFactory = $this->displayGroupFactory;
                     break;
-                case 'displayGroup':
-                    $entityFactory = $this->displayGroupFactory;
-                    break;
+                default:
+                    throw new InvalidArgumentException(__('Edit multiple tags is not supported on this item'), 'targetType');
             }
 
             foreach ($targetIdsArray as $id) {
                 // get the entity by provided id, for display we need different function
+                $this->getLog()->debug('editMultiple: lookup using id: ' . $id . ' for type: ' . $targetType);
                 if ($targetType === 'display') {
-                    $entity = $entityFactory->getByDisplayId($id)[0];
+                    $entity = $entityFactory->getDisplaySpecificByDisplayId($id);
                 } else {
                     $entity = $entityFactory->getById($id);
                 }
 
-                // for DG and campaign we need to setChildObjectDependencies otherwise it won't load.
-                if ($targetType === 'displayGroup' || $targetType === 'display') {
-                    $entity->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                } else if ($targetType === 'campaign') {
-                    $entity->setChildObjectDependencies($this->layoutFactory);
+                if ($targetType === 'display' || $targetType === 'displaygroup') {
+                    $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($entity), DisplayGroupLoadEvent::$NAME);
                 }
 
                 foreach ($untags as $untag) {
@@ -764,8 +745,16 @@ class Tag extends Base
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
             if ($targetType === 'display') {
                 foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                    $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                    $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => true]);
+                    $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($group), DisplayGroupLoadEvent::$NAME);
+                    $group->save([
+                        'validate' => false,
+                        'saveGroup' => false,
+                        'saveTags' => false,
+                        'manageLinks' => false,
+                        'manageDisplayLinks' => true,
+                        'manageDynamicDisplayLinks' => true,
+                        'allowNotify' => true
+                    ]);
                 }
             }
         } else {
@@ -775,7 +764,7 @@ class Tag extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Tags Edited'))
+            'message' => __('Tags Edited')
         ]);
 
         return $this->render($request, $response);

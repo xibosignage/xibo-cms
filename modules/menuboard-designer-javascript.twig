@@ -1,0 +1,131 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function menuboard_form_edit_open() {
+
+        var $form = $(this).find('form');
+
+        if($form.data('formStep') === 1) {
+            // If Menu Board ID exists, set the drop-down to that value
+            var menuId = $form.data().elementOptions.menuId;
+
+            if(menuId !== undefined) {
+                $(this).find('#menuId').val(menuId);
+            }
+
+            $form.find('#orientation').on('change', function(){
+                filterTemplates($form, true);
+            });
+
+            filterTemplates($(this));
+        } else if ($form.data('formStep') === 2) {
+            // Setup lists drag and sort ( with double click )
+            $('#categoriesIn, #categoriesOut').sortable({
+                connectWith: '.connectedSortable',
+                dropOnEmpty: true
+            }).disableSelection();
+            $('.li-sortable.dbclick', this).dblclick(switchLists);
+
+            menuBoardFormSetup(this);
+        } else if($form.data('formStep') === 3) {
+            formHelpers.setupCheckboxInputFields($form, '#useDuration', '.duration-fields');
+
+            menuBoardFormSetup(this);
+        }
+    }
+
+    // Runs before form submit
+    function menuboard_form_edit_submit() {
+        if($(this).find('form').data('formStep') === 2) {
+            var form2 = $("#menuBoardEditFormStep2");
+
+            for (var i = 1; i <= $(this).find('form').data().elementOptions.templateZones; i++) {
+                form2.find('input[name="menuBoardCategories_'+ i + '[]"]').remove();
+
+                $($("#categoriesAssigned_"+i).sortable('toArray')).each(function() {
+                    form2.append('<input type="hidden" name="menuBoardCategories_' + i +'[]" value="' + this + '" />');
+                });
+            }
+
+            form2.data("apply", true);
+        }
+    }
+
+    function menuBoardFormSetup(dialog) {
+        // Setup lists drag and sort ( with double click )
+        $('.connectedSortable2').sortable({
+            connectWith: '.connectedSortable2',
+            dropOnEmpty: true
+        }).disableSelection();
+        
+        $('.connectedSortable2.single').on("sortreceive", function(event, ui) {
+            var $list = $(this);
+            
+            if ($list.children().length > 1) {
+                toastr.warning(menuBoardTranslations.maxNumElementsPerZone);
+                $(ui.sender).sortable('cancel');
+            }
+        });
+
+        // Configure some color pickers
+        $(dialog).find('.colorpicker').colorpicker();
+
+        // Populate the font list with options
+        var $fontFamily = $(dialog).find('#fontFamily');
+        $.ajax({
+            method: 'GET',
+            url: $fontFamily.data('searchUrl'),
+            success: function(res) {
+                if (res.success) {
+                    $.each(res.data, function(index, element) {
+                        if ($fontFamily.data('value') === element.familyName) {
+                            $fontFamily.append($('<option value="' + element.familyName + '" selected>' + element.displayName + '</option>'));
+                        } else {
+                            $fontFamily.append($('<option value="' + element.familyName + '">' + element.displayName + '</option>'));
+                        }
+                    });
+                }
+            }
+        });
+
+        if($(dialog).hasClass('modal')) {
+            $(dialog).on('hide.bs.modal', function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    $(dialog).find('.colorpicker-element').colorpicker('destroy');
+                }
+            });
+        }
+    }
+
+    function filterTemplates($form, change) {
+        $form.find('#templateId').data('filterClass', $form.find('#orientation').val())
+        // Select first option
+        if(change) {
+            $form.find('#templateId').val(null).trigger("change");
+        }
+    }
+
+</script>

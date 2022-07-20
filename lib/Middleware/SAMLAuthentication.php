@@ -29,7 +29,9 @@ use OneLogin\Saml2\Settings;
 use OneLogin\Saml2\Utils;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Routing\RouteContext;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -43,6 +45,7 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class SAMLAuthentication extends AuthenticationBase
 {
+    use LogoutTrait;
     /**
      * @return $this
      */
@@ -52,7 +55,7 @@ class SAMLAuthentication extends AuthenticationBase
         $app->getContainer()->logoutRoute = 'saml.logout';
 
         // Route providing SAML metadata
-        $app->get('/saml/metadata', function (Request $request, Response $response) {
+        $app->get('/saml/metadata', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             $settings = new Settings($this->getConfig()->samlSettings, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
@@ -69,25 +72,24 @@ class SAMLAuthentication extends AuthenticationBase
         });
 
         // SAML Login
-        $app->get('/saml/login', function (Request $request, Response $response) {
+        $app->get('/saml/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             // Initiate SAML SSO
             $auth = new Auth($this->getConfig()->samlSettings);
-            $auth->login();
+            return $auth->login();
         });
 
         // SAML Logout
-        $app->get('/saml/logout', function (Request $request, Response $response) {
-            $this->samlLogout($request,  $response);
+        $app->get('/saml/logout', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
+            return $this->samlLogout($request, $response);
         })->setName('saml.logout');
 
         // SAML Assertion Consumer Endpoint
-        $app->post('/saml/acs', function (Request $request, Response $response) {
+        $app->post('/saml/acs', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             // Log some interesting things
             $this->getLog()->debug('Arrived at the ACS route with own URL: ' . Utils::getSelfRoutedURLNoQuery());
 
             // Pull out the SAML settings
             $samlSettings = $this->getConfig()->samlSettings;
-
             $auth = new Auth($samlSettings);
             $auth->processResponse();
 
@@ -164,7 +166,6 @@ class SAMLAuthentication extends AuthenticationBase
                         default:
                             throw new AccessDeniedException(__('Invalid field_to_identify value. Review settings.'));
                     }
-
                 } catch (NotFoundException $e) {
                     // User does not exist - this is valid as we might create them JIT.
                 }
@@ -196,7 +197,12 @@ class SAMLAuthentication extends AuthenticationBase
 
                         // Home page
                         if (isset($samlSettings['workflow']['homePage'])) {
-                            $user->homePageId = $this->getUserGroupFactory()->getHomepageByName($samlSettings['workflow']['homePage']);
+                            try {
+                                $user->homePageId = $this->getUserGroupFactory()->getHomepageByName($samlSettings['workflow']['homePage'])->homepage;
+                            } catch (NotFoundException $exception) {
+                                $this->getLog()->info(sprintf('Provided homepage %s, does not exist, setting the icondashboard.view as homepage', $samlSettings['workflow']['homePage']));
+                                $user->homePageId = 'icondashboard.view';
+                            }
                         } else {
                             $user->homePageId = 'icondashboard.view';
                         }
@@ -241,11 +247,11 @@ class SAMLAuthentication extends AuthenticationBase
 
                         $group->assignUser($user);
                         $group->save(['validate' => false]);
+                        $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
 
                         // Audit Log
                         $this->getLog()->audit('User', $user->userId, 'User created with SAML workflow', [
                             'UserName' => $user->userName,
-                            'IPAddress' => $request->getAttribute('ip_address'),
                             'UserAgent' => $request->getHeader('User-Agent')
                         ]);
                     }
@@ -253,7 +259,7 @@ class SAMLAuthentication extends AuthenticationBase
 
                 if (isset($user) && $user->userId > 0) {
                     // Load User
-                    $this->getUser($user->userId);
+                    $this->getUser($user->userId, $request->getAttribute('ip_address'));
 
                     // Overwrite our stored user with this new object.
                     $this->setUserForRequest($user);
@@ -263,33 +269,36 @@ class SAMLAuthentication extends AuthenticationBase
                     $this->getSession()->regenerateSessionId();
                     $this->getSession()->setUser($user->userId);
 
+                    $user->touch();
+
                     // Audit Log
                     $this->getLog()->audit('User', $user->userId, 'Login Granted via SAML', [
-                        'IPAddress' => $request->getAttribute('ip_address'),
                         'UserAgent' => $request->getHeader('User-Agent')
                     ]);
                 }
 
-                // Redirect to User Homepage
-                return $response->withRedirect($this->getRouteParser()->urlFor('home'));
+                // Redirect back to the originally-requested url
+                $params =  $request->getParams();
+                $redirect = !isset($params['RelayState']) || (isset($params['RelayState']) && basename($params['RelayState']) == 'login')
+                    ? $this->getRouteParser()->urlFor('home')
+                    : $params['RelayState'];
+
+                return $response->withRedirect($redirect);
             }
         });
 
         // Single Logout Service
-        $app->get('/saml/sls', function (Request $request, Response $response) use ($app) {
+        $app->get('/saml/sls', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) use ($app) {
 
-            $auth = new Auth( $app->getContainer()->get('configService')->samlSettings);
-            $auth->processSLO(false, null, false, function() use ($app, $request, $response) {
-                // Grab a login controller
-                /** @var \Xibo\Controller\Login $loginController */
-                $loginController = $app->getContainer()->get('\Xibo\Controller\Login');
-                $loginController->logout($request, $response);
+            $auth = new Auth($app->getContainer()->get('configService')->samlSettings);
+            $auth->processSLO(false, null, false, function () use ($request) {
+                $this->completeLogoutFlow($this->getUser($_SESSION['userid'], $request->getAttribute('ip_address')), $this->getSession(), $this->getLog(), $request);
             });
 
             $errors = $auth->getErrors();
 
             if (empty($errors)) {
-                return $response->withRedirect($this->getRouteParser()->urlFor('logout'));
+                return $response->withRedirect($this->getRouteParser()->urlFor('home'));
             } else {
                 throw new AccessDeniedException("SLO failed. " . implode(', ', $errors));
             }
@@ -328,11 +337,11 @@ class SAMLAuthentication extends AuthenticationBase
     public function redirectToLogin(Request $request)
     {
         if ($this->isAjax($request)) {
-            return $this->createResponse()->withJson(ApplicationState::asRequiresLogin());
+            return $this->createResponse($request)->withJson(ApplicationState::asRequiresLogin());
         } else {
             // Initiate SAML SSO
             $auth = new Auth($this->getConfig()->samlSettings);
-            return $this->createResponse()->withRedirect($auth->login());
+            return $this->createResponse($request)->withRedirect($auth->login());
         }
     }
 
@@ -359,6 +368,6 @@ class SAMLAuthentication extends AuthenticationBase
     /** @inheritDoc */
     public function addToRequest(Request $request)
     {
-        return $request->withAttribute('excludedCsrfRoutes', ['/saml/acs']);
+        return $request->withAttribute('excludedCsrfRoutes', array_merge($request->getAttribute('excludedCsrfRoutes', []), ['/saml/acs']));
     }
 }

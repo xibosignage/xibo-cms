@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -45,7 +45,7 @@ class Bandwidth
     public static $NOTIFYSTATUS = 7;
     public static $SUBMITSTATS = 8;
     public static $SUBMITLOG = 9;
-    public static $BLACKLIST = 10;
+    public static $REPORTFAULT = 10;
     public static $SCREENSHOT = 11;
 
     public $displayId;
@@ -56,10 +56,11 @@ class Bandwidth
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $dispatcher)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
     public function save()

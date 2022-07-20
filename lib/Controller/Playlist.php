@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,27 +26,19 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -64,24 +56,9 @@ class Playlist extends Base
     private $playlistFactory;
 
     /**
-     * @var RegionFactory
-     */
-    private $regionFactory;
-
-    /**
      * @var MediaFactory
      */
     private $mediaFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var TransitionFactory
-     */
-    private $transitionFactory;
 
     /**
      * @var WidgetFactory
@@ -118,38 +95,33 @@ class Playlist extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param PlaylistFactory $playlistFactory
-     * @param RegionFactory $regionFactory
      * @param MediaFactory $mediaFactory
-     * @param PermissionFactory $permissionFactory
-     * @param TransitionFactory $transitionFactory
      * @param WidgetFactory $widgetFactory
      * @param ModuleFactory $moduleFactory
      * @param UserGroupFactory $userGroupFactory
      * @param UserFactory $userFactory
      * @param TagFactory $tagFactory
-     * @param Twig $view
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory, $folderFactory)
-    {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
+    public function __construct(
+        $playlistFactory,
+        $mediaFactory,
+        $widgetFactory,
+        $moduleFactory,
+        $userGroupFactory,
+        $userFactory,
+        $tagFactory,
+        $layoutFactory,
+        $displayFactory,
+        $scheduleFactory,
+        $folderFactory
+    ) {
         $this->playlistFactory = $playlistFactory;
-        $this->regionFactory = $regionFactory;
         $this->mediaFactory = $mediaFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->transitionFactory = $transitionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->moduleFactory = $moduleFactory;
         $this->userGroupFactory = $userGroupFactory;
@@ -232,6 +204,13 @@ class Playlist extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
      *      in="query",
@@ -288,7 +267,9 @@ class Playlist extends Base
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
-            'folderId' => $sanitizedParams->getInt('folderId')
+            'folderId' => $sanitizedParams->getInt('folderId'),
+            'layoutId' => $sanitizedParams->getInt('layoutId'),
+            'logicalOperator' => $sanitizedParams->getString('logicalOperator')
         ], $sanitizedParams));
 
         foreach ($playlists as $playlist) {
@@ -322,6 +303,12 @@ class Playlist extends Base
 
                     // Add widget module type name
                     $widget->moduleName = $widget->module->getModuleName();
+
+                    // Get transitions
+                    $widget->transitionIn = $widget->getOptionValue('transIn', null);
+                    $widget->transitionOut = $widget->getOptionValue('transOut', null);
+                    $widget->transitionDurationIn = $widget->getOptionValue('transInDuration', null);
+                    $widget->transitionDurationOut = $widget->getOptionValue('transOutDuration', null);
 
                     // Permissions?
                     if ($loadPermissions) {
@@ -455,6 +442,7 @@ class Playlist extends Base
                     'id' => 'playlist_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
                     'text' => __('Share'),
+                    'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])],
                         ['name' => 'commit-method', 'value' => 'post'],
@@ -548,6 +536,27 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="When filtering by Tags, should we use exact match?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="formData",
+     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="maxNumberOfItems",
+     *      in="formData",
+     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -602,18 +611,28 @@ class Playlist extends Base
         // Do we have a tag or name filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
         $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
+        $logicalOperator = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('logicalOperator') : 'OR';
+        $exactTags = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getCheckbox('exactTags') : 0;
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
+            if (empty($nameFilter) && empty($tagFilter)) {
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+            }
             $playlist->filterMediaName = $nameFilter;
-            $playlist->filterMediaTags = $tagFilter;
+            if ($this->getUser()->featureEnabled('tag.tagging')) {
+                $playlist->filterMediaTags = $tagFilter;
+                $playlist->filterExactTags = $exactTags;
+                $playlist->filterLogicalOperator = $logicalOperator;
+            }
+            $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems', ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]);
         }
 
         $playlist->save();
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1]);
+            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1, 'exactTags' => $exactTags, 'logicalOperator' => $logicalOperator]);
 
             if (count($media) > 0) {
                 $widgets = [];
@@ -643,6 +662,10 @@ class Playlist extends Base
 
                     // Add to a list of new widgets
                     $widgets[] = $widget;
+                    if ($playlist->isDynamic && count($widgets) >= $playlist->maxNumberOfItems) {
+                        $this->getLog()->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                        break;
+                    }
                 }
 
                 // Save the playlist
@@ -681,8 +704,7 @@ class Playlist extends Base
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
-            'playlist' => $playlist,
-            'tags' => $this->tagFactory->getTagsWithValues($playlist)
+            'playlist' => $playlist
         ]);
 
         return $this->render($request, $response);
@@ -740,6 +762,27 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="When filtering by Tags, should we use exact match?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="formData",
+     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="maxNumberOfItems",
+     *      in="formData",
+     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -789,11 +832,17 @@ class Playlist extends Base
         // Do we have a tag or name filter?
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
+            if (empty($sanitizedParams->getString('filterMediaName')) && empty($sanitizedParams->getString('filterMediaTag'))) {
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+            }
             $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
 
             if ($this->getUser()->featureEnabled('tag.tagging')) {
                 $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
+                $playlist->filterExactTags = $sanitizedParams->getCheckbox('exactTags');
+                $playlist->filterLogicalOperator = $sanitizedParams->getString('logicalOperator');
             }
+            $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems');
         }
 
         $playlist->save();
@@ -837,6 +886,25 @@ class Playlist extends Base
 
     /**
      * Delete
+     *
+     * @SWG\Delete(
+     *  path="/playlist/{playlistId}",
+     *  operationId="playlistDelete",
+     *  tags={"playlist"},
+     *  summary="Delete a Playlist",
+     *  description="Delete a Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The PlaylistId to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -987,9 +1055,7 @@ class Playlist extends Base
         }
 
         // Handle tags
-        $tags = $this->tagFactory->getTagsWithValues($playlist);
-
-        $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
+        $playlist->replaceTags($this->tagFactory->tagsFromString($playlist->tags));
 
         // Set from global setting
         if ($playlist->enableStat == null) {

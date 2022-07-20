@@ -1,10 +1,10 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2020 Xibo Signage Ltd
- * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
- * (DataSetFactory.php) This file is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,10 +18,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
-namespace Xibo\Factory;
 
+namespace Xibo\Factory;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -31,10 +30,8 @@ use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -56,34 +53,27 @@ class DataSetFactory extends BaseFactory
     /** @var  PermissionFactory */
     private $permissionFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    private $sanitizerService;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param \Xibo\Entity\User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayNotifyService)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
         $this->pool = $pool;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->displayFactory = $displayFactory;
-        $this->sanitizerService = $sanitizerService;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -102,13 +92,14 @@ class DataSetFactory extends BaseFactory
         return new DataSet(
             $this->getStore(),
             $this->getLog(),
-            $this->sanitizerService,
+            $this->getDispatcher(),
+            $this->getSanitizerService(),
             $this->config,
             $this->pool,
             $this,
             $this->dataSetColumnFactory,
             $this->permissionFactory,
-            $this->displayFactory
+            $this->displayNotifyService
         );
     }
 
@@ -122,8 +113,9 @@ class DataSetFactory extends BaseFactory
     {
         $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
 
-        if (count($dataSets) <= 0)
+        if (count($dataSets) <= 0) {
             throw new NotFoundException();
+        }
 
         return $dataSets[0];
     }
@@ -138,8 +130,9 @@ class DataSetFactory extends BaseFactory
     {
         $dataSets = $this->query(null, ['disableUserCheck' => 1, 'code' => $code]);
 
-        if (count($dataSets) <= 0)
+        if (count($dataSets) <= 0) {
             throw new NotFoundException();
+        }
 
         return $dataSets[0];
     }
@@ -155,8 +148,9 @@ class DataSetFactory extends BaseFactory
     {
         $dataSets = $this->query(null, ['dataSetExact' => $dataSet, 'userId' => $userId]);
 
-        if (count($dataSets) <= 0)
+        if (count($dataSets) <= 0) {
             throw new NotFoundException();
+        }
 
         return $dataSets[0];
     }
@@ -205,8 +199,10 @@ class DataSetFactory extends BaseFactory
             dataset.`username`,
             dataset.`password`,
             dataset.`customHeaders`,
+            dataset.`userAgent`,
             dataset.`refreshRate`,
             dataset.`clearRate`,
+            dataset.`truncateOnEmpty`,
             dataset.`runsAfter`,
             dataset.`dataRoot`,
             dataset.`summarize`,
@@ -217,6 +213,7 @@ class DataSetFactory extends BaseFactory
             dataset.`ignoreFirstRow`,
             dataset.`rowLimit`,
             dataset.`limitPolicy`,
+            dataset.`csvSeparator`,
             dataset.`folderId`,
             dataset.`permissionsFolderId`,
             user.userName AS owner,
@@ -239,9 +236,6 @@ class DataSetFactory extends BaseFactory
                INNER JOIN `user` ON user.userId = dataset.userId
              WHERE 1 = 1
         ';
-
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
 
         if ($parsedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND dataset.dataSetId = :dataSetId ';
@@ -278,6 +272,9 @@ class DataSetFactory extends BaseFactory
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -286,7 +283,7 @@ class DataSetFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -313,7 +310,7 @@ class DataSetFactory extends BaseFactory
      * @param DataSet $dataSet The Dataset to get Data for
      * @param DataSet|null $dependant The Dataset $dataSet depends on
      * @param bool $enableCaching Should we cache check the results and store the resulting cache
-     * @return \stdClass{entries:[],number:int}
+     * @return \stdClass {entries:[], number:int, isEligibleToTruncate:bool}
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
@@ -330,6 +327,7 @@ class DataSetFactory extends BaseFactory
         $result = new \stdClass();
         $result->entries = [];
         $result->number = 0;
+        $result->isEligibleToTruncate = false;
         
         // Getting all dependant values if needed
         // just an empty array if we don't have a dependent
@@ -351,7 +349,6 @@ class DataSetFactory extends BaseFactory
 
             // Auth
             switch ($dataSet->authentication) {
-
                 case 'basic':
                     $requestParams['auth'] = [$dataSet->username, $dataSet->password];
                     break;
@@ -389,6 +386,10 @@ class DataSetFactory extends BaseFactory
                 parse_str(parse_url($resolvedUri, PHP_URL_QUERY), $queryParamsArray);
                 parse_str($this->replaceParams($dataSet->postData, $options), $dataSetPostData);
                 $requestParams['query'] = array_merge($queryParamsArray, $dataSetPostData);
+            }
+
+            if (!empty($dataSet->userAgent)) {
+                $requestParams['headers']['User-Agent'] = trim($dataSet->userAgent);
             }
 
             $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));
@@ -429,7 +430,6 @@ class DataSetFactory extends BaseFactory
                         }
 
                         $cacheControlKeyValue = $etags[0];
-
                     } else if (count($lastModifieds) > 0) {
                         if ($cacheControlKeyValue === $lastModifieds[0]) {
                             $this->getLog()->debug('Skipping due to Last-Modified');
@@ -437,7 +437,6 @@ class DataSetFactory extends BaseFactory
                         }
 
                         $cacheControlKeyValue = $lastModifieds[0];
-
                     } else {
                         // Request doesn't have any cache control of its own
                         // use the md5
@@ -462,6 +461,9 @@ class DataSetFactory extends BaseFactory
                     $this->pool->saveDeferred($cacheControlKey);
                 }
 
+                // We have passed any caching and therefore expect results
+                $result->isEligibleToTruncate = true;
+
                 if ($dataSet->sourceId === 1) {
                     // Make sure we have JSON in the response
                     $body = $request->getBody()->getContents();
@@ -485,7 +487,12 @@ class DataSetFactory extends BaseFactory
                     }
                 } else {
                     $csv = $request->getBody()->getContents();
-                    $array = array_map("str_getcsv", explode("\n", $csv));
+                    $array = array_map(
+                        function ($v) use ($dataSet) {
+                            return str_getcsv($v, $dataSet->csvSeparator ?? ',');
+                        },
+                        explode("\n", $csv)
+                    );
 
                     if ($dataSet->ignoreFirstRow == 1) {
                         array_shift($array);
@@ -512,10 +519,11 @@ class DataSetFactory extends BaseFactory
      * @param array $values ColumnValues to use on {{COL.xxx}} parts
      * @return string
      */
-    private function replaceParams($string = '', array $values = []) {
-
-        if (empty($string))
+    private function replaceParams($string = '', array $values = [])
+    {
+        if (empty($string)) {
             return $string;
+        }
 
         $string = str_replace('{{DATE}}', date('Y-m-d'), $string);
         $string = str_replace('%7B%7BDATE%7D%7D', date('Y-m-d'), $string);
@@ -538,7 +546,8 @@ class DataSetFactory extends BaseFactory
      * @param bool $save
      * @throws InvalidArgumentException
      */
-    public function processResults(DataSet $dataSet, \stdClass $results, $save = true) {
+    public function processResults(DataSet $dataSet, \stdClass $results, $save = true)
+    {
         $results->processed = [];
 
         if (property_exists($results, 'entries') && is_array($results->entries)) {
@@ -548,7 +557,6 @@ class DataSetFactory extends BaseFactory
             $results->messages = [__('Processing %d results into %d potential columns', count($results->entries), count($dataSet->columns))];
 
             foreach ($results->entries as $result) {
-
                 $results->messages[] = __('Processing Result with Data Root %s', $dataSet->dataRoot);
 
                 // Remote Data has to have the configured DataRoot which has to be an Array
@@ -595,7 +603,6 @@ class DataSetFactory extends BaseFactory
                         $results->messages[] = __('Processing as a Single Row');
 
                         $entries[] = $this->processEntry((array)$data, $columns);
-
                     } else {
                         // Process as multiple rows
                         $results->messages[] = __('Processing as Multiple Rows');
@@ -607,7 +614,6 @@ class DataSetFactory extends BaseFactory
                             $entries[] = $this->processEntry([$property, $value], $columns);
                         }
                     }
-
                 } else {
                     throw new InvalidArgumentException(__('No data found at the DataRoot %s', $dataSet->dataRoot), 'dataRoot');
                 }
@@ -638,7 +644,8 @@ class DataSetFactory extends BaseFactory
      * @param array|\stdClass The Value from the remote request
      * @return array|\stdClass The Data hold in the configured dataRoot
      */
-    private function getDataRootFromResult($dataRoot, $result) {
+    private function getDataRootFromResult($dataRoot, $result)
+    {
         $this->getLog()->debug('Getting ' . $dataRoot . 'from result.');
 
         if (empty($dataRoot)) {
@@ -655,56 +662,86 @@ class DataSetFactory extends BaseFactory
      * @param array $entry The Data from the remote system
      * @param DataSetColumn[] $dataSetColumns The configured Columns form the current DataSet
      * @return array The processed $entry as a List of Fields from $columns
-     * @throws InvalidArgumentException
      */
-    private function processEntry(array $entry, array $dataSetColumns) {
+    private function processEntry(array $entry, array $dataSetColumns)
+    {
         $result = [];
 
         foreach ($dataSetColumns as $column) {
-
             if ($column->dataSetColumnTypeId === 3 && $column->remoteField != null) {
-
                 $this->getLog()->debug('Trying to match dataSetColumn ' . $column->heading . ' with remote field ' . $column->remoteField);
 
                 // The Field may be a Date, timestamp or a real field
                 if ($column->remoteField == '{{DATE}}') {
                     $value = [0, date('Y-m-d')];
-
                 } else if ($column->remoteField == '{{TIMESTAMP}}') {
                     $value = [0, Carbon::now()->format('U')];
-
                 } else {
                     $chunks = explode('.', $column->remoteField);
                     $value = $this->getFieldValueFromEntry($chunks, $entry);
                 }
 
                 $this->getLog()->debug('Resolved value: ' . var_export($value, true));
-                $sanitizer = $this->getSanitizer($value);
-                // Only add it to the result if we where able to process the field
-                if (($value != null) && ($value[1] !== null)) {
+
+                // Only add it to the result if we were able to process the field
+                if ($value != null && $value[1] !== null) {
+                    // 1,String
+                    // 2,Number
+                    // 3,Date
+                    // 4,External Image
+                    // 5,Library Image
+                    // 6,HTML
+                    $validator = $this->getValidator();
+
                     switch ($column->dataTypeId) {
                         case 2:
-                            $result[$column->heading] = $sanitizer->getDouble(1);
-                            break;
-                        case 3:
-                            // This expects an ISO date
-                            $date =  $sanitizer->getDate(1);
-                            try {
-                                $result[$column->heading] = $date->format(DateFormatHelper::getSystemFormat());
-                            } catch (\Exception $e) {
-                                $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $date));
-                                throw new InvalidArgumentException(sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $date), 'date');
+                            // Number
+                            if (empty($value[1]) || !($validator->double($value[1]) || $validator->int($value[1]))) {
+                                $result[$column->heading] = 0;
+                            } else {
+                                $result[$column->heading] = doubleval($value[1]);
                             }
                             break;
+                        case 3:
+                            // Date
+                            // This expects an ISO date
+                            // check if we were provided with custom dateFormat
+                            $dateFormat = $column->dateFormat ?: DateFormatHelper::getSystemFormat();
+
+                            try {
+                                // Parse into a date object from any format, and then save using the system format
+                                $result[$column->heading] = Carbon::createFromFormat($dateFormat, $value[1])
+                                    ->format(DateFormatHelper::getSystemFormat());
+                            } catch (\Exception $e) {
+                                $this->getLog()->error(
+                                    sprintf(
+                                        'Incorrect date provided %s, expected date format %s',
+                                        $value[1],
+                                        $dateFormat
+                                    )
+                                );
+                            }
+
+                            break;
                         case 5:
-                            $result[$column->heading] = $sanitizer->getInt(1);
+                            // Library Image
+                            if (empty($value[1]) || !$validator->int($value[1])) {
+                                $result[$column->heading] = 0;
+                            } else {
+                                $result[$column->heading] = intval($value[1]);
+                            }
                             break;
                         case 6:
                             // HTML, without any sanitization
                             $result[$column->heading] = $value[1];
                             break;
                         default:
-                            $result[$column->heading] = $sanitizer->getString(1);
+                            // Default value, assume it will be a string and filter it accordingly.
+                            $result[$column->heading] = filter_var(
+                                $value[1],
+                                FILTER_SANITIZE_STRING,
+                                FILTER_FLAG_NO_ENCODE_QUOTES
+                            );
                     }
                 }
             } else {
@@ -724,7 +761,8 @@ class DataSetFactory extends BaseFactory
      * @param array|\stdClass $entry Current DataEntry
      * @return array of the last FieldName and the corresponding value
      */
-    private function getFieldValueFromEntry(array $chunks, $entry) {
+    private function getFieldValueFromEntry(array $chunks, $entry)
+    {
         $value = null;
         $key = array_shift($chunks);
 
@@ -757,7 +795,8 @@ class DataSetFactory extends BaseFactory
      * @param array $columns The columns form this DataSet
      * @return array which contains all Entries to be added to the DataSet
      */
-    private function consolidateEntries(DataSet $dataSet, array $entries, array $columns) {
+    private function consolidateEntries(DataSet $dataSet, array $entries, array $columns)
+    {
         // Do we need to consolidate?
         if ((count($entries) > 0) && $dataSet->doConsolidate()) {
             // Yes
