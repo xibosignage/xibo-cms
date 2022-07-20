@@ -309,6 +309,8 @@ class WidgetHtmlRenderer
         $twig = [];
         $twig['hbs'] = [];
         $twig['twig'] = [];
+        $twig['renderers'] = [];
+        $twig['dataParsers'] = [];
         $twig['templateProperties'] = [];
         $twig['elements'] = [];
         $twig['width'] = $region->width;
@@ -335,13 +337,18 @@ class WidgetHtmlRenderer
             $templateId = $widget->getOptionValue('templateId', null);
             
             // Output some sample data and a data url.
-            // TODO: output sample data into "data"
             $widgetData = [
                 'widgetId' => $widget->widgetId,
                 'url' => '[[dataUrl=' . $widget->widgetId . ']]',
                 'data' => '[[data=' . $widget->widgetId . ']]',
-                'templateId' => $templateId
+                'templateId' => $templateId,
+                'sample' => $module->sampleData
             ];
+
+            // Output data parsers for this widget
+            if (!empty($module->dataParser)) {
+                $twig['dataParsers'][$widget->widgetId] = $module->dataParser;
+            }
             
             // Find my template
             if ($templateId !== 'elements') {
@@ -367,7 +374,7 @@ class WidgetHtmlRenderer
             // Add to widgetData
             $twig['data'][] = $widgetData;
 
-                // Watermark duration
+            // Watermark duration
             $duration = max($duration, $widget->calculatedDuration);
 
             // What does our module have
@@ -401,6 +408,10 @@ class WidgetHtmlRenderer
                     'width' => $moduleTemplate->stencil->width,
                     'height' => $moduleTemplate->stencil->height,
                 ];
+            }
+
+            if ($moduleTemplate->renderer !== null) {
+                $twig['renderer'][$moduleTemplate->templateId] = $moduleTemplate->renderer;
             }
         }
 

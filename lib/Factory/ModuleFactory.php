@@ -400,6 +400,13 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
+        $module->dataParser = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataParser');
+
+        // We might have sample data (usually only if there is a dataType)
+        $sampleData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'sampleData');
+        if (!empty($module->sampleData)) {
+            $module->sampleData = json_decode(trim($sampleData), true);
+        }
 
         // Default values for remaining expected properties
         $module->isInstalled = false;

@@ -55,6 +55,9 @@ class ModuleTemplate implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Stencil|null */
     public $stencil;
 
+    /** @var string A Renderer to run if custom rendering is required. */
+    public $renderer;
+
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;
 

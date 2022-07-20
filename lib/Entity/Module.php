@@ -132,6 +132,18 @@ class Module implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;
 
+    /**
+     * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
+     * @var string
+     */
+    public $dataParser;
+
+    /**
+     * @SWG\Property(description="Optional sample data item, only applicable when a dataType is present")
+     * @var string
+     */
+    public $sampleData;
+
     // <editor-fold desc="Properties recorded in the database">
 
     /**

@@ -74,4 +74,18 @@
 {% for id, item in hbs %}
     <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}">{{ item.content|raw }}</script>
 {% endfor %}
+{% for widgetId, parser in dataParsers %}
+    <script type="text/javascript" id="dataParser-{{ widgetId }}">
+      const dataParser_{{ widgetId }} = function (item, options) {
+        {{ parser }}
+      }
+    </script>
+{% endfor %}
+{% for templateId, renderer in renderers %}
+    <script type="text/javascript" id="render-{{ templateId }}">
+      const render_{{ templateId }} = function (id, item, options) {
+        {{ renderer }}
+      }
+    </script>
+{% endfor %}
 </html>
