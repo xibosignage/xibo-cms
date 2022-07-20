@@ -22,8 +22,15 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use GeoJson\Exception\UnserializationException;
+use GeoJson\Feature\Feature;
+use GeoJson\Feature\FeatureCollection;
+use GeoJson\GeoJson;
+use GeoJson\Geometry\Point;
 use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
+use Jenssegers\Date\Date;
+use MongoDB\BSON\ObjectId;
 use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
@@ -178,12 +185,84 @@ class Display extends Base
 
         // Call to render the template
         $this->getState()->template = 'display-page';
+
+        $mapConfig = [
+        'setArea' => [
+            'lat' => 51.505,
+            'long' => -0.09,
+            'zoom' => 13
+        ]
+    ];
+
         $this->getState()->setData([
+            'mapConfig' => $mapConfig,
             'displayGroups' => $this->displayGroupFactory->query(),
             'displayProfiles' => $displayProfiles
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Display in map
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function displayMap(Request $request, Response $response)
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $filter = [
+            'displayId' => $parsedQueryParams->getInt('displayId'),
+            'display' => $parsedQueryParams->getString('display'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+            'macAddress' => $parsedQueryParams->getString('macAddress'),
+            'license' => $parsedQueryParams->getString('hardwareKey'),
+            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+            'clientVersion' => $parsedQueryParams->getString('clientVersion'),
+            'clientType' => $parsedQueryParams->getString('clientType'),
+            'clientCode' => $parsedQueryParams->getString('clientCode'),
+            'authorised' => $parsedQueryParams->getInt('authorised'),
+            'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+            'showTags' => true,
+            'clientAddress' => $parsedQueryParams->getString('clientAddress'),
+            'mediaInventoryStatus' => $parsedQueryParams->getInt('mediaInventoryStatus'),
+            'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
+            'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
+            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
+            'orientation' => $parsedQueryParams->getString('orientation'),
+            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+        ];
+
+        // Get a list of displays
+        $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
+        $results = [];
+        $status = [
+            '1' => 'Up to date',
+            '2' => 'Downloading',
+            '3' => 'Out of date'
+        ];
+        foreach ($displays as $display) {
+         $geo = new Point([(double)$display->longitude, (double)$display->latitude]);
+
+            $results[] = new Feature($geo, [
+                'display' => $display->display,
+                'status' => $display->mediaInventoryStatus ? $status[$display->mediaInventoryStatus] : 'Unknown',
+                'orientation' => ucwords($display->orientation),
+                'displayId' => $display->getId(),
+                'licensed' => $display->licensed,
+            ]);
+        }
+
+        return $response->withJson(new FeatureCollection($results));
     }
 
     /**

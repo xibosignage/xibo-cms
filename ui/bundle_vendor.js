@@ -127,6 +127,16 @@ require('leaflet-search');
 window.L = require('leaflet');
 window.leafletPip = require('@mapbox/leaflet-pip');
 
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://assets.xibo-adspace.com/map/marker-icon-2x.png',
+    iconUrl: 'https://assets.xibo-adspace.com/map/marker-icon.png',
+    shadowUrl: 'https://assets.xibo-adspace.com/map/marker-shadow.png',
+});
+
+require('leaflet.markercluster');
+require('leaflet-easyprint');
+
 // typeahead
 window.Bloodhound = require('corejs-typeahead/dist/bloodhound.min.js');
 require('corejs-typeahead/dist/typeahead.jquery.min.js');
