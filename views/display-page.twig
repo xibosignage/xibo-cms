@@ -187,10 +187,10 @@
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{{ "Open / Close Folder Search options"|trans }}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    <div class="map-controller d-none" style="padding-left: 5px">
+                    <div class="map-controller d-none pl-1">
                         <button type="button" id="map_button" class="btn btn-outline-secondary" title="{{ "Map"|trans }}"><i class="fas fa-map-marker fa-1x"></i></button>
                     </div>
-                    <div class="list-controller d-none" style="padding-left: 5px">
+                    <div class="list-controller d-none pl-1">
                         <button type="button" id="list_button" class="btn btn-outline-secondary" title="{{ "List"|trans }}"><i class="fas fa-list fa-1x"></i></button>
                     </div>
 
@@ -611,12 +611,10 @@
                     hideControlContainer: true
                 }).addTo(map);
 
-                // Cluster marker group for individual plays
-                // create a cluster group
+                // Create a cluster group
                 let cluster = L.markerClusterGroup({
                     iconCreateFunction: function (cluster) {
                         let childCount = cluster.getChildCount();
-                        let playCount = getPlayCount(cluster.getAllChildMarkers());
                         let c = ' marker-cluster-';
                         if (childCount < 10) {
                             c += 'small';
@@ -627,7 +625,7 @@
                         }
 
                         return new L.DivIcon({
-                            html: '<div><span>' + playCount + '</span></div>',
+                            html: childCount,
                             className: 'marker-cluster' + c, iconSize: new L.Point(40, 40)
                         });
                     }
@@ -656,14 +654,14 @@
                             // displays
                             if (response.features.length > 0) {
                                 let licensedIcon = L.icon({
-                                    iconUrl: 'https://assets.xibo-adspace.com/map/marker-icon-green.png',
-                                    iconRetinaUrl: 'https://assets.xibo-adspace.com/map/marker-icon-2x-green.png',
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-green.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-2x-green.png',
                                     iconSize: [24, 40],
                                     iconAnchor: [12, 40]
                                 });
                                 let unlicensedIcon = L.icon({
-                                    iconUrl: 'https://assets.xibo-adspace.com/map/marker-icon-red.png',
-                                    iconRetinaUrl: 'https://assets.xibo-adspace.com/map/marker-icon-2x-red.png',
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-red.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-2x-red.png',
                                     iconSize: [24, 40],
                                     iconAnchor: [12, 40]
                                 });
