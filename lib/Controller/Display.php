@@ -184,12 +184,12 @@ class Display extends Base
         $this->getState()->template = 'display-page';
 
         $mapConfig = [
-        'setArea' => [
-            'lat' => $this->getConfig()->getSetting('DEFAULT_LAT'),
-            'long' => $this->getConfig()->getSetting('DEFAULT_LONG'),
-            'zoom' => 13
-        ]
-    ];
+            'setArea' => [
+                'lat' => $this->getConfig()->getSetting('DEFAULT_LAT'),
+                'long' => $this->getConfig()->getSetting('DEFAULT_LONG'),
+                'zoom' => 13
+            ]
+        ];
 
         $this->getState()->setData([
             'mapConfig' => $mapConfig,
