@@ -1024,7 +1024,7 @@ class Display extends Base
 
             $results[] = new Feature($geo, [
                 'display' => $display->display,
-                'status' => $display->mediaInventoryStatus ? $status[$display->mediaInventoryStatus] : 'Unknown',
+                'status' => $display->mediaInventoryStatus ? $status[$display->mediaInventoryStatus] : __('Unknown'),
                 'orientation' => ucwords($display->orientation),
                 'displayId' => $display->getId(),
                 'licensed' => $display->licensed,
