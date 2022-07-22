@@ -29,14 +29,18 @@ describe('Displays', function () {
 
         cy.visit('/display/view');
 
-        cy.get('#displays_wrapper.dataTables_wrapper').check();
+        cy.wait(500);
+
+        cy.get('#displays_wrapper.dataTables_wrapper').should('have.length', 1);
 
         cy.get('#map_button').click();
 
-        cy.get('#map.leaflet-container').check();
+        cy.wait(500);
 
-        cy.get('#map_button').click();
+        cy.get('#map.leaflet-container').should('have.length', 1);
 
-        cy.get('#displays_wrapper.dataTables_wrapper').check();
+        cy.get('#list_button').click();
+
+        cy.get('#displays_wrapper.dataTables_wrapper').should('have.length', 1);
     });
 });
