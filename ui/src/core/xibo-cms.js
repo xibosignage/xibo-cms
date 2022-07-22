@@ -1466,9 +1466,7 @@ function dataTableDraw(e, settings, callBack) {
         $folderController.removeClass('d-none').addClass('d-inline-flex');
     }
 
-    if (callBack && callBack instanceof Function) {
-        callBack();
-    }
+    (typeof callBack === 'function') && callBack();
 
     // Bind any buttons
     XiboInitialise("#" + e.target.id);
