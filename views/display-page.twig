@@ -568,10 +568,8 @@
             });
 
             table.on('draw', function(e, settings) {
-                console.log('table.on');
 
                 dataTableDraw(e, settings, function() {
-                    console.log('dataTableDraw');
 
                     var target = $("#" + e.target.id);
                     var $mapController = target.closest(".XiboGrid").find('.map-controller');
