@@ -567,7 +567,28 @@
                 ]
             });
 
-            table.on('draw', dataTableDraw);
+            table.on('draw', function(e, settings) {
+                console.log('table.on');
+
+                dataTableDraw(e, settings, function() {
+                    console.log('dataTableDraw');
+
+                    var target = $("#" + e.target.id);
+                    var $mapController = target.closest(".XiboGrid").find('.map-controller');
+                    var $listController = target.closest(".XiboGrid").find('.list-controller');
+
+                    // Move and show map button inside of the table container
+                    if ($mapController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .map-controller').length == 0) {
+                        $mapController.appendTo('.dataTables_folder');
+                        $mapController.removeClass('d-none').addClass('d-inline-flex');
+                    }
+                    // Move and show list button inside of the table container
+                    if ($listController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .list-controller').length == 0) {
+                        $listController.appendTo('.dataTables_folder');
+                        $listController.removeClass('d-none').addClass('d-inline-flex');
+                    }
+                })
+            });
             table.on('draw', { form: $("#displays").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#displays_wrapper').find('.dataTables_buttons'));
@@ -643,6 +664,7 @@
                  */
                 function getPoints() {
 
+                    console.log('Get points and clear layer')
                     // Clear any existing points
                     cluster.clearLayers();
 

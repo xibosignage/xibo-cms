@@ -1344,8 +1344,9 @@ function dataTableProcessing(e, settings, processing) {
  * DataTable Draw Event
  * @param e
  * @param settings
+ * @param callBack
  */
-function dataTableDraw(e, settings) {
+function dataTableDraw(e, settings, callBack) {
 
     var target = $("#" + e.target.id);
 
@@ -1357,8 +1358,8 @@ function dataTableDraw(e, settings) {
 
     // Check to see if we have a folder system for this table
     var $folderController = target.closest(".XiboGrid").find('.folder-controller');
-    var $mapController = target.closest(".XiboGrid").find('.map-controller');
-    var $listController = target.closest(".XiboGrid").find('.list-controller');
+
+
 
     if (enabledButtons.length > 0) {
 
@@ -1465,15 +1466,8 @@ function dataTableDraw(e, settings) {
         $folderController.removeClass('d-none').addClass('d-inline-flex');
     }
 
-    // Move and show map button inside of the table container
-    if ($mapController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .map-controller').length == 0) {
-        $mapController.appendTo('.dataTables_folder');
-        $mapController.removeClass('d-none').addClass('d-inline-flex');
-    }
-    // Move and show list button inside of the table container
-    if ($listController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .list-controller').length == 0) {
-        $listController.appendTo('.dataTables_folder');
-        $listController.removeClass('d-none').addClass('d-inline-flex');
+    if (callBack && callBack instanceof Function) {
+        callBack();
     }
 
     // Bind any buttons
