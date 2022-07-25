@@ -31,9 +31,9 @@ describe('Displays', function () {
 
         cy.get('#displays_wrapper.dataTables_wrapper').should('be.visible');
 
-        cy.get('#map_button').click();
+        cy.get('#map.leaflet-container').should('not.be.visible');
 
-        cy.wait(500);
+        cy.get('#map_button').click();
 
         cy.get('#map.leaflet-container').should('be.visible');
 
