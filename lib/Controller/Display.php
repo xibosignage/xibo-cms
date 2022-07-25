@@ -2056,9 +2056,9 @@ class Display extends Base
 
                     // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
                     if ($operatingHours) {
-                        $subject = sprintf(__("Alert for Display %s"), $display->display);
+                        $subject = sprintf(__('Alert for Display %s'), $display->display);
                         $body = sprintf(
-                            __("Display ID %d is offline since %s."),
+                            __('Display ID %d is offline since %s.'),
                             $display->displayId,
                             Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat())
                         );
