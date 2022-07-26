@@ -23,41 +23,72 @@ $(function() {
   $.each(widgetData, function(_key, widget) {
     // Load the template
     const $template = $('#hbs-' + widget.templateId);
-    const hbs = Handlebars.compile($template.html());
+    const hbs = ($template.length > 0) ?
+      Handlebars.compile($template.html()) :
+      null;
     const $content = $('#content');
-
-    // Set some variables
-    // Get template height and width
-    globalOptions.widgetDesignWidth = $template.data('width');
-    globalOptions.widgetDesignHeight = $template.data('height');
-
-    // Save template properties as global options for scaling
-    for (const key in widget.templateProperties) {
-      if (widget.templateProperties.hasOwnProperty(key)) {
-        globalOptions[key] = widget.templateProperties[key];
-      }
-    }
-
-    // Set scale flag to true
-    window.scaleContent = true;
-
     $.ajax({
       method: 'GET',
       url: widget.url,
     }).done(function(data) {
       $.each(data, function(_key, item) {
-        // TODO: parse through the data parser if one exists for this widget
-        // Parse the data if there is a parser function
-        if (typeof dataParser === 'function') {
-          item = dataParser(item, widget.templateProperties);
-        }
-        if (!globalOptions.itemsPerPage || _key < globalOptions.itemsPerPage) {
-          $content.append(hbs(item));
+        // If we have items per page, add only the first n items
+        if (
+          !widget.templateProperties.itemsPerPage ||
+           _key < widget.templateProperties.itemsPerPage
+        ) {
+          // Parse the data if there is a parser function
+          if (typeof window['dataParser_' + widget.widgetId] === 'function') {
+            item = window[
+              'dataParser_' + widget.widgetId
+            ](item, widget.properties);
+          }
+          // Add the item to the content
+          (hbs) && $content.append(hbs(item));
         }
       });
 
-      // Scale the content
-      $('body').xiboLayoutScaler(globalOptions);
+      // Save template height and width if exists to global options
+      if ($template.length > 0) {
+        globalOptions.widgetDesignWidth = $template.data('width');
+        globalOptions.widgetDesignHeight = $template.data('height');
+      }
+
+      // Save template properties as global options for scaling
+      for (const key in widget.templateProperties) {
+        if (widget.templateProperties.hasOwnProperty(key)) {
+          globalOptions[key] = widget.templateProperties[key];
+        }
+      }
+
+      // Handle the scaling of the widget
+      const $target = $('body');
+      const targetId = widget.widgetId;
+      if (
+        typeof window['render_' + widget.templateId] === 'function'
+      ) { // Custom scaler
+        window.scaleContent =
+          window['render_' + widget.templateId];
+      } else { // Default scaler
+        // Default scaler
+        window.scaleContent = function(
+          {
+            id,
+            item = $('body'),
+            options = globalOptions,
+          } = {},
+        ) {
+          // Scale the content
+          $(item).xiboLayoutScaler(options);
+        };
+      }
+
+      // Call the scale function on body
+      window.scaleContent({
+        id: targetId,
+        target: $target,
+        options: globalOptions,
+      });
     }).fail(function(jqXHR, textStatus, errorThrown) {
       console.log( 'fail' );
       console.log(jqXHR, textStatus, errorThrown);

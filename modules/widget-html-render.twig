@@ -76,15 +76,15 @@
 {% endfor %}
 {% for widgetId, parser in dataParsers %}
     <script type="text/javascript" id="dataParser-{{ widgetId }}">
-      const dataParser_{{ widgetId }} = function (item, options) {
-        {{ parser }}
+      function dataParser_{{ widgetId }}(item, options) {
+        {{ parser|raw }}
       }
     </script>
 {% endfor %}
 {% for templateId, renderer in renderers %}
     <script type="text/javascript" id="render-{{ templateId }}">
-      const render_{{ templateId }} = function (id, item, options) {
-        {{ renderer }}
+      function render_{{ templateId }}({id, target, options} = {}) {
+        {{ renderer|raw  }}
       }
     </script>
 {% endfor %}

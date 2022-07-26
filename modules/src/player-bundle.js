@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
@@ -28,7 +29,7 @@ window.Handlebars = require('handlebars/dist/handlebars.min.js');
 // most likely this can be done more efficiently.
 require('chart.js');
 require('hls.js');
-var pdflib = require('pdfjs-dist/legacy/build/pdf.min.js');
+const pdflib = require('pdfjs-dist/legacy/build/pdf.min.js');
 import '../vendor/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
 import './xibo-countdown-render';
@@ -40,7 +41,7 @@ import './xibo-metro-render';
 import './xibo-text-render';
 import './xibo-webpage-render';
 import './xibo-worldclock-render';
-import './render-controller';
+import './editor-render';
 import './player';
 
 // Plugins

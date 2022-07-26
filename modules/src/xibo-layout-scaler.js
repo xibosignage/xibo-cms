@@ -30,6 +30,8 @@ jQuery.fn.extend({
       'itemsPerPage': 0,
       'alignmentH': 'center',
       'alignmentV': 'middle',
+      'displayDirection': 0,
+      // 0 = undefined (default), 1 = horizontal, 2 = vertical
     };
 
     options = $.extend({}, defaults, options);
@@ -50,14 +52,22 @@ jQuery.fn.extend({
     // if so, we need to further scale the widget
     if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
       if (options.itemsPerPage > 0) {
-        if (newWidth > newHeight) {
+        if (
+          (newWidth >= newHeight && options.displayDirection == '0') ||
+          (options.displayDirection == '1')
+        ) {
           // Landscape or square size plus padding
+          // display direction is horizontal
           options.widgetDesignWidth =
             (options.itemsPerPage * options.widgetDesignWidth) +
             (options.widgetDesignPadding * (options.itemsPerPage - 1));
           options.widgetDesignHeight = options.widgetDesignHeight;
-        } else {
+        } else if (
+          (newWidth < newHeight && options.displayDirection == '0') ||
+          (options.displayDirection == '2')
+        ) {
           // Portrait size plus padding
+          // display direction is vertical
           options.widgetDesignHeight =
             (options.itemsPerPage * options.widgetDesignHeight) +
             (options.widgetDesignPadding * (options.itemsPerPage - 1));
@@ -118,16 +128,6 @@ jQuery.fn.extend({
           width: newWidth,
           height: newHeight,
         });
-
-        // Hide content that goes over item per page
-        /*
-        if (options.itemsPerPage > 0) {
-          $(el).find(
-            '.container:nth-child(n+' +
-            (Number(options.itemsPerPage) + 1) +
-            ')').hide();
-        }
-        */
 
         // Handle the scaling
         // What IE are we?

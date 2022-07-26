@@ -87,10 +87,19 @@
         </property>
     </properties>
     <dataParser><![CDATA[
-        // items, options
-        console.log('dataParser');
-        console.log(item);
-        console.log(options);
+        // item - element to be parsed
+        // options - object containing the values to be evaluated/used
+        if(options.removeMentions == 1) {
+            item.text = item.text.replace(/@[^\s]+/g, '');
+        }
+        if(options.removeHashtags == 1) {
+            item.text = item.text.replace(/#[^\s]+/g, '');
+        }
+        if(options.removeUrls == 1) {
+            item.text = item.text.replace(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9()@:%_\+.~#?&//=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, '');
+        }
+        // Return the parsed item
+        return item;
     ]]></dataParser>
     <sampleData><![CDATA[
         {

@@ -342,7 +342,8 @@ class WidgetHtmlRenderer
                 'url' => '[[dataUrl=' . $widget->widgetId . ']]',
                 'data' => '[[data=' . $widget->widgetId . ']]',
                 'templateId' => $templateId,
-                'sample' => $module->sampleData
+                'sample' => $module->sampleData,
+                'properties' => $module->getPropertyValues(),
             ];
 
             // Output data parsers for this widget
@@ -411,7 +412,7 @@ class WidgetHtmlRenderer
             }
 
             if ($moduleTemplate->renderer !== null) {
-                $twig['renderer'][$moduleTemplate->templateId] = $moduleTemplate->renderer;
+                $twig['renderers'][$moduleTemplate->templateId] = $moduleTemplate->renderer;
             }
         }
 

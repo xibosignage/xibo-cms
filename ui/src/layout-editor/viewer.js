@@ -267,8 +267,11 @@ Viewer.prototype.render = function(forceReload = false) {
           clicks = 0;
 
           // Select widget if exists
-          if ($(e.target).find('.designer-widget').length > 0) {
-            lD.selectObject($(e.target).find('.designer-widget'));
+          if (
+            $(e.target).find('.designer-widget').length > 0 &&
+            !$(e.target).find('.designer-widget').hasClass('selected')
+          ) {
+            lD.selectObject($(e.target).find('.designer-widget'), true);
             self.selectElement($(e.target).find('.designer-widget'));
           }
         }
@@ -592,7 +595,7 @@ Viewer.prototype.initMoveable = function() {
     e.target.style.left = `${e.left}px`;
     e.target.style.top = `${e.top}px`;
   }).on('dragEnd', (e) => {
-    saveRegionProperties(e.target, false, true);
+    (e.isDrag) && saveRegionProperties(e.target, false, true);
   });
 
   /* resizable */
@@ -693,8 +696,9 @@ Viewer.prototype.updateRegionContent = function(region) {
     // We need to recalculate the scale inside of the iframe
     $iframe[0].contentWindow
       .postMessage({
-        method: 'calculateScale',
+        method: 'scaleContent',
         options: {
+          id: region.id,
           originalWidth: region.dimensions.width,
           originalHeight: region.dimensions.height,
         },
