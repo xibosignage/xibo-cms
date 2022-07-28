@@ -107,7 +107,8 @@
     "doctrine/annotations": "^1",
     "squizlabs/php_codesniffer": "3.*",
     "exussum12/coverage-checker": "^0.11.2",
-    "micheh/phpcs-gitlab": "^1.1"
+    "micheh/phpcs-gitlab": "^1.1",
+    "jmikola/geojson": "^1.0"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }

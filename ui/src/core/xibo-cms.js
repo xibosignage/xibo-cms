@@ -1344,8 +1344,9 @@ function dataTableProcessing(e, settings, processing) {
  * DataTable Draw Event
  * @param e
  * @param settings
+ * @param callBack
  */
-function dataTableDraw(e, settings) {
+function dataTableDraw(e, settings, callBack) {
 
     var target = $("#" + e.target.id);
 
@@ -1357,6 +1358,8 @@ function dataTableDraw(e, settings) {
 
     // Check to see if we have a folder system for this table
     var $folderController = target.closest(".XiboGrid").find('.folder-controller');
+
+
 
     if (enabledButtons.length > 0) {
 
@@ -1462,6 +1465,8 @@ function dataTableDraw(e, settings) {
         $folderController.appendTo('.dataTables_folder');
         $folderController.removeClass('d-none').addClass('d-inline-flex');
     }
+
+    (typeof callBack === 'function') && callBack();
 
     // Bind any buttons
     XiboInitialise("#" + e.target.id);

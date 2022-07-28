@@ -187,6 +187,13 @@
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{{ "Open / Close Folder Search options"|trans }}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
+                    <div class="map-controller d-none pl-1">
+                        <button type="button" id="map_button" class="btn btn-outline-secondary" title="{{ "Map"|trans }}"><i class="fas fa-map-marker fa-1x"></i></button>
+                    </div>
+                    <div class="list-controller d-none pl-1">
+                        <button type="button" id="list_button" class="btn btn-outline-secondary" title="{{ "List"|trans }}"><i class="fas fa-list fa-1x"></i></button>
+                    </div>
+
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid" style="width: 100%;">
@@ -237,6 +244,10 @@
                             </table>
                         </div>
                     </div>
+
+                    <div id="map"
+                         data-displays-url="{{ url_for("display.map") }}"
+                    ></div>
                 </div>
             </div>
         </div>
@@ -245,6 +256,8 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        var mapConfig = {{ mapConfig|json_encode|raw }};
+
         {% if not currentUser.featureEnabled("folder.view") %}
         disableFolders();
         {% endif %}
@@ -554,13 +567,159 @@
                 ]
             });
 
-            table.on('draw', dataTableDraw);
+            table.on('draw', function(e, settings) {
+
+                dataTableDraw(e, settings, function() {
+
+                    var target = $("#" + e.target.id);
+                    var $mapController = target.closest(".XiboGrid").find('.map-controller');
+                    var $listController = target.closest(".XiboGrid").find('.list-controller');
+
+                    // Move and show map button inside of the table container
+                    if ($mapController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .map-controller').length == 0) {
+                        $mapController.appendTo('.dataTables_folder');
+                        $mapController.removeClass('d-none').addClass('d-inline-flex');
+                    }
+                    // Move and show list button inside of the table container
+                    if ($listController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .list-controller').length == 0) {
+                        $listController.appendTo('.dataTables_folder');
+                        $listController.removeClass('d-none').addClass('d-inline-flex');
+                    }
+                })
+            });
             table.on('draw', { form: $("#displays").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#displays_wrapper').find('.dataTables_buttons'));
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();
+            });
+
+
+            // Detect the dimensions of our container and set to match.
+            let $map = $('#map');
+            let $mapBtn = $('#map_button');
+            let $listBtn =  $('#list_button');
+            let $container = $map.parent();
+            let $dataTablesFolder = $('.dataTables_folder');
+
+            $listBtn.hide();
+
+            // Wait until we have a width and height.
+            setTimeout(initialiseMap, 1000);
+
+            function initialiseMap() {
+
+                $map.width($container.width());
+                $map.height($(window).height() - 100);
+
+                // Calling map
+                let map = L.map('map', {
+                    center: [mapConfig.setArea.lat, mapConfig.setArea.long],
+                    zoom: mapConfig.setArea.zoom
+                });
+
+                let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map);
+
+                // Print button
+                L.easyPrint({
+                    tileLayer: tiles,
+                    sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+                    filename: 'Displays on Map',
+                    hideControlContainer: true
+                }).addTo(map);
+
+                let displaysLayerGroup = L.layerGroup();
+
+                let bounds;
+                bounds = map.getBounds().toBBoxString();
+                map.on("moveend", function () {
+                    bounds = map.getBounds().toBBoxString();
+                    getPoints();
+                });
+
+                // Get points
+                getPoints();
+
+                // Bind the filter form
+                $('.XiboGrid').find(".XiboFilter form input").on("keyup",  getPoints);
+                $('.XiboGrid').find(".XiboFilter form input, .XiboFilter form select").on("change", getPoints);
+
+                /**
+                 * Gets Displays.
+                 */
+                function getPoints() {
+
+                    displaysLayerGroup.clearLayers();
+
+                    // console.log('Clear Layer');
+                    // console.log(map.hasLayer(displaysLayerGroup));
+
+                    // Make an ajax request for the displays
+                    $.ajax($map.data('displaysUrl'), {
+                        method: 'GET',
+                        data: $('.XiboGrid').find(".XiboFilter form").serialize() + '&bounds=' + bounds,
+                        success: function(response) {
+                            // displays
+                            if (response.features.length > 0) {
+                                let licensedIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-green.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-2x-green.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let unlicensedIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-red.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-2x-red.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+
+                                let feature = L.geoJSON(response, {
+                                    pointToLayer: function (feature, latlng) {
+                                        let options = {
+                                            icon: ((feature.properties.licensed) ? licensedIcon : unlicensedIcon)
+                                        };
+
+                                        let popup = feature.properties.display;
+                                        popup += '<br/><div style="width: 160px;"><span>Orientation: ' + feature.properties.orientation + '</span></div>';
+
+                                        if (feature.properties.status) {
+                                            popup += '<div style="width: 160px;"><span>Status: ' + feature.properties.status + '</span></div>';
+                                        }
+                                        return L.marker(latlng, options)
+                                            .bindPopup(popup)
+                                            .openPopup()
+                                            .addTo(displaysLayerGroup);
+                                    },
+                                });
+                            }
+                        }
+                    });
+
+                    displaysLayerGroup.addTo(map);
+                }
+
+                // Hide map/ Show Display List
+                $map.hide();
+            }
+
+            $mapBtn.click(function () {
+                $map.show();
+                $mapBtn.hide();
+                $listBtn.show();
+                $dataTablesFolder.siblings().hide();
+                $dataTablesFolder.parent().siblings().hide();
+            });
+
+            $listBtn.click(function () {
+                $map.hide();
+                $listBtn.hide();
+                $mapBtn.show();
+                $dataTablesFolder.siblings().show();
+                $dataTablesFolder.parent().siblings().show();
             });
         });
 

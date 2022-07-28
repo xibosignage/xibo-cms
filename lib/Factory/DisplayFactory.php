@@ -293,6 +293,13 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
+        // Filter by map bound?
+        if ($parsedBody->getString('bounds') !== null) {
+            $coordinates = explode(',', $parsedBody->getString('bounds'));
+            $body .= ' AND  ' . $functionPrefix . 'X(display.GeoLocation)  BETWEEN ' . $coordinates['1'] . ' AND ' . $coordinates['3'] .
+                ' AND  ' . $functionPrefix . 'Y(display.GeoLocation) BETWEEN  ' . $coordinates['0'] . ' AND ' . $coordinates['2'] . ' ';
+        }
+
         // Filter by Display ID?
         if ($parsedBody->getInt('displayId') !== null) {
             $body .= ' AND display.displayid = :displayId ';
