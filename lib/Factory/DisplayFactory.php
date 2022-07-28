@@ -295,7 +295,7 @@ class DisplayFactory extends BaseFactory
 
         // Filter by map bound?
         if ($parsedBody->getString('bounds') !== null) {
-            $coordinates = explode(',',  $parsedBody->getString('bounds'));
+            $coordinates = explode(',', $parsedBody->getString('bounds'));
             $body .= ' AND  ' . $functionPrefix . 'X(display.GeoLocation)  BETWEEN ' . $coordinates['1'] . ' AND ' . $coordinates['3'] .
                 ' AND  ' . $functionPrefix . 'Y(display.GeoLocation) BETWEEN  ' . $coordinates['0'] . ' AND ' . $coordinates['2'] . ' ';
         }
