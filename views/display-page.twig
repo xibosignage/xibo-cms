@@ -613,41 +613,31 @@
                 $map.width($container.width());
                 $map.height($(window).height() - 100);
 
-                // Can we load some geoJson?
-                const map = L.map('map').setView([
-                    mapConfig.setArea.lat, mapConfig.setArea.long,
-                ], mapConfig.setArea.zoom);
+                // Calling map
+                let map = L.map('map', {
+                    center: [mapConfig.setArea.lat, mapConfig.setArea.long],
+                    zoom: mapConfig.setArea.zoom
+                });
 
                 let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 }).addTo(map);
 
                 // Print button
                 L.easyPrint({
                     tileLayer: tiles,
                     sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
-                    filename: 'Network Overview',
+                    filename: 'Displays on Map',
                     hideControlContainer: true
                 }).addTo(map);
 
-                // Create a cluster group
-                let cluster = L.markerClusterGroup({
-                    iconCreateFunction: function (cluster) {
-                        let childCount = cluster.getChildCount();
-                        let c = ' marker-cluster-';
-                        if (childCount < 10) {
-                            c += 'small';
-                        } else if (childCount < 100) {
-                            c += 'medium';
-                        } else {
-                            c += 'large';
-                        }
+                let displaysLayerGroup = L.layerGroup();
 
-                        return new L.DivIcon({
-                            html: childCount,
-                            className: 'marker-cluster' + c, iconSize: new L.Point(40, 40)
-                        });
-                    }
+                let bounds;
+                bounds = map.getBounds().toBBoxString();
+                map.on("moveend", function () {
+                    bounds = map.getBounds().toBBoxString();
+                    getPoints();
                 });
 
                 // Get points
@@ -662,14 +652,15 @@
                  */
                 function getPoints() {
 
-                    console.log('Get points and clear layer')
-                    // Clear any existing points
-                    cluster.clearLayers();
+                    displaysLayerGroup.clearLayers();
+
+                    // console.log('Clear Layer');
+                    // console.log(map.hasLayer(displaysLayerGroup));
 
                     // Make an ajax request for the displays
                     $.ajax($map.data('displaysUrl'), {
                         method: 'GET',
-                        data: $('.XiboGrid').find(".XiboFilter form").serialize(),
+                        data: $('.XiboGrid').find(".XiboFilter form").serialize() + '&bounds=' + bounds,
                         success: function(response) {
                             // displays
                             if (response.features.length > 0) {
@@ -700,17 +691,15 @@
                                         }
                                         return L.marker(latlng, options)
                                             .bindPopup(popup)
-                                            .openPopup();
+                                            .openPopup()
+                                            .addTo(displaysLayerGroup);
                                     },
                                 });
-                                feature.addTo(map);
-                                map.fitBounds(feature.getBounds());
-
-                                cluster.addLayer(feature);
-                                cluster.addTo(map);
                             }
                         }
                     });
+
+                    displaysLayerGroup.addTo(map);
                 }
 
                 // Hide map/ Show Display List

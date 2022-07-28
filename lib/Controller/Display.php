@@ -397,6 +397,7 @@ class Display extends Base
             'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'bounds' => $parsedQueryParams->getString('bounds'),
         ];
     }
 
