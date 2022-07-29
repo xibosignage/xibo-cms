@@ -187,7 +187,7 @@ class Display extends Base
             'setArea' => [
                 'lat' => $this->getConfig()->getSetting('DEFAULT_LAT'),
                 'long' => $this->getConfig()->getSetting('DEFAULT_LONG'),
-                'zoom' => 13
+                'zoom' => 7
             ]
         ];
 

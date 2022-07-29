@@ -635,7 +635,7 @@
                     hideControlContainer: true
                 }).addTo(map);
 
-                let displaysLayerGroup = L.layerGroup();
+                var markers = L.markerClusterGroup();
 
                 let bounds;
                 bounds = map.getBounds().toBBoxString();
@@ -656,10 +656,9 @@
                  */
                 function getPoints() {
 
-                    displaysLayerGroup.clearLayers();
+                    markers.clearLayers();
 
                     // console.log('Clear Layer');
-                    // console.log(map.hasLayer(displaysLayerGroup));
 
                     // Make an ajax request for the displays
                     $.ajax($map.data('displaysUrl'), {
@@ -696,14 +695,14 @@
                                         return L.marker(latlng, options)
                                             .bindPopup(popup)
                                             .openPopup()
-                                            .addTo(displaysLayerGroup);
+                                            .addTo(markers);
                                     },
                                 });
                             }
                         }
                     });
 
-                    displaysLayerGroup.addTo(map);
+                    markers.addTo(map);
                 }
 
                 // Hide map/ Show Display List
