@@ -271,6 +271,7 @@ $app->get('/library/fontlist', ['\Xibo\Controller\Library','fontList'])->setName
 // display
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/display/map', ['\Xibo\Controller\Display', 'displayMap'])->setName('display.map');
     $group->get('/display/view', ['\Xibo\Controller\Display', 'displayPage'])->setName('display.view');
     $group->get('/display/manage/{id}', ['\Xibo\Controller\Display', 'displayManage'])->setName('display.manage');
     $group->get('/display/form/screenshot/{id}', ['\Xibo\Controller\Display','requestScreenShotForm'])->setName('display.screenshot.form');
