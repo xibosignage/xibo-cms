@@ -224,8 +224,8 @@ class DisplayFactory extends BaseFactory
                   display.broadCastAddress,
                   display.secureOn,
                   display.cidr,
-                  ' . $functionPrefix . 'X(display.GeoLocation) AS latitude,
-                  ' . $functionPrefix . 'Y(display.GeoLocation) AS longitude,
+                  IFNULL( ' . $functionPrefix . 'X(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LAT'). ') AS latitude,
+                  IFNULL( ' . $functionPrefix . 'Y(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LONG'). ') AS longitude,
                   display.client_type AS clientType,
                   display.client_version AS clientVersion,
                   display.client_code AS clientCode,
@@ -296,8 +296,8 @@ class DisplayFactory extends BaseFactory
         // Filter by map bound?
         if ($parsedBody->getString('bounds') !== null) {
             $coordinates = explode(',', $parsedBody->getString('bounds'));
-            $body .= ' AND  ' . $functionPrefix . 'X(display.GeoLocation)  BETWEEN ' . $coordinates['1'] . ' AND ' . $coordinates['3'] .
-                ' AND  ' . $functionPrefix . 'Y(display.GeoLocation) BETWEEN  ' . $coordinates['0'] . ' AND ' . $coordinates['2'] . ' ';
+            $body .= ' AND IFNULL( ' . $functionPrefix . 'X(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LAT'). ')  BETWEEN ' . $coordinates['1'] . ' AND ' . $coordinates['3'] .
+                ' AND IFNULL( ' . $functionPrefix . 'Y(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LONG'). ')  BETWEEN  ' . $coordinates['0'] . ' AND ' . $coordinates['2'] . ' ';
         }
 
         // Filter by Display ID?

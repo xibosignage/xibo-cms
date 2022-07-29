@@ -1020,15 +1020,21 @@ class Display extends Base
             '3' => __('Out of date')
         ];
         foreach ($displays as $display) {
-            $geo = new Point([(double)$display->longitude, (double)$display->latitude]);
-
-            $results[] = new Feature($geo, [
+            $properties = [
                 'display' => $display->display,
                 'status' => $display->mediaInventoryStatus ? $status[$display->mediaInventoryStatus] : __('Unknown'),
                 'orientation' => ucwords($display->orientation),
                 'displayId' => $display->getId(),
                 'licensed' => $display->licensed,
-            ]);
+            ];
+            
+            if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
+                $properties['thumbnail'] = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
+            }
+
+            $geo = new Point([(double)$display->longitude, (double)$display->latitude]);
+
+            $results[] = new Feature($geo, $properties);
         }
 
         return $response->withJson(new FeatureCollection($results));
