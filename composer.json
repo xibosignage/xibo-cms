@@ -98,7 +98,8 @@
     "php-di/slim-bridge" : "^3.0",
     "akrabat/ip-address-middleware" : "1.*",
     "selective/samesite-cookie": "^0.1.0",
-    "nesbot/carbon": "^2.32"
+    "nesbot/carbon": "^2.32",
+    "jmikola/geojson": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^5",
@@ -107,8 +108,7 @@
     "doctrine/annotations": "^1",
     "squizlabs/php_codesniffer": "3.*",
     "exussum12/coverage-checker": "^0.11.2",
-    "micheh/phpcs-gitlab": "^1.1",
-    "jmikola/geojson": "^1.0"
+    "micheh/phpcs-gitlab": "^1.1"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }
