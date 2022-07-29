@@ -22,13 +22,6 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         });
     });
 
-    /* Disabled for testing speed reasons
-        after(function() {
-            // Remove the created layout
-            cy.deletePlaylist(this.testPlaylistId);
-        });
-    */
-
     beforeEach(function() {
         cy.login();
         cy.openPlaylistEditorAndLoadPrefs(this.testPlaylistId);
@@ -37,7 +30,7 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
     it('opens a media tab in the toolbar and searches for items', () => {
 
         cy.server();
-        cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
+        cy.route('/library/search?*').as('mediaLoad');
 
         cy.populateLibraryWithMedia();
 
@@ -58,7 +51,7 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         cy.route('DELETE', '/playlist/widget/*').as('deleteWidget');
-        cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
+        cy.route('/library/search?*').as('mediaLoad');
 
         // Open library search tab
         cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();

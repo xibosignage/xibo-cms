@@ -951,7 +951,7 @@ class Display extends Base
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
                         ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple.form')],
-                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                        ['name' => 'content-id-name', 'value' => 'displayId']
                     ]
                 ];
 
@@ -1345,6 +1345,8 @@ class Display extends Base
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {
+            // Set the original tags
+            $display->setOriginalValue('tags', $this->tagFactory->tagsFromString($display->tags));
             $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
         }
 
@@ -1796,7 +1798,9 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        if (!empty($display->xmrChannel)) {
+        $xmrPubAddress = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
+
+        if (!empty($display->xmrChannel) && !empty($xmrPubAddress) && $xmrPubAddress !== 'DISABLED') {
             $this->playerAction->sendAction($display, new ScreenShotAction());
         }
 

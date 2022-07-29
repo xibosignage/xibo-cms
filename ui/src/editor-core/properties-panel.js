@@ -206,8 +206,11 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
     .find('input, select, textarea, button:not(.copyTextAreaButton)')
     .attr('disabled', 'disabled');
 
-  // Hide bootstrap switch
-  this.DOMObject.find('.bootstrap-switch').hide();
+    // Hide buttons
+    this.DOMObject.find('button:not(.copyTextAreaButton)').hide();
+
+    // Hide bootstrap switch
+    this.DOMObject.find('.bootstrap-switch').hide();
 };
 
 /**

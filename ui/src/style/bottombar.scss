@@ -79,6 +79,13 @@
 
             .info {
                 line-height: 2.5rem;
+
+                .label-name {
+                    max-width: 20%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
 
             .btn {

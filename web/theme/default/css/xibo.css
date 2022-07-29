@@ -947,11 +947,31 @@ ul li.active.tab-design:hover a {
 }
 
 .tags-input-wide .bootstrap-tagsinput {
+    overflow: auto;
     width: 100%;
+    max-height: 400px;
 }
 
 .tags-input-addons-wide .bootstrap-tagsinput {
+    overflow: auto;
     width: 80%;
+    max-height: 400px;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput .tag,
+.tags-input-wide .bootstrap-tagsinput .tag {
+    line-height: 1.4rem;
+    vertical-align: top;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput pre[aria-hidden="true"],
+.tags-input-wide .bootstrap-tagsinput pre[aria-hidden="true"] {
+    display: none;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput div[role="listbox"],
+.tags-input-wide .bootstrap-tagsinput div[role="listbox"] {
+    position: relative !important;
 }
 
 @media (min-width: 768px) {

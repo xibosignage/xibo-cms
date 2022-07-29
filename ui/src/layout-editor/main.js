@@ -1119,6 +1119,13 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     }
   };
 
+  // If the draggable is from another toolbar, stop adding
+  if($(draggable).parents('#layout-editor-toolbar').length === 0) {
+      return;
+  }
+
+  let playlistId;
+
   if (draggableType == 'media') {
     // Adding media
     const mediaId = $(draggable).data('mediaId');

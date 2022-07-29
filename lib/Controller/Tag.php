@@ -1,24 +1,24 @@
 <?php
-/**
-* Copyright (C) 2021 Xibo Signage Ltd
-*
-* Xibo - Digital Signage - http://www.xibo.org.uk
-*
-* This file is part of Xibo.
-*
-* Xibo is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* any later version.
-*
-* Xibo is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Controller;
 
@@ -35,6 +35,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -712,14 +713,21 @@ class Tag extends Base
                 case 'display':
                     $entityFactory = $this->displayGroupFactory;
                     break;
+                default:
+                    throw new InvalidArgumentException(__('Edit multiple tags is not supported on this item'), 'targetType');
             }
 
             foreach ($targetIdsArray as $id) {
                 // get the entity by provided id, for display we need different function
+                $this->getLog()->debug('editMultiple: lookup using id: ' . $id . ' for type: ' . $targetType);
                 if ($targetType === 'display') {
-                    $entity = $entityFactory->getByDisplayId($id)[0];
+                    $entity = $entityFactory->getDisplaySpecificByDisplayId($id);
                 } else {
                     $entity = $entityFactory->getById($id);
+                }
+
+                if ($targetType === 'display' || $targetType === 'displaygroup') {
+                    $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($entity), DisplayGroupLoadEvent::$NAME);
                 }
 
                 foreach ($untags as $untag) {
@@ -737,8 +745,16 @@ class Tag extends Base
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
             if ($targetType === 'display') {
                 foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                    $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($group));
-                    $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => true]);
+                    $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($group), DisplayGroupLoadEvent::$NAME);
+                    $group->save([
+                        'validate' => false,
+                        'saveGroup' => false,
+                        'saveTags' => false,
+                        'manageLinks' => false,
+                        'manageDisplayLinks' => true,
+                        'manageDynamicDisplayLinks' => true,
+                        'allowNotify' => true
+                    ]);
                 }
             }
         } else {
@@ -748,7 +764,7 @@ class Tag extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Tags Edited'))
+            'message' => __('Tags Edited')
         ]);
 
         return $this->render($request, $response);

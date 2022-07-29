@@ -956,7 +956,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     const start = self.menuItems[menu].itemCount;
 
     $.ajax({
-      url: requestURL,
+      url: librarySearchUrl,
       type: 'GET',
       data: $.extend({
         start: start,
@@ -1112,7 +1112,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     return false;
   });
 
-  // Bind seach action to refresh the results
+  // Bind search action to refresh the results
   $mediaContainer.find(
     '.media-search-form select, ' +
     '.media-search-form input[type="text"].input-tag',
@@ -1120,6 +1120,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     filterRefresh(filters);
   }, 200));
 
+  // Bind tags change to refresh the results
   $mediaContainer.find('.media-search-form input[type="text"]')
     .on('input', _.debounce(function() {
       filterRefresh(filters);
@@ -1377,7 +1378,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
     // Select upload card
     this.DOMObject.find('.toolbar-card .select-upload').click((e) => {
-      const $card = $(this).parent();
+      const $card = $(e.currentTarget).parent();
       if (!$card.hasClass('card-selected')) {
         self.selectCard($(e.currentTarget).parent());
       } else {

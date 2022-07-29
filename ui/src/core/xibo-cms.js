@@ -1,6 +1,7 @@
-/**
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2020 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -1408,13 +1409,30 @@ function dataTableDraw(e, settings) {
 
         // Get every enabled button
         $(enabledButtons).each(function () {
-            if (!searchByKey(buttons, "id", $(this).data("id")))
-                buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text"), customHandler: $(this).data("customHandler"), customHandlerUrl: $(this).data("customHandlerUrl"), contentIdName: $(this).data('contentIdName'), sortGroup: ($(this).data('sortGroup') != undefined) ? $(this).data('sortGroup') : 0})
+          if (!searchByKey(buttons, 'id', $(this).data('id'))) {
+            buttons.push({
+              id: $(this).data('id'),
+              gridId: e.target.id,
+              text: $(this).data('text'),
+              customHandler: $(this).data('customHandler'),
+              customHandlerUrl: $(this).data('customHandlerUrl'),
+              contentIdName: $(this).data('contentIdName'),
+              sortGroup: ($(this).data('sortGroup') != undefined) ? $(this).data('sortGroup') : 0
+            })
+          }
         });
 
         // Add tag button if exist in the filter ( and user has permissions)
         if($tagsElement.length > 0 && userRoutePermissions.tags == 1) {
-            buttons.push({id: $tagsElement.attr("id"), gridId: e.target.id, text: translations.editTags, contentType: target.data('contentType'), contentIdName: target.data('contentIdName'), customHandler: "XiboMultiSelectTagFormRender", sortGroup: 0});
+          buttons.push({
+            id: $tagsElement.attr('id'),
+            gridId: e.target.id,
+            text: translations.editTags,
+            contentType: target.data('contentType'),
+            contentIdName: target.data('contentIdName'),
+            customHandler: 'XiboMultiSelectTagFormRender',
+            sortGroup: 0
+          });
         }
         
         // Sort buttons by groups/importance

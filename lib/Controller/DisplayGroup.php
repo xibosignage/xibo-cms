@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -876,12 +876,16 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->load();
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
         if (!$this->getUser()->checkDeleteable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
+        if ($displayGroup->isDisplaySpecific == 1) {
+            throw new AccessDeniedException(__('Displays should be deleted using the Display delete operation'));
+        }
+
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->delete();
 
         // Return
@@ -960,11 +964,20 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->load();
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
+        $this->getLog()->debug('assignDisplay: displayGroupId loaded: ' . $displayGroup->displayGroupId);
+
+        // Keep track of displays we've changed so that we can notify.
         $modifiedDisplays = [];
 
-        $displays = $sanitizedParams->getIntArray('displayId', ['default' => []]);
+        // Support both an array and a single int.
+        $displays = $sanitizedParams->getParam('displayId');
+        if (is_numeric($displays)) {
+            $displays = [$sanitizedParams->getInt('displayId')];
+        } else {
+            $displays = $sanitizedParams->getIntArray('displayId', ['default' => []]);
+        }
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
@@ -981,7 +994,12 @@ class DisplayGroup extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        $displays = $sanitizedParams->getIntArray('unassignDisplayId', ['default' => []]);
+        $displays = $sanitizedParams->getParam('unassignDisplayId');
+        if (is_numeric($displays)) {
+            $displays = [$sanitizedParams->getInt('unassignDisplayId')];
+        } else {
+            $displays = $sanitizedParams->getIntArray('unassignDisplayId', ['default' => []]);
+        }
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
@@ -2380,79 +2398,55 @@ class DisplayGroup extends Base
     {
         // get display group object
         $displayGroup = $this->displayGroupFactory->getById($id);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $displayGroup->setDisplayFactory($this->displayFactory);
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
-        // load Layouts, media and Displays assigned to original Display Group
-        $displayGroup->load();
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
-
-        // get an array of assigned display groups
-        $membersDisplayGroups = $this->displayGroupFactory->getByParentId($id);
-
+        // What should we copy?
         $copyMembers = $sanitizedParams->getCheckbox('copyMembers');
         $copyTags = $sanitizedParams->getCheckbox('copyTags');
         $copyAssignments = $sanitizedParams->getCheckbox('copyAssignments');
 
+        // Save loading if we don't need to.
+        if ($copyTags || $copyMembers || $copyAssignments) {
+            // Load tags
+            $displayGroup->load();
 
+            if ($copyMembers || $copyAssignments) {
+                // Load the entire display group
+                $this->getDispatcher()->dispatch(
+                    new DisplayGroupLoadEvent($displayGroup),
+                    DisplayGroupLoadEvent::$NAME
+                );
+            }
+        }
 
+        // Copy the group
         $new = clone $displayGroup;
-
-        // handle display group members
-        if ($copyMembers && !$displayGroup->isDynamic) {
-
-            //copy display members
-            foreach ($displayGroup->displays as $display) {
-                $new->assignDisplay($display);
-            }
-
-            // copy display group members
-            foreach ($membersDisplayGroups as $dg) {
-                $new->assignDisplayGroup($dg);
-            }
-
-        }
-
-        // handle layout and file assignment
-        if ($copyAssignments) {
-
-            // copy layout assignments
-            foreach ($displayGroup->layouts as $layout) {
-                $new->assignLayout($layout);
-            }
-
-            // copy media assignments
-            foreach ($displayGroup->media as $media) {
-                $new->assignMedia($media);
-            }
-        }
-
-        // Dynamic display group needs to have at least one criteria specified to be added, we always want to copy criteria when we copy dynamic display group
-        if ($displayGroup->isDynamic) {
-            $new->dynamicCriteria = $displayGroup->dynamicCriteria;
-            $new->dynamicCriteriaTags = $displayGroup->dynamicCriteriaTags;
-        }
-
-        // handle tags
-        if ($copyTags) {
-            $new->replaceTags($this->tagFactory->tagsFromString($displayGroup->tags));
-        }
-
         $new->displayGroup = $sanitizedParams->getString('displayGroup');
         $new->description = $sanitizedParams->getString('description');
         $new->setOwner($this->getUser()->userId);
 
-        // save without managing links, we need to save for new display group to get an ID, which is then used in next save to manage links - for dynamic groups.
-        // we also don't want to call notify at this point (for file/layout assignment)
-        $new->save(['manageDisplayLinks' => false, 'allowNotify' => false]);
+        // handle display group members
+        if (!$copyMembers) {
+            $new->clearDisplays();
+            $new->clearDisplayGroups();
+        }
 
-        // load the created display group and save along with display links and notify
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($new));
-        $new->load();
+        // handle layout and file assignment
+        if (!$copyAssignments) {
+            $new->clearLayouts()->clearMedia();
+        }
+
+        // handle tags
+        if (!$copyTags) {
+            $new->clearTags();
+        }
+
         $new->save();
 
         // Return

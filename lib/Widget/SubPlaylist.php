@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -40,7 +40,7 @@ use Xibo\Widget\Provider\WidgetProviderTrait;
 class SubPlaylist implements WidgetProviderInterface
 {
     use WidgetProviderTrait;
-    
+
     /**
      * A private cache of resolved widgets
      * @var Widget[]
@@ -228,6 +228,7 @@ class SubPlaylist implements WidgetProviderInterface
         $this->setDuration(10);
         $this->setUseDuration(0);
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $this->setOption('name', $sanitizedParams->getString('name'));
 
         // Options
         $this->setOption('arrangement', $sanitizedParams->getString('arrangement'));

@@ -164,6 +164,17 @@ trait EntityTrait
     }
 
     /**
+     * @param string $property
+     * @param mixed $value
+     * @return $this
+     */
+    public function setOriginalValue(string $property, $value)
+    {
+        $this->originalValues[$property] = $value;
+        return $this;
+    }
+
+    /**
      * Has the provided property been changed from its original value
      * @param string $property
      * @return bool

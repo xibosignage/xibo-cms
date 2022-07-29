@@ -7,13 +7,6 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         });
     });
 
-    /* Disabled for testing speed reasons
-        after(function() {
-            // Remove the created layout
-            cy.deleteLayout(this.testLayoutId);
-        });
-    */
-
     beforeEach(function() {
         cy.login();
         cy.goToLayoutAndLoadPrefs(this.testLayoutId);
@@ -37,7 +30,26 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.get('#properties-panel').contains('Edit Image');
     });
 
-    it.skip('should revert a saved form to a previous state', () => {
+    it('should open the playlist editor and be able to show modals', function() {
+            cy.route('/playlist/widget/form/edit/*').as('reloadWidget');
+            
+            // Open the playlist editor
+            cy.get('#layout-timeline .designer-region-info:first .open-playlist-editor').click();
+
+            // Wait for the widget to load
+            cy.wait('@reloadWidget');
+
+            // Right click on the first widget in the playlist editor
+            cy.get('.editor-modal #timeline-container .playlist-widget:first').rightclick();
+
+            // Open the delete modal for the first widget
+            cy.get('.context-menu-overlay .context-menu-widget .deleteBtn').should('be.visible').click();
+
+            // Modal should be visible
+            cy.get('[data-test="deleteObjectModal"]').should('be.visible');
+    });
+
+    it('should revert a saved form to a previous state', () => {
         let oldName;
 
         // Create and alias for reload widget
@@ -70,7 +82,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
             cy.wait('@reloadWidget');
 
             // Click the revert button
-            cy.get('#layout-editor-toolbar #undoContainer').click();
+            cy.get('#layout-editor-bottombar #undo-btn').click();
 
             // Wait for the widget to save
             cy.wait('@saveWidget');
@@ -80,26 +92,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         });
     });
 
-    it.skip('shows the file upload form by using the Add button on a card with uploadable media from the toolbar to layout-timeline region', () => {
-
-        cy.populateLibraryWithMedia();
-
-        // Open toolbar Widgets tab
-        cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
-        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
-
-        // Activate the Add button
-        cy.get('#layout-editor-toolbar #content-2 .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click({force:true});
-
-        // Click on the region to add
-        cy.get('#layout-timeline .designer-region:first').click();
-
-        // Check if the form opened
-        cy.get('[data-test="uploadFormModal"]').contains('Upload media');
-    });
-
-
-    it.skip('should revert the widgets order when using the undo feature', () => {
+    it('should revert the widgets order when using the undo feature', () => {
         cy.server();
         cy.route('POST', '**/playlist/order/*').as('saveOrder');
         cy.route('/layout?layoutId=*').as('reloadLayout');
@@ -132,7 +125,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
             });
 
             // Click the revert button
-            cy.get('#layout-editor-toolbar #undoContainer').click();
+            cy.get('#layout-editor-bottombar #undo-btn').click();
 
             // Wait for the order to save
             cy.wait('@saveOrder');
@@ -145,16 +138,17 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         });
     });
 
-    it.skip('should play a preview in the viewer, in fullscreen mode', () => {
+    it('should play a preview in the viewer', () => {
+        cy.server();
+        cy.route('**/region/preview/*').as('loadRegion');
+        // Wait for the viewer and region to load
+        cy.get('#layout-viewer-container .viewer-element.layout-player').should('be.visible');
+        cy.wait('@loadRegion');
 
-        // Click fullscreen button
-        cy.get('#main-panel #fullscreenBtn').click();
+        // Click play
+        cy.get('#layout-editor-bottombar #play-btn').click();
 
-        // Viewer should have a fullscreen class, and click play
-        cy.get('#layout-viewer-container.fullscreen #layout-viewer-navbar #play-btn').click();
-
-
-        // Check if the fullscreen iframe has a scr for preview layout
-        cy.get('#layout-viewer-container.fullscreen #layout-viewer iframe').should('have.attr', 'src').and('include', '/layout/preview/');
+        // Check if the fullscreen iframe has loaded
+        cy.get('#layout-viewer-container #layout-viewer .viewer-element > iframe').should('be.visible');
     });
 });

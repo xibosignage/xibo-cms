@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,6 +25,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -40,15 +41,20 @@ class DayPart extends Base
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
+
     /**
      * Set common dependencies.
      * @param DayPartFactory $dayPartFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param \Xibo\Service\DisplayNotifyServiceInterface $displayNotifyService
      */
-    public function __construct($dayPartFactory, $scheduleFactory)
+    public function __construct($dayPartFactory, $scheduleFactory, DisplayNotifyServiceInterface $displayNotifyService)
     {
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -373,7 +379,7 @@ class DayPart extends Base
         $this->handleCommonInputs($dayPart, $request);
 
         $dayPart
-            ->setScheduleFactory($this->scheduleFactory)
+            ->setScheduleFactory($this->scheduleFactory, $this->displayNotifyService)
             ->save();
 
         // Return
@@ -485,7 +491,7 @@ class DayPart extends Base
 
         $this->handleCommonInputs($dayPart, $request);
         $dayPart
-            ->setScheduleFactory($this->scheduleFactory)
+            ->setScheduleFactory($this->scheduleFactory, $this->displayNotifyService)
             ->save();
 
         // Return
@@ -600,7 +606,7 @@ class DayPart extends Base
         }
 
         $dayPart
-            ->setScheduleFactory($this->scheduleFactory)
+            ->setScheduleFactory($this->scheduleFactory, $this->displayNotifyService)
             ->delete();
 
         // Return

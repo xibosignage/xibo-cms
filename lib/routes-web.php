@@ -189,23 +189,24 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     // Designer
     $group->get('/playlist/form/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssignForm'])->setName('playlist.library.assign.form');
 
+    // Outputs
+    $group->get('/playlist/widget/resource/{regionId}[/{id}]', [
+        '\Xibo\Controller\Widget', 'getResource'
+    ])->setName('module.getResource');
+
+    $group->get('/playlist/widget/data/{regionId}/{id}', [
+        '\Xibo\Controller\Widget', 'getData'
+    ])->setName('module.getData');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
+
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     // Widget functions
     $group->get('/playlist/widget/form/edit/{id}', ['\Xibo\Controller\Widget','editWidgetForm'])->setName('module.widget.edit.form');
     $group->get('/playlist/widget/form/delete/{id}', ['\Xibo\Controller\Widget','deleteWidgetForm'])->setName('module.widget.delete.form');
     $group->get('/playlist/widget/form/transition/edit/{type}/{id}', ['\Xibo\Controller\Widget','editWidgetTransitionForm'])->setName('module.widget.transition.edit.form');
     $group->get('/playlist/widget/form/audio/{id}', ['\Xibo\Controller\Widget','widgetAudioForm'])->setName('module.widget.audio.form');
     $group->get('/playlist/widget/form/expiry/{id}', ['\Xibo\Controller\Widget','widgetExpiryForm'])->setName('module.widget.expiry.form');
-
-    // Outputs
-    $group->get('/playlist/widget/resource/{regionId}[/{id}]', [
-        '\Xibo\Controller\Widget', 'getResource'
-    ])->setName('module.getResource');
-    
-    $group->get('/playlist/widget/data/{regionId}/{id}', [
-        '\Xibo\Controller\Widget', 'getData'
-    ])->setName('module.getData');
-
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
 
 //
 // playlists

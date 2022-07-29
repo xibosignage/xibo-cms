@@ -206,15 +206,14 @@ $app->group('', function (RouteCollectorProxy $group) use ($app) {
     $group->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
     $group->put('/playlist/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolder'])->setName('playlist.selectfolder');
 
-    $group->group('', function (RouteCollectorProxy $group) {
-        $group->post('/playlist/order/{id}', [
-            '\Xibo\Controller\Playlist', 'order'
-        ])->setName('playlist.order');
-        $group->post('/playlist/library/assign/{id}', [
-            '\Xibo\Controller\Playlist', 'libraryAssign'
-        ])->setName('playlist.library.assign');
-    })->addMiddleware(new LayoutLock($app));
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->post('/playlist/order/{id}', ['\Xibo\Controller\Playlist','order'])->setName('playlist.order');
+    $group->post('/playlist/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssign'])->setName('playlist.library.assign');
+})
+    ->addMiddleware(new LayoutLock($app))
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/playlist/usage/{id}', ['\Xibo\Controller\Playlist','usage'])->setName('playlist.usage');
