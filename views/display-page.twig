@@ -242,12 +242,16 @@
 
                                 </tbody>
                             </table>
+
+                            <!-- Map -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div id="map" data-displays-url="{{ url_for("display.map") }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div id="map"
-                         data-displays-url="{{ url_for("display.map") }}"
-                    ></div>
                 </div>
             </div>
         </div>
