@@ -67,13 +67,13 @@
 
                                     {% set title %}{% trans "Status" %}{% endset %}
                                     {% set check %}{% trans "Up to date" %}{% endset %}
-                                    {% set cloud %}{% trans "Out of date" %}{% endset %}
                                     {% set cross %}{% trans "Downloading" %}{% endset %}
+                                    {% set cloud %}{% trans "Out of date" %}{% endset %}
                                     {% set options = [
                                         { optionid: "", option: "" },
                                         { optionid: "1", option: check},
-                                        { optionid: "3", option: cloud},
-                                        { optionid: "2", option: cross}
+                                        { optionid: "2", option: cross},
+                                        { optionid: "3", option: cloud}
                                     ] %}
                                     {{ inline.dropdown("mediaInventoryStatus", "single", title, "", options, "optionid", "option") }}
 
@@ -306,7 +306,7 @@
                 createdRow: function (row, data, index) {
                     if (data.mediaInventoryStatus === 1) {
                         $(row).addClass('table-success');
-                    } else if (data.mediaInventoryStatus === 1) {
+                    } else if (data.mediaInventoryStatus === 3) {
                         $(row).addClass('table-danger');
                     } else {
                         $(row).addClass('table-warning');
@@ -642,24 +642,29 @@
 
                 map.on("moveend", _.debounce(function() {
                     bounds = map.getBounds().toBBoxString();
-                    getPoints();
+                    getPoints(false);
                 }, 500));
 
                 // Get points
-                getPoints();
+                getPoints(false);
 
                 // Bind the filter form
                 $('.XiboGrid').find(".XiboFilter form input").on("keyup",  getPoints);
                 $('.XiboGrid').find(".XiboFilter form input, .XiboFilter form select").on("change", getPoints);
 
+                var added = [];
+
                 /**
                  * Gets Displays.
                  */
-                function getPoints() {
+                function getPoints(clear = true) {
 
-                    markers.clearLayers();
+                    if (clear) {
+                        markers.clearLayers();
+                        added = [];
+                        // console.log('Clear Layer');
+                    }
 
-                    // console.log('Clear Layer');
 
                     // Make an ajax request for the displays
                     $.ajax($map.data('displaysUrl'), {
@@ -668,23 +673,70 @@
                         success: function(response) {
                             // displays
                             if (response.features.length > 0) {
-                                let licensedIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-green.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-2x-green.png',
+
+                                let uptoDateLoggedInIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check-2x.png',
                                     iconSize: [24, 40],
                                     iconAnchor: [12, 40]
                                 });
-                                let unlicensedIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-red.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/marker-icon-2x-red.png',
+                                let uptoDateLoggedOutIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let outOfDateLoggedInIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let outOfDateLoggedOutIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let downloadingLoggedInIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let downloadingLoggedOutIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross-2x.png',
                                     iconSize: [24, 40],
                                     iconAnchor: [12, 40]
                                 });
 
                                 let feature = L.geoJSON(response, {
                                     pointToLayer: function (feature, latlng) {
+                                        let icon;
+
+                                        if (feature.properties.status === 1) {
+                                            if (feature.properties.loggedIn) {
+                                                icon = uptoDateLoggedInIcon;
+                                            } else {
+                                                icon = uptoDateLoggedOutIcon;
+                                            }
+                                        } else if (feature.properties.status === 3) {
+                                            if (feature.properties.loggedIn) {
+                                                icon = outOfDateLoggedInIcon;
+                                            } else {
+                                                icon = outOfDateLoggedOutIcon;
+                                            }
+                                        } else {
+                                            if (feature.properties.loggedIn) {
+                                                icon = downloadingLoggedInIcon;
+                                            } else {
+                                                icon = downloadingLoggedOutIcon;
+                                            }
+                                        }
+
                                         let options = {
-                                            icon: ((feature.properties.licensed) ? licensedIcon : unlicensedIcon)
+                                            icon: icon
                                         };
 
                                         let popup = feature.properties.display;
@@ -696,10 +748,17 @@
                                         if (feature.properties.thumbnail) {
                                             popup += '<div style="width: 160px;"><img class="display-screenshot" src="' + feature.properties.thumbnail + '" /></div>';
                                         }
-                                        return L.marker(latlng, options)
-                                            .bindPopup(popup)
-                                            .openPopup()
-                                            .addTo(markers);
+
+                                        if (!added.includes(feature.properties.displayId)) {
+
+                                            // Cache displayId
+                                            added.push(feature.properties.displayId);
+
+                                            return L.marker(latlng, options)
+                                                .bindPopup(popup)
+                                                .openPopup()
+                                                .addTo(markers);
+                                        }
                                     },
                                 });
                             }
