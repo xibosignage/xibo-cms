@@ -188,10 +188,10 @@
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
                     <div class="map-controller d-none pl-1">
-                        <button type="button" id="map_button" class="btn btn-outline-secondary" title="{{ "Map"|trans }}"><i class="fas fa-map-marker fa-1x"></i></button>
+                        <button type="button" id="map_button" class="btn btn-primary" title="{{ "Map"|trans }}"><i class="fa fa-map"></i></button>
                     </div>
                     <div class="list-controller d-none pl-1">
-                        <button type="button" id="list_button" class="btn btn-outline-secondary" title="{{ "List"|trans }}"><i class="fas fa-list fa-1x"></i></button>
+                        <button type="button" id="list_button" class="btn btn-primary" title="{{ "List"|trans }}"><i class="fa fa-list"></i></button>
                     </div>
 
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
@@ -635,14 +635,15 @@
                     hideControlContainer: true
                 }).addTo(map);
 
-                let displaysLayerGroup = L.layerGroup();
+                var markers = L.markerClusterGroup();
 
                 let bounds;
                 bounds = map.getBounds().toBBoxString();
-                map.on("moveend", function () {
+
+                map.on("moveend", _.debounce(function() {
                     bounds = map.getBounds().toBBoxString();
                     getPoints();
-                });
+                }, 500));
 
                 // Get points
                 getPoints();
@@ -656,10 +657,9 @@
                  */
                 function getPoints() {
 
-                    displaysLayerGroup.clearLayers();
+                    markers.clearLayers();
 
                     // console.log('Clear Layer');
-                    // console.log(map.hasLayer(displaysLayerGroup));
 
                     // Make an ajax request for the displays
                     $.ajax($map.data('displaysUrl'), {
@@ -693,17 +693,20 @@
                                         if (feature.properties.status) {
                                             popup += '<div style="width: 160px;"><span>Status: ' + feature.properties.status + '</span></div>';
                                         }
+                                        if (feature.properties.thumbnail) {
+                                            popup += '<div style="width: 160px;"><img class="display-screenshot" src="' + feature.properties.thumbnail + '" /></div>';
+                                        }
                                         return L.marker(latlng, options)
                                             .bindPopup(popup)
                                             .openPopup()
-                                            .addTo(displaysLayerGroup);
+                                            .addTo(markers);
                                     },
                                 });
                             }
                         }
                     });
 
-                    displaysLayerGroup.addTo(map);
+                    markers.addTo(map);
                 }
 
                 // Hide map/ Show Display List

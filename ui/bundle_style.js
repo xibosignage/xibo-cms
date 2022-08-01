@@ -65,4 +65,6 @@ require('./src/vendor/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css
 require('leaflet/dist/leaflet.css');
 require('leaflet-draw/dist/leaflet.draw-src.css');
 require('leaflet-search/dist/leaflet-search.src.css');
+require('leaflet.markercluster/dist/MarkerCluster.css');
+require('leaflet.markercluster/dist/MarkerCluster.Default.css');
 

@@ -296,8 +296,8 @@ class DisplayFactory extends BaseFactory
         // Filter by map bound?
         if ($parsedBody->getString('bounds') !== null) {
             $coordinates = explode(',', $parsedBody->getString('bounds'));
-            $body .= ' AND  ' . $functionPrefix . 'X(display.GeoLocation)  BETWEEN ' . $coordinates['1'] . ' AND ' . $coordinates['3'] .
-                ' AND  ' . $functionPrefix . 'Y(display.GeoLocation) BETWEEN  ' . $coordinates['0'] . ' AND ' . $coordinates['2'] . ' ';
+            $body .= ' AND IFNULL( ' . $functionPrefix . 'X(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LAT'). ')  BETWEEN ' . $coordinates['1'] . ' AND ' . $coordinates['3'] .
+                ' AND IFNULL( ' . $functionPrefix . 'Y(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LONG'). ')  BETWEEN  ' . $coordinates['0'] . ' AND ' . $coordinates['2'] . ' ';
         }
 
         // Filter by Display ID?
