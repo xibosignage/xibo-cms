@@ -1026,6 +1026,7 @@ class Display extends Base
                 'orientation' => ucwords($display->orientation),
                 'displayId' => $display->getId(),
                 'licensed' => $display->licensed,
+                'loggedIn' => $display->loggedIn,
             ];
             
             if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
