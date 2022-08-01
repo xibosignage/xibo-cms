@@ -1032,7 +1032,10 @@ class Display extends Base
                 $properties['thumbnail'] = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
-            $geo = new Point([(double)$display->longitude, (double)$display->latitude]);
+            $longitude = ($display->longitude) ? $display->longitude : $this->getConfig()->getSetting('DEFAULT_LONG');
+            $latitude =  ($display->latitude) ? $display->latitude : $this->getConfig()->getSetting('DEFAULT_LAT');
+
+            $geo = new Point([(double)$longitude, (double)$latitude]);
 
             $results[] = new Feature($geo, $properties);
         }
