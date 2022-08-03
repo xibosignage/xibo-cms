@@ -1019,14 +1019,38 @@ class Display extends Base
             '2' => __('Downloading'),
             '3' => __('Out of date')
         ];
+
+        // Get all Display Profiles
+        $displayProfiles = [];
+        foreach ($this->displayProfileFactory->query() as $displayProfile) {
+            $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
+        }
+
         foreach ($displays as $display) {
+
+            // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
+            $displayProfileName = '';
+            try {
+                $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
+                $displayProfileName = $defaultDisplayProfile->name;
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
+            }
+
+            // Add in the display profile information
+            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
+
             $properties = [
                 'display' => $display->display,
                 'status' => $display->mediaInventoryStatus ? $status[$display->mediaInventoryStatus] : __('Unknown'),
+                'mediaInventoryStatus' => $display->mediaInventoryStatus,
                 'orientation' => ucwords($display->orientation),
                 'displayId' => $display->getId(),
                 'licensed' => $display->licensed,
                 'loggedIn' => $display->loggedIn,
+                'displayProfile' => $display->displayProfile,
+                'resolution' => $display->resolution,
+                'lastAccessed' => $display->lastAccessed,
             ];
             
             if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {

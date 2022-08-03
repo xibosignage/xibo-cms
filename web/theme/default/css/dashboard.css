@@ -449,3 +449,15 @@ ul.sidebar .sidebar-title {
 .capitalize {
     text-transform: capitalize;
 }
+
+/* Display Map */
+#display-map {
+  width: 100% !important;
+}
+
+.display-map-legend {
+  background-color: #ffffffad;
+  border-radius: 5px;
+  padding: 10px;
+  border: 1px solid grey;
+}
