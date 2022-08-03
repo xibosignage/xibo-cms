@@ -246,7 +246,7 @@
                             <!-- Map -->
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <div class="mapFilter" style="position: absolute; z-index: 500; right: 20px; top: 10px;">
+                                    <div class="map-legend" style="display:none; position: absolute; z-index: 500; right: 20px; top: 10px;">
                                         <div class="display-map-legend" style="font-size: 12px;">
                                             <div>Logged in</div>
                                             <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-green-check.png'/> - Up to date</div>
@@ -280,6 +280,7 @@
         {% endif %}
 
         $(document).ready(function() {
+
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
                 dom: dataTablesTemplate,
@@ -819,6 +820,7 @@
             }
 
             $mapBtn.click(function () {
+                $('.map-legend').show()
                 $displayMap.show();
                 $mapBtn.hide();
                 $listBtn.show();
@@ -827,6 +829,7 @@
             });
 
             $listBtn.click(function () {
+                $('.map-legend').hide();
                 $displayMap.hide();
                 $listBtn.hide();
                 $mapBtn.show();
