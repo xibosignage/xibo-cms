@@ -31,11 +31,11 @@ describe('Displays', function () {
 
         cy.get('#displays_wrapper.dataTables_wrapper').should('be.visible');
 
-        cy.get('#displays-map.leaflet-container').should('not.be.visible');
+        cy.get('#display-map.leaflet-container').should('not.be.visible');
 
-        cy.get('#displays-map_button').click();
+        cy.get('#map_button').click();
 
-        cy.get('#displays-map.leaflet-container').should('be.visible');
+        cy.get('#display-map.leaflet-container').should('be.visible');
 
         cy.get('#list_button').click();
 
