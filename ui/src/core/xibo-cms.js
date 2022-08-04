@@ -3757,7 +3757,7 @@ function adjustDatatableSize (reload) {
     // Shrink table to ease animation
     if($('#grid-folder-filter').is(":hidden")) {
         $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
-        refreshDisplayMap();
+        resizeDisplayMap();
     }
 
     $('#grid-folder-filter').toggle('fast', function() {
@@ -3769,7 +3769,7 @@ function adjustDatatableSize (reload) {
 
             // if the folder tree is hidden, then make it so datatable can take whole available width
             $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
-            refreshDisplayMap();
+            resizeDisplayMap();
         } else {
             // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
             $("#breadcrumbs").hide('slow');
