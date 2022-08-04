@@ -251,7 +251,7 @@ Layout.prototype.checkout = function() {
       lD.editorContainer.find('#read-only-message').remove();
 
       // Reload layout
-      lD.reloadData(res.data, false, true);
+      lD.reloadData(res.data, true);
 
       // Refresh toolbar
       lD.toolbar.render();

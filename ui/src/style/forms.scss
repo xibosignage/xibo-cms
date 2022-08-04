@@ -3,7 +3,7 @@
 .form-help-popup {
     float: right;
     padding-top: 6px;
-    color: $xibo-color-primary-lighter;
+    color: $xibo-color-primary-l60;
 
     &.checkbox-popup {
         padding-top: 3px;
@@ -13,10 +13,10 @@
 /* Code input */
 .code-input-group {
     .code-input-editor-container {
-        background-color: $code-editor-background-color;
+        background-color: $xibo-color-neutral-900;
         padding: 6px;
         height: 250px;
-        border: 2px solid $code-editor-border-color;
+        border: 2px solid $xibo-color-neutral-700;
         border-radius: 3px;
 
         .code-input-editor {

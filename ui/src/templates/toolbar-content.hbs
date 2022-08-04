@@ -11,8 +11,7 @@
     {{else if content}}
         <form id="module-search-form" class="module-search-form">
             <div class="form-group">
-                <label for="module-name" class="mb-0">{{trans.searchFilters.search}}</label>
-                <input id="module-name" name="module-name" type="text" class="form-control input-name" value="{{ filters.name.value }}">
+                <input id="module-name" placeholder="{{trans.searchFilters.search}}" name="module-name" type="text" class="form-control input-name" value="{{ filters.name.value }}">
             </div>
         </form>
 

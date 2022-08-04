@@ -40,7 +40,7 @@ const Manager = require('../editor-core/manager.js');
 if (typeof lD == 'undefined') {
   // Include the layout designer code if we're in the playlist editor only
   require('../style/common.scss');
-  require('../style/designer.scss');
+  require('../style/layout-editor.scss');
   require('../style/toolbar.scss');
   require('../style/topbar.scss');
 }

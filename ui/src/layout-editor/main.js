@@ -23,7 +23,7 @@
 require('../../public_path');
 
 // Include handlebars templates
-const designerMainTemplate = require('../templates/designer.hbs');
+const designerMainTemplate = require('../templates/layout-editor.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
@@ -45,7 +45,7 @@ const Common = require('../editor-core/common.js');
 
 // Include CSS
 require('../style/common.scss');
-require('../style/designer.scss');
+require('../style/layout-editor.scss');
 require('../style/toolbar.scss');
 require('../style/topbar.scss');
 require('../style/bottombar.scss');
@@ -394,8 +394,17 @@ lD.selectObject =
           const playlistId = res.data.regionPlaylist.playlistId;
           // Add media to new region
           lD.importFromProvider(selectedQueue).then((res) => {
+            // If res is empty, it means that the import failed
+            if (res.length === 0) {
+              // Delete new region
+              lD.layout.deleteElement(
+                'region',
+                res.data.regionPlaylist.regionId,
+              );
+            } else {
             // Add media queue to playlist
-            lD.addMediaToPlaylist(playlistId, res);
+              lD.addMediaToPlaylist(playlistId, res);
+            }
           });
         });
       }
@@ -516,13 +525,11 @@ lD.refreshDesigner = function(
 /**
  * Reload API data and replace the layout structure with the new value
  * @param {object=} layout  - previous layout
- * @param {boolean} refreshBeforeSelect - refresh before selecting
  * @param {boolean} captureThumbnail - capture thumbnail
  * @param {boolean} reloadViewer - reload viewer after reloading layout
  */
 lD.reloadData = function(
   layout,
-  refreshBeforeSelect = false,
   captureThumbnail = false,
   reloadViewer = false,
 ) {
@@ -543,20 +550,11 @@ lD.reloadData = function(
       // get Layout folder id
       lD.folderId = lD.layout.folderId;
 
-      // To select an object that still doesn't exist
-      if (refreshBeforeSelect) {
-        lD.refreshDesigner(false, true);
-      }
-
-      // Force the viewer to reload
-      lD.viewer.reload = true;
-
       // Select the same object ( that will refresh the layout too )
       const selectObjectId = lD.selectedObject.id;
-      lD.selectedObject = {};
       lD.selectObject(
         $('#' + selectObjectId),
-        false,
+        true,
         null,
         false,
         reloadViewer,
@@ -1018,7 +1016,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
             ).then((res) => { // Success
               // Behavior if successful
               toastr.success(res.message);
-              lD.reloadData(lD.layout, false, false, true);
+              lD.reloadData(lD.layout, false, true);
 
               lD.common.hideLoadingScreen('deleteObject');
             }).catch((error) => { // Fail/error
@@ -1106,22 +1104,34 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
    * @param {*} playlistId - Playlist id
    * @param {*} draggable - Dragged object
    * @param {*} mediaId - Media id
+   * @return {Promise}
    */
   const importOrAddMedia = function(playlistId, draggable, mediaId) {
-    if ($(draggable).hasClass('from-provider')) {
-      lD.importFromProvider(
-        [$(draggable).data('providerData')],
-      ).then((res) => {
-        lD.addMediaToPlaylist(playlistId, res);
-      });
-    } else {
-      lD.addMediaToPlaylist(playlistId, mediaId);
-    }
+    return new Promise((resolve, reject) => {
+      if ($(draggable).hasClass('from-provider')) {
+        lD.importFromProvider(
+          [$(draggable).data('providerData')],
+        ).then((res) => {
+          // If res is empty, it means that the import failed
+          if (res.length === 0) {
+            reject(res);
+          } else {
+            lD.addMediaToPlaylist(playlistId, res).then((_res) => {
+              resolve(_res);
+            });
+          }
+        });
+      } else {
+        lD.addMediaToPlaylist(playlistId, mediaId).then((_res) => {
+          resolve(_res);
+        });
+      }
+    });
   };
 
   // If the draggable is from another toolbar, stop adding
-  if($(draggable).parents('#layout-editor-toolbar').length === 0) {
-      return;
+  if ($(draggable).parents('#layout-editor-toolbar').length === 0) {
+    return;
   }
 
   let playlistId;
@@ -1134,7 +1144,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       // Add to drawer
       playlistId = lD.layout.drawer.playlists.playlistId;
 
-      importOrAddMedia(playlistId, draggable, mediaId);
+      importOrAddMedia(playlistId, draggable, mediaId).catch((_error) => {
+        // Delete new region
+        lD.layout.deleteElement('region', res.data.regionPlaylist.regionId);
+      });
     } else {
       // TODO: If image, we need to chose if we want to create
       // a canvas or playlist region, for now we create a playlist
@@ -1147,7 +1160,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         playlistId = res.data.regionPlaylist.playlistId;
 
         // Add media to new region
-        importOrAddMedia(playlistId, draggable, mediaId);
+        importOrAddMedia(playlistId, draggable, mediaId).catch((_error) => {
+          // Delete new region
+          lD.layout.deleteElement('region', res.data.regionPlaylist.regionId);
+        });
       });
     }
   } else {
@@ -1171,6 +1187,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
 
         // Add module to new region
         lD.addModuleToPlaylist(
+          res.data.regionId,
           res.data.regionPlaylist.playlistId,
           draggableSubType,
           draggableData,
@@ -1190,6 +1207,7 @@ lD.getUploadDialogClassName = function() {
 
 /**
  * Add module to playlist
+ * @param {number} regionId
  * @param {number} playlistId
  * @param {string} moduleType
  * @param {object} moduleData
@@ -1197,7 +1215,7 @@ lD.getUploadDialogClassName = function() {
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
-  playlistId, moduleType, moduleData, addToPosition = null,
+  regionId, playlistId, moduleType, moduleData, addToPosition = null,
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     const validExt = moduleData.validExt.replace(/,/g, '|');
@@ -1289,11 +1307,24 @@ lD.addModuleToPlaylist = function(
 
       // The new selected object as the id based on the previous selected region
       lD.selectedObject.id =
-        'widget_' + lD.selectedObject.regionId + '_' + res.data.widgetId;
+      'widget_' + regionId + '_' + res.data.widgetId;
       lD.selectedObject.type = 'widget';
 
+      // Append temporary object to the viewer
+      $('<div>', {
+        id: 'widget_' +
+         regionId +
+         '_' +
+         res.data.widgetId,
+        data: {
+          type: 'widget',
+          parentType: 'region',
+          widgetRegion: 'region_' + regionId,
+        },
+      }).appendTo(lD.viewer.DOMObject);
+
       // Reload data ( and viewer )
-      lD.reloadData(lD.layout, true, false, true);
+      lD.reloadData(lD.layout, false, true);
 
       lD.common.hideLoadingScreen('addModuleToPlaylist');
     }).catch((error) => { // Fail/error
@@ -1324,6 +1355,7 @@ lD.addModuleToPlaylist = function(
  * @param {number} playlistId
  * @param {Array.<number>} media
  * @param {number=} addToPosition
+ * @return {Promise} Promise
  */
 lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
   // Get media Id
@@ -1357,7 +1389,7 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
   }
 
   // Create change to be uploaded
-  lD.manager.addChange(
+  return lD.manager.addChange(
     'addMedia',
     'playlist', // targetType
     playlistId, // targetId
@@ -1373,11 +1405,21 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
 
     // The new selected object as the id based on the previous selected region
     lD.selectedObject.id =
-      'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
+    'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
     lD.selectedObject.type = 'widget';
 
+    // Append temporary object to the viewer
+    $('<div>', {
+      id: 'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId,
+      data: {
+        type: 'widget',
+        parentType: 'region',
+        widgetRegion: 'region_' + res.data.regionId,
+      },
+    }).appendTo(lD.viewer.DOMObject);
+
     // Reload data ( and viewer )
-    lD.reloadData(lD.layout, true, false, true);
+    lD.reloadData(lD.layout, false, true);
 
     lD.common.hideLoadingScreen('addMediaToPlaylist');
   }).catch((error) => { // Fail/error
@@ -1793,7 +1835,7 @@ lD.showUnlockScreen = function() {
     },
   }).attr({
     'data-test': 'unlockLayoutModal',
-    'id': 'unlockLayoutModal',
+    id: 'unlockLayoutModal',
   });
 };
 

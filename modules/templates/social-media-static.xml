@@ -184,4 +184,168 @@ body {
         ]]>
         </renderer>
     </template>
+    <template>
+        <id>twitter2</id>
+        <type>static</type>
+        <dataType>social-media</dataType>
+        <title>Template 12 - text, profile image, twitter logo</title>
+        <properties>
+            <property id="alignmentH" type="dropdown" mode="single">
+                <title>Horizontal Align</title>
+                <helpText>How should this widget be aligned?</helpText>
+                <default>center</default>
+                <options>
+                    <option name="left">Left</option>
+                    <option name="center">Center</option>
+                    <option name="right">Right</option>
+                </options>
+            </property>
+            <property id="alignmentV" type="dropdown" mode="single">
+                <title>Vertical Align</title>
+                <helpText>How should this widget be vertically aligned?</helpText>
+                <default>middle</default>
+                <options>
+                    <option name="top">Top</option>
+                    <option name="middle">Middle</option>
+                    <option name="bottom">Bottom</option>
+                </options>
+            </property>
+            <property id="itemsPerPage" type="number">
+                <title>Tweets Per Page</title>
+                <helpText>The number of tweets to show per page (default = 5).</helpText>
+                <default>5</default>
+            </property>
+            <property id="displayDirection" type="dropdown" mode="single">
+                <title>Tweets direction</title>
+                <helpText>The display order if there's more than one item.</helpText>
+                <default>0</default>
+                <options>
+                    <option name="0"></option>
+                    <option name="1">Horizontal</option>
+                    <option name="2">Vertical</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="#itemsPerPage" type="gt">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">350</width>
+            <height id="height">650</height>
+            <hbs><![CDATA[
+<div class="container">
+    <div class="tweet">
+        <div class="header">
+            <div class="twitter-col image-div"><img src="{{userProfileImage}}"/></div>
+            <div class="twitter-col user">{{user}}</div>
+        </div>
+        <div class="body">
+            <div class="main-tweet">{{text}}</div>
+            <div class="twitter-col date">{{date}}</div>
+            <div class="twitter-col logo"><img class="img-responsive" src="[TwitterLogoBlue]" /></div>
+        </div>
+    </div>
+</div>
+            ]]></hbs>
+            <twig><![CDATA[
+<style>
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+#content {
+    font-size: 0;
+}
+
+.container {
+    width: 350px !important;
+    height: 650px !important;
+    display: inline-block;
+}
+
+.twitter-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+}
+
+.tweet {
+    overflow: hidden;
+    border: 1px solid #ddd;
+    width: 340px;
+    height: 640px;
+    margin: 5px;
+}
+
+.header {
+    font-size: 1rem;
+    background: #1da1f2;
+    width: 100%;
+    height: 110px;
+}
+
+.image-div {
+    overflow: hidden;
+    height: 100%;
+    width: 30%;
+}
+
+.user {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    margin-top: 35px;
+    letter-spacing: 1px;
+    width: 64%;
+    padding: 3%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.image-div img {
+    border-radius: 50%;
+    position: absolute;
+    width: 70px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+-webkit-transform: translate(-50%, -50%);
+    border: 3px solid #FFF;
+}
+
+.body {
+    background: #FFF;
+    height: 530px;
+}
+
+.main-tweet {
+    font-size: 24px;
+    padding: 24px 16px;
+    line-height: 150%;
+    color: #4d4d4d;
+    height: 450px;
+}
+
+.date {
+    width: 240px;
+    padding: 0 16px;
+    font-size: 14px;
+}
+
+.logo {
+    width: 80px;
+    height: 80px;
+    text-align: center;
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
 </templates>
