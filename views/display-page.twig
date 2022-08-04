@@ -246,7 +246,20 @@
                             <!-- Map -->
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <div id="map" data-displays-url="{{ url_for("display.map") }}">
+                                    <div class="map-legend" style="display:none; position: absolute; z-index: 500; right: 20px; top: 10px;">
+                                        <div class="display-map-legend" style="font-size: 12px;">
+                                            <div>Logged in</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-green-check.png'/> - Up to date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-red-check.png'/> - Out of date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-yellow-check.png'/> - Downloading/Unknown</div>
+                                            </br>
+                                            <div>Logged out</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-green-cross.png'/> - Up to date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-red-cross.png'/> - Out of date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross.png'/> - Downloading/Unknown</div>
+                                        </div>
+                                    </div>
+                                    <div id="display-map" data-displays-url="{{ url_for("display.map") }}">
                                     </div>
                                 </div>
                             </div>
@@ -267,6 +280,7 @@
         {% endif %}
 
         $(document).ready(function() {
+
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
                 dom: dataTablesTemplate,
@@ -601,24 +615,34 @@
 
 
             // Detect the dimensions of our container and set to match.
-            let $map = $('#map');
-            let $mapBtn = $('#map_button');
-            let $listBtn =  $('#list_button');
-            let $container = $map.parent();
-            let $dataTablesFolder = $('.dataTables_folder');
+            const $displayMap = $('#display-map');
+            const $mapBtn = $('#map_button');
+            const $listBtn =  $('#list_button');
+            const $mapParent = $displayMap.parent();
+            const $dataTablesFolder = $('.dataTables_folder');
 
             $listBtn.hide();
 
+            let map;
+
             // Wait until we have a width and height.
-            setTimeout(initialiseMap, 1000);
+            setTimeout(initializeMap, 1000);
 
-            function initialiseMap() {
+            // Map resizing when folder is toggled
+            window.refreshDisplayMap = function () {
+                if (map) {
+                    map.invalidateSize();
+                }
+            }
 
-                $map.width($container.width());
-                $map.height($(window).height() - 100);
+            // Initialise and build map
+            function initializeMap() {
+
+                $displayMap.width($mapParent.width() - 10);
+                $displayMap.height($(window).height() - 100);
 
                 // Calling map
-                let map = L.map('map', {
+                map = L.map('display-map', {
                     center: [mapConfig.setArea.lat, mapConfig.setArea.long],
                     zoom: mapConfig.setArea.zoom
                 });
@@ -645,6 +669,10 @@
                     getPoints(false);
                 }, 500));
 
+                map.on("resize", function() {
+                    map.invalidateSize();
+                });
+
                 // Get points
                 getPoints(false);
 
@@ -667,7 +695,7 @@
 
 
                     // Make an ajax request for the displays
-                    $.ajax($map.data('displaysUrl'), {
+                    $.ajax($displayMap.data('displaysUrl'), {
                         method: 'GET',
                         data: $('.XiboGrid').find(".XiboFilter form").serialize() + '&bounds=' + bounds,
                         success: function(response) {
@@ -715,13 +743,13 @@
                                     pointToLayer: function (feature, latlng) {
                                         let icon;
 
-                                        if (feature.properties.status === 1) {
+                                        if (feature.properties.mediaInventoryStatus === 1) {
                                             if (feature.properties.loggedIn) {
                                                 icon = uptoDateLoggedInIcon;
                                             } else {
                                                 icon = uptoDateLoggedOutIcon;
                                             }
-                                        } else if (feature.properties.status === 3) {
+                                        } else if (feature.properties.mediaInventoryStatus === 3) {
                                             if (feature.properties.loggedIn) {
                                                 icon = outOfDateLoggedInIcon;
                                             } else {
@@ -739,14 +767,33 @@
                                             icon: icon
                                         };
 
-                                        let popup = feature.properties.display;
-                                        popup += '<br/><div style="width: 160px;"><span>Orientation: ' + feature.properties.orientation + '</span></div>';
-
+                                        let popup = '<strong>' + feature.properties.display + '</strong>';
+                                        if (feature.properties.orientation) {
+                                            popup += '<br/><div style="width: 180px;"><span>Orientation: ' + feature.properties.orientation + '</span></div>';
+                                        }
                                         if (feature.properties.status) {
-                                            popup += '<div style="width: 160px;"><span>Status: ' + feature.properties.status + '</span></div>';
+                                            popup += '<div style="width: 180px;"><span>Status: ' + feature.properties.status + '</span>';
+                                            if (feature.properties.loggedIn) {
+                                                popup += '<span> (Logged in) </span></div>';
+                                            } else {
+                                                popup += '<span> (Not logged in) </span></div>';
+                                            }
+                                        }
+                                        if (feature.properties.displayProfile) {
+                                            popup += '<div style="width: 180px;"><span>Display profile: ' + feature.properties.displayProfile + '</span></div>';
+                                        }
+                                        if (feature.properties.resolution) {
+                                            popup += '<div style="width: 180px;"><span>Resolution: ' + feature.properties.resolution + '</span></div>';
+                                        }
+                                        if (feature.properties.lastAccessed) {
+                                            let lastAccessed = moment(feature.properties.lastAccessed, "X").tz ?
+                                                moment(feature.properties.lastAccessed, "X").tz(timezone).format(jsDateFormat) :
+                                                moment(feature.properties.lastAccessed, "X").format(jsDateFormat);
+
+                                            popup += '<div style="width: 180px;"><span>Last accessed: ' + lastAccessed + '</span></div>';
                                         }
                                         if (feature.properties.thumbnail) {
-                                            popup += '<div style="width: 160px;"><img class="display-screenshot" src="' + feature.properties.thumbnail + '" /></div>';
+                                            popup += '<div style="width: 180px;"><img class="display-screenshot" src="' + feature.properties.thumbnail + '" /></div>';
                                         }
 
                                         if (!added.includes(feature.properties.displayId)) {
@@ -769,11 +816,12 @@
                 }
 
                 // Hide map/ Show Display List
-                $map.hide();
+                $displayMap.hide();
             }
 
             $mapBtn.click(function () {
-                $map.show();
+                $('.map-legend').show()
+                $displayMap.show();
                 $mapBtn.hide();
                 $listBtn.show();
                 $dataTablesFolder.siblings().hide();
@@ -781,7 +829,8 @@
             });
 
             $listBtn.click(function () {
-                $map.hide();
+                $('.map-legend').hide();
+                $displayMap.hide();
                 $listBtn.hide();
                 $mapBtn.show();
                 $dataTablesFolder.siblings().show();
