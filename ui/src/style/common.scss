@@ -9,8 +9,8 @@ $fa-font-path: "~font-awesome/fonts";
 /* Form Editor Controls */
 .form-editor-controls {
     padding: 6px;
-    background: $form-editor-controls-bg-color;
-    color: $form-editor-controls-fg-color;
+    background: $xibo-color-neutral-900;
+    color: $xibo-color-neutral-100;
 
     .form-group {
         margin-right: 10px;
@@ -33,21 +33,21 @@ $fa-font-path: "~font-awesome/fonts";
 /* Tab System */
 .form-container {
     .nav>li>a {
-        color: $properties-panel-nav-fg-color;
-        background-color: lighten($properties-panel-nav-fg-color, 30%);
+        color: $xibo-color-neutral-900;
+        background-color: lighten($xibo-color-neutral-900, 30%);
         @include border-radius(0);
-        border: 1px solid $properties-panel-nav-active-bg-color !important;
+        border: 1px solid $xibo-color-neutral-100 !important;
         padding: 5px 7px;
     
         &:hover {
-            color: $properties-panel-nav-active-bg-color;
-            background-color: $properties-panel-nav-active-fg-color !important;
+            color: $xibo-color-neutral-100;
+            background-color: $xibo-color-primary !important;
         }
 
         &.active,
         &.active:hover {
-            background-color: $properties-panel-nav-active-bg-color !important;
-            color: $properties-panel-nav-active-fg-color;
+            background-color: $xibo-color-neutral-100 !important;
+            color: $xibo-color-primary;
         }
     }
 
@@ -57,7 +57,7 @@ $fa-font-path: "~font-awesome/fonts";
 
     /* Form drag and drop list */
     .connectedlist .ui-sortable {
-        background-color: $properties-panel-nav-bg-color;
+        background-color: $xibo-color-primary;
         min-height: 80px;
     }
 }
@@ -155,19 +155,19 @@ $fa-font-path: "~font-awesome/fonts";
         position: absolute;
         z-index: ($loading-overlay-z-index + 1);
         opacity: 0.9;
-        background: $context-menu-bg-color;
-        border: $context-menu-border-color solid 2px;
-        @include box-shadow(2px 2px 5px $context-menu-shadow);
+        background: $xibo-color-primary;
+        border: $xibo-color-secondary solid 2px;
+        @include box-shadow(2px 2px 5px $xibo-color-neutral-900);
 
         .sort-controls-container {
             text-align: center;
-            background: $properties-panel-nav-active-fg-color;
+            background: $xibo-color-secondary;
 
             .context-menu-btn {
-                color: $context-menu-btn-move-color;
+                color: $xibo-color-primary-l60;
 
                 &:hover {
-                    color: $context-menu-btn-move-hover-color;
+                    color: $xibo-color-primary-l30;
                 }
             }
         }
@@ -179,19 +179,19 @@ $fa-font-path: "~font-awesome/fonts";
         .context-menu-btn {
             display: inline-block;
             font-size: 1.25rem;
-            color: $context-menu-btn-color;
+            color: $xibo-color-primary-l30;
             cursor: pointer;
 
             &:hover {
-                color: $context-menu-btn-hover-color;
+                color: $xibo-color-primary-l10;
             }
         }
 
         .deleteBtn {
-            color: $context-menu-bin-btn-color;
+            color: $xibo-color-primary-l30;
 
             &:hover {
-                color: $context-menu-bin-btn-hover-color;
+                color: $xibo-color-primary-l10;
             }
         }
     }

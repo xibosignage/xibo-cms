@@ -6,14 +6,14 @@
     margin: 0px 16px 16px 16px;
     
     nav {
-        border: none;
-        color: $xibo-color-blue-pastel;
+        border: 2px solid $xibo-color-secondary;
+        color: $xibo-color-primary;
         padding: 0 16px !important;
         min-height: 30px;
         font-size: 0;
         z-index: 2;
         margin: 0;
-        background: $xibo-color-white-pure;
+        background: $xibo-color-neutral-0;
         right: 0;
         left: 0;
         @include border-radius(0 0 4px 4px);
@@ -26,12 +26,12 @@
             display: inline-block;
             height: 40px;
             vertical-align: middle;
-            border-right: 3px solid $xibo-color-white;
+            border-right: 3px solid $xibo-color-primary-l5;
             margin: 0 3px;
         }
 
         .btn {
-            color: $xibo-color-blue-pastel;
+            color: $xibo-color-primary;
             height: 38px;
             width: 38px;
             font-size: 1.2rem;
@@ -39,8 +39,8 @@
             border-radius: 0;
 
             &:hover:not(:disabled) {
-                color: $xibo-color-white;
-                background-color: $xibo-color-blue-pastel;
+                color: $xibo-color-primary-l5;
+                background-color: $xibo-color-primary;
             }
 
             &:disabled, &.disabled {
@@ -48,11 +48,11 @@
             }
 
             &#delete-btn {
-                color: $xibo-color-red;
+                color: $xibo-color-semantic-error;
 
                 &:hover {
-                    color: $xibo-color-white;
-                    background-color: $xibo-color-red;
+                    color: $xibo-color-primary-l5;
+                    background-color: $xibo-color-semantic-error;
                 }
             }
         }
@@ -71,7 +71,7 @@
             margin: 0 4px;
             height: 38px;
             top: -38px;
-            color: $xibo-color-white;
+            color: $xibo-color-primary-l5;
             opacity: 0.8;
             padding: 0 1rem;
             left: 0;
@@ -89,7 +89,7 @@
             }
 
             .btn {
-                color: $xibo-color-white;
+                color: $xibo-color-primary-l5;
                 height: 38px;
                 width: 38px;
                 font-size: 1.2rem;
@@ -101,19 +101,9 @@
         }
 
         &.designer-layout {
-            border-bottom: 3px solid $xibo-color-blue-lighter;
-
             .viewer-navbar-overlay {
                 display: none;
             }
-        }
-
-        &.designer-region-selected {
-            border-bottom: 3px solid $xibo-color-orange;
-        }
-
-        &.designer-widget-selected {
-            border-bottom: 3px solid $xibo-color-green;
         }
     }
 

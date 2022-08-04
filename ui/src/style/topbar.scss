@@ -1,11 +1,13 @@
 @import "variables";
+@import "mixins";
 
 #layout-editor-topbar nav {
     border: none;
-    min-height: 40px;
+    // Hide for now
+    // min-height: 40px;
     z-index: 2;
     margin: 0;
-    background: $xibo-color-white-pure;
+    background: $xibo-color-neutral-0;
     color: $xibo-color-primary;
     right: 0;
     left: 0;
@@ -22,11 +24,17 @@
 
 #layout-editor-topbar .container-toolbar {
     padding: 0 16px;
+    @include box-shadow(0px 2px 4px $xibo-color-shadow);
 
     .navbar-text.layout-info {
-        color: $xibo-color-primary;
+        color: $xibo-color-secondary;
         line-height: 24px;
         display: inline-block;
+        // Fix position for now
+        position: fixed;
+        top: 6px;
+        left: 96px;
+        // Fix position for now
 
         & > span {
             margin-right: 10px;
@@ -70,7 +78,7 @@
         }
 
         .popover {
-            color: $xibo-color-black;
+            color: $xibo-color-neutral-900;
             min-width: 250px;
             
             .popover-title {
@@ -88,8 +96,8 @@
                 padding: 6px;
                 margin: 0px -1px 3px -1px;
                 border-radius: 6px;
-                background: $xibo-color-red;
-                color: $xibo-color-white;
+                background: $xibo-color-semantic-error;
+                color: $xibo-color-primary-l5;
             }
 
             .popover-content .status-title {
@@ -103,16 +111,36 @@
     .layout-action-menu {
         margin: 0;
         padding: 0;
+        // Fix position for now
+        position: fixed;
+        top: 0;
+        right: 114px;
+        // Fix position for now
 
         #layoutJumpListContainer {
             min-width: 120px;
-            margin: 5px 6px;
+            margin: 10px 6px;
 
             .select2-selection {
                 max-height: 30px;
                 padding-top: 4px;
                 padding-bottom: 4px;
             }
+        }
+    }
+
+    .navbar-submenu-options-container {
+        a:not(.page-link) {
+            color: $xibo-color-secondary !important;
+            background-color: unset !important;
+
+            &:hover, &:focus {
+                color: $xibo-color-primary !important;
+            }
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: $xibo-color-neutral-0;
         }
     }
 }

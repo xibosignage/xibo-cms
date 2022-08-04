@@ -1,101 +1,54 @@
 // Global SASS variables 
 
-// Colour palette
-$xibo-color-primary: #607bb5;
-$xibo-color-primary-lighter: #7392d4;
-$xibo-color-secondary: #337AB7;
-$xibo-color-white: #F0F2F8;
-$xibo-color-white-pure: #fff;
+// COLOURS
+$xibo-color-primary: #1775F6;
+$xibo-color-secondary: #121A5E;
+$xibo-color-tertiary: #15D5CB;
+$xibo-color-accent: #EB7857;
 
-$xibo-color-red: #e64c4c;
-$xibo-color-blue: #506098;
-$xibo-color-blue-pastel: #506098;
-$xibo-color-blue-darker: #42528A;
-$xibo-color-blue-lighter: #c1e1fd;
-$xibo-color-blue-lightest: #ebeff7;
-$xibo-color-green: #82E59E;
-$xibo-color-green-highlight: #6af367;
-$xibo-color-yellow: #E7EA6E;
-$xibo-color-purple-lighter: #DAE2FB;
-$xibo-color-purple: #8f2ac3;
-$xibo-color-purple-darker: #9197AC;
-$xibo-color-orange: #FFC582;
-$xibo-color-orange-darker: #FB6C05;
-$xibo-color-gray-light: #CAD0D6;
-$xibo-color-gray: #C4C4C4;
-$xibo-color-gray-dark: #888;
-$xibo-color-gray-darker: #666;
-$xibo-color-black: #333;
-$xibo-color-black-pure: #181818;
+//  Variants
+$xibo-color-primary-d60: #0E4694;
+$xibo-color-primary-l60: #74ACFA;
+$xibo-color-primary-l30: #B9D6FC;
+$xibo-color-primary-l10: #E8F1FE;
+$xibo-color-primary-l5: #F3F8FF;
 
-// Variables
-$form-editor-controls-bg-color: $xibo-color-black;
-$form-editor-controls-fg-color: $xibo-color-white;
+//  Neutral
+$xibo-color-neutral-0: #fff;
+$xibo-color-neutral-100: #FCFCFC;
+$xibo-color-neutral-300: #E9E9E9;
+$xibo-color-neutral-500: #CECECE;
+$xibo-color-neutral-700: #898989;
+$xibo-color-neutral-900: #333333;
+$xibo-color-neutral-1000: #000000;
 
-$properties-panel-nav-bg-color: $xibo-color-white;
-$properties-panel-nav-fg-color: $xibo-color-gray-dark;
-$properties-panel-nav-active-bg-color: $xibo-color-white;
-$properties-panel-nav-active-fg-color: $xibo-color-secondary;
+// Semantic
+$xibo-color-semantic-error: #BF5555;
+$xibo-color-semantic-success: #3E9A42;
+$xibo-color-semantic-warning: #D4D74E;
+$xibo-color-semantic-info: #5593BF;
 
-$context-menu-bg-color: $xibo-color-primary;
-$context-menu-border-color: $xibo-color-secondary;
+// Overlay
+$xibo-color-overlay: rgba(0, 0, 0, 0.6);
 
-$context-menu-btn-color: $xibo-color-white;
-$context-menu-btn-hover-color: $xibo-color-yellow;
+// Specific
+$xibo-color-selected: #4adc52;
+$xibo-color-shadow: rgba(0, 0, 0, 0.1);
 
-$context-menu-btn-move-color: $xibo-color-white;
-$context-menu-btn-move-hover-color: $xibo-color-yellow;
+$xibo-color-region-hover: $xibo-color-accent;
+$xibo-color-region-selected: $xibo-color-accent;
 
-$context-menu-bin-btn-color: $xibo-color-red;
-$context-menu-bin-btn-hover-color: lighten($xibo-color-red, 20%);
+$xibo-color-widget-hover: $xibo-color-primary;
+$xibo-color-widget-selected: lighten($xibo-color-primary, 15%);
 
-$context-menu-shadow: darken($xibo-color-primary, 20%);
-
+// ZINDEX
 $loading-overlay-z-index: 4000;
-
-$code-editor-background-color: #1e1e1e;
-$code-editor-border-color: $xibo-color-primary-lighter;
-
-// Variables
-$toolbar-width: 60px;
 $toolbar-z-index: 1040;
+$toolbar-card-z-index: 1060;
+$toolbar-content-header-height: 40px;
 
-$toolbar-card-width: 96px;
-$toolbar-card-height: 96px;
-$toolbar-card-margin: 4px;
-
-$toolbar-media-card-height: 60px;
+// DIMENSIONS
+$toolbar-width: 60px;
 
 $toolbar-widgets-card-height: 60px;
-
-// Colours
-$toolbar-main-color: $xibo-color-blue-pastel;
-$toolbar-selected-color: darken($xibo-color-green, 20%);
-$toolbar-secondary-color: $xibo-color-primary;
-$toolbar-blue: $xibo-color-secondary;
-$toolbar-light-blue: lighten($xibo-color-secondary, 20%);
-$toolbar-green: darken($xibo-color-green, 20%);
-$toolbar-purple: $xibo-color-purple;
-$toolbar-light-green: $xibo-color-green;
-$toolbar-dark-blue: $xibo-color-primary;
-$toolbar-card-color: $xibo-color-primary;
-$toolbar-menu-content-bg-color: $xibo-color-white;
-$toolbar-disabled-color: $xibo-color-gray-dark;
-
-$toolbar-tab-bg-color: $xibo-color-primary;
-$toolbar-tab-fg-color: $xibo-color-white;
-$toolbar-tab-hover-color: $xibo-color-blue-lighter;
-$toolbar-tab-border-color: $xibo-color-secondary;
-
-$bin-bg-color: $xibo-color-red;
-$bin-fg-color: $xibo-color-white;
-$bin-bg-color-hover: darken($xibo-color-red, 20%);
-
-$undo-bg-color: $xibo-color-orange;
-$undo-fg-color: $xibo-color-white;
-$undo-bg-color-hover: darken($xibo-color-orange, 20%);
-
-$multiselect-bg-color: $xibo-color-purple;
-$multiselect-fg-color: $xibo-color-white;
-$multiselect-bg-color-hover: darken($xibo-color-purple, 20%);
-$multiselect-bg-color-active: lighten($xibo-color-purple, 10%);
+$toolbar-widgets-card-margin-bottom: 0.5rem;

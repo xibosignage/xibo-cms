@@ -255,10 +255,14 @@ Viewer.prototype.render = function(forceReload = false) {
             // Single click action
             clicks = 0;
 
-            // Select region ( only if target is not selected )
-            if (!$(e.target).hasClass('selected')) {
-              lD.selectObject($(e.target));
-              self.selectElement($(e.target));
+            // Select widget if exists
+            if (
+              $(e.target).find('.designer-widget').length > 0 &&
+              !$(e.target).find('.designer-widget').hasClass('selected') &&
+              !$(e.target).hasClass('selected')
+            ) {
+              lD.selectObject($(e.target).find('.designer-widget'), true);
+              self.selectElement($(e.target).find('.designer-widget'));
             }
           }, 200);
         } else {
@@ -266,13 +270,10 @@ Viewer.prototype.render = function(forceReload = false) {
           clearTimeout(timer);
           clicks = 0;
 
-          // Select widget if exists
-          if (
-            $(e.target).find('.designer-widget').length > 0 &&
-            !$(e.target).find('.designer-widget').hasClass('selected')
-          ) {
-            lD.selectObject($(e.target).find('.designer-widget'), true);
-            self.selectElement($(e.target).find('.designer-widget'));
+          // Select region ( if not selected )
+          if (!$(e.target).hasClass('selected')) {
+            lD.selectObject($(e.target));
+            self.selectElement($(e.target));
           }
         }
       }
@@ -553,8 +554,8 @@ Viewer.prototype.initMoveable = function() {
     const scale = self.containerElementDimensions.scale;
     const regionId = $(region).attr('id');
     const transform = {
-      'width': parseInt($(region).width() / scale),
-      'height': parseInt($(region).height() / scale),
+      width: parseInt($(region).width() / scale),
+      height: parseInt($(region).height() / scale),
     };
     const regionObject = lD.layout.regions[regionId];
 
@@ -779,8 +780,8 @@ Viewer.prototype.updateRegionContent = function(region) {
 
     // Update image dimensions
     $image.css({
-      'width': region.scaledDimensions.width,
-      'height': region.scaledDimensions.height,
+      width: region.scaledDimensions.width,
+      height: region.scaledDimensions.height,
     });
   }
 };

@@ -795,7 +795,8 @@ Toolbar.prototype.selectCard = function(card) {
 
     // Select new card
     $(card).addClass('card-selected');
-    $(card).parent('.toolbar-pane-content').addClass('selected');
+    $(card).parents('.toolbar-pane-content').addClass('selected');
+    $(card).parents('nav.navbar').addClass('card-selected');
 
     // Save selected card data
     this.selectedCard = card;
@@ -853,6 +854,7 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
   // Remove content selected class
   this.DOMObject.find('.toolbar-pane-content.selected')
     .removeClass('selected');
+  this.DOMObject.find('nav.navbar').removeClass('card-selected');
 
   // Remove media queue data
   this.DOMObject.find('.toolbar-pane-content').removeData('mediaQueue');
@@ -907,7 +909,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
   const self = this;
   const app = this.parent;
   const filters = self.menuItems[menu].filters;
-  const requestURL = librarySearchUrl + '?assignable=1&retired=0';
   const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
 
   // Request elements based on filters
@@ -929,8 +930,8 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     }
 
     // Show loading
-    $mediaContent.after(
-      `<div class="loading-container w-100 text-center">
+    $mediaContent.before(
+      `<div class="loading-container-toolbar w-100 text-center">
         <span class="loading fa fa-cog fa-spin"></span>
       </div>`);
 
@@ -978,13 +979,21 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       };
 
       // Remove loading
-      $mediaContent.parent().find('.loading-container').remove();
+      $mediaContent.parent().find('.loading-container-toolbar').remove();
+
+      // If there's no masonry sizer, add it
+      if ($mediaContent.find('.toolbar-card-sizer').length == 0) {
+        $mediaContent.append(
+          '<div class="toolbar-card-sizer"></div>',
+        );
+      }
 
       // Init masonry
       $mediaContent.masonry({
         itemSelector: '.toolbar-card',
-        columnWidth: 96,
-        gutter: 11,
+        columnWidth: '.toolbar-card-sizer',
+        percentPosition: true,
+        gutter: 8,
       });
 
       if (
@@ -1318,84 +1327,86 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
   // If in edit mode
   if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
-    this.DOMObject.find('.toolbar-card').each(function(idx, el) {
-      $(el).draggable({
-        cursor: 'crosshair',
-        appendTo: $(el).parents('.toolbar-pane:first'),
-        handle:
-          (self.openedMenu == self.widgetMenuIndex) ?
-            '.drag-area' :
-            false,
-        cursorAt: {
-          top:
+    this.DOMObject.find('.toolbar-card:not(.toolbar-card-menu)')
+      .each(function(idx, el) {
+        $(el).draggable({
+          appendTo: $(el).parents('.toolbar-pane:first'),
+          cursorAt: {
+            top:
             (
               $(el).height() + ($(el).outerWidth(true) - $(el).outerWidth()) / 2
             ) / 2,
-          left:
+            left:
             (
               $(el).width() + ($(el).outerWidth(true) - $(el).outerWidth()) / 2
             ) / 2,
-        },
-        opacity: 0.3,
-        helper: 'clone',
-        start: function() {
+          },
+          opacity: 0.7,
+          helper: 'clone',
+          start: function() {
           // Deselect previous selections
-          self.deselectCardsAndDropZones();
+            self.deselectCardsAndDropZones();
 
-          // Show overlay
-          $('.custom-overlay').show();
+            // Show overlay
+            $('.custom-overlay').show();
 
-          // Mark card as being dragged
-          $(this).addClass('card-dragged');
+            // Mark card as being dragged
+            $(this).addClass('card-dragged');
 
-          // Mark content as selected
-          $(this).parent('.toolbar-pane-content').addClass('selected');
+            // Mark content as selected
+            $(this).parents('.toolbar-pane-content').addClass('selected');
+            $(this).parents('nav.navbar').addClass('card-selected');
 
-          // Reload tooltips to avoid floating detached elements
-          app.common.reloadTooltips(app.editorContainer);
-        },
-        stop: function() {
+            // Reload tooltips to avoid floating detached elements
+            app.common.reloadTooltips(app.editorContainer);
+          },
+          stop: function() {
           // Hide overlay
-          $('.custom-overlay').hide();
+            $('.custom-overlay').hide();
 
-          // Remove card class as being dragged
-          $(this).removeClass('card-dragged');
+            // Remove card class as being dragged
+            $(this).removeClass('card-dragged');
 
-          // Mark content as unselected
-          $(this).parent('.toolbar-pane-content').removeClass('selected');
+            // Mark content as unselected
+            $(this).parents('.toolbar-pane-content').removeClass('selected');
+            $(this).parents('nav.navbar').removeClass('card-selected');
 
-          // Reload tooltips to avoid floating detached elements
-          app.common.reloadTooltips(app.editorContainer);
-        },
+            // Reload tooltips to avoid floating detached elements
+            app.common.reloadTooltips(app.editorContainer);
+          },
+        });
       });
+
+    // Select normal card
+    this.DOMObject.find(
+      '.toolbar-card:not(.toolbar-card-menu):not(.card-selected)',
+    ).click((e) => {
+      self.selectCard($(e.currentTarget));
     });
 
-    // Select card clicking in the Add button
-    this.DOMObject.find('.toolbar-card:not(.card-selected) .add-area')
-      .click((e) => {
-        self.selectCard($(e.currentTarget).parent());
-      });
-
     // Select upload card
-    this.DOMObject.find('.toolbar-card .select-upload').click((e) => {
-      const $card = $(e.currentTarget).parent();
+    this.DOMObject.find('.toolbar-card.upload-card').off('click').click((e) => {
+      const $card = $(this);
       if (!$card.hasClass('card-selected')) {
-        self.selectCard($(e.currentTarget).parent());
+        self.selectCard($(e.currentTarget));
       } else {
         self.deselectCardsAndDropZones();
       }
     });
 
     // Open card menu
-    this.DOMObject.find('.toolbar-card.toolbar-card-menu').click((e) => {
-      self.openSubMenu($(e.currentTarget));
-    });
-
-    // Select card clicking in the Add button
-    this.DOMObject.find('.toolbar-card:not(.card-selected) .btn-favourite')
-      .click((e) => {
-        self.toggleFavourite(e.currentTarget);
+    this.DOMObject.find('.toolbar-card.toolbar-card-menu')
+      .off('click').click((e) => {
+        self.openSubMenu($(e.currentTarget));
       });
+
+    // Toggle favourite card
+    this.DOMObject.find(
+      '.toolbar-card:not(.card-selected) '+
+      '.btn-favourite',
+    ).click((e) => {
+      self.toggleFavourite(e.currentTarget);
+    });
 
     // Card select button
     this.DOMObject.find(
@@ -1403,6 +1414,9 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       this.openedMenu +
       ' .select-button:not(.select-upload)').off('click')
       .click(function(e) {
+        // Stop propagation
+        e.stopPropagation();
+
         // If upload card is selected, remove all selected
         if (
           !$.isEmptyObject(self.selectedCard) &&
@@ -1427,7 +1441,10 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       this.openedMenu +
       ' .preview-button',
     ).off('click').click(function(e) {
-      self.createMediaPreview($(e.target).parent());
+      // Stop propagation
+      e.stopPropagation();
+
+      self.createMediaPreview($(e.currentTarget).parent());
     });
 
     // Play video on hover
@@ -1437,7 +1454,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       ' .toolbar-card[data-sub-type="video"]',
     ).off('mouseenter mouseleave').hover(
       function(e) { // mouseenter
-        const vid = $(e.target).find('video')[0];
+        const vid = $(e.currentTarget).find('video')[0];
         if (vid && vid.readyState > 1 && vid.paused) {
           vid.play();
 
@@ -1455,7 +1472,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
         }
       },
       function(e) { // mouseleave
-        const vid = $(e.target).find('video')[0];
+        const vid = $(e.currentTarget).find('video')[0];
         if (vid && vid.readyState > 1 && !vid.paused && vid.currentTime > 0) {
           vid.currentTime = 0;
           vid.pause();
@@ -1610,43 +1627,72 @@ Toolbar.prototype.loadSubMenu = function($container, contentType, moduleType) {
   let requestPath = urlsForApi.module.getTemplates.url;
   requestPath = requestPath.replace(':dataType', contentType);
 
+  // Show loading
+  $container.find('.toolbar-pane-container').before(
+    `<div class="loading-container-toolbar w-100 text-center">
+      <span class="loading fa fa-cog fa-spin"></span>
+    </div>`);
+
   // Get templates data
   $.ajax({
     url: requestPath,
     type: urlsForApi.module.getTemplates.type,
   }).done(function(res) {
-    const elements = [];
-    const stencils = [];
-    const templates = [];
+    const populateSubMenu = function() {
+      const elements = [];
+      const stencils = [];
+      const templates = [];
 
-    // Tidy content
-    for (let i = 0; i < res.data.length; i++) {
-      const el = res.data[i];
+      // Get filter value
+      const filterValue = $container.find('#template-name').val();
 
-      // Add module type to the elements
-      el.subType = moduleType;
+      // Tidy content
+      for (let i = 0; i < res.data.length; i++) {
+        const el = res.data[i];
 
-      if (el.type === 'element') {
-        elements.push(el);
-      } else if (el.type === 'element-group') {
-        stencils.push(el);
-      } else if (el.type === 'static') {
-        templates.push(el);
+        // Add module type to the elements
+        el.subType = moduleType;
+
+        // Filter elements
+        if (filterValue && filterValue.length > 0) {
+          if (el.title.toLowerCase().indexOf(filterValue.toLowerCase()) == -1) {
+            continue;
+          }
+        }
+
+        if (el.type === 'element') {
+          elements.push(el);
+        } else if (el.type === 'element-group') {
+          stencils.push(el);
+        } else if (el.type === 'static') {
+          templates.push(el);
+        }
       }
-    }
 
-    $container.find('.toolbar-pane-container').html(
-      // TODO: Don't send elements and stencils for now
-      ToolbarContentSubmenuElements({
-        elements: [], // elements,
-        stencils: [], // stencils,
-        templates: templates,
-        trans: toolbarTrans,
-      }),
-    );
+      // Remove loading
+      $container.find('.loading-container-toolbar')
+        .remove();
 
-    // Handle cards behaviour
-    self.handleCardsBehaviour();
+      $container.find('.toolbar-pane-container').html(
+        // TODO: Don't send elements and stencils for now
+        ToolbarContentSubmenuElements({
+          elements: [], // elements,
+          stencils: [], // stencils,
+          templates: templates,
+          trans: toolbarTrans,
+        }),
+      );
+
+      // Handle cards behaviour
+      self.handleCardsBehaviour();
+    };
+
+    // Handle name filter change
+    $container.find('#template-name').off()
+      .on('input', _.debounce(populateSubMenu, 500));
+
+    // Call populate content on load
+    populateSubMenu();
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userLoadPreferencesFailed);

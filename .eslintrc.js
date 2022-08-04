@@ -10,5 +10,7 @@ module.exports = {
   },
   rules: {
     indent: ['error', 2],
+    'quote-props': ['warn', 'as-needed'],
+    'dot-location': ['warn', 'property'],
   },
 };

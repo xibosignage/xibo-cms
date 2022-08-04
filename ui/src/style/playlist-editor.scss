@@ -3,18 +3,18 @@
 @import "mixins";
 
 // Variables
-$playlist-editor-main-background-color: $xibo-color-white;
-$playlist-editor-main-fb-color: $xibo-color-black;
+$playlist-editor-main-background-color: $xibo-color-primary-l5;
+$playlist-editor-main-fb-color: $xibo-color-neutral-900;
 $playlist-editor-min-content-height: 40vh;
 $playlist-editor-max-content-height: 65vh;
 
-$playlist-editor-widget-bg-color: $xibo-color-white;
-$playlist-editor-widget-fg-color:$xibo-color-black;
-$playlist-editor-widget-fg-color2: $xibo-color-gray-dark;
-$playlist-editor-widget-selected-color: $xibo-color-green;
-$playlist-editor-widget-multi-selected-color: lighten($xibo-color-purple, 20%);
-$playlist-editor-widget-hover-bg-color: lighten($xibo-color-green, 20%);
-$playlist-editor-widget-border-color: $xibo-color-gray-dark;
+$playlist-editor-widget-bg-color: $xibo-color-primary-l5;
+$playlist-editor-widget-fg-color:$xibo-color-neutral-900;
+$playlist-editor-widget-fg-color2: $xibo-color-neutral-700;
+$playlist-editor-widget-selected-color: $xibo-color-semantic-success;
+$playlist-editor-widget-multi-selected-color: lighten($xibo-color-tertiary, 20%);
+$playlist-editor-widget-hover-bg-color: lighten($xibo-color-semantic-success, 20%);
+$playlist-editor-widget-border-color: $xibo-color-neutral-700;
 $playlist-editor-playlist-hover-color-color: lighten($xibo-color-primary, 20%);
 
 $playlist-editor-z-index-background: 1011;
@@ -23,14 +23,14 @@ $playlist-editor-z-index-select: 1013;
 
 $playlist-editor-timeline-fg-color: $xibo-color-primary;
 
-$playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
+$playlist-editor-unsuccess-message-bg-color: $xibo-color-semantic-error;
 
 // CSS
 .editor-modal {
     display: block;
     z-index: $playlist-editor-z-index-background;
     overflow: auto;
-    @include set-transparent-color(background, $xibo-color-black, 0.6);
+    @include set-transparent-color(background, $xibo-color-neutral-900, 0.6);
 
     &.toolbar-opened {
         padding-left: 410px;
@@ -77,13 +77,13 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     z-index: $playlist-editor-z-index-background;
 
     &.tooltip.right .tooltip-arrow {
-        border-right-color: $properties-panel-nav-active-fg-color;
+        border-right-color: $xibo-color-secondary;
     }
 
     .tooltip-inner-image {
         min-height: 50px;
         padding: 4px;
-        background-color: $properties-panel-nav-active-fg-color;
+        background-color: $xibo-color-secondary;
         border-radius: 4px;
         
         img {
@@ -118,27 +118,27 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
 
     /* Track */
     ::-webkit-scrollbar-track {
-        background: $xibo-color-white;
+        background: $xibo-color-primary-l5;
         @include border-radius(6px);
     }
     
     /* Handle */
     ::-webkit-scrollbar-thumb {
-        background: $xibo-color-blue-darker;
+        background: $xibo-color-primary-d60;
         @include border-radius(4px);
     }
 
     /* Handle on hover */
     ::-webkit-scrollbar-thumb:hover {
-        background: lighten($xibo-color-blue-darker, 20%);
+        background: lighten($xibo-color-primary-d60, 20%);
     }
 
     ::-webkit-scrollbar-corner {
-        @include box-shadow(inset 0 0 5px $xibo-color-gray-dark);
+        @include box-shadow(inset 0 0 5px $xibo-color-neutral-700);
     }
 
     #playlist-timeline {
-        background: $xibo-color-white;
+        background: $xibo-color-primary-l5;
         @include border-radius(4px);
         border: 2px solid $playlist-editor-timeline-fg-color;
         margin-bottom: 10px;
@@ -166,13 +166,13 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
 
             .timeline-overlay-step {
                 height: 14px;
-                background: darken($xibo-color-white, 10%);
+                background: darken($xibo-color-primary-l5, 10%);
                 margin-top: -5px;
                 margin-bottom: 5px;
 
                 &:hover, &.ui-droppable-hover {
-                    background: lighten($xibo-color-white, 10%);
-                    @include box-shadow(0px 0px 3px 1px $xibo-color-white);
+                    background: lighten($xibo-color-primary-l5, 10%);
+                    @include box-shadow(0px 0px 3px 1px $xibo-color-primary-l5);
                 }
             }
 
@@ -218,7 +218,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     }
 
     #playlist-properties-panel  {
-        background: $xibo-color-white;
+        background: $xibo-color-primary-l5;
         padding: 0;
         @include border-radius(4px);
         border: 2px solid $playlist-editor-widget-selected-color;
@@ -286,7 +286,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         text-align: center;
         font-weight: bold;
         font-size: 1.2em;
-        color: $xibo-color-white;
+        color: $xibo-color-primary-l5;
         background: $xibo-color-primary;
         border-width: 0 0 4px 0;
         border-style: solid;
@@ -314,7 +314,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         padding: 0 4px;
 
         &:not(.editable) {
-            @include box-shadow(inset 0 0 4px 2px $xibo-color-gray-dark);
+            @include box-shadow(inset 0 0 4px 2px $xibo-color-neutral-700);
         }
 
         &.selectable {
@@ -384,7 +384,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         }
 
         &.invalid-widget {
-            @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
+            @include box-shadow(inset 0px 0px 10px 3px $xibo-color-semantic-error);
         }
     }
 
@@ -401,10 +401,10 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     }
 
     .ui-droppable-active {
-        @include box-shadow(inset 0 0 20px $xibo-color-white);
+        @include box-shadow(inset 0 0 20px $xibo-color-primary-l5);
     }
 
     .ui-droppable-hover {
-        @include box-shadow(inset 0 0 10px $xibo-color-black);
+        @include box-shadow(inset 0 0 10px $xibo-color-neutral-900);
     }
 }

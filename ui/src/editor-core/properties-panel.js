@@ -8,9 +8,9 @@ const actionsTemplate = require('../templates/actions-form-template.hbs');
 const actionsButtonTemplate =
   require('../templates/actions-button-template.hbs');
 const formTemplates = {
-  'widget': require('../templates/forms/widget.hbs'),
-  'region': require('../templates/forms/region.hbs'),
-  'layout': require('../templates/forms/layout.hbs'),
+  widget: require('../templates/forms/widget.hbs'),
+  region: require('../templates/forms/region.hbs'),
+  layout: require('../templates/forms/layout.hbs'),
 };
 
 /**
@@ -105,7 +105,7 @@ PropertiesPanel.prototype.save = function(element) {
         }
 
         // Reload data, and refresh viewer if we're saving the layout properties
-        app.reloadData(mainObject, false, false, (element.type === 'layout'));
+        app.reloadData(mainObject, false, (element.type === 'layout'));
       };
 
       // Check if its a drawer widget and
@@ -206,11 +206,11 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
     .find('input, select, textarea, button:not(.copyTextAreaButton)')
     .attr('disabled', 'disabled');
 
-    // Hide buttons
-    this.DOMObject.find('button:not(.copyTextAreaButton)').hide();
+  // Hide buttons
+  this.DOMObject.find('button:not(.copyTextAreaButton)').hide();
 
-    // Hide bootstrap switch
-    this.DOMObject.find('.bootstrap-switch').hide();
+  // Hide bootstrap switch
+  this.DOMObject.find('.bootstrap-switch').hide();
 };
 
 /**
@@ -223,7 +223,9 @@ PropertiesPanel.prototype.render = function(element, step) {
   const self = this;
 
   // Show a message if the module is disabled for a widget rendering
-  if (element.type === 'widget' && !element.enabled) {
+  if (element.type === undefined ||
+      (element.type === 'widget' && !element.enabled)
+  ) {
     this.DOMObject.html(messageTemplate({
       message: editorsTrans.invalidModule,
     }));
