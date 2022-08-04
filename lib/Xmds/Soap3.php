@@ -1,7 +1,8 @@
 <?php
 /*
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -206,6 +207,13 @@ class Soap3 extends Soap
                     throw new NotFoundException("Invalid file path.");
 
                 $fileId = explode('.', $filePath);
+
+                // Is this a request for the bundle?
+                if ($fileId == '-1') {
+                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
+                    $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, strlen($file));
+                    return $file;
+                }
 
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId[0]);

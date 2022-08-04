@@ -1,0 +1,91 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Xibo Open Source Digital Signage</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=[[ViewPortWidth]]" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <!-- Copyright 2006-2022 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <script type="text/javascript" src="[[PlayerBundle]]"></script>
+        <style type="text/css">
+            body {
+                margin: 0;
+                overflow: hidden;
+                font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+            }
+            h1, h2, h3, h4, p {
+                margin-top: 0;
+            }
+            #iframe {
+                border: 0;
+            }
+            .cycle-slide p, p.cycle-slide {
+                margin-bottom:0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="content"></div>
+    {% for item in twig %}
+        {{ item|raw }}
+    {% endfor %}
+    </body>
+    <script type="text/javascript">
+        window.globalOptions = {
+          originalWidth: {{ width }},
+          originalHeight: {{ height }},
+          duration: {{ duration }},
+          cmsDateFormat: '{{ cmsDateFormat }}'
+        };
+        var widgetData = [];
+        {% for item in data %}
+        widgetData.push({{ item|json_encode|raw }});
+        {% endfor %}
+
+        {% if elementGroups %}
+        var elements = [];
+        {% for item in elements %}
+        elements.push({{ item|raw }});
+        {% endfor %}
+        {% endif %}
+    </script>
+{% for id, item in hbs %}
+    <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}">{{ item.content|raw }}</script>
+{% endfor %}
+{% for widgetId, parser in dataParsers %}
+    <script type="text/javascript" id="dataParser-{{ widgetId }}">
+      function dataParser_{{ widgetId }}(item, options) {
+        {{ parser|raw }}
+      }
+    </script>
+{% endfor %}
+{% for templateId, renderer in renderers %}
+    <script type="text/javascript" id="render-{{ templateId }}">
+      function render_{{ templateId }}({id, target, options} = {}) {
+        {{ renderer|raw  }}
+      }
+    </script>
+{% endfor %}
+</html>

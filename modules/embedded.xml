@@ -1,0 +1,87 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-embedded</id>
+    <name>Embedded</name>
+    <author>Core</author>
+    <description>Embedded HTML</description>
+    <class></class>
+    <type>embedded</type>
+    <dataType></dataType>
+    <schemaVersion>2</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="transparency" type="checkbox">
+            <title>Background transparent?</title>
+            <helpText>Should the Widget be shown with a transparent background? Also requires the embedded content to have a transparent background.</helpText>
+            <default>1</default>
+        </property>
+        <property id="scaleContent" type="checkbox">
+            <title>Scale Content?</title>
+            <helpText>Should the embedded content be scaled along with the layout?</helpText>
+            <default>1</default>
+            <playerCompatibility windows="v2 R253+"></playerCompatibility>
+        </property>
+        <property id="isPreNavigate" type="checkbox">
+            <title>Preload?</title>
+            <helpText>Should this Widget be loaded entirely off-screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
+            <default>1</default>
+        </property>
+        <property id="embedHtml" type="code" allowLibraryRefs="true" codeType="html">
+            <title>HTML to embed</title>
+            <helpText>Enter text or HTML in the box below.</helpText>
+        </property>
+        <property id="embedStyle" type="code" allowLibraryRefs="true" codeType="css">
+            <title>Custom Style Sheets</title>
+        </property>
+        <property id="embedScript" type="code" allowLibraryRefs="true" codeType="javascript">
+            <title>JavaScript to embed</title>
+            <helpText>Please include script tags.</helpText>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <twig><![CDATA[
+            {{embedHtml|raw}}
+            <script type="text/javascript">
+                {{embedScript|raw}}
+            </script>
+            <style>
+                {{embedStyle}}
+            </style>
+            <script type="text/javascript">
+                $(function() {
+                    if(typeof EmbedInit === "function"){
+                        EmbedInit();
+                    }
+                    {% if scaleContent %}
+                        window.scaleContent = true;
+                        $("body").xiboLayoutScaler(globalOptions);
+                    {% endif %}
+                });
+            </script>
+        ]]></twig>
+    </stencil>
+</module>

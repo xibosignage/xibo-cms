@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,23 +20,30 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Widget\Provider\DataProvider;
+use Xibo\Widget\Provider\DurationProvider;
+use Xibo\Widget\Provider\WidgetProviderInterface;
 
 /**
  * Class Module
  * @package Xibo\Entity
- *
+ * @property bool $isInstalled Is this module installed?
+ * @property bool $isError Does this module have any errors?
+ * @property string[] $errors An array of errors this module has.
  * @SWG\Definition()
  */
 class Module implements \JsonSerializable
 {
     use EntityTrait;
+    use ModulePropertyTrait;
 
     /**
      * @SWG\Property(description="The ID of this Module")
@@ -51,16 +58,16 @@ class Module implements \JsonSerializable
     public $name;
 
     /**
+     * @SWG\Property(description="Module Author")
+     * @var string
+     */
+    public $author;
+
+    /**
      * @SWG\Property(description="Description of the Module")
      * @var string
      */
     public $description;
-
-    /**
-     * @SWG\Property(description="A comma separated list of Valid Extensions")
-     * @var string
-     */
-    public $validExtensions;
 
     /**
      * @SWG\Property(description="The type code for this module")
@@ -69,46 +76,22 @@ class Module implements \JsonSerializable
     public $type;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this module is enabled")
-     * @var int
+     * @SWG\Property(description="The data type of the data expected to be returned by this modules data provider")
+     * @var string
      */
-    public $enabled;
+    public $dataType;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this module is specific to a Layout or can be uploaded to the Library")
+     * @SWG\Property(description="The cache key used when requesting data")
+     * @var string
+     */
+    public $dataCacheKey;
+
+    /**
+     * @SWG\Property(description="Is specific to a Layout or can be uploaded to the Library?")
      * @var int
      */
     public $regionSpecific;
-
-    /**
-     * @SWG\Property(description="A flag indicating whether the Layout designer should render a preview of this module")
-     * @var int
-     */
-    public $previewEnabled;
-
-    /**
-     * @SWG\Property(description="A flag indicating whether the module is assignable to a Layout")
-     * @var int
-     */
-    public $assignable;
-
-    /**
-     * @SWG\Property(description="A flag indicating whether the module should be rendered natively by the Player or via the CMS (native|html)")
-     * @var string
-     */
-    public $renderAs;
-
-    /**
-     * @SWG\Property(description="The default duration for Widgets of this Module when the user has elected to not set a specific duration.")
-     * @var int
-     */
-    public $defaultDuration;
-
-    /**
-     * @SWG\Property(description="An array of additional module specific settings", type="array", @SWG\Items(type="string"))
-     * @var array
-     */
-    public $settings = [];
 
     /**
      * @SWG\Property(description="The schema version of the module")
@@ -117,31 +100,105 @@ class Module implements \JsonSerializable
     public $schemaVersion;
 
     /**
+     * @SWG\Property(description="A flag indicating whether the module is assignable to a Layout")
+     * @var int
+     */
+    public $assignable;
+
+    /**
+     * @SWG\Property(description="Does this module have a thumbnail to render?")
+     * @var int
+     */
+    public $hasThumbnail;
+
+    /**
+     * @SWG\Property(description="Should be rendered natively by the Player or via the CMS (native|html)")
+     * @var string
+     */
+    public $renderAs;
+
+    /**
      * @SWG\Property(description="Class Name including namespace")
      * @var string
      */
     public $class;
 
-    /**
-     * @SWG\Property(description="The Twig View path for module specific templates")
-     * @var string
-     */
-    public $viewPath = '../modules';
+    /** @var \Xibo\Widget\Definition\Stencil|null Stencil for this modules preview */
+    public $preview;
+
+    /** @var \Xibo\Widget\Definition\Stencil|null Stencil for this modules HTML cache */
+    public $stencil;
+
+    /** @var \Xibo\Widget\Definition\Property[]|null */
+    public $properties;
 
     /**
-     * @SWG\Property(description="The original installation name of this module.")
+     * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
      * @var string
      */
-    public $installName;
+    public $dataParser;
+
+    /**
+     * @SWG\Property(description="Optional sample data item, only applicable when a dataType is present")
+     * @var string
+     */
+    public $sampleData;
+
+    // <editor-fold desc="Properties recorded in the database">
+
+    /**
+     * @SWG\Property(description="A flag indicating whether this module is enabled")
+     * @var int
+     */
+    public $enabled;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the Layout designer should render a preview of this module")
+     * @var int
+     */
+    public $previewEnabled;
+
+    /**
+     * @SWG\Property(
+     *     description="The default duration for Widgets of this Module when the user has not set a duration."
+     * )
+     * @var int
+     */
+    public $defaultDuration;
+
+    /**
+     * @SWG\Property(
+     *     description="An array of additional module specific settings",
+     *     type="array",
+     *     @SWG\Items(type="string")
+     * )
+     * @var \Xibo\Widget\Definition\Property[]
+     */
+    public $settings = [];
+
+    // </editor-fold>
+
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
+    /** @var WidgetProviderInterface */
+    private $widgetProvider;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     * @param \Xibo\Factory\ModuleFactory $moduleFactory
      */
-    public function __construct($store, $log, $dispatcher)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+        ModuleFactory $moduleFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
+        $this->moduleFactory = $moduleFactory;
     }
 
     /**
@@ -153,52 +210,159 @@ class Module implements \JsonSerializable
     }
 
     /**
-     * @throws InvalidArgumentException
+     * Is a template expected?
+     * @return bool
+     */
+    public function isTemplateExpected(): bool
+    {
+        return (!empty($this->dataType));
+    }
+
+    /**
+     * Is a template expected?
+     * @return bool
+     */
+    public function isDataProviderExpected(): bool
+    {
+        return (!empty($this->dataType));
+    }
+
+    /**
+     * Get this module's widget provider, or null if there isn't one
+     * @return \Xibo\Widget\Provider\WidgetProviderInterface|null
+     */
+    public function getWidgetProviderOrNull(): ?WidgetProviderInterface
+    {
+        return $this->widgetProvider;
+    }
+
+    /**
+     * @param \Xibo\Entity\Widget $widget
+     * @return \Xibo\Widget\Provider\DataProvider
+     */
+    public function createDataProvider(Widget $widget): DataProvider
+    {
+        return $this->moduleFactory->createDataProvider($this, $widget);
+    }
+
+    /**
+     * @param string $file a fully qualified path to this file
+     * @return \Xibo\Widget\Provider\DurationProvider
+     */
+    public function createDurationProvider(string $file): DurationProvider
+    {
+        return $this->moduleFactory->createDurationProvider($file);
+    }
+
+    /**
+     * Fetch duration of a file.
+     * @param string $file
+     * @return int
+     */
+    public function fetchDurationOrDefault(string $file): int
+    {
+        if ($this->widgetProvider === null) {
+            return $this->defaultDuration;
+        }
+        $durationProvider = $this->createDurationProvider($file);
+        $this->widgetProvider->fetchDuration($durationProvider);
+
+        return $durationProvider->getDuration();
+    }
+
+    /**
+     * Sets the widget provider for this module
+     * @param \Xibo\Widget\Provider\WidgetProviderInterface $widgetProvider
+     * @return $this
+     */
+    public function setWidgetProvider(WidgetProviderInterface $widgetProvider): Module
+    {
+        $this->widgetProvider = $widgetProvider;
+        return $this;
+    }
+
+    /**
+     * Get all properties which allow library references.
+     * @return \Xibo\Widget\Definition\Property[]
+     */
+    public function getPropertiesAllowingLibraryRefs(): array
+    {
+        $props = [];
+        foreach ($this->properties as $property) {
+            if ($property->allowLibraryRefs) {
+                $props[] = $property;
+            }
+        }
+
+        return $props;
+    }
+
+    /**
+     * Get a module setting
+     * If the setting does not exist, $default will be returned.
+     * If the setting exists, but is not set, the default value from the setting will be returned
+     * @param string $setting The setting
+     * @param mixed|null $default A default value if the setting does not exist
+     * @return mixed
+     */
+    public function getSetting(string $setting, $default = null)
+    {
+        foreach ($this->settings as $property) {
+            if ($property->id === $setting) {
+                return $property->value ?? $property->default;
+            }
+        }
+
+        return $default;
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function validate()
     {
         if (!v::intType()->validate($this->defaultDuration)) {
             throw new InvalidArgumentException(__('Default Duration is a required field.'), 'defaultDuration');
         }
-
-        if (!empty($this->validExtensions) && !v::alnum(',')->validate($this->validExtensions)) {
-            throw new InvalidArgumentException(__('Comma separated file extensions only please, without the .'), 'validExtensions');
-        }
     }
 
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
     public function save()
     {
         $this->validate();
 
-        if ($this->moduleId == null || $this->moduleId == 0)
+        if (!$this->isInstalled) {
             $this->add();
-        else
+        } else {
             $this->edit();
-
+        }
     }
 
     private function add()
     {
         $this->moduleId = $this->getStore()->insert('
-          INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`, `installName`)
-            VALUES (:module, :name, :enabled, :region_specific, :description,
-                :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration, :installName)
+          INSERT INTO `module` (
+            `moduleId`,
+            `enabled`,
+            `previewEnabled`,
+            `defaultDuration`,
+            `settings`
+            )
+            VALUES (
+            :moduleId,
+            :enabled,
+            :previewEnabled,
+            :defaultDuration,
+            :settings
+            )
         ', [
-            'module' => $this->type,
-            'name' => $this->name,
+            'moduleId' => $this->moduleId,
             'enabled' => $this->enabled,
-            'region_specific' => $this->regionSpecific,
-            'description' => $this->description,
-            'schema_version' => $this->schemaVersion,
-            'valid_extensions' => $this->validExtensions,
-            'preview_enabled' => $this->previewEnabled,
-            'assignable' => $this->assignable,
-            'render_as' => $this->renderAs,
-            'settings' => json_encode($this->settings),
-            'viewPath' => $this->viewPath,
-            'class' => $this->class,
+            'previewEnabled' => $this->previewEnabled,
             'defaultDuration' => $this->defaultDuration,
-            'installName' => $this->installName
+            'settings' => $this->getSettingsForSaving()
         ]);
     }
 
@@ -208,7 +372,6 @@ class Module implements \JsonSerializable
           UPDATE `module` SET
               enabled = :enabled,
               previewEnabled = :previewEnabled,
-              validExtensions = :validExtensions,
               defaultDuration = :defaultDuration,
               settings = :settings
            WHERE moduleid = :moduleId
@@ -216,10 +379,23 @@ class Module implements \JsonSerializable
             'moduleId' => $this->moduleId,
             'enabled' => $this->enabled,
             'previewEnabled' => $this->previewEnabled,
-            'validExtensions' => $this->validExtensions,
             'defaultDuration' => $this->defaultDuration,
-            'settings' => json_encode($this->settings)
+            'settings' => $this->getSettingsForSaving()
         ]);
+    }
+
+    /**
+     * @return string
+     */
+    private function getSettingsForSaving(): string
+    {
+        $settings = [];
+        foreach ($this->settings as $setting) {
+            if ($setting->value !== null) {
+                $settings[$setting->id] = $setting->value;
+            }
+        }
+        return count($settings) > 0 ? json_encode($settings) : '[]';
     }
 
     /**
@@ -228,6 +404,8 @@ class Module implements \JsonSerializable
      */
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `module` WHERE moduleId = :id', ['id' => $this->moduleId]);
+        $this->getStore()->update('DELETE FROM `module` WHERE moduleId = :id', [
+            'id' => $this->moduleId
+        ]);
     }
 }

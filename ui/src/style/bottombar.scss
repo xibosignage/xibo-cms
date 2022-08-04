@@ -3,7 +3,7 @@
 
 #layout-editor-bottombar  {
     height: 38px;
-    margin: 0px 24px 24px 16px;
+    margin: 0px 16px 16px 16px;
     
     nav {
         border: none;
@@ -67,14 +67,15 @@
 
         .viewer-navbar-overlay {
             position: absolute;
-            width: 100%;
+            width: calc(100% - 8px);
+            margin: 0 4px;
             height: 38px;
             top: -38px;
             color: $xibo-color-white;
             opacity: 0.8;
             padding: 0 1rem;
             left: 0;
-            @include set-transparent-color(background, $xibo-color-black, 0.8);
+            @include set-transparent-color(background, $xibo-color-primary, 0.8);
 
             .info {
                 line-height: 2.5rem;
@@ -107,11 +108,11 @@
             }
         }
 
-        &.designer-region {
+        &.designer-region-selected {
             border-bottom: 3px solid $xibo-color-orange;
         }
 
-        &.designer-widget {
+        &.designer-widget-selected {
             border-bottom: 3px solid $xibo-color-green;
         }
     }

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,150 +22,256 @@
 
 namespace Xibo\XTR;
 
-use Xibo\Entity\Region;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\ModuleFactory;
+use Xibo\Entity\Module;
+use Xibo\Entity\Widget;
+use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Widget\Provider\WidgetProviderInterface;
 
 /**
  * Class WidgetSyncTask
+ * Keep all widgets which have data up to date
  * @package Xibo\XTR
  */
 class WidgetSyncTask implements TaskInterface
 {
     use TaskTrait;
 
-    /** @var ModuleFactory */
+    /** @var \Xibo\Factory\ModuleFactory */
     private $moduleFactory;
 
-    /** @var LayoutFactory */
-    private $layoutFactory;
+    /** @var \Xibo\Factory\WidgetFactory */
+    private $widgetFactory;
+
+    /** @var \Xibo\Factory\MediaFactory */
+    private $mediaFactory;
+
+    /** @var \Xibo\Factory\DisplayFactory */
+    private $displayFactory;
+
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcher */
+    private $eventDispatcher;
 
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->moduleFactory = $container->get('moduleFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
+        $this->widgetFactory = $container->get('widgetFactory');
+        $this->mediaFactory = $container->get('mediaFactory');
+        $this->displayFactory = $container->get('displayFactory');
+        $this->eventDispatcher = $container->get('dispatcher');
         return $this;
     }
 
     /** @inheritdoc */
     public function run()
     {
-        // Get an array of modules to use
-        $modules = $this->moduleFactory->get();
-
-        $currentLayoutId = 0;
-        $layout = null;
+        // Track the total time we've spent caching
+        $timeCaching = 0.0;
         $countWidgets = 0;
-        $countLayouts = 0;
-        $widgetsDone = [];
 
+        // Update for widgets which are active on displays
         $sql = '
-          SELECT requiredfile.itemId, requiredfile.displayId 
+          SELECT DISTINCT `requiredfile`.itemId 
             FROM `requiredfile` 
               INNER JOIN `layout`
-              ON layout.layoutId = requiredfile.itemId
+              ON `layout`.layoutId = `requiredfile`.itemId
               INNER JOIN `display`
-              ON display.displayId = requiredfile.displayId
-           WHERE requiredfile.type = \'L\' 
-            AND display.loggedIn = 1
-          ORDER BY itemId, displayId
+              ON `display`.displayId = `requiredfile`.displayId
+           WHERE `requiredfile`.type = \'W\' 
+              AND `display`.loggedIn = 1
+          ORDER BY `requiredfile`.complete DESC, `requiredfile`.itemId
         ';
 
         $smt = $this->store->getConnection()->prepare($sql);
         $smt->execute();
 
-        // Track the total time we've spent caching (excluding all other operations, etc)
-        $timeCaching = 0.0;
-
-        // Get a list of Layouts which are currently active, along with the display they are active on
-        // get the widgets from each layout and call get resource on them
-        while ($row = $smt->fetch(\PDO::FETCH_ASSOC)) {
-
+        $row = true;
+        while ($row) {
+            $row = $smt->fetch(\PDO::FETCH_ASSOC);
             try {
-                // We have a Layout
-                $layoutId = (int)$row['itemId'];
-                $displayId = (int)$row['displayId'];
+                $widgetId = (int)$row['itemId'];
+                $widget = $this->widgetFactory->getById($widgetId);
+                $widget->load();
 
-                $this->log->debug('Found layout to keep in sync ' . $layoutId);
+                $module = $this->moduleFactory->getByType($widget->type);
+                if ($module->isDataProviderExpected()) {
+                    // Record start time
+                    $countWidgets++;
+                    $startTime = microtime(true);
 
-                if ($layoutId !== $currentLayoutId) {
-                    $countLayouts++;
+                    // Grab a widget interface, if there is one
+                    $widgetInterface = $module->getWidgetProviderOrNull();
 
-                    // Add a little break in here
-                    if ($currentLayoutId !== 0) {
-                        usleep(10000);
+                    // Is the cache key display specific?
+                    $cacheKey = null;
+                    if ($widgetInterface !== null) {
+                        $cacheKey = $widgetInterface->getDataCacheKey(
+                            $module->createDataProvider($widget)
+                        );
+                    }
+                    if ($cacheKey === null) {
+                        $cacheKey = $module->dataCacheKey;
                     }
 
-                    // We've changed layout
-                    // load in the new one
-                    $layout = $this->layoutFactory->getById($layoutId);
-                    $layout->load();
+                    // Refresh the cache if needed.
+                    $isDisplaySpecific = str_contains($cacheKey, '%displayId%');
 
-                    // Update pointer
-                    $currentLayoutId = $layoutId;
-
-                    // Clear out the list of widgets we've done
-                    $widgetsDone = [];
-                }
-
-                // Load the layout XML and work out if we have any ticker / text / dataset media items
-                foreach ($layout->regions as $region) {
-                    /* @var Region $region */
-                    $playlist = $region->getPlaylist();
-                    $playlist->setModuleFactory($this->moduleFactory);
-
-                    foreach ($playlist->expandWidgets() as $widget) {
-                        // See if we have a cache
-                        if ($widget->type == 'ticker' ||
-                            $widget->type == 'text' ||
-                            $widget->type == 'datasetview' ||
-                            $widget->type == 'webpage' ||
-                            $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
-                        ) {
-                            $countWidgets++;
-
-                            // Make me a module from the widget
-                            $module = $this->moduleFactory->createWithWidget($widget, $region);
-
-                            // Have we done this widget before?
-                            if (in_array($widget->widgetId, $widgetsDone) && !$module->isCacheDisplaySpecific()) {
-                                $this->log->debug('This widgetId ' . $widget->widgetId . ' has been done before and is not display specific, so we skip');
-                                continue;
-                            }
-
-                            // Record start time
-                            $startTime = microtime(true);
-
-                            // Cache the widget
-                            $module->getResourceOrCache($displayId);
-
-                            // Record we have done this widget
-                            $widgetsDone[] = $widget->widgetId;
-
-                            // Record end time and aggregate for final total
-                            $duration = (microtime(true) - $startTime);
-                            $timeCaching = $timeCaching + $duration;
-
-                            $this->log->debug('Took ' . $duration . ' seconds to check and/or cache widgetId ' . $widget->widgetId . ' for displayId ' . $displayId);
-
-                            // Commit so that any images we've downloaded have their cache times updated for the next request
-                            // this makes sense because we've got a file cache that is already written out.
-                            $this->store->commitIfNecessary();
+                    // We're either assigning all media to all displays, or we're assigning then one by one
+                    if ($isDisplaySpecific) {
+                        // We need to run the cache for every display this widget is assigned to.
+                        foreach ($this->getDisplays($widget) as $display) {
+                            $mediaIds = $this->cache($module, $widget, $widgetInterface, intval($display['displayId']));
+                            $this->linkDisplays([$display], $mediaIds);
                         }
+                    } else {
+                        // Just a single run will do it.
+                        $mediaIds = $this->cache($module, $widget, $widgetInterface, null);
+                        $this->linkDisplays($this->getDisplays($widget), $mediaIds);
                     }
+
+                    // Record end time and aggregate for final total
+                    $duration = (microtime(true) - $startTime);
+                    $timeCaching = $timeCaching + $duration;
+                    $this->log->debug('Took ' . $duration
+                        . ' seconds to check and/or cache widgetId ' . $widget->widgetId);
+
+                    // Commit so that any images we've downloaded have their cache times updated for the
+                    // next request, this makes sense because we've got a file cache that is already written
+                    // out.
+                    $this->store->commitIfNecessary();
                 }
             } catch (GeneralException $xiboException) {
                 // Log and skip to the next layout
                 $this->log->debug($xiboException->getTraceAsString());
-                $this->log->error('Cannot process layoutId ' . $layoutId . ', E = ' . $xiboException->getMessage());
+                $this->log->error('Cannot process widget ' . $widgetId . ', E = ' . $xiboException->getMessage());
             }
         }
 
         $this->log->info('Total time spent caching is ' . $timeCaching);
 
-        $this->appendRunMessage('Synced ' . $countWidgets . ' widgets across ' . $countLayouts . ' layouts.');
+        $this->appendRunMessage('Synced ' . $countWidgets . ' widgets');
+    }
+
+    /**
+     * @return int[] mediaIds
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function cache(
+        Module $module,
+        Widget $widget,
+        ?WidgetProviderInterface $widgetInterface,
+        ?int $displayId
+    ): array {
+        $mediaIds = [];
+
+        // Each time we call this we use a new provider
+        $dataProvider = $module->createDataProvider($widget);
+        $dataProvider->setMediaFactory($this->mediaFactory);
+        $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
+
+        // Get the cache key
+        $cacheKey = $this->moduleFactory->determineCacheKey(
+            $module,
+            $widget,
+            $displayId ?? 0,
+            $dataProvider,
+            $widgetInterface
+        );
+
+        // Set our provider up for the displays
+        if ($displayId !== null) {
+            $display = $this->displayFactory->getById($displayId);
+            $dataProvider->setDisplayProperties($display->latitude, $display->longitude);
+        } else {
+            $dataProvider->setDisplayProperties(
+                $this->getConfig()->getSetting('DEFAULT_LAT'),
+                $this->getConfig()->getSetting('DEFAULT_LONG')
+            );
+        }
+
+        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+            $this->getLogger()->debug('Cache expired, pulling fresh');
+
+            if ($widgetInterface !== null) {
+                $widgetInterface->fetchData($dataProvider);
+            } else {
+                $dataProvider->setIsUseEvent();
+            }
+
+            if ($dataProvider->isUseEvent()) {
+                $this->getDispatcher()->dispatch(
+                    new WidgetDataRequestEvent($dataProvider),
+                    WidgetDataRequestEvent::$NAME
+                );
+            }
+
+            // Do we have images?
+            $media = $dataProvider->getImages();
+            if (count($media) > 0) {
+                // Process the downloads.
+                $this->mediaFactory->processDownloads(function ($media) use ($widget, &$mediaIds) {
+                    /** @var \Xibo\Entity\Media $media */
+                    // Success
+                    // We don't need to do anything else, references to mediaId will be built when we decorate
+                    // the HTML.
+                    $this->getLogger()->debug('Successfully downloaded ' . $media->mediaId);
+
+                    if (!in_array($media->mediaId, $mediaIds)) {
+                        $mediaIds[] = $media->mediaId;
+                    }
+                });
+            }
+
+            // Save to cache
+            // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
+            if (count($dataProvider->getData()) > 0) {
+                $widgetDataProviderCache->saveToCache($dataProvider);
+            }
+        } else {
+            $this->getLogger()->debug('Cache still valid');
+        }
+
+        return $mediaIds;
+    }
+
+    private function getDisplays(Widget $widget): array
+    {
+        $sql = '
+            SELECT DISTINCT displayId
+              FROM `requiredfile`
+             WHERE itemId = :widgetId
+                AND type = \'W\'
+        ';
+
+        return $this->store->select($sql, ['widgetId' => $widget->widgetId]);
+    }
+
+    /**
+     * Link an array of displays with an array of media
+     * @param array $displays
+     * @param array $mediaIds
+     * @return void
+     */
+    private function linkDisplays(array $displays, array $mediaIds): void
+    {
+        $sql = '
+            INSERT INTO `display_media` (displayId, mediaId) 
+                VALUES (:displayId, :mediaId)
+            ON DUPLICATE KEY UPDATE mediaId = mediaId
+        ';
+
+        // TODO: there will be a much more efficient way to do this!
+        foreach ($displays as $display) {
+            $displayId = intval($display['displayId']);
+            $this->displayFactory->getDisplayNotifyService()->collectLater()->notifyByDisplayId($displayId);
+
+            foreach ($mediaIds as $mediaId) {
+                $this->store->update($sql, [
+                    'displayId' => $displayId,
+                    'mediaId' => $mediaId
+                ]);
+            }
+        }
     }
 }

@@ -36,7 +36,6 @@ use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\SubPlaylist;
 
 /**
  * Class Playlist
@@ -955,15 +954,14 @@ class Playlist implements \JsonSerializable
                     $this->getLog()->debug('expandWidgets: processing sub-playlist ' . $widget->widgetId
                         . ', parentWidgetId is ' . $parentWidgetId);
 
-                    /** @var SubPlaylist $module */
-                    $module = $this->moduleFactory->createWithWidget($widget);
-                    $module->isValid();
-
                     // Get the sub-playlist widgets
-                    $subPlaylistWidgets = $module->getSubPlaylistResolvedWidgets($widget->tempId);
+                    $module = $this->moduleFactory->getByType($widget->type);
+                    $subPlaylistWidgets = $module
+                        ->getWidgetProviderOrNull()
+                        ->getSubPlaylistResolvedWidgets($widget->tempId);
 
                     // Are we the top level sub-playlist, and do we have cycle playback enabled?
-                    if ($parentWidgetId === 0 && $module->getOption('cyclePlaybackEnabled', 0) === 1) {
+                    if ($parentWidgetId === 0 && $widget->getOptionValue('cyclePlaybackEnabled', 0) === 1) {
                         $this->getLog()->debug('expandWidgets: cyclePlaybackEnabled on ' . $widget->widgetId);
 
                         // Work out the average duration
@@ -1061,9 +1059,14 @@ class Playlist implements \JsonSerializable
                 }
             } else {
                 // Add the sub playlist duration
-                /** @var SubPlaylist $module */
-                $module = $this->moduleFactory->createWithWidget($widget);
-                $duration += $module->getSubPlaylistResolvedDuration();
+                $module = $this->moduleFactory->getByType($widget->type);
+                $widgetInterface = $module->getWidgetProviderOrNull();
+                if ($widgetInterface !== null) {
+                    // We use a duration provider
+                    $durationProvider = $module->createDurationProvider($this);
+                    $widgetInterface->fetchDuration($durationProvider);
+                    $duration += $durationProvider->getDuration();
+                }
             }
         }
 

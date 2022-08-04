@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -351,7 +351,7 @@ class MediaFactory extends BaseFactory
                         }
                     }
                 },
-                'rejected' => function ($reason, $index) use ($log, $rejected) {
+                'rejected' => function ($reason, $index) use ($log, $queue, $rejected) {
                     /* @var RequestException $reason */
                     $log->error(
                         sprintf(
@@ -361,8 +361,11 @@ class MediaFactory extends BaseFactory
                             $reason->getMessage()
                         )
                     );
+                    
+                    // We should remove the media record.
+                    $queue[$index]->delete(['rollback' => true]);
 
-                    // If a failure callback has been provided, call it
+                    // If a rejected callback has been provided, call it
                     if ($rejected !== null && is_callable($rejected)) {
                         // Do we have a wrapped exception?
                         $reasonMessage = $reason->getPrevious() !== null

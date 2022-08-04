@@ -1325,6 +1325,33 @@ function XiboInitialise(scope) {
             }
         }, 200);
     });
+
+    // Initialise code field
+    $(scope + " .xibo-code-input").each(function() {
+        const $textArea = $(this).find('.code-input');
+        const inputValue = $textArea.val();
+        const codeType = $textArea.data('codeType');
+        
+        var newEditor = monaco.editor.create($(this).find('.code-input-editor')[0], {
+            value: inputValue,
+            fontSize: 12,
+            theme: 'vs-dark',
+            language: codeType,
+            lineNumbers: 'off',
+            glyphMargin: false,
+            folding: false,
+            lineDecorationsWidth: 0,
+            lineNumbersMinChars: 0,
+            automaticLayout: true,
+            minimap: {
+                enabled: false
+            },
+        });
+    
+        newEditor.onDidChangeModelContent(() => {
+            $textArea.val(newEditor.getValue());
+        });
+    });
 }
 
 /**

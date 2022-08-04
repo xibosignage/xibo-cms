@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -32,7 +32,7 @@ use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\ModuleWidget;
+use Xibo\Widget\Definition\Property;
 
 /**
  * Class Widget
@@ -172,12 +172,6 @@ class Widget implements \JsonSerializable
      * @var Permission[]
      */
     public $permissions = [];
-
-    /**
-     * @SWG\Property(description="The Module Object for this Widget")
-     * @var ModuleWidget $module
-     */
-    public $module;
 
     /**
      * @SWG\Property(description="The name of the Playlist this Widget is on")
@@ -385,12 +379,12 @@ class Widget implements \JsonSerializable
      * @return WidgetOption
      * @throws NotFoundException
      */
-    public function getOption($option)
+    public function getOption(string $option): WidgetOption
     {
         foreach ($this->widgetOptions as $widgetOption) {
-            /* @var WidgetOption $widgetOption */
-            if (strtolower($widgetOption->option) == strtolower($option))
+            if (strtolower($widgetOption->option) == strtolower($option)) {
                 return $widgetOption;
+            }
         }
 
         throw new NotFoundException(__('Widget Option not found'));
@@ -402,18 +396,18 @@ class Widget implements \JsonSerializable
      * @param mixed $default
      * @return mixed
      */
-    public function getOptionValue($option, $default)
+    public function getOptionValue(string $option, $default)
     {
         try {
             $widgetOption = $this->getOption($option);
             $widgetOption = (($widgetOption->value) === null) ? $default : $widgetOption->value;
 
-            if (is_integer($default))
+            if (is_integer($default)) {
                 $widgetOption = intval($widgetOption);
+            }
 
             return $widgetOption;
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             return $default;
         }
     }
@@ -424,14 +418,14 @@ class Widget implements \JsonSerializable
      * @param string $type
      * @param mixed $value
      */
-    public function setOptionValue($option, $type, $value)
+    public function setOptionValue(string $option, string $type, $value)
     {
+        $this->getLog()->debug('setOptionValue: ' . $option . ', ' . $type . '. Value = ' . $value);
         try {
             $widgetOption = $this->getOption($option);
             $widgetOption->type = $type;
             $widgetOption->value = $value;
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             $this->widgetOptions[] = $this->widgetOptionFactory->create($this->widgetId, $type, $option, $value);
         }
     }
@@ -637,49 +631,58 @@ class Widget implements \JsonSerializable
 
     /**
      * Calculates the duration of this widget according to some rules
-     * @param $module ModuleWidget
+     * @param \Xibo\Entity\Module $module
      * @param bool $import
      * @return $this
      */
-    public function calculateDuration($module, $import = false)
-    {
+    public function calculateDuration(
+        Module $module,
+        bool $import = false
+    ): Widget {
         $this->getLog()->debug('Calculating Duration - existing value is ' . $this->calculatedDuration);
 
-        // Does our widget have a durationIsPerItem and a Number of Items?
-        $numItems = $this->getOptionValue('numItems', 0);
-
-        // Determine the duration of this widget
-        if ($this->type === 'subplaylist') {
-            // We use the module to calculate the duration
-            $this->calculatedDuration = $module->getSubPlaylistResolvedDuration();
-        } else if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
-            // If we have paging involved then work out the page count.
-            $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
-            if ($itemsPerPage > 0) {
-                $numItems = ceil($numItems / $itemsPerPage);
-            }
-
-            // For import
-            // in the layout.xml file the duration associated with widget that has all the above parameters
-            // will already be the calculatedDuration ie $this->duration from xml is duration * (numItems/itemsPerPage)
-            // since we preserve the itemsPerPage, durationIsPerItem and numItems on imported layout, we need to
-            // ensure we set the duration correctly
-            // this will ensure that both, the widget duration and calculatedDuration will be correct on import.
-            if ($import) {
-                $this->duration = (($this->useDuration == 1)
-                    ? $this->duration / $numItems
-                    : $module->getModule()->defaultDuration);
-            }
-
-            $this->calculatedDuration = (($this->useDuration == 1)
-                    ? $this->duration
-                    : $module->getModule()->defaultDuration) * $numItems;
-        } else if ($this->useDuration == 1) {
-            // Widget duration is as specified
-            $this->calculatedDuration = $this->duration;
+        // If we have been provided a widget interface, then we always use that to calculate the duration
+        $widgetInterface = $module->getWidgetProviderOrNull();
+        if ($widgetInterface !== null) {
+            // We use a duration provider
+            $durationProvider = $module->createDurationProvider($this);
+            $widgetInterface->fetchDuration($durationProvider);
+            $this->calculatedDuration = $durationProvider->getDuration();
         } else {
-            // Ask the module what duration we should be.
-            $this->calculatedDuration = $module->getDuration(['real' => true]);
+            // We base our decision on what we know about the module
+            // Does our widget have a durationIsPerItem and a Number of Items?
+            $numItems = $this->getOptionValue('numItems', 0);
+
+            if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+                // If we have paging involved then work out the page count.
+                $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
+                if ($itemsPerPage > 0) {
+                    $numItems = ceil($numItems / $itemsPerPage);
+                }
+
+                // For import
+                // in the layout.xml file the duration associated with widget that has all the above parameters
+                // will already be the calculatedDuration ie $this->duration from xml is
+                // duration * (numItems/itemsPerPage)
+                // since we preserve the itemsPerPage, durationIsPerItem and numItems on imported layout, we need to
+                // ensure we set the duration correctly
+                // this will ensure that both, the widget duration and calculatedDuration will be correct on import.
+                if ($import) {
+                    $this->duration = $this->useDuration == 1
+                        ? ($this->duration / $numItems)
+                        : $module->defaultDuration;
+                }
+
+                $this->calculatedDuration = $this->useDuration == 1
+                    ? $this->duration
+                    : ($module->defaultDuration * $numItems);
+            } else if ($this->useDuration == 1) {
+                // Widget duration is as specified
+                $this->calculatedDuration = $this->duration;
+            } else {
+                // Use the default duration
+                $this->calculatedDuration = $module->defaultDuration;
+            }
         }
 
         $this->getLog()->debug('Set to ' . $this->calculatedDuration);
@@ -691,7 +694,7 @@ class Widget implements \JsonSerializable
      * Load the Widget
      * @param bool $loadActions
      */
-    public function load($loadActions = true)
+    public function load(bool $loadActions = true)
     {
         if ($this->loaded || $this->widgetId == null || $this->widgetId == 0) {
             return;
@@ -719,6 +722,31 @@ class Widget implements \JsonSerializable
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
         $this->loaded = true;
+    }
+
+    /**
+     * @param Property[] $properties
+     * @return \Xibo\Entity\Widget
+     */
+    public function applyProperties(array $properties): Widget
+    {
+        foreach ($properties as $property) {
+            $type = ($property->type === 'code') ? 'cdata' : 'attrib';
+            $this->setOptionValue($property->id, $type, $property->value);
+
+            if ($property->allowLibraryRefs) {
+                // Parse them out and replace for our special syntax.
+                $matches = [];
+                preg_match_all('/\[(.*?)\]/', $property->value, $matches);
+                foreach ($matches[1] as $match) {
+                    if (is_numeric($match)) {
+                        $this->assignMedia(intval($match));
+                    }
+                }
+            }
+        }
+
+        return $this;
     }
 
     /**

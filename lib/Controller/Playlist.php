@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,13 +20,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Controller;
 
-use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Widget;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -38,7 +35,6 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -50,29 +46,19 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Playlist extends Base
 {
-    /**
-     * @var PlaylistFactory
-     */
+    /** @var PlaylistFactory */
     private $playlistFactory;
 
-    /**
-     * @var MediaFactory
-     */
+    /** @var MediaFactory */
     private $mediaFactory;
 
-    /**
-     * @var WidgetFactory
-     */
+    /** @var WidgetFactory */
     private $widgetFactory;
 
-    /**
-     * @var ModuleFactory
-     */
+    /** @var ModuleFactory */
     private $moduleFactory;
 
-    /**
-     * @var UserGroupFactory
-     */
+    /** @var UserGroupFactory */
     private $userGroupFactory;
 
     /** @var UserFactory */
@@ -150,11 +136,7 @@ class Playlist extends Base
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
             'groups' => $this->userGroupFactory->query(),
-                        'modules' => array_map(function($element) use ($moduleFactory) { 
-                    $module = $moduleFactory->createForInstall($element->class);
-                    $module->setModule($element);
-                    return $module;
-                }, $moduleFactory->getAssignableModules())
+            'modules' => $moduleFactory->getAssignableModules()
         ]);
 
         return $this->render($request, $response);
@@ -254,7 +236,9 @@ class Playlist extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Embed?
-        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
+        $embed = ($sanitizedParams->getString('embed') != null)
+            ? explode(',', $sanitizedParams->getString('embed'))
+            : [];
 
         // Playlists
         $playlists = $this->playlistFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
@@ -273,10 +257,8 @@ class Playlist extends Base
         ], $sanitizedParams));
 
         foreach ($playlists as $playlist) {
-
             // Handle embeds
             if (in_array('widgets', $embed)) {
-
                 $loadPermissions = in_array('permissions', $embed);
                 $loadTags = in_array('tags', $embed);
                 $loadActions = in_array('actions', $embed);
@@ -289,20 +271,25 @@ class Playlist extends Base
                 ]);
 
                 foreach ($playlist->widgets as $widget) {
-
-                    /* @var Widget $widget */
-                    $widget->module = $this->moduleFactory->createWithWidget($widget);
-
-                    // Embed the name of this widget
-                    $widget->name = $widget->module->getName();
-
-                    // Augment with tags?
-                    if ($loadTags) {
-                        $widget->tags = $widget->module->getMediaTags();
+                    $widget->tags = [];
+                    
+                    try {
+                        $module = $this->moduleFactory->getByType($widget->type);
+                    } catch (NotFoundException $notFoundException) {
+                        $this->getLog()->error('Module not found for widget: ' . $widget->type);
+                        continue;
                     }
 
-                    // Add widget module type name
-                    $widget->moduleName = $widget->module->getModuleName();
+                    // Embed the name of this widget
+                    $widget->moduleName = $module->name;
+                    $widget->name = $widget->getOptionValue('name', $widget->moduleName);
+
+                    // Augment with tags?
+                    if ($loadTags && $module->regionSpecific == 0) {
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                        $media->load();
+                        $widget->tags = $media->tags;
+                    }
 
                     // Get transitions
                     $widget->transitionIn = $widget->getOptionValue('transIn', null);
@@ -324,13 +311,13 @@ class Playlist extends Base
                 }
             }
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 continue;
+            }
 
             $playlist->includeProperty('buttons');
 
             switch ($playlist->enableStat) {
-
                 case 'On':
                     $playlist->enableStatDescription = __('This Playlist has enable stat collection set to ON');
                     break;
@@ -377,11 +364,16 @@ class Playlist extends Base
                     // Select Folder
                     $playlist->buttons[] = [
                         'id' => 'playlist_button_selectfolder',
-                        'url' => $this->urlFor($request,'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
+                        'url' => $this->urlFor($request, 'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'playlist.selectfolder', ['id' => $playlist->playlistId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor($request, 'playlist.selectfolder', [
+                                    'id' => $playlist->playlistId
+                                ])
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'playlist_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -398,7 +390,12 @@ class Playlist extends Base
                     'text' => __('Enable stats collection?'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'playlist.setenablestat', ['id' => $playlist->playlistId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor($request, 'playlist.setenablestat', [
+                                'id' => $playlist->playlistId
+                            ])
+                        ],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'playlist_button_setenablestat'],
                         ['name' => 'text', 'value' => __('Enable stats collection?')],
@@ -417,11 +414,16 @@ class Playlist extends Base
                 // Delete Button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_delete',
-                    'url' => $this->urlFor($request,'playlist.delete.form', ['id' => $playlist->playlistId]),
+                    'url' => $this->urlFor($request, 'playlist.delete.form', ['id' => $playlist->playlistId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'playlist.delete', ['id' => $playlist->playlistId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor($request, 'playlist.delete', [
+                                'id' => $playlist->playlistId
+                            ])
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'playlist_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -440,18 +442,32 @@ class Playlist extends Base
                 // Permissions button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
+                    'url' => $this->urlFor($request, 'user.permissions.form', [
+                        'entity' => 'Playlist',
+                        'id' => $playlist->playlistId
+                    ]),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor($request, 'user.permissions.multi', [
+                                'entity' => 'Playlist',
+                                'id' => $playlist->playlistId
+                            ])
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'playlist_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $playlist->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Playlist'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor($request, 'user.permissions.multi.form', [
+                                'entity' => 'Playlist'
+                            ])
+                        ],
                         ['name' => 'content-id-name', 'value' => 'playlistId']
                     ]
                 ];
@@ -632,27 +648,33 @@ class Playlist extends Base
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1, 'exactTags' => $exactTags, 'logicalOperator' => $logicalOperator]);
+            $media = $this->mediaFactory->query(null, [
+                'name' => $nameFilter,
+                'tags' => $tagFilter,
+                'assignable' => 1,
+                'exactTags' => $exactTags,
+                'logicalOperator' => $logicalOperator
+            ]);
 
             if (count($media) > 0) {
                 $widgets = [];
 
                 foreach ($media as $item) {
-                    // Create a module
-                    $module = $this->moduleFactory->create($item->mediaType);
+                    // Assign items from the library.
+                    // Get a module to use
+                    $module = $this->moduleFactory->getByType($item->mediaType);
 
-                    // Determine the duration
-                    $itemDuration = ($item->duration == 0) ? $module->determineDuration() : $item->duration;
+                    // The item duration shouldn't ever be 0 in the library, but in case it is we set to the default
+                    $itemDuration = ($item->duration == 0) ? $module->defaultDuration : $item->duration;
 
                     // Create a widget
-                    $widget = $this->widgetFactory->create($this->getUser()->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
+                    $widget = $this->widgetFactory->create(
+                        $this->getUser()->userId,
+                        $playlist->playlistId,
+                        $item->mediaType,
+                        $itemDuration
+                    );
                     $widget->assignMedia($item->mediaId);
-
-                    // Assign the widget to the module
-                    $module->setWidget($widget);
-
-                    // Set default options (this sets options on the widget)
-                    $module->setDefaultWidgetOptions();
 
                     // Calculate the duration
                     $widget->calculateDuration($module);
@@ -663,7 +685,11 @@ class Playlist extends Base
                     // Add to a list of new widgets
                     $widgets[] = $widget;
                     if ($playlist->isDynamic && count($widgets) >= $playlist->maxNumberOfItems) {
-                        $this->getLog()->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                        $this->getLog()->debug(sprintf(
+                            'Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments',
+                            $playlist->playlistId,
+                            $playlist->maxNumberOfItems
+                        ));
                         break;
                     }
                 }
@@ -1078,6 +1104,7 @@ class Playlist extends Base
 
         return $this->render($request, $response);
     }
+
     //</editor-fold>
 
     /**
@@ -1106,86 +1133,6 @@ class Playlist extends Base
             'playlist' => $playlist,
             'help' => $this->getHelp()->link('Layout', 'RegionOptions')
         ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Widget Grid
-     *
-     * @SWG\Get(
-     *  path="/playlist/widget",
-     *  operationId="playlistWidgetSearch",
-     *  tags={"playlist"},
-     *  summary="Playlist Widget Search",
-     *  description="Search widgets on a Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="query",
-     *      description="The Playlist ID to Search",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="widgetId",
-     *      in="query",
-     *      description="The Widget ID to Search",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Widget")
-     *      )
-     *  )
-     * )
-     *
-     * This is not used by the WEB app - remains here for API usage only
-     * TODO: deprecate
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function widgetGrid(Request $request, Response $response)
-    {
-        $this->getState()->template = 'grid';
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $widgets = $this->widgetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
-            'playlistId' => $sanitizedParams->getInt('playlistId'),
-            'widgetId' => $sanitizedParams->getInt('widgetId')
-        ], $sanitizedParams));
-
-        foreach ($widgets as $widget) {
-            /* @var Widget $widget */
-            $widget->load();
-
-            $widget->module = $this->moduleFactory->createWithWidget($widget);
-
-            // Add property for name
-            $widget->name = $widget->module->getName();
-
-            // Add property for transition
-            $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
-
-            if ($this->isApi($request)) {
-                $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format(DateFormatHelper::getSystemFormat());
-                $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format(DateFormatHelper::getSystemFormat());
-                $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
-                $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
-            }
-        }
-
-        // Store the table rows
-        $this->getState()->recordsTotal = $this->widgetFactory->countLast();
-        $this->getState()->setData($widgets);
 
         return $this->render($request, $response);
     }
@@ -1282,36 +1229,34 @@ class Playlist extends Base
 
         // Loop through all the media
         foreach ($media as $mediaId) {
-            /* @var int $mediaId */
             $item = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser()->checkViewable($item))
+            if (!$this->getUser()->checkViewable($item)) {
                 throw new AccessDeniedException(__('You do not have permissions to use this media'));
+            }
 
-            if ($item->mediaType == 'genericfile' || $item->mediaType == 'font')
-                throw new InvalidArgumentException(sprintf(__('You cannot assign file type %s to a playlist'), $item->mediaType), 'mediaType');
+            if ($item->mediaType == 'genericfile' || $item->mediaType == 'font') {
+                throw new InvalidArgumentException(sprintf(
+                    __('You cannot assign file type %s to a playlist'),
+                    $item->mediaType
+                ), 'mediaType');
+            }
 
             // Create a module
-            $module = $this->moduleFactory->create($item->mediaType);
+            $module = $this->moduleFactory->getByType($item->mediaType);
 
             // Determine the duration
-            // if we have a duration provided, then use it, otherwise use the duration recorded on the library item already
+            // if we have a duration provided, then use it, otherwise use the duration recorded on the
+            // library item already
             $itemDuration = ($duration !== null) ? $duration : $item->duration;
 
-            // If the library item duration (or provided duration) is 0, then call the module to determine what the
-            // duration should be.
-            // in most cases calling the module will return the Module Default Duration as configured in settings.
-            $itemDuration = ($itemDuration == 0) ? $module->determineDuration() : $itemDuration;
+            // If the library item duration (or provided duration) is 0, then default to the Module Default
+            // Duration as configured in settings.
+            $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
 
             // Create a widget
             $widget = $this->widgetFactory->create($this->getUser()->userId, $id, $item->mediaType, $itemDuration);
             $widget->assignMedia($item->mediaId);
-
-            // Assign the widget to the module
-            $module->setWidget($widget);
-
-            // Set default options (this sets options on the widget)
-            $module->setDefaultWidgetOptions();
 
             // If a duration has been provided, then we want to use it, so set useDuration to 1.
             if ($duration !== null || $sanitizedParams->getCheckbox('useDuration') == 1) {
@@ -1408,7 +1353,7 @@ class Playlist extends Base
      *  )
      * )
      */
-    function order(Request $request, Response $response, $id)
+    public function order(Request $request, Response $response, $id)
     {
         $playlist = $this->playlistFactory->getById($id);
 
@@ -1433,10 +1378,8 @@ class Playlist extends Base
 
         // Go through each one and move it
         foreach ($widgets as $widgetId => $position) {
-
             // Find this item in the existing list and add it to our new order
             foreach ($playlist->widgets as $widget) {
-                /* @var \Xibo\Entity\Widget $widget */
                 if ($widget->getId() == $widgetId) {
                     $this->getLog()->debug('Setting Display Order ' . $position . ' on widgetId ' . $widgetId);
                     $widget->displayOrder = $position;
@@ -1825,9 +1768,8 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
      *

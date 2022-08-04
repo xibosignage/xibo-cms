@@ -1,0 +1,32 @@
+@import "variables";
+
+.form-help-popup {
+    float: right;
+    padding-top: 6px;
+    color: $xibo-color-primary-lighter;
+
+    &.checkbox-popup {
+        padding-top: 3px;
+    }
+}
+
+/* Code input */
+.code-input-group {
+    .code-input-editor-container {
+        background-color: $code-editor-background-color;
+        padding: 6px;
+        height: 250px;
+        border: 2px solid $code-editor-border-color;
+        border-radius: 3px;
+
+        .code-input-editor {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    /* Fix for monaco editor helper */
+    .monaco-editor .editor-widget.suggest-widget {
+        left: 0 !important;
+    }
+}

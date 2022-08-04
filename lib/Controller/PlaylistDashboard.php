@@ -43,11 +43,8 @@ class PlaylistDashboard extends Base
     /** @var \Xibo\Factory\WidgetFactory */
     private $widgetFactory;
 
-    /** @var \Xibo\Factory\LayoutFactory */
-    private $layoutFactory;
-
-    /** @var \Xibo\Factory\DisplayGroupFactory */
-    private $displayGroupFactory;
+    /** @var \Xibo\Factory\MediaFactory */
+    private $mediaFactory;
 
     /** @var ContainerInterface */
     private $container;
@@ -57,17 +54,15 @@ class PlaylistDashboard extends Base
      * @param $playlistFactory
      * @param $moduleFactory
      * @param $widgetFactory
-     * @param $layoutFactory
-     * @param $displayGroupFactory
+     * @param \Xibo\Factory\MediaFactory $mediaFactory
      * @param ContainerInterface $container
      */
-    public function __construct($playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, ContainerInterface $container)
+    public function __construct($playlistFactory, $moduleFactory, $widgetFactory, $mediaFactory, ContainerInterface $container)
     {
         $this->playlistFactory = $playlistFactory;
         $this->moduleFactory = $moduleFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
+        $this->mediaFactory = $mediaFactory;
         $this->container = $container;
     }
 
@@ -164,13 +159,16 @@ class PlaylistDashboard extends Base
 
         foreach ($playlist->widgets as $widget) {
             // Create a module for the widget and load in some extra data
-            $widget->module = $this->moduleFactory->createWithWidget($widget);
+            $module = $this->moduleFactory->getByType($widget->type);
+            $widget->name = $widget->getOptionValue('name', $module->name);
+            $widget->regionSpecific = $module->regionSpecific;
 
             // Check my permissions
-            if ($widget->module->getModule()->regionSpecific == 0) {
-                $widget->viewble = $user->checkViewable($widget->module->getMedia());
-                $widget->editable = $user->checkEditable($widget->module->getMedia());
-                $widget->deletable = $user->checkDeleteable($widget->module->getMedia());
+            if ($widget->regionSpecific == 0) {
+                $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                $widget->viewble = $user->checkViewable($media);
+                $widget->editable = $user->checkEditable($media);
+                $widget->deletable = $user->checkDeleteable($media);
             } else {
                 $widget->viewble = $user->checkViewable($widget);
                 $widget->editable = $user->checkEditable($widget);
@@ -191,8 +189,11 @@ class PlaylistDashboard extends Base
 
             foreach ($parent->widgets as $parentWidget) {
                 if ($parentWidget->type === 'subplaylist') {
-                    // Create a SubPlaylist widget so we can easily get the items we want.
-                    $subPlaylist = $this->moduleFactory->createWithWidget($parentWidget);
+                    // Create a SubPlaylist widget, so we can easily get the items we want.
+                    $subPlaylist = $this->moduleFactory->getByType($parentWidget->type);
+                    
+                    // TODO: sub-playlist: what do we do here?
+                    //  are we going instantiate sub-playlists using a provider, or are they an exception?
                     $subPlaylistOptions = $subPlaylist->getSubPlaylistOptions($playlist->playlistId);
 
                     // This will be included?
@@ -229,16 +230,16 @@ class PlaylistDashboard extends Base
      */
     public function deletePlaylistWidgetForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        $widget = $this->widgetFactory->loadByWidgetId($id);
 
-        if (!$this->getUser()->checkDeleteable($module->widget)) {
+        if (!$this->getUser()->checkDeleteable($widget)) {
             throw new AccessDeniedException();
         }
 
         // Pass to view
         $this->getState()->template = 'playlist-module-form-delete';
         $this->getState()->setData([
-            'module' => $module,
+            'wodget' => $widget,
             'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
 

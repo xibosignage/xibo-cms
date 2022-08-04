@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -304,11 +304,13 @@ class Soap
      * @param $serverKey
      * @param $hardwareKey
      * @param bool $httpDownloads
+     * @param bool $isSupportsDataUrl
      * @return string
-     * @throws NotFoundException
+     * @throws \DOMException
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
+    protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads, bool $isSupportsDataUrl = false)
     {
         $this->logProcessor->setRoute('RequiredFiles');
         $sanitizer = $this->getSanitizer([
@@ -322,10 +324,13 @@ class Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
-        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey)) {
@@ -334,7 +339,7 @@ class Soap
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         // Check the cache
@@ -375,12 +380,14 @@ class Soap
         // we will use this to drop items from the requirefile table if they are no longer in required files
         $rfIds = array_map(function ($element) {
             return intval($element['rfId']);
-        }, $this->getStore()->select('SELECT rfId FROM `requiredfile` WHERE displayId = :displayId', ['displayId' => $this->display->displayId]));
+        }, $this->getStore()->select('SELECT rfId FROM `requiredfile` WHERE displayId = :displayId', [
+            'displayId' => $this->display->displayId
+        ]));
         $newRfIds = [];
 
         // Build a new RF
-        $requiredFilesXml = new \DOMDocument("1.0");
-        $fileElements = $requiredFilesXml->createElement("files");
+        $requiredFilesXml = new \DOMDocument('1.0');
+        $fileElements = $requiredFilesXml->createElement('files');
         $requiredFilesXml->appendChild($fileElements);
 
         // Filter criteria
@@ -390,6 +397,21 @@ class Soap
         $fileElements->setAttribute('generated', Carbon::now()->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
+
+        // Player Bundle
+        // -------------
+        // Output the player bundle
+        $bundlePath = PROJECT_ROOT . '/modules/bundle.min.js';
+        $file = $requiredFilesXml->createElement('file');
+        $file->setAttribute('type', 'media');
+        $file->setAttribute('download', 'xmds');
+        $file->setAttribute('path', '-1.js');
+        $file->setAttribute('id', '-1');
+        $file->setAttribute('size', filesize($bundlePath));
+        $file->setAttribute('md5', md5_file($bundlePath));
+        $fileElements->appendChild($file);
+        // ------------
+        // Bundle finished
 
         // Default Layout
         $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
@@ -440,7 +462,11 @@ class Soap
             }
 
             // Also look at the schedule
-            foreach ($this->scheduleFactory->getForXmds($this->display->displayId, $this->fromFilter, $this->toFilter) as $row) {
+            foreach ($this->scheduleFactory->getForXmds(
+                $this->display->displayId,
+                $this->fromFilter,
+                $this->toFilter
+            ) as $row) {
                 $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
@@ -497,7 +523,7 @@ class Soap
             $actionLayoutIds = $this->layoutFactory->getActionPublishedLayoutIds($layoutId);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
-            if (!empty($actionLayoutIds) ) {
+            if (!empty($actionLayoutIds)) {
                 $layouts = array_unique(array_merge($layouts, $actionLayoutIds));
             }
         }
@@ -523,13 +549,34 @@ class Soap
             //  4 - Background Images for all Scheduled Layouts
             //  5 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
-                SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
-                   FROM `media`
+                SELECT 1 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
+                  FROM `media`
                  WHERE media.type = 'font'
                     OR (media.type = 'module' AND media.moduleSystemFile = 1)
                 UNION ALL
-                SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
-                   FROM `media`
+                SELECT 1 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
+                  FROM `media`
+                    INNER JOIN `display_media`
+                    ON `display_media`.mediaid = `media`.mediaId
+                 WHERE `display_media`.displayId = :displayId
+                UNION ALL
+                SELECT 2 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
+                  FROM `media`
                     INNER JOIN `lkmediadisplaygroup`
                     ON lkmediadisplaygroup.mediaid = media.MediaID
                     INNER JOIN `lkdgdg`
@@ -538,7 +585,12 @@ class Soap
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                  WHERE lkdisplaydg.DisplayID = :displayId
                 UNION ALL
-                SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
+                SELECT 3 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
                   FROM region
                     INNER JOIN playlist
                     ON playlist.regionId = region.regionId
@@ -552,7 +604,12 @@ class Soap
                     ON media.mediaId = lkwidgetmedia.mediaId
                  WHERE region.layoutId IN (%s)
                 UNION ALL
-                SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize, media.released
+                SELECT 4 AS DownloadOrder,
+                     `media`.storedAs AS path,
+                     `media`.mediaId AS id,
+                     `media`.`MD5`,
+                     `media`.FileSize,
+                     `media`.released
                   FROM `media`
                  WHERE `media`.mediaID IN (
                     SELECT backgroundImageId
@@ -564,16 +621,21 @@ class Soap
             $params = ['displayId' => $this->display->displayId];
 
             if ($playerVersionMediaId != null) {
-                $SQL .= " UNION ALL 
-                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize, media.released
-                            FROM `media`
-                            WHERE `media`.type = 'playersoftware' 
-                            AND `media`.mediaId = :playerVersionMediaId
-                ";
+                $SQL .= ' UNION ALL 
+                    SELECT 5 AS DownloadOrder,
+                        `media`.storedAs AS path,
+                        `media`.mediaId AS id,
+                        `media`.`MD5`,
+                        `media`.fileSize,
+                        `media`.released
+                      FROM `media`
+                     WHERE `media`.type = \'playersoftware\' 
+                        AND `media`.mediaId = :playerVersionMediaId
+                ';
                 $params['playerVersionMediaId'] = $playerVersionMediaId;
             }
 
-            $SQL .= " ORDER BY DownloadOrder ";
+            $SQL .= ' ORDER BY DownloadOrder ';
 
             // Sub layoutId list
             $SQL = sprintf($SQL, $layoutIdList, $layoutIdList);
@@ -601,13 +663,13 @@ class Soap
                 $released = $parsedRow->getInt('released');
 
                 // Check we haven't added this before
-                if (in_array($path, $pathsAdded))
+                if (in_array($path, $pathsAdded)) {
                     continue;
+                }
 
                 // Do we need to calculate a new MD5?
                 // If they are empty calculate them and save them back to the media.
                 if ($md5 == '' || $fileSize == 0) {
-
                     $md5 = md5_file($libraryLocation . $path);
                     $fileSize = filesize($libraryLocation . $path);
 
@@ -616,7 +678,9 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path, $released)->save();
+                $mediaNonce = $this->requiredFileFactory
+                    ->createForMedia($this->display->displayId, $id, $fileSize, $path, $released)
+                    ->save();
 
                 // skip media which has released == 0 or 2
                 if ($released == 0 || $released == 2) {
@@ -626,21 +690,20 @@ class Soap
                 $newRfIds[] = $mediaNonce->rfId;
 
                 // Add the file node
-                $file = $requiredFilesXml->createElement("file");
-                $file->setAttribute("type", 'media');
-                $file->setAttribute("id", $id);
-                $file->setAttribute("size", $fileSize);
-                $file->setAttribute("md5", $md5);
+                $file = $requiredFilesXml->createElement('file');
+                $file->setAttribute('type', 'media');
+                $file->setAttribute('id', $id);
+                $file->setAttribute('size', $fileSize);
+                $file->setAttribute('md5', $md5);
 
                 if ($httpDownloads) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute("path", $this->generateRequiredFileDownloadPath('M', $id, $playerNonce));
-                    $file->setAttribute("saveAs", $path);
-                    $file->setAttribute("download", 'http');
-                }
-                else {
-                    $file->setAttribute("download", 'xmds');
-                    $file->setAttribute("path", $path);
+                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('M', $id, $playerNonce));
+                    $file->setAttribute('saveAs', $path);
+                    $file->setAttribute('download', 'http');
+                } else {
+                    $file->setAttribute('download', 'xmds');
+                    $file->setAttribute('path', $path);
                 }
 
                 $fileElements->appendChild($file);
@@ -655,14 +718,13 @@ class Soap
         }
 
         // Get an array of modules to use
-        $modules = $this->moduleFactory->get();
+        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];
 
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
-
             try {
                 // Check we haven't added this before
                 if (in_array($layoutId, $pathsAdded)) {
@@ -674,7 +736,7 @@ class Soap
                 try {
                     $layout->loadPlaylists();
 
-                    // Make sure its XLF is up to date
+                    // Make sure its XLF is up-to-date
                     $path = $layout->xlfToDisk(['notify' => false]);
                 } finally {
                     $this->layoutFactory->concurrentRequestRelease($layout);
@@ -692,19 +754,22 @@ class Soap
                 $fileName = basename($path);
 
                 // Log
-                if ($this->display->isAuditing())
+                if ($this->display->isAuditing()) {
                     $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
+                }
 
                 // Add nonce
-                $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName)->save();
+                $layoutNonce = $this->requiredFileFactory
+                    ->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName)
+                    ->save();
                 $newRfIds[] = $layoutNonce->rfId;
 
                 // Add the Layout file element
-                $file = $requiredFilesXml->createElement("file");
-                $file->setAttribute("type", 'layout');
-                $file->setAttribute("id", $layoutId);
-                $file->setAttribute("size", $fileSize);
-                $file->setAttribute("md5", $md5);
+                $file = $requiredFilesXml->createElement('file');
+                $file->setAttribute('type', 'layout');
+                $file->setAttribute('id', $layoutId);
+                $file->setAttribute('size', $fileSize);
+                $file->setAttribute('md5', $md5);
 
                 // add Layout code only if code identifier is set on the Layout.
                 if ($layout->code != null) {
@@ -716,13 +781,12 @@ class Soap
 
                 if ($httpDownloads && $supportsHttpLayouts) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute("path", $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
-                    $file->setAttribute("saveAs", $fileName);
-                    $file->setAttribute("download", 'http');
-                }
-                else {
-                    $file->setAttribute("download", 'xmds');
-                    $file->setAttribute("path", $layoutId);
+                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
+                    $file->setAttribute('saveAs', $fileName);
+                    $file->setAttribute('download', 'http');
+                } else {
+                    $file->setAttribute('download', 'xmds');
+                    $file->setAttribute('path', $layoutId);
                 }
 
                 // Get the Layout Modified Date
@@ -733,10 +797,15 @@ class Soap
                 $allRegions = array_merge($layout->regions, $layout->drawers);
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
-                // Append layout resources before layout so they are downloaded first. 
-                // If layouts are set to expire immediately, the new layout will use the old resources if 
+                // Append layout resources before layout, so they are downloaded first.
+                // If layouts are set to expire immediately, the new layout will use the old resources if
                 // the layout is downloaded first.
                 foreach ($allRegions as $region) {
+                    // TODO: canvas region or not?
+                    //  if this is a canvas region we should only send the first widget as a resource
+                    //  but all widgets with data
+                    //  HOW do we manage the lifecycle of widgets with data that changes overtime?
+
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
 
@@ -764,27 +833,23 @@ class Soap
                             $resourcesAdded[] = $widget->widgetId;
 
                             // Add nonce
-                            $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
+                            $getResourceRf = $this->requiredFileFactory
+                                ->createForGetResource($this->display->displayId, $widget->widgetId)
+                                ->save();
                             $newRfIds[] = $getResourceRf->rfId;
 
-                            // Make me a module from the widget, so I can ask it whether it has an updated last accessed
-                            // date or not.
-                            $module = $this->moduleFactory->createWithWidget($widget);
-
                             // Get the widget modified date
-                            // we will use the later of this vs the layout modified date as the updated attribute on
+                            // we will use the latter of this vs the layout modified date as the updated attribute on
                             // required files
-                            $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
-                            $cachedDt = $module->getCacheDate($this->display->displayId);
+                            $widgetModifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
 
-                            // Updated date is the greater of layout/widget modified date
-                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt)) ? $layoutModifiedDt : $widgetModifiedDt;
-
-                            // Finally compare against the cached date, and see if that has updated us at all
-                            $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
+                            // Updated date is the greatest of layout/widget modified date
+                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt))
+                                ? $layoutModifiedDt
+                                : $widgetModifiedDt;
 
                             // Append this item to required files
-                            $resourceFile = $requiredFilesXml->createElement("file");
+                            $resourceFile = $requiredFilesXml->createElement('file');
                             $resourceFile->setAttribute('type', 'resource');
                             $resourceFile->setAttribute('id', $widget->widgetId);
                             $resourceFile->setAttribute('layoutid', $layoutId);
@@ -792,6 +857,41 @@ class Soap
                             $resourceFile->setAttribute('mediaid', $widget->widgetId);
                             $resourceFile->setAttribute('updated', $updatedDt->format('U'));
                             $fileElements->appendChild($resourceFile);
+
+                            // Does this also have an associated data file?
+                            if ($isSupportsDataUrl && $modules[$widget->type]->isDataProviderExpected()) {
+                                // Do we have widget HTML cache? We should
+                                $htmlFile = $libraryLocation . 'widgets' . DIRECTORY_SEPARATOR
+                                    . $widget->widgetId
+                                    . '_'
+                                    . $region->regionId
+                                    . '.html';
+                                $fileSize = filesize($htmlFile);
+
+                                // Output another file node with a different type
+                                $dataFile = $requiredFilesXml->createElement('file');
+                                $dataFile->setAttribute('type', 'widget');
+                                $dataFile->setAttribute('download', 'xmds');
+                                $dataFile->setAttribute('path', $widget->widgetId);
+                                $dataFile->setAttribute('saveAs', $widget->widgetId . '.json');
+                                $dataFile->setAttribute('id', $widget->widgetId);
+                                $dataFile->setAttribute('regionId', $region->regionId);
+                                $dataFile->setAttribute('size', $fileSize);
+                                $dataFile->setAttribute('md5', md5_file($htmlFile));
+
+                                $getResourceRf = $this->requiredFileFactory
+                                    ->createForMedia(
+                                        $this->display->displayId,
+                                        $widget->widgetId,
+                                        $fileSize,
+                                        $htmlFile,
+                                        1
+                                    )
+                                    ->save();
+                                $newRfIds[] = $getResourceRf->rfId;
+                                
+                                $fileElements->appendChild($dataFile);
+                            }
                         }
                     }
                 }
@@ -801,7 +901,6 @@ class Soap
                 
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
-
             } catch (GeneralException $e) {
                 $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
                 continue;
@@ -856,7 +955,8 @@ class Soap
             try {
                 // Execute this on the default connection
                 $this->getStore()->updateWithDeadlockLoop(
-                    'DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
+                    'DELETE FROM `requiredfile` WHERE rfId IN ('
+                        . implode(',', array_fill(0, count($rfIds), '?')) . ')',
                     $rfIds,
                     'default'
                 );
@@ -1889,40 +1989,138 @@ class Soap
         $layoutId = $sanitizer->getInt('layoutId');
         $regionId = $sanitizer->getString('regionId');
         $mediaId = $sanitizer->getString('mediaId');
-
-
+        
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.");
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         // The MediaId is actually the widgetId
         try {
-            $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
+            $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget(
+                $this->display->displayId,
+                $mediaId
+            );
 
-            $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResourceOrCache($this->display->displayId);
+            $region = $this->regionFactory->getById($regionId);
+            $widget = $this->widgetFactory->loadByWidgetId($mediaId);
+            
+            // If this is a canvas region we add all our widgets to this.
+            if ($region->type === 'canvas') {
+                // Render a canvas
+                // ---------------
+                // A canvas plays all widgets in the region at once.
+                // none of them will be anything other than elements
+                $widgets = $region->getPlaylist()->widgets;
+            } else {
+                // Render a widget in a region
+                // ---------------------------
+                // We have a widget
+                $widgets = [$widget];
+            }
+            
+            // Module is always the first widget
+            $module = $this->moduleFactory->getByType($widget->type);
+            
+            // Get all templates
+            $templates = $this->widgetFactory->getTemplatesForWidgets($module, $widgets);
 
+            $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
+            $resource = $renderer->renderOrCache(
+                $module,
+                $region,
+                $widgets,
+                $templates
+            );
+
+            // An array of media we have access to.
+            // Get all linked media for this player and this widget.
+            $media = [];
+            $widgetIds = implode(',', array_map(function ($el) {
+                return $el->widgetId;
+            }, $widgets));
+
+            $sql = '
+                SELECT mediaId, storedAs 
+                  FROM `media` 
+                    INNER JOIN `lkwidgetmedia`
+                    ON `lkwidgetmedia`.mediaId = `media`.mediaId
+                 WHERE `lkwidgetmedia`.widgetId IN (' . $widgetIds . ')
+                UNION ALL
+                SELECT mediaId, storedAs
+                  FROM `media`
+                    INNER JOIN `display_media`
+                    ON `display_media`.mediaId = `media`.mediaId
+                 WHERE `display_media`.displayId = :displayId
+            ';
+
+            // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
+            foreach ($this->getStore()->select($sql, [
+                'displayId' => $this->display->displayId
+            ]) as $row) {
+                $media[$row['mediaId']] = $row['storedAs'];
+            };
+
+            // Join in the data for this player if we're an older one (which we must be).
+            $data = [];
+            foreach ($widgets as $widget) {
+                $dataModule = $this->moduleFactory->getByType($widget->type);
+                if ($dataModule->isDataProviderExpected()) {
+                    // We only ever return cache.
+                    $dataProvider = $module->createDataProvider($widget);
+
+                    // Use the cache if we can.
+                    try {
+                        $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
+                        $cacheKey = $this->moduleFactory->determineCacheKey(
+                            $module,
+                            $widget,
+                            $this->display->displayId,
+                            $dataProvider,
+                            null
+                        );
+
+                        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+                            throw new NotFoundException('Cache not ready');
+                        }
+
+                        $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
+                    } catch (GeneralException $exception) {
+                        // We ignore this.
+                        $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
+                            . ', e: ' . $exception->getMessage());
+                    }
+
+                    $data[$widget->widgetId] = $dataProvider->getData();
+                }
+            }
+
+            // Decorate for the player
+            $resource = $renderer->decorateForPlayer($resource, $media, false, $data);
+
+            if ($resource == '') {
+                throw new ControllerNotImplemented();
+            }
+
+            // Log bandwidth
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
-
-            if ($resource == '')
-                throw new ControllerNotImplemented();
-        }
-        catch (NotFoundException $notEx) {
+        } catch (NotFoundException $notEx) {
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->getLog()->error('Unknown error during getResource. E = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             throw new \SoapFault('Receiver', 'Unable to get the media resource');

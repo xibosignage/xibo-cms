@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -141,6 +141,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
     $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
+    $group->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])->setName('layout.preview.bundle');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
 
 // forms
@@ -189,20 +190,22 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/form/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssignForm'])->setName('playlist.library.assign.form');
 
     // Outputs
-    $group->get('/playlist/widget/tab/{tab}/{id}', ['\Xibo\Controller\Module','getTab'])->setName('module.widget.tab.form');
-    $group->get('/playlist/widget/resource/{regionId}/{id}', ['\Xibo\Controller\Module','getResource'])->setName('module.getResource');
-    $group->get('/playlist/widget/form/templateimage/{type}/{templateId}', ['\Xibo\Controller\Module','getTemplateImage'])->setName('module.getTemplateImage');
+    $group->get('/playlist/widget/resource/{regionId}[/{id}]', [
+        '\Xibo\Controller\Widget', 'getResource'
+    ])->setName('module.getResource');
+
+    $group->get('/playlist/widget/data/{regionId}/{id}', [
+        '\Xibo\Controller\Widget', 'getData'
+    ])->setName('module.getData');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
 
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
-    // Module functions
-    $group->get('/playlist/widget/form/edit/{id}', ['\Xibo\Controller\Module','editWidgetForm'])->setName('module.widget.edit.form');
-    $group->get('/playlist/widget/form/delete/{id}', ['\Xibo\Controller\Module','deleteWidgetForm'])->setName('module.widget.delete.form');
-    $group->get('/playlist/widget/form/transition/edit/{type}/{id}', ['\Xibo\Controller\Module','editWidgetTransitionForm'])->setName('module.widget.transition.edit.form');
-    $group->get('/playlist/widget/form/audio/{id}', ['\Xibo\Controller\Module','widgetAudioForm'])->setName('module.widget.audio.form');
-    $group->get('/playlist/widget/form/expiry/{id}', ['\Xibo\Controller\Module','widgetExpiryForm'])->setName('module.widget.expiry.form');
-    $group->get('/playlist/widget/dataset', ['\Xibo\Controller\Module','getDataSets'])->setName('module.widget.dataset.search');
-    $group->get('/playlist/widget/menuboard', ['\Xibo\Controller\Module','getMenuBoards'])->setName('module.widget.menuboard.search');
+    // Widget functions
+    $group->get('/playlist/widget/form/edit/{id}', ['\Xibo\Controller\Widget','editWidgetForm'])->setName('module.widget.edit.form');
+    $group->get('/playlist/widget/form/delete/{id}', ['\Xibo\Controller\Widget','deleteWidgetForm'])->setName('module.widget.delete.form');
+    $group->get('/playlist/widget/form/transition/edit/{type}/{id}', ['\Xibo\Controller\Widget','editWidgetTransitionForm'])->setName('module.widget.transition.edit.form');
+    $group->get('/playlist/widget/form/audio/{id}', ['\Xibo\Controller\Widget','widgetAudioForm'])->setName('module.widget.audio.form');
+    $group->get('/playlist/widget/form/expiry/{id}', ['\Xibo\Controller\Widget','widgetExpiryForm'])->setName('module.widget.expiry.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
 
 //
@@ -224,8 +227,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/form/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolderForm'])->setName('playlist.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
-// What permissions do we need to be able to see the timeline form?
-// this can be accessed from the designer and the playlist page
 $app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])->setName('playlist.timeline.form');
 
 $app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm'])
@@ -531,18 +532,13 @@ $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Application
 //
 // module
 //
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/module/view', ['\Xibo\Controller\Module','displayPage'])->setName('module.view');
-    $group->post('/module/inst/{name}', ['\Xibo\Controller\Module','install'])->setName('module.install');
-    $group->delete('/module/uninst/{id}', ['\Xibo\Controller\Module','uninstall'])->setName('module.uninstall');
-    $group->get('/module/form/inst/{name}', ['\Xibo\Controller\Module','installForm'])->setName('module.install.form');
-    $group->get('/module/form/uninst/{id}', ['\Xibo\Controller\Module','uninstallForm'])->setName('module.uninstall.form');
-    $group->get('/module/form/instlist', ['\Xibo\Controller\Module','installListForm'])->setName('module.install.list.form');
-    $group->get('/module/form/verify', ['\Xibo\Controller\Module','verifyForm'])->setName('module.verify.form');
-    $group->get('/module/form/clear-cache/{id}', ['\Xibo\Controller\Module','clearCacheForm'])->setName('module.clear.cache.form');
-    $group->get('/module/form/settings/{id}', ['\Xibo\Controller\Module','settingsForm'])->setName('module.settings.form');
-    $group->get('/module/form/{id}/custom/{name}', ['\Xibo\Controller\Module','customFormRender'])->setName('module.custom.form');
-    $group->map(['GET','POST'], '/module/{id}/custom/{name}', ['\Xibo\Controller\Module','customFormExecute'])->setName('module.custom');
+    $group->get('/module/form/clear-cache/{id}', ['\Xibo\Controller\Module','clearCacheForm'])
+        ->setName('module.clear.cache.form');
+    
+    $group->get('/module/form/settings/{id}', ['\Xibo\Controller\Module','settingsForm'])
+        ->setName('module.settings.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['module.view']));
 
 //

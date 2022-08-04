@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,29 +21,48 @@
  */
 namespace Xibo\Event;
 
-use Xibo\Widget\ModuleWidget;
+use Xibo\Entity\Module;
+use Xibo\Entity\Widget;
 
+/**
+ * Widget Add
+ * ----------
+ * Call when a new non-file based widget is added to a Layout
+ */
 class WidgetAddEvent extends Event
 {
     public static $NAME = 'widget.add';
 
-    /** @var ModuleWidget */
+    /** @var \Xibo\Entity\Module */
     protected $module;
+
+    /** @var \Xibo\Entity\Widget */
+    protected $widget;
 
     /**
      * WidgetEditEvent constructor.
-     * @param ModuleWidget $module
+     * @param \Xibo\Entity\Module $module
+     * @param \Xibo\Entity\Widget $widget
      */
-    public function __construct($module)
+    public function __construct(Module $module, Widget $widget)
     {
         $this->module = $module;
+        $this->widget = $widget;
     }
 
     /**
-     * @return ModuleWidget
+     * @return \Xibo\Entity\Module
      */
-    public function getModule()
+    public function getModule(): Module
     {
         return $this->module;
+    }
+
+    /**
+     * @return \Xibo\Entity\Widget
+     */
+    public function getWidget(): Widget
+    {
+        return $this->widget;
     }
 }

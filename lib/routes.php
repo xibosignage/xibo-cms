@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -194,8 +194,6 @@ $app->group('/region', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/playlist', ['\Xibo\Controller\Playlist','grid'])->setName('playlist.search');
-// Widgets Order
-$app->get('/playlist/widget', ['\Xibo\Controller\Playlist','widgetGrid'])->setName('playlist.widget.search');
 
 $app->post('/playlist', ['\Xibo\Controller\Playlist','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.add']))
@@ -229,16 +227,17 @@ $app->group('', function (RouteCollectorProxy $group) {
  * )
  */
 $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
-    $group->post('/{type}/{id}', ['\Xibo\Controller\Module','addWidget'])->setName('module.widget.add');
-    $group->put('/{id}', ['\Xibo\Controller\Module','editWidget'])->setName('module.widget.edit');
-    $group->delete('/{id}', ['\Xibo\Controller\Module','deleteWidget'])->setName('module.widget.delete');
-    $group->put('/transition/{type}/{id}', ['\Xibo\Controller\Module','editWidgetTransition'])->setName('module.widget.transition.edit');
-    $group->put('/{id}/audio', ['\Xibo\Controller\Module','widgetAudio'])->setName('module.widget.audio');
-    $group->delete('/{id}/audio', ['\Xibo\Controller\Module','widgetAudioDelete']);
-    $group->put('/{id}/expiry', ['\Xibo\Controller\Module','widgetExpiry'])->setName('module.widget.expiry');
+    $group->post('/{type}/{id}', ['\Xibo\Controller\Widget','addWidget'])->setName('module.widget.add');
+    $group->put('/{id}', ['\Xibo\Controller\Widget','editWidget'])->setName('module.widget.edit');
+    $group->delete('/{id}', ['\Xibo\Controller\Widget','deleteWidget'])->setName('module.widget.delete');
+    $group->put('/transition/{type}/{id}', ['\Xibo\Controller\Widget','editWidgetTransition'])->setName('module.widget.transition.edit');
+    $group->put('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudio'])->setName('module.widget.audio');
+    $group->delete('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudioDelete']);
+    $group->put('/{id}/expiry', ['\Xibo\Controller\Widget','widgetExpiry'])->setName('module.widget.expiry');
+    $group->put('/{id}/elements', ['\Xibo\Controller\Widget','saveElements'])->setName('module.widget.elements');
 
     // Drawer widgets Region
-    $group->put('/{id}/target', ['\Xibo\Controller\Module','widgetSetRegion'])->setName('module.widget.set.region');
+    $group->put('/{id}/target', ['\Xibo\Controller\Widget','widgetSetRegion'])->setName('module.widget.set.region');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']))
     ->addMiddleware(new LayoutLock($app));
@@ -308,7 +307,12 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/library/usage/layouts/{id}', ['\Xibo\Controller\Library','usageLayouts'])->setName('library.usage.layouts');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
 
-$app->get('/library/download/{id}[/{type}]', ['\Xibo\Controller\Library','download'])->setName('library.download');
+$app->get('/library/download/{id}', [
+    '\Xibo\Controller\Library', 'download'
+])->setName('library.download');
+$app->get('/library/thumbnail/{id}', [
+    '\Xibo\Controller\Library', 'thumbnail'
+])->setName('library.thumbnail');
 
 $app->group('', function (RouteCollectorProxy $group) {
     //$group->map(['HEAD'],'/library', ['\Xibo\Controller\Library','  addgroup
@@ -593,9 +597,16 @@ $app->group('', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/module', ['\Xibo\Controller\Module','grid'])->setName('module.search');
+$app->get('/module/templates/{dataType}', [
+    '\Xibo\Controller\Module', 'templateGrid'
+])->setName('module.template.search');
+
+$app->get('/module/templates/{dataType}/{templateId}/image', [
+    '\Xibo\Controller\Module', 'templateImage'
+])->setName('module.template.image');
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/module/settings/{id}', ['\Xibo\Controller\Module','settings'])->setName('module.settings');
-    $group->put('/module/verify', ['\Xibo\Controller\Module','verify'])->setName('module.verify');
     $group->put('/module/clear-cache/{id}', ['\Xibo\Controller\Module','clearCache'])->setName('module.clear.cache');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['module.view']));
 

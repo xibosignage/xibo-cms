@@ -264,7 +264,7 @@ class Base
             $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
 
             $data = [
-                'draw' => intval($params->getInt('draw')),
+                'draw' => $params->getInt('draw'),
                 'recordsTotal' => $recordsTotal,
                 'recordsFiltered' => $recordsFiltered,
                 'data' => $data
@@ -274,7 +274,7 @@ class Base
         // API Request
         if ($this->isApi($request)) {
             // Envelope by default - the APIView will un-pack if necessary
-            $this->getState()->setData( [
+            $this->getState()->setData([
                 'grid' => $grid,
                 'success' => $state->success,
                 'status' => $state->httpStatus,
@@ -284,7 +284,6 @@ class Base
             ]);
 
             return $this->renderApiResponse($request, $response->withStatus($state->httpStatus));
-
         } else if ($request->isXhr()) {
             // WEB Ajax
             // --------
@@ -295,14 +294,13 @@ class Base
             }
 
             // We always return 200's
-            // TODO: we might want to change this (we'd need to change the javascript to suit)
             if ($grid) {
                 $json = $data;
             } else {
                 $json = $state->asArray();
             }
 
-           return $response->withJson($json, 200);
+            return $response->withJson($json, 200);
         } else {
             // WEB Normal
             // ----------
@@ -311,7 +309,7 @@ class Base
                 throw new ControllerNotImplemented(__('Template Missing'));
             }
 
-            // Append the side bar content
+            // Append the sidebar content
             $data['clock'] = Carbon::now()->format('H:i T');
             $data['currentUser'] = $this->getUser();
 

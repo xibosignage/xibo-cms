@@ -38,14 +38,13 @@ class UpdateEmptyVideoDurations implements TaskInterface
     public function run()
     {
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-        $videos = $this->mediaFactory->getByMediaType('video');
+        $module = $this->moduleFactory->getByType('video');
+        $videos = $this->mediaFactory->getByMediaType($module->type);
 
         foreach ($videos as $video) {
-            /* @var \Xibo\Entity\Media $video */
             if ($video->duration == 0) {
                 // Update
-                $module = $this->moduleFactory->createWithMedia($video);
-                $video->duration = $module->determineDuration($libraryLocation . $video->storedAs);
+                $video->duration = $module->fetchDurationOrDefault($libraryLocation . $video->storedAs);
                 $video->save(['validate' => false]);
             }
         }

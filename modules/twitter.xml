@@ -1,0 +1,110 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-twitter</id>
+    <name>Twitter</name>
+    <author>Core</author>
+    <description>Twitter</description>
+    <class></class>
+    <type>twitter</type>
+    <dataType>social-media</dataType>
+    <dataCacheKey>%searchTerm%_%language%_%resultType%_%tweetCount%</dataCacheKey>
+    <schemaVersion>2</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="searchTerm" type="input">
+            <title>Search Term</title>
+            <helpText>Search term. You can test your search term in the twitter.com search box first.</helpText>
+            <default></default>
+        </property>
+        <property id="language" type="input">
+            <title>Language</title>
+            <helpText>Language in which tweets should be returned</helpText>
+            <default></default>
+        </property>
+        <property id="resultType" type="dropdown" mode="single">
+            <title>Type</title>
+            <helpText>Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.</helpText>
+            <default>1</default>
+            <options>
+                <option name="1">Mixed</option>
+                <option name="2">Recent</option>
+                <option name="3">Popular</option>
+            </options>
+            <playerCompatibility android="v3 R304" windows="v3 R303" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
+        </property>
+        <property id="resultContent" type="dropdown" mode="single">
+            <title>Content Type</title>
+            <helpText>This is the intended tweet content type.</helpText>
+            <default>1</default>
+            <options>
+                <option name="0">All Tweets</option>
+                <option name="1">Tweets with text only content</option>
+                <option name="2">Tweets with text and image content</option>
+            </options>
+        </property>
+        <property id="tweetDistance" type="number">
+            <title>Distance</title>
+            <helpText>Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.</helpText>
+            <default></default>
+        </property>
+        <property id="removeMentions" type="checkbox">
+            <title>Remove Mentions?</title>
+            <helpText>Should mentions (@someone) be removed from the Tweet Text?</helpText>
+            <default>0</default>
+        </property>
+        <property id="removeHashtags" type="checkbox">
+            <title>Remove Hashtags?</title>
+            <helpText>Should Hashtags (#something) be removed from the Tweet Text?</helpText>
+            <default>0</default>
+        </property>
+        <property id="removeUrls" type="checkbox">
+            <title>Remove URLs?</title>
+            <helpText>Should URLs be removed from the Tweet Text? Most URLs do not compliment digital signage.</helpText>
+            <default>1</default>
+        </property>
+    </properties>
+    <dataParser><![CDATA[
+        // item - element to be parsed
+        // options - object containing the values to be evaluated/used
+        if(options.removeMentions == 1) {
+            item.text = item.text.replace(/@[^\s]+/g, '');
+        }
+        if(options.removeHashtags == 1) {
+            item.text = item.text.replace(/#[^\s]+/g, '');
+        }
+        if(options.removeUrls == 1) {
+            item.text = item.text.replace(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9()@:%_\+.~#?&//=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, '');
+        }
+        // Return the parsed item
+        return item;
+    ]]></dataParser>
+    <sampleData><![CDATA[
+        {
+            "tweet": "Tweet text"
+        }
+    ]]></sampleData>
+    <preview></preview>
+</module>

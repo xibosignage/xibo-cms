@@ -150,16 +150,6 @@ class ContainerFactory
             'state' => function () {
                 return new ApplicationState();
             },
-            'moduleService' => function (ContainerInterface $c) {
-                return new ModuleService(
-                    $c->get('store'),
-                    $c->get('pool'),
-                    $c->get('logService'),
-                    $c->get('configService'),
-                    $c->get('sanitizerService'),
-                    $c->get('dispatcher')
-                );
-            },
             'configService' => function (ContainerInterface $c) {
                 return ConfigService::Load($c, PROJECT_ROOT . '/web/settings.php');
             },

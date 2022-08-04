@@ -13,8 +13,8 @@
         {% for widget in region.regionPlaylist.widgets|slice(0, 10) %}
             <tr>
                 <td>{{ region.regionPlaylist.name }}</td>
-                <td>{{ widget.module.getName() }}</td>
-                <td>{{ widget.module.getModuleName() }}</td>
+                <td>{{ widget.name }}</td>
+                <td>{{ widget.moduleName }}</td>
                 <td>{{ widget.calculatedDuration }}</td>
             </tr>
         {% endfor %}

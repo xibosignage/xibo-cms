@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -332,8 +332,7 @@ class Controllers
                     $c->get('playlistFactory'),
                     $c->get('moduleFactory'),
                     $c->get('widgetFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('displayGroupFactory'),
+                    $c->get('mediaFactory'),
                     $c
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -341,21 +340,8 @@ class Controllers
             },
             '\Xibo\Controller\Module' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Module(
-                    $c->get('store'),
                     $c->get('moduleFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('permissionFactory'),
-                    $c->get('userGroupFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('transitionFactory'),
-                    $c->get('regionFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('widgetAudioFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('dataSetFactory'),
-                    $c->get('menuBoardFactory')
+                    $c->get('moduleTemplateFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -577,6 +563,21 @@ class Controllers
                     $c->get('userGroupFactory'),
                     $c->get('permissionFactory'),
                     $c->get('userFactory')
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
+            '\Xibo\Controller\Widget' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Widget(
+                    $c->get('moduleFactory'),
+                    $c->get('moduleTemplateFactory'),
+                    $c->get('playlistFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('permissionFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('transitionFactory'),
+                    $c->get('regionFactory'),
+                    $c->get('widgetAudioFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

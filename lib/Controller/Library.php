@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Stream;
+use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -66,6 +67,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\LibraryFullException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Render\WidgetDownloader;
 
 /**
  * Class Library
@@ -299,10 +301,14 @@ class Library extends Base
             }
 
             // Thumbnail
-            $module = $this->moduleFactory->createWithMedia($media);
+            $module = $this->moduleFactory->getByType($media->mediaType);
             $media->thumbnail = '';
-            if ($module->hasThumbnail()) {
-                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+            if ($module->hasThumbnail) {
+                $media->thumbnail = $this->urlFor($request, 'library.download', [
+                    'id' => $media->mediaId
+                ], [
+                    'preview' => 1
+                ]);
             }
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
 
@@ -315,7 +321,7 @@ class Library extends Base
             $this->getState()->template = 'library-page';
             $this->getState()->setData([
                 'users' => $this->userFactory->query(),
-                'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
+                'modules' => $this->moduleFactory->getLibraryModules(),
                 'groups' => $this->userGroupFactory->query(),
                 'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
             ]);
@@ -528,7 +534,7 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $user = $this->getUser();
 
@@ -566,10 +572,18 @@ class Library extends Base
             $media->revised = ($media->parentId != 0) ? 1 : 0;
 
             // Thumbnail
-            $module = $this->moduleFactory->createWithMedia($media);
             $media->thumbnail = '';
-            if ($module->hasThumbnail()) {
-                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+            try {
+                $module = $this->moduleFactory->getByType($media->mediaType);
+                if ($module->hasThumbnail) {
+                    $media->thumbnail = $this->urlFor($request, 'library.download', [
+                        'id' => $media->mediaId
+                    ], [
+                        'preview' => 1
+                    ]);
+                }
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->error('Module ' . $media->mediaType . ' not found');
             }
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
@@ -583,14 +597,15 @@ class Library extends Base
                 $media->excludeProperty('mediaExpiresIn');
                 $media->excludeProperty('mediaExpiryFailed');
                 $media->excludeProperty('mediaNoExpiryDate');
-                $media->expires = ($media->expires == 0) ? 0 : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
+                $media->expires = ($media->expires == 0)
+                    ? 0
+                    : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
                 continue;
             }
 
             $media->includeProperty('buttons');
 
             switch ($media->released) {
-
                 case 1:
                     $media->releasedDescription = '';
                     break;
@@ -604,7 +619,6 @@ class Library extends Base
             }
 
             switch ($media->enableStat) {
-
                 case 'On':
                     $media->enableStatDescription = __('This Media has enable stat collection set to ON');
                     break;
@@ -807,11 +821,14 @@ class Library extends Base
                 $searchResult->duration = $media->duration;
 
                 // Thumbnail
-                $module = $this->moduleFactory->createWithMedia($media);
-
-                if ($module->hasThumbnail()) {
-                    $searchResult->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1])
-                        . '&isThumb=1';
+                $module = $this->moduleFactory->getByType($media->mediaType);
+                if ($module->hasThumbnail) {
+                    $searchResult->thumbnail = $this->urlFor($request, 'library.download', [
+                            'id' => $media->mediaId
+                        ], [
+                            'preview' => 1,
+                            'isThumb' => 1
+                        ]);
                 }
 
                 // Add the result
@@ -1312,9 +1329,11 @@ class Library extends Base
         }
 
         // Should we update the media in all layouts?
-        if ($sanitizedParams->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
+        if ($sanitizedParams->getCheckbox('updateInLayouts') == 1
+            || $media->hasPropertyChanged('enableStat')
+        ) {
             foreach ($this->widgetFactory->getByMediaId($media->mediaId, 0) as $widget) {
-                $widget->calculateDuration($this->moduleFactory->createWithWidget($widget));
+                $widget->calculateDuration($this->moduleFactory->getByType($widget->type));
                 $widget->save();
             }
         }
@@ -1504,69 +1523,139 @@ class Library extends Base
      *
      * @param Request $request
      * @param Response $response
+     * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function download(Request $request, Response $response)
+    public function download(Request $request, Response $response, $id)
     {
-        $routeContext = RouteContext::fromRequest($request);
-        $route = $routeContext->getRoute();
-        $mediaId = $route->getArgument('id');
-        $type = $route->getArgument('type');
-
         // We can download by mediaId or by mediaName.
-        if (is_numeric($mediaId)) {
-            $media = $this->mediaFactory->getById($mediaId);
+        if (is_numeric($id)) {
+            $media = $this->mediaFactory->getById($id);
         } else {
-            $media = $this->mediaFactory->getByName($mediaId);
+            $media = $this->mediaFactory->getByName($id);
         }
 
-        $this->getLog()->debug('Download request for mediaId ' . $mediaId
-            . ' and type ' . $type . '. Media is a '
-            . $media->mediaType . ', is system file:' . $media->moduleSystemFile);
+        $this->getLog()->debug('Download request for mediaId ' . $id
+            . '. Media is a ' . $media->mediaType . ', is system file:' . $media->moduleSystemFile);
 
-        if ($media->mediaType === 'module' && $media->moduleSystemFile === 1) {
-            // grant permissions
-            // (everyone has access to module system files)
-        } else if ($media->mediaType === 'module') {
-            // Make sure that our user has this mediaId assigned to a Widget they can view
-            // we can't test for normal media permissions, because no user has direct access to these "module" files
-            // https://github.com/xibosignage/xibo/issues/1304
-            if (count($this->widgetFactory->query(null, ['mediaId' => $mediaId])) <= 0) {
-                throw new AccessDeniedException();
-            }
-        } else if (!$this->getUser()->checkViewable($media)) {
+        // TODO: Permissions check
+        //  decide how we grant permissions to module files.
+        if ($media->mediaType !== 'module' && !$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
-        if ($type == null && $media->mediaType === 'module') {
-            $type = 'genericfile';
-        }
-
-        if ($type != '') {
-            $widget = $this->moduleFactory->create($type);
-            $widgetOverride = $this->widgetFactory->createEmpty();
-            $widgetOverride->assignMedia($media->mediaId);
-            $widget->setWidget($widgetOverride);
+        // Make a module
+        if ($media->mediaType === 'module') {
+            $module = $this->moduleFactory->getByType('image');
         } else {
-            // Make a media module
-            $this->getLog()->debug('Creating a module with Media: ' . $media->mediaId);
-
-            $widget = $this->moduleFactory->createWithMedia($media);
+            $module = $this->moduleFactory->getByType($media->mediaType);
         }
 
-        if ($widget->getModule()->regionSpecific == 1) {
+        // We are not able to download region specific modules
+        if ($module->regionSpecific == 1) {
             throw new NotFoundException(__('Cannot download region specific module'));
         }
 
-        $this->getLog()->debug('About to call download for Widget: ' . $widget->getModuleType());
-        $response = $widget->download($request, $response);
+        // Hand over to the widget downloader
+        $downloader = new WidgetDownloader(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            $this->getConfig()->getSetting('SENDFILE_MODE')
+        );
+        $downloader->useLogger($this->getLog()->getLoggerInterface());
+
+        $params = $this->getSanitizer($request->getParams());
+        if ($params->getCheckbox('preview') == 1) {
+            // Various different behaviours for the different types of file.
+            if ($module->type === 'image') {
+                $response = $downloader->imagePreview(
+                    $params,
+                    $media->storedAs,
+                    $response,
+                    $this->getConfig()->uri('img/error.png', true)
+                );
+            } else if ($module->type === 'video') {
+                $response = $downloader->imagePreview(
+                    $params,
+                    $media->mediaId . '_videocover',
+                    $response,
+                    $this->getConfig()->uri('img/1x1.png', true)
+                );
+            } else {
+                $response = $downloader->download($media, $response, $media->getMimeType());
+            }
+        } else {
+            $response = $downloader->download($media, $response, null, $params->getString('attachment'));
+        }
 
         $this->setNoOutput(true);
+        return $this->render($request, $response);
+    }
 
+    /**
+     * @SWG\Get(
+     *  path="/library/thumbnail/{mediaId}",
+     *  operationId="libraryThumbnail",
+     *  tags={"library"},
+     *  summary="Download Thumbnail",
+     *  description="Download thumbnail for a Media file from the Library",
+     *  produces={"application/octet-stream"},
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID to Download",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(type="file"),
+     *      @SWG\Header(
+     *          header="X-Sendfile",
+     *          description="Apache Send file header - if enabled.",
+     *          type="string"
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Accel-Redirect",
+     *          description="nginx send file header - if enabled.",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function thumbnail(Request $request, Response $response, $id)
+    {
+        // We can download by mediaId or by mediaName.
+        if (is_numeric($id)) {
+            $media = $this->mediaFactory->getById($id);
+        } else {
+            $media = $this->mediaFactory->getByName($id);
+        }
+
+        $this->getLog()->debug('Thumbnail request for mediaId ' . $id
+            . '. Media is a ' . $media->mediaType);
+
+        // Permissions.
+        if (!$this->getUser()->checkViewable($media)) {
+            throw new AccessDeniedException();
+        }
+
+        // Hand over to the widget downloader
+        $downloader = new WidgetDownloader(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            $this->getConfig()->getSetting('SENDFILE_MODE')
+        );
+        $downloader->useLogger($this->getLog()->getLoggerInterface());
+        $response = $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));
+
+        $this->setNoOutput(true);
         return $this->render($request, $response);
     }
 
@@ -2374,23 +2463,24 @@ class Library extends Base
         // check if we have type provided in the request (available via API), if not get the module type from
         // the extension
         if (!empty($type)) {
-            $module = $this->getModuleFactory()->create($type);
+            $module = $this->getModuleFactory()->getByType($type);
         } else {
             $module = $this->getModuleFactory()->getByExtension($ext);
-            $module = $this->getModuleFactory()->create($module->type);
+            $module = $this->getModuleFactory()->getByType($module->type);
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from download info
         $name = empty($optionalName) ? $downloadInfo['filename'] : $optionalName;
 
         // double check that provided Module Type and Extension are valid
-        $moduleCheck = $this->getModuleFactory()->query(null, [
-            'extension' => $ext,
-            'type' => $module->getModuleType()
-        ]);
-
-        if (count($moduleCheck) <= 0) {
-            throw new NotFoundException(sprintf(__('Invalid Module type or extension. Module type %s does not allow for %s extension'), $module->getModuleType(), $ext));
+        if (!Str::contains($module->getSetting('validExtensions'), $ext)) {
+            throw new NotFoundException(
+                sprintf(
+                    __('Invalid Module type or extension. Module type %s does not allow for %s extension'),
+                    $module->type,
+                    $ext
+                )
+            );
         }
 
         // add our media to queueDownload and process the downloads
@@ -2399,8 +2489,8 @@ class Library extends Base
             str_replace(' ', '%20', htmlspecialchars_decode($url)),
             $expires,
             [
-                'fileType' => strtolower($module->getModuleType()),
-                'duration' => $module->determineDuration(),
+                'fileType' => strtolower($module->type),
+                'duration' => $module->defaultDuration,
                 'extension' => $ext,
                 'enableStat' => $enableStat,
                 'folderId' => $folderId,
@@ -2413,7 +2503,7 @@ class Library extends Base
                 // Success
                 $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
                 $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-                $realDuration = $module->determineDuration($libraryFolder . $media->storedAs);
+                $realDuration = $module->fetchDurationOrDefault($libraryFolder . $media->storedAs);
                 if ($realDuration !== $media->duration) {
                     $media->updateDuration($realDuration);
                 }
@@ -2647,14 +2737,14 @@ class Library extends Base
 
                     // Queue this for upload.
                     // Use a module to make sure our type, etc is supported.
-                    $module = $this->getModuleFactory()->create($import->searchResult->type);
+                    $module = $this->getModuleFactory()->getByType($import->searchResult->type);
                     $import->media = $this->mediaFactory->queueDownload(
                         $import->searchResult->title,
                         str_replace(' ', '%20', htmlspecialchars_decode($import->url)),
                         0,
                         [
-                            'fileType' => strtolower($module->getModuleType()),
-                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->determineDuration(),
+                            'fileType' => strtolower($module->type),
+                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->defaultDuration,
                             'enableStat' => $enableStat,
                             'folderId' => $folderId,
                             'permissionsFolderId' => $permissionsFolderId

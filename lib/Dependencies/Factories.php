@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -266,26 +266,23 @@ class Factories
             },
             'moduleFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ModuleFactory(
-                    $c->get('user'),
-                    $c->get('userFactory'),
-                    $c->get('moduleService'),
-                    $c->get('widgetFactory'),
-                    $c->get('regionFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('dataSetFactory'),
-                    $c->get('dataSetColumnFactory'),
-                    $c->get('transitionFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('commandFactory'),
-                    $c->get('scheduleFactory'),
-                    $c->get('permissionFactory'),
-                    $c->get('userGroupFactory'),
-                    $c->get('menuBoardFactory'),
-                    $c->get('menuBoardCategoryFactory'),
-                    $c->get('notificationFactory'),
+                    $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'widget',
+                    $c->get('pool'),
                     $c->get('view'),
-                    $c->get('httpCache')
+                    $c->get('configService')
+                );
+                $repository
+                    ->setAclDependencies(
+                        $c->get('user'),
+                        $c->get('userFactory')
+                    )
+                    ->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'moduleTemplateFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\ModuleTemplateFactory(
+                    $c->get('pool'),
+                    $c->get('view')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -469,7 +466,8 @@ class Factories
                     $c->get('widgetAudioFactory'),
                     $c->get('permissionFactory'),
                     $c->get('displayNotifyService'),
-                    $c->get('actionFactory')
+                    $c->get('actionFactory'),
+                    $c->get('moduleTemplateFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;

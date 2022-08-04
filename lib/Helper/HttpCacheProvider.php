@@ -7,6 +7,9 @@ namespace Xibo\Helper;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * A set of helper methods for dealing with HTTP cache
+ */
 class HttpCacheProvider
 {
     /**
@@ -20,7 +23,7 @@ class HttpCacheProvider
      * @return ResponseInterface           A new PSR7 response object with `Cache-Control` header
      * @throws InvalidArgumentException if the cache-control type is invalid
      */
-    public function allowCache(ResponseInterface $response, $type = 'private', $maxAge = null, $mustRevalidate = false)
+    public static function allowCache(ResponseInterface $response, $type = 'private', $maxAge = null, $mustRevalidate = false)
     {
         if (!in_array($type, ['private', 'public'])) {
             throw new InvalidArgumentException('Invalid Cache-Control type. Must be "public" or "private".');
@@ -47,7 +50,7 @@ class HttpCacheProvider
      *
      * @return ResponseInterface           A new PSR7 response object with `Cache-Control` header
      */
-    public function denyCache(ResponseInterface $response)
+    public static function denyCache(ResponseInterface $response)
     {
         return $response->withHeader('Cache-Control', 'no-store,no-cache');
     }
@@ -61,7 +64,7 @@ class HttpCacheProvider
      * @return ResponseInterface           A new PSR7 response object with `Expires` header
      * @throws InvalidArgumentException if the expiration date cannot be parsed
      */
-    public function withExpires(ResponseInterface $response, $time)
+    public static function withExpires(ResponseInterface $response, $time)
     {
         if (!is_integer($time)) {
             $time = strtotime($time);
@@ -83,7 +86,7 @@ class HttpCacheProvider
      * @return ResponseInterface           A new PSR7 response object with `ETag` header
      * @throws InvalidArgumentException if the etag type is invalid
      */
-    public function withEtag(ResponseInterface $response, $value, $type = 'strong')
+    public static function withEtag(ResponseInterface $response, $value, $type = 'strong')
     {
         if (!in_array($type, ['strong', 'weak'])) {
             throw new InvalidArgumentException('Invalid etag type. Must be "strong" or "weak".');
@@ -105,7 +108,7 @@ class HttpCacheProvider
      * @return ResponseInterface           A new PSR7 response object with `Last-Modified` header
      * @throws InvalidArgumentException if the last modified date cannot be parsed
      */
-    public function withLastModified(ResponseInterface $response, $time)
+    public static function withLastModified(ResponseInterface $response, $time)
     {
         if (!is_integer($time)) {
             $time = strtotime($time);

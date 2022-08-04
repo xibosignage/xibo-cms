@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 html {
+    /* TODO To be changed to 16px in v4 */
     font-size: 14px; /* Root default font size */
 }
 

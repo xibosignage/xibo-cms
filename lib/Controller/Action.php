@@ -180,7 +180,10 @@ class Action  extends Base
             'layoutCode' => $parsedParams->getString('layoutCode')
         ];
 
-        $actions = $this->actionFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
+        $actions = $this->actionFactory->query(
+            $this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams)
+        );
 
         foreach ($actions as $action) {
             $action->widgetName = null;
@@ -188,10 +191,10 @@ class Action  extends Base
 
             if ($action->actionType === 'navWidget' && $action->widgetId != null) {
                 $widget = $this->widgetFactory->loadByWidgetId($action->widgetId);
-                $module = $this->moduleFactory->createWithWidget($widget);
+                $module = $this->moduleFactory->getByType($widget->type);
 
                 // dynamic field to display in the grid instead of widgetId
-                $action->widgetName = $module->getName();
+                $action->widgetName = $widget->getOptionValue('name', $module->name);
             }
 
             if ($action->target === 'region' && $action->targetId != null) {
@@ -210,13 +213,13 @@ class Action  extends Base
 
             $action->buttons[] = [
                 'id' => 'action_edit_button',
-                'url' => $this->urlFor($request,'action.edit.form', ['id' => $action->actionId]),
+                'url' => $this->urlFor($request, 'action.edit.form', ['id' => $action->actionId]),
                 'text' => __('Edit')
             ];
 
             $action->buttons[] = [
                 'id' => 'action_delete_button',
-                'url' => $this->urlFor($request,'action.delete.form', ['id' => $action->actionId]),
+                'url' => $this->urlFor($request, 'action.delete.form', ['id' => $action->actionId]),
                 'text' => __('Delete')
             ];
         }
@@ -266,9 +269,9 @@ class Action  extends Base
         $widgets = $layout->getDrawerWidgets();
 
         foreach ($widgets as $widget) {
-            $module = $this->moduleFactory->createWithWidget($widget);
+            $module = $this->moduleFactory->getByType($widget->type);
             // if we don't have a name set in the Widget
-            $widget->name = sprintf('%s [%s]', $module->getName(), $module->getModuleType());
+            $widget->name = sprintf('%s [%s]', $widget->getOptionValue('name', $module->name), $module->type);
         }
 
         $this->getState()->template = 'action-form-add';
@@ -459,9 +462,8 @@ class Action  extends Base
         $widgets = $layout->getDrawerWidgets();
 
         foreach ($widgets as $widget) {
-            $module = $this->moduleFactory->createWithWidget($widget);
-            // if we don't have a name set in the Widget
-            $widget->name = $module->getName();
+            $module = $this->moduleFactory->getByType($widget->type);
+            $widget->name = $widget->getOptionValue('name', $module->name);
         }
 
         // Make sure the Layout is checked out to begin with

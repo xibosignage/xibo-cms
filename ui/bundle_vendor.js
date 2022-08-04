@@ -1,4 +1,4 @@
-//--- Add NPM Packages - JS ----
+// --- Add NPM Packages - JS ----
 import './public_path';
 
 // jquery-ui
@@ -32,46 +32,47 @@ window.moment = require('moment');
 require('moment-timezone');
 
 try {
-    // Conditional import for the locale variable
-    if( calendar_type && calendar_type == "Jalali") {
-        // moment-jalaali
-        window.moment = require('moment-jalaali');
+  // Conditional import for the locale variable
+  if (CALENDAR_TYPE && CALENDAR_TYPE == 'Jalali') {
+    // moment-jalaali
+    window.moment = require('moment-jalaali');
 
-        // Persian date time picker
-        window.persianDate = require('persian-date/dist/persian-date.min.js');
-        require('persian-datepicker/dist/js/persian-datepicker.min.js');
-    } else {
-        // Time/Date picker
-        window.flatpickr = require('flatpickr');
-        window.flatpickrMonthSelectPlugin = require('flatpickr/dist/plugins/monthSelect/index.js');
+    // Persian date time picker
+    window.persianDate = require('persian-date/dist/persian-date.min.js');
+    require('persian-datepicker/dist/js/persian-datepicker.min.js');
+  } else {
+    // Time/Date picker
+    window.flatpickr = require('flatpickr');
+    window.flatpickrMonthSelectPlugin =
+      require('flatpickr/dist/plugins/monthSelect/index.js');
 
-        try {
-            // Conditional import for the locale variable
-            if(jsShortLocale && jsShortLocale != 'en-GB') {
-                require('flatpickr/dist/l10n/' + jsShortLocale + '.js');
-            }
-        } catch(e) { //Handle variable not set error
-            console.warn('[Warning] loading flatpickr: Locale not defined!');
-        }
+    try {
+      // Conditional import for the locale variable
+      if (jsShortLocale && jsShortLocale != 'en-GB') {
+        require('flatpickr/dist/l10n/' + jsShortLocale + '.js');
+      }
+    } catch (e) { // Handle variable not set error
+      console.warn('[Warning] loading flatpickr: Locale not defined!');
     }
-} catch (e) { //Handle variable not set error
-    console.warn('[Warning] loading moment-jalaali: Calendar Type not defined!');
+  }
+} catch (e) { // Handle variable not set error
+  console.warn('[Warning] loading moment-jalaali: Calendar Type not defined!');
 }
 
 // select2
 require('select2');
 
 try {
-    // Conditional import for the locale variable
-    if(jsShortLocale && jsShortLocale != "en-GB" ) {
-        require('select2/dist/js/i18n/' + jsLocale + '.js');
-    }
-} catch (e) { //Handle variable not set error
-    console.warn('[Warning] loading select2: Locale not defined!');
+  // Conditional import for the locale variable
+  if (jsShortLocale && jsShortLocale != 'en-GB' ) {
+    require('select2/dist/js/i18n/' + jsLocale + '.js');
+  }
+} catch (e) { // Handle variable not set error
+  console.warn('[Warning] loading select2: Locale not defined!');
 }
 
 // Default theme for select2
-$.fn.select2.defaults.set("theme", "bootstrap");
+$.fn.select2.defaults.set('theme', 'bootstrap');
 
 // ekko-lightbox
 require('ekko-lightbox');
@@ -104,23 +105,25 @@ require('chart.js');
 require('form-serializer');
 
 // datatables.net
-var dt_extras = [
-         require("datatables.net"),
-         require("datatables.net-bs4"),
-         require("datatables.net-buttons"),
-         require("datatables.net-buttons/js/buttons.colVis.min.js"),
-         require("datatables.net-buttons/js/buttons.html5.min.js"),
-         require("datatables.net-buttons/js/buttons.print.min.js"),
-         require("datatables.net-buttons-bs4"),
-         require('datatables.net-responsive')
-     ];
-dt_extras.forEach(function(e) {e(window, window.$);});
+const DT_EXTRAS = [
+  require('datatables.net'),
+  require('datatables.net-bs4'),
+  require('datatables.net-buttons'),
+  require('datatables.net-buttons/js/buttons.colVis.min.js'),
+  require('datatables.net-buttons/js/buttons.html5.min.js'),
+  require('datatables.net-buttons/js/buttons.print.min.js'),
+  require('datatables.net-buttons-bs4'),
+  require('datatables.net-responsive'),
+];
+DT_EXTRAS.forEach(function(e) {
+  e(window, window.$);
+});
 
-//--- Add Local JS files ---
+// --- Add Local JS files ---
 // jquery-message-queuing
 require('./src/vendor/jquery-message-queuing/jquery.ba-jqmq.min.js');
 
-//leaflet
+// leaflet
 require('leaflet');
 require('leaflet-draw');
 require('leaflet-search');
@@ -145,10 +148,16 @@ require('corejs-typeahead/dist/typeahead.jquery.min.js');
 require('jstree/dist/jstree.min.js');
 require('jstree/dist/themes/default/style.min.css');
 
+// Monaco Editor
+window.monaco = require('monaco-editor/esm/vs/editor/editor.api.js');
+
 // Masonry
 window.Masonry = require('masonry-layout');
 
 // images loaded
-var imagesLoaded = require('imagesloaded');
+const imagesLoaded = require('imagesloaded');
 // provide jQuery argument
 imagesLoaded.makeJQueryPlugin( window.$ );
+
+// moveable
+window.Moveable = require('moveable/dist/moveable.min.js');

@@ -1,0 +1,114 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-image</id>
+    <name>Image</name>
+    <author>Core</author>
+    <description>Upload Image files to assign to Layouts</description>
+    <class></class>
+    <type>image</type>
+    <dataType></dataType>
+    <schemaVersion>2</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>0</regionSpecific>
+    <renderAs>native</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <hasThumbnail>1</hasThumbnail>
+    <settings>
+        <property id="validExtensions" type="input">
+            <title>Valid Extensions</title>
+            <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
+            <default>jpg,jpeg,png,bmp,gif</default>
+        </property>
+        <property id="defaultScaleTypeId" type="dropdown" mode="single">
+            <title>Default Scale type</title>
+            <helpText>How should images be scaled by default?</helpText>
+            <default>center</default>
+            <options>
+                <option name="center">Centre</option>
+                <option name="stretch">Stretch</option>
+                <option name="fit">Fit</option>
+            </options>
+        </property>
+    </settings>
+    <properties>
+        <property id="scaleTypeId" type="dropdown" mode="single">
+            <title>Scale type</title>
+            <helpText>How should this image be scaled?</helpText>
+            <default>%defaultScaleTypeId%</default>
+            <options>
+                <option name="center">Centre</option>
+                <option name="stretch">Stretch</option>
+                <option name="fit">Fit</option>
+            </options>
+            <playerCompatibility android="v3 R304" windows="v3 R303" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
+        </property>
+        <property id="alignId" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this image be aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+            <visibility>
+                <test>
+                    <condition field="#scaleTypeId" type="eq">center</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="valignId" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this image be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+            <visibility>
+                <test>
+                    <condition field="#scaleTypeId" type="eq">center</condition>
+                </test>
+            </visibility>
+        </property>
+    </properties>
+    <preview>
+        <twig><![CDATA[
+{% if options.scaleTypeId == "stretch" %}
+    {% set proportional = 0 %}
+{% else %}
+    {% set proportional = 1 %}
+{% endif %}
+{% if options.scaleTypeId == "fit" %}
+    {% set fit = 1 %}
+{% else %}
+    {% set fit = 0 %}
+{% endif %}
+<div class="img-container" style="display:table; width:100%; height: {{ height }}px">
+    <div class="img-sub-container" style="text-align:{{ options.alignId }}; display: table-cell; vertical-align: {{ options.valignId }};">
+        <img src="{{ downloadUrl }}&width={{ width }}&height={{ height }}&proportional={{ proportional }}&fit={{ fit }}" />
+    </div>
+</div>
+		]]></twig>
+    </preview>
+</module>

@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,7 +25,7 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% set name = module.getName() %}
+    {% set name = module.name %}
     {% trans %}Audio for {{ name }}{% endtrans %}
 {% endblock %}
 
@@ -36,8 +36,8 @@
 
 {% block formHtml %}
 
-    {% if module.widget.countAudio > 0 %}
-        {% set audio = module.widget.audio[0] %}
+    {% if widget.countAudio > 0 %}
+        {% set audio = widget.audio[0] %}
         {% set mediaId = audio.mediaId %}
         {% set volume = audio.volume %}
         {% set loop = audio.loop %}
@@ -49,7 +49,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <form id="widgetAudioForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.audio", {id: module.widget.widgetId}) }}">
+            <form id="widgetAudioForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.audio", {id: widget.widgetId}) }}">
 
                 {% set title %}{% trans "Audio Media" %}{% endset %}
                 {% set helpText %}{% trans "Select the audio file that should be played when this Widget starts." %}{% endset %}

@@ -28,7 +28,7 @@
         // MODULES LIST
         var modulesList = [];
         {% for module in modules %}
-            modulesList.push({{ module.getModule()|json_encode|raw }});
+            modulesList.push({{ module|json_encode|raw }});
         {% endfor %}
 
         // USERS LIST
@@ -275,7 +275,13 @@
                     url: "{{ url_for("library.isused", {id: ':id'}) }}",
                     type: 'GET'
                 }
-            }
+            },
+            module: {
+                getTemplates: {
+                    url: "{{ url_for("module.template.search", {dataType: ':dataType'}) }}",
+                    type: 'GET'
+                },
+            },
         };
 
         {% autoescape "js" %}
@@ -349,9 +355,16 @@
             };
 
             var propertiesPanelTrans = {
+                configure: "{{ "Configure" |trans }}",
+                appearance: "{{ "Appearance" |trans }}",
+                advanced: "{{ "Advanced" |trans }}",
+                general: "{{ "General" |trans }}",
+                positioning: "{{ "Positioning" |trans }}",
+                transition: "{{ "Transition" |trans }}",
                 width: "{{ "Width" |trans }}",
                 height: "{{ "Height" |trans }}",
                 scale: "{{ "Scale"|trans }}",
+                somethingWentWrong: "{{ "Something went wrong!"|trans }}",
                 targetDrawer: "{{ "Target"|trans }}",
                 selectATarget: "{{ "Select a target region!"|trans }}"
             };
@@ -440,8 +453,12 @@
                 },
                 widgets: "{{ "Widgets"|trans }}",
                 favourites: "{{ "Favourites"|trans }}",
+                elements: "{{ "Elements"|trans }}",
+                stencils: "{{ "Stencils"|trans }}",
+                templates: "{{ "Static Templates"|trans }}",
                 closeTab: "{{ "Close content"|trans }}",
                 noWidgetsToShow: "{{ "No widgets to display"|trans }}",
+                noTemplatesToShow: "{{ "No templates to display"|trans }}",
                 noMediaToShow: "{{ "No media to display!" |trans }}",
                 showMore: "{{ "Show more" |trans }}",
                 noShowMore: "{{ "No more results for this filter!" |trans }}",

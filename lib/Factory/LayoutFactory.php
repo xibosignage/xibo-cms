@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -234,6 +234,7 @@ class LayoutFactory extends BaseFactory
         // Add a blank, full screen region
         if ($addRegion) {
             $layout->regions[] = $this->regionFactory->create(
+                'playlist',
                 $ownerId,
                 $name . '-1',
                 $layout->width,
@@ -248,6 +249,7 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Layout $layout
+     * @param string $type
      * @param int $width
      * @param int $height
      * @param int $top
@@ -255,9 +257,10 @@ class LayoutFactory extends BaseFactory
      * @return \Xibo\Entity\Layout
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function addRegion(Layout $layout, int $width, int $height, int $top, int $left): Layout
+    public function addRegion(Layout $layout, string $type, int $width, int $height, int $top, int $left): Layout
     {
         $layout->regions[] = $this->regionFactory->create(
+            $type,
             $layout->ownerId,
             $layout->layout . '-' . count($layout->regions),
             $width,
@@ -542,7 +545,7 @@ class LayoutFactory extends BaseFactory
         }
 
         // Get a list of modules for us to use
-        $modules = $this->moduleFactory->get();
+        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
@@ -569,8 +572,11 @@ class LayoutFactory extends BaseFactory
             if ($regionOwnerId == null) {
                 $regionOwnerId = $layout->ownerId;
             }
+
             // Create the region
+            //  we only import from XLF for older layouts which only had playlist type regions.
             $region = $this->regionFactory->create(
+                'playlist',
                 $regionOwnerId,
                 $regionNode->getAttribute('name'),
                 (double)$regionNode->getAttribute('width'),
@@ -781,7 +787,7 @@ class LayoutFactory extends BaseFactory
         $newIds = [];
         $widgets = [];
         // Get a list of modules for us to use
-        $modules = $this->moduleFactory->get();
+        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         $layout->schemaVersion = (int)$layoutJson['layoutDefinitions']['schemaVersion'];
         $layout->width = $layoutJson['layoutDefinitions']['width'];
@@ -851,6 +857,7 @@ class LayoutFactory extends BaseFactory
 
             // Create the region
             $region = $this->regionFactory->create(
+                $regionJson['type'] ?? 'playlist',
                 $regionOwnerId,
                 $regionJson['name'],
                 (double)$regionJson['width'],
@@ -1653,7 +1660,7 @@ class LayoutFactory extends BaseFactory
 
         // We need one final pass through all widgets on the layout so that we can set the durations properly.
         foreach ($layout->getAllWidgets() as $widget) {
-            $module = $this->moduleFactory->createWithWidget($widget);
+            $module = $this->moduleFactory->getByType($widget->type);
             $widget->calculateDuration($module, true);
 
             // Get global stat setting of widget to set to on/off/inherit
@@ -1689,7 +1696,7 @@ class LayoutFactory extends BaseFactory
             $playlist = $this->playlistFactory->getById($playlistId);
 
             foreach ($widgetsDetails as $widgetsDetail) {
-                $modules = $this->moduleFactory->get();
+                $modules = $this->moduleFactory->getKeyedArrayOfModules();
                 $playlistWidget = $this->widgetFactory->createEmpty();
                 $playlistWidget->playlistId = $playlistId;
                 $playlistWidget->widgetId = null;
@@ -2452,18 +2459,24 @@ class LayoutFactory extends BaseFactory
      * if it does, then go through them find and replace old media references
      *
      * @param Widget $widget
-     * @param $newMediaId
-     * @param $oldMediaId
+     * @param int $newMediaId
+     * @param int $oldMediaId
      * @throws NotFoundException
      */
-    public function handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId)
+    public function handleWidgetMediaIdReferences(Widget $widget, int $newMediaId, int $oldMediaId)
     {
-        $module = $this->moduleFactory->createWithWidget($widget);
+        $module = $this->moduleFactory->getByType($widget->type);
 
-        if ($module->hasHtmlEditor()) {
-            foreach ($module->getHtmlWidgetOptions() as $option) {
-                $widget->setOptionValue($option, 'cdata', str_replace('[' . $oldMediaId . ']', '[' . $newMediaId . ']', $widget->getOptionValue($option, null)));
-            }
+        foreach ($module->getPropertiesAllowingLibraryRefs() as $property) {
+            $widget->setOptionValue(
+                $property->id,
+                'cdata',
+                str_replace(
+                    '[' . $oldMediaId . ']',
+                    '[' . $newMediaId . ']',
+                    $widget->getOptionValue($property->id, null)
+                )
+            );
         }
     }
 

@@ -1,5 +1,5 @@
 {#
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,7 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% set name = module.getName() %}
+    {% set name = module.name %}
     {% trans %}Expiry for {{ name }}{% endtrans %}
 {% endblock %}
 
@@ -35,7 +35,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <form id="widgetExpiryForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.expiry", {id: module.widget.widgetId}) }}">
+            <form id="widgetExpiryForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.expiry", {id: widget.widgetId}) }}">
                 {% set title %}{% trans "Start Time" %}{% endset %}
                 {% set helpText %}{% trans "Select the start time for this widget" %}{% endset %}
                 {{ forms.dateTime("fromDt", title, fromDt, helpText, "starttime-control") }}

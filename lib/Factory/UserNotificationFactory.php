@@ -204,7 +204,7 @@ class UserNotificationFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length');
+            $limit = ' LIMIT ' . $parsedBody->getInt('start', ['default' => 0]) . ', ' . $parsedBody->getInt('length');
         }
 
         $sql = $select . $body . $order . $limit;

@@ -1,0 +1,187 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>twitter1</id>
+        <type>static</type>
+        <dataType>social-media</dataType>
+        <title>Template 6 - text, profile image</title>
+        <properties>
+            <property id="alignmentH" type="dropdown" mode="single">
+                <title>Horizontal Align</title>
+                <helpText>How should this widget be aligned?</helpText>
+                <default>center</default>
+                <options>
+                    <option name="left">Left</option>
+                    <option name="center">Center</option>
+                    <option name="right">Right</option>
+                </options>
+            </property>
+            <property id="alignmentV" type="dropdown" mode="single">
+                <title>Vertical Align</title>
+                <helpText>How should this widget be vertically aligned?</helpText>
+                <default>middle</default>
+                <options>
+                    <option name="top">Top</option>
+                    <option name="middle">Middle</option>
+                    <option name="bottom">Bottom</option>
+                </options>
+            </property>
+            <property id="itemsPerPage" type="number">
+                <title>Tweets Per Page</title>
+                <helpText>The number of tweets to show per page (default = 5).</helpText>
+                <default>5</default>
+            </property>
+            <property id="displayDirection" type="dropdown" mode="single">
+                <title>Tweets direction</title>
+                <helpText>The display order if there's more than one item.</helpText>
+                <default>0</default>
+                <options>
+                    <option name="0"></option>
+                    <option name="1">Horizontal</option>
+                    <option name="2">Vertical</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="#itemsPerPage" type="gt">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">960</width>
+            <height id="height">350</height>
+            <hbs><![CDATA[
+<div class="container">
+    <div class="twitter-container">
+        <div class="twitter-col col-left">
+            <div class="pic-container center-block"><img src="{{userProfileImage}}"/></div>
+        </div>
+        <div class="twitter-col col-right">
+            <div class="twitter-col main-tweet">{{text}}</div>
+            <div class="twitter-col twitter-date">{{date}}</div>
+            <div class="twitter-col twitter-location">{{location}}</div>
+        </div>
+    </div>
+</div>
+            ]]></hbs>
+            <twig><![CDATA[
+<style>
+.item {
+    float: left;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+body {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+.emojione {
+    width: 30px;
+    height: 30px
+}
+
+.pic-container {
+    width: 270px;
+    height: 270px;
+    overflow: hidden;
+    padding: 32px;
+}
+
+.pic-container img {
+    height: 100%;
+    width: 100%;
+}
+
+#content {
+    font-size: 0;
+}
+
+.container {
+    width: 960px !important;
+    height: 350px !important;
+    display: inline-block;
+}
+
+.twitter-container {
+    position: relative;
+    top: 8px;
+    left: 8px;
+    border: 1px solid #eee;
+    background-color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.6);
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
+}
+
+.main-tweet {
+    font-size: 28px;
+    padding: 42px 16px 8px 0px;
+    line-height: 120%;
+    color: #434343;
+    overflow: hidden;
+    max-height: 220px;
+}
+
+.twitter-date, .twitter-location {
+    margin-top: 20px;
+    margin-right: 8px;
+    font-size: 17px;
+    color: #434343;
+    font-weight: bold;
+}
+
+.twitter-date {
+    color: #6e6e6e;
+}
+
+.col-left {
+    width: 334px;
+}
+
+.col-right {
+    width: calc(100% - 334px);
+}
+
+.twitter-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+}
+</style>
+            ]]></twig>
+        </stencil>
+        <renderer><![CDATA[
+            // Template renderer options
+            // id: The id of the widget
+            // target: The target element to render
+            // options: The options for the widget
+            $(target).xiboLayoutScaler(options);
+        ]]>
+        </renderer>
+    </template>
+</templates>

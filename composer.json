@@ -80,7 +80,6 @@
     "xibosignage/xibo-xmr": "0.*",
     "tedivm/stash": "^0.14.1",
     "phenx/php-font-lib": "^0.5.0",
-    "abraham/twitteroauth": "^0.6.4",
     "symfony/event-dispatcher": "^4.1",
     "xibosignage/support": "dev-master",
     "xibosignage/oauth2-xibo-cms": "dev-feature/3.0",

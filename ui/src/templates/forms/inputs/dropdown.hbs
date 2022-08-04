@@ -1,0 +1,20 @@
+<div class="form-group xibo-form-input" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
+    <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
+    {{#if helpText}}
+        <i class="fa fa-question-circle form-help-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
+    {{/if}}
+
+    <select class="form-control" id="{{id}}" name="{{id}}">
+        {{!-- Set default property values --}}
+        {{#unless optionsValue}}
+            {{set "optionsValue" "name"}}
+        {{/unless}}
+        {{#unless optionsTitle}}
+            {{set "optionsTitle" "title"}}
+        {{/unless}}
+
+        {{#each options}}
+            <option value="{{lookup this ../optionsValue}}" {{#eq (lookup this ../optionsValue) ../value}}selected{{/eq}}>{{lookup this ../optionsTitle}}</option>
+        {{/each}}
+    </select>
+</div>

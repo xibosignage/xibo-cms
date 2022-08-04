@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -34,7 +34,6 @@ use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
-use Xibo\Entity\Widget;
 use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -56,6 +55,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
+use Xibo\Widget\Render\WidgetDownloader;
 
 /**
  * Class Layout
@@ -237,13 +237,11 @@ class Layout extends Base
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
-            'zoom' => $sanitizedParams->getDouble('zoom', ['default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)]),
+            'zoom' => $sanitizedParams->getDouble('zoom', [
+                'default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)
+            ]),
             'users' => $this->userFactory->query(),
-            'modules' => array_map(function($element) use ($moduleFactory) {
-                    $module = $moduleFactory->createForInstall($element->class);
-                    $module->setModule($element);
-                    return $module;
-                }, $moduleFactory->getAssignableModules())
+            'modules' => $moduleFactory->getAssignableModules()
         ];
 
         // Call the render the template
@@ -1355,7 +1353,9 @@ class Layout extends Base
             $embed = ['regions', 'playlists', 'widgets'];
         } else {
             // Embed?
-            $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
+            $embed = ($parsedQueryParams->getString('embed') != null)
+                ? explode(',', $parsedQueryParams->getString('embed'))
+                : [];
         }
 
         // Get all layouts
@@ -1406,7 +1406,7 @@ class Layout extends Base
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) {
                 foreach ($layout->getAllWidgets() as $widget) {
                     try {
-                        $module = $this->moduleFactory->createWithWidget($widget);
+                        $module = $this->moduleFactory->getByType($widget->type);
                     } catch (NotFoundException $notFoundException) {
                         // This module isn't available, mark it as invalid.
                         $widget->isValid = 0;
@@ -1417,16 +1417,35 @@ class Layout extends Base
                         continue;
                     }
 
-                    $widget->name = $module->getName();
+                    $widget->moduleName = $module->name;
 
-                    // Augment with tags
-                    $widget->tags = $module->getMediaTags();
+                    if ($module->regionSpecific == 0) {
+                        // Use the media assigned to this widget
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                        $widget->name = $widget->getOptionValue('name', $media->name);
 
-                    // Add widget module type name
-                    $widget->moduleName = $module->getModuleName();
+                        // Augment with tags
+                        $widget->tags = $media->tags;
+                    } else {
+                        $widget->name = $widget->getOptionValue('name', $module->name);
+                        $widget->tags = [];
+                    }
 
+                    // Sub-playlists should calculate a fresh duration
                     if ($widget->type === 'subplaylist') {
+                        // We know we have a provider class for this module.
                         $widget->calculateDuration($module);
+                    }
+
+                    if (in_array('widget_validity', $embed)) {
+                        try {
+                            $module
+                                ->decorateProperties($widget)
+                                ->validateProperties();
+                            $widget->isValid = 1;
+                        } catch (GeneralException $xiboException) {
+                            $widget->isValid = 0;
+                        }
                     }
 
                     // apply default transitions to a dynamic parameters on widget object.
@@ -1456,14 +1475,6 @@ class Layout extends Base
 
                         // Augment with permissions flag
                         $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
-                    }
-
-                    if (in_array('widget_validity', $embed)) {
-                        try {
-                            $widget->isValid = $module->isValid();
-                        } catch (GeneralException $xiboException) {
-                            $widget->isValid = 0;
-                        }
                     }
                 }
 
@@ -1513,8 +1524,9 @@ class Layout extends Base
                 // widget and its items.
                 foreach ($layout->regions as $region) {
                     foreach ($region->getPlaylist()->widgets as $widget) {
-                        /* @var Widget $widget */
-                        $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+                        $module = $this->moduleFactory->getByType($widget->type);
+                        $widget->moduleName = $module->name;
+                        $widget->name = $widget->getOptionValue('name', $module->name);
                     }
                 }
 
@@ -2525,13 +2537,21 @@ class Layout extends Base
         $media = $this->mediaFactory->getById($layout->backgroundImageId);
 
         // Make a media module
-        $widget = $this->moduleFactory->createWithMedia($media);
-
-        if ($widget->getModule()->regionSpecific == 1) {
-            throw new NotFoundException(__('Cannot download non-region specific module'));
+        if ($media->mediaType !== 'image') {
+            throw new NotFoundException(__('Layout background must be an image'));
         }
 
-        $response = $widget->download($request, $response);
+        // Hand over to the widget downloader
+        $downloader = new WidgetDownloader(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            $this->getConfig()->getSetting('SENDFILE_MODE')
+        );
+        $downloader->useLogger($this->getLog()->getLoggerInterface());
+        $response = $downloader->imagePreview($this->getSanitizer([
+            'width' => $layout->width,
+            'height' => $layout->height,
+            'proportional' => 0
+        ]), $media->storedAs, $response);
 
         $this->setNoOutput(true);
         return $this->render($request, $response);
@@ -3017,11 +3037,12 @@ class Layout extends Base
                         }
                     } else {
                         // Render just the first widget in the appropriate place
-                        $module = $this->moduleFactory->createWithWidget($widgets[0], $region);
-                        if ($module->getModuleType() === 'image') {
-                            $cover = Img::make($libraryLocation . $module->getMedia()->storedAs);
-                            $proportional = $module->getOption('scaleType') !== 'stretch';
-                            $fit = $module->getOption('scaleType') === 'fit';
+                        $widget = $widgets[0];
+                        if ($widget->type === 'image') {
+                            $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                            $cover = Img::make($libraryLocation . $media->storedAs);
+                            $proportional = $widget->getOptionValue('scaleType', 'stretch') !== 'stretch';
+                            $fit = $widget->getOptionValue('scaleType', 'stretch') === 'fit';
 
                             if ($fit) {
                                 $cover->fit($region->width, $region->height);
@@ -3040,11 +3061,11 @@ class Layout extends Base
                                 $cover->resizeCanvas($region->width, $region->height);
                             }
                             $image->insert($cover, 'top-left', $region->left, $region->top);
-                        } else if ($module->getModuleType() === 'video'
-                            && file_exists($libraryLocation . $module->getMediaId() . '_videocover.png')
+                        } else if ($widget->type === 'video'
+                            && file_exists($libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png')
                         ) {
                             // Render the video cover
-                            $cover = Img::make($libraryLocation . $module->getMediaId() . '_videocover.png');
+                            $cover = Img::make($libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png');
                             $cover->resize($region->width, $region->height, function ($constraint) {
                                 $constraint->aspectRatio();
                             });
@@ -3061,10 +3082,10 @@ class Layout extends Base
                                     $draw->background('rgba(196, 196, 196, 0.6)');
                                 }
                             );
-
+                            $module = $this->moduleFactory->getByType($widget->type);
                             if ($region->width >= 400) {
                                 $image->text(
-                                    $module->getModule()->name,
+                                    $widget->getOptionValue('name', $module->name),
                                     $region->left + ($region->width / 2),
                                     $region->top + ($region->height / 2),
                                     function ($font) {

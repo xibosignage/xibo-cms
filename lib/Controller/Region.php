@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,16 +25,11 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
-use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Session;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -70,7 +65,6 @@ class Region extends Base
      */
     private $transitionFactory;
 
-
     /**
      * Set common dependencies.
      * @param RegionFactory $regionFactory
@@ -79,8 +73,13 @@ class Region extends Base
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
      */
-    public function __construct($regionFactory, $widgetFactory, $transitionFactory, $moduleFactory, $layoutFactory)
-    {
+    public function __construct(
+        $regionFactory,
+        $widgetFactory,
+        $transitionFactory,
+        $moduleFactory,
+        $layoutFactory
+    ) {
         $this->regionFactory = $regionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->transitionFactory = $transitionFactory;
@@ -171,6 +170,13 @@ class Region extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The type of region this should be, either playlist or canvas. Default = playlist.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="width",
      *      in="formData",
      *      description="The Width, default 250",
@@ -232,7 +238,9 @@ class Region extends Base
 
         // Add a new region
         $region = $this->regionFactory->create(
-            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            $sanitizedParams->getString('type'),
+            $this->getUser()->userId,
+            $layout->layout . '-' . (count($layout->regions) + 1),
             $sanitizedParams->getInt('width', ['default' => 250]),
             $sanitizedParams->getInt('height', ['default' => 250]),
             $sanitizedParams->getInt('top', ['default' => 50]),
@@ -373,6 +381,7 @@ class Region extends Base
         $region->top = $sanitizedParams->getDouble('top');
         $region->left = $sanitizedParams->getDouble('left');
         $region->zIndex = $sanitizedParams->getInt('zIndex');
+        $region->type = $sanitizedParams->getString('type');
 
         // Loop
         $region->setOptionValue('loop', $sanitizedParams->getCheckbox('loop'));
@@ -578,8 +587,11 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function preview(Request $request, Response $response, $id)
     {
@@ -588,14 +600,13 @@ class Region extends Base
         $widgetId = $sanitizedQuery->getInt('widgetId', ['default' => null]);
         $seqGiven = $sanitizedQuery->getInt('seq', ['default' => 1]);
         $seq = $sanitizedQuery->getInt('seq', ['default' => 1]);
-        $width = $sanitizedQuery->getDouble('width', ['default' => 0]);
-        $height = $sanitizedQuery->getDouble('height', ['default' => 0]);
-        $scaleOverride = $sanitizedQuery->getDouble('scale_override', ['default' => 0]);
 
         // Load our region
         try {
             $region = $this->regionFactory->getById($id);
             $region->load();
+            
+            // TODO: is this region a canvas type?
 
             if ($widgetId !== null) {
                 // Single Widget Requested
@@ -603,9 +614,7 @@ class Region extends Base
                 $widget->load();
 
                 $countWidgets = 1;
-
             } else {
-
                 // Get the first playlist we can find
                 $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
 
@@ -624,33 +633,38 @@ class Region extends Base
 
                 // Select the widget at the required sequence
                 $widget = $playlist->getWidgetAt($seq, $widgets);
-                /* @var \Xibo\Entity\Widget $widget */
                 $widget->load();
             }
 
             // Output a preview
-            $module = $this->moduleFactory->createWithWidget($widget, $region);
-
-            // We need to make a route parser
-            $this->getState()->html = $module
-                ->setPreview(
-                    true,
-                    RouteContext::fromRequest($request)->getRouteParser(),
-                    $width, $height
-                )
-                ->preview($width, $height, $scaleOverride);
+            $module = $this->moduleFactory->getByType($widget->type);
+            $this->getState()->html = $this->moduleFactory
+                ->createWidgetHtmlRenderer()
+                ->preview(
+                    $module,
+                    $region,
+                    $widget,
+                    $sanitizedQuery,
+                    $this->urlFor(
+                        $request,
+                        'library.download',
+                        [
+                            'regionId' => $region->regionId,
+                            'id' => $widget->getPrimaryMedia()[0] ?? null
+                        ]
+                    ) . '?preview=1'
+                );
 
             $this->getState()->extra['empty'] = false;
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->calculatedDuration;
             $this->getState()->extra['number_items'] = $countWidgets;
             $this->getState()->extra['current_item'] = $seqGiven;
-            $this->getState()->extra['moduleName'] = $module->getName();
+            $this->getState()->extra['moduleName'] = $module->name;
             $this->getState()->extra['regionDuration'] = $region->duration;
             $this->getState()->extra['useDuration'] = $widget->useDuration;
             $this->getState()->extra['zIndex'] = $region->zIndex;
             $this->getState()->extra['tempId'] = $widget->tempId;
-
         } catch (NotFoundException $e) {
             // No media to preview
             $this->getState()->extra['empty'] = true;
@@ -743,7 +757,9 @@ class Region extends Base
         // Add a new region
         // we default to layout width/height/0/0
         $drawer = $this->regionFactory->create(
-            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1 . ' - drawer'),
+            'playlist',
+            $this->getUser()->userId,
+            $layout->layout . '-' . (count($layout->regions) + 1 . ' - drawer'),
             $layout->width,
             $layout->height,
             0,

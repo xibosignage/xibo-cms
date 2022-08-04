@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -91,7 +91,8 @@ class RegionFactory extends BaseFactory
 
     /**
      * Create a new region
-     * @param int $ownerId ;
+     * @param string $type
+     * @param int $ownerId
      * @param string $name
      * @param int $width
      * @param int $height
@@ -102,9 +103,12 @@ class RegionFactory extends BaseFactory
      * @return Region
      * @throws InvalidArgumentException
      */
-    public function create($ownerId, $name, $width, $height, $top, $left, $zIndex = 0, $isDrawer = 0)
+    public function create(string $type, $ownerId, $name, $width, $height, $top, $left, $zIndex = 0, $isDrawer = 0)
     {
-        // Validation
+        if (!in_array($type, ['playlist', 'canvas'])) {
+            throw new InvalidArgumentException(__('Incorrect type'), 'type');
+        }
+
         if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left)) {
             throw new InvalidArgumentException(__('Size and coordinates must be generic'));
         }
@@ -118,6 +122,7 @@ class RegionFactory extends BaseFactory
         }
 
         return $this->hydrate($this->createEmpty(), [
+            'type' => $type,
             'ownerId' => $ownerId,
             'name' => $name,
             'width' => $width,
@@ -222,6 +227,7 @@ class RegionFactory extends BaseFactory
               `region`.top,
               `region`.left,
               `region`.zIndex,
+              `region`.type,
               `region`.duration,
               `region`.isDrawer
         ';
