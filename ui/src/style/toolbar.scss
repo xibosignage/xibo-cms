@@ -111,12 +111,11 @@
         .toolbar-pane {
             position: absolute;
             left: $toolbar-width;
-            top: 1rem;
+            top: 0;
             bottom: 0;
             background: $xibo-color-primary-l5;
             color: $xibo-color-primary;
             width: 288px;
-            @include border-radius(0 4px 0 0);
 
             .content-header {
                 display: flex;
@@ -139,11 +138,9 @@
                     line-height: 15px;
                     color: $xibo-color-primary-d60;
                     text-align: right;
-                    transition: 0.3s 0.1s padding-right;
                     
                     &:hover {
                         color: $xibo-color-primary;
-                        padding-right: 12px;
                     }
                 }
             }
@@ -487,6 +484,11 @@
 
                         .card-icon {
                             color: $xibo-color-primary;
+
+                            /* Special case for Twitter */
+                            &.fa-twitter {
+                                color: #1d9bf0;
+                            }
                         }
 
                         .btn-favourite {
@@ -564,17 +566,19 @@
                         align-items: center;
                     
                         i {
-                            color: $xibo-color-primary-d60;
-                            font-size: 1.75rem;
-                            margin-right: 8px;
+                            color: $xibo-color-neutral-0;
+                            font-size: 1.5rem;
+                            margin: 0 0.5rem;
                         }
                     }
 
                     .close-content {
                         color: $xibo-color-primary-l10;
+                        transition: 0.3s 0.1s padding-right;
 
                         &:hover {
                             color: $xibo-color-primary-l5;
+                            padding-right: 0.75rem;
                         }
                     }
                 }

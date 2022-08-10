@@ -69,7 +69,7 @@
 
     <div class="viewer-navbar-overlay">
         {{! Element Info }}
-        {{#if extra}}
+        {{#eq element.type "widget"}}
             <div class="info d-inline">
                 {{#if regionName}}
                     <span class="label-name align-middle d-inline-block">
@@ -78,10 +78,7 @@
                     &nbsp;&nbsp;<i class="fas fa-arrow-right align-middle"></i>&nbsp;&nbsp;
                 {{/if}}
                 <span class="label-name align-middle d-inline-block">
-                    "{{extra.moduleName}}" ({{extra.type}})
-                </span>
-                <span class="label label-time align-middle d-inline-block pl-2">
-                    {{extra.duration}} / {{extra.regionDuration}}
+                    "{{element.widgetName}}" ({{extra.moduleName}})
                 </span>
             </div>
         {{else}}
@@ -90,21 +87,6 @@
                     "{{element.name}}" ({{element.type}})
                 </span>
             </div>
-        {{/if}}
-
-        {{!-- Paging controls --}}
-        {{#if pagingEnable}}
-            <span class="paging d-inline pull-right">
-                <button type="button" id="left-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.previousWidget }}">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <span class="label align-middle">
-                    {{currentItem}} / {{totalItems}}
-                </span>
-                <button type="button" id="right-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.nextWidget }}">
-                    <i class="fa fa-arrow-right"></i>
-                </button>
-            </span>
-        {{/if}}
+        {{/eq}}
     </div>
 </nav>

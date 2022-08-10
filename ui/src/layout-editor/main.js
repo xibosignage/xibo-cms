@@ -507,19 +507,18 @@ lD.refreshDesigner = function(
   // Remove temporary data
   this.clearTemporaryData();
 
-  // Render containers with layout ( default )
+  // Toolbars
   (updateToolbar) && this.toolbar.render();
   this.topbar.render();
+  this.bottombar.render(this.selectedObject);
 
-  // Refresh bottom bar if no object is selected ( to avoid looping )
-  (this.selectedObject.type === 'layout') &&
-    this.bottombar.render(this.selectedObject);
-
+  // Manager ( hidden )
   this.manager.render();
+
+  // Properties panel and viewer
   this.propertiesPanel.render(this.selectedObject);
   (updateViewer || reloadViewer) &&
     this.viewer.render(reloadViewer);
-  this.drawer.render();
 };
 
 /**
@@ -1177,21 +1176,29 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       );
     } else {
       // Check if the module has data type, if not
-      // create a playlist region
-      const regionType = draggableDataType ? 'canvas' : 'playlist';
+      // create a frame region
+      // or playlist
+      const regionType = (draggableSubType === 'playlist') ?
+        'playlist' :
+        ((draggableDataType) ? 'canvas' : 'frame');
 
       // Add module to layout, but create a region first
       lD.addRegion(dropPosition, regionType).then((res) => {
         // Deselect cards and drop zones
         lD.toolbar.deselectCardsAndDropZones();
 
-        // Add module to new region
-        lD.addModuleToPlaylist(
-          res.data.regionId,
-          res.data.regionPlaylist.playlistId,
-          draggableSubType,
-          draggableData,
-        );
+        // Add module to new region if it's not a playlist
+        if (regionType !== 'playlist') {
+          lD.addModuleToPlaylist(
+            res.data.regionId,
+            res.data.regionPlaylist.playlistId,
+            draggableSubType,
+            draggableData,
+          );
+        } else {
+          // Reload data ( and viewer )
+          lD.reloadData(lD.layout, false, true);
+        }
       });
     }
   }
@@ -1556,12 +1563,76 @@ lD.checkLayoutStatus = function() {
   });
 };
 
+
+/**
+ * New open playlist editor
+ * @param {string} playlistId - Id of the playlist
+ * @param {object} region - Region related to the playlist
+ */
+lD.openPlaylistEditor = function(playlistId, region) {
+  // Deselect previous selected object
+  lD.selectObject();
+
+  // Get main panel
+  const $mainPanel = lD.editorContainer.find('.main-panel');
+
+  // Create or load container
+  const $playlistEditorPanel = $('.playlist-panel');
+
+  // Add inline class and id to the container
+  $playlistEditorPanel
+    .attr('id', 'editor-container')
+    .addClass('playlist-editor-inline-container');
+
+  // Attach region id to editor data
+  $playlistEditorPanel.data('regionObj', region);
+
+  // Populate container
+  $playlistEditorPanel.html(
+    '<div id="playlist-editor" playlist-id="' +
+    playlistId +
+    '"></div>',
+  );
+
+  // Hide layout designer editor
+  $mainPanel.addClass('hidden');
+
+  // Show playlist editor
+  $playlistEditorPanel.removeClass('hidden');
+
+  // Load playlist editor
+  pE.loadEditor(true);
+
+  // On close, remove container and refresh designer
+  $playlistEditorPanel.find('.playlist-editor-close').attr('onclick', '')
+    .on('click', function() {
+      // Close playlist editor
+      pE.close();
+
+      // Remove region id from data
+      $playlistEditorPanel.removeData('regionObj');
+
+      // Hide layout designer editor
+      $mainPanel.removeClass('hidden');
+
+      // Show playlist editor
+      $playlistEditorPanel.addClass('hidden');
+
+      // Set the first run flag of the toolbar as true
+      // to reload the changed from the playlistEditor toolbar
+      lD.toolbar.firstRun = true;
+
+      // Reload data
+      lD.reloadData(lD.layout);
+    });
+};
+
 /**
  * Open playlist editor
  * @param {string} playlistId - Id of the playlist
  * @param {object} region - Region related to the playlist
  */
-lD.openPlaylistEditor = function(playlistId, region) {
+lD.openPlaylistEditorOld = function(playlistId, region) {
   let requestPath = playlistEditorUrl;
 
   // replace id if necessary/exists
@@ -1694,6 +1765,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       lD.layout.moveWidgetInRegion(
         layoutObject.regionId, layoutObject.id, target.data('actionType'),
       );
+    } else if (target.data('action') == 'editPlaylist') {
+      // Open playlist editor
+      lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
     } else {
       layoutObject.editPropertyForm(
         target.data('property'), target.data('propertyType'),
@@ -2050,9 +2124,9 @@ lD.addRegion = function(positionToAdd, regionType) {
     lD.selectObject();
   }
 
-  // If region type is not defined, use the default (playlist)
+  // If region type is not defined, use the default (frame)
   if (regionType == undefined) {
-    regionType = 'playlist';
+    regionType = 'frame';
   }
 
   return lD.layout.addElement(

@@ -21,13 +21,17 @@
 require('../../public_path');
 
 // Include handlebars templates
-const playlistEditorTemplate = require('../templates/playlist-editor.hbs');
+const playlistEditorTemplate =
+  require('../templates/playlist-editor.hbs');
+const playlistEditorExternalContainerTemplate =
+  require('../templates/playlist-editor-external-container.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
-const dropZoneTemplate = require('../templates/drop-zone.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
-const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
-const deleteMultiElementModalContentTemplate = require('../templates/delete-multi-element-modal-content.hbs');
+const deleteElementModalContentTemplate =
+  require('../templates/delete-element-modal-content.hbs');
+const deleteMultiElementModalContentTemplate =
+  require('../templates/delete-multi-element-modal-content.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -46,6 +50,7 @@ if (typeof lD == 'undefined') {
 }
 
 require('../style/playlist-editor.scss');
+require('../style/playlist-editor-external-container.scss');
 
 // Common funtions/tools
 const Common = require('../editor-core/common.js');
@@ -85,8 +90,11 @@ window.pE = {
   folderId: '',
 };
 
-// Load Playlist and build app structure
-pE.loadEditor = function() {
+/**
+ * Load Playlist and build app structure
+ * @param {string} inline - Is this an inline playlist editor?
+ */
+pE.loadEditor = function(inline = false) {
   pE.common.showLoadingScreen();
 
   // Save and change toastr positioning
@@ -96,12 +104,14 @@ pE.loadEditor = function() {
   // Get DOM main object
   pE.editorContainer = $('#playlist-editor');
 
-  // If the editor is being loaded from within the layout designer, change the region specific flag
+  // If the editor is being loaded from within
+  // the layout designer, change the region specific flag
   pE.regionSpecificQuery = '';
 
-  if (typeof lD != 'undefined') {
+  if (inline) {
     pE.regionSpecificQuery = '&regionSpecific=1';
-    pE.mainRegion = pE.editorContainer.parents('#editor-container').data('regionObj');
+    pE.mainRegion =
+      pE.editorContainer.parents('#editor-container').data('regionObj');
   }
 
   // Get playlist id
@@ -114,27 +124,44 @@ pE.loadEditor = function() {
   pE.editorContainer.html(loadingTemplate());
 
   // Load playlist through an ajax request
-  $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
+  $.get(
+    urlsForApi.playlist.get.url +
+    '?playlistId=' +
+    playlistId +
+    '&embed=widgets,widget_validity,tags,permissions' +
+    pE.regionSpecificQuery,
+  )
     .done(function(res) {
       if (res.data != null && res.data.length > 0) {
         // Append layout html to the main div
-        pE.editorContainer.html(playlistEditorTemplate());
-        // Initialise dropabble containers
-        pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
-          tolerance: 'pointer',
-          accept: '[drop-to="region"]',
-          drop: function(event, ui) {
-            pE.playlist.addElement(event.target, ui.draggable[0]);
-          },
-        }).attr('data-type', 'region');
+        pE.editorContainer.html(
+          inline ?
+            playlistEditorTemplate() :
+            playlistEditorExternalContainerTemplate(),
+        );
 
-        // Editor container select ( faking drag and drop ) to add a element to the playlist
-        pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
-          if (!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
-            e.stopPropagation();
-            pE.selectObject($(this));
-          }
-        });
+        // Initialise dropabble containers
+        pE.editorContainer.find('#playlist-timeline')
+          .droppable({
+            tolerance: 'pointer',
+            accept: '[drop-to="region"]',
+            drop: function(event, ui) {
+              pE.playlist.addElement(event.target, ui.draggable[0]);
+            },
+          }).attr('data-type', 'region');
+
+        // Editor container select ( faking drag and drop )
+        // to add a element to the playlist
+        pE.editorContainer.find('#playlist-timeline')
+          .click(function(e) {
+            if (
+              !$.isEmptyObject(pE.toolbar.selectedCard) ||
+            !$.isEmptyObject(pE.toolbar.selectedQueue)
+            ) {
+              e.stopPropagation();
+              pE.selectObject($(e.target));
+            }
+          });
 
         // Initialize timeline and create data structure
         pE.playlist = new Playlist(playlistId, res.data[0]);
@@ -169,7 +196,7 @@ pE.loadEditor = function() {
         // Append toolbar to the modal container
         $('#playlist-editor-toolbar').appendTo('#playlist-editor');
 
-        // Initialize bottom toolbar
+        // Initialize toolbar
         pE.toolbar = new Toolbar(
           pE,
           $('#playlist-editor').find('#playlist-editor-toolbar'),
@@ -223,13 +250,18 @@ pE.loadEditor = function() {
  * @param {object =} [options] - selectObject options
  * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
-pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
+pE.selectObject = function(obj = null,
+  forceUnselect = false,
+  {positionToAdd = null} = {},
+) {
   // Clear rogue tooltips
   pE.common.clearTooltips();
 
-  // If there is a selected card, use the drag&drop simulate to add that item to a object
+  // If there is a selected card, use the
+  // drag&drop simulate to add that item to a object
   if (!$.isEmptyObject(this.toolbar.selectedCard)) {
-    if ([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
+    if ([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard)
+      .attr('drop-to')) !== -1) {
       // Get card object
       const card = this.toolbar.selectedCard[0];
 
@@ -239,7 +271,9 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
       // Simulate drop item add
       this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
     }
-  } else if (!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+  } else if (!$.isEmptyObject(this.toolbar.selectedQueue)) {
+    // If there's a selected queue, use the drag&drop
+    // simulate to add those items to a object
     if (obj.data('type') == 'region') {
       pE.importFromProvider(this.toolbar.selectedQueue).then((res) => {
         // Add media queue to playlist
@@ -264,7 +298,8 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
       }
     }
 
-    // If there's no selected object, select a default one ( or nothing if widgets are empty)
+    // If there's no selected object, select a default one
+    // ( or nothing if widgets are empty)
     if (obj == null || typeof obj.data('type') == 'undefined') {
       if ($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
         this.selectedObject = {};
@@ -298,17 +333,18 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
 /**
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
- * @param {object} draggable - Target Card
+ * @param {object} card - Target Card
  * @param {object =} [options] - Options
- * @param {object/number=} [options.positionToAdd = null] - order position for widget
+ * @param {object/number=} [options.positionToAdd = null]
+ *  - order position for widget
  */
 pE.dropItemAdd = function(droppable, card, {positionToAdd = null} = {}) {
-    // If the draggable is from another toolbar, stop adding
-    if($(card).parents('#playlist-editor-toolbar').length === 0) {
-        return;
-    }
+  // If the draggable is from another toolbar, stop adding
+  if ($(card).parents('#playlist-editor-toolbar').length === 0) {
+    return;
+  }
 
-    this.playlist.addElement(droppable, card, positionToAdd);
+  this.playlist.addElement(droppable, card, positionToAdd);
 };
 
 /**
@@ -340,7 +376,8 @@ pE.undoLastAction = function() {
       errorMessage = error.errorThrown;
     }
 
-    toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
+    toastr.error(errorMessagesTrans.revertFailed
+      .replace('%error%', errorMessage));
   });
 };
 
@@ -352,13 +389,17 @@ pE.deleteSelectedObject = function() {
     // Get selected widgets
     const selectedWidgetsIds = [];
 
-    pE.timeline.DOMObject.find('.playlist-widget.multi-selected').each(function() {
-      selectedWidgetsIds.push($(this).data('widgetId'));
-    });
+    pE.timeline.DOMObject.find('.playlist-widget.multi-selected')
+      .each(function(el) {
+        selectedWidgetsIds.push($(el).data('widgetId'));
+      });
 
     pE.deleteMultipleObjects('widget', selectedWidgetsIds);
   } else {
-    pE.deleteObject(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']);
+    pE.deleteObject(
+      pE.selectedObject.type,
+      pE.selectedObject[pE.selectedObject.type + 'Id'],
+    );
   }
 };
 
@@ -368,7 +409,11 @@ pE.deleteSelectedObject = function() {
  * @param {number} objectId
  */
 pE.deleteObject = function(objectType, objectId) {
-  const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
+  const createDeleteModal = function(objectType,
+    objectId,
+    hasMedia = false,
+    showDeleteFromLibrary = false,
+  ) {
     bootbox.hideAll();
 
     const htmlContent = deleteElementModalContentTemplate({
@@ -404,26 +449,28 @@ pE.deleteObject = function(objectType, objectId) {
             pE.common.showLoadingScreen('deleteObject');
 
             // Delete element from the layout
-            pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
-              pE.common.hideLoadingScreen('deleteObject');
+            pE.playlist.deleteElement(objectType, objectId, options)
+              .then((res) => { // Success
+                pE.common.hideLoadingScreen('deleteObject');
 
-              // Behavior if successful
-              toastr.success(res.message);
-              pE.reloadData();
-            }).catch((error) => { // Fail/error
-              pE.common.hideLoadingScreen('deleteObject');
+                // Behavior if successful
+                toastr.success(res.message);
+                pE.reloadData();
+              }).catch((error) => { // Fail/error
+                pE.common.hideLoadingScreen('deleteObject');
 
-              // Show error returned or custom message to the user
-              let errorMessage = '';
+                // Show error returned or custom message to the user
+                let errorMessage = '';
 
-              if (typeof error == 'string') {
-                errorMessage = error;
-              } else {
-                errorMessage = error.errorThrown;
-              }
+                if (typeof error == 'string') {
+                  errorMessage = error;
+                } else {
+                  errorMessage = error.errorThrown;
+                }
 
-              toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-            });
+                toastr.error(errorMessagesTrans.deleteFailed
+                  .replace('%error%', errorMessage));
+              });
           },
         },
       },
@@ -431,7 +478,8 @@ pE.deleteObject = function(objectType, objectId) {
   };
 
   if (objectType === 'widget') {
-    const widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + objectId);
+    const widgetToDelete =
+    pE.getElementByTypeAndId('widget', 'widget_' + objectId);
 
     if (widgetToDelete.isRegionSpecific()) {
       createDeleteModal(objectType, objectId);
@@ -439,7 +487,8 @@ pE.deleteObject = function(objectType, objectId) {
       pE.common.showLoadingScreen('checkMediaIsUsed');
 
       const linkToAPI = urlsForApi.media.isUsed;
-      const requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+      const requestPath =
+        linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
 
       // Request with count as being 2, for the published layout and draft
       $.get(requestPath + '?count=1')
@@ -468,7 +517,8 @@ pE.deleteObject = function(objectType, objectId) {
 
 /**
  * Delete multiple objects
- * @param {object[]} objectsToDelete
+ * @param {string} objectsType - Type of objects to delete
+ * @param {string[]} objectIds - Object ids to delete
  */
 pE.deleteMultipleObjects = function(objectsType, objectIds) {
   const createMultiDeleteModal = function(objectArray) {
@@ -530,45 +580,47 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
           }
 
           // Delete element from the playlist
-          pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
+          pE.playlist.deleteElement(objectType, objectId, options)
+            .then((res) => { // Success
             // Behavior if successful
-            toastr.success(res.message);
+              toastr.success(res.message);
 
-            deletedElements++;
+              deletedElements++;
 
-            if (deletedElements == $objects.length) {
+              if (deletedElements == $objects.length) {
               // Hide loading screen
+                pE.common.hideLoadingScreen('deleteObjects');
+
+                // Reload data
+                pE.reloadData();
+
+                // Hide/close modal
+                bootbox.hideAll();
+              } else {
+                index++;
+                deleteObject();
+              }
+            }).catch((error) => { // Fail/error
               pE.common.hideLoadingScreen('deleteObjects');
+
+              // Show error returned or custom message to the user
+              let errorMessage = '';
+
+              if (typeof error == 'string') {
+                errorMessage = error;
+              } else {
+                errorMessage = error.errorThrown;
+              }
+
+              toastr.error(errorMessagesTrans.deleteFailed
+                .replace('%error%', errorMessage));
 
               // Reload data
               pE.reloadData();
 
               // Hide/close modal
               bootbox.hideAll();
-            } else {
-              index++;
-              deleteObject();
-            }
-          }).catch((error) => { // Fail/error
-            pE.common.hideLoadingScreen('deleteObjects');
-
-            // Show error returned or custom message to the user
-            let errorMessage = '';
-
-            if (typeof error == 'string') {
-              errorMessage = error;
-            } else {
-              errorMessage = error.errorThrown;
-            }
-
-            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-
-            // Reload data
-            pE.reloadData();
-
-            // Hide/close modal
-            bootbox.hideAll();
-          });
+            });
         };
 
         deleteObject();
@@ -592,17 +644,19 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
     const getWidgetStatus = function() {
       const widgetId = objectIds[index];
-      const widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
+      const widgetToDelete =
+      pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
       const linkToAPI = urlsForApi.media.isUsed;
-      const requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+      const requestPath =
+      linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
 
       if (widgetToDelete.isRegionSpecific()) {
         arrayOfWidgets.push({
-          'objectId': widgetId,
-          'objectType': 'widget',
-          'objectName': widgetToDelete.widgetName,
-          'hasMedia': false,
-          'dataUsed': false,
+          objectId: widgetId,
+          objectType: 'widget',
+          objectName: widgetToDelete.widgetName,
+          hasMedia: false,
+          dataUsed: false,
         });
 
         if (arrayOfWidgets.length == objectIds.length) {
@@ -618,11 +672,11 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
           .done(function(res) {
             if (res.success) {
               arrayOfWidgets.push({
-                'objectId': widgetId,
-                'objectType': 'widget',
-                'objectName': widgetToDelete.widgetName,
-                'hasMedia': true,
-                'dataUsed': res.data.isUsed,
+                objectId: widgetId,
+                objectType: 'widget',
+                objectName: widgetToDelete.widgetName,
+                hasMedia: true,
+                dataUsed: res.data.isUsed,
               });
 
               if (arrayOfWidgets.length == objectIds.length) {
@@ -671,14 +725,21 @@ pE.refreshDesigner = function(renderToolbar = false) {
     this.toolbar.openMenu(this.toolbar.openedMenu, true);
   }
 
-  // Render widgets container only if there are widgets on the playlist, if not draw drop area
+  // Render widgets container only if there
+  // are widgets on the playlist, if not draw drop area
   if (!$.isEmptyObject(pE.playlist.widgets)) {
     // Render timeline
     this.timeline.render();
 
-    // Select the object that was previously selected if it's not selected and exists on the timeline
-    if (this.playlist.widgets[this.selectedObject.id] !== undefined && !this.playlist.widgets[this.selectedObject.id].selected) {
-      this.selectObject(this.timeline.DOMObject.find('#' + this.selectedObject.id));
+    // Select the object that was previously selected
+    // if it's not selected and exists on the timeline
+    if (
+      this.playlist.widgets[this.selectedObject.id] !== undefined &&
+      !this.playlist.widgets[this.selectedObject.id].selected
+    ) {
+      this.selectObject(
+        this.timeline.DOMObject.find('#' + this.selectedObject.id),
+      );
     } else if (this.playlist.widgets[this.selectedObject.id] === undefined) {
       // Prevent nothing selected
       this.selectObject();
@@ -687,15 +748,13 @@ pE.refreshDesigner = function(renderToolbar = false) {
       this.propertiesPanel.render(this.selectedObject);
     }
 
-    this.editorContainer.find('#editing-container').show();
-    this.editorContainer.find('#dropzone-container').hide();
+    // Show properties panel
+    $('.properties-panel-container').addClass('opened');
   } else {
-    this.editorContainer.find('#dropzone-container').html(dropZoneTemplate());
+    // Hide properties panel
+    $('.properties-panel-container').removeClass('opened');
 
-    this.editorContainer.find('#editing-container').hide();
-    this.editorContainer.find('#dropzone-container').show();
-
-    // If playlist is empty, open the widget tab
+    // If playlist is empty, force open the widget tab
     if (this.toolbar.openedMenu == -1) {
       this.toolbar.firstRun = false;
       this.toolbar.openMenu(0, true);
@@ -709,7 +768,13 @@ pE.refreshDesigner = function(renderToolbar = false) {
 pE.reloadData = function() {
   pE.common.showLoadingScreen();
 
-  $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
+  $.get(
+    urlsForApi.playlist.get.url +
+    '?playlistId=' +
+    pE.playlist.playlistId +
+   '&embed=widgets,widget_validity,tags,permissions' +
+    pE.regionSpecificQuery,
+  )
     .done(function(res) {
       pE.common.hideLoadingScreen();
 
@@ -761,7 +826,9 @@ pE.saveOrder = function() {
 
   pE.common.showLoadingScreen('saveOrder');
 
-  this.playlist.saveOrder(this.editorContainer.find('#timeline-container').find('.playlist-widget')).then((res) => { // Success
+  this.playlist.saveOrder(
+    this.editorContainer.find('#timeline-container').find('.playlist-widget'),
+  ).then((res) => { // Success
     pE.common.hideLoadingScreen('saveOrder');
 
     // Behavior if successful
@@ -780,7 +847,8 @@ pE.saveOrder = function() {
       errorMessage = error.errorThrown;
     }
 
-    toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
+    toastr.error(errorMessagesTrans.saveOrderFailed
+      .replace('%error%', errorMessage));
   });
 };
 
@@ -793,7 +861,11 @@ pE.close = function() {
      * @param {object} objectToClean
      */
   const deleteObjectProperties = function(objectToClean) {
-    for (const x in objectToClean) if (objectToClean.hasOwnProperty(x)) delete objectToClean[x];
+    for (const x in objectToClean) {
+      if (objectToClean.hasOwnProperty(x)) {
+        delete objectToClean[x];
+      }
+    }
   };
 
   // Clear loaded vars
@@ -809,7 +881,9 @@ pE.close = function() {
   $(window).off('.toolbar-' + this.mainObjectType);
 
   // Make sure all remaining objects are pure empty JS objects
-  this.playlist = this.editorContainer = this.timeline = this.propertiesPanel = this.manager = this.selectedObject = this.toolbar = {};
+  this.playlist = this.editorContainer = this.timeline =
+    this.propertiesPanel = this.manager =
+    this.selectedObject = this.toolbar = {};
 
   // Restore toastr positioning
   toastr.options.positionClass = this.toastrPosition;
@@ -845,8 +919,9 @@ pE.clearTemporaryData = function() {
 
 /**
  * Get element from the main object ( playlist )
- * @param {string} type
- * @param {number} id
+ * @param {string} type - type of the element to get
+ * @param {number} id - id of the element to get
+ * @return {object} element
  */
 pE.getElementByTypeAndId = function(type, id) {
   let element = {};
@@ -880,17 +955,29 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   // Get object
   const playlistObject = pE.getElementByTypeAndId(objType, objId);
 
-  // Create menu and append to the designer div ( using the object extended with translations )
-  pE.editorContainer.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
+  // Create menu and append to the designer div
+  // ( using the object extended with translations )
+  pE.editorContainer.append(
+    contextMenuTemplate(
+      Object.assign(playlistObject, {trans: contextMenuTrans}),
+    ),
+  );
 
   // Set menu position ( and fix page limits )
-  const contextMenuWidth = pE.editorContainer.find('.context-menu').outerWidth();
-  const contextMenuHeight = pE.editorContainer.find('.context-menu').outerHeight();
+  const contextMenuWidth =
+  pE.editorContainer.find('.context-menu').outerWidth();
+  const contextMenuHeight =
+  pE.editorContainer.find('.context-menu').outerHeight();
 
-  const positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
-  const positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
+  const positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ?
+    (position.x - contextMenuWidth) :
+    position.x;
+  const positionTop = ((position.y + contextMenuHeight) > $(window).height()) ?
+    (position.y - contextMenuHeight) :
+    position.y;
 
-  pE.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
+  pE.editorContainer.find('.context-menu')
+    .offset({top: positionTop, left: positionLeft});
 
   // Click overlay to close menu
   pE.editorContainer.find('.context-menu-overlay').click((ev) => {
@@ -906,7 +993,10 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     if (target.data('action') == 'Delete') {
       pE.deleteObject(objType, playlistObject[objType + 'Id']);
     } else {
-      playlistObject.editPropertyForm(target.data('property'), target.data('propertyType'));
+      playlistObject.editPropertyForm(
+        target.data('property'),
+        target.data('propertyType'),
+      );
     }
 
     // Remove context menu
@@ -916,13 +1006,14 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
 /**
  * Load user preference
+ * @param {string} prefToLoad - Preference to load
+ * @param {string} defaultValue - Default value if preference is not found
  */
 pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
   // Load using the API
   const linkToAPI = urlsForApi.user.getPref;
 
   // Request elements based on filters
-  const self = this;
   $.ajax({
     url: linkToAPI.url + '?preference=' + prefToLoad,
     type: linkToAPI.type,
@@ -955,6 +1046,7 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
 
 /**
  * Check history and return last step description
+ * @return {object} last step description
  */
 pE.checkHistory = function() {
   // Check if there are some changes
@@ -963,9 +1055,15 @@ pE.checkHistory = function() {
 
   // Get last action text for popup
   if (undoActive) {
-    const lastAction = pE.manager.changeHistory[pE.manager.changeHistory.length - 1];
-    if (typeof historyManagerTrans != 'undefined' && historyManagerTrans.revert[lastAction.type] != undefined) {
-      undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+    const lastAction =
+      pE.manager.changeHistory[pE.manager.changeHistory.length - 1];
+
+    if (
+      typeof historyManagerTrans != 'undefined' &&
+    historyManagerTrans.revert[lastAction.type] != undefined
+    ) {
+      undoActiveTitle = historyManagerTrans.revert[lastAction.type]
+        .replace('%target%', lastAction.target.type);
     } else {
       undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
     }
@@ -979,7 +1077,9 @@ pE.checkHistory = function() {
 
 /**
  * Toggle panel and refresh view containers
- * @param {Array.<number, object>} items - list of items to add, either just an id or a provider object
+ * @param {Array.<number, object>} items
+ *  - list of items to add, either just an id or a provider object
+ * @return {Promise} Promise
  */
 pE.importFromProvider = function(items) {
   const requestItems = [];
@@ -1053,7 +1153,7 @@ pE.importFromProvider = function(items) {
       pE.common.hideLoadingScreen();
 
       // Reject promise and return an object with all values
-      reject({jqXHR, textStatus, errorThrown});
+      reject(new Error({jqXHR, textStatus, errorThrown}));
     });
   });
 };

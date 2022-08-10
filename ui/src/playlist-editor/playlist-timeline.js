@@ -16,9 +16,10 @@ const PlaylistTimeline = function(container) {
  * Render Timeline and the layout
  */
 PlaylistTimeline.prototype.render = function() {
-
-    // Render timeline template
-    const html = timelineTemplate($.extend({}, pE.playlist, {trans: editorsTrans}));
+  // Render timeline template
+  const html = timelineTemplate(
+    $.extend({}, pE.playlist, {trans: editorsTrans}),
+  );
 
   // Append html to the main div
   this.DOMObject.html(html);
@@ -26,8 +27,8 @@ PlaylistTimeline.prototype.render = function() {
   // Enable select for each widget
   this.DOMObject.find('.playlist-widget.selectable').click(function(e) {
     e.stopPropagation();
-    if (!$(this).hasClass('to-be-saved')) {
-      pE.selectObject($(this));
+    if (!$(e.target).hasClass('to-be-saved')) {
+      pE.selectObject($(e.target));
     }
   });
 
@@ -43,11 +44,18 @@ PlaylistTimeline.prototype.render = function() {
   });
 
   this.DOMObject.find('.timeline-overlay-step').click(function(e) {
-    if (!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
+    if (
+      !$.isEmptyObject(pE.toolbar.selectedCard) ||
+      !$.isEmptyObject(pE.toolbar.selectedQueue)
+    ) {
       e.stopPropagation();
-      const position = parseInt($(this).data('position')) + 1;
+      const position = parseInt($(e.target).data('position')) + 1;
 
-      pE.selectObject($(this).parents('#playlist-timeline'), false, {positionToAdd: position});
+      pE.selectObject(
+        $(e.target).parents('#playlist-timeline'),
+        false,
+        {positionToAdd: position},
+      );
     }
   });
 
@@ -55,8 +63,15 @@ PlaylistTimeline.prototype.render = function() {
     greedy: true,
     tolerance: 'pointer',
     accept: function(el) {
-      return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
-                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+      return (
+        $(this).hasClass('editable') &&
+        $(el).attr('drop-to') === 'widget'
+      ) ||
+      (
+        $(this).hasClass('permissionsModifiable') &&
+        $(el).attr('drop-to') === 'all' &&
+        $(el).data('subType') === 'permissions'
+      );
     },
     drop: function(event, ui) {
       pE.playlist.addElement(event.target, ui.draggable[0]);
@@ -64,16 +79,28 @@ PlaylistTimeline.prototype.render = function() {
   });
 
   // Handle widget attached audio click
-  this.DOMObject.find('.playlist-widget.editable .editProperty').click(function(e) {
+  this.DOMObject.find(
+    '.playlist-widget.editable .editProperty',
+  ).click(function(e) {
     e.stopPropagation();
 
-    const widget = pE.getElementByTypeAndId($(this).parents('.playlist-widget').data('type'), $(this).parents('.playlist-widget').attr('id'), $(this).parents('.playlist-widget').data('widgetRegion'));
+    const widget =
+      pE.getElementByTypeAndId(
+        $(e.target).parents('.playlist-widget').data('type'),
+        $(e.target).parents('.playlist-widget').attr('id'),
+        $(e.target).parents('.playlist-widget').data('widgetRegion'),
+      );
 
-    widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
+    widget.editPropertyForm(
+      $(e.target).data('property'),
+      $(e.target).data('propertyType'),
+    );
   });
 
   this.DOMObject.find('.playlist-widget').contextmenu(function(ev) {
-    if ($(ev.currentTarget).is('.editable, .deletable, .permissionsModifiable')) {
+    if (
+      $(ev.currentTarget).is('.editable, .deletable, .permissionsModifiable')
+    ) {
       // Open context menu
       pE.openContextMenu(ev.currentTarget, {
         x: ev.pageX,

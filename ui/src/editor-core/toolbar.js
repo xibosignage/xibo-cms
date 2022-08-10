@@ -41,6 +41,15 @@ modulesList.forEach((el) => {
   }
 });
 
+// Add playlist to modules
+moduleListFiltered.push({
+  moduleId: 'playlist',
+  name: toolbarTrans.playlist,
+  type: 'playlist',
+  dataType: '',
+  regionSpecific: 1,
+});
+
 // Sort modules by name
 moduleListFiltered.sort(function(a, b) {
   return (a.name < b.name) ? -1 : 1;

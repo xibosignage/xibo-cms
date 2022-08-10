@@ -250,6 +250,7 @@ Viewer.prototype.render = function(forceReload = false) {
       } else {
         clicks++;
 
+        // Single click
         if (clicks === 1 && e.which === 1) {
           timer = setTimeout(function() {
             // Single click action
@@ -263,6 +264,17 @@ Viewer.prototype.render = function(forceReload = false) {
             ) {
               lD.selectObject($(e.target).find('.designer-widget'), true);
               self.selectElement($(e.target).find('.designer-widget'));
+            } else if (
+              $(e.target).data('subType') === 'playlist' &&
+              !$(e.target).hasClass('selected')
+            ) { // Edit region if it's a playlist
+              // Get region object
+              const regionObject =
+                lD.getElementByTypeAndId('region', $(e.target).attr('id'));
+              // Open playlist editor
+              lD.openPlaylistEditor(
+                regionObject.playlists.playlistId,
+                regionObject);
             }
           }, 200);
         } else {
