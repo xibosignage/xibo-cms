@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -53,9 +53,10 @@ interface StorageServiceInterface
 
     /**
      * Open a new connection using the stored details
+     * @param $name string The name of the connection, e.g. "default"
      * @return \PDO
      */
-    public static function newConnection();
+    public static function newConnection(string $name);
 
     /**
      * Open a connection with the specified details
@@ -82,9 +83,10 @@ interface StorageServiceInterface
      * @param array[mixed] $params
      * @param string|null $connection
      * @param bool $reconnect
+     * @param bool $close
      * @return bool
      */
-    public function exists($sql, $params, $connection = null, $reconnect = false);
+    public function exists($sql, $params, $connection = 'default', $reconnect = false, $close = false);
 
     /**
      * Run Insert SQL
@@ -92,10 +94,11 @@ interface StorageServiceInterface
      * @param array $params
      * @param string|null $connection
      * @param bool $reconnect
+     * @param bool $close
      * @return int
      * @throws \PDOException
      */
-    public function insert($sql, $params, $connection = null, $reconnect = false);
+    public function insert($sql, $params, $connection = 'default', $reconnect = false, $transaction = true, $close = false);
 
     /**
      * Run Update SQL
@@ -103,10 +106,12 @@ interface StorageServiceInterface
      * @param array $params
      * @param string|null $connection
      * @param bool $reconnect
+     * @param bool $transaction If we are already in a transaction, then do nothing. Otherwise, start one.
+     * @param bool $close
      * @return int affected rows
      * @throws \PDOException
      */
-    public function update($sql, $params, $connection = null, $reconnect = false);
+    public function update($sql, $params, $connection = 'default', $reconnect = false, $transaction = true, $close = false);
 
     /**
      * Run Select SQL
@@ -114,43 +119,37 @@ interface StorageServiceInterface
      * @param $params
      * @param string|null $connection
      * @param bool $reconnect
+     * @param bool $close
      * @return array
      * @throws \PDOException
      */
-    public function select($sql, $params, $connection = null, $reconnect = false);
-
-    /**
-     * Run SQL in an isolated connection/transaction
-     * @param $sql
-     * @param $params
-     * @param string|null $connection
-     * @param bool $reconnect
-     * @return mixed
-     */
-    public function isolated($sql, $params, $connection = null, $reconnect = false);
+    public function select($sql, $params, $connection = 'default', $reconnect = false, $close = false);
 
     /**
      * Run the SQL statement with a deadlock loop
      * @param $sql
      * @param $params
      * @param string|null $connection
+     * @param bool $close
+     * @param bool $transaction If we are already in a transaction, then do nothing. Otherwise, start one.
      * @return mixed
      * @throws DeadlockException
      */
-    public function updateWithDeadlockLoop($sql, $params, $connection = null);
+    public function updateWithDeadlockLoop($sql, $params, $connection = 'default', $transaction = true, $close = false);
 
     /**
      * Commit if necessary
      * @param $name
+     * @param bool $close
      */
-    public function commitIfNecessary($name = 'default');
+    public function commitIfNecessary($name = 'default', $close = false);
 
     /**
      * Set the TimeZone for this connection
      * @param string|null $connection
      * @param string $timeZone e.g. -8:00
      */
-    public function setTimeZone($timeZone, $connection = null);
+    public function setTimeZone($timeZone, $connection = 'default');
 
     /**
      * PDO stats
@@ -163,7 +162,7 @@ interface StorageServiceInterface
      * @param $key
      * @return mixed
      */
-    public function incrementStat($connection, $key);
+    public static function incrementStat($connection, $key);
 
     /**
      * Get the Storage engine version

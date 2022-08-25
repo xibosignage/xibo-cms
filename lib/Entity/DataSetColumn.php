@@ -342,7 +342,7 @@ class DataSetColumn implements \JsonSerializable
         // Add Column to Underlying Table
         if (($this->dataSetColumnTypeId == 1) || ($this->dataSetColumnTypeId == 3)) {
             // Use a separate connection for DDL (it operates outside transactions)
-            $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+            $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', [], 'isolated', false, false);
         }
     }
 
@@ -392,12 +392,12 @@ class DataSetColumn implements \JsonSerializable
 
         try {
             if ($options['rebuilding'] && ($this->dataSetColumnTypeId == 1 || $this->dataSetColumnTypeId == 3)) {
-                $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+                $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', [], 'isolated', false, false);
 
             } else if (($this->dataSetColumnTypeId == 1 || $this->dataSetColumnTypeId == 3)
                    && ($this->hasPropertyChanged('heading') || $this->hasPropertyChanged('dataTypeId'))) {
                 $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $this->getOriginalValue('heading') . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
-                $this->getStore()->isolated($sql, []);
+                $this->getStore()->update($sql, [], 'isolated');
             }
         } catch (\PDOException $PDOException) {
             $this->getLog()->error('Unable to change DataSetColumn because ' . $PDOException->getMessage());
