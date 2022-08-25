@@ -397,7 +397,7 @@ class DataSetColumn implements \JsonSerializable
             } else if (($this->dataSetColumnTypeId == 1 || $this->dataSetColumnTypeId == 3)
                    && ($this->hasPropertyChanged('heading') || $this->hasPropertyChanged('dataTypeId'))) {
                 $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $this->getOriginalValue('heading') . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
-                $this->getStore()->update($sql, [], 'isolated');
+                $this->getStore()->update($sql, [], 'isolated', false, false);
             }
         } catch (\PDOException $PDOException) {
             $this->getLog()->error('Unable to change DataSetColumn because ' . $PDOException->getMessage());

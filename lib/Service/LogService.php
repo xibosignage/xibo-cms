@@ -107,7 +107,8 @@ class LogService implements LogServiceInterface
      */
     public function audit($entity, $entityId, $message, $object)
     {
-        $this->debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s from IP %s',
+        $this->debug(sprintf(
+            'Audit Trail message recorded for %s with id %d. Message: %s from IP %s',
             $entity,
             $entityId,
             $message,
