@@ -121,10 +121,12 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         try {
             // This runs on the default connection which will already be committed and closed by the time we get
-            // here.
+            // here. This doesn't run in a transaction.
             $this->store->updateWithDeadlockLoop(
                 'UPDATE `display` SET mediaInventoryStatus = 3 WHERE displayId IN (' . $qmarks . ')',
-                $displayIds
+                $displayIds,
+                'default',
+                false
             );
         } catch (DeadlockException $deadlockException) {
             $this->log->error('Failed to update media inventory status: ' . $deadlockException->getMessage());
