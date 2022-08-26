@@ -1275,7 +1275,7 @@ class User implements \JsonSerializable, UserEntityInterface
                 ON group.groupId = lkusergroup.groupId
              WHERE lkusergroup.userId = :userId
             ORDER BY `group`.isUserSpecific DESC, IFNULL(group.libraryQuota, 0) DESC
-        ', ['userId' => $this->userId], null, $reconnect);
+        ', ['userId' => $this->userId], 'default', $reconnect);
 
         if (count($rows) <= 0) {
             throw new LibraryFullException('Problem calculating this users library quota.');

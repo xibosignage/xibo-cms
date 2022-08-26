@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -80,26 +80,25 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     protected function write(array $record)
     {
         if (self::$statement == NULL) {
-            self::$pdo = PdoStorageService::newConnection();
+            self::$pdo = PdoStorageService::newConnection('log');
 
-            $SQL = 'INSERT INTO log (runNo, logdate, channel, type, page, function, message, userid, displayid)
-                      VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)
-                  ';
+            $SQL = 'INSERT INTO `log` (runNo, logdate, channel, type, page, function, message, userid, displayid)
+                      VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)';
 
             self::$statement = self::$pdo->prepare($SQL);
         }
 
-        $params = array(
-            'runNo' => isset($record['extra']['uid']) ? $record['extra']['uid'] : '',
-            'logdate' => $record['datetime']->format("Y-m-d H:i:s"),
+        $params = [
+            'runNo' => $record['extra']['uid'] ?? '',
+            'logdate' => $record['datetime']->format('Y-m-d H:i:s'),
             'type' => $record['level_name'],
             'channel' => $record['channel'],
-            'page' => isset($record['extra']['route']) ? $record['extra']['route'] : '',
-            'function' => isset($record['extra']['method']) ? $record['extra']['method'] : '',
+            'page' => $record['extra']['route'] ?? '',
+            'function' => $record['extra']['method'] ?? '',
             'message' => $record['message'],
-            'userid' => isset($record['extra']['userId']) ? $record['extra']['userId'] : 0,
-            'displayid' => isset($record['extra']['displayId']) ? $record['extra']['displayId'] : 0
-        );
+            'userid' => $record['extra']['userId'] ?? 0,
+            'displayid' => $record['extra']['displayId'] ?? 0
+        ];
 
         try {
             // Insert
@@ -109,8 +108,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
             $this->failureCount = 0;
 
             // Successful write
-            PdoStorageService::incrementStatStatic('log', 'insert');
-
+            PdoStorageService::incrementStat('log', 'insert');
         } catch (\Exception $e) {
             // Increment failure count
             $this->failureCount++;
@@ -129,17 +127,20 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     }
 
     /**
+     * Deleting logs must happen on the same DB connection as the log handler writes logs
+     *  otherwise we can end up with a deadlock where the log handler has written things, locked the table
+     *  and, we're then trying to get the same lock.
      * @param string $cutOff
      */
     public static function tidyLogs($cutOff)
     {
         try {
             if (self::$pdo === null) {
-                self::$pdo = PdoStorageService::newConnection();
+                self::$pdo = PdoStorageService::newConnection('log');
             }
             $statement = self::$pdo->prepare('DELETE FROM `log` WHERE logdate < :maxage');
             $statement->execute(['maxage' => $cutOff]);
-
+            PdoStorageService::incrementStat('log', 'delete');
         } catch (\PDOException $ignored) {}
     }
 }
