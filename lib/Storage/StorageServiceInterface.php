@@ -80,8 +80,8 @@ interface StorageServiceInterface
     /**
      * Check to see if the query returns records
      * @param string $sql
-     * @param array[mixed] $params
-     * @param string|null $connection
+     * @param array $params
+     * @param string|null $connection Note: the transaction for non-default connections is not automatically committed
      * @param bool $reconnect
      * @param bool $close
      * @return bool
@@ -92,7 +92,7 @@ interface StorageServiceInterface
      * Run Insert SQL
      * @param string $sql
      * @param array $params
-     * @param string|null $connection
+     * @param string|null $connection Note: the transaction for non-default connections is not automatically committed
      * @param bool $reconnect
      * @param bool $close
      * @return int
@@ -104,7 +104,7 @@ interface StorageServiceInterface
      * Run Update SQL
      * @param string $sql
      * @param array $params
-     * @param string|null $connection
+     * @param string|null $connection Note: the transaction for non-default connections is not automatically committed
      * @param bool $reconnect
      * @param bool $transaction If we are already in a transaction, then do nothing. Otherwise, start one.
      * @param bool $close
@@ -117,7 +117,7 @@ interface StorageServiceInterface
      * Run Select SQL
      * @param $sql
      * @param $params
-     * @param string|null $connection
+     * @param string|null $connection Note: the transaction for non-default connections is not automatically committed
      * @param bool $reconnect
      * @param bool $close
      * @return array
@@ -129,7 +129,7 @@ interface StorageServiceInterface
      * Run the SQL statement with a deadlock loop
      * @param $sql
      * @param $params
-     * @param string|null $connection
+     * @param string|null $connection Note: the transaction for non-default connections is not automatically committed
      * @param bool $close
      * @param bool $transaction If we are already in a transaction, then do nothing. Otherwise, start one.
      * @return mixed

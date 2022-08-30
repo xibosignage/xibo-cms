@@ -22,6 +22,7 @@
 
 
 namespace Xibo\Entity;
+use Carbon\Carbon;
 use Cron\CronExpression;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -227,6 +228,30 @@ class Task implements \JsonSerializable
             'lastRunExitCode' => $this->lastRunExitCode,
             'isActive' => $this->isActive,
             'runNow' => $this->runNow
-        ], $options['connection'], $options['reconnect']);
+        ], $options['connection'], $options['reconnect'], $options['connection'] === 'default');
+    }
+
+    /**
+     * Set this task to be started, updating the DB as necessary
+     * @return $this
+     */
+    public function setStarted(): Task
+    {
+        // Set to running
+        $this->status = \Xibo\Entity\Task::$STATUS_RUNNING;
+        $this->lastRunStartDt = Carbon::now()->format('U');
+        $this->pid = getmypid();
+
+        $this->store->update('
+            UPDATE `task` SET `status` = :status, lastRunStartDt = :lastRunStartDt, pid = :pid
+             WHERE taskId = :taskId
+        ', [
+            'taskId' => $this->taskId,
+            'status' => $this->status,
+            'lastRunStartDt' => $this->lastRunStartDt,
+            'pid' => $this->pid,
+        ], 'xtr', true, false);
+
+        return $this;
     }
 }

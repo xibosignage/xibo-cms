@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -395,9 +395,12 @@ class Task extends Base
         $task = $this->taskFactory->getById($id);
 
         // Set to running
-        $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . '], Class = ' . $task->class);
+        $this->getLog()->debug('Running Task ' . $task->name
+            . ' [' . $task->taskId . '], Class = ' . $task->class);
 
         // Run
+        $task->setStarted();
+
         try {
             // Instantiate
             if (!class_exists($task->class)) {
@@ -430,22 +433,25 @@ class Task extends Base
             $task->lastRunDuration = Carbon::now()->format('U') - $start;
             $task->lastRunMessage = $taskClass->getRunMessage();
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_SUCCESS;
-        }
-        catch (\Exception $e) {
+            $task->lastRunExitCode = 0;
+        } catch (\Exception $e) {
             $this->getLog()->error($e->getMessage() . ' Exception Type: ' . get_class($e));
             $this->getLog()->debug($e->getTraceAsString());
 
-            // We should rollback anything we've done so far
-            if ($this->store->getConnection()->inTransaction())
+            // We should roll back anything we've done so far
+            if ($this->store->getConnection()->inTransaction()) {
                 $this->store->getConnection()->rollBack();
+            }
 
             // Set the results to error
             $task->lastRunMessage = $e->getMessage();
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_ERROR;
+            $task->lastRunExitCode = 1;
         }
 
         $task->lastRunDt = Carbon::now()->format('U');
         $task->runNow = 0;
+        $task->status = \Xibo\Entity\Task::$STATUS_IDLE;
 
         // lastRunMessage columns has a limit of 255 characters, if the message is longer, we need to truncate it.
         if (strlen($task->lastRunMessage) > 255) {
@@ -453,18 +459,19 @@ class Task extends Base
         }
 
         // Save (on the XTR connection)
+        // task::save will detect the XTR connection and not start a transaction
         $task->save(['connection' => 'xtr', 'validate' => false, 'reconnect' => true]);
 
-        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: '
+            . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
-        // No output
-        $this->setNoOutput(true);
+        $this->setNoOutput();
         return $this->render($request, $response);
     }
 
     /**
      * Poll for tasks to run
-     *  continue polling until there aren't any more to run
+     *  continue polling until there aren't anymore to run
      *  allow for multiple polls to run at the same time
      * @param Request $request
      * @param Response $response
@@ -480,22 +487,25 @@ class Task extends Base
         $this->pollProcessTimeouts();
 
         // Keep track of tasks we've run during this poll period
-        // we will use this as a catch all so that we do not run a task more than once.
+        // we will use this as a catch-all so that we do not run a task more than once.
         $tasksRun = [];
 
-        // The getting/updating of tasks runs in a separate DB connection
-        $sqlForActiveTasks = 'SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY lastRunDuration';
-
-        // Update statements
-        $updateSth = 'UPDATE `task` SET status = :status WHERE taskId = :taskId';
-
         // We loop until we have gone through without running a task
-        // we select new tasks each time
+        // each loop we are expecting to run ONE task only, to allow for multiple runs of XTR at the
+        // same time.
         while (true) {
             // Get tasks that aren't running currently
-            $tasks = $this->store->select($sqlForActiveTasks, ['status' => \Xibo\Entity\Task::$STATUS_RUNNING], 'xtr', true);
+            // we have to get them all here because we can't calculate the CRON schedule with SQL,
+            // therefore we return them all and process one and a time.
+            $tasks = $this->store->select('
+                SELECT taskId, `schedule`, runNow, lastRunDt
+                  FROM `task`
+                 WHERE isActive = 1
+                   AND `status` <> :status
+                ORDER BY lastRunDuration
+            ', ['status' => \Xibo\Entity\Task::$STATUS_RUNNING], 'xtr', true);
 
-            // Assume we wont run anything
+            // Assume we won't run anything
             $taskRun = false;
 
             foreach ($tasks as $task) {
@@ -510,33 +520,22 @@ class Task extends Base
                 $cron = \Cron\CronExpression::factory($task['schedule']);
 
                 // Is the next run date of this event earlier than now, or is the task set to runNow
-                $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))->format('U');
+                $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))
+                    ->format('U');
 
                 if ($task['runNow'] == 1 || $nextRunDt <= Carbon::now()->format('U')) {
-
                     $this->getLog()->info('Running Task ' . $taskId);
 
-                    // Set to running
-                    $this->store->update('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId', [
-                        'taskId' => $taskId,
-                        'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-                        'lastRunStartDt' => Carbon::now()->format('U')
-                    ], 'xtr');
-                    $this->store->commitIfNecessary('xtr');
-
-                    // Pass to run.
                     try {
-                        // Run is isolated
-                        $this->run($request,$response,$taskId);
-
-                        // Set to idle
-                        $this->store->update($updateSth, ['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE], 'xtr', true);
-
+                        // Pass to run.
+                        $this->run($request, $response, $taskId);
                     } catch (\Exception $exception) {
-                        // This is a completely unexpected exception, and we should disable the task
-                        $this->getLog()->error('Task run error for taskId ' . $taskId . '. E = ' . $exception->getMessage());
+                        // The only thing which can fail inside run is core code,
+                        // so it is reasonable here to disable the task.
+                        $this->getLog()->error('Task run error for taskId ' . $taskId
+                            . '. E = ' . $exception->getMessage());
 
-                        // Set to error
+                        // Set to error and disable.
                         $this->store->update('
                             UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage 
                              WHERE taskId = :taskId
@@ -545,10 +544,8 @@ class Task extends Base
                             'status' => \Xibo\Entity\Task::$STATUS_ERROR,
                             'isActive' => 0,
                             'lastRunMessage' => 'Fatal Error: ' . $exception->getMessage()
-                        ], 'xtr', true);
+                        ], 'xtr', true, false);
                     }
-
-                    $this->store->commitIfNecessary('xtr');
 
                     // We have run a task
                     $taskRun = true;
@@ -556,48 +553,39 @@ class Task extends Base
                     // We've run this task during this polling period
                     $tasksRun[] = $taskId;
 
+                    // As mentioned above, we only run 1 task at a time to allow for concurrent runs of XTR.
                     break;
                 }
             }
 
             // If we haven't run a task, then stop
-            if (!$taskRun)
+            if (!$taskRun) {
                 break;
+            }
         }
 
         $this->getLog()->debug('XTR poll stopped');
-        // No output
-        $this->setNoOutput(true);
+        $this->setNoOutput();
         return $this->render($request, $response);
     }
 
     private function pollProcessTimeouts()
     {
-        $db = $this->store->getConnection('xtr');
+        $count = $this->store->update('
+            UPDATE `task` SET `status` = :newStatus
+               WHERE `isActive` = 1 
+                AND `status` = :currentStatus
+                AND `lastRunStartDt` < :timeout
+        ', [
+            'timeout' => Carbon::now()->subHours(12)->format('U'),
+            'currentStatus' => \Xibo\Entity\Task::$STATUS_RUNNING,
+            'newStatus' => \Xibo\Entity\Task::$STATUS_TIMEOUT,
+        ], 'xtr', false, false);
 
-        // Get timed out tasks and deal with them
-        $command = $db->prepare('
-          SELECT taskId, lastRunStartDt 
-            FROM `task` 
-           WHERE isActive = 1 
-            AND `status` = :status
-            AND lastRunStartDt < :timeout
-        ');
-
-        $updateFatalErrorSth = $db->prepare('UPDATE `task` SET `status` = :status WHERE taskId = :taskId');
-
-        $command->execute([
-            'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-            'timeout' => Carbon::now()->subHours(12)->format('U')
-        ]);
-
-        foreach ($command->fetchAll(\PDO::FETCH_ASSOC) as $task) {
-            $this->getLog()->error('Timed out task detected, marking as timed out. TaskId: ' . $task['taskId']);
-
-            $updateFatalErrorSth->execute([
-                'taskId' => intval($task['taskId']),
-                'status' => \Xibo\Entity\Task::$STATUS_TIMEOUT
-            ]);
+        if ($count > 0) {
+            $this->getLog()->error($count . ' timed out tasks.');
+        } else {
+            $this->getLog()->debug('No timed out tasks.');
         }
     }
 }
