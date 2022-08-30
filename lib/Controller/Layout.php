@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -399,6 +399,8 @@ class Layout extends Base
             $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
 
             if (!$isResolution) {
+                $this->getLog()->debug('add: loading template for clone operation. templateId: ' . $templateId);
+
                 // Load the template
                 $template = $this->layoutFactory->loadById($templateId);
 
@@ -409,11 +411,9 @@ class Layout extends Base
                 $layout->layout = $name;
                 $layout->description = $description;
                 $layout->code = $code;
+                $layout->tags = $tags;
 
-                // Create some tags (overwriting the old ones)
-                if ($this->getUser()->featureEnabled('tag.tagging')) {
-                    $layout->tags = $tags;
-                }
+                $this->getLog()->debug('add: loaded and cloned, about to setOwner. templateId: ' . $templateId);
 
                 // Set the owner
                 $layout->setOwner($this->getUser()->userId, true);
