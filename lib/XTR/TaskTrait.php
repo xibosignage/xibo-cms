@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -182,7 +182,7 @@ trait TaskTrait
      */
     private function getOption($option, $default)
     {
-        return isset($this->options[$option]) ? $this->options[$option] : $default;
+        return $this->options[$option] ?? $default;
     }
 
     /**
