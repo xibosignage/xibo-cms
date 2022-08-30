@@ -130,28 +130,21 @@ class Task implements \JsonSerializable
 
     /**
      * Save
-     * @param array $options
      * @throws InvalidArgumentException
      */
-    public function save($options = [])
+    public function save()
     {
-        $options = array_merge([
-            'validate' => true,
-            'connection' => 'default',
-            'reconnect' => false
-        ], $options);
+        $this->validate();
 
-        if ($options['validate'])
-            $this->validate();
-
-        if ($this->taskId == null)
+        if ($this->taskId == null) {
             $this->add();
-        else {
+        } else {
             // If we've transitioned from active to inactive, then reset the task status
-            if ($this->getOriginalValue('isActive') != $this->isActive)
+            if ($this->getOriginalValue('isActive') != $this->isActive) {
                 $this->status = Task::$STATUS_IDLE;
+            }
 
-            $this->edit($options);
+            $this->edit();
         }
     }
 
@@ -190,10 +183,7 @@ class Task implements \JsonSerializable
         ]);
     }
 
-    /**
-     * @param array $options
-     */
-    private function edit($options)
+    private function edit()
     {
         $this->getStore()->update('
             UPDATE `task` SET 
@@ -228,7 +218,7 @@ class Task implements \JsonSerializable
             'lastRunExitCode' => $this->lastRunExitCode,
             'isActive' => $this->isActive,
             'runNow' => $this->runNow
-        ], $options['connection'], $options['reconnect'], $options['connection'] === 'default');
+        ]);
     }
 
     /**
@@ -250,6 +240,38 @@ class Task implements \JsonSerializable
             'status' => $this->status,
             'lastRunStartDt' => $this->lastRunStartDt,
             'pid' => $this->pid,
+        ], 'xtr', true, false);
+
+        return $this;
+    }
+
+    /**
+     * Set this task to be finished, updating only the fields we might have changed
+     * @return $this
+     */
+    public function setFinished(): Task
+    {
+        $this->getStore()->update('
+            UPDATE `task` SET 
+              `status` = :status, 
+              `pid` = :pid,
+              `lastRunDt` = :lastRunDt, 
+              `lastRunMessage` = :lastRunMessage,
+              `lastRunStatus` = :lastRunStatus,
+              `lastRunDuration` = :lastRunDuration,
+              `lastRunExitCode` = :lastRunExitCode,
+              `runNow` = :runNow
+             WHERE `taskId` = :taskId
+        ', [
+            'taskId' => $this->taskId,
+            'status' => $this->status,
+            'pid' => $this->pid,
+            'lastRunDt' => $this->lastRunDt,
+            'lastRunMessage' => $this->lastRunMessage,
+            'lastRunStatus' => $this->lastRunStatus,
+            'lastRunDuration' => $this->lastRunDuration,
+            'lastRunExitCode' => $this->lastRunExitCode,
+            'runNow' => $this->runNow
         ], 'xtr', true, false);
 
         return $this;

@@ -458,9 +458,8 @@ class Task extends Base
             $task->lastRunMessage = substr($task->lastRunMessage, 0, 250) . '(...)';
         }
 
-        // Save (on the XTR connection)
-        // task::save will detect the XTR connection and not start a transaction
-        $task->save(['connection' => 'xtr', 'validate' => false, 'reconnect' => true]);
+        // Finished
+        $task->setFinished();
 
         $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: '
             . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
