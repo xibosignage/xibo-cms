@@ -607,7 +607,7 @@ class Currencies extends AlphaVantageBase
                                 $itemName = trim(explode('|', $item)[0]);
                                 
                                 // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
-                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0 ) {
+                                if (sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0) {
                                     // Get the multiplier
                                     $multiplier = explode('|', $item)[1];
                                     
