@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -47,6 +47,8 @@ class Bandwidth
     public static $SUBMITLOG = 9;
     public static $REPORTFAULT = 10;
     public static $SCREENSHOT = 11;
+    public static $GET_DATA = 12;
+    public static $GET_DEPENDENCY = 13;
 
     public $displayId;
     public $type;

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -33,6 +33,11 @@ use Xibo\Support\Exception\DeadlockException;
  */
 class RequiredFile implements \JsonSerializable
 {
+    public static $TYPE_DEPENDENCY = 'P';
+    public static $TYPE_LAYOUT = 'L';
+    public static $TYPE_MEDIA = 'M';
+    public static $TYPE_WIDGET_DATA = 'D';
+    
     use EntityTrait;
     public $rfId;
     public $displayId;

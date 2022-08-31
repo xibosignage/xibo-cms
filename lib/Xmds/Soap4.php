@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Intervention\Image\ImageManagerStatic as Img;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Entity\RequiredFile;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
@@ -328,7 +329,7 @@ class Soap4 extends Soap
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
-        $fileId = $sanitizer->getInt('fileId');
+        $fileId = $sanitizer->getString('fileId');
         $fileType = $sanitizer->getString('fileType');
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
@@ -360,6 +361,9 @@ class Soap4 extends Soap
 
         try {
             if ($fileType == 'layout') {
+                // fileId should be the layoutId
+                $fileId = intval($fileId);
+
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
@@ -376,13 +380,9 @@ class Soap4 extends Soap
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
-            } else if ($fileType == 'media') {
-                // Is this a request for the bundle?
-                if ($fileId == '-1') {
-                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
-                    $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, strlen($file));
-                    return $file;
-                }
+            } else if ($fileType == 'media' && is_numeric($fileId)) {
+                // fileId should be the mediaId
+                $fileId = intval($fileId);
 
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
@@ -412,6 +412,41 @@ class Soap4 extends Soap
                 }
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->save();
+            } else if ($fileType == 'media') {
+                // fileId might be the path to a dependency
+                $path = $fileId;
+                
+                if (strstr($path, '/') || strstr($path, '\\')) {
+                    throw new \SoapFault('Receiver', 'Requested an invalid dependency');
+                }
+                
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndPath(
+                    $this->display->displayId,
+                    $path,
+                    RequiredFile::$TYPE_DEPENDENCY
+                );
+
+                if ($path === 'bundle.min.js') {
+                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
+                } else {
+                    $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+                    $file = file_get_contents(
+                        $libraryLocation
+                        . DIRECTORY_SEPARATOR
+                        . 'dependencies'
+                        . DIRECTORY_SEPARATOR
+                        . $requiredFile->path
+                    );
+                }
+
+                if (!$file) {
+                    throw new \SoapFault('Sender', 'Dependency not found');
+                }
+
+                $size = strlen($file);
+
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $size;
                 $requiredFile->save();
             } else {
                 throw new NotFoundException(__('Unknown FileType Requested.'));

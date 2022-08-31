@@ -31,6 +31,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Region;
+use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Widget;
 use Xibo\Factory\BandwidthFactory;
@@ -304,14 +305,20 @@ class Soap
      * @param $serverKey
      * @param $hardwareKey
      * @param bool $httpDownloads
-     * @param bool $isSupportsDataUrl
+     * @param bool $isSupportsDataUrl Does the callee support data URLs in widgets?
+     * @param bool $isSupportsDependency Does the callee support a separate dependency call?
      * @return string
      * @throws \DOMException
      * @throws \SoapFault
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads, bool $isSupportsDataUrl = false)
-    {
+    protected function doRequiredFiles(
+        $serverKey,
+        $hardwareKey,
+        $httpDownloads,
+        bool $isSupportsDataUrl = false,
+        bool $isSupportsDependency = false
+    ) {
         $this->logProcessor->setRoute('RequiredFiles');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
@@ -402,16 +409,55 @@ class Soap
         // -------------
         // Output the player bundle
         $bundlePath = PROJECT_ROOT . '/modules/bundle.min.js';
+        $bundleSize = filesize($bundlePath);
+
         $file = $requiredFilesXml->createElement('file');
-        $file->setAttribute('type', 'media');
-        $file->setAttribute('download', 'xmds');
-        $file->setAttribute('path', '-1.js');
-        $file->setAttribute('id', '-1');
-        $file->setAttribute('size', filesize($bundlePath));
-        $file->setAttribute('md5', md5_file($bundlePath));
+        if ($isSupportsDependency) {
+            $file->setAttribute('type', 'dependency');
+            $file->setAttribute('fileType', 'bundle');
+            if ($httpDownloads) {
+                $file->setAttribute(
+                    'path',
+                    $this->generateRequiredFileDownloadPath(
+                        RequiredFile::$TYPE_DEPENDENCY,
+                        'bundle.min.js',
+                        $playerNonce
+                    )
+                );
+            } else {
+                $file->setAttribute('path', 'bundle.min.js');
+            }
+            $file->setAttribute('download', 'xmds');
+            $file->setAttribute('saveAs', 'bundle.min.js');
+            $file->setAttribute('size', $bundleSize);
+            $file->setAttribute('md5', md5_file($bundlePath));
+
+            $bundleRf = $this->requiredFileFactory
+                ->createForGetDependency($this->display->displayId, 'bundle.min.js')
+                ->save();
+        } else {
+            // We have no choice but to pretend we're a media download.
+            // Soap3/4 are modified to cater for this.
+            $file->setAttribute('type', 'media');
+            $file->setAttribute('download', 'xmds');
+            $file->setAttribute('path', 'bundle.min.js');
+            $file->setAttribute('id', -1);
+            $file->setAttribute('size', $bundleSize);
+            $file->setAttribute('md5', md5_file($bundlePath));
+
+            $bundleRf = $this->requiredFileFactory
+                ->createForMedia($this->display->displayId, -1, $bundleSize, $bundlePath, 1)
+                ->save();
+        }
         $fileElements->appendChild($file);
+        $newRfIds[] = $bundleRf->rfId;
         // ------------
         // Bundle finished
+
+        // TODO: other types of dependency, i.e. font.
+        //  can we do this with an event dispatch? we'd need a good interface for it.
+        // $file->setAttribute('type', 'dependency');
+        // $file->setAttribute('fileType', 'font');
 
         // Default Layout
         $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
@@ -543,7 +589,7 @@ class Soap
             // Run a query to get all required files for this display.
             // Include the following:
             // DownloadOrder:
-            //  1 - Module System Files and fonts
+            //  1 - TODO: this is removed. Module System Files and fonts
             //  2 - Media Linked to Displays
             //  3 - Media Linked to Widgets in the Scheduled Layouts (linked through Playlists)
             //  4 - Background Images for all Scheduled Layouts
@@ -860,37 +906,16 @@ class Soap
 
                             // Does this also have an associated data file?
                             if ($isSupportsDataUrl && $modules[$widget->type]->isDataProviderExpected()) {
-                                // Do we have widget HTML cache? We should
-                                $htmlFile = $libraryLocation . 'widgets' . DIRECTORY_SEPARATOR
-                                    . $widget->widgetId
-                                    . '_'
-                                    . $region->regionId
-                                    . '.html';
-                                $fileSize = filesize($htmlFile);
-
-                                // Output another file node with a different type
+                                // A node specifically for the widget data.
                                 $dataFile = $requiredFilesXml->createElement('file');
                                 $dataFile->setAttribute('type', 'widget');
-                                $dataFile->setAttribute('download', 'xmds');
-                                $dataFile->setAttribute('path', $widget->widgetId);
-                                $dataFile->setAttribute('saveAs', $widget->widgetId . '.json');
                                 $dataFile->setAttribute('id', $widget->widgetId);
-                                $dataFile->setAttribute('regionId', $region->regionId);
-                                $dataFile->setAttribute('size', $fileSize);
-                                $dataFile->setAttribute('md5', md5_file($htmlFile));
-
-                                $getResourceRf = $this->requiredFileFactory
-                                    ->createForMedia(
-                                        $this->display->displayId,
-                                        $widget->widgetId,
-                                        $fileSize,
-                                        $htmlFile,
-                                        1
-                                    )
-                                    ->save();
-                                $newRfIds[] = $getResourceRf->rfId;
-                                
                                 $fileElements->appendChild($dataFile);
+
+                                $getDataRf = $this->requiredFileFactory
+                                    ->createForGetData($this->display->displayId, $widget->widgetId)
+                                    ->save();
+                                $newRfIds[] = $getDataRf->rfId;
                             }
                         }
                     }
@@ -1963,17 +1988,26 @@ class Soap
     }
 
     /**
+     * Get Resource for XMDS v6 and lower
+     *  outputs the HTML with data included
      * @param string $serverKey
      * @param string $hardwareKey
      * @param integer $layoutId
      * @param string $regionId
      * @param string $mediaId
+     * @param bool $isSupportsDataUrl Does the callee support data URLs in widgets?
      * @return mixed
      * @throws NotFoundException
      * @throws \SoapFault
      */
-    protected function doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
-    {
+    protected function doGetResource(
+        $serverKey,
+        $hardwareKey,
+        $layoutId,
+        $regionId,
+        $mediaId,
+        bool $isSupportsDataUrl = false
+    ) {
         $this->logProcessor->setRoute('GetResource');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
@@ -2074,37 +2108,40 @@ class Soap
                 $media[$row['mediaId']] = $row['storedAs'];
             };
 
-            // Join in the data for this player if we're an older one (which we must be).
+            // If this player doesn't support data URLs, then add the data to this response.
             $data = [];
-            foreach ($widgets as $widget) {
-                $dataModule = $this->moduleFactory->getByType($widget->type);
-                if ($dataModule->isDataProviderExpected()) {
-                    // We only ever return cache.
-                    $dataProvider = $module->createDataProvider($widget);
 
-                    // Use the cache if we can.
-                    try {
-                        $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
-                        $cacheKey = $this->moduleFactory->determineCacheKey(
-                            $module,
-                            $widget,
-                            $this->display->displayId,
-                            $dataProvider,
-                            null
-                        );
+            if (!$isSupportsDataUrl) {
+                foreach ($widgets as $widget) {
+                    $dataModule = $this->moduleFactory->getByType($widget->type);
+                    if ($dataModule->isDataProviderExpected()) {
+                        // We only ever return cache.
+                        $dataProvider = $module->createDataProvider($widget);
 
-                        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
-                            throw new NotFoundException('Cache not ready');
+                        // Use the cache if we can.
+                        try {
+                            $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
+                            $cacheKey = $this->moduleFactory->determineCacheKey(
+                                $module,
+                                $widget,
+                                $this->display->displayId,
+                                $dataProvider,
+                                null
+                            );
+
+                            if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+                                throw new NotFoundException('Cache not ready');
+                            }
+
+                            $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
+                        } catch (GeneralException $exception) {
+                            // We ignore this.
+                            $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
+                                . ', e: ' . $exception->getMessage());
                         }
 
-                        $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
-                    } catch (GeneralException $exception) {
-                        // We ignore this.
-                        $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
-                            . ', e: ' . $exception->getMessage());
+                        $data[$widget->widgetId] = $dataProvider->getData();
                     }
-
-                    $data[$widget->widgetId] = $dataProvider->getData();
                 }
             }
 
@@ -2441,7 +2478,12 @@ class Soap
      */
     protected function generateRequiredFileDownloadPath($type, $itemId, $nonce)
     {
-        $saveAsPath = Wsdl::getRoot() . '?file=' . $nonce . '&displayId=' . $this->display->displayId . '&type=' . $type . '&itemId=' . $itemId;
+        $saveAsPath = Wsdl::getRoot()
+            . '?file=' . $nonce
+            . '&displayId=' . $this->display->displayId
+            . '&type=' . $type
+            . '&itemId=' . $itemId;
+
         // CDN?
         $cdnUrl = $this->configService->getSetting('CDN_URL');
         if ($cdnUrl != '') {

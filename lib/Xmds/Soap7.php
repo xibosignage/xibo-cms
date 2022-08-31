@@ -23,6 +23,7 @@
 namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
+use Xibo\Entity\RequiredFile;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -36,47 +37,111 @@ class Soap7 extends Soap6
 {
     /**
      * @inheritDoc
-     * @throws \DOMException
+     * @noinspection PhpMissingParentCallCommonInspection
      */
     public function RequiredFiles($serverKey, $hardwareKey)
     {
         $httpDownloads = ($this->getConfig()->getSetting('SENDFILE_MODE') != 'Off');
-        return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads, true);
+        return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads, true, true);
     }
 
     /**
      * @inheritDoc
-     */
-    public function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
-    {
-        // TODO: we're going to need to have a slightly different format because we need the regionId to
-        //  get the correct HTML cache.
-        //  Maybe this should even be a different call altogether.
-        if ($fileType === 'widget') {
-            return '';
-        } else {
-            return parent::GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize);
-        }
-    }
-
-    /**
-     * @inheritDoc
+     * @noinspection PhpMissingParentCallCommonInspection
      */
     public function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
+    {
+        return $this->doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId, true);
+    }
+
+    /**
+     * Get player dependencies.
+     * @param $serverKey
+     * @param $hardwareKey
+     * @param $path
+     * @return string
+     * @throws \SoapFault
+     * @throws NotFoundException
+     */
+    public function GetDependency($serverKey, $hardwareKey, $path)
+    {
+        if (strstr($path, '/') || strstr($path, '\\')) {
+            throw new \SoapFault('Receiver', 'Requested an invalid dependency');
+        }
+
+        // Check the serverKey matches
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
+        }
+
+        // Authenticate this request...
+        if (!$this->authDisplay($hardwareKey)) {
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
+        }
+
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
+        }
+
+        // Validate the nonce
+        $requiredFile = $this->requiredFileFactory->getByDisplayAndPath(
+            $this->display->displayId,
+            $path,
+            RequiredFile::$TYPE_DEPENDENCY
+        );
+
+        if ($path === 'bundle.min.js') {
+            $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
+        } else {
+            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            $file = file_get_contents(
+                $libraryLocation
+                . DIRECTORY_SEPARATOR
+                . 'dependencies'
+                . DIRECTORY_SEPARATOR
+                . $requiredFile->path
+            );
+        }
+
+        if (!$file) {
+            throw new \SoapFault('Sender', 'Dependency not found');
+        }
+
+        $size = strlen($file);
+
+        $requiredFile->bytesRequested = $requiredFile->bytesRequested + $size;
+        $requiredFile->save();
+
+        $this->logBandwidth($this->display->displayId, Bandwidth::$GET_DEPENDENCY, $size);
+
+        return $file;
+    }
+
+    /**
+     * Get Data for a widget
+     * @param $serverKey
+     * @param $hardwareKey
+     * @param $widgetId
+     * @return false|string
+     * @throws NotFoundException
+     * @throws \SoapFault
+     */
+    public function GetData($serverKey, $hardwareKey, $widgetId)
     {
         $this->logProcessor->setRoute('GetResource');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey,
-            'layoutId' => $layoutId,
-            'regionId' => $regionId,
-            'mediaId' => $mediaId
         ]);
 
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
-        $mediaId = $sanitizer->getString('mediaId');
+        $widgetId = $sanitizer->getString('widgetId');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -100,10 +165,10 @@ class Soap7 extends Soap6
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget(
                 $this->display->displayId,
-                $mediaId
+                $widgetId
             );
 
-            $widget = $this->widgetFactory->loadByWidgetId($mediaId);
+            $widget = $this->widgetFactory->loadByWidgetId($widgetId);
 
             $module = $this->moduleFactory->getByType($widget->type);
 
@@ -175,7 +240,7 @@ class Soap7 extends Soap6
         }
 
         // Log Bandwidth
-        $this->logBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$GET_DATA, strlen($resource));
 
         return $resource;
     }

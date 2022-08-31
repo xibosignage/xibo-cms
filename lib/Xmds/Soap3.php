@@ -28,6 +28,7 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Soap3
  * @package Xibo\Xmds
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
  */
 class Soap3 extends Soap
 {
@@ -151,7 +152,7 @@ class Soap3 extends Soap
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
 
-        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -160,12 +161,12 @@ class Soap3 extends Soap
 
         // Authenticate this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.");
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         if ($this->display->isAuditing()) {
@@ -181,7 +182,7 @@ class Soap3 extends Soap
 
         try {
             // Handle fetching the file
-            if ($fileType == "layout") {
+            if ($fileType == 'layout') {
                 $fileId = (int) $filePath;
 
                 // Validate the nonce
@@ -200,11 +201,11 @@ class Soap3 extends Soap
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
-
-            } else if ($fileType == "media") {
+            } else if ($fileType == 'media') {
                 // Get the ID
-                if (strstr($filePath, '/') || strstr($filePath, '\\'))
-                    throw new NotFoundException("Invalid file path.");
+                if (strstr($filePath, '/') || strstr($filePath, '\\')) {
+                    throw new NotFoundException('Invalid file path.');
+                }
 
                 $fileId = explode('.', $filePath);
 
