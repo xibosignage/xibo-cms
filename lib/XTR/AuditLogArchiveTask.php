@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,6 +27,7 @@ use Carbon\Carbon;
 use Xibo\Entity\User;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Exception\TaskRunException;
@@ -63,41 +64,51 @@ class AuditLogArchiveTask implements TaskInterface
     /** @inheritdoc */
     public function run()
     {
-        // Archive tasks by week.
-        $maxPeriods = $this->getOption('maxPeriods', 1);
+        $maxPeriods = intval($this->getOption('maxPeriods', 1));
+        $maxAge = Carbon::now()
+            ->subMonths(intval($this->getOption('maxAgeMonths', 1)))
+            ->startOfDay();
+
         $this->setArchiveOwner();
 
-        // Delete or Archive
+        // Delete or Archive?
         if ($this->getOption('deleteInstead', 1) == 1) {
-            $this->runMessage = '# ' . __('AuditLog Delete') . PHP_EOL . PHP_EOL;
+            $this->appendRunMessage('# ' . __('AuditLog Delete'));
+            $this->appendRunMessage('maxAge: ' . $maxAge->format(DateFormatHelper::getSystemFormat()));
 
-            // Delete all audit log messages older than 1 month
+            // Delete all audit log messages older than the configured number of months
             $this->store->update('DELETE FROM `auditlog` WHERE logDate < :logDate', [
-                'logDate' => Carbon::now()->subMonth($this->getOption('maxAgeMonths', 1))->setTime(0, 0, 0)->format('U')
+                'logDate' => $maxAge->format('U')
             ]);
-
         } else {
-
-            $this->runMessage = '# ' . __('AuditLog Archive') . PHP_EOL . PHP_EOL;
-
+            $this->appendRunMessage('# ' . __('AuditLog Archive'));
+            $this->appendRunMessage('maxAge: ' . $maxAge->format(DateFormatHelper::getSystemFormat()));
 
             // Get the earliest
-            $earliestDate = $this->store->select('SELECT MIN(logDate) AS minDate FROM `auditlog`', []);
+            $earliestDate = $this->store->select('
+                SELECT MIN(logDate) AS minDate FROM `auditlog` WHERE logDate < :logDate
+            ', [
+                'logDate' => $maxAge->format('U')
+            ]);
 
-            if (count($earliestDate) <= 0) {
-                $this->runMessage = __('Nothing to archive');
+            if (count($earliestDate) <= 0 || $earliestDate[0]['minDate'] === null) {
+                $this->appendRunMessage(__('Nothing to archive'));
                 return;
             }
 
-            /** @var Carbon $earliestDate */
-            $earliestDate = Carbon::createFromTimestamp($earliestDate[0]['minDate'])->setTime(0, 0, 0);
-
-            // Take the earliest date and roll forward until the current time
-            /** @var Carbon $now */
-            $now = Carbon::now()->subMonth()->setTime(0, 0, 0);
+            // Take the earliest date and roll forward until the max age
+            $earliestDate = Carbon::createFromTimestamp($earliestDate[0]['minDate'])->startOfDay();
+            $now = Carbon::now()->subMonth()->startOfDay();
             $i = 0;
 
             while ($earliestDate < $now && $i <= $maxPeriods) {
+                // We only archive up until the max age, leaving newer records alone.
+                if ($earliestDate->greaterThanOrEqualTo($maxAge)) {
+                    $this->appendRunMessage(__('Exceeded max age: '
+                        . $maxAge->format(DateFormatHelper::getSystemFormat())));
+                    break;
+                }
+
                 $i++;
 
                 $this->log->debug('Running archive number ' . $i);
@@ -127,8 +138,7 @@ class AuditLogArchiveTask implements TaskInterface
         $sql = '
             SELECT *
               FROM `auditlog`
-             WHERE 1 = 1
-              AND logDate >= :fromDt
+             WHERE logDate >= :fromDt
               AND logDate < :toDt
         ';
 
@@ -137,7 +147,7 @@ class AuditLogArchiveTask implements TaskInterface
             'toDt' => $toDt->format('U')
         ];
 
-        $sql .= " ORDER BY 1 ";
+        $sql .= ' ORDER BY 1 ';
 
         $records = $this->store->select($sql, $params);
 
@@ -152,7 +162,7 @@ class AuditLogArchiveTask implements TaskInterface
         $out = fopen($fileName, 'w');
         fputcsv($out, ['logId', 'logDate', 'userId', 'message', 'entity', 'entityId', 'objectAfter']);
 
-        // Do some post processing
+        // Do some post-processing
         foreach ($records as $row) {
             $sanitizedRow = $this->getSanitizer($row);
             // Read the columns
@@ -182,7 +192,12 @@ class AuditLogArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('AuditLog Export %s to %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'auditlog.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(
+            __('AuditLog Export %s to %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')),
+            'auditlog.csv.zip',
+            'genericfile',
+            $this->archiveOwner->getId()
+        );
         $media->save();
 
         // Delete the logs
