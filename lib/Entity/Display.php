@@ -370,6 +370,12 @@ class Display implements \JsonSerializable
     public $webkeySerial;
 
     /**
+     * @SWG\Property(description="A comma separated list of groups/users with permissions to this Display")
+     * @var string
+     */
+    public $groupsWithPermissions;
+
+    /**
      * @SWG\Property(description="The datetime this entity was created")
      * @var string
      */

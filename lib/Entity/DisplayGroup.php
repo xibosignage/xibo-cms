@@ -137,6 +137,12 @@ class DisplayGroup implements \JsonSerializable
     public $bandwidthLimit;
 
     /**
+     * @SWG\Property(description="A comma separated list of groups/users with permissions to this DisplayGroup")
+     * @var string
+     */
+    public $groupsWithPermissions;
+
+    /**
      * @SWG\Property(description="The datetime this entity was created")
      * @var string
      */

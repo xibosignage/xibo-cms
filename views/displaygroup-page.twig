@@ -119,6 +119,7 @@
                                             <th>{% trans "Criteria Tags" %}</th>
                                             <th>{% trans "Tags" %}</th>
                                         {% endif %}
+                                        <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th class="rowMenu"></th>
@@ -175,6 +176,12 @@
                     "data": dataTableCreateTags
                 },
                 {% endif %}
+                {
+                    "data": "groupsWithPermissions",
+                    visible: false,
+                    responsivePriority: 10,
+                    "render": dataTableCreatePermissions
+                },
                 { "data": "createdDt", "visible": false, responsivePriority: 5 },
                 { "data": "modifiedDt", "visible": false, responsivePriority: 5 },
                 {
