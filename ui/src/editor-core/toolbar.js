@@ -972,6 +972,16 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           const module = app.common.getModuleByType(filter.type);
           if (module) {
             module.trans = toolbarTrans;
+
+            // check if we have valid extension on settings
+            for (let index = 0; index < module.settings.length; index++) {
+              const setting = module.settings[index];
+
+              if (setting.id == 'validExtensions') {
+                module.validExtensions =
+                    (setting.value) ? setting.value : setting.default;
+              }
+            }
             const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
             $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
           }
