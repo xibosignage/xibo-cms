@@ -40,8 +40,8 @@
                 <div class="tab-pane active" id="general">
                     {% include "displayprofile-form-edit-common-fields.twig" %}
 
-                    {% set title = "Email Address"|trans %}
-                    {% set helpText = "The email address will be used to license this Player. This is the email address you provided when you purchased the licence."|trans %}
+                    {% set title = "Licence Code"|trans %}
+                    {% set helpText = "Provide the Licence Code (formerly Licence email address) to license Players using this Display Profile."|trans %}
                     {{ forms.email("emailAddress", title, displayProfile.getSetting("emailAddress"), helpText) }}
 
                     {% set title = "Collect interval"|trans %}
