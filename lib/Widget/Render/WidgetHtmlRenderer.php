@@ -115,7 +115,7 @@ class WidgetHtmlRenderer
                     'options' => $module->getPropertyValues(),
                     'downloadUrl' => $downloadUrl
                 ]);
-            } else {
+            } else if ($module->renderAs === 'html') {
                 // Modules without a preview should render out as HTML
                 return $this->twig->fetch('module-html-preview.twig', [
                     'width' => $width,
@@ -124,13 +124,13 @@ class WidgetHtmlRenderer
                     'widgetId' => $widget->widgetId
                 ]);
             }
-        } else {
-            // Render an icon.
-            return $this->twig->fetch('module-icon-preview.twig', [
-                'moduleName' => $module->name,
-                'moduleType' => $module->type
-            ]);
         }
+        
+        // Render an icon.
+        return $this->twig->fetch('module-icon-preview.twig', [
+            'moduleName' => $module->name,
+            'moduleType' => $module->type
+        ]);
     }
 
     /**
