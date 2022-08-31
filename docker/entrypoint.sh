@@ -363,6 +363,12 @@ then
   sed -i "s/\-Indexes/\+Indexes/" /etc/apache2/conf.d/cms.conf
 fi
 
+# Configure Apache ServerTokens
+if [ "$CMS_APACHE_SERVER_TOKENS" == "Prod" ]
+then
+  sed -i "s/ServerTokens.*$/ServerTokens Prod/" /etc/apache2/conf.d/cms.conf
+fi
+
 # Run CRON in Production mode
 if [ "$CMS_DEV_MODE" == "false" ]
 then
