@@ -19,32 +19,28 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <module>
-    <id>core-audio</id>
-    <name>Audio</name>
+    <id>core-flash</id>
+    <name>Flash</name>
     <author>Core</author>
-    <description>Upload Audio files to assign to Layouts</description>
+    <description>Upload SWF files to assign to Layouts</description>
     <class></class>
-    <type>audio</type>
+    <type>flash</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>0</regionSpecific>
     <renderAs>html</renderAs>
-    <defaultDuration>0</defaultDuration>
-    <hasThumbnail>0</hasThumbnail>
+    <defaultDuration>10</defaultDuration>
     <settings>
         <property id="validExtensions" type="input">
             <title>Valid Extensions</title>
             <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
-            <default>mp3,wav</default>
+            <default>swf</default>
         </property>
     </settings>
-    <properties>
-        <property id="loop" type="checkbox">
-            <title>Loop?</title>
-            <helpText>Should the video loop if it finishes before the provided duration?</helpText>
-            <default>0</default>
-        </property>
-    </properties>
+    <properties></properties>
     <preview></preview>
+    <stencil>
+        <twig><![CDATA[]]></twig>
+    </stencil>
 </module>

@@ -19,32 +19,28 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <module>
-    <id>core-audio</id>
-    <name>Audio</name>
+    <id>core-htmlpackage</id>
+    <name>HTML Package</name>
     <author>Core</author>
-    <description>Upload Audio files to assign to Layouts</description>
+    <description>Upload a complete package to distribute to Players</description>
     <class></class>
-    <type>audio</type>
+    <type>htmlpackage</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>0</regionSpecific>
-    <renderAs>html</renderAs>
-    <defaultDuration>0</defaultDuration>
-    <hasThumbnail>0</hasThumbnail>
-    <settings>
-        <property id="validExtensions" type="input">
-            <title>Valid Extensions</title>
-            <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
-            <default>mp3,wav</default>
-        </property>
-    </settings>
+    <renderAs>native</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
     <properties>
-        <property id="loop" type="checkbox">
-            <title>Loop?</title>
-            <helpText>Should the video loop if it finishes before the provided duration?</helpText>
-            <default>0</default>
+        <property id="nominatedFile" type="input">
+            <title>Nominated File</title>
+            <helpText>Enter a nominated file name that player will attempt to open after extracting the .htz archive</helpText>
+            <default>index.html</default>
         </property>
     </properties>
     <preview></preview>
+    <stencil>
+        <twig><![CDATA[]]></twig>
+    </stencil>
 </module>
