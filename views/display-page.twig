@@ -225,6 +225,7 @@
                                         <th>{% trans "XMR Registered" %}</th>
                                         <th>{% trans "Commercial Licence" %}</th>
                                         <th>{% trans "Remote" %}</th>
+                                        <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th>{% trans "Faults?" %}</th>
@@ -523,6 +524,12 @@
                         },
                         "visible": true,
                         "orderable": false
+                    },
+                    {
+                        "data": "groupsWithPermissions",
+                        visible: false,
+                        responsivePriority: 10,
+                        "render": dataTableCreatePermissions
                     },
                     {"data": "createdDt", "visible": false, responsivePriority: 6},
                     {"data": "modifiedDt", "visible": false, responsivePriority: 6},
