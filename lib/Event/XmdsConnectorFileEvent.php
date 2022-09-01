@@ -31,10 +31,15 @@ class XmdsConnectorFileEvent extends Event
     public static $NAME = 'connector.xmds.file.event';
     private $widget;
     private $response;
+    /**
+     * @var boolean
+     */
+    private $preview;
 
-    public function __construct($widget)
+    public function __construct($widget, $preview = false)
     {
         $this->widget = $widget;
+        $this->preview = $preview;
     }
 
     /**
@@ -43,6 +48,11 @@ class XmdsConnectorFileEvent extends Event
     public function getWidget(): ?Widget
     {
         return $this->widget;
+    }
+
+    public function isPreview(): bool
+    {
+        return $this->preview;
     }
 
     /**

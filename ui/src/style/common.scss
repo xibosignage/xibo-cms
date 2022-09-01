@@ -334,6 +334,10 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-th;
 }
 
+.module-icon-dashboard {
+    @extend .fa-file-image;
+}
+
 /* Tools icons */
 .tool-icon-region {
     @extend .fa-clone;
