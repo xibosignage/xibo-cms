@@ -1,7 +1,0 @@
-{
-  "title": "HTML Package",
-  "author": "Xibo Signage Ltd",
-  "description": "A module for displaying HTML packages in .htz format",
-  "name": "htmlpackage",
-  "class": "Xibo\\Widget\\HtmlPackage"
-}
