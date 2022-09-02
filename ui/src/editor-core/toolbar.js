@@ -23,6 +23,16 @@ const usersListFiltered = [];
 
 // Filter module list to create the types for the filter
 modulesList.forEach((el) => {
+  // check if we have valid extension on settings
+  for (let index = 0; index < el.settings.length; index++) {
+    const setting = el.settings[index];
+
+    if (setting.id == 'validExtensions') {
+      el.validExtensions =
+          (setting.value) ? setting.value : setting.default;
+    }
+  }
+
   // Create new list with "other" modules
   if (
     el.assignable == 1 &&
@@ -973,15 +983,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           if (module) {
             module.trans = toolbarTrans;
 
-            // check if we have valid extension on settings
-            for (let index = 0; index < module.settings.length; index++) {
-              const setting = module.settings[index];
-
-              if (setting.id == 'validExtensions') {
-                module.validExtensions =
-                    (setting.value) ? setting.value : setting.default;
-              }
-            }
             const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
             $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
           }
