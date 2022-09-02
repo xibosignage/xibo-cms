@@ -29,7 +29,7 @@
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>0</regionSpecific>
-    <renderAs>html</renderAs>
+    <renderAs>native</renderAs>
     <defaultDuration>10</defaultDuration>
     <settings>
         <property id="validExtensions" type="input">

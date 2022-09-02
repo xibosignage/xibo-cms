@@ -24,7 +24,7 @@
     <author>Core</author>
     <description>A generic file to be stored in the library</description>
     <class></class>
-    <type>pdf</type>
+    <type>genericfile</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>0</assignable>

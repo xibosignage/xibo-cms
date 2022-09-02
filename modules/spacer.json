@@ -1,7 +1,0 @@
-{
-  "title": "Spacer",
-  "author": "Xibo Signage Ltd",
-  "description": "A module for making region empty for the duration",
-  "name": "spacer",
-  "class": "Xibo\\Widget\\Spacer"
-}
