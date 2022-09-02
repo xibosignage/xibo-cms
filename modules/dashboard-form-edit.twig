@@ -38,7 +38,7 @@
                     <div class="tab-pane active" id="generalTab">
                         {% set title %}{% trans "Type" %}{% endset %}
                         {% set helpText %}{% trans "Select the dashboards type below" %}{% endset %}
-                        {{ forms.dropdown("type", "single", title, module.getOption("type"), options, "type", "name", helptext)}}
+                        {{ forms.dropdown("type", "single", title, module.getOption("type"), options.serviceType, "type", "name", helptext)}}
 
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}

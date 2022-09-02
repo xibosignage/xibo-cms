@@ -466,6 +466,8 @@ class XiboDashboardConnector implements ConnectorInterface
     {
         $this->getLogger()->debug('onWidgetEditOption');
         $widget = $event->getWidget();
+        // get any options we have in this event
+        $options = $event->getOptions();
 
         if ($widget === null) {
             throw new NotFoundException();
@@ -475,7 +477,10 @@ class XiboDashboardConnector implements ConnectorInterface
         if ($widget->type === 'dashboard') {
             // get available services
             $services = $this->getAvailableServices(true, $this->getSetting('apiKey'));
-            $event->setOptions($services);
+
+            // add services to our options array and set options on the event.
+            $options['serviceType'] = $services;
+            $event->setOptions($options);
         }
     }
 }
