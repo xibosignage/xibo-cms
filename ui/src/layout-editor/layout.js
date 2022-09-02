@@ -88,9 +88,9 @@ Layout.prototype.createDataStructure = function(data) {
   for (const region in data.regions) {
     if (Object.prototype.hasOwnProperty.call(data.regions, region)) {
       let regionDuration = 0;
-      const isPlaylist = (data.regions[region].type === 'playlist');
+      const isCanvas = (data.regions[region].type === 'canvas');
 
-      const newRegion = isPlaylist ?
+      const newRegion = !isCanvas ?
         new Region(
           data.regions[region].regionId,
           data.regions[region],
@@ -149,8 +149,8 @@ Layout.prototype.createDataStructure = function(data) {
       // Push Region to the Layout region array
       this.regions[newRegion.id] = newRegion;
 
-      // If not playlist, save region also as canvas to the layout
-      if (!isPlaylist) {
+      // If it's a canvas, save region also to the layout
+      if (isCanvas) {
         this.canvas = this.regions[newRegion.id];
       }
 
@@ -251,7 +251,7 @@ Layout.prototype.checkout = function() {
       lD.editorContainer.find('#read-only-message').remove();
 
       // Reload layout
-      lD.reloadData(res.data, true);
+      lD.reloadData(res.data, true, true);
 
       // Refresh toolbar
       lD.toolbar.render();

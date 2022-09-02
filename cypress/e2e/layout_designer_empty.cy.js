@@ -67,10 +67,10 @@ describe('Layout Designer (Empty)', function() {
 
         it('should create a new region from within the navigator edit', () => {
             // Open navigator edit
-            cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
+            cy.get('.editor-bottom-bar #navigator-edit-btn').click();
 
             // Click on add region button
-            cy.get('#layout-editor-bottombar #add-btn').click();
+            cy.get('.editor-bottom-bar #add-btn').click();
 
             // Check if there are 2 regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('have.length', 2);
@@ -81,7 +81,7 @@ describe('Layout Designer (Empty)', function() {
             cy.route('/layout?layoutId=*').as('reloadLayout');
 
             // Open navigator edit
-            cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
+            cy.get('.editor-bottom-bar #navigator-edit-btn').click();
 
             // Select a region from the navigator
             cy.get('#layout-navigator-content [data-type="region"]:first-child').click().then(($el) => {
@@ -89,7 +89,7 @@ describe('Layout Designer (Empty)', function() {
                 const regionId = $el.attr('id');
 
                 // Click trash container
-                cy.get('#layout-editor-bottombar #delete-btn').click();
+                cy.get('.editor-bottom-bar #delete-btn').click();
 
                 // Confirm delete on modal
                 cy.get('[data-test="deleteObjectModal"] button.btn-bb-confirm').click();
@@ -115,17 +115,17 @@ describe('Layout Designer (Empty)', function() {
             cy.route('/library/search?*').as('mediaLoad');
 
             // Open library search tab
-            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force: true});
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force: true});
+            cy.get('.editor-main-toolbar #btn-menu-0').should('be.visible').click({force: true});
+            cy.get('.editor-main-toolbar #btn-menu-1').should('be.visible').click({force: true});
 
             cy.wait('@mediaLoad');
 
-            cy.get('#layout-editor-bottombar #navigator-edit-btn').click({force: true});
+            cy.get('.editor-bottom-bar #navigator-edit-btn').click({force: true});
 
-            cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2)').find("img").should('be.visible');
+            cy.get('.editor-main-toolbar #media-content-1 .toolbar-card:nth-of-type(2)').find("img").should('be.visible');
 
             // Get a table row, select it and add to the region
-            cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
+            cy.get('.editor-main-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
                 cy.get('#layout-navigator [data-type="region"]:first-child').click({force: true}).then(() => {
 
                     // Wait for the layout to reload
@@ -144,13 +144,13 @@ describe('Layout Designer (Empty)', function() {
             cy.populateLibraryWithMedia();
 
             // Open toolbar Widgets tab
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force: true});
-            cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force: true});
+            cy.get('.editor-main-toolbar #btn-menu-1').should('be.visible').click({force: true});
+            cy.get('.editor-main-toolbar #btn-menu-2').should('be.visible').click({force: true});
 
-            cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
+            cy.get('.editor-bottom-bar #navigator-edit-btn').click();
 
-            cy.get('#layout-editor-toolbar #content-2 .toolbar-pane-content .toolbar-card.upload-card').should('be.visible').then(() => {
-                cy.get('#layout-editor-toolbar #content-2 .toolbar-pane-content .toolbar-card.upload-card .select-upload').click({force: true});
+            cy.get('.editor-main-toolbar #content-2 .toolbar-pane-content .toolbar-card.upload-card').should('be.visible').then(() => {
+                cy.get('.editor-main-toolbar #content-2 .toolbar-pane-content .toolbar-card.upload-card .select-upload').click({force: true});
                 cy.get('#layout-navigator [data-type="region"]:first-child').click({force: true});
                 cy.get('[data-test="uploadFormModal"]').contains('Upload media');
             });
@@ -168,11 +168,11 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#actions-drawer-empty-message').should('be.visible');
 
             // Open modules tab
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force: true});
-            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force: true});
+            cy.get('.editor-main-toolbar #btn-menu-1').should('be.visible').click({force: true});
+            cy.get('.editor-main-toolbar #btn-menu-0').should('be.visible').click({force: true});
 
              // Get a table row, select it and add to the region
-             cy.get('#layout-editor-toolbar #content-0 .toolbar-card[data-sub-type="clock"] .add-area').click({force: true}).then(() => {
+             cy.get('.editor-main-toolbar #content-0 .toolbar-card[data-sub-type="clock"] .add-area').click({force: true}).then(() => {
                 cy.get('#actions-drawer-content.ui-droppable-active').click({force: true}).then(() => {
 
                     // Wait for the layout to reload

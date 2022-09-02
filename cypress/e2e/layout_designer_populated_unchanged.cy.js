@@ -82,7 +82,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
             cy.wait('@reloadWidget');
 
             // Click the revert button
-            cy.get('#layout-editor-bottombar #undo-btn').click();
+            cy.get('.editor-bottom-bar #undo-btn').click();
 
             // Wait for the widget to save
             cy.wait('@saveWidget');
@@ -125,7 +125,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
             });
 
             // Click the revert button
-            cy.get('#layout-editor-bottombar #undo-btn').click();
+            cy.get('.editor-bottom-bar #undo-btn').click();
 
             // Wait for the order to save
             cy.wait('@saveOrder');
@@ -146,7 +146,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.wait('@loadRegion');
 
         // Click play
-        cy.get('#layout-editor-bottombar #play-btn').click();
+        cy.get('.editor-bottom-bar #play-btn').click();
 
         // Check if the fullscreen iframe has loaded
         cy.get('#layout-viewer-container #layout-viewer .viewer-element > iframe').should('be.visible');

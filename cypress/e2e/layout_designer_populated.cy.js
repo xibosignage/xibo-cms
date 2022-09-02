@@ -78,17 +78,17 @@ describe('Layout Designer (Populated)', function() {
         cy.get('#properties-panel #backgroundRemoveButton').click();
 
         // Open library search tab
-        cy.get('#layout-editor-toolbar #btn-menu-0').click();
-        cy.get('#layout-editor-toolbar #btn-menu-1').click();
+        cy.get('.editor-main-toolbar #btn-menu-0').click();
+        cy.get('.editor-main-toolbar #btn-menu-1').click();
 
         cy.wait('@mediaLoad');
 
-        cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
+        cy.get('.editor-bottom-bar #navigator-edit-btn').click();
 
-        cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2)').find("img").should('be.visible');
+        cy.get('.editor-main-toolbar #media-content-1 .toolbar-card:nth-of-type(2)').find("img").should('be.visible');
 
         // Get a table row, select it and add to the region
-        cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
+        cy.get('.editor-main-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
             cy.get('#properties-panel-container .background-image-drop').click().then(() => {
 
                 // Save form
@@ -113,7 +113,7 @@ describe('Layout Designer (Populated)', function() {
         cy.route('**/region/preview/*').as('regionPreview');
 
         // Open navigator edit
-        cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
+        cy.get('.editor-bottom-bar #navigator-edit-btn').click();
 
         // Wait for the region to preview
         cy.wait('@regionPreview');
@@ -177,7 +177,7 @@ describe('Layout Designer (Populated)', function() {
             cy.wait('@regionPreview');
 
             // Click trash container
-            cy.get('#layout-editor-bottombar button#delete-btn').click({force: true});
+            cy.get('.editor-bottom-bar button#delete-btn').click({force: true});
 
             // Confirm delete on modal
             cy.get('[data-test="deleteObjectModal"] button.btn-bb-confirm').click();
@@ -232,8 +232,8 @@ describe('Layout Designer (Populated)', function() {
         cy.server();
         cy.route('PUT', '/layout/publish/*').as('layoutPublish');
 
-        cy.get('#layout-editor-topbar li.navbar-submenu-options a#optionsContainerTop').click();
-        cy.get('#layout-editor-topbar li.navbar-submenu-options #publishLayout').click();
+        cy.get('.editor-top-bar li.navbar-submenu-options a#optionsContainerTop').click();
+        cy.get('.editor-top-bar li.navbar-submenu-options #publishLayout').click();
 
         cy.get('button.btn-bb-Publish').click();
 

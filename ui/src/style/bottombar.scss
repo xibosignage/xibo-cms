@@ -1,7 +1,7 @@
 @import "variables";
 @import "mixins";
 
-#layout-editor-bottombar  {
+.editor-bottom-bar  {
     height: 38px;
     margin: 0px 16px 16px 16px;
     
@@ -109,7 +109,7 @@
     }
 }
 
-#layout-editor.fullscreen-mode #layout-editor-bottombar {
+#layout-editor.fullscreen-mode .editor-bottom-bar {
     position: fixed;
     bottom: 0;
     left: 0;

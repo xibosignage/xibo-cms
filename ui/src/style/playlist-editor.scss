@@ -1,102 +1,538 @@
-// Playlist Editor ( common properties )
+// Playlist Editor ( separate from layout editor )
 // Imports
 @import "variables";
 @import "mixins";
 
-
 // Variables
+$playlist-editor-main-background-color: $xibo-color-primary-l5;
+$playlist-editor-main-fb-color: $xibo-color-neutral-900;
+
+$playlist-editor-widget-bg-color: $xibo-color-primary-l5;
+$playlist-editor-widget-fg-color: $xibo-color-neutral-900;
+$playlist-editor-widget-fg-color2: $xibo-color-neutral-700;
+$playlist-editor-widget-selected-color: $xibo-color-semantic-success;
+$playlist-editor-widget-multi-selected-color: $xibo-color-accent;
+$playlist-editor-widget-multi-selected-hover-color: lighten($playlist-editor-widget-multi-selected-color, 20%);
+$playlist-editor-widget-hover-bg-color: lighten($xibo-color-semantic-success, 20%);
+$playlist-editor-widget-border-color: $xibo-color-neutral-700;
+$playlist-editor-playlist-hover-color-color: lighten($xibo-color-primary, 20%);
+
+$playlist-editor-z-index-background: 1011;
+$playlist-editor-z-index-overlay: 1012;
+$playlist-editor-z-index-select: 1013;
+
+$playlist-editor-timeline-fg-color: $xibo-color-primary;
+$playlist-editor-unsuccess-message-bg-color: $xibo-color-semantic-error;
+
 $left-bar-width: 100px;
-$top-bar-height: 38px;
+$bottom-bar-height: 38px;
+$timeline-left-margin-width: 100px;
+
+// CSS
+.editor-modal {
+    display: block;
+    z-index: $playlist-editor-z-index-background;
+    overflow: auto;
+    @include set-transparent-color(background, $xibo-color-neutral-900, 0.6);
+
+    &.toolbar-opened {
+        padding-left: 410px;
+    }
+
+    .editor-modal-content {
+        background: $playlist-editor-main-background-color;
+        margin-bottom: 60px;
+    }
+
+    .editor-modal-body {
+        padding: 15px 0 0 0;
+    }
+
+    .editor-modal-title {
+        line-height: 1;
+        font-weight: bold;
+        color: $playlist-editor-main-fb-color;
+    }
+}
+
+// Bootbox custom dialogs
+.second-dialog {
+    z-index: 3100;
+
+    &+.in.modal-backdrop {
+        z-index: 3000;
+    }
+
+    &~.select2-container.select2-container--open {
+        z-index: 3200;
+    }
+}
+
+.inner-modal {
+    z-index: 3101;
+}
+
+.vakata-context {
+    z-index: 3102;
+}
+
+.playlist-widget-preview {
+    z-index: $playlist-editor-z-index-background;
+
+    &.tooltip.right .tooltip-arrow {
+        border-right-color: $xibo-color-secondary;
+    }
+
+    .tooltip-inner-image {
+        min-height: 50px;
+        padding: 4px;
+        background-color: $xibo-color-secondary;
+        border-radius: 4px;
+
+        img {
+            height: 60px;
+            max-width: 200px;
+        }
+    }
+}
+
+.multi-delete-modal .multi-delete-element {
+
+    &>div {
+        overflow: hidden;
+    }
+
+    .checkbox,
+    .help-block {
+        margin: 0;
+    }
+}
 
 .playlist-editor-inline-container {
     padding: 16px;
+}
 
-    #playlist-editor {
+#playlist-editor {
+    @include border-radius(4px);
+    width: 100%;
+    height: 100%;
+    background-color: $xibo-color-neutral-0;
+    border: 2px solid $playlist-editor-timeline-fg-color;
+    margin-bottom: 10px;
+    position: relative;
+
+    /* width */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+        background: $xibo-color-primary-l5;
+        @include border-radius(6px);
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+        background: $xibo-color-primary-d60;
         @include border-radius(4px);
-        outline: 1px solid $xibo-color-neutral-300;
-        background-color: $xibo-color-neutral-0;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: lighten($xibo-color-primary-d60, 20%);
+    }
+
+    ::-webkit-scrollbar-corner {
+        @include box-shadow(inset 0 0 5px $xibo-color-neutral-700);
+    }
+
+    #timeline-container {
+        padding: 5px;
+    }
+
+    #timeline-overlay-container {
+        display: none;
+        padding: 0;
+        position: absolute !important;
         width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
+        min-height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0.6;
 
-        .editor-body {
-            flex: 1;
+        .timeline-overlay-step {
+            height: 14px;
+            background: darken($xibo-color-primary-l5, 10%);
+            margin-top: -5px;
+            margin-bottom: 5px;
+
+            &:hover,
+            &.ui-droppable-hover {
+                background: lighten($xibo-color-primary-l5, 10%);
+                @include box-shadow(0px 0px 3px 1px $xibo-color-primary-l5);
+            }
+        }
+
+        .timeline-overlay-dummy {
+            height: 32px;
+        }
+
+        :nth-child(1) {
+            height: 12px;
+            margin: 0;
+        }
+
+        :nth-child(2) {
+            height: 35px;
+        }
+    }
+
+    .left-margin {
+        height: calc(100% - 38px);
+        position: absolute;
+        background-color: $xibo-color-neutral-300;
+        width: $timeline-left-margin-width;
+    }
+
+    .editor-body {
+        height: calc(100% - $bottom-bar-height);
+        position: relative;
+        overflow: auto;
+
+        .time-grid {
+            position: absolute;
+            color: $xibo-color-neutral-700;
+            width: 100%;
             display: flex;
+            flex-direction: column;
+            gap: 22px;
+            top: 4px;
 
-            .time-grid {
-                color: $xibo-color-neutral-700;
-                background-color: $xibo-color-neutral-300;
-                height: 100%;
-                width: $left-bar-width;
+            .time-grid-step {
+                height: 2px;
+                min-height: 2px;
+                position: relative;
+                background-color: $xibo-color-neutral-500;
+                left: 40px;
+                width: calc(100% - 40px);
             }
 
-            #playlist-timeline {
-                flex: 1;
-                margin: 0;
-                border: 0;
-                background-color: $xibo-color-neutral-0;
+            .time-grid-step-with-value {
+                left: 70px;
+                width: calc(100% - 70px);
 
-                .playlist-widget {
-                    @include border-radius(2px);
-                    background-color: $xibo-color-primary-l10;
-                    color: $xibo-color-secondary;
-                    outline: 1px solid $xibo-color-primary-d60;
-
-                    .info {
-                        @include border-radius(4px 0 0 4px);
-                        background-color: $xibo-color-primary;
-                        color: $xibo-color-neutral-0;
-                    }
+                .step-value {
+                    position: relative;
+                    color: $xibo-color-neutral-500;
+                    top: -10px;
+                    left: -45px;
                 }
             }
         }
 
-        .editor-footer {
-            height: $top-bar-height;
-            display: flex;
+        #playlist-timeline {
+            margin-left: $timeline-left-margin-width;
+            border: 0;
+            @include set-transparent-color(background-color, $xibo-color-neutral-0, 0.65);
+            z-index: 1;
+            @include border-radius(3px);
 
-            .footer-controls {
-                background-color: $xibo-color-primary-d60;
-                width: $left-bar-width;
-                height: 100%;
+            .playlist-widget {
+                @include border-radius(2px);
+                background-color: $xibo-color-primary-l10;
+                outline: 1px solid $xibo-color-primary-d60;
+                color: $xibo-color-secondary;
+                min-height: 56px;
+                width: 100%;
+                padding: 6px 6px 6px 0;
                 display: flex;
+                justify-content: space-between;
+                gap: 6px;
+                position: relative;
 
-                .btn {
+                .widgetLabel {
+                    flex: 0;
+                    color: $playlist-editor-main-background-color;
+                    flex-basis: 28px;
+                    margin: -6px 0;
+                    text-align: center;
+                    float: left;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    padding: 8px 0;
+
+                    .widgetDuration {
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        padding: 0 2px;
+                    }
+                }
+
+                .widgetName {
+                    flex: 1;
+                    font-weight: bold;
+                    color: $playlist-editor-widget-fg-color;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .widgetProperties {
+                    flex: 1;
+                }
+
+                .widgetPreview {
+                    flex-basis: 100px;
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        @include border-radius(2px);
+                        object-fit: cover;
+                    }
+                }
+
+                .widgetDelete {
+                    display: none;
+                    cursor: pointer;
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 25px;
+                    height: 100%;
                     color: $xibo-color-neutral-100;
-                    width: 25%;
-                    padding: 0;
-                    border-radius: 0;
-                    border: none;
+                    background-color: $xibo-color-semantic-error;
+                    opacity: 0.7;
 
                     i {
-                        font-size: 14px;
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
                     }
+                }
+
+                i.editProperty {
+                    float: right;
+                    cursor: pointer;
+                    padding: 2px;
+                    color: $playlist-editor-widget-fg-color;
 
                     &:hover {
-                        background-color: $xibo-color-secondary;
+                        color: lighten($playlist-editor-widget-fg-color, 20%);
+                    }
+                }
+
+                &:not(.editable) {
+                    @include box-shadow(inset 0 0 4px 2px $xibo-color-neutral-700);
+                }
+
+                &.selectable {
+                    @include user-select-none();
+
+                    &:hover {
+                        background: $playlist-editor-widget-hover-bg-color;
+                    }
+                }
+
+                &.selected {
+                    background: $playlist-editor-widget-selected-color;
+                }
+
+                &.invalid-widget {
+                    @include box-shadow(inset 0px 0px 10px 3px $xibo-color-semantic-error);
+                }
+
+                &:hover {
+                    .widgetDelete {
+                        display: block;
+
+                        &:hover {
+                            opacity: 0.9;
+                        }
                     }
                 }
             }
 
-            .footer-info-bar {
+            &.ui-droppable-active {
+                @include z-index-set($playlist-editor-z-index-select);
+                background: $xibo-color-primary-l30  !important;
+                min-height: 100%;
+            }
+
+            &.ui-droppable-hover {
+                background: darken($xibo-color-primary-l30, 10%) !important;
+            }
+        }
+    }
+
+    .editor-footer {
+        height: $bottom-bar-height;
+        display: flex;
+
+        .footer-controls {
+            background-color: $xibo-color-primary-d60;
+            width: $left-bar-width;
+            height: 100%;
+            display: flex;
+
+            .btn {
                 color: $xibo-color-neutral-100;
-                background-color: $xibo-color-primary;
-                flex: 1;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                flex-direction: row;
+                width: 25%;
+                padding: 0;
+                border-radius: 0;
+                border: none;
 
                 i {
-                    margin: auto 0.5rem;
-                    font-size: 1.2rem;
+                    font-size: 14px;
                 }
 
-                span {
-                    font-weight: bold;
+                &:hover {
+                    color: $xibo-color-neutral-0;
+                    background-color: $xibo-color-secondary;
+                }
+
+                &:focus {
+                    box-shadow: none;
                 }
             }
         }
+
+        .footer-info {
+            color: $xibo-color-neutral-100;
+            background-color: $xibo-color-primary;
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .selected-info {
+                color: $xibo-color-neutral-0;
+            }
+
+            .footer-actions {
+                font-size: 0;
+
+                button {
+                    color: $xibo-color-neutral-100;
+                    height: $bottom-bar-height;
+                    border-radius: 0;
+
+                    &:hover:not(.inactive) {
+                        color: $xibo-color-neutral-0;
+                        background: darken($xibo-color-primary, 10%);
+                    }
+
+                    &:focus {
+                        box-shadow: none;
+                    }
+
+                    i {
+                        margin: 0 auto;
+                    }
+
+                    &.inactive {
+                        opacity: 0.6;
+                        cursor: auto;
+                    }
+
+                    &[data-action="remove-widget"] {
+                        background-color: $xibo-color-semantic-error !important;
+
+                        &:hover:not(.inactive) {
+                            background-color: darken($xibo-color-semantic-error, 10%) !important;
+                        }
+                    }
+
+                    &.hide-on-multi-select {
+                        display: inline-block;
+                    }
+    
+                    &.show-on-multi-select {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+
+    .playlist-timeline-container {
+        z-index: auto;
+    }
+
+    &.multi-select {
+        .editor-footer {
+            .footer-info {
+                position: relative;
+                z-index: $playlist-editor-z-index-select;
+                width: 100%;
+            }
+
+            .footer-actions {
+                .hide-on-multi-select {
+                    display: none !important;
+                }
+
+                .show-on-multi-select {
+                    display: inline-block !important;
+                }
+            }
+        }
+
+        #timeline-container {
+            position: relative;
+
+            .playlist-widget {
+                position: relative;
+                z-index: $playlist-editor-z-index-select;
+
+                .widgetDelete, .widgetProperties {
+                    display: none !important;
+                }
+            }
+        }
+    }
+
+    #playlist-properties-panel {
+        background: $xibo-color-primary-l5;
+        padding: 0;
+        @include border-radius(4px);
+        border: 2px solid $playlist-editor-widget-selected-color;
+
+        .form-container form {
+            padding-top: 10px;
+        }
+
+        /* Select2 width fix */
+        .select2-container {
+            width: auto !important;
+        }
+
+        /* Hide layout designer only messages */
+        .layout-designer-message {
+            display: none;
+        }
+    }
+
+    /* Multi Select */
+    &.multi-select {
+        .playlist-widget {
+            &:hover {
+                background: $playlist-editor-widget-multi-selected-hover-color !important;
+            }
+
+            &.multi-selected {
+                background: $playlist-editor-widget-multi-selected-color  !important;
+            }
+        }
+    }
+
+    .custom-overlay {
+        z-index: $playlist-editor-z-index-overlay;
     }
 }

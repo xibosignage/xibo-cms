@@ -1,29 +1,44 @@
+<div class="left-margin"></div>
 <div class="editor-body">
     <div class="time-grid">
         {{!--TIME GRID--}}
     </div>
-    <div id="playlist-timeline"  class="editable">
+    <div id="playlist-timeline" class="editable">
         {{!--TIMELINE--}}
     </div>
 </div>
 
 <div class="editor-footer">
     <div class="footer-controls">
-        <button class="btn btn-default btn-sm" data-action="zoom-in">
+        <button class="btn" data-action="zoom-in">
             <i class="fa fa-search-plus"></i>
         </button>
-        <button class="btn btn-default btn-sm" data-action="zoom-out">
+        <button class="btn" data-action="zoom-out">
             <i class="fa fa-search-minus"></i>
         </button>
-        <button class="btn btn-default btn-sm" data-action="zoom-reset">
+        <button class="btn" data-action="zoom-reset">
             <i class="fa fa-search"></i>
         </button>
-        <button class="btn btn-default btn-sm" data-action="find-selected">
+        <button class="btn" data-action="find-selected">
             <i class="fa fa-map-marker"></i>
         </button>
     </div>
-    <div class="footer-info-bar">
-        <i class="fa fa-plus"></i>
-        <span class="footer-info-name">{{trans.playOrder}}</span>
+    <div class="footer-info">
+        <div class="selected-info">
+            <span></span>
+        </div>
+        <div class="footer-actions">
+            <button class="btn inactive hide-on-multi-select" data-action="undo">
+                <i class="fa fa-undo"></i>
+            </button>
+            <button class="btn" data-action="multi-select">
+                <i class="fa fa-object-group"></i>
+            </button>
+            <button class="btn inactive show-on-multi-select" data-action="remove-widget">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
     </div>
 </div>
+
+<div class="custom-overlay"></div>

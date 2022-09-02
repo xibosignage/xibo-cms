@@ -23,55 +23,6 @@
         .navbar-btn {
             margin: 8px 3px;
         }
-
-        .navbar-peek-button {
-            display: block;
-            width: $toolbar-width;
-            text-align: center;
-            font-size: 1.5rem;
-            padding: 10px;
-            line-height: 30px;
-            @include set-transparent-color(background, $xibo-color-neutral-700, 0.3);
-            color: lighten($xibo-color-neutral-700, 30%);
-            opacity: 0.4;
-            cursor: unset;
-
-            &.active {
-                cursor: pointer;
-                opacity: 1;
-
-                &.navbar-bin {
-                    background: $xibo-color-semantic-error;
-                    color: $xibo-color-neutral-100;
-                }
-
-                &.navbar-bin:hover {
-                    background: darken($xibo-color-semantic-error, 20%) !important;
-                }
-
-                &.navbar-undo {
-                    background: $xibo-color-semantic-warning;
-                    color: $xibo-color-neutral-900;
-                }
-
-                &.navbar-undo:hover {
-                    background: darken($xibo-color-semantic-warning, 20%) !important;
-                }
-
-                &.navbar-multiselect {
-                    background: $xibo-color-tertiary;
-                    color: $xibo-color-neutral-100;
-                }
-
-                &.navbar-multiselect:hover {
-                    background: darken($xibo-color-tertiary, 20%) !important;
-                }
-                
-                &.navbar-multiselect.multiselect-active {
-                    background: lighten($xibo-color-tertiary, 20%)  !important;
-                }
-            }
-        }
     }
 
     .toolbar-pane {
@@ -679,8 +630,7 @@
             }
 
             &:hover, &:focus {
-                color: $xibo-color-primary-l5;
-                background-color: $xibo-color-tertiary;
+                background-color: $xibo-color-primary-l10;
             }
 
             &.trash-container {

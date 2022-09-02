@@ -2,12 +2,6 @@
 @import "variables";
 @import "mixins";
 
-// VARIABLES (Layout Editor)
-$properties-panel-width: 320px;
-$designer-overlay-z-index: 1050;
-$designer-z-index-select: 10;
-$inline-editing-z-index: 1040;
-
 // CSS
 #read-only-message {
     display: block;
@@ -73,82 +67,14 @@ $inline-editing-z-index: 1040;
     }
 }
 
-/* Toggle Panels */
-.toggle-panel {
-    .toggle-container {
-        background-color: $xibo-color-neutral-300;
-        width: 100%;
-        height: 8px;
-
-        .toggle {
-            color: $xibo-color-primary;
-            top: -13px;
-            width: 50px;
-            height: 13px;
-            background-color: $xibo-color-neutral-300;
-            position: relative;
-            border-radius: 18px 18px 0px 0;
-            left: 50%;
-            transform: translateX(50%);
-            cursor: pointer;
-            font-size: 12px;
-            z-index: 1;
-        }
-    }
-
-    .hide-closed {
-        display: inline;
-    }
-
-    .hide-opened {
-        display: none;
-    }
-
-    &.opened {
-        .hide-closed {
-            display: none;
-        }
-
-        .hide-opened {
-            display: inline;
-        }
-    }
-}
-
 .properties-panel-container {
     flex: 0;
-    width: 0;
+    width: auto;
     height: 100%;
     display: flex;
 
-    .toggle-container {
-        background-color: $xibo-color-neutral-0;
-        height: 100%;
-        width: 8px;
-
-        .toggle {
-            background-color: $xibo-color-neutral-0;
-            left: -13px;
-            height: 50px;
-            width: 13px;
-            border-radius: 18px 0 0 18px;
-            top: 50%;
-            transform: translateY(-50%);
-
-            i {
-                top: 50%;
-                position: absolute;
-                transform: translateY(-50%);
-            }
-        }
-    }
-
-    &.opened {
-        width: auto;
-
-        .toggle-container {
-            width: 0;
-        }
+    &.closed {
+        width: 0;
     }
 }
 
@@ -267,9 +193,20 @@ $inline-editing-z-index: 1040;
 
     .back-button {
         position: fixed;
-        left: 16px;
-        top: 8px;
+        text-transform: uppercase;
+        left: 6px;
+        top: 4px;
         z-index: 1;
+
+        a {
+            width: 100px;
+            padding: 0.5rem;
+            color: $xibo-color-secondary;
+
+            &:hover {
+                background-color: $xibo-color-primary-l10;
+            }
+        }
 
         span {
             margin-left: 6px;
@@ -413,7 +350,12 @@ $inline-editing-z-index: 1040;
             background: $xibo-color-neutral-900;
         }
 
+
         .designer-region-playlist {
+            background: $xibo-color-neutral-900;
+        }
+
+        .designer-region {
             &.empty-region {
                 width: 100%;
                 height: 100%;
@@ -450,48 +392,6 @@ $inline-editing-z-index: 1040;
                 height: 100%;
                 position: absolute;
                 z-index: 1;
-            }
-
-            .preview-paging {
-                position: absolute;
-                color: $xibo-color-primary-l5;
-                display: none;
-                position: absolute;
-                min-width: 100%;
-                width: max-content;
-                height: 20px;
-                bottom: 0;
-                z-index: 2;
-                @include set-transparent-color(background, $xibo-color-neutral-900, 0.5);
-                opacity: 0.2;
-                padding: 0 4px;
-                white-space: nowrap;
-                left: 50%;
-                transform: translate(-50%, 0);
-            }
-
-            .preview-paging.active {
-                display: block;
-            }
-
-            .preview-paging-message {
-                font-weight: bold;
-                font-size: 1rem;
-            }
-
-            .preview-paging-name {
-                font-weight: bold;
-                font-style: italic;
-                max-width: 150px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .widget-arrow {
-                display: none;
-                cursor: pointer;
-                padding: 2px 3px;
             }
 
             .loading-container {
@@ -941,7 +841,7 @@ $inline-editing-z-index: 1040;
         @include user-select-none();
     }
 
-    .designer-region-playlist {
+    .designer-region {
         outline: 4px solid $xibo-color-neutral-700;
 
         &::before {
@@ -980,13 +880,13 @@ $inline-editing-z-index: 1040;
         }
     }
 
-    .designer-region-playlist:not(.selected):hover::before {
+    .designer-region:not(.selected):hover::before {
         outline-color: $xibo-color-neutral-0;
     }
 
     /* Viewer */
     #layout-viewer {
-        .designer-region-playlist.ui-droppable-active {
+        .designer-region.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
             background: $xibo-color-region-hover  !important;
 
@@ -1079,7 +979,7 @@ $inline-editing-z-index: 1040;
         display: none;
     }
 
-    .designer-region-playlist .preview-paging {
+    .designer-region .preview-paging {
         z-index: 1;
     }
 }

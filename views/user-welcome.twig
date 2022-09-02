@@ -156,13 +156,13 @@
                 },
                 { // 12
                     content: "{% trans "Here is the Play button which you use to Preview your Layout designs to ensure that it will play as you intend." %}",
-                    element: "#layout-editor #layout-editor-bottombar #play-btn",
+                    element: "#layout-editor .editor-bottom-bar #play-btn",
                     placement: "bottom",
                     template: next_template
                 },
                 {
                     content: "{% trans "This edit icon will open the Edit Layout mode so you can add, position and resize Regions." %}",
-                    element: "#layout-editor #layout-editor-bottombar #navigator-edit-btn",
+                    element: "#layout-editor .editor-bottom-bar #navigator-edit-btn",
                     placement: "bottom",
                     template: next_template
                 },
@@ -183,13 +183,13 @@
                 },
                 { // 16
                     content: "{% trans "The Toolbar includes buttons for you to add media items straight from your Library, apply actions using the Tools menu and assign Widgets to your Layouts." %}",
-                    element: "#layout-editor-toolbar nav .toolbar-menu-left",
+                    element: ".editor-main-toolbar nav .toolbar-menu-left",
                     placement: "right",
                     template: next_template
                 },
                 {
                     content: "{% trans "Let's create a simple layout...Start by clicking on the edit icon." %}",
-                    element: "#layout-editor-bottombar #navigator-edit-btn",
+                    element: ".editor-bottom-bar #navigator-edit-btn",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template
@@ -281,14 +281,14 @@
                 },
                 { // 26
                     content: "{% trans "Let's add some content! Click the Widgets button on the bottom toolbar to open." %}",
-                    element: "#layout-editor-toolbar #btn-menu-0",
+                    element: ".editor-main-toolbar #btn-menu-0",
                     delay: 500,
                     placement: "right",
                     reflex: true,
                     template: no_nav_template,
                     onShown: function (tour) {
                         // If widgets are selected already, go to next step
-                        if ($('#layout-editor-toolbar #btn-menu-1.active').length > 0) {
+                        if ($('.editor-main-toolbar #btn-menu-1.active').length > 0) {
                             tour.goTo(27);
                             return false;
                         }
@@ -296,7 +296,7 @@
                 },
                 {
                     content: "{% trans "Scroll or use the search field to find the 'Text' Widget." %}",
-                    element: "#layout-editor-toolbar #content-0 .toolbar-pane-container",
+                    element: ".editor-main-toolbar #content-0 .toolbar-pane-container",
                     placement: "right",
                     template: next_template,
                     boundary: "window",
@@ -304,7 +304,7 @@
                 },
                 { // 28
                     content: "{% trans "Add the Text Widget by using the 'Grab' option and dragging to the Region or click the '+' button to select then click in the target Region. Click Next after adding the Widget." %}",
-                    element: '#layout-editor-toolbar .toolbar-card[data-sub-type="text"]',
+                    element: '.editor-main-toolbar .toolbar-card[data-sub-type="text"]',
                     boundary: "window",
                     placement: "right",
                     template: next_template,
@@ -321,7 +321,7 @@
                         }
 
                         // Go back if the element isn't still visible
-                        if (!isScrolledIntoView('#layout-editor-toolbar .toolbar-card[data-sub-type="text"]', '.toolbar-pane-container')){
+                        if (!isScrolledIntoView('.editor-main-toolbar .toolbar-card[data-sub-type="text"]', '.toolbar-pane-container')){
                             tour.goTo(27);
                             return false;
                         }
@@ -439,14 +439,14 @@
                 },
                 {
                     content: "{% trans "Do this by clicking on the menu on the top toolbar." %}",
-                    element: '#layout-editor-topbar li.navbar-submenu-options a#optionsContainerTop',
+                    element: '.editor-top-bar li.navbar-submenu-options a#optionsContainerTop',
                     placement: "left",
                     reflex: true,
                     template: no_nav_template
                 },
                 { // 40
                     content: "{% trans "Select Publish!" %}",
-                    element: '#layout-editor-topbar #publishLayout',
+                    element: '.editor-top-bar #publishLayout',
                     placement: "left",
                     reflex: true,
                     delayOnElement: {
@@ -805,8 +805,8 @@
                     template: next_template,
                 },
                 { // 1
-                    element: "#layout-editor-toolbar #read-only-message",
-                    container: '#layout-editor-toolbar .container-toolbar',
+                    element: ".editor-main-toolbar #read-only-message",
+                    container: '.editor-main-toolbar .container-toolbar',
                     reflex: true,
                     content: "{% trans "Click on this message to checkout the Layout." %}",
                     placement: "top",
@@ -833,7 +833,7 @@
                 },
                 { 
                     content: "{% trans "Let's open the Navigator edit mode. Click on the edit button." %}",
-                    element: "#layout-editor #layout-editor-bottombar #navigator-edit-btn",
+                    element: "#layout-editor .editor-bottom-bar #navigator-edit-btn",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template
@@ -860,20 +860,20 @@
                 },
                 {
                     content: "{% trans "This is the <b>Toolbar</b>, used to interact with the layout designer." %}",
-                    element: "#layout-editor-toolbar nav",
+                    element: ".editor-main-toolbar nav",
                     placement: "right",
                     boundary: "window",
                     template: next_template
                 },
                 { // 9
                     content: "{% trans "Use the Toolbar tabs to select <b>Widgets</b>" %}",
-                    element: "#layout-editor-toolbar #btn-menu-0",
+                    element: ".editor-main-toolbar #btn-menu-0",
                     placement: "right",
                     reflex: true,
                     template: no_nav_template,
                     onShown: function (tour) {
                         // If widgets are selected already, go to next step
-                        if ($('#layout-editor-toolbar #btn-menu-0.active').length > 0) {
+                        if ($('.editor-main-toolbar #btn-menu-0.active').length > 0) {
                             tour.goTo(10);
                             return false;
                         }
@@ -881,7 +881,7 @@
                 },
                 {
                     content: "{% trans "These are the widgets you can add." %}",
-                    element: "#layout-editor-toolbar #content-0 .toolbar-pane-container",
+                    element: ".editor-main-toolbar #content-0 .toolbar-pane-container",
                     placement: "right",
                     delayOnElement: {
                         delayElement: "element",
@@ -891,7 +891,7 @@
                 },
                 { // 11
                     content: "{% trans "You can take a look at how your layout will look on your displays by clicking on the Play button on the Preview window." %}",
-                    element: '#layout-editor-bottombar #play-btn',
+                    element: '.editor-bottom-bar #play-btn',
                     placement: "bottom",
                     delayOnElement: {
                         delayElement: "element",
@@ -900,7 +900,7 @@
                     template: next_template
                 },
                 {
-                    element: '#layout-editor-topbar li.navbar-submenu-options',
+                    element: '.editor-top-bar li.navbar-submenu-options',
                     content: "{% trans "When happy with your layout you will need to publish before being able to schedule to displays." %}",
                     placement: "bottom",
                     template: next_template,

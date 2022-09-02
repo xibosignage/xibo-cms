@@ -256,18 +256,11 @@ Viewer.prototype.render = function(forceReload = false) {
             // Single click action
             clicks = 0;
 
-            // Select widget if exists
+            // Edit region if it's a playlist
             if (
-              $(e.target).find('.designer-widget').length > 0 &&
-              !$(e.target).find('.designer-widget').hasClass('selected') &&
-              !$(e.target).hasClass('selected')
-            ) {
-              lD.selectObject($(e.target).find('.designer-widget'), true);
-              self.selectElement($(e.target).find('.designer-widget'));
-            } else if (
               $(e.target).data('subType') === 'playlist' &&
               !$(e.target).hasClass('selected')
-            ) { // Edit region if it's a playlist
+            ) {
               // Get region object
               const regionObject =
                 lD.getElementByTypeAndId('region', $(e.target).attr('id'));
@@ -275,6 +268,14 @@ Viewer.prototype.render = function(forceReload = false) {
               lD.openPlaylistEditor(
                 regionObject.playlists.playlistId,
                 regionObject);
+            } else if (
+              $(e.target).find('.designer-widget').length > 0 &&
+              !$(e.target).find('.designer-widget').hasClass('selected') &&
+              !$(e.target).hasClass('selected')
+            ) {
+              // Select widget if exists
+              lD.selectObject($(e.target).find('.designer-widget'), true);
+              self.selectElement($(e.target).find('.designer-widget'));
             }
           }, 200);
         } else {
@@ -682,7 +683,9 @@ Viewer.prototype.updateMoveable = function() {
   // Update moveable if region is selected and belongs to the DOM
   if (
     $selectedElement &&
-    $selectedElement.hasClass('designer-region-playlist') &&
+    (
+      $selectedElement.hasClass('designer-region')
+    ) &&
     $.contains(document, $selectedElement[0])
   ) {
     this.moveable.target = $selectedElement[0];

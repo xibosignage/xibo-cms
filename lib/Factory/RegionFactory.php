@@ -105,7 +105,7 @@ class RegionFactory extends BaseFactory
      */
     public function create(string $type, $ownerId, $name, $width, $height, $top, $left, $zIndex = 0, $isDrawer = 0)
     {
-        if (!in_array($type, ['playlist', 'canvas'])) {
+        if (!in_array($type, ['playlist', 'canvas', 'frame'])) {
             throw new InvalidArgumentException(__('Incorrect type'), 'type');
         }
 

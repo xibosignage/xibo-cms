@@ -46,14 +46,9 @@ Playlist.prototype.createDataStructure = function(data) {
       );
 
       if (newWidget.subType == 'image') {
-        newWidget.previewTemplate =
-          '<div class="tooltip playlist-widget-preview" role="tooltip">' +
-          '<div class="arrow"></div><div class="tooltip-inner-image">' +
-          '<img src=' +
-          imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) +
-          '></div></div>';
+        newWidget.previewSrc =
+          imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]);
       }
-
 
       newWidget.designerObject = pE;
 
@@ -133,6 +128,7 @@ Playlist.prototype.addElement = function(
 ) {
   const draggableType = $(draggable).data('type');
   const draggableSubType = $(draggable).data('subType');
+  const draggableData = $(draggable).data();
 
   // Get playlist Id
   const playlistId = this.playlistId;
@@ -148,7 +144,10 @@ Playlist.prototype.addElement = function(
     } else {
       this.addMedia($(draggable).data('mediaId'), addToPosition);
     }
-  } else if (draggableType == 'module') { // Add widget/module
+  } else if (
+    draggableType == 'module' ||
+    draggableType == 'template'
+  ) { // Add widget/module/template
     // Get regionSpecific property
     const regionSpecific = $(draggable).data('regionSpecific');
 
@@ -215,6 +214,12 @@ Playlist.prototype.addElement = function(
         };
       }
 
+      // Set template if if exists
+      if (draggableData.templateId) {
+        addOptions = addOptions || {};
+        addOptions.templateId = draggableData.templateId;
+      }
+
       pE.manager.addChange(
         'addWidget',
         'playlist', // targetType
@@ -255,32 +260,9 @@ Playlist.prototype.addElement = function(
         // Remove added change from the history manager
         pE.manager.removeLastChange();
 
-        // Display message in form
-        formHelpers.displayErrorMessage(
-          dialog.find('form'), errorMessage, 'danger',
-        );
-
         // Show toast message
         toastr.error(errorMessage);
       });
-    }
-  } else if (draggableType == 'tool') { // Add tool
-    const widgetId = $(droppable).attr('id');
-    const widget = pE.getElementByTypeAndId('widget', widgetId);
-
-    // Select widget ( and avoid deselect if region was already selected )
-    pE.selectObject($(droppable), true);
-
-    if (draggableSubType == 'audio') {
-      widget.editAttachedAudio();
-    } else if (draggableSubType == 'expiry') {
-      widget.editExpiry();
-    } else if (draggableSubType == 'transitionIn') {
-      widget.editTransition('in');
-    } else if (draggableSubType == 'transitionOut') {
-      widget.editTransition('out');
-    } else if (draggableSubType == 'permissions') {
-      widget.editPermissions();
     }
   }
 };

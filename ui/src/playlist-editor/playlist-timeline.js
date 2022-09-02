@@ -21,14 +21,17 @@ PlaylistTimeline.prototype.render = function() {
     $.extend({}, pE.playlist, {trans: editorsTrans}),
   );
 
+  // Create grid
+  this.createGrid();
+
   // Append html to the main div
   this.DOMObject.html(html);
 
   // Enable select for each widget
   this.DOMObject.find('.playlist-widget.selectable').click(function(e) {
     e.stopPropagation();
-    if (!$(e.target).hasClass('to-be-saved')) {
-      pE.selectObject($(e.target));
+    if (!$(e.currentTarget).hasClass('to-be-saved')) {
+      pE.selectObject($(e.currentTarget));
     }
   });
 
@@ -136,6 +139,30 @@ PlaylistTimeline.prototype.render = function() {
       saveOrderFunc();
     },
   });
+};
+
+/**
+ * Create grid
+ */
+PlaylistTimeline.prototype.createGrid = function() {
+  return;
+  // TODO This is just a sample grig, it should be replaced with a real one
+  const $stepEven =
+    $(`<div class="time-grid-step-with-value time-grid-step">
+      <div class="step-value"></div>
+    </div>`);
+  const $stepOdd =
+    $('<div class="time-grid-step"></div>');
+
+  // Add 20 steps
+  for (let i = 0; i < 30; i++) {
+    if (i % 2 === 0) {
+      $stepOdd.clone().appendTo('.time-grid');
+    } else {
+      $stepEven.find('.step-value').text(i);
+      $stepEven.clone().appendTo('.time-grid');
+    }
+  }
 };
 
 module.exports = PlaylistTimeline;
