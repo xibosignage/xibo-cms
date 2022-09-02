@@ -50,7 +50,7 @@ class Dashboard extends ModuleWidget
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
-        $this->setOption('type', 'powerbi');
+        $this->setOption('type', $sanitizedParams->getString('type'));
         $this->setOption('lang', $sanitizedParams->getString('lang'));
         $this->setOption('tz', $sanitizedParams->getString('tz'));
 

@@ -27,6 +27,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Connector\ConnectorInterface;
 use Xibo\Connector\ConnectorTrait;
 use Xibo\Event\MaintenanceRegularEvent;
+use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Event\XmdsConnectorFileEvent;
 use Xibo\Event\XmdsConnectorTokenEvent;
 use Xibo\Support\Exception\GeneralException;
@@ -59,6 +60,7 @@ class XiboDashboardConnector implements ConnectorInterface
         $dispatcher->addListener(MaintenanceRegularEvent::$NAME, [$this, 'onRegularMaintenance']);
         $dispatcher->addListener(XmdsConnectorFileEvent::$NAME, [$this, 'onXmdsFile']);
         $dispatcher->addListener(XmdsConnectorTokenEvent::$NAME, [$this, 'onXmdsToken']);
+        $dispatcher->addListener(WidgetEditOptionRequestEvent::$NAME, [$this, 'onWidgetEditOption']);
         return $this;
     }
 
@@ -151,6 +153,8 @@ class XiboDashboardConnector implements ConnectorInterface
             }
             $password = $params->getString($service['type'] . '_password');
             $twoFactorSecret = $params->getString($service['type'] . '_twoFactorSecret');
+            $isUrl = isset($service['isUrl']);
+            $url = ($isUrl) ? $params->getString($service['type' ]. '_url') : '';
 
             if (!empty($id) && $isMarkedForRemoval) {
                 // Existing credential marked for removal
@@ -173,7 +177,8 @@ class XiboDashboardConnector implements ConnectorInterface
                             'json' => [
                                 'username' => $userName,
                                 'password' => $password,
-                                'totp' => $twoFactorSecret
+                                'totp' => $twoFactorSecret,
+                                'url' => $url
                             ],
                             'timeout' => 120
                         ]
@@ -454,6 +459,23 @@ class XiboDashboardConnector implements ConnectorInterface
         } catch (\Exception $exception) {
             // We log any error and return empty
             $this->getLogger()->error('onXmdsFile: unknown error: ' . $exception->getMessage());
+        }
+    }
+
+    public function onWidgetEditOption(WidgetEditOptionRequestEvent $event)
+    {
+        $this->getLogger()->debug('onWidgetEditOption');
+        $widget = $event->getWidget();
+
+        if ($widget === null) {
+            throw new NotFoundException();
+        }
+
+        // only care about dashboard type Widgets here
+        if ($widget->type === 'dashboard') {
+            // get available services
+            $services = $this->getAvailableServices(true, $this->getSetting('apiKey'));
+            $event->setOptions($services);
         }
     }
 }

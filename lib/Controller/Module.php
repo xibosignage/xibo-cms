@@ -29,6 +29,7 @@ use Xibo\Entity\Widget;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetEditEvent;
+use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -784,13 +785,20 @@ class Module extends Base
             $templates = $module->templatesAvailable(true);
         }
 
+        // do we have special options requested?
+        // Dashboards Widget needs to pull available services from connector
+        $event = new WidgetEditOptionRequestEvent($module->widget);
+        $this->getDispatcher()->dispatch($event, $event::$NAME);
+        $options = $event->getOptions();
+
         // Pass to view
         $this->getState()->template = $module->editForm($request);
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => $media,
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions),
-            'templatesAvailable' => $templates
+            'templatesAvailable' => $templates,
+            'options' => $options
         ]));
 
         return $this->render($request, $response);
