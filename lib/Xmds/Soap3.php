@@ -23,6 +23,7 @@ namespace Xibo\Xmds;
 
 use Carbon\Carbon;
 use Xibo\Entity\Bandwidth;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -112,8 +113,7 @@ class Soap3 extends Soap
      */
     function RequiredFiles($serverKey, $hardwareKey, $version)
     {
-        $httpDownloads = false;
-        return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
+        return $this->doRequiredFiles($serverKey, $hardwareKey, false);
     }
 
     /**
@@ -131,7 +131,7 @@ class Soap3 extends Soap
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
+    public function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
     {
         $this->logProcessor->setRoute('GetFile');
 
@@ -209,18 +209,32 @@ class Soap3 extends Soap
 
                 $fileId = explode('.', $filePath);
 
-                // Is this a request for the bundle?
-                if ($fileId == '-1') {
-                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
-                    $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, strlen($file));
-                    return $file;
+                if (is_numeric($fileId)) {
+                    // Validate the nonce
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
+                        $this->display->displayId,
+                        $fileId[0]
+                    );
+
+                    // Return the Chunk size specified
+                    $f = fopen($libraryLocation . $filePath, 'r');
+                } else {
+                    // Non-numeric, so assume we're a dependency
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndDependencyPath(
+                        $this->display->displayId,
+                        $filePath
+                    );
+                    
+                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->itemId);
+                    $this->getDispatcher()->dispatch($event);
+
+                    $path = $event->getFullPath();
+                    if (empty($path)) {
+                        throw new NotFoundException(__('File not found'));
+                    }
+
+                    $f = fopen($path, 'r');
                 }
-
-                // Validate the nonce
-                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId[0]);
-
-                // Return the Chunk size specified
-                $f = fopen($libraryLocation . $filePath, 'r');
 
                 fseek($f, $chunkOffset);
 

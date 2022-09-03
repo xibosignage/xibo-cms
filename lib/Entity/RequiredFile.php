@@ -48,6 +48,8 @@ class RequiredFile implements \JsonSerializable
     public $bytesRequested = 0;
     public $complete = 0;
     public $released = 1;
+    public $fileType;
+    public $realId;
 
     /**
      * Entity constructor.
@@ -66,9 +68,9 @@ class RequiredFile implements \JsonSerializable
      */
     public function save()
     {
-        if ($this->rfId == null)
+        if ($this->rfId == null) {
             $this->add();
-        else if ($this->hasPropertyChanged('bytesRequested') || $this->hasPropertyChanged('complete')) {
+        } else if ($this->hasPropertyChanged('bytesRequested') || $this->hasPropertyChanged('complete')) {
             $this->edit();
         }
 
@@ -81,8 +83,8 @@ class RequiredFile implements \JsonSerializable
     private function add()
     {
         $this->rfId = $this->store->insert('
-            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`, `released`)
-              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path, :released)
+            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`, `released`, `fileType`, `realId`)
+              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path, :released, :fileType, :realId)
         ', [
             'displayId' => $this->displayId,
             'type' => $this->type,
@@ -91,7 +93,9 @@ class RequiredFile implements \JsonSerializable
             'complete' => $this->complete,
             'size' => $this->size,
             'path' => $this->path,
-            'released' => $this->released
+            'released' => $this->released,
+            'fileType' => $this->fileType,
+            'realId' => $this->realId,
         ]);
     }
 

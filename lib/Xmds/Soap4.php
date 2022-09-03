@@ -25,7 +25,7 @@ use Carbon\Carbon;
 use Intervention\Image\ImageManagerStatic as Img;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Entity\RequiredFile;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
@@ -380,22 +380,46 @@ class Soap4 extends Soap
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
-            } else if ($fileType == 'media' && is_numeric($fileId)) {
+            } else if ($fileType == 'media') {
                 // fileId should be the mediaId
                 $fileId = intval($fileId);
 
-                // Validate the nonce
-                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
+                // Is the ID negative?
+                if ($fileId < 0) {
+                    // Expect a dependency.
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndDependencyId(
+                        $this->display->displayId,
+                        $fileId
+                    );
 
-                $media = $this->mediaFactory->getById($fileId);
-                $this->getLog()->debug(json_encode($media));
+                    // use the path we saved in required files to work out which type of dependency we are.
+                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->realId);
+                    $this->getDispatcher()->dispatch($event);
 
-                if (!file_exists($libraryLocation . $media->storedAs)) {
-                    throw new NotFoundException(__('Media exists but file missing from library. ') . $libraryLocation);
+                    $path = $event->getFullPath();
+                    if (empty($path)) {
+                        throw new NotFoundException(__('File not found'));
+                    }
+
+                    $f = fopen($path, 'r');
+                } else {
+                    // A normal media file.
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
+                        $this->display->displayId,
+                        $fileId
+                    );
+
+                    $media = $this->mediaFactory->getById($fileId);
+                    $this->getLog()->debug(json_encode($media));
+
+                    if (!file_exists($libraryLocation . $media->storedAs)) {
+                        throw new NotFoundException(__('Media exists but file missing from library.'));
+                    }
+
+                    // Return the Chunk size specified
+                    $f = fopen($libraryLocation . $media->storedAs, 'r');
                 }
 
-                // Return the Chunk size specified
-                $f = fopen($libraryLocation . $media->storedAs, 'r');
                 if (!$f) {
                     throw new NotFoundException(__('Unable to get file pointer'));
                 }
@@ -412,41 +436,6 @@ class Soap4 extends Soap
                 }
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
-                $requiredFile->save();
-            } else if ($fileType == 'media') {
-                // fileId might be the path to a dependency
-                $path = $fileId;
-                
-                if (strstr($path, '/') || strstr($path, '\\')) {
-                    throw new \SoapFault('Receiver', 'Requested an invalid dependency');
-                }
-                
-                $requiredFile = $this->requiredFileFactory->getByDisplayAndPath(
-                    $this->display->displayId,
-                    $path,
-                    RequiredFile::$TYPE_DEPENDENCY
-                );
-
-                if ($path === 'bundle.min.js') {
-                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
-                } else {
-                    $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-                    $file = file_get_contents(
-                        $libraryLocation
-                        . DIRECTORY_SEPARATOR
-                        . 'dependencies'
-                        . DIRECTORY_SEPARATOR
-                        . $requiredFile->path
-                    );
-                }
-
-                if (!$file) {
-                    throw new \SoapFault('Sender', 'Dependency not found');
-                }
-
-                $size = strlen($file);
-
-                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $size;
                 $requiredFile->save();
             } else {
                 throw new NotFoundException(__('Unknown FileType Requested.'));

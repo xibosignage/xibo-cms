@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -37,6 +37,7 @@ use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Xmds\Listeners\XmdsPlayerBundleListener;
 
 /**
  * This middleware is used to register listeners against the dispatcher
@@ -295,5 +296,22 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(PlaylistMaxNumberChangedEvent::$NAME, (new \Xibo\Listener\OnPlaylistMaxNumberChange(
             $c->get('store')
         )));
+    }
+
+    /**
+     * Set XMDS specific listeners
+     * @param App $app
+     * @return void
+     */
+    public static function setXmdsListeners(App $app)
+    {
+        $c = $app->getContainer();
+        $dispatcher = $c->get('dispatcher');
+
+        $playerBundleListener = new XmdsPlayerBundleListener();
+        $playerBundleListener->useLogger($c->get('logger'));
+
+        $dispatcher->addListener('xmds.dependency.list', [$playerBundleListener, 'onDependencyList']);
+        $dispatcher->addListener('xmds.dependency.request', [$playerBundleListener, 'onDependencyRequest']);
     }
 }

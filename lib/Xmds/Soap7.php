@@ -23,7 +23,7 @@
 namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
-use Xibo\Entity\RequiredFile;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -58,16 +58,24 @@ class Soap7 extends Soap6
      * Get player dependencies.
      * @param $serverKey
      * @param $hardwareKey
-     * @param $path
+     * @param $fileType
+     * @param $id
      * @return string
-     * @throws \SoapFault
      * @throws NotFoundException
+     * @throws \SoapFault
      */
-    public function GetDependency($serverKey, $hardwareKey, $path)
+    public function GetDependency($serverKey, $hardwareKey, $fileType, $id)
     {
-        if (strstr($path, '/') || strstr($path, '\\')) {
-            throw new \SoapFault('Receiver', 'Requested an invalid dependency');
-        }
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'fileType' => $fileType,
+            'id' => $id,
+        ]);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
+        $fileType = $sanitizer->getString('fileType');
+        $id = $sanitizer->getInt('id');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -88,25 +96,22 @@ class Soap7 extends Soap6
         }
 
         // Validate the nonce
-        $requiredFile = $this->requiredFileFactory->getByDisplayAndPath(
+        $requiredFile = $this->requiredFileFactory->getByDisplayAndDependency(
             $this->display->displayId,
-            $path,
-            RequiredFile::$TYPE_DEPENDENCY
+            $fileType,
+            $id
         );
 
-        if ($path === 'bundle.min.js') {
-            $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
-        } else {
-            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-            $file = file_get_contents(
-                $libraryLocation
-                . DIRECTORY_SEPARATOR
-                . 'dependencies'
-                . DIRECTORY_SEPARATOR
-                . $requiredFile->path
-            );
+        // File is valid, see if we can return it.
+        $event = new XmdsDependencyRequestEvent($fileType, $id);
+        $this->getDispatcher()->dispatch($event);
+
+        $path = $event->getFullPath();
+        if (empty($path)) {
+            throw new NotFoundException(__('File not found'));
         }
 
+        $file = file_get_contents($path);
         if (!$file) {
             throw new \SoapFault('Sender', 'Dependency not found');
         }
@@ -178,7 +183,7 @@ class Soap7 extends Soap6
                 // We only ever return cache.
                 $dataProvider = $module->createDataProvider($widget);
 
-                // Use the cache if we can.
+                // We only __ever__ return cache from XMDS.
                 try {
                     $cacheKey = $this->moduleFactory->determineCacheKey(
                         $module,

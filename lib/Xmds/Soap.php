@@ -34,6 +34,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Widget;
+use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -405,59 +406,87 @@ class Soap
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
-        // Player Bundle
-        // -------------
-        // Output the player bundle
-        $bundlePath = PROJECT_ROOT . '/modules/bundle.min.js';
-        $bundleSize = filesize($bundlePath);
+        // Player dependencies
+        // -------------------
+        // Output player dependencies such as the player bundle, fonts, etc.
+        // 1) get a list of dependencies.
+        $dependencyListEvent = new XmdsDependencyListEvent();
+        $this->getDispatcher()->dispatch($dependencyListEvent);
 
-        $file = $requiredFilesXml->createElement('file');
-        if ($isSupportsDependency) {
-            $file->setAttribute('type', 'dependency');
-            $file->setAttribute('fileType', 'bundle');
-            if ($httpDownloads) {
-                $file->setAttribute(
-                    'path',
-                    $this->generateRequiredFileDownloadPath(
-                        RequiredFile::$TYPE_DEPENDENCY,
-                        'bundle.min.js',
-                        $playerNonce
-                    )
+        // 2) Each dependency returned needs to be added to RF.
+        foreach ($dependencyListEvent->getDependencies() as $dependency) {
+            $file = $requiredFilesXml->createElement('file');
+
+            // HTTP downloads?
+            // 3) some dependencies don't support HTTP downloads because they aren't in the library
+            $httpFilePath = null;
+            if ($httpDownloads && $dependency->isAvailableOverHttp) {
+                $httpFilePath = $this->generateRequiredFileDownloadPath(
+                    RequiredFile::$TYPE_DEPENDENCY,
+                    $dependency->id,
+                    $playerNonce,
+                    $dependency->fileType
                 );
+
+                $file->setAttribute('download', 'http');
             } else {
-                $file->setAttribute('path', 'bundle.min.js');
+                $file->setAttribute('download', 'xmds');
             }
-            $file->setAttribute('download', 'xmds');
-            $file->setAttribute('saveAs', 'bundle.min.js');
-            $file->setAttribute('size', $bundleSize);
-            $file->setAttribute('md5', md5_file($bundlePath));
 
-            $bundleRf = $this->requiredFileFactory
-                ->createForGetDependency($this->display->displayId, 'bundle.min.js')
-                ->save();
-        } else {
-            // We have no choice but to pretend we're a media download.
-            // Soap3/4 are modified to cater for this.
-            $file->setAttribute('type', 'media');
-            $file->setAttribute('download', 'xmds');
-            $file->setAttribute('path', 'bundle.min.js');
-            $file->setAttribute('id', -1);
-            $file->setAttribute('size', $bundleSize);
-            $file->setAttribute('md5', md5_file($bundlePath));
+            $dependencyId = $dependency->id;
+            $dependencyBasePath = basename($dependency->path);
+            $file->setAttribute('size', $dependency->size);
+            $file->setAttribute('md5', $dependency->md5);
+            $file->setAttribute('saveAs', $dependencyBasePath);
 
-            $bundleRf = $this->requiredFileFactory
-                ->createForMedia($this->display->displayId, -1, $bundleSize, $bundlePath, 1)
-                ->save();
+            // 4) earlier versions of XMDS do not support GetDependency, and will therefore need to have their
+            // dependencies added as media nodes.
+            if ($isSupportsDependency) {
+                // Soap7+: GetDependency supported
+                $file->setAttribute('type', 'dependency');
+                $file->setAttribute('fileType', $dependency->fileType);
+                if ($httpFilePath !== null) {
+                    $file->setAttribute('path', $httpFilePath);
+                } else {
+                    $file->setAttribute('path', $dependencyBasePath);
+                }
+                $file->setAttribute('saveAs', $dependencyBasePath);
+            } else {
+                // We have no choice but to pretend we're a media download.
+                // Soap3/4 are modified to cater for this.
+                // Soap3: players read, send and save using the `path`. Expects `id.ext`.
+                // Soap4: we only have the ID, but we can use HTTP downloads.
+                // Soap5,6,7: use Soap4
+                $file->setAttribute('type', 'media');
+                if ($httpFilePath !== null) {
+                    $file->setAttribute('path', $httpFilePath);
+                } else {
+                    $file->setAttribute('path', $dependencyBasePath);
+                }
+
+                // TODO: make this better
+                // Use a negative Id which we can guarantee unique. (this doesn't work because font/player bundle, 
+                //  etc will have the same IDs)
+                $dependencyId = $dependency->id * -1;
+                $file->setAttribute('id', $dependencyId);
+            }
+
+            // Add our node
+            $fileElements->appendChild($file);
+
+            // Add a new required file for this.
+            $newRfIds[] = $this->requiredFileFactory
+                ->createForGetDependency(
+                    $this->display->displayId,
+                    $dependency->fileType,
+                    $dependencyId,
+                    $dependency->id,
+                    $dependencyBasePath
+                )
+                ->save()->rfId;
         }
-        $fileElements->appendChild($file);
-        $newRfIds[] = $bundleRf->rfId;
         // ------------
-        // Bundle finished
-
-        // TODO: other types of dependency, i.e. font.
-        //  can we do this with an event dispatch? we'd need a good interface for it.
-        // $file->setAttribute('type', 'dependency');
-        // $file->setAttribute('fileType', 'font');
+        // Dependencies finished
 
         // Default Layout
         $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
@@ -2474,15 +2503,20 @@ class Soap
      * @param $type
      * @param $itemId
      * @param $nonce
+     * @param string|null $fileType
      * @return string
      */
-    protected function generateRequiredFileDownloadPath($type, $itemId, $nonce)
+    protected function generateRequiredFileDownloadPath($type, $itemId, $nonce, $fileType = null)
     {
         $saveAsPath = Wsdl::getRoot()
             . '?file=' . $nonce
             . '&displayId=' . $this->display->displayId
             . '&type=' . $type
             . '&itemId=' . $itemId;
+
+        if ($fileType !== null) {
+            $saveAsPath .= '&fileType=' . $fileType;
+        }
 
         // CDN?
         $cdnUrl = $this->configService->getSetting('CDN_URL');

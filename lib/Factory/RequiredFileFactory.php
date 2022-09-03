@@ -121,20 +121,86 @@ class RequiredFileFactory extends BaseFactory
 
     /**
      * @param int $displayId
-     * @param string $path
-     * @param string $type The type of widget
+     * @param string $fileType The file type of this dependency
+     * @param int $id The ID of this dependency
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public function getByDisplayAndPath($displayId, $path, $type)
+    public function getByDisplayAndDependency($displayId, $fileType, $id)
     {
-        $result = $this->query(['displayId' => $displayId, 'type' => $type, 'path' => $path]);
+        $result = $this->getStore()->select('
+            SELECT * 
+              FROM `requiredfile` 
+             WHERE `displayId` = :displayId
+                AND `type` = :type 
+                AND `fileType` = :fileType
+                AND `itemId` = :itemId
+        ', [
+            'displayId' => $displayId,
+            'type' => 'P',
+            'fileType' => $fileType,
+            'itemId' => $id,
+        ]);
+
+        if (count($result) <= 0) {
+            throw new NotFoundException(__('Required file not found for Display and Dependency'));
+        }
+
+        return $this->createEmpty()->hydrate($result[0]);
+    }
+
+    /**
+     * @param int $displayId
+     * @param string $path The path of this dependency
+     * @return RequiredFile
+     * @throws NotFoundException
+     */
+    public function getByDisplayAndDependencyPath($displayId, $path)
+    {
+        $result = $this->getStore()->select('
+            SELECT * 
+              FROM `requiredfile` 
+             WHERE `displayId` = :displayId
+                AND `type` = :type 
+                AND `path` = :path
+        ', [
+            'displayId' => $displayId,
+            'type' => 'P',
+            'path' => $path
+        ]);
 
         if (count($result) <= 0) {
             throw new NotFoundException(__('Required file not found for Display and Path'));
         }
 
-        return $result[0];
+        return $this->createEmpty()->hydrate($result[0]);
+    }
+
+    /**
+     * @param int $displayId
+     * @param string $id The itemId of this dependency
+     * @return RequiredFile
+     * @throws NotFoundException
+     */
+    public function getByDisplayAndDependencyId($displayId, $id)
+    {
+        $result = $this->getStore()->select('
+            SELECT * 
+              FROM `requiredfile` 
+             WHERE `displayId` = :displayId
+                AND `type` = :type 
+                AND `itemId` = :itemId
+        ', [
+            'displayId' => $displayId,
+            'type' => 'P',
+            'itemId' => $id
+        ]);
+
+        if (count($result) <= 0) {
+            throw new NotFoundException(__('Required file not found for Display and Dependency ID'));
+        }
+
+        return $this->createEmpty()->hydrate($result[0]);
     }
 
     /**
@@ -206,20 +272,25 @@ class RequiredFileFactory extends BaseFactory
     /**
      * Create for Get Dependency
      * @param $displayId
+     * @param $fileType
+     * @param $id
+     * @param $realId
      * @param $path
      * @return RequiredFile
      */
-    public function createForGetDependency($displayId, $path): RequiredFile
+    public function createForGetDependency($displayId, $fileType, $id, $realId, $path): RequiredFile
     {
         try {
-            $requiredFile = $this->getByDisplayAndPath($displayId, $path, 'P');
+            $requiredFile = $this->getByDisplayAndDependency($displayId, $fileType, $id);
         } catch (NotFoundException $e) {
             $requiredFile = $this->createEmpty();
         }
 
         $requiredFile->displayId = $displayId;
         $requiredFile->type = 'P';
-        $requiredFile->itemId = -1;
+        $requiredFile->itemId = $id;
+        $requiredFile->fileType = $fileType;
+        $requiredFile->realId = $realId;
         $requiredFile->path = $path;
         return $requiredFile;
     }
@@ -237,8 +308,7 @@ class RequiredFileFactory extends BaseFactory
     {
         try {
             $requiredFile = $this->getByDisplayAndMedia($displayId, $mediaId);
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             $requiredFile = $this->createEmpty();
         }
 

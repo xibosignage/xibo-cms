@@ -18,7 +18,6 @@
   ~ You should have received a copy of the GNU Affero General Public License
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
-
 <definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:xmds"
              xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns="http://schemas.xmlsoap.org/wsdl/"
              targetNamespace="urn:xmds">
@@ -126,6 +125,23 @@
     <message name="SubmitScreenShotResponse">
         <part name="success" type="xsd:boolean" />
     </message>
+    <message name="GetDataRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="widgetId" type="xsd:int" />
+    </message>
+    <message name="GetDataResponse">
+        <part name="data" type="xsd:string" />
+    </message>
+    <message name="GetDependencyRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="fileType" type="xsd:string" />
+        <part name="id" type="xsd:int" />
+    </message>
+    <message name="GetDependencyResponse">
+        <part name="file" type="xsd:base64Binary" />
+    </message>
     <portType name="xmdsPortType">
         <operation name="RegisterDisplay">
             <documentation>Register the Display with the CMS</documentation>
@@ -181,6 +197,16 @@
             <documentation>Submit a screen shot for a display</documentation>
             <input message="tns:SubmitScreenShotRequest"/>
             <output message="tns:SubmitScreenShotResponse"/>
+        </operation>
+        <operation name="GetData">
+            <documentation>Get data for a widget</documentation>
+            <input message="tns:GetDataRequest"/>
+            <output message="tns:GetDataResponse"/>
+        </operation>
+        <operation name="GetDependency">
+            <documentation>Get a player dependency (player bundle/font/etc)</documentation>
+            <input message="tns:GetDependencyRequest"/>
+            <output message="tns:GetDependencyResponse"/>
         </operation>
     </portType>
     <binding name="xmdsBinding" type="tns:xmdsPortType">
@@ -277,6 +303,24 @@
         </operation>
         <operation name="SubmitScreenShot">
             <soap:operation soapAction="urn:xmds#SubmitScreenShot" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="GetData">
+            <soap:operation soapAction="urn:xmds#GetData" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="GetDependency">
+            <soap:operation soapAction="urn:xmds#GetDependency" style="rpc"/>
             <input>
                 <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
             </input>
