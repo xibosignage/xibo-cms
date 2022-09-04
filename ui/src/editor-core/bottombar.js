@@ -14,9 +14,8 @@ const Bottombar = function(parent, container) {
 /**
  * Render bottombar
  * @param {object} element - the element to render the bottombar to
- * @param {object} data - the data to render the bottombar with
  */
-Bottombar.prototype.render = function(element, data) {
+Bottombar.prototype.render = function(element) {
   const app = this.parent;
   const readOnlyModeOn =
     (app.readOnlyMode != undefined && app.readOnlyMode === true);
@@ -44,26 +43,15 @@ Bottombar.prototype.render = function(element, data) {
       '';
 
   if (element.type == 'widget') {
-    const currentItem = element.index;
     const parentRegion =
       (element.drawerWidget) ?
         lD.getElementByTypeAndId('drawer') :
         lD.getElementByTypeAndId('region', element.regionId);
-    const totalItems =
-      (
-        parentRegion != undefined &&
-        parentRegion.numWidgets != undefined
-      ) ?
-        parentRegion.numWidgets : 1;
 
     // Render widget toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
-        currentItem: currentItem,
-        totalItems: totalItems,
-        extra: data.extra,
         regionName: (parentRegion) ? parentRegion.name : '',
-        pagingEnable: (totalItems > 1),
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
         element: element,
@@ -71,20 +59,6 @@ Bottombar.prototype.render = function(element, data) {
         trashActive: trashBinActive,
       },
     ));
-
-    // Paging controls
-    if (data.extra && totalItems > 1) {
-      this.DOMObject.find('#left-btn').prop('disabled', (currentItem <= 1))
-        .click(function() {
-          lD.selectObject($('#' + element.getNextWidget(true).id));
-        });
-
-      this.DOMObject.find('#right-btn')
-        .prop('disabled', (currentItem >= totalItems))
-        .click(function() {
-          lD.selectObject($('#' + element.getNextWidget().id));
-        });
-    }
   } else if (element.type == 'layout') {
     // Render layout  toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
@@ -135,21 +109,28 @@ Bottombar.prototype.render = function(element, data) {
     ));
   }
 
-    // If read only mode is enabled
-    if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
-        // Create the read only alert message
-        const $readOnlyMessage = $('<div id="read-only-message" class="alert alert-warning text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutEditorTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle + '</strong>:&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
+  // If read only mode is enabled
+  if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
+    // Create the read only alert message
+    const $readOnlyMessage =
+      $('<div id="read-only-message" class="alert alert-warning' +
+      'text-center navbar-nav" data-container=".editor-bottom-bar"' +
+      'data-toggle="tooltip" data-placement="bottom" data-title="' +
+      layoutEditorTrans.readOnlyModeMessage +
+      '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle +
+      '</strong>:&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
 
-        // Prepend the element to the bottom toolbar's content
-        $readOnlyMessage.insertAfter(this.DOMObject.find('.pull-left')).on('click', lD.checkoutLayout);
+    // Prepend the element to the bottom toolbar's content
+    $readOnlyMessage.insertAfter(this.DOMObject.find('.pull-left'))
+      .on('click', lD.checkoutLayout);
+  }
+
+  // Button handlers
+  this.DOMObject.find('#delete-btn').click(function() {
+    if (element.isDeletable) {
+      lD.deleteSelectedObject();
     }
-
-    // Button handlers
-    this.DOMObject.find('#delete-btn').click(function() {
-        if(element.isDeletable) {
-            lD.deleteSelectedObject();
-        }
-    });
+  });
 
   this.DOMObject.find('#undo-btn').click(function() {
     app.undoLastAction();

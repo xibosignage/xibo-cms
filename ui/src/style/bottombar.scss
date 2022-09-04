@@ -1,7 +1,7 @@
 @import "variables";
 @import "mixins";
 
-#layout-editor-bottombar  {
+.editor-bottom-bar  {
     height: 38px;
     margin: 0px 16px 16px 16px;
     
@@ -31,16 +31,14 @@
         }
 
         .btn {
-            color: $xibo-color-primary;
-            height: 38px;
+            color: $xibo-color-secondary;
             width: 38px;
             font-size: 1.2rem;
             border: none;
             border-radius: 0;
 
             &:hover:not(:disabled) {
-                color: $xibo-color-primary-l5;
-                background-color: $xibo-color-primary;
+                color: lighten($xibo-color-secondary, 10%);
             }
 
             &:disabled, &.disabled {
@@ -51,8 +49,7 @@
                 color: $xibo-color-semantic-error;
 
                 &:hover {
-                    color: $xibo-color-primary-l5;
-                    background-color: $xibo-color-semantic-error;
+                    color: lighten($xibo-color-semantic-error, 10%);
                 }
             }
         }
@@ -67,15 +64,15 @@
 
         .viewer-navbar-overlay {
             position: absolute;
-            width: calc(100% - 8px);
-            margin: 0 4px;
+            width: 100%;
+            margin: 0;
             height: 38px;
             top: -38px;
             color: $xibo-color-primary-l5;
             opacity: 0.8;
             padding: 0 1rem;
             left: 0;
-            @include set-transparent-color(background, $xibo-color-primary, 0.8);
+            background-color: $xibo-color-primary;
 
             .info {
                 line-height: 2.5rem;
@@ -112,7 +109,7 @@
     }
 }
 
-#layout-editor.fullscreen-mode #layout-editor-bottombar {
+#layout-editor.fullscreen-mode .editor-bottom-bar {
     position: fixed;
     bottom: 0;
     left: 0;

@@ -99,7 +99,7 @@ PropertiesPanel.prototype.save = function(element) {
           app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
 
         // If we're saving a widget, reload region on the viewer
-        if (element.type === 'widget') {
+        if (element.type === 'widget' && app.viewer) {
           app.viewer.renderRegion(
             app.getElementByTypeAndId('region', element.regionId));
         }
@@ -222,13 +222,24 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
 PropertiesPanel.prototype.render = function(element, step) {
   const self = this;
 
+  // Hide panel if no element is passed
+  if (element == undefined || $.isEmptyObject(element)) {
+    this.DOMObject.parent().addClass('closed');
+    return;
+  } else {
+    this.DOMObject.parent().removeClass('closed');
+  }
+
   // Show a message if the module is disabled for a widget rendering
-  if (element.type === undefined ||
-      (element.type === 'widget' && !element.enabled)
+  if (
+    element.type === 'widget' &&
+    !element.enabled
   ) {
+    // Show invalid module message
     this.DOMObject.html(messageTemplate({
       message: editorsTrans.invalidModule,
     }));
+
     return false;
   }
 
@@ -237,12 +248,6 @@ PropertiesPanel.prototype.render = function(element, step) {
 
   // Show loading template
   this.DOMObject.html(loadingTemplate());
-
-  // Get toggleable panel and hide it during loading
-  const $togglePanel = self.DOMObject.parents('.toggle-panel');
-  if ($togglePanel.hasClass('opened')) {
-    this.DOMObject.siblings('.toggle-container').hide();
-  }
 
   // Build request path
   let requestPath = urlsForApi[element.type].getForm.url;
@@ -319,7 +324,7 @@ PropertiesPanel.prototype.render = function(element, step) {
       // append new tab
       const tabName = actionsTranslations.tableHeaders.name;
       const tabList = self.DOMObject.find('.nav-tabs');
-      // TODO: use template for the tab element
+      // TODO use template for the tab element
       const tabHtml =
       `<li class="nav-item">
         <a class="nav-link action-tab"
@@ -445,7 +450,7 @@ PropertiesPanel.prototype.render = function(element, step) {
     XiboInitialise('#' + self.DOMObject.attr('id'));
 
     // For the layout properties, call background Setup
-    // TODO: Move method to a common JS file
+    // TODO Move method to a common JS file
     if (element.type == 'layout') {
       backGroundFormSetup(self.DOMObject);
     }
@@ -503,16 +508,6 @@ PropertiesPanel.prototype.render = function(element, step) {
       app.togglePanel($togglePanel);
       app.savePrefs();
     }
-
-    // Handle toggle panel
-    $togglePanel.find('.toggle').off().click(function(e) {
-      e.stopPropagation();
-      app.togglePanel($togglePanel);
-      app.savePrefs();
-    });
-
-    // Show toggler
-    self.DOMObject.siblings('.toggle-container').show();
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;

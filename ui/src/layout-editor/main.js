@@ -153,7 +153,7 @@ $(() => {
       // Initialize bottom toolbar ( with custom buttons )
       lD.toolbar = new Toolbar(
         lD,
-        lD.editorContainer.find('#layout-editor-toolbar'),
+        lD.editorContainer.find('.editor-main-toolbar'),
         // Custom actions
         {
           deleteSelectedObjectAction: lD.deleteSelectedObject,
@@ -164,7 +164,7 @@ $(() => {
       // Initialize top topbar
       lD.topbar = new Topbar(
         lD,
-        lD.editorContainer.find('#layout-editor-topbar'),
+        lD.editorContainer.find('.editor-top-bar'),
         // Custom dropdown options
         [
           {
@@ -260,7 +260,7 @@ $(() => {
       // Initialize bottom toolbar ( with custom buttons )
       lD.bottombar = new Bottombar(
         lD,
-        lD.editorContainer.find('#layout-editor-bottombar'),
+        lD.editorContainer.find('.editor-bottom-bar'),
       );
 
       // Initialize properties panel
@@ -296,7 +296,7 @@ $(() => {
       lD.selectedObject.type = 'layout';
 
       // Refresh the designer containers
-      lD.refreshDesigner(true, true);
+      lD.refreshEditor(true, true);
 
       // Load preferences
       lD.loadPrefs();
@@ -340,7 +340,6 @@ $(() => {
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceSelect - Select object even if it was already selected
  * @param {object=} clickPosition - Position of the click
- * @param {bool=} updateViewer - Reload the viewer
  * @param {bool=} reloadViewer - Force viewer reload
  */
 lD.selectObject =
@@ -348,7 +347,6 @@ lD.selectObject =
     obj = null,
     forceSelect = false,
     clickPosition = null,
-    updateViewer = false,
     reloadViewer = false,
   ) {
     // Clear rogue tooltips
@@ -358,11 +356,8 @@ lD.selectObject =
     // use the drag&drop simulate to add that item to a object
     if (!$.isEmptyObject(this.toolbar.selectedCard)) {
       // If selected card has the droppable type or "all"
-      if (
-        obj == null ||
-        [obj.data('type'), 'all']
-          .indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1
-      ) {
+      // TODO add to other than layout to be done
+      if (obj == null) {
         // Get card object
         const card = this.toolbar.selectedCard[0];
 
@@ -390,7 +385,7 @@ lD.selectObject =
         });
       } else {
         // Add to layout, but create a new region
-        lD.addRegion(clickPosition, 'playlist').then((res) => {
+        lD.addRegion(clickPosition, 'frame').then((res) => {
           const playlistId = res.data.regionPlaylist.playlistId;
           // Add media to new region
           lD.importFromProvider(selectedQueue).then((res) => {
@@ -488,50 +483,46 @@ lD.selectObject =
         this.selectedObject.type = newSelectedType;
 
         // Refresh the designer containers
-        lD.refreshDesigner(false, updateViewer, reloadViewer);
+        lD.refreshEditor(false, reloadViewer);
       }
     }
   };
 
 /**
  * Refresh designer
- * @param {boolean} [updateToolbar=false] - Render toolbar
- * @param {boolean} [updateViewer=false] - Update viewer
+ * @param {boolean} [updateToolbar=false] - Update toolbar
  * @param {boolean} [reloadViewer=false] - Reload viewer
  */
-lD.refreshDesigner = function(
+lD.refreshEditor = function(
   updateToolbar = false,
-  updateViewer = false,
   reloadViewer = false,
 ) {
   // Remove temporary data
   this.clearTemporaryData();
 
-  // Render containers with layout ( default )
+  // Toolbars
   (updateToolbar) && this.toolbar.render();
   this.topbar.render();
+  this.bottombar.render(this.selectedObject);
 
-  // Refresh bottom bar if no object is selected ( to avoid looping )
-  (this.selectedObject.type === 'layout') &&
-    this.bottombar.render(this.selectedObject);
-
+  // Manager ( hidden )
   this.manager.render();
+
+  // Properties panel and viewer
   this.propertiesPanel.render(this.selectedObject);
-  (updateViewer || reloadViewer) &&
-    this.viewer.render(reloadViewer);
-  this.drawer.render();
+  (reloadViewer) && this.viewer.render(reloadViewer);
 };
 
 /**
  * Reload API data and replace the layout structure with the new value
  * @param {object=} layout  - previous layout
+ * @param {boolean} [refreshEditor=false] - refresh editor
  * @param {boolean} captureThumbnail - capture thumbnail
- * @param {boolean} reloadViewer - reload viewer after reloading layout
  */
 lD.reloadData = function(
   layout,
+  refreshEditor = false,
   captureThumbnail = false,
-  reloadViewer = false,
 ) {
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
@@ -557,7 +548,7 @@ lD.reloadData = function(
         true,
         null,
         false,
-        reloadViewer,
+        true,
       );
 
       // Reload the form helper connection
@@ -568,6 +559,9 @@ lD.reloadData = function(
 
       // Add thumbnail
       captureThumbnail && lD.uploadThumbnail();
+
+      // Refresh designer
+      refreshEditor && lD.refreshEditor(true, true);
     } else {
       // Login Form needed?
       if (res.login) {
@@ -892,7 +886,7 @@ lD.undoLastAction = function() {
 
     // Refresh designer according to local or API revert
     if (res.localRevert) {
-      lD.refreshDesigner(false, true);
+      lD.refreshEditor(false, true);
     } else {
       lD.reloadData(lD.layout);
     }
@@ -1016,7 +1010,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
             ).then((res) => { // Success
               // Behavior if successful
               toastr.success(res.message);
-              lD.reloadData(lD.layout, false, true);
+              lD.reloadData(lD.layout, true);
 
               lD.common.hideLoadingScreen('deleteObject');
             }).catch((error) => { // Fail/error
@@ -1129,11 +1123,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     });
   };
 
-  // If the draggable is from another toolbar, stop adding
-  if ($(draggable).parents('#layout-editor-toolbar').length === 0) {
-    return;
-  }
-
   let playlistId;
 
   if (draggableType == 'media') {
@@ -1149,11 +1138,11 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         lD.layout.deleteElement('region', res.data.regionPlaylist.regionId);
       });
     } else {
-      // TODO: If image, we need to chose if we want to create
-      // a canvas or playlist region, for now we create a playlist
+      // TODO If image, we need to chose if we want to create
+      // a canvas or frame region, for now we create a frame
 
       // Add to layout, but create a new region
-      lD.addRegion(dropPosition, 'playlist').then((res) => {
+      lD.addRegion(dropPosition, 'frame').then((res) => {
         // Deselect cards and drop zones
         lD.toolbar.deselectCardsAndDropZones();
 
@@ -1177,21 +1166,29 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       );
     } else {
       // Check if the module has data type, if not
-      // create a playlist region
-      const regionType = draggableDataType ? 'canvas' : 'playlist';
+      // create a frame region
+      // or playlist
+      const regionType = (draggableSubType === 'playlist') ?
+        'playlist' :
+        ((draggableDataType) ? 'canvas' : 'frame');
 
       // Add module to layout, but create a region first
       lD.addRegion(dropPosition, regionType).then((res) => {
         // Deselect cards and drop zones
         lD.toolbar.deselectCardsAndDropZones();
 
-        // Add module to new region
-        lD.addModuleToPlaylist(
-          res.data.regionId,
-          res.data.regionPlaylist.playlistId,
-          draggableSubType,
-          draggableData,
-        );
+        // Add module to new region if it's not a playlist
+        if (regionType !== 'playlist') {
+          lD.addModuleToPlaylist(
+            res.data.regionId,
+            res.data.regionPlaylist.playlistId,
+            draggableSubType,
+            draggableData,
+          );
+        } else {
+          // Reload data ( and viewer )
+          lD.reloadData(lD.layout, true);
+        }
       });
     }
   }
@@ -1324,7 +1321,7 @@ lD.addModuleToPlaylist = function(
       }).appendTo(lD.viewer.DOMObject);
 
       // Reload data ( and viewer )
-      lD.reloadData(lD.layout, false, true);
+      lD.reloadData(lD.layout, true);
 
       lD.common.hideLoadingScreen('addModuleToPlaylist');
     }).catch((error) => { // Fail/error
@@ -1419,7 +1416,7 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
     }).appendTo(lD.viewer.DOMObject);
 
     // Reload data ( and viewer )
-    lD.reloadData(lD.layout, false, true);
+    lD.reloadData(lD.layout, true);
 
     lD.common.hideLoadingScreen('addMediaToPlaylist');
   }).catch((error) => { // Fail/error
@@ -1557,77 +1554,81 @@ lD.checkLayoutStatus = function() {
 };
 
 /**
- * Open playlist editor
+ * New open playlist editor
  * @param {string} playlistId - Id of the playlist
  * @param {object} region - Region related to the playlist
  */
 lD.openPlaylistEditor = function(playlistId, region) {
-  let requestPath = playlistEditorUrl;
-
-  // replace id if necessary/exists
-  requestPath = requestPath.replace(':id', playlistId);
-
   // Deselect previous selected object
   lD.selectObject();
 
-  $.ajax({
-    url: requestPath,
-    type: 'GET',
-  }).done(function(res) {
-    if (!res.success) {
-      // Login Form needed?
-      if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
-      } else {
-        // Just an error we dont know about
-        if (res.message == undefined) {
-          console.error(res);
-        } else {
-          console.error(res.message);
-        }
-      }
-    } else {
-      // Create or load container
-      const $editor =
-        ($('#editor-container').length > 0) ?
-          $('#editor-container') :
-          $('<div/>').attr('id', 'editor-container')
-            .appendTo(lD.editorContainer.parent());
+  // Get main panel
+  const $mainPanel = lD.editorContainer.find('.main-panel');
 
-      // Populate container
-      $editor.html(res.html);
+  // Create or load container
+  const $playlistEditorPanel = $('.playlist-panel');
 
-      // Hide layout designer toolbar
-      lD.toolbar.DOMObject.hide();
+  // Add inline class and id to the container
+  $playlistEditorPanel
+    .attr('id', 'editor-container')
+    .addClass('playlist-editor-inline-container');
 
-      // Attach region id to editor data
-      $editor.data('regionObj', region);
+  // Attach region id to editor data
+  $playlistEditorPanel.data('regionObj', region);
 
-      // On close, remove container and refresh designer
-      $editor.find('.editor-modal-close').attr('onclick', '')
-        .on('click', function() {
-        // Close playlist editor
-          pE.close();
+  // Populate container
+  $playlistEditorPanel.html(
+    '<div id="playlist-editor" playlist-id="' +
+    playlistId +
+    '"></div>',
+  );
 
-          // Remove region id from data
-          $editor.removeData('regionObj');
+  // Hide layout designer editor
+  $mainPanel.addClass('hidden');
 
-          // Show layout designer toolbar
-          lD.toolbar.DOMObject.show();
+  // Hide layout topbar
+  lD.editorContainer.find('.editor-top-bar').addClass('hidden');
 
-          // Set the first run flag of the toolbar as true
-          // to reload the changed from the playlistEditor toolbar
-          lD.toolbar.firstRun = true;
+  // Switch back button to edit button
+  lD.editorContainer.find('.back-button #backBtn').addClass('hidden');
+  lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
+    .removeClass('hidden');
 
-          // Reload data
-          lD.reloadData(lD.layout);
-        });
-    }
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-    // Output error to console
-    console.error(jqXHR, textStatus, errorThrown);
-  });
+  // Show playlist editor
+  $playlistEditorPanel.removeClass('hidden');
+
+  // Load playlist editor
+  pE.loadEditor(true);
+
+  // On close, remove container and refresh designer
+  lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
+    .off().on('click', function() {
+      // Close playlist editor
+      pE.close();
+
+      // Remove region id from data
+      $playlistEditorPanel.removeData('regionObj');
+
+      // Hide layout designer editor
+      $mainPanel.removeClass('hidden');
+
+      // Show playlist editor
+      $playlistEditorPanel.addClass('hidden');
+
+      // Show layout topbar
+      lD.editorContainer.find('.editor-top-bar').removeClass('hidden');
+
+      // Switch back button to edit button
+      lD.editorContainer.find('.back-button #backBtn').removeClass('hidden');
+      lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
+        .addClass('hidden');
+
+      // Reopen properties panel
+      lD.editorContainer.find('.properties-panel-container').addClass('opened');
+
+      // Reload data
+      lD.reloadData(lD.layout, true);
+    });
 };
 
 /**
@@ -1694,6 +1695,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       lD.layout.moveWidgetInRegion(
         layoutObject.regionId, layoutObject.id, target.data('actionType'),
       );
+    } else if (target.data('action') == 'editPlaylist') {
+      // Open playlist editor
+      lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
     } else {
       layoutObject.editPropertyForm(
         target.data('property'), target.data('propertyType'),
@@ -2039,7 +2043,7 @@ lD.uploadThumbnail = function(targetToAttach) {
 /**
  * Add a new region to the layout
  * @param {object} positionToAdd - Position to add the region to
- * @param {object} regionType - Region type (playlist or canvas)
+ * @param {object} regionType - Region type (frame, playlist or canvas)
  * @return {Promise} - Promise object
  */
 lD.addRegion = function(positionToAdd, regionType) {
@@ -2050,9 +2054,9 @@ lD.addRegion = function(positionToAdd, regionType) {
     lD.selectObject();
   }
 
-  // If region type is not defined, use the default (playlist)
+  // If region type is not defined, use the default (frame)
   if (regionType == undefined) {
-    regionType = 'playlist';
+    regionType = 'frame';
   }
 
   return lD.layout.addElement(
@@ -2087,7 +2091,7 @@ lD.handleMessage = function(event) {
   const messageFromSender = event.data;
   if (messageFromSender == 'viewerStoppedPlaying') {
     // Refresh designer
-    lD.refreshDesigner(false, true);
+    lD.refreshEditor(false, true);
 
     // Show tooltip on play button
     lD.bottombar.showPlayMessage();
@@ -2103,26 +2107,14 @@ lD.loadPrefs = function() {
   const linkToAPI = urlsForApi.user.getPref;
 
   // Request elements based on filters
-  const self = this;
   $.ajax({
     url: linkToAPI.url + '?preference=editor',
     type: linkToAPI.type,
   }).done(function(res) {
     if (res.success) {
       const loadedData = JSON.parse(res.data.value);
-
-      // Properties Panel
-      const propertiesPanelToggle =
-        self.propertiesPanel.DOMObject.parents('.toggle-panel');
-      if (
-        loadedData.propertiesPanelStatus !=
-          undefined &&
-        loadedData.propertiesPanelStatus !=
-          propertiesPanelToggle.hasClass('opened')
-      ) {
-        self.togglePanel(
-          propertiesPanelToggle, loadedData.propertiesPanelStatus);
-      }
+      // TODO Loaded data is not being used
+      console.log(loadedData);
     } else {
       // Login Form needed?
       if (res.login) {
@@ -2148,25 +2140,17 @@ lD.loadPrefs = function() {
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
 lD.savePrefs = function(clearPrefs = false) {
-  // Get current values
-  let timelineStatus =
-    this.timeline.DOMObject.parents('.toggle-panel').hasClass('opened');
-  let propertiesPanelStatus =
-    this.propertiesPanel.DOMObject.parents('.toggle-panel').hasClass('opened');
-
   // Clear values to defaults
   if (clearPrefs) {
-    timelineStatus = false;
-    propertiesPanelStatus = true;
+    console.log('Clearing user preferences');
   }
 
+  // TODO Data to be saved
   const dataToSave = {
     preference: [
       {
         option: 'editor',
         value: JSON.stringify({
-          timelineStatus: timelineStatus,
-          propertiesPanelStatus: propertiesPanelStatus,
         }),
       },
     ],

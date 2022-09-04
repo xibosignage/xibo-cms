@@ -40,6 +40,12 @@
                 {{/if}}
             {{/eq}}
 
+            {{#if isPlaylist}}
+                <div class="context-menu-btn editPlaylistBtn" data-title="{{trans.editPlaylist}}" data-action="editPlaylist" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fa fa-edit"></i>
+                </div>
+            {{/if}}
+
             {{#if isPermissionsModifiable}}
                 <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                     <i class="fa tool-icon-permissions"></i>

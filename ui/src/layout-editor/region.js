@@ -11,7 +11,7 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   this.id = 'region_' + id;
   this.regionId = id;
   this.type = 'region';
-  this.subType = 'playlist';
+  this.subType = data.type;
   this.name = data.name;
 
   this.playlists = data.regionPlaylist;
@@ -31,6 +31,7 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   this.isEditable = data.isEditable;
   this.isDeletable = data.isDeletable;
   this.isPermissionsModifiable = data.isPermissionsModifiable;
+  this.isPlaylist = data.type === 'playlist';
 
   // Interactive actions
   this.actions = data.actions;
@@ -61,19 +62,19 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
   if (saveToHistory) {
     // save old/previous values
     const oldValues = [{
-      'width': this.dimensions.width,
-      'height': this.dimensions.height,
-      'top': this.dimensions.top,
-      'left': this.dimensions.left,
-      'regionid': this.regionId,
+      width: this.dimensions.width,
+      height: this.dimensions.height,
+      top: this.dimensions.top,
+      left: this.dimensions.left,
+      regionid: this.regionId,
     }];
 
     const newValues = [{
-      'width': transform.width,
-      'height': transform.height,
-      'top': transform.top,
-      'left': transform.left,
-      'regionid': this.regionId,
+      width: transform.width,
+      height: transform.height,
+      top: transform.top,
+      left: transform.left,
+      regionid: this.regionId,
     }];
 
     // Add a tranform change to the history array

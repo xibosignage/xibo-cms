@@ -1,0 +1,24 @@
+<nav class="navbar">
+    <div class="container-toolbar container-fluid">
+        {{!-- Menu items/tabs --}}
+        <div id="playlistInfo" class="navbar-text playlist-info">
+            <span class="playlist-info-name" 
+                data-toggle="tooltip" 
+                data-placement="bottom"
+                data-container=".editor-top-bar" 
+                data-title="{{trans.nameDetail}}">
+                <i class="fa fa-tag playlist-info-icon" title="{{trans.name}}"></i>
+                <span>"{{playlist.name}}"</span>
+            </span>
+
+            <span class="playlist-info-duration"
+                data-toggle="tooltip" 
+                data-placement="bottom"
+                data-container=".editor-top-bar" 
+                data-title="{{trans.durationDetail}}">
+                <i class="fa fa-clock-o playlist-info-icon" title="{{trans.duration}}"></i>
+                <span>{{playlist.duration}}</span>s
+            </span>
+        </div>
+    </div>
+</nav>
