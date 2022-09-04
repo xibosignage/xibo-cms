@@ -76,9 +76,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
-  // Filter module list to create the types for the filter
-  modulesList.forEach((el) => {
-    // check if we have valid extension on settings
+    // Check if we have valid extension on settings
     for (let index = 0; index < el.settings.length; index++) {
       const setting = el.settings[index];
 
@@ -87,7 +85,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
             (setting.value) ? setting.value : setting.default;
       }
     }
-    
+
     // Create new list with "other" modules
     if (
       el.assignable == 1 &&
