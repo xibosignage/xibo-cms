@@ -76,7 +76,19 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
-  // Create new list with "other" modules
+  // Filter module list to create the types for the filter
+  modulesList.forEach((el) => {
+    // check if we have valid extension on settings
+    for (let index = 0; index < el.settings.length; index++) {
+      const setting = el.settings[index];
+
+      if (setting.id == 'validExtensions') {
+        el.validExtensions =
+            (setting.value) ? setting.value : setting.default;
+      }
+    }
+    
+    // Create new list with "other" modules
     if (
       el.assignable == 1 &&
     el.regionSpecific == 0 &&
@@ -931,6 +943,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           const module = app.common.getModuleByType(filter.type);
           if (module) {
             module.trans = toolbarTrans;
+
             const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
             $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
           }

@@ -28,7 +28,7 @@ window.Handlebars = require('handlebars/dist/handlebars.min.js');
 // Module specific
 // most likely this can be done more efficiently.
 require('chart.js');
-require('hls.js');
+window.Hls = require('hls.js');
 const pdflib = require('pdfjs-dist/legacy/build/pdf.min.js');
 import '../vendor/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
