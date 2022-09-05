@@ -57,6 +57,7 @@ COPY ./ui ./ui
 
 # Copy modules source folder
 COPY ./modules/src ./modules/src
+COPY ./modules/vendor ./modules/vendor
 
 # Build webpack
 RUN npm run publish
