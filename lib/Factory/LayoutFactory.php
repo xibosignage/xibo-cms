@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 use Carbon\Carbon;
+use Slim\Interfaces\RouteParserInterface;
 use Stash\Invalidation;
 use Stash\Pool;
 use Xibo\Entity\DataSet;
@@ -35,6 +36,7 @@ use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\MediaServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -734,6 +736,11 @@ class LayoutFactory extends BaseFactory
                 $playlist->assignWidget($widget);
             }
 
+            // See if this region can be converted to a frame
+            if (count($playlist->widgets) === 1) {
+                $region->type = 'frame';
+            }
+
             // Assign Playlist to the Region
             $region->regionPlaylist = $playlist;
 
@@ -855,9 +862,16 @@ class LayoutFactory extends BaseFactory
                 $regionOwnerId = $layout->ownerId;
             }
 
+            $regionIsDrawer = isset($regionJson['isDrawer']) ? (int)$regionJson['isDrawer'] : 0;
+            $regionType = $regionJson['type'] ?? 'playlist';
+            $regionWidgets = $regionJson['regionPlaylist']['widgets'] ?? [];
+            if ($regionIsDrawer === 1 && $regionType === 'playlist' && count($regionWidgets) === 1) {
+                $regionType = 'frame';
+            }
+
             // Create the region
             $region = $this->regionFactory->create(
-                $regionJson['type'] ?? 'playlist',
+                $regionType,
                 $regionOwnerId,
                 $regionJson['name'],
                 (double)$regionJson['width'],
@@ -865,7 +879,7 @@ class LayoutFactory extends BaseFactory
                 (double)$regionJson['top'],
                 (double)$regionJson['left'],
                 (int)$regionJson['zIndex'],
-                isset($regionJson['isDrawer']) ? (int)$regionJson['isDrawer'] : 0
+                $regionIsDrawer
             );
 
             // Use the regionId locally to parse the rest of the JSON
@@ -893,7 +907,7 @@ class LayoutFactory extends BaseFactory
             }
 
             // Get all widgets
-            foreach ($regionJson['regionPlaylist']['widgets'] as $mediaNode) {
+            foreach ($regionWidgets as $mediaNode) {
                 $mediaOwnerId = $mediaNode['ownerId'];
                 if ($mediaOwnerId == null) {
                     $mediaOwnerId = $regionOwnerId;
@@ -1100,7 +1114,7 @@ class LayoutFactory extends BaseFactory
      * @param bool $importDataSetData
      * @param DataSetFactory $dataSetFactory
      * @param string $tags
-     * @param \Slim\Interfaces\RouteParserInterface $routeParser $routeParser
+     * @param RouteParserInterface $routeParser $routeParser
      * @param MediaServiceInterface $mediaService
      * @param int $folderId
      * @return Layout
@@ -1108,11 +1122,28 @@ class LayoutFactory extends BaseFactory
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $dataSetFactory, $tags, $routeParser, MediaServiceInterface $mediaService, int $folderId)
-    {
-        $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
+    public function createFromZip(
+        $zipFile,
+        $layoutName,
+        $userId,
+        $template,
+        $replaceExisting,
+        $importTags,
+        $useExistingDataSets,
+        $importDataSetData,
+        $dataSetFactory,
+        $tags,
+        $routeParser,
+        MediaServiceInterface $mediaService,
+        int $folderId
+    ) {
+        $this->getLog()->debug(sprintf(
+            'Create Layout from ZIP File: %s, imported name will be %s.',
+            $zipFile,
+            $layoutName
+        ));
 
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/';
 
@@ -1146,12 +1177,20 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, $playlistDetails, $nestedPlaylistDetails, $folder, null, $importTags);
+            $jsonResults = $this->loadByJson(
+                $layoutDetails,
+                $playlistDetails,
+                $nestedPlaylistDetails,
+                $folder,
+                null,
+                $importTags
+            );
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
             if (array_key_exists('code', $layoutDetails['layoutDefinitions'])) {
-                // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
+                // Layout code, remove it if Layout with the same code already exists in the CMS,
+                // otherwise import would fail.
                 // if the code does not exist, then persist it on import.
                 try {
                     $this->getByCode($layoutDetails['layoutDefinitions']['code']);
@@ -1172,7 +1211,7 @@ class LayoutFactory extends BaseFactory
 
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
-        $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+        $layout->description = $layoutDetails['description'] ?? '';
 
         // Get global stat setting of layout to on/off proof of play statistics
         $layout->enableStat = $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
@@ -1187,9 +1226,14 @@ class LayoutFactory extends BaseFactory
                 $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
             }
         } catch (NotFoundException $notFoundException) {
-            $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+            $this->getLog()->info('Import is for an unknown resolution, we will create it with name: '
+                . $layout->width . ' x ' . $layout->height);
 
-            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
+            $resolution = $this->resolutionFactory->create(
+                $layout->width . ' x ' . $layout->height,
+                (int)$layout->width,
+                (int)$layout->height
+            );
             $resolution->userId = $userId;
             $resolution->save();
         }
@@ -1198,7 +1242,9 @@ class LayoutFactory extends BaseFactory
         if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
             $this->getLog()->debug('Updating region names according to layout.json');
             foreach ($layout->regions as $region) {
-                if (array_key_exists($region->tempId, $layoutDetails['regions']) && !empty($layoutDetails['regions'][$region->tempId])) {
+                if (array_key_exists($region->tempId, $layoutDetails['regions'])
+                    && !empty($layoutDetails['regions'][$region->tempId])
+                ) {
                     $region->name = $layoutDetails['regions'][$region->tempId];
                     $region->regionPlaylist->name = $layoutDetails['regions'][$region->tempId];
                 }
@@ -1209,7 +1255,9 @@ class LayoutFactory extends BaseFactory
         if (isset($layoutDetails['drawers']) && count($layoutDetails['drawers']) > 0) {
             $this->getLog()->debug('Updating drawer region names according to layout.json');
             foreach ($layout->drawers as $drawer) {
-                if (array_key_exists($drawer->tempId, $layoutDetails['drawers']) && !empty($layoutDetails['drawers'][$drawer->tempId])) {
+                if (array_key_exists($drawer->tempId, $layoutDetails['drawers'])
+                    && !empty($layoutDetails['drawers'][$drawer->tempId])
+                ) {
                     $drawer->name = $layoutDetails['drawers'][$drawer->tempId];
                     $drawer->regionPlaylist->name = $layoutDetails['drawers'][$drawer->tempId];
                 }
@@ -1272,7 +1320,8 @@ class LayoutFactory extends BaseFactory
             }
 
             // Open a file pointer to stream into
-            if (!$temporaryFileStream = fopen($temporaryFileName, 'w')) {
+            $temporaryFileStream = fopen($temporaryFileName, 'w');
+            if (!$temporaryFileStream) {
                 throw new InvalidArgumentException(__('Cannot save media file from ZIP file'), 'temp');
             }
 
@@ -1302,7 +1351,13 @@ class LayoutFactory extends BaseFactory
                 // Create it instead
                 $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
 
-                $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+                $media = $this->mediaFactory->create(
+                    $intendedMediaName,
+                    $file['file'],
+                    $file['type'],
+                    $userId,
+                    $file['duration']
+                );
 
                 if ($importTags && isset($file['tags'])) {
                     foreach ($file['tags'] as $tagNode) {
@@ -1345,10 +1400,16 @@ class LayoutFactory extends BaseFactory
                 // Go through all widgets and replace if necessary
                 // Keep the keys the same? Doesn't matter
                 foreach ($widgets as $widget) {
-                    /* @var Widget $widget */
                     $audioIds = $widget->getAudioIds();
 
-                    $this->getLog()->debug(sprintf('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds)));
+                    $this->getLog()->debug(sprintf(
+                        'Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId '
+                            . '[%d] and storedAs [%s]. Media assigned to widget %s.',
+                        $oldMediaId,
+                        $newMediaId,
+                        $media->storedAs,
+                        json_encode($widget->mediaIds)
+                    ));
 
                     if (in_array($oldMediaId, $widget->mediaIds)) {
                         $this->getLog()->debug(sprintf('Removing %d and replacing with %d', $oldMediaId, $newMediaId));
@@ -1374,9 +1435,11 @@ class LayoutFactory extends BaseFactory
                         // Assign the new ID
                         $widget->assignMedia($newMediaId);
                     }
-                    // change mediaId references in applicable widgets, outside of the if condition,
+
+                    // change mediaId references in applicable widgets, outside the if condition,
                     // because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
-                    // the mediaIds array for Widgets with Library references will be correctly populated on getResource call from Player/CMS.
+                    // the mediaIds array for Widgets with Library references will be correctly populated on
+                    // getResource call from Player/CMS.
                     // if the Layout was loadByJson then it will already have correct mediaIds array at this point.
                     $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
                 }
@@ -1396,7 +1459,12 @@ class LayoutFactory extends BaseFactory
                     foreach ($widget->mediaIds as $mediaId) {
                         foreach ($uploadedMediaIds as $old => $new) {
                             if ($mediaId == $old) {
-                                $this->getLog()->debug(sprintf('Playlist import Removing %d and replacing with %d', $old, $new));
+                                $this->getLog()->debug(sprintf(
+                                    'Playlist import Removing %d and replacing with %d',
+                                    $old,
+                                    $new
+                                ));
+
                                 // Are we an audio record?
                                 if (in_array($old, $audioIds)) {
                                     // Swap the mediaId on the audio record
@@ -1419,7 +1487,8 @@ class LayoutFactory extends BaseFactory
                                 // Assign the new ID
                                 $widget->assignMedia($new);
 
-                                // change mediaId references in applicable widgets in all Playlists we have created on this import.
+                                // change mediaId references in applicable widgets in all Playlists we have created
+                                // on this import.
                                 $this->handleWidgetMediaIdReferences($widget, $new, $old);
                             }
                         }
@@ -1431,9 +1500,13 @@ class LayoutFactory extends BaseFactory
                         $playlist->requiresDurationUpdate = 1;
                         $playlist->save();
                     }
+
                     // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
                     // this will be needed if any Playlist has widgets with dataSets
-                    if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
+                    if ($widget->type == 'datasetview'
+                        || $widget->type == 'datasetticker'
+                        || $widget->type == 'chart'
+                    ) {
                         $widgets[] = $widget;
                         $playlistWidgets[] = $widget;
                     }
@@ -1464,7 +1537,10 @@ class LayoutFactory extends BaseFactory
                     if ($columnItem['dataTypeId'] === 5) {
                         $columnWithImages[] = $columnItem['heading'];
                     }
-                    $dataSet->assignColumn($dataSetFactory->getDataSetColumnFactory()->createEmpty()->hydrate($columnItem));
+                    $dataSet->assignColumn($dataSetFactory
+                        ->getDataSetColumnFactory()
+                        ->createEmpty()
+                        ->hydrate($columnItem));
                 }
 
                 /** @var DataSet $existingDataSet */
@@ -1493,7 +1569,10 @@ class LayoutFactory extends BaseFactory
                 }
 
                 if ($existingDataSet === null) {
-                    $this->getLog()->debug(sprintf('Matching DataSet not found, will need to add one. useExistingDataSets = %s', $useExistingDataSets));
+                    $this->getLog()->debug(sprintf(
+                        'Matching DataSet not found, will need to add one. useExistingDataSets = %s',
+                        $useExistingDataSets
+                    ));
 
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
@@ -1507,7 +1586,10 @@ class LayoutFactory extends BaseFactory
                     // Do we need to add data
                     if ($importDataSetData) {
                         // Import the data here
-                        $this->getLog()->debug(sprintf('Importing data into new DataSet %d', $existingDataSet->dataSetId));
+                        $this->getLog()->debug(sprintf(
+                            'Importing data into new DataSet %d',
+                            $existingDataSet->dataSetId
+                        ));
 
                         foreach ($item['data'] as $itemData) {
                             if (isset($itemData['id'])) {
@@ -1533,8 +1615,15 @@ class LayoutFactory extends BaseFactory
 
                     // Validate that the columns are the same
                     if (count($dataSet->columns) != count($existingDataSet->columns)) {
-                        $this->getLog()->debug(sprintf('Columns for Imported DataSet = %s', json_encode($dataSet->columns)));
-                        throw new InvalidArgumentException(sprintf(__('DataSets have different number of columns imported = %d, existing = %d'), count($dataSet->columns), count($existingDataSet->columns)));
+                        $this->getLog()->debug(sprintf(
+                            'Columns for Imported DataSet = %s',
+                            json_encode($dataSet->columns)
+                        ));
+                        throw new InvalidArgumentException(sprintf(
+                            __('DataSets have different number of columns imported = %d, existing = %d'),
+                            count($dataSet->columns),
+                            count($existingDataSet->columns)
+                        ));
                     }
 
                     // Check the column headings
@@ -1565,11 +1654,14 @@ class LayoutFactory extends BaseFactory
                 // Also make sure we replace the columnId's with the columnId's in the new "existing" DataSet.
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
-                    if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
+                    if ($widget->type == 'datasetview'
+                        || $widget->type == 'datasetticker'
+                        || $widget->type == 'chart'
+                    ) {
                         $widgetDataSetId = $widget->getOptionValue('dataSetId', 0);
 
                         if ($widgetDataSetId != 0 && $widgetDataSetId == $dataSetId) {
-                            // Widget has a dataSet and it matches the one we've just actioned.
+                            // Widget has a dataSet, and it matches the one we've just actioned.
                             $widget->setOptionValue('dataSetId', 'attrib', $existingDataSet->dataSetId);
 
                             // Check for and replace column references.
@@ -1580,7 +1672,10 @@ class LayoutFactory extends BaseFactory
                                 // Get the columns option
                                 $columns = explode(',', $widget->getOptionValue('columns', ''));
 
-                                $this->getLog()->debug(sprintf('Looking to replace columns from %s', json_encode($columns)));
+                                $this->getLog()->debug(sprintf(
+                                    'Looking to replace columns from %s',
+                                    json_encode($columns)
+                                ));
 
                                 foreach ($existingDataSet->columns as $column) {
                                     foreach ($columns as $index => $col) {
@@ -1603,7 +1698,11 @@ class LayoutFactory extends BaseFactory
 
                                 foreach ($existingDataSet->columns as $column) {
                                     // We replace with the |%d] so that we dont experience double replacements
-                                    $template = str_replace('|' . $column->priorDatasetColumnId . ']', '|' . $column->dataSetColumnId . ']', $template);
+                                    $template = str_replace(
+                                        '|' . $column->priorDatasetColumnId . ']',
+                                        '|' . $column->dataSetColumnId . ']',
+                                        $template
+                                    );
                                 }
 
                                 $widget->setOptionValue('template', 'cdata', $template);
@@ -1613,7 +1712,10 @@ class LayoutFactory extends BaseFactory
                                 // get the config for the chart widget
                                 $oldConfig = json_decode($widget->getOptionValue('config', '[]'), true);
                                 $newConfig = [];
-                                $this->getLog()->debug(sprintf('Looking to replace config from %s', json_encode($oldConfig)));
+                                $this->getLog()->debug(sprintf(
+                                    'Looking to replace config from %s',
+                                    json_encode($oldConfig)
+                                ));
 
                                 // go through the chart config and our dataSet
                                 foreach ($oldConfig as $config) {
@@ -1631,7 +1733,8 @@ class LayoutFactory extends BaseFactory
 
                                 $this->getLog()->debug(sprintf('Replaced config with %s', json_encode($newConfig)));
 
-                                // json encode our newConfig and set it as config attribute in the imported chart widget.
+                                // json encode our newConfig and set it as config attribute in the imported chart
+                                // widget.
                                 $widget->setOptionValue('config', 'attrib', json_encode($newConfig));
                             }
                         }

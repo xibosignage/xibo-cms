@@ -329,7 +329,7 @@ class Layout extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function add(Request $request, Response $response)
+    public function add(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -394,13 +394,13 @@ class Layout extends Base
             @unlink($event->getFilePath());
         } else {
             // Template or Resolution?
-            $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
+            $isResolution = empty($templateId) || Str::startsWith($templateId, '0|');
 
             if (!$isResolution) {
                 // Load the template
                 $template = $this->layoutFactory->loadById($templateId);
 
-                // Empty all of the ID's
+                // Empty all the ID's
                 $layout = clone $template;
 
                 // Overwrite our new properties
@@ -441,32 +441,74 @@ class Layout extends Base
                         // Main window - 80%
                         $mainWidth = $layout->width * 0.8;
                         $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, $layout->width - $mainWidth);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $mainWidth,
+                            $mainHeight,
+                            0,
+                            $layout->width - $mainWidth
+                        );
 
                         // Bottom bar
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width,
+                            $layout->height - $mainHeight,
+                            $mainHeight,
+                            0
+                        );
 
                         // Left bar
-                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width - $mainWidth,
+                            $mainHeight,
+                            0,
+                            0
+                        );
                         break;
 
                     case '0|l-bar-right':
                         // Main window - 80%
                         $mainWidth = $layout->width * 0.8;
                         $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, 0);
+                        $this->layoutFactory->addRegion($layout, 'playlist', $mainWidth, $mainHeight, 0, 0);
 
                         // Bottom bar
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width,
+                            $layout->height - $mainHeight,
+                            $mainHeight,
+                            0
+                        );
 
                         // Right bar
-                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, $mainWidth);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width - $mainWidth,
+                            $mainHeight,
+                            0,
+                            $mainWidth
+                        );
                         break;
 
                     case '0|full-screen':
                     default:
                         // Maintain backwards compatibility by creating an empty full screen region
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height, 0, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width,
+                            $layout->height,
+                            0,
+                            0
+                        );
                 }
             }
         }
