@@ -17,7 +17,7 @@ RUN cd / && \
 
 # Stage 1
 # Run composer
-FROM composer:1.6 as composer
+FROM composer as composer
 COPY ./composer.json /app
 COPY ./composer.lock /app
 
