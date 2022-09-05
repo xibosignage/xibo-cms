@@ -38,5 +38,19 @@ class RegionTypeMigration extends AbstractMigration
                 'limit' => 10
             ])
             ->save();
+        
+        // Update existing regions with the correct region type.
+        $this->execute('
+            UPDATE region SET type = \'frame\'
+              WHERE regionId IN (
+                SELECT regionId
+                  FROM playlist
+                    INNER JOIN widget
+                    ON playlist.playlistId = widget.playlistId
+                 WHERE IFNULL(regionId, 0) > 0
+                GROUP BY regionId
+                HAVING COUNT(widget.widgetId) = 1
+              )
+        ');
     }
 }

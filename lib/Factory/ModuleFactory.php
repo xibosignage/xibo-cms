@@ -145,6 +145,9 @@ class ModuleFactory extends BaseFactory
                 // Start with the one provided
                 $cacheKey = $module->dataCacheKey;
 
+                // Properties
+                $properties = $module->getPropertyValues();
+
                 // Parse the cache key for variables.
                 $matches = [];
                 preg_match_all('/%(.*?)%/', $cacheKey, $matches);
@@ -154,9 +157,10 @@ class ModuleFactory extends BaseFactory
                     } else if ($match === 'widgetId') {
                         $cacheKey = str_replace('%widgetId%', $widget->widgetId, $cacheKey);
                     } else {
+                        $this->getLog()->debug($match);
                         $cacheKey = str_replace(
                             '%' . $match . '%',
-                            $widget->getOptionValue($match, ''),
+                            $properties[$match] ?? '',
                             $cacheKey
                         );
                     }

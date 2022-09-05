@@ -124,6 +124,8 @@ class WidgetDataProviderCache
 
         // Release the cache
         $this->concurrentRequestRelease();
+
+        $this->getLog()->debug('Cached for ' . $dataProvider->getCacheTtl() . ' seconds');
     }
 
     /**
