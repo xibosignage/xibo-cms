@@ -80,12 +80,6 @@
                             {% set title %}{% trans "Change second factor secret" %}{% endset %}
                             {% set helpText %}{% trans "We support Google Authenticator or similar two factor codes. You get this secret by scanning the QR code." %}{% endset %}
                             {{ inline.input((service.type ~ "_twoFactorSecret"), title, null, helpText) }}
-
-                            {% if service.isUrl %}
-                                {% set title %}{% trans "Change URL" %}{% endset %}
-                                {% set helpText %}{{ "The URL where the %service% is hosted"|trans({'%service%':service.name}) }}{% endset %}
-                                {{ inline.input((service.type ~ "_url"), title, null, helpText) }}
-                            {% endif %}
                         </td>
                         <td>{{ inline.checkbox((service.type ~ "_remove"), "Check to remove"|trans)}}</td>
                     {% else %}
