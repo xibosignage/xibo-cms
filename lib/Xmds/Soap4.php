@@ -329,7 +329,7 @@ class Soap4 extends Soap
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
-        $fileId = $sanitizer->getString('fileId');
+        $fileId = $sanitizer->getInt('fileId');
         $fileType = $sanitizer->getString('fileType');
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
@@ -381,9 +381,6 @@ class Soap4 extends Soap
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
             } else if ($fileType == 'media') {
-                // fileId should be the mediaId
-                $fileId = intval($fileId);
-
                 // Is the ID negative?
                 if ($fileId < 0) {
                     // Expect a dependency.
