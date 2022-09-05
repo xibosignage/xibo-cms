@@ -26,7 +26,7 @@ use Phinx\Migration\AbstractMigration;
  * Add additional columns to required file so that we can handle dependencies separately to media
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
-class RequriedFileDependencyMigration extends AbstractMigration
+class RequiredfileDependencyMigration extends AbstractMigration
 {
     public function change()
     {
@@ -34,9 +34,26 @@ class RequriedFileDependencyMigration extends AbstractMigration
         $table
             ->addColumn('fileType', 'string', [
                 'limit' => 50,
-                'null' => false
+                'null' => true,
+                'default' => null
             ])
-            ->addColumn('realId', 'integer')
+            ->addColumn('realId', 'integer', [
+                'null' => true,
+                'default' => null
+            ])
+            ->save();
+        
+        $this->table('bandwidthtype')
+            ->insert([
+                [
+                    'bandwidthTypeId' => 12,
+                    'name' => 'Get Data'
+                ],
+                [
+                    'bandwidthTypeId' => 13,
+                    'name' => 'Get Dependency'
+                ],
+            ])
             ->save();
     }
 }

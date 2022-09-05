@@ -220,13 +220,15 @@ class Soap3 extends Soap
                     $f = fopen($libraryLocation . $filePath, 'r');
                 } else {
                     // Non-numeric, so assume we're a dependency
+                    $this->getLog()->debug('Assumed dependency with path: ' . $filePath);
+
                     $requiredFile = $this->requiredFileFactory->getByDisplayAndDependencyPath(
                         $this->display->displayId,
                         $filePath
                     );
                     
-                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->itemId);
-                    $this->getDispatcher()->dispatch($event);
+                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->realId);
+                    $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
                     $path = $event->getFullPath();
                     if (empty($path)) {

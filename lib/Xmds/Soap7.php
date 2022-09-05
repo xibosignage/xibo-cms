@@ -104,7 +104,7 @@ class Soap7 extends Soap6
 
         // File is valid, see if we can return it.
         $event = new XmdsDependencyRequestEvent($fileType, $id);
-        $this->getDispatcher()->dispatch($event);
+        $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
         $path = $event->getFullPath();
         if (empty($path)) {

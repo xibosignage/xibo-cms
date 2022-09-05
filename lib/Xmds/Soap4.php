@@ -394,7 +394,7 @@ class Soap4 extends Soap
 
                     // use the path we saved in required files to work out which type of dependency we are.
                     $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->realId);
-                    $this->getDispatcher()->dispatch($event);
+                    $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
                     $path = $event->getFullPath();
                     if (empty($path)) {

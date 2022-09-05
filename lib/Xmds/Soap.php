@@ -33,7 +33,6 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
-use Xibo\Entity\Widget;
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
@@ -411,7 +410,7 @@ class Soap
         // Output player dependencies such as the player bundle, fonts, etc.
         // 1) get a list of dependencies.
         $dependencyListEvent = new XmdsDependencyListEvent();
-        $this->getDispatcher()->dispatch($dependencyListEvent);
+        $this->getDispatcher()->dispatch($dependencyListEvent, 'xmds.dependency.list');
 
         // 2) Each dependency returned needs to be added to RF.
         foreach ($dependencyListEvent->getDependencies() as $dependency) {
@@ -451,6 +450,7 @@ class Soap
                     $file->setAttribute('path', $dependencyBasePath);
                 }
                 $file->setAttribute('saveAs', $dependencyBasePath);
+                $file->setAttribute('id', $dependency->id);
             } else {
                 // We have no choice but to pretend we're a media download.
                 // Soap3/4 are modified to cater for this.
@@ -464,10 +464,15 @@ class Soap
                     $file->setAttribute('path', $dependencyBasePath);
                 }
 
-                // TODO: make this better
-                // Use a negative Id which we can guarantee unique. (this doesn't work because font/player bundle, 
-                //  etc will have the same IDs)
-                $dependencyId = $dependency->id * -1;
+                // For this workaround we need to set a negative ID so that we can differentiate between a normal
+                // media download and a dependency download.
+                // We can't make the ID negative, because dependencies can come from different tables
+                // and have the same IDs.
+                if ($dependency->fileType === 'font') {
+                    $dependencyId = ($dependency->id + 100000000) * -1;
+                } else {
+                    $dependencyId = $dependency->id * -1;
+                }
                 $file->setAttribute('id', $dependencyId);
             }
 
@@ -890,7 +895,11 @@ class Soap
                     $resourcesAdded = [];
 
                     foreach ($playlist->expandWidgets() as $widget) {
-                        /* @var Widget $widget */
+                        if (!array_key_exists($widget->type, $modules)) {
+                            $this->getLog()->debug('Unknown type of widget: ' . $widget->type);
+                            continue;
+                        }
+
                         if ($widget->type == 'ticker' ||
                             $widget->type == 'text' ||
                             $widget->type == 'datasetview' ||
@@ -1921,7 +1930,10 @@ class Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Auth this request...
@@ -1931,7 +1943,7 @@ class Soap
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         if ($this->display->isAuditing()) {
@@ -1944,14 +1956,14 @@ class Soap
         }
 
         // Load the XML into a DOMDocument
-        $document = new \DOMDocument("1.0");
+        $document = new \DOMDocument('1.0');
         $document->loadXML($inventory);
 
         // Assume we are complete (but we are getting some)
         $mediaInventoryComplete = 1;
 
         $xpath = new \DOMXPath($document);
-        $fileNodes = $xpath->query("//file");
+        $fileNodes = $xpath->query('//file');
 
         foreach ($fileNodes as $node) {
             /* @var \DOMElement $node */
@@ -1960,24 +1972,42 @@ class Soap
             try {
                 $requiredFile = null;
                 switch ($node->getAttribute('type')) {
-
                     case 'media':
-                        $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
+                            $this->display->displayId,
+                            $node->getAttribute('id')
+                        );
                         break;
 
                     case 'layout':
-                        $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout(
+                            $this->display->displayId,
+                            $node->getAttribute('id')
+                        );
                         break;
 
                     case 'resource':
-                        $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget(
+                            $this->display->displayId,
+                            $node->getAttribute('id')
+                        );
+                        break;
+
+                    case 'dependency':
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndDependency(
+                            $this->display->displayId,
+                            $node->getAttribute('fileType'),
+                            $node->getAttribute('id')
+                        );
                         break;
 
                     default:
-                        $this->getLog()->debug(sprintf('Skipping unknown node in media inventory: %s - %s.',
+                        $this->getLog()->debug(sprintf(
+                            'Skipping unknown node in media inventory: %s - %s.',
                             $node->getAttribute('type'),
-                            $node->getAttribute('id'))
-                        );
+                            $node->getAttribute('id')
+                        ));
+
                         // continue drops out the switch, continue again goes to the top of the foreach
                         continue 2;
                 }
@@ -1988,11 +2018,12 @@ class Soap
                 $requiredFile->save();
 
                 // If this item is a 0 then set not complete
-                if ($complete == 0)
+                if ($complete == 0) {
                     $mediaInventoryComplete = 2;
-            }
-            catch (NotFoundException $e) {
-                $this->getLog()->error('Unable to find file in media inventory: ' . $node->getAttribute('type') . '. ' . $node->getAttribute('id'));
+                }
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Unable to find file in media inventory: '
+                    . $node->getAttribute('type') . '. ' . $node->getAttribute('id'));
             }
         }
 
@@ -2004,7 +2035,9 @@ class Soap
 
             // If we are complete, then drop the player nonce cache
             if ($this->display->mediaInventoryStatus == 1) {
-                $this->getLog()->debug('Media Inventory tells us that all downloads are complete, clearing the nonce for this display');
+                $this->getLog()->debug('Media Inventory tells us that all downloads are complete,'
+                    . ' clearing the nonce for this display');
+
                 $this->pool->deleteItem('/display/nonce/' . $this->display->displayId);
             }
 

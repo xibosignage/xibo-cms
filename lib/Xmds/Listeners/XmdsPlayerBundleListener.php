@@ -37,6 +37,8 @@ class XmdsPlayerBundleListener
 
     public function onDependencyList(XmdsDependencyListEvent $event)
     {
+        $this->getLogger()->debug('onDependencyList: XmdsPlayerBundleListener');
+
         // Output the player bundle
         $bundlePath = PROJECT_ROOT . '/modules/bundle.min.js';
         $bundleSize = filesize($bundlePath);
