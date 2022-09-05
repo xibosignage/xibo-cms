@@ -23,55 +23,6 @@
         .navbar-btn {
             margin: 8px 3px;
         }
-
-        .navbar-peek-button {
-            display: block;
-            width: $toolbar-width;
-            text-align: center;
-            font-size: 1.5rem;
-            padding: 10px;
-            line-height: 30px;
-            @include set-transparent-color(background, $xibo-color-neutral-700, 0.3);
-            color: lighten($xibo-color-neutral-700, 30%);
-            opacity: 0.4;
-            cursor: unset;
-
-            &.active {
-                cursor: pointer;
-                opacity: 1;
-
-                &.navbar-bin {
-                    background: $xibo-color-semantic-error;
-                    color: $xibo-color-neutral-100;
-                }
-
-                &.navbar-bin:hover {
-                    background: darken($xibo-color-semantic-error, 20%) !important;
-                }
-
-                &.navbar-undo {
-                    background: $xibo-color-semantic-warning;
-                    color: $xibo-color-neutral-900;
-                }
-
-                &.navbar-undo:hover {
-                    background: darken($xibo-color-semantic-warning, 20%) !important;
-                }
-
-                &.navbar-multiselect {
-                    background: $xibo-color-tertiary;
-                    color: $xibo-color-neutral-100;
-                }
-
-                &.navbar-multiselect:hover {
-                    background: darken($xibo-color-tertiary, 20%) !important;
-                }
-                
-                &.navbar-multiselect.multiselect-active {
-                    background: lighten($xibo-color-tertiary, 20%)  !important;
-                }
-            }
-        }
     }
 
     .toolbar-pane {
@@ -111,12 +62,11 @@
         .toolbar-pane {
             position: absolute;
             left: $toolbar-width;
-            top: 1rem;
+            top: 0;
             bottom: 0;
             background: $xibo-color-primary-l5;
             color: $xibo-color-primary;
             width: 288px;
-            @include border-radius(0 4px 0 0);
 
             .content-header {
                 display: flex;
@@ -139,11 +89,9 @@
                     line-height: 15px;
                     color: $xibo-color-primary-d60;
                     text-align: right;
-                    transition: 0.3s 0.1s padding-right;
                     
                     &:hover {
                         color: $xibo-color-primary;
-                        padding-right: 12px;
                     }
                 }
             }
@@ -487,6 +435,11 @@
 
                         .card-icon {
                             color: $xibo-color-primary;
+
+                            /* Special case for Twitter */
+                            &.fa-twitter {
+                                color: #1d9bf0;
+                            }
                         }
 
                         .btn-favourite {
@@ -564,17 +517,19 @@
                         align-items: center;
                     
                         i {
-                            color: $xibo-color-primary-d60;
-                            font-size: 1.75rem;
-                            margin-right: 8px;
+                            color: $xibo-color-neutral-0;
+                            font-size: 1.5rem;
+                            margin: 0 0.5rem;
                         }
                     }
 
                     .close-content {
                         color: $xibo-color-primary-l10;
+                        transition: 0.3s 0.1s padding-right;
 
                         &:hover {
                             color: $xibo-color-primary-l5;
+                            padding-right: 0.75rem;
                         }
                     }
                 }
@@ -675,8 +630,7 @@
             }
 
             &:hover, &:focus {
-                color: $xibo-color-primary-l5;
-                background-color: $xibo-color-tertiary;
+                background-color: $xibo-color-primary-l10;
             }
 
             &.trash-container {

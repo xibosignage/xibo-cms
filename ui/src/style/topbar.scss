@@ -1,7 +1,7 @@
 @import "variables";
 @import "mixins";
 
-#layout-editor-topbar nav {
+.editor-top-bar nav {
     border: none;
     // Hide for now
     // min-height: 40px;
@@ -15,36 +15,28 @@
 }
 
 @media (max-width: 768px) {    
-    #layout-editor-topbar nav {
+    .editor-top-bar nav {
         .layout-info-duration, .layout-info-dimensions {
             display: none;
         }
     }
 }
 
-#layout-editor-topbar .container-toolbar {
-    padding: 0 16px;
-    @include box-shadow(0px 2px 4px $xibo-color-shadow);
-
-    .navbar-text.layout-info {
+.editor-toolbar .container-toolbar {
+    .navbar-text.layout-info,
+    .navbar-text.playlist-info {
         color: $xibo-color-secondary;
         line-height: 24px;
         display: inline-block;
         // Fix position for now
         position: fixed;
         top: 6px;
-        left: 96px;
+        left: 122px;
         // Fix position for now
 
         & > span {
             margin-right: 10px;
             line-height: 24px;
-        }
-
-        .layout-info-label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            margin-right: 3px;
         }
 
         .layout-info-icon {

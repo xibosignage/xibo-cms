@@ -8,7 +8,7 @@
         <form id="regionFormEdit" class="XiboForm">
             <div class="tab-content">
                 <div class="tab-pane active" id="generalTab">
-                    {{> inputs/hidden name="type" value="playlist" }}"
+                    {{> inputs/hidden name="type" value=region.type }}
                     {{> inputs/text value=region.name id="name" title="Name" helpText="An optional name for this widget" }}
                     {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this region should it loop?" }}
                     {{> inputs/message messageType="info" title="When should the Region Loop be enabled?"}}

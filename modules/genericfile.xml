@@ -1,0 +1,46 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-genericfile</id>
+    <name>Generic File</name>
+    <author>Core</author>
+    <description>A generic file to be stored in the library</description>
+    <class></class>
+    <type>genericfile</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>0</assignable>
+    <regionSpecific>0</regionSpecific>
+    <renderAs></renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings>
+        <property id="validExtensions" type="input">
+            <title>Valid Extensions</title>
+            <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
+            <default>apk,ipk,js,html,htm</default>
+        </property>
+    </settings>
+    <properties></properties>
+    <preview></preview>
+    <stencil>
+        <twig><![CDATA[]]></twig>
+    </stencil>
+</module>
