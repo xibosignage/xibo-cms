@@ -361,9 +361,6 @@ class Soap4 extends Soap
 
         try {
             if ($fileType == 'layout') {
-                // fileId should be the layoutId
-                $fileId = intval($fileId);
-
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
