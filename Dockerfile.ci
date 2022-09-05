@@ -28,16 +28,13 @@ RUN composer install --no-interaction
 FROM node:12 AS webpack
 WORKDIR /app
 
-# Install webpack
-RUN npm install webpack -g
-
 # Copy package.json and the webpack config file
 COPY webpack.config.js .
 COPY package.json .
 COPY package-lock.json .
 
 # Install npm packages
-RUN npm install --only=prod
+RUN npm install
 
 # Copy ui folder
 COPY ./ui ./ui
@@ -47,7 +44,7 @@ COPY ./modules/src ./modules/src
 COPY ./modules/vendor ./modules/vendor
 
 # Build webpack
-RUN npm run build
+RUN npm run publish
 
 # Stage 1
 # Build the CMS container
