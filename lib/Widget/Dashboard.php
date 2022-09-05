@@ -130,11 +130,6 @@ class Dashboard extends ModuleWidget
     /** @inheritDoc */
     public function getResource($displayId = 0)
     {
-        // Preview not allowed
-        if ($this->isPreview()) {
-            throw new ConfigurationException(__('Preview not available'));
-        }
-
         // Always generate a token
         $event = new XmdsConnectorTokenEvent();
         $event->setTargets($displayId, $this->getWidgetId());
@@ -145,9 +140,13 @@ class Dashboard extends ModuleWidget
             throw new ConfigurationException(__('No token returned'));
         }
 
-        // This is fallback HTML for the player.
-        // so output a link to the XMDS file request.
-        $url = Wsdl::getRoot() . '?connector=true&token=' . $token;
+        if ($this->isPreview()) {
+            $url = $this->urlFor('layout.preview.connector', [], ['token' => $token]);
+        } else {
+            // This is fallback HTML for the player.
+            // so output a link to the XMDS file request.
+            $url = Wsdl::getRoot() . '?connector=true&token=' . $token;
+        }
 
         // Construct the response HTML
         $this

@@ -75,7 +75,8 @@ class Controllers
             },
             '\Xibo\Controller\Connector' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Connector(
-                    $c->get('connectorFactory')
+                    $c->get('connectorFactory'),
+                    $c->get('widgetFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
