@@ -1437,7 +1437,7 @@ class Library extends Base
 
             // Eligible for delete
             $i++;
-            $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
+            $this->getDispatcher()->dispatch(new MediaDeleteEvent($item), MediaDeleteEvent::$NAME);
             $item->delete();
         }
 

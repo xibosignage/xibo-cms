@@ -505,9 +505,9 @@ class UserGroup extends Base
             $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
 
             // if we have homepage set assign matching feature if it does not already exist
-            if (!in_array($this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature, $group->features)
+            if (!empty($group->defaultHomepageId)
+                && !in_array($this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature, $group->features)
                 && $group->defaultHomepageId !== 'icondashboard.view'
-                && !empty($group->defaultHomepageId)
             ) {
                 $group->features[] = $this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature;
                 $group->saveFeatures();
