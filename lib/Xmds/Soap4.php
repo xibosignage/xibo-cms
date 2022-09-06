@@ -551,6 +551,7 @@ class Soap4 extends Soap
         $this->display->storageTotalSpace = $sanitizedStatus->getInt('totalSpace', ['default' => $this->display->storageTotalSpace]);
         $this->display->lastCommandSuccess = $sanitizedStatus->getCheckbox('lastCommandSuccess');
         $this->display->deviceName = $sanitizedStatus->getString('deviceName', ['default' => $this->display->deviceName]);
+        $this->display->lanIpAddress = $sanitizedStatus->getString('lanIpAddress', ['default' => $this->display->lanIpAddress]);
         $commercialLicenceString = $sanitizedStatus->getString('licenceResult',['default' => null]);
 
         // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
