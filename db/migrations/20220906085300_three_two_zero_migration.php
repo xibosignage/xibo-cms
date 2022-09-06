@@ -58,11 +58,11 @@ class ThreeTwoZeroMigration extends AbstractMigration
             ->save();
 
         $this->table('playlist')
-            ->addColumn('filterMediaName', 'text', [
+            ->changeColumn('filterMediaName', 'text', [
                 'null' => true,
                 'default' => null
             ])
-            ->addColumn('filterMediaTags', 'text', [
+            ->changeColumn('filterMediaTags', 'text', [
                 'null' => true,
                 'default' => null
             ])
