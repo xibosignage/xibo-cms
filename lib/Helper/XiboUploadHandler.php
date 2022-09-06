@@ -435,7 +435,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Save the playlist
                 $playlist->save();
 
-                // Configure widgetId is reponse
+                // Configure widgetId is response
                 $file->widgetId = $widget->widgetId;
             }
         } catch (Exception $e) {
@@ -446,6 +446,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
             @unlink($filePath);
 
             $file->error = $e->getMessage();
+
+            // Don't commit
+            $controller->getState()->setCommitState(false);
         }
     }
 
