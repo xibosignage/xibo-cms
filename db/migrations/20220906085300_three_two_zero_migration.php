@@ -31,11 +31,21 @@ class ThreeTwoZeroMigration extends AbstractMigration
     /** @inheritDoc */
     public function change()
     {
+        // New Ip Address field
         $this->table('display')
             ->addColumn('lanIpAddress', 'string', [
                 'limit' => 50,
                 'null' => true,
                 'default' => null,
+            ])
+            ->save();
+
+        // Add the Dashboards connector, disabled.
+        $this->table('connectors')
+            ->insert([
+                'className' => '\\Xibo\\Connector\\XiboDashboardConnector',
+                'isEnabled' => 0,
+                'isVisible' => 1
             ])
             ->save();
     }
