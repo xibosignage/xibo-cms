@@ -572,6 +572,8 @@ class MediaFactory extends BaseFactory
                `media`.folderId,
                `media`.permissionsFolderId,
                `media`.orientation,
+               `media`.width,
+               `media`.height,
                ( 
                    SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
                         FROM tag
@@ -894,7 +896,15 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires', 'valid'
+                    'duration',
+                    'size',
+                    'released',
+                    'moduleSystemFile',
+                    'isEdited',
+                    'expires',
+                    'valid',
+                    'width',
+                    'height'
                 ]
             ]);
             $media->excludeProperty('layoutBackgroundImages');
