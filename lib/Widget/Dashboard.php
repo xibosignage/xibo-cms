@@ -308,11 +308,6 @@ class Dashboard extends ModuleWidget
             // Set the newly created module and then call install
             $this->setModule($module);
             $this->installModule();
-
-            // TODO Remove in v4, handle this in a migration instead
-            $this->getStore()->insert('INSERT INTO `connectors` (`className`) VALUES (:connector)', [
-                'connector' => '\\Xibo\\Connector\\XiboDashboardConnector'
-            ]);
         }
 
         // Install and additional module files that are required.
