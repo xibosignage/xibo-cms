@@ -48,5 +48,24 @@ class ThreeTwoZeroMigration extends AbstractMigration
                 'isVisible' => 1
             ])
             ->save();
+
+        // Dynamic criteria tags
+        $this->table('displaygroup')
+            ->changeColumn('dynamicCriteria', 'text', [
+                'null' => true,
+                'default' => null,
+            ])
+            ->save();
+
+        $this->table('playlist')
+            ->addColumn('filterMediaName', 'text', [
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('filterMediaTags', 'text', [
+                'null' => true,
+                'default' => null
+            ])
+            ->save();
     }
 }
