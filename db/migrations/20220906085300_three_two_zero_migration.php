@@ -67,5 +67,31 @@ class ThreeTwoZeroMigration extends AbstractMigration
                 'default' => null
             ])
             ->save();
+
+        // Resolution on media
+        $this->table('media')
+            ->addColumn('width', 'integer', [
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_MEDIUM,
+                'null' => true,
+                'default' => null,
+            ])
+            ->addColumn('height', 'integer', [
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_MEDIUM,
+                'null' => true,
+                'default' => null,
+            ])
+            ->save();
+
+        // Setting for folders.
+        if (!$this->fetchRow('SELECT * FROM `setting` WHERE setting = \'FOLDERS_ALLOW_SAVE_IN_ROOT\'')) {
+            $this->table('setting')->insert([
+                [
+                    'setting' => 'FOLDERS_ALLOW_SAVE_IN_ROOT',
+                    'value' => '1',
+                    'userSee' => 1,
+                    'userChange' => 1
+                ]
+            ])->save();
+        }
     }
 }
