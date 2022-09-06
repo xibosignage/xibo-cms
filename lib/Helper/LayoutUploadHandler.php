@@ -110,7 +110,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            // TODO for this the getState() had to be changed to public, we should do it in a better way I think.
+            // Don't commit
             $controller->getState()->setCommitState(false);
         }
     }
