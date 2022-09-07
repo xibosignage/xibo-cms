@@ -534,6 +534,7 @@ class Display extends Base
             'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ];
 
         // Get a list of displays

@@ -269,7 +269,8 @@ class Playlist extends Base
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
             'folderId' => $sanitizedParams->getInt('folderId'),
             'layoutId' => $sanitizedParams->getInt('layoutId'),
-            'logicalOperator' => $sanitizedParams->getString('logicalOperator')
+            'logicalOperator' => $sanitizedParams->getString('logicalOperator'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ], $sanitizedParams));
 
         foreach ($playlists as $playlist) {

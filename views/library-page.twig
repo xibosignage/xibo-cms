@@ -51,19 +51,8 @@
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.number("mediaId", title) }}
 
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="" for="media" accesskey="">{% trans "Name" %}</label>
-                                <div>
-                                    <div class="input-group">
-                                        <input class="form-control" name="media" type="text" id="media" value="">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.inputNameGrid('media', title) }}
 
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}

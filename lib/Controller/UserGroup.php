@@ -123,6 +123,8 @@ class UserGroup extends Base
         $filterBy = [
             'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
             'group' => $sanitizedQueryParams->getString('userGroup'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
             'isUserSpecific' => 0
         ];
 

@@ -42,7 +42,7 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("template", title) }}
+                            {{ inline.inputNameGrid('template', title) }}
 
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}

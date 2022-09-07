@@ -120,7 +120,10 @@ class Template extends Base
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
             'layout' => $sanitizedQueryParams->getString('template'),
-            'folderId' => $sanitizedQueryParams->getInt('folderId')
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'folderId' => $sanitizedQueryParams->getInt('folderId'),
+            'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ], $sanitizedQueryParams));
 
         foreach ($templates as $template) {

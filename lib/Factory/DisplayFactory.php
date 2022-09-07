@@ -348,7 +348,16 @@ class DisplayFactory extends BaseFactory
         // Filter by Display Name?
         if ($parsedBody->getString('display') != null) {
             $terms = explode(',', $parsedBody->getString('display'));
-            $this->nameFilter('display', 'display', $terms, $body, $params, ($parsedBody->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedBody->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'display',
+                'display',
+                $terms,
+                $body,
+                $params,
+                ($parsedBody->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($parsedBody->getString('macAddress') != '') {

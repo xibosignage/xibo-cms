@@ -696,7 +696,16 @@ class MediaFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != null) {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('media', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'media',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getString('nameExact') != '') {

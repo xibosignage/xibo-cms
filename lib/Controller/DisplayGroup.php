@@ -265,6 +265,7 @@ class DisplayGroup extends Base
             'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);

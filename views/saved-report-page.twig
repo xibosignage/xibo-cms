@@ -40,19 +40,8 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="" for="saveAs" accesskey="">{% trans "Name" %}</label>
-                                <div>
-                                    <div class="input-group">
-                                        <input class="form-control" name="saveAs" type="text" id="saveAs" value="">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.inputNameGrid('saveAs', title) }}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}

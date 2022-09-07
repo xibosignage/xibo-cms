@@ -1380,6 +1380,7 @@ class Layout extends Base
             'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
             'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
