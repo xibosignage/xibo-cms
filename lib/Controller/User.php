@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -324,6 +324,9 @@ class User extends Base
                 $user->homePage = __('Unknown homepage, please edit to update.');
             }
 
+            // Set the home folder
+            $user->homeFolder = $user->getUnmatchedProperty('homeFolder', '/');
+
             // Super admins have some buttons
             if ($this->getUser()->featureEnabled('users.modify')
                 && $this->getUser()->checkEditable($user)
@@ -556,6 +559,13 @@ class User extends Base
         $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
         $user->setNewPassword($sanitizedParams->getString('password'));
+
+        // Are user home folders enabled? If not, use the default.
+        if ($this->getUser()->featureEnabled('folder.userHome')) {
+            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+        } else {
+            $user->homeFolderId = 1;
+        }
 
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
@@ -804,6 +814,11 @@ class User extends Base
         $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
         $user->retired = $sanitizedParams->getCheckbox('retired');
+
+        // Are user home folders enabled? Don't change unless they are.
+        if ($this->getUser()->featureEnabled('folder.userHome')) {
+            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+        }
 
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');

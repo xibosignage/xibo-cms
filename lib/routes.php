@@ -475,8 +475,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 /**
  *  Folders
  */
+$app->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
     $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
 

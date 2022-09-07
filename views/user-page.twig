@@ -77,6 +77,7 @@
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Homepage" %}</th>
+                                <th>{% trans "Home folder" %}</th>
                                 <th>{% trans "Email" %}</th>
                                 <th>{% trans "Library Quota" %}</th>
                                 <th>{% trans "Last Login" %}</th>
@@ -132,6 +133,10 @@
                         "data": "homePage",
                         "sortable": false,
                         responsivePriority: 3
+                    },
+                    {
+                        data: 'homeFolder',
+                        responsivePriority: 4
                     },
                     {"data": "email", responsivePriority: 3},
                     {

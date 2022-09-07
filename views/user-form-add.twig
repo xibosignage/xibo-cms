@@ -102,6 +102,20 @@
 
                         {{ forms.message("User Groups are an easy way to configure a set of features and sharing which can be applied to multiple users. After adding a User they can be assigned to multiple Groups or have individual sharing assigned to them directly."|trans, "card p-3 mb-3 bg-light") }}
 
+                        {% if currentUser.featureEnabled("folder.userHome") %}
+                            {% set title %}{% trans "Home folder" %}{% endset %}
+                            {% set helpText %}{% trans "Set a home folder to use as the default folder for new content" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-search-url", value: url_for("folders.search") ~ "?isShowTree=0" },
+                                { name: "data-search-term", value: "folderName" },
+                                { name: "data-id-property", value: "id" },
+                                { name: "data-text-property", value: "text" },
+                                { name: "data-initial-key", value: "id" },
+                                { name: "data-initial-value", value: 1 },
+                            ] %}
+                            {{ forms.dropdown("homeFolderId", "single", title, "", resolutions, "id", "text", helpText, "pagedSelect folder-group", "", "", "", attributes) }}
+                        {% endif %}
+
                         {% set title %}{% trans "Homepage" %}{% endset %}
                         {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
                         <div class="form-group row">

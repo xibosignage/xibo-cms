@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -72,7 +72,6 @@ class Folder extends Base
     public function grid(Request $request, Response $response)
     {
         $parsedParams = $this->getSanitizer($request->getParams());
-        $treeJson = [];
 
         $folders = $this->folderFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter([
             'folderId' => $parsedParams->getInt('folderId'),
@@ -81,6 +80,16 @@ class Folder extends Base
             'includeRoot' => 1
         ], $parsedParams));
 
+        // Do we want a flat list or a tree?
+        if ($parsedParams->hasParam('isShowTree') && !$parsedParams->getCheckbox('isShowTree')) {
+            $this->getState()->template = 'grid';
+            $this->getState()->recordsTotal = $this->folderFactory->countLast();
+            $this->getState()->setData($folders);
+            return $this->render($request, $response);
+        }
+
+        // Show a tree view of all folders.
+        $treeJson = [];
         foreach ($folders as $folder) {
             if ($folder->id === 1) {
                 $folder->text = 'Root Folder';

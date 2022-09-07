@@ -120,7 +120,7 @@ class FolderFactory extends BaseFactory
             $params['parentId'] = $sanitizedFilter->getInt('parentId');
         }
 
-        if ($sanitizedFilter->getString('folderName') !== null) {
+        if ($sanitizedFilter->getString('folderName') != null) {
             $body .= ' AND folder.folderName = :folderName ';
             $params['folderName'] = $sanitizedFilter->getString('folderName');
         }

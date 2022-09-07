@@ -85,6 +85,20 @@
                             </div>
                         </div>
 
+                        {% if currentUser.featureEnabled("folder.userHome") %}
+                            {% set title %}{% trans "Home folder" %}{% endset %}
+                            {% set helpText %}{% trans "Set a home folder to use as the default folder for new content" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-search-url", value: url_for("folders.search") ~ "?isShowTree=0" },
+                                { name: "data-search-term", value: "folderName" },
+                                { name: "data-id-property", value: "id" },
+                                { name: "data-text-property", value: "text" },
+                                { name: "data-initial-key", value: "id" },
+                                { name: "data-initial-value", value: user.homeFolderId },
+                            ] %}
+                            {{ forms.dropdown("homeFolderId", "single", title, "", resolutions, "id", "text", helpText, "pagedSelect folder-group", "", "", "", attributes) }}
+                        {% endif %}
+
                         {% if currentUser.isSuperAdmin() %}
                             {% set title %}{% trans "User Type" %}{% endset %}
                             {% set helpText %}{% trans "What is this users type?" %}{% endset %}
