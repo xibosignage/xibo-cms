@@ -473,7 +473,11 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.data']));
 
 /**
- *  Folders
+ * Folders
+ * @SWG\Tag(
+ *  name="folder",
+ *  description="Folders"
+ * )
  */
 $app->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
 $app->group('', function (RouteCollectorProxy $group) {

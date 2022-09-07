@@ -104,7 +104,25 @@ class FolderFactory extends BaseFactory
         $params = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        $select = 'SELECT `folderId` as id, `folderName` as text, `parentId`, `isRoot`, `children`, `permissionsFolderId` ';
+        $select = 'SELECT `folderId`,
+            `folderName`, 
+            `folderId` AS id,
+            IF(`isRoot`=1, \'Root Folder\', `folderName`) AS text,
+            `parentId`,
+            `isRoot`,
+            `children`,
+            `permissionsFolderId`
+        ';
+
+        if ($sanitizedFilter->getInt('isIncludeHomeFolderCount') === 1) {
+            $select .= '
+                , (SELECT COUNT(*) AS cnt
+                  FROM `user`
+                 WHERE `user`.homeFolderId = `folder`.folderId
+                    AND `user`.retired = 0
+                ) AS homeFolderCount
+            ';
+        }
 
         $body = '
           FROM `folder`
@@ -151,7 +169,7 @@ class FolderFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isRoot']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isRoot', 'homeFolderCount']]);
         }
 
         // Paging

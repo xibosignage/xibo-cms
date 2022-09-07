@@ -33,6 +33,9 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * Class Folder
  * @package Xibo\Entity
  * @SWG\Definition()
+ *
+ * @property $a_attr
+ * @property $li_attr
  */
 class Folder
 {

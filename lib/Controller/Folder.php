@@ -40,9 +40,24 @@ class Folder extends Base
      * Set common dependencies.
      * @param FolderFactory $folderFactory
      */
-    public function __construct($folderFactory)
+    public function __construct(FolderFactory $folderFactory)
     {
         $this->folderFactory = $folderFactory;
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function displayPage(Request $request, Response $response)
+    {
+        $this->getState()->template = 'folders-page';
+        $this->getState()->setData([]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -73,39 +88,59 @@ class Folder extends Base
     {
         $parsedParams = $this->getSanitizer($request->getParams());
 
+        // Do we want a flat list or a tree?
+        if (!$parsedParams->hasParam('isShowTree') || $parsedParams->getCheckbox('isShowTree')) {
+            // Show a tree view of all folders.
+            $rootFolder = $this->folderFactory->getById(1);
+            $rootFolder->a_attr['title'] = __('Right click a Folder for further Options');
+            $this->buildTreeView($rootFolder);
+            return $response->withJson([$rootFolder]);
+        }
+
+        // Not a tree view.
         $folders = $this->folderFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter([
             'folderId' => $parsedParams->getInt('folderId'),
             'folderName' => $parsedParams->getString('folderName'),
             'isRoot' => $parsedParams->getInt('isRoot'),
-            'includeRoot' => 1
+            'includeRoot' => 1,
+            'isIncludeHomeFolderCount' => 1
         ], $parsedParams));
 
-        // Do we want a flat list or a tree?
-        if ($parsedParams->hasParam('isShowTree') && !$parsedParams->getCheckbox('isShowTree')) {
-            $this->getState()->template = 'grid';
-            $this->getState()->recordsTotal = $this->folderFactory->countLast();
-            $this->getState()->setData($folders);
-            return $this->render($request, $response);
-        }
+        if (!$this->isApi($request)) {
+            foreach ($folders as $folder) {
+                // Dynamic properties
+                $folder->homeFolderCount = $folder->getUnmatchedProperty('homeFolderCount', 0);
 
-        // Show a tree view of all folders.
-        $treeJson = [];
-        foreach ($folders as $folder) {
-            if ($folder->id === 1) {
-                $folder->text = 'Root Folder';
-                $folder->a_attr['title'] = __("Right click a Folder for further Options");
-                $this->buildTreeView($folder);
-                array_push($treeJson, $folder);
+                // Buttons.
+                if ($this->getUser()->checkEditable($folder)) {
+                    $folder->buttons[] = [
+                        'id' => 'folder_button_edit',
+                        'url' => $this->urlFor($request, 'folders.edit.form', ['id' => $folder->id]),
+                        'text' => __('Edit')
+                    ];
+                }
+
+                if ($this->getUser()->checkDeleteable($folder)) {
+                    $folder->buttons[] = [
+                        'id' => 'folder_button_delete',
+                        'url' => $this->urlFor($request, 'folders.delete.form', ['id' => $folder->id]),
+                        'text' => __('Delete')
+                    ];
+                }
             }
         }
 
-        return $response->withJson($treeJson);
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->folderFactory->countLast();
+        $this->getState()->setData($folders);
+        return $this->render($request, $response);
     }
 
     /**
      * @param \Xibo\Entity\Folder $folder
+     * @throws InvalidArgumentException
      */
-    private function buildTreeView(&$folder)
+    private function buildTreeView(\Xibo\Entity\Folder $folder)
     {
         $children = array_filter(explode(',', $folder->children));
         $childrenDetails = [];
@@ -123,7 +158,7 @@ class Folder extends Base
                     $child->li_attr['disabled'] = true;
                 }
 
-                array_push($childrenDetails, $child);
+                $childrenDetails[] = $child;
             } catch (NotFoundException $exception) {
                 // this should be fine, just log debug message about it.
                 $this->getLog()->debug('User does not have permissions to Folder ID ' . $childId);
