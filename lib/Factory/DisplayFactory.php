@@ -253,6 +253,7 @@ class DisplayFactory extends BaseFactory
                   `display`.commercialLicence,
                   `display`.teamViewerSerial,
                   `display`.webkeySerial,
+                  `display`.lanIpAddress,
                   (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
                   (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                     FROM `permission`

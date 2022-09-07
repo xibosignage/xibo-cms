@@ -151,6 +151,9 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
         } catch (Exception $e) {
             $file->error = $e->getMessage();
+
+            // Don't commit
+            $controller->getState()->setCommitState(false);
         }
     }
 }

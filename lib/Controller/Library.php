@@ -2479,7 +2479,9 @@ class Library extends Base
             throw new InvalidArgumentException(__('Invalid image data'));
         }
 
-        $media->orientation = ($image->getWidth() >= $image->getHeight()) ? 'landscape' : 'portrait';
+        $media->width = $image->getWidth();
+        $media->height = $image->getHeight();
+        $media->orientation = ($media->width >= $media->height) ? 'landscape' : 'portrait';
         $media->save(['saveTags' => false, 'validate' => false]);
 
         return $response->withStatus(204);
@@ -2692,7 +2694,7 @@ class Library extends Base
                             );
 
                             list($imgWidth, $imgHeight) = @getimagesize($filePath);
-                            $media->updateOrientation(($imgWidth >= $imgHeight) ? 'landscape' : 'portrait');
+                            $media->updateOrientation($imgWidth, $imgHeight);
                         } catch (\Exception $exception) {
                             // if we failed, corrupted file might still be created, remove it here
                             unlink($libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png');
