@@ -160,8 +160,8 @@ const mainConfig = Object.assign({}, config, {
       ],
     }),
     new MonacoWebpackPlugin({
-			languages: ['typescript', 'javascript', 'css', 'html']
-		}),
+      languages: ['typescript', 'javascript', 'css', 'html'],
+    }),
   ],
 });
 
@@ -194,7 +194,7 @@ const moduleConfig = Object.assign({}, config, {
           'style-loader',
           'css-loader',
         ],
-      }
+      },
     ],
   },
   plugins: [

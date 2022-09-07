@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2022 Xibo Signage Ltd
@@ -66,13 +67,209 @@ window.forms = {
         }
 
         // Append the property to the target container
-        $(templates.forms[property.type](property))
-          .appendTo($(targetContainer));
+        if (templates.forms.hasOwnProperty(property.type)) {
+          $(templates.forms[property.type](property))
+            .appendTo($(targetContainer));
+        } else {
+          console.error('Form type not found: ' + property.type);
+        }
       }
     }
 
     // Initialise tooltips
     Common.reloadTooltips($(targetContainer));
+  },
+  /**
+   * Initialise the form fields
+   * @param {object} container - Main container
+   */
+  initFields: function(container) {
+    // Code editor
+    $(container).find('.xibo-code-input').each(function(_k, el) {
+      const $textArea = $(el).find('.code-input');
+      const inputValue = $textArea.val();
+      const codeType = $textArea.data('codeType');
+
+      const newEditor =
+        monaco.editor.create($(el).find('.code-input-editor')[0], {
+          value: inputValue,
+          fontSize: 12,
+          theme: 'vs-dark',
+          language: codeType,
+          lineNumbers: 'off',
+          glyphMargin: false,
+          folding: false,
+          lineDecorationsWidth: 0,
+          lineNumbersMinChars: 0,
+          automaticLayout: true,
+          minimap: {
+            enabled: false,
+          },
+        });
+
+      newEditor.onDidChangeModelContent(() => {
+        $textArea.val(newEditor.getValue());
+      });
+    });
+
+    // Date picker - date only
+    $(container).find(
+      '.dateControl.date:not(.datePickerHelper)',
+    ).each(function(_k, el) {
+      if (calendarType == 'Jalali') {
+        initDatePicker(
+          $(el),
+          systemDateFormat,
+          jsDateOnlyFormat,
+          {
+            altFieldFormatter: function(unixTime) {
+              const newDate = moment.unix(unixTime / 1000);
+              newDate.set('hour', 0);
+              newDate.set('minute', 0);
+              newDate.set('second', 0);
+              return newDate.format(systemDateFormat);
+            },
+          },
+        );
+      } else {
+        initDatePicker(
+          $(el),
+          systemDateFormat,
+          jsDateOnlyFormat,
+        );
+      }
+    });
+
+    // Date picker - date and time
+    $(container).find(
+      '.dateControl.dateTime:not(.datePickerHelper)',
+    ).each(function(_k, el) {
+      const enableSeconds = dateFormat.includes('s');
+      const enable24 = !dateFormat.includes('A');
+
+      if (calendarType == 'Jalali') {
+        initDatePicker(
+          $(el),
+          systemDateFormat,
+          jsDateFormat,
+          {
+            timePicker: {
+              enabled: true,
+              second: {
+                enabled: enableSeconds,
+              },
+            },
+          },
+        );
+      } else {
+        initDatePicker(
+          $(el),
+          systemDateFormat,
+          jsDateFormat,
+          {
+            enableTime: true,
+            time_24hr: enable24,
+            enableSeconds: enableSeconds,
+            altFormat: $(el).data('customFormat') ?
+              $(el).data('customFormat') : jsDateFormat,
+          },
+        );
+      }
+    });
+
+    // Date picker - month only
+    $(container).find(
+      '.dateControl.month:not(.datePickerHelper)',
+    ).each(function(_k, el) {
+      if (calendarType == 'Jalali') {
+        initDatePicker(
+          $(el),
+          systemDateFormat,
+          jsDateFormat,
+          {
+            format: $(el).data('customFormat') ?
+              $(el).data('customFormat') : 'MMMM YYYY',
+            viewMode: 'month',
+            dayPicker: {
+              enabled: false,
+            },
+            altFieldFormatter: function(unixTime) {
+              const newDate = moment.unix(unixTime / 1000);
+              newDate.set('date', 1);
+              newDate.set('hour', 0);
+              newDate.set('minute', 0);
+              newDate.set('second', 0);
+
+              return newDate.format(systemDateFormat);
+            },
+          },
+        );
+      } else {
+        initDatePicker(
+          $(el),
+          systemDateFormat,
+          jsDateFormat,
+          {
+            plugins: [new flatpickrMonthSelectPlugin({
+              shorthand: false,
+              dateFormat: systemDateFormat,
+              altFormat: $(el).data('customFormat') ?
+                $(el).data('customFormat') : 'MMMM Y',
+              parseDate: function(datestr, format) {
+                return moment(datestr, format, true).toDate();
+              },
+              formatDate: function(date, format, locale) {
+                return moment(date).format(format);
+              },
+            })],
+          },
+        );
+      }
+    });
+
+    // Date picker - time only
+    $(container).find(
+      '.dateControl.time:not(.datePickerHelper)',
+    ).each(function(_k, el) {
+      const enableSeconds = dateFormat.includes('s');
+
+      if (calendarType == 'Jalali') {
+        initDatePicker(
+          $(el),
+          systemTimeFormat,
+          jsTimeFormat,
+          {
+            onlyTimePicker: true,
+            format: jsTimeFormat,
+            timePicker: {
+              second: {
+                enabled: enableSeconds,
+              },
+            },
+            altFieldFormatter: function(unixTime) {
+              const newDate = moment.unix(unixTime / 1000);
+              newDate.set('second', 0);
+
+              return newDate.format(systemTimeFormat);
+            },
+          },
+        );
+      } else {
+        initDatePicker(
+          $(el),
+          systemTimeFormat,
+          jsTimeFormat,
+          {
+            enableTime: true,
+            noCalendar: true,
+            enableSeconds: enableSeconds,
+            time_24hr: true,
+            altFormat: $(el).data('customFormat') ?
+              $(el).data('customFormat') : jsTimeFormat,
+          },
+        );
+      }
+    });
   },
   /**
      * Handle form field replacements

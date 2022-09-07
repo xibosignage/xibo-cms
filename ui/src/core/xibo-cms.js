@@ -282,151 +282,6 @@ function XiboInitialise(scope) {
         }
     });
 
-    // Date time controls
-    $(scope + ' .datePicker:not(.datePickerHelper)').each(function() {
-        if(calendarType == 'Jalali') {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateOnlyFormat,
-                {
-                    altFieldFormatter: function(unixTime) {
-                        var newDate = moment.unix(unixTime / 1000);
-                        newDate.set('hour', 0);
-                        newDate.set('minute', 0);
-                        newDate.set('second', 0);
-                        return newDate.format(systemDateFormat);
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateOnlyFormat
-            );
-        }
-    });
-
-    $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
-        var enableSeconds = dateFormat.includes('s');
-        var enable24 = !dateFormat.includes('A');
-
-        if(calendarType == 'Jalali') {
-            initDatePicker(
-                $(this),
-                systemDateFormat, 
-                jsDateFormat, 
-                {
-                    timePicker: {
-                        enabled: true,
-                        second: {
-                            enabled: enableSeconds
-                        }
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateFormat,
-                {
-                    enableTime: true,
-                    time_24hr: enable24,
-                    enableSeconds: enableSeconds,
-                    altFormat: jsDateFormat
-                }
-            );
-        }
-    });
-
-    $(scope + ' .dateMonthPicker:not(.datePickerHelper)').each(function() {
-        if(calendarType == 'Jalali') {
-            var linkedFormat = $(this).data().linkFormat;
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateFormat,
-                {
-                    format: "MMMM YYYY",
-                    viewMode: 'month',
-                    dayPicker: {
-                        enabled: false
-                    },
-                    altFieldFormatter: function(unixTime) {
-                        var newDate = moment.unix(unixTime / 1000);
-                        newDate.set('date', 1);
-                        newDate.set('hour', 0);
-                        newDate.set('minute', 0);
-                        newDate.set('second', 0);
-
-                        return newDate.format(systemDateFormat);
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateFormat,
-                {
-                    plugins: [new flatpickrMonthSelectPlugin({
-                        shorthand: false,
-                        dateFormat: systemDateFormat,
-                        altFormat: 'MMMM Y',
-                        parseDate: function(datestr, format) {
-                            return moment(datestr, format, true).toDate();
-                        },
-                        formatDate: function(date, format, locale) {
-                            return moment(date).format(format);
-                        }
-                    })]
-                }
-            );
-        }
-    });
-
-    $(scope + ' .timePicker:not(.datePickerHelper)').each(function() {
-        var enableSeconds = dateFormat.includes('s');
-
-        if(calendarType == 'Jalali') {
-            initDatePicker(
-                $(this),
-                systemTimeFormat,
-                jsTimeFormat,
-                {
-                    onlyTimePicker: true,
-                    format: jsTimeFormat,
-                    timePicker: {
-                        second: {
-                            enabled: enableSeconds
-                        }
-                    },
-                    altFieldFormatter: function(unixTime) {
-                        var newDate = moment.unix(unixTime / 1000);
-                        newDate.set('second', 0);
-
-                        return newDate.format(systemTimeFormat);
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemTimeFormat,
-                jsTimeFormat,
-                {
-                    enableTime: true,
-                    noCalendar: true,
-                    enableSeconds: enableSeconds,
-                    time_24hr: true,
-                    altFormat: jsTimeFormat
-                }
-            );
-        }
-    });
-
     $(scope + " .selectPicker select.form-control").select2({
         dropdownParent: ($(scope).hasClass("modal") ? $(scope) : $("body")),
         templateResult: function(state) {
@@ -1326,32 +1181,13 @@ function XiboInitialise(scope) {
         }, 200);
     });
 
-    // Initialise code field
-    $(scope + " .xibo-code-input").each(function() {
-        const $textArea = $(this).find('.code-input');
-        const inputValue = $textArea.val();
-        const codeType = $textArea.data('codeType');
-        
-        var newEditor = monaco.editor.create($(this).find('.code-input-editor')[0], {
-            value: inputValue,
-            fontSize: 12,
-            theme: 'vs-dark',
-            language: codeType,
-            lineNumbers: 'off',
-            glyphMargin: false,
-            folding: false,
-            lineDecorationsWidth: 0,
-            lineNumbersMinChars: 0,
-            automaticLayout: true,
-            minimap: {
-                enabled: false
-            },
-        });
-    
-        newEditor.onDidChangeModelContent(() => {
-            $textArea.val(newEditor.getValue());
-        });
-    });
+    // Initalise remaining form fields
+    if (forms && typeof forms.initFields === 'function') {
+        // Initialise fields, with scope of body if we don't have a specific scope
+        forms.initFields(
+            (scope === " ") ? "body" : scope,
+        );
+    }
 }
 
 /**
@@ -3327,7 +3163,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
     }
 
     if ($element.data('customFormat')) {
-        baseFormat = $element.data('customFormat');
+        displayFormat = $element.data('customFormat');
     }
 
     var $inputElement = $element;

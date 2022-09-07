@@ -449,6 +449,9 @@ PropertiesPanel.prototype.render = function(element, step) {
     // Call Xibo Init for this form
     XiboInitialise('#' + self.DOMObject.attr('id'));
 
+    // Initialise form elements
+    forms.initFields(self.DOMObject);
+
     // For the layout properties, call background Setup
     // TODO Move method to a common JS file
     if (element.type == 'layout') {

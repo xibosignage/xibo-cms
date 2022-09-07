@@ -47,8 +47,11 @@ class Property implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Test[]  */
     public $visibility = [];
 
-    /** @var string The code type (html/css/javascript/etc) */
-    public $codeType;
+    /** @var string The element variant */
+    public $variant;
+
+    /** @var string The data format */
+    public $format;
 
     /** @var bool Should library refs be permitted in the value? */
     public $allowLibraryRefs = false;
@@ -65,7 +68,8 @@ class Property implements \JsonSerializable
             'id' => $this->id,
             'value' => $this->value,
             'type' => $this->type,
-            'codeType' => $this->codeType,
+            'variant' => $this->variant,
+            'format' => $this->format,
             'title' => $this->title,
             'helpText' => $this->helpText,
             'validation' => $this->validation,
