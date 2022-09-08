@@ -178,6 +178,7 @@ class Connector extends Base
     {
         $params = $this->getSanitizer($request->getParams());
         $token = $params->getString('token');
+        $isDebug = $params->getCheckbox('isDebug');
 
         if (empty($token)) {
             throw new AccessDeniedException();
@@ -196,7 +197,7 @@ class Connector extends Base
         $widget = $this->widgetFactory->getById($tokenEvent->getWidgetId());
 
         // It has been found, so we raise an event here to see if any connector can provide a file for it.
-        $event = new \Xibo\Event\XmdsConnectorFileEvent($widget);
+        $event = new \Xibo\Event\XmdsConnectorFileEvent($widget, $isDebug);
         $this->getDispatcher()->dispatch($event, \Xibo\Event\XmdsConnectorFileEvent::$NAME);
 
         // What now?

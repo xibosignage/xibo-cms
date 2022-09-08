@@ -34,12 +34,12 @@ class XmdsConnectorFileEvent extends Event
     /**
      * @var boolean
      */
-    private $preview;
+    private $isDebug;
 
-    public function __construct($widget, $preview = false)
+    public function __construct($widget, $isDebug = false)
     {
         $this->widget = $widget;
-        $this->preview = $preview;
+        $this->isDebug = $isDebug;
     }
 
     /**
@@ -50,9 +50,9 @@ class XmdsConnectorFileEvent extends Event
         return $this->widget;
     }
 
-    public function isPreview(): bool
+    public function isDebug(): bool
     {
-        return $this->preview;
+        return $this->isDebug;
     }
 
     /**

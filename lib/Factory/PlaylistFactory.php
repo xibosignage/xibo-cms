@@ -176,9 +176,10 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.duration,
                 `playlist`.isDynamic,
                 `playlist`.filterMediaName,
+                `playlist`.filterMediaNameLogicalOperator,
                 `playlist`.filterMediaTags,
                 `playlist`.filterExactTags,
-                `playlist`.filterLogicalOperator,
+                `playlist`.filterMediaTagsLogicalOperator,
                 `playlist`.maxNumberOfItems,
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
@@ -302,7 +303,16 @@ class PlaylistFactory extends BaseFactory
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {
             $terms = explode(',', $parsedFilter->getString('name'));
-            $this->nameFilter('playlist', 'name', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'playlist',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Playlist exact name

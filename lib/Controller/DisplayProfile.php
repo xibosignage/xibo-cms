@@ -154,7 +154,8 @@ class DisplayProfile extends Base
             'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
             'displayProfile' => $parsedQueryParams->getString('displayProfile'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
-            'type' => $parsedQueryParams->getString('type')
+            'type' => $parsedQueryParams->getString('type'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ];
 
         $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];

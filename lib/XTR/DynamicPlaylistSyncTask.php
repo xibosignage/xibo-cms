@@ -130,9 +130,10 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 $mediaIds = [];
                 foreach ($this->mediaFactory->query(null, [
                     'name' => $playlist->filterMediaName,
+                    'logicalOperatorName' => $playlist->filterMediaNameLogicalOperator,
                     'tags' => $playlist->filterMediaTags,
                     'exactTags' => $playlist->filterExactTags,
-                    'logicalOperator' => $playlist->filterLogicalOperator,
+                    'logicalOperator' => $playlist->filterMediaTagsLogicalOperator,
                     'userCheckUserId' => $playlist->getOwnerId(),
                     'start' => 0,
                     'length' => $playlist->maxNumberOfItems

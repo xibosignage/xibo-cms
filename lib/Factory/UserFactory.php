@@ -314,7 +314,16 @@ class UserFactory extends BaseFactory
 
         if ($parsedFilter->getString('userName') != null) {
             $terms = explode(',', $parsedFilter->getString('userName'));
-            $this->nameFilter('user', 'userName', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'user',
+                'userName',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Email Provided

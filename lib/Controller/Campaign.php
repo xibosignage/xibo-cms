@@ -206,6 +206,7 @@ class Campaign extends Base
             'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
             'layoutId' => $parsedParams->getInt('layoutId'),
             'logicalOperator' => $parsedParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];

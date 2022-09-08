@@ -150,7 +150,8 @@ class MenuBoard extends Base
             'userId' => $parsedParams->getInt('userId'),
             'name' => $parsedParams->getString('name'),
             'code' => $parsedParams->getString('code'),
-            'folderId' => $parsedParams->getInt('folderId')
+            'folderId' => $parsedParams->getInt('folderId'),
+            'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
         ];
 
         $menuBoards = $this->menuBoardFactory->query(

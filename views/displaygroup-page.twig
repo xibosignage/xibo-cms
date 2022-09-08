@@ -45,19 +45,8 @@
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.input("displayGroupId", title) }}
 
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="" for="displayGroup" accesskey="">{% trans "Name" %}</label>
-                                <div>
-                                    <div class="input-group">
-                                        <input class="form-control" name="displayGroup" type="text" id="displayGroup" value="">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.inputNameGrid('displayGroup', title) }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -207,6 +196,7 @@
         var useRegexForName;
         var exactTags;
         var logicalOperator;
+        var logicalOperatorName;
 
         function setDeleteMultiSelectFormOpen(dialog) {
             $(dialog).find('.save-button').prop('disabled', false);
@@ -242,7 +232,7 @@
                 displayGroupQueryDynamicMembers(dialog);
             }, 500));
 
-            $(dialog).find("input[name=dynamicCriteriaTags], input[name=exactTags], select[name=logicalOperator]").change(function() {
+            $(dialog).find("input[name=dynamicCriteriaTags], input[name=exactTags], select[name=logicalOperator], select[name=logicalOperatorName]").change(function() {
                 displayGroupQueryDynamicMembers(dialog);
             });
 
@@ -261,6 +251,7 @@
                 useRegexForName = $(dialog).find("input[name=useRegexForName]").val();
                 exactTags = $(dialog).find("input[name=exactTags]").is(':checked');
                 logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
+                logicalOperatorName = $(dialog).find("select[name=logicalOperatorName]").val();
 
                 if (criteria === "" && criteriaTag === "") {
                     if (displayTable != null) {
@@ -285,7 +276,17 @@
                         ajax: {
                             "url": "{{ url_for("display.search") }}",
                             "data": function (d) {
-                                $.extend(d, {display: criteria, tags: criteriaTag, useRegexForName: useRegexForName, exactTags: exactTags, logicalOperator: logicalOperator});
+                                $.extend(
+                                  d,
+                                  {
+                                    display: criteria,
+                                    tags: criteriaTag,
+                                    useRegexForName: useRegexForName,
+                                    exactTags: exactTags,
+                                    logicalOperator: logicalOperator,
+                                    logicalOperatorName: logicalOperatorName
+                                  }
+                                );
                             }
                         },
                         "columns": [

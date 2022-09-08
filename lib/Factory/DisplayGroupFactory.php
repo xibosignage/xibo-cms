@@ -290,9 +290,10 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.description,
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
+                `displaygroup`.dynamicCriteriaLogicalOperator,
                 `displaygroup`.dynamicCriteriaTags,
                 `displaygroup`.dynamicCriteriaExactTags,
-                `displaygroup`.dynamicCriteriaLogicalOperator,
+                `displaygroup`.dynamicCriteriaTagsLogicalOperator,
                 `displaygroup`.bandwidthLimit,
                 `displaygroup`.createdDt,
                 `displaygroup`.modifiedDt,
@@ -401,7 +402,16 @@ class DisplayGroupFactory extends BaseFactory
         // Filter by DisplayGroup Name?
         if ($parsedBody->getString('displayGroup') != null) {
             $terms = explode(',', $parsedBody->getString('displayGroup'));
-            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params, ($parsedBody->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedBody->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'displaygroup',
+                'displayGroup',
+                $terms,
+                $body,
+                $params,
+                ($parsedBody->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Tags
