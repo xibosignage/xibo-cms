@@ -244,6 +244,8 @@
                 }
             });
 
+            initFolderPanel(dialog, true);
+
             // Bind to the add form submit
             $(".UserForm").validate({
                 submitHandler: function (form) {
@@ -287,7 +289,7 @@
 
             // Init the folder panel
             {% if currentUser.featureEnabled("folder.view") %}
-            initFolderPanel(dialog);
+            initFolderPanel(dialog, false, true);
             {% endif %}
 
             var navListItems = $(dialog).find('div.setup-panel div a'),
@@ -352,7 +354,7 @@
                                 if (xhr.success && xhr.id) {
                                     {% if currentUser.featureEnabled("folder.view") %}
                                     // Submit the folder ownerships
-                                    var selected = $(dialog).find("#container-folder-tree").jstree("get_selected");
+                                    var selected = $(dialog).find("#container-form-folder-tree").jstree("get_selected");
                                     var groupIds = {};
                                     groupIds[xhr.data.groupId] = {
                                         "view": 1,
@@ -401,27 +403,56 @@
                     }));
         }
 
-        function initFolderPanel(dialog) {
-            var $container = $(dialog).find("#container-folder-tree");
-
-            $container.jstree({
-                "plugins": ["checkbox", "sort"],
-                "themes" : {
-                    "responsive" : true
+        function initFolderPanel(dialog, isHomeOnSelect = false, isHomeContext = false) {
+            var $container = $(dialog).find('#container-form-folder-tree');
+            var settings = {
+                plugins: ['sort'],
+                themes: {
+                    responsive: true,
                 },
-                "core": {
-                    "data": {
-                        "url": foldersUrl
+                core: {
+                    data: {
+                        url: foldersUrl,
                     }
                 },
-                "checkbox" : {
-                    "three_state" : false
+                checkbox: {
+                    three_state: false,
                 },
-            }).on("ready.jstree", function(e, data) {
-                $(this).jstree().disable_checkbox(1);
-                $(this).jstree().disable_node(1);
-                $(this).jstree("open_all");
+            }
+            if (isHomeContext) {
+                settings.plugins.push('contextmenu');
+                settings.contextmenu = {};
+                settings.contextmenu.items = function($node) {
+                    return {
+                        home: {
+                            separator_before: false,
+                            separator_after: false,
+                            label: translations.folderTreeSetAsHome,
+                            action: function() {
+                                $(dialog).find('input[name=homeFolderId]').val($node.id);
+                            }
+                        }
+                    }
+                };
+            }
+
+            if (!isHomeOnSelect) {
+                settings.plugins.push('checkbox');
+            }
+
+            $container.jstree(settings).on('ready.jstree', function(e, data) {
+                if (!isHomeOnSelect) {
+                    $(this).jstree().disable_checkbox(1);
+                    $(this).jstree().disable_node(1);
+                }
+                $(this).jstree('open_all');
             });
+
+            if (isHomeOnSelect) {
+                $container.on('changed.jstree', function (e, data) {
+                    $(dialog).find('input[name=homeFolderId]').val(data.node.id);
+                });
+            }
         }
     </script>
 {% endblock %}

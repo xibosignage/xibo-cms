@@ -81,59 +81,25 @@ class Folder extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response, $folderId = null)
     {
-        $parsedParams = $this->getSanitizer($request->getParams());
+        // Should we return information for a specific folder?
+        if ($folderId !== null) {
+            $folder = $this->folderFactory->getById($folderId);
 
-        // Do we want a flat list or a tree?
-        if (!$parsedParams->hasParam('isShowTree') || $parsedParams->getCheckbox('isShowTree')) {
+            // TODO: decorate with some extra info.
+            $this->decorateWithButtons($folder);
+
+            return $response->withJson($folder);
+        } else {
             // Show a tree view of all folders.
             $rootFolder = $this->folderFactory->getById(1);
             $rootFolder->a_attr['title'] = __('Right click a Folder for further Options');
             $this->buildTreeView($rootFolder);
             return $response->withJson([$rootFolder]);
         }
-
-        // Not a tree view.
-        $folders = $this->folderFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter([
-            'folderId' => $parsedParams->getInt('folderId'),
-            'folderName' => $parsedParams->getString('folderName'),
-            'isRoot' => $parsedParams->getInt('isRoot'),
-            'includeRoot' => 1,
-            'isIncludeHomeFolderCount' => 1
-        ], $parsedParams));
-
-        if (!$this->isApi($request)) {
-            foreach ($folders as $folder) {
-                // Dynamic properties
-                $folder->homeFolderCount = $folder->getUnmatchedProperty('homeFolderCount', 0);
-
-                // Buttons.
-                if ($this->getUser()->checkEditable($folder)) {
-                    $folder->buttons[] = [
-                        'id' => 'folder_button_edit',
-                        'url' => $this->urlFor($request, 'folders.edit.form', ['id' => $folder->id]),
-                        'text' => __('Edit')
-                    ];
-                }
-
-                if ($this->getUser()->checkDeleteable($folder)) {
-                    $folder->buttons[] = [
-                        'id' => 'folder_button_delete',
-                        'url' => $this->urlFor($request, 'folders.delete.form', ['id' => $folder->id]),
-                        'text' => __('Delete')
-                    ];
-                }
-            }
-        }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->folderFactory->countLast();
-        $this->getState()->setData($folders);
-        return $this->render($request, $response);
     }
 
     /**
@@ -364,27 +330,30 @@ class Folder extends Base
      */
     public function getContextMenuButtons(Request $request, Response $response, $folderId)
     {
-        $user = $this->getUser();
         $folder = $this->folderFactory->getById($folderId);
+        $this->decorateWithButtons($folder);
 
-        $buttons = [];
+        return $response->withJson($folder->buttons);
+    }
+
+    private function decorateWithButtons($folder)
+    {
+        $user = $this->getUser();
 
         if ($user->featureEnabled('folder.add') &&  $user->checkViewable($folder)) {
-            $buttons['create'] = true;
+            $folder->buttons['create'] = true;
         }
 
         if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder) && !$folder->isRoot()) {
-            $buttons['modify'] = true;
+            $folder->buttons['modify'] = true;
         }
 
         if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder) && !$folder->isRoot()) {
-            $buttons['delete'] = true;
+            $folder->buttons['delete'] = true;
         }
 
         if ($user->isSuperAdmin() && !$folder->isRoot()) {
-            $buttons['share'] = true;
+            $folder->buttons['share'] = true;
         }
-
-        return $response->withJson($buttons);
     }
 }

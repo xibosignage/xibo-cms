@@ -25,55 +25,16 @@
 
 {% block title %}{{ "Folders"|trans }} | {% endblock %}
 
-{% block actionMenu %}
-    <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Folder" %}" href="{{ url_for("folders.add.form") }}">
-            <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Folder" %}
-        </button>
-    </div>
-{% endblock %}
-
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Folders" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="folderView">
-                <div class="XiboFilter card mb-3 bg-light">
-                    <div class="FilterDiv card-body" id="Filter">
-                        <form class="form-inline">
-                            {% set title %}{% trans "ID" %}{% endset %}
-                            {{ inline.number("folderId", title) }}
-
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="" for="folder" accesskey="">{% trans "Name" %}</label>
-                                <div>
-                                    <div class="input-group">
-                                        <input class="form-control" name="folder" type="text" id="folder" value="">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div id="container-folder-tree"></div>
                 </div>
-                <div class="XiboData card pt-3">
-                    <table id="folders" class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>{% trans "ID" %}</th>
-                            <th>{% trans "Name" %}</th>
-                            <th>{% trans "Used as home?" %}</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
+                <div class="col-md-8">
+                    <div id="container-folder-info"></div>
                 </div>
             </div>
         </div>
@@ -82,38 +43,56 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $('#folders').DataTable({
-            language: dataTablesLanguage,
-            dom: dataTablesTemplate,
-            serverSide: true,
-            stateSave: true,
-            stateDuration: 0,
-            responsive: true,
-            stateLoadCallback: dataTableStateLoadCallback,
-            stateSaveCallback: dataTableStateSaveCallback,
-            filter: false,
-            searchDelay: 3000,
-            order: [[ 1, 'asc']],
-            ajax: {
-                url: '{{ url_for("folders.search") }}?isShowTree=0',
-                data: function(d) {
-                    $.extend(d, $('#folders').closest('.XiboGrid').find('.FilterDiv form').serializeObject());
-                }
-            },
-            columns: [
-                { data: 'id', responsivePriority: 2 },
-                { data: 'text', responsivePriority: 1 },
-                { data: 'homeFolderCount', responsivePriority: 3 },
-                {
-                    orderable: false,
-                    responsivePriority: 1,
-                    data: dataTableButtonsColumn
-                }
-            ]
-        });
+        $(function() {
+            var foldersInputPanelTemplate = Handlebars.compile($('#folders-info-panel').html());
+            var $folderInfo = $('#container-folder-info');
 
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#folders_wrapper').find('.dataTables_buttons'), false);
+            $('#container-folder-tree').jstree({
+                plugins: ['unique', 'sort', 'themes'],
+                core: {
+                  data: {
+                      url: '{{ url_for("folders.search") }}',
+                  }
+                },
+                themes: {
+                    responsive: true
+                },
+            }).bind('loaded.jstree', function (event, data) {
+                $(this).jstree('open_all');
+            }).bind('changed.jstree', function (e, data) {
+                $.ajax({
+                    method: 'GET',
+                    url: '{{ url_for("folders.search") }}/' + data.node.id,
+                    success: function(response) {
+                        if (response) {
+                            $folderInfo.html(foldersInputPanelTemplate(response));
+                        } else {
+                            toastr.error(response.message || '{{ "Unknown error"|trans }}');
+                        }
+                    },
+                    error: function() {
+                        toastr.error(response.message || '{{ "Unknown error"|trans }}');
+                    },
+                })
+            });
+        });
     </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% verbatim %}
+    <script type="text/x-handlebars-template" id="folders-info-panel">
+        <div class="card p-3 mb-0" data-folder-id="{{ id }}">
+            <div class="card-body">
+                <h5 class="card-title">{% endverbatim %}{{ "Folder info"|trans }}{% verbatim %}</h5>
+                <p>{{text}}</p>
+            </div>
+            <div class="card-footer p-0 m-0">
+
+            </div>
+        </div>
+    </script>
+    {% endverbatim %}
 {% endblock %}
