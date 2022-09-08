@@ -232,7 +232,7 @@ class FolderFactory extends BaseFactory
 
         foreach ($results as $row) {
             $folder->usage[] = [
-                'type' => $row['type'],
+                'type' => __($row['type']),
                 'count' => intval($row['cnt'] ?? 0),
                 'sizeBytes' => intval($row['size'] ?? 0),
                 'size' => ByteFormatter::format(intval($row['size'] ?? 0)),
