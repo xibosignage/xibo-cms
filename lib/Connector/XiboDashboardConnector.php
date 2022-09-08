@@ -426,17 +426,6 @@ class XiboDashboardConnector implements ConnectorInterface
                 'X-API-KEY' => $this->getSetting('apiKey')
             ];
 
-            // Optional headers
-            $lang = $widget->getOptionValue('lang', null);
-            if ($lang !== null) {
-                $headers['X-LANG'] = $lang;
-            }
-
-            $tz = $widget->getOptionValue('tz', null);
-            if ($tz !== null) {
-                $headers['X-TZ'] = $tz;
-            }
-
             $response = $this->getClient()->get($this->getServiceUrl() . '/services/' . $type, [
                 'headers' => $headers,
                 'query' => [
