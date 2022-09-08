@@ -88,11 +88,37 @@
                 <h5 class="card-title">{% endverbatim %}{{ "Folder info"|trans }}{% verbatim %}</h5>
                 <p>{{text}}</p>
                 <ul>
-                    <li>{% endverbatim %}{{ "Used as a home folder"|trans }}{% verbatim %}: {{homeFolderCount}}</li>
+                    <li>{% endverbatim %}{{ "Number of times used as a home folder:"|trans }}{% verbatim %} {{homeFolderCount}}</li>
                 </ul>
-            </div>
-            <div class="card-footer p-0 m-0">
-
+                <p>{% endverbatim %}{{ "Permissions:"|trans }}{% verbatim %}</p>
+                {{#unless sharing}}
+                {% endverbatim %}{{ "Not shared"|trans }}{% verbatim %}
+                {{/unless}}
+                <div class="folder-info-sharing">
+                    {{#each sharing}}
+                    <li class="badge {{#if isGroup}}badge-info{{else}}badge-success{{/if}}"><span>{{name}}</span></li>
+                    {{/each}}
+                </div>
+                <div class="folder-info-usage mt-5">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% endverbatim %}{{ "Section"|trans }}{% verbatim %}</th>
+                                <th>{% endverbatim %}{{ "Number of items"|trans }}{% verbatim %}</th>
+                                <th>{% endverbatim %}{{ "Size"|trans }}{% verbatim %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each usage}}
+                                <tr>
+                                    <td>{{type}}</td>
+                                    <td>{{count}}</td>
+                                    <td>{{size}}</td>
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </script>

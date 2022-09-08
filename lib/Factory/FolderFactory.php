@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Folder;
 use Xibo\Entity\User;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Support\Exception\NotFoundException;
 
 class FolderFactory extends BaseFactory
@@ -179,9 +180,63 @@ class FolderFactory extends BaseFactory
              WHERE `user`.homeFolderId = :folderId
                 AND `user`.retired = 0
         ', [
-            'folderId' => $folder->id
+            'folderId' => $folder->id,
         ]);
 
-        $folder->homeFolderCount = $results[0]['cnt'] ?? 0;
+        $folder->homeFolderCount = intval($results[0]['cnt'] ?? 0);
+    }
+
+    public function decorateWithSharing(Folder $folder)
+    {
+        $results = $this->getStore()->select('
+            SELECT `group`.group,
+                   `group`.isUserSpecific
+              FROM `permission`
+                INNER JOIN `permissionentity`
+                ON `permissionentity`.entityId = permission.entityId
+                INNER JOIN `group`
+                ON `group`.groupId = `permission`.groupId
+             WHERE entity = :permissionEntity
+                AND objectId = :folderId
+                AND `view` = 1
+            ORDER BY `group`.isUserSpecific
+        ', [
+            'folderId' => $folder->id,
+            'permissionEntity' => 'Xibo\Entity\Folder',
+        ]);
+
+        $folder->sharing = [];
+        foreach ($results as $row) {
+            $folder->sharing[] = [
+                'name' => $row['group'],
+                'isGroup' => intval($row['isUserSpecific']) !== 1,
+            ];
+        }
+    }
+
+    public function decorateWithUsage(Folder $folder)
+    {
+        $folder->usage = [];
+
+        // TODO: add other types.
+        $results = $this->getStore()->select('
+            SELECT \'Library\' AS `type`,
+                COUNT(mediaId) AS cnt,
+                SUM(fileSize) AS `size`
+              FROM media
+             WHERE folderId = :folderId
+                AND moduleSystemFile = 0
+        ', [
+            'folderId' => $folder->id,
+        ]);
+
+        foreach ($results as $row) {
+            $folder->usage[] = [
+                'type' => $row['type'],
+                'count' => intval($row['cnt'] ?? 0),
+                'sizeBytes' => intval($row['size'] ?? 0),
+                'size' => ByteFormatter::format(intval($row['size'] ?? 0)),
+            ];
+        }
     }
 }

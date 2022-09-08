@@ -34,8 +34,11 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * @package Xibo\Entity
  * @SWG\Definition()
  *
- * @property $a_attr
- * @property $li_attr
+ * @property string $a_attr
+ * @property string $li_attr
+ * @property int $homeFolderCount How many times the folder is used as a home folder, optionally decorated by Folder Factory
+ * @property array $sharing Sharing information, optionally decorated by Folder Factory
+ * @property array $usage Usage information, optionally decorated by Folder Factory
  */
 class Folder
 {

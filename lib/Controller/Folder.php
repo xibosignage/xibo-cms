@@ -91,6 +91,8 @@ class Folder extends Base
 
             $this->decorateWithButtons($folder);
             $this->folderFactory->decorateWithHomeFolderCount($folder);
+            $this->folderFactory->decorateWithSharing($folder);
+            $this->folderFactory->decorateWithUsage($folder);
 
             return $response->withJson($folder);
         } else {
