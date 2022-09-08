@@ -10,6 +10,7 @@ window.templates = {
     code: require('./src/templates/forms/inputs/code.hbs'),
     message: require('./src/templates/forms/inputs/message.hbs'),
     hidden: require('./src/templates/forms/inputs/hidden.hbs'),
+    date: require('./src/templates/forms/inputs/date.hbs'),
     // More to be added
   },
 };

@@ -30,3 +30,16 @@
         left: 0 !important;
     }
 }
+
+/* Data input */
+.date-input-group {
+
+    .input-group {
+        & > .form-control:not([type="hidden"]) {
+            border-top-left-radius: 0.25rem;
+            border-bottom-left-radius: 0.25rem;
+            background-color: white;
+            cursor: pointer;
+        }
+    }
+}
