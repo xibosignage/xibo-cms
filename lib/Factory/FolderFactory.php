@@ -114,16 +114,6 @@ class FolderFactory extends BaseFactory
             `permissionsFolderId`
         ';
 
-        if ($sanitizedFilter->getInt('isIncludeHomeFolderCount') === 1) {
-            $select .= '
-                , (SELECT COUNT(*) AS cnt
-                  FROM `user`
-                 WHERE `user`.homeFolderId = `folder`.folderId
-                    AND `user`.retired = 0
-                ) AS homeFolderCount
-            ';
-        }
-
         $body = '
           FROM `folder`
          WHERE 1 = 1 ';
@@ -179,5 +169,19 @@ class FolderFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    public function decorateWithHomeFolderCount(Folder $folder)
+    {
+        $results = $this->getStore()->select('
+            SELECT COUNT(*) AS cnt
+              FROM `user`
+             WHERE `user`.homeFolderId = :folderId
+                AND `user`.retired = 0
+        ', [
+            'folderId' => $folder->id
+        ]);
+
+        $folder->homeFolderCount = $results[0]['cnt'] ?? 0;
     }
 }

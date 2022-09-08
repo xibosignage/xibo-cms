@@ -3433,7 +3433,7 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, id, isForm, ttl)
+function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null)
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
@@ -3601,6 +3601,10 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             }
+
+            if (onReady && onReady instanceof Function) {
+                onReady($(this).jstree(true));
+            }
         });
 
         $(container).on("rename_node.jstree", function (e, data) {
@@ -3712,6 +3716,10 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 if ($('#selectedFormFolder').length) {
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
                 }
+            }
+
+            if (onSelected && onSelected instanceof Function) {
+                onSelected(data);
             }
         });
 

@@ -89,8 +89,8 @@ class Folder extends Base
         if ($folderId !== null) {
             $folder = $this->folderFactory->getById($folderId);
 
-            // TODO: decorate with some extra info.
             $this->decorateWithButtons($folder);
+            $this->folderFactory->decorateWithHomeFolderCount($folder);
 
             return $response->withJson($folder);
         } else {
