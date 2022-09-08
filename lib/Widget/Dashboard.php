@@ -51,8 +51,6 @@ class Dashboard extends ModuleWidget
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('type', $sanitizedParams->getString('type'));
-        $this->setOption('lang', $sanitizedParams->getString('lang'));
-        $this->setOption('tz', $sanitizedParams->getString('tz'));
 
         // URL
         $url = $sanitizedParams->getString('url');
@@ -94,36 +92,16 @@ class Dashboard extends ModuleWidget
             return parent::preview($width, $height, $scaleOverride);
         }
 
-        // If we're a preview, emit an event to get the image data
-        $this->getLog()->debug('Emitting event for Connector File');
-        $event = new XmdsConnectorFileEvent($this->widget, true);
-        $this->getDispatcher()->dispatch($event, XmdsConnectorFileEvent::$NAME);
 
-        // Loader spinner
-        $isSpinner = true;
-        $url = null;
+        if ($this->isValid() === self::$STATUS_VALID) {
+            $widthPx = $width . 'px';
+            $heightPx = $height . 'px';
 
-        // Get a real response if we can.
-        $response = $event->getResponse();
-        if ($response->getStatusCode() < 300) {
-            // Use the response as the URL.
-            $body = $response->getBody();
-            if ($body->isSeekable()) {
-                $body->rewind();
-            }
-            $body = $body->getContents();
-            if (!empty($body)) {
-                $isSpinner = false;
-                $url = 'data:' . ($response->getHeader('Content-Type')[0] ?? 'image/png')
-                    . ';base64,' . base64_encode($body);
-            }
-        }
+            $url = $this->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
-        // Show the image - scaled to the aspect ratio of this region (get from GET)
-        if ($isSpinner) {
-            return '<img id="dashboard" src="' . $this->getSpinner() . '" style="display:block;margin-left: auto;margin-right: auto;margin-top: 50px;"/>';
+            return '<iframe scrolling="no" src="' . $url . '?preview=1&debug=1" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
         } else {
-            return '<img id="dashboard" src="' . $url . '" width="' . $width . 'px" height=' . $height . 'px" />';
+            return '<img id="dashboard" src="' . $this->getSpinner() . '" style="display:block;margin-left: auto;margin-right: auto;margin-top: 50px;"/>';
         }
     }
 
@@ -136,6 +114,7 @@ class Dashboard extends ModuleWidget
         $event->setTtl($this->getCacheDuration() * 2);
         $this->getDispatcher()->dispatch($event, XmdsConnectorTokenEvent::$NAME);
         $token = $event->getToken();
+
         if (empty($token)) {
             throw new ConfigurationException(__('No token returned'));
         }
@@ -179,7 +158,8 @@ class Dashboard extends ModuleWidget
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
                 'url' => $url,
-                'interval' => $this->getOption('updateInterval', 60)
+                'interval' => $this->getOption('updateInterval', 60),
+                'isPreview' => $this->isPreview()
             ])
             ->appendJavaScript('
                 var interval;
@@ -208,6 +188,16 @@ class Dashboard extends ModuleWidget
                     }
                     
                     if (options.url) {
+                        if (options.isPreview) {
+                            var queryParams = new URLSearchParams(window.location.search)
+                            if(queryParams.has("debug")) {
+                                var debug = queryParams.get("debug")
+                                if (debug == 1) {
+                                    options.url = options.url.concat("&isDebug=1")
+                                }
+                            }
+                        }
+                        
                         image.src = options.url;
                     }
                 }

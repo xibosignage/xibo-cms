@@ -177,6 +177,7 @@ class DataSet extends Base
             'code' => $sanitizedParams->getString('code'),
             'userId' => $sanitizedParams->getInt('userId'),
             'folderId' => $sanitizedParams->getInt('folderId'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ];
 
         $dataSets = $this->dataSetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));

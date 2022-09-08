@@ -366,7 +366,16 @@ class DisplayProfileFactory extends BaseFactory
             // Filter by DisplayProfile Name?
             if ($parsedFilter->getString('displayProfile') != null) {
                 $terms = explode(',', $parsedFilter->getString('displayProfile'));
-                $this->nameFilter('displayprofile', 'name', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+                $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+                $this->nameFilter(
+                    'displayprofile',
+                    'name',
+                    $terms,
+                    $body,
+                    $params,
+                    ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                    $logicalOperator
+                );
             }
 
             if ($parsedFilter->getString('type') != null) {

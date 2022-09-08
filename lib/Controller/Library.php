@@ -557,7 +557,8 @@ class Library extends Base
             'layoutId' => $parsedQueryParams->getInt('layoutId'),
             'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0,
             'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
-            'logicalOperator' => $parsedQueryParams->getString('logicalOperator')
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ], $parsedQueryParams));
 
         // Add some additional row content

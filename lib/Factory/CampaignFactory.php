@@ -262,7 +262,16 @@ class CampaignFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('campaign', 'Campaign', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'campaign',
+                'Campaign',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Exclude templates by default
