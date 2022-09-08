@@ -432,7 +432,7 @@ class XiboDashboardConnector implements ConnectorInterface
                     'credentialId' => $credentials['id'],
                     'url' => $widget->getOptionValue('url', ''),
                     'interval' => $widget->getOptionValue('updateInterval', 60) * 60,
-                    'debug' => $event->isPreview()
+                    'debug' => $event->isDebug()
                 ]
             ]);
 
