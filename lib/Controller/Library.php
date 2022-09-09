@@ -2603,19 +2603,15 @@ class Library extends Base
     {
         $params = $this->getSanitizer($request->getParams());
         $items = $params->getArray('items');
-        $folderId = $params->getInt('folderId');
-        if (empty($dataSet->folderId)) {
-            $dataSet->folderId = $this->getUser()->homeFolderId;
-        }
 
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($folderId);
-            $permissionsFolderId = ($folder->permissionsFolderId == null)
-                ? $folder->id
-                : $folder->permissionsFolderId;
-        } else {
-            $permissionsFolderId = 1;
+        // Folders
+        $folderId = $params->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
         }
+        $folder = $this->folderFactory->getById($folderId, 0);
+
+        // Stats
         $enableStat = $params->getString('enableStat', [
             'default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')
         ]);
@@ -2666,8 +2662,8 @@ class Library extends Base
                             'fileType' => strtolower($module->getModuleType()),
                             'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->determineDuration(),
                             'enableStat' => $enableStat,
-                            'folderId' => $folderId,
-                            'permissionsFolderId' => $permissionsFolderId
+                            'folderId' => $folder->getId(),
+                            'permissionsFolderId' => $folder->permissionsFolderId
                         ]
                     );
                 } else {

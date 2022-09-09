@@ -1069,7 +1069,7 @@ class User implements \JsonSerializable, UserEntityInterface
                 }
             }
 
-            // Always have our home folder with view permissions.
+            // Always have our home folder with full permissions.
             $this->getLog()->debug('Adding homeFolderId ' . $this->homeFolderId . ' to view permissions');
             if (!array_key_exists($this->homeFolderId, $this->permissionCache[$entity])) {
                 $this->permissionCache[$entity][$this->homeFolderId] = $this->permissionFactory->createEmpty();
