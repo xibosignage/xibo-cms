@@ -322,6 +322,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
                 $user->userName = 'phpunit';
                 $user->libraryQuota = 0;
                 $user->homePageId = 'statusdashboard.view';
+                $user->homeFolderId = 1;
                 $user->isSystemNotification = 1;
                 $user->setNewPassword(\Xibo\Helper\Random::generateString());
                 $user->save();
