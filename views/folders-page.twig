@@ -90,16 +90,19 @@
                 <ul>
                     <li>{% endverbatim %}{{ "Number of times used as a home folder:"|trans }}{% verbatim %} {{homeFolderCount}}</li>
                 </ul>
-                <p>{% endverbatim %}{{ "Permissions:"|trans }}{% verbatim %}</p>
-                {{#unless sharing}}
-                {% endverbatim %}{{ "Not shared"|trans }}{% verbatim %}
-                {{/unless}}
                 <div class="folder-info-sharing">
-                    {{#each sharing}}
-                    <li class="badge {{#if isGroup}}badge-info{{else}}badge-success{{/if}}"><span>{{name}}</span></li>
-                    {{/each}}
+                    <h5>{% endverbatim %}{{ "Shared with:"|trans }}{% verbatim %}</h5>
+                    {{#if sharing}}
+                        {{#each sharing}}
+                        <li class="badge {{#if isGroup}}badge-info{{else}}badge-success{{/if}}"><span>{{name}}</span></li>
+                        {{/each}}
+                    {{else}}
+                        {% endverbatim %}{{ "Not shared"|trans }}{% verbatim %}
+                    {{/if}}
                 </div>
                 <div class="folder-info-usage mt-5">
+                    <h5>{% endverbatim %}{{ "Contents:"|trans }}{% verbatim %}</h5>
+                    {{#if usage}}
                     <table class="table table-striped">
                         <thead>
                             <tr>
@@ -118,6 +121,9 @@
                             {{/each}}
                         </tbody>
                     </table>
+                    {{else}}
+                    {% endverbatim %}{{ "Empty folder"|trans }}{% verbatim %}
+                    {{/if}}
                 </div>
             </div>
         </div>

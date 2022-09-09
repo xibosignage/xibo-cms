@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -603,15 +603,18 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->create($sanitizedParams->getString('name'), $this->getUser()->getId());
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
-        $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($playlist->folderId);
-            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-        } else {
-            $playlist->permissionsFolderId = 1;
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
         }
 
+        $folder = $this->folderFactory->getById($folderId, 0);
+        $playlist->folderId = $folder->id;
+        $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
+
+        // Tags
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
         }

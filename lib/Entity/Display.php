@@ -956,9 +956,10 @@ class Display implements \JsonSerializable
             }
 
             // If the folderId has changed, we should check this user has permissions to the new folderId
+            // it shouldn't ever be null, but just in case.
             $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
             if ($this->hasPropertyChanged('folderId')) {
-                $folder = $this->folderFactory->getById($displayGroup->folderId);
+                $folder = $this->folderFactory->getById($displayGroup->folderId, 0);
                 // We have permission, so assert the new folder's permission id
                 $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
             }

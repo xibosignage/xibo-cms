@@ -340,7 +340,12 @@ class Layout extends Base
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
-        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));

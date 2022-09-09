@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -69,7 +69,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = $params->getCheckbox('importTags', ['default' => 0]);
             $useExistingDataSets = $params->getCheckbox('useExistingDataSets', ['default' => 0]);
             $importDataSetData = $params->getCheckbox('importDataSetData', ['default' => 0]);
-            $folderId = $params->getInt('folderId', ['default' => 1]);
+            $folderId = $params->getInt('folderId');
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(

@@ -487,7 +487,10 @@ class Template extends Base
         $resolutionId = $sanitizedParams->getInt('resolutionId');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
-        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+        $folderId = $sanitizedParams->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         // Tags
         if ($this->getUser()->featureEnabled('tag.tagging')) {

@@ -3433,7 +3433,7 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null)
+function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [])
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
@@ -3469,7 +3469,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"],
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"] + plugins,
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3530,6 +3530,10 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                                         XiboFormRender(permissionsUrl.replace(":entity", "form/Folder/") + $node.id);
                                     }
                                 }
+                            }
+
+                            if (onBuildContextMenu !== null && onBuildContextMenu instanceof Function) {
+                                items = onBuildContextMenu(items);
                             }
                         },
                         complete: function (data) {
@@ -3603,7 +3607,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
             }
 
             if (onReady && onReady instanceof Function) {
-                onReady($(this).jstree(true));
+                onReady($(container).jstree(true), $(container));
             }
         });
 
