@@ -359,7 +359,7 @@ class Folder extends Base
         if ($featureModify
             && $user->checkEditable($folder)
             && !$folder->isRoot()
-            && $folder->getId() !== $this->getUser()->homeFolderId
+            && ($this->getUser()->isSuperAdmin() || $folder->getId() !== $this->getUser()->homeFolderId)
         ) {
             $folder->buttons['modify'] = true;
         }
@@ -367,7 +367,7 @@ class Folder extends Base
         if ($featureModify
             && $user->checkDeleteable($folder)
             && !$folder->isRoot()
-            && $folder->getId() !== $this->getUser()->homeFolderId
+            && ($this->getUser()->isSuperAdmin() || $folder->getId() !== $this->getUser()->homeFolderId)
         ) {
             $folder->buttons['delete'] = true;
         }

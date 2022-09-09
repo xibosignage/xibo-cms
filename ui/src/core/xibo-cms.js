@@ -3469,7 +3469,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"] + plugins,
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"].concat(plugins),
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3533,7 +3533,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                             }
 
                             if (onBuildContextMenu !== null && onBuildContextMenu instanceof Function) {
-                                items = onBuildContextMenu(items);
+                                items = onBuildContextMenu($node, items);
                             }
                         },
                         complete: function (data) {

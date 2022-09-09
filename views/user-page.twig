@@ -393,55 +393,44 @@
         }
 
         function initFolderPanel(dialog, isHomeOnSelect = false, isHomeContext = false) {
-            var $container = $(dialog).find('#container-form-folder-tree');
-            var settings = {
-                plugins: ['sort'],
-                themes: {
-                    responsive: true,
+            var plugins = [];
+
+            if (!isHomeOnSelect) {
+                plugins.push('checkbox');
+            }
+
+            initJsTreeAjax(
+                '#container-form-folder-tree',
+                'user-add_edit-form',
+                true,
+                600,
+                function(tree, $container) {
+                    if (!isHomeOnSelect) {
+                        tree.disable_checkbox(1);
+                        tree.disable_node(1);
+                    }
+                    $container.jstree('open_all');
                 },
-                core: {
-                    data: {
-                        url: foldersUrl,
+                function(data) {
+                    if (isHomeOnSelect && data.action === 'select_node') {
+                        $(dialog).find('input[name=homeFolderId]').val(data.node.id);
                     }
                 },
-                checkbox: {
-                    three_state: false,
-                },
-            }
-            if (isHomeContext) {
-                settings.plugins.push('contextmenu');
-                settings.contextmenu = {};
-                settings.contextmenu.items = function($node) {
-                    return {
-                        home: {
+                function($node, items) {
+                    if (isHomeContext) {
+                        items['home'] = {
                             separator_before: false,
                             separator_after: false,
                             label: translations.folderTreeSetAsHome,
-                            action: function() {
+                            action: function () {
                                 $(dialog).find('input[name=homeFolderId]').val($node.id);
                             }
                         }
                     }
-                };
-            }
-
-            if (!isHomeOnSelect) {
-                settings.plugins.push('checkbox');
-            }
-
-            $container.jstree(settings).on('ready.jstree', function(e, data) {
-                if (!isHomeOnSelect) {
-                    $(this).jstree().disable_checkbox(1);
-                    $(this).jstree().disable_node(1);
-                }
-                $(this).jstree('open_all');
-            });
-
-            if (isHomeOnSelect) {
-                $container.on('changed.jstree', function (e, data) {
-                    $(dialog).find('input[name=homeFolderId]').val(data.node.id);
-                });
-            }
+                    return items;
+                },
+                plugins
+            );
         }
     </script>
 {% endblock %}
