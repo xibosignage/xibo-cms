@@ -661,6 +661,11 @@ class Settings extends Base
             $this->getConfig()->changeSetting('TRANSITION_CONFIG_LOCKED_CHECKB', $sanitizedParams->getCheckbox('TRANSITION_CONFIG_LOCKED_CHECKB'));
         }
 
+        if ($this->getConfig()->isSettingEditable('FOLDERS_ALLOW_SAVE_IN_ROOT')) {
+            $this->handleChangedSettings('FOLDERS_ALLOW_SAVE_IN_ROOT', $this->getConfig()->getSetting('FOLDERS_ALLOW_SAVE_IN_ROOT'), $sanitizedParams->getCheckbox('FOLDERS_ALLOW_SAVE_IN_ROOT'), $changedSettings);
+            $this->getConfig()->changeSetting('FOLDERS_ALLOW_SAVE_IN_ROOT', $sanitizedParams->getCheckbox('FOLDERS_ALLOW_SAVE_IN_ROOT'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_LANGUAGE')) {
             $this->handleChangedSettings('DEFAULT_LANGUAGE', $this->getConfig()->getSetting('DEFAULT_LANGUAGE'), $sanitizedParams->getString('DEFAULT_LANGUAGE'), $changedSettings);
             $this->getConfig()->changeSetting('DEFAULT_LANGUAGE', $sanitizedParams->getString('DEFAULT_LANGUAGE'));

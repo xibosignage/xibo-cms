@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Folder;
 use Xibo\Entity\User;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Support\Exception\NotFoundException;
 
 class FolderFactory extends BaseFactory
@@ -104,7 +105,15 @@ class FolderFactory extends BaseFactory
         $params = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        $select = 'SELECT `folderId` as id, `folderName` as text, `parentId`, `isRoot`, `children`, `permissionsFolderId` ';
+        $select = 'SELECT `folderId`,
+            `folderName`, 
+            `folderId` AS id,
+            IF(`isRoot`=1, \'Root Folder\', `folderName`) AS text,
+            `parentId`,
+            `isRoot`,
+            `children`,
+            `permissionsFolderId`
+        ';
 
         $body = '
           FROM `folder`
@@ -120,7 +129,7 @@ class FolderFactory extends BaseFactory
             $params['parentId'] = $sanitizedFilter->getInt('parentId');
         }
 
-        if ($sanitizedFilter->getString('folderName') !== null) {
+        if ($sanitizedFilter->getString('folderName') != null) {
             $body .= ' AND folder.folderName = :folderName ';
             $params['folderName'] = $sanitizedFilter->getString('folderName');
         }
@@ -151,7 +160,7 @@ class FolderFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isRoot']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isRoot', 'homeFolderCount']]);
         }
 
         // Paging
@@ -161,5 +170,73 @@ class FolderFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    public function decorateWithHomeFolderCount(Folder $folder)
+    {
+        $results = $this->getStore()->select('
+            SELECT COUNT(*) AS cnt
+              FROM `user`
+             WHERE `user`.homeFolderId = :folderId
+                AND `user`.retired = 0
+        ', [
+            'folderId' => $folder->id,
+        ]);
+
+        $folder->homeFolderCount = intval($results[0]['cnt'] ?? 0);
+    }
+
+    public function decorateWithSharing(Folder $folder)
+    {
+        $results = $this->getStore()->select('
+            SELECT `group`.group,
+                   `group`.isUserSpecific
+              FROM `permission`
+                INNER JOIN `permissionentity`
+                ON `permissionentity`.entityId = permission.entityId
+                INNER JOIN `group`
+                ON `group`.groupId = `permission`.groupId
+             WHERE entity = :permissionEntity
+                AND objectId = :folderId
+                AND `view` = 1
+            ORDER BY `group`.isUserSpecific
+        ', [
+            'folderId' => $folder->id,
+            'permissionEntity' => 'Xibo\Entity\Folder',
+        ]);
+
+        $folder->sharing = [];
+        foreach ($results as $row) {
+            $folder->sharing[] = [
+                'name' => $row['group'],
+                'isGroup' => intval($row['isUserSpecific']) !== 1,
+            ];
+        }
+    }
+
+    public function decorateWithUsage(Folder $folder)
+    {
+        $folder->usage = [];
+
+        // TODO: add other types.
+        $results = $this->getStore()->select('
+            SELECT \'Library\' AS `type`,
+                COUNT(mediaId) AS cnt,
+                SUM(fileSize) AS `size`
+              FROM media
+             WHERE folderId = :folderId
+                AND moduleSystemFile = 0
+        ', [
+            'folderId' => $folder->id,
+        ]);
+
+        foreach ($results as $row) {
+            $folder->usage[] = [
+                'type' => __($row['type']),
+                'count' => intval($row['cnt'] ?? 0),
+                'sizeBytes' => intval($row['size'] ?? 0),
+                'size' => ByteFormatter::format(intval($row['size'] ?? 0)),
+            ];
+        }
     }
 }
