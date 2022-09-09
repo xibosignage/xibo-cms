@@ -340,7 +340,12 @@ class Layout extends Base
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
-        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
@@ -2462,6 +2467,7 @@ class Layout extends Base
     public function import(Request $request, Response $response)
     {
         $this->getLog()->debug('Import Layout');
+        $parsedBody = $this->getSanitizer($request->getParams());
 
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
@@ -2470,6 +2476,12 @@ class Layout extends Base
 
         // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+
+        // Folders
+        $folderId = $parsedBody->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         $options = [
             'userId' => $this->getUser()->userId,
@@ -2485,7 +2497,8 @@ class Layout extends Base
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->mediaService->libraryUsage() > $libraryLimit),
             'routeParser' => RouteContext::fromRequest($request)->getRouteParser(),
             'mediaService' => $this->mediaService,
-            'sanitizerService' => $this->getSanitizerService()
+            'sanitizerService' => $this->getSanitizerService(),
+            'folderId' => $folderId,
         ];
 
         $this->setNoOutput(true);

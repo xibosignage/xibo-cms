@@ -99,17 +99,26 @@ class Folder extends Base
             // Show a tree view of all folders.
             $rootFolder = $this->folderFactory->getById(1);
             $rootFolder->a_attr['title'] = __('Right click a Folder for further Options');
-            $this->buildTreeView($rootFolder);
+            $this->buildTreeView($rootFolder, $this->getUser()->homeFolderId);
             return $response->withJson([$rootFolder]);
         }
     }
 
     /**
      * @param \Xibo\Entity\Folder $folder
+     * @param int $homeFolderId
      * @throws InvalidArgumentException
      */
-    private function buildTreeView(\Xibo\Entity\Folder $folder)
+    private function buildTreeView(\Xibo\Entity\Folder $folder, int $homeFolderId)
     {
+        // Set the folder type
+        $folder->type = '';
+        if ($folder->isRoot === 1) {
+            $folder->type = 'root';
+        } else if ($homeFolderId === $folder->id) {
+            $folder->type = 'home';
+        }
+
         $children = array_filter(explode(',', $folder->children));
         $childrenDetails = [];
 
@@ -118,7 +127,7 @@ class Folder extends Base
                 $child = $this->folderFactory->getById($childId);
 
                 if ($child->children != null) {
-                    $this->buildTreeView($child);
+                    $this->buildTreeView($child, $homeFolderId);
                 }
 
                 if (!$this->getUser()->checkViewable($child)) {
@@ -346,11 +355,20 @@ class Folder extends Base
             $folder->buttons['create'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder) && !$folder->isRoot()) {
+        $featureModify = $user->featureEnabled('folder.modify');
+        if ($featureModify
+            && $user->checkEditable($folder)
+            && !$folder->isRoot()
+            && ($this->getUser()->isSuperAdmin() || $folder->getId() !== $this->getUser()->homeFolderId)
+        ) {
             $folder->buttons['modify'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder) && !$folder->isRoot()) {
+        if ($featureModify
+            && $user->checkDeleteable($folder)
+            && !$folder->isRoot()
+            && ($this->getUser()->isSuperAdmin() || $folder->getId() !== $this->getUser()->homeFolderId)
+        ) {
             $folder->buttons['delete'] = true;
         }
 

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -441,19 +441,22 @@ class Campaign extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
+
+        $folder = $this->folderFactory->getById($folderId, 0);
+
+        // Create Campaign
         $campaign = $this->campaignFactory->create(
             $sanitizedParams->getString('name'),
             $this->getUser()->userId,
             $sanitizedParams->getString('tags'),
-            $sanitizedParams->getInt('folderId', ['default' => 1])
+            $folder->getId()
         );
-
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($campaign->folderId);
-            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-        } else {
-            $campaign->permissionsFolderId = 1;
-        }
+        $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Cycle based playback
         $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');

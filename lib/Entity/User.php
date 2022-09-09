@@ -1064,10 +1064,19 @@ class User implements \JsonSerializable, UserEntityInterface
                     $new->delete = max($permission->delete, $old->delete);
 
                     $this->permissionCache[$entity][$permission->objectId] = $new;
-                }
-                else
+                } else {
                     $this->permissionCache[$entity][$permission->objectId] = $permission;
+                }
             }
+
+            // Always have our home folder with full permissions.
+            $this->getLog()->debug('Adding homeFolderId ' . $this->homeFolderId . ' to view permissions');
+            if (!array_key_exists($this->homeFolderId, $this->permissionCache[$entity])) {
+                $this->permissionCache[$entity][$this->homeFolderId] = $this->permissionFactory->createEmpty();
+            }
+            $this->permissionCache[$entity][$this->homeFolderId]->view = 1;
+            $this->permissionCache[$entity][$this->homeFolderId]->edit = 1;
+            $this->permissionCache[$entity][$this->homeFolderId]->delete = 1;
         }
 
         return $this->permissionCache[$entity];

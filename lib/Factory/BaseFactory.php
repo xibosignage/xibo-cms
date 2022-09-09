@@ -261,6 +261,13 @@ class BaseFactory
                 $params['currentUserId2'] = $user->userId;
             }
 
+            // Home folders (only for folder entity)
+            if ($entity === 'Xibo\Entity\Folder') {
+                $permissionSql .= ' OR folder.folderId = :permissionsHomeFolderId';
+                $permissionSql .= ' OR folder.permissionsFolderId = :permissionsHomeFolderId';
+                $params['permissionsHomeFolderId'] = $this->getUser()->homeFolderId;
+            }
+
             // Group Admin?
             if ($user->userTypeId == 2 && $ownerColumn != null) {
                 // OR the group admin and the owner of the media are in the same group
@@ -280,8 +287,8 @@ class BaseFactory
                 $params['currentUserId3'] = $user->userId;
             }
 
-        if ($permissionFolderIdColumn != null) {
-            $permissionSql .= '
+            if ($permissionFolderIdColumn != null) {
+                $permissionSql .= '
                     OR ' . $permissionFolderIdColumn . ' IN (
                         SELECT `permission`.objectId
                             FROM `permission`
@@ -307,10 +314,10 @@ class BaseFactory
                                 AND `group`.isEveryone = 1
                                 AND `permission`.view = 1
                     )
-                    ';
+                ';
 
-            $params['folderEntity'] = 'Xibo\Entity\Folder';
-        }
+                $params['folderEntity'] = 'Xibo\Entity\Folder';
+            }
 
             $permissionSql .= ' )';
 

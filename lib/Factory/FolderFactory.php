@@ -144,7 +144,7 @@ class FolderFactory extends BaseFactory
             $body .= 'OR folder.isRoot = 1';
         }
 
-        // View Permissions
+        // View Permissions (home folder included in here)
         $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folder`.folderId', null, $filterBy, 'folder.permissionsFolderId');
 
         // Sorting?
@@ -172,6 +172,11 @@ class FolderFactory extends BaseFactory
         return $entries;
     }
 
+    /**
+     * Add the count of times the provided folder has been used as a home folder
+     * @param Folder $folder
+     * @return void
+     */
     public function decorateWithHomeFolderCount(Folder $folder)
     {
         $results = $this->getStore()->select('
@@ -186,6 +191,11 @@ class FolderFactory extends BaseFactory
         $folder->homeFolderCount = intval($results[0]['cnt'] ?? 0);
     }
 
+    /**
+     * Add sharing information to the provided folder
+     * @param Folder $folder
+     * @return void
+     */
     public function decorateWithSharing(Folder $folder)
     {
         $results = $this->getStore()->select('
@@ -214,11 +224,15 @@ class FolderFactory extends BaseFactory
         }
     }
 
+    /**
+     * Add usage information to the provided folder
+     * @param Folder $folder
+     * @return void
+     */
     public function decorateWithUsage(Folder $folder)
     {
         $folder->usage = [];
 
-        // TODO: add other types.
         $results = $this->getStore()->select('
             SELECT \'Library\' AS `type`,
                 COUNT(mediaId) AS cnt,
@@ -226,17 +240,54 @@ class FolderFactory extends BaseFactory
               FROM media
              WHERE folderId = :folderId
                 AND moduleSystemFile = 0
+            UNION ALL
+            SELECT IF (campaign.isLayoutSpecific = 1, \'Layouts\', \'Campaigns\') AS `type`,
+                COUNT(*) AS cnt,
+                0 AS `size`
+              FROM campaign
+             WHERE campaign.folderId = :folderId
+            GROUP BY campaign.isLayoutSpecific
+            UNION ALL
+            SELECT IF (displaygroup.isDisplaySpecific = 1, \'Displays\', \'Display Groups\') AS `type`,
+                COUNT(*) AS cnt,
+                0 AS `size`
+              FROM displaygroup
+             WHERE displaygroup.folderId = :folderId
+            GROUP BY displaygroup.isDisplaySpecific
+            UNION ALL
+            SELECT \'DataSets\' AS `type`,
+                COUNT(*) AS cnt,
+                0 AS `size`
+              FROM dataset
+             WHERE dataset.folderId = :folderId
+            UNION ALL
+            SELECT \'Playlists\' AS `type`,
+                COUNT(*) AS cnt,
+                0 AS `size`
+              FROM playlist
+             WHERE playlist.folderId = :folderId
+                AND IFNULL(playlist.regionId, 0) = 0
+            UNION ALL
+            SELECT \'Menu Boards\' AS `type`,
+                COUNT(*) AS cnt,
+                0 AS `size`
+              FROM menu_board
+             WHERE menu_board.folderId = :folderId
+            ORDER BY 1
         ', [
             'folderId' => $folder->id,
         ]);
 
         foreach ($results as $row) {
-            $folder->usage[] = [
-                'type' => __($row['type']),
-                'count' => intval($row['cnt'] ?? 0),
-                'sizeBytes' => intval($row['size'] ?? 0),
-                'size' => ByteFormatter::format(intval($row['size'] ?? 0)),
-            ];
+            $count = intval($row['cnt'] ?? 0);
+            if ($count > 0) {
+                $folder->usage[] = [
+                    'type' => __($row['type']),
+                    'count' => $count,
+                    'sizeBytes' => intval($row['size'] ?? 0),
+                    'size' => ByteFormatter::format(intval($row['size'] ?? 0)),
+                ];
+            }
         }
     }
 }
