@@ -30,6 +30,8 @@ use Slim\App;
 use Xibo\Event\CampaignLoadEvent;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\FolderDeletingEvent;
+use Xibo\Event\FolderMovingEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
@@ -295,5 +297,39 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(PlaylistMaxNumberChangedEvent::$NAME, (new \Xibo\Listener\OnPlaylistMaxNumberChange(
             $c->get('store')
         )));
+
+        // On Folder moving listeners
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\CampaignListener(
+            $c->get('campaignFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DataSetListener(
+            $c->get('dataSetFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DisplayGroupListener(
+            $c->get('displayGroupFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\FolderListener(
+            $c->get('folderFactory')
+        )), -1);
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\MediaListener(
+            $c->get('mediaFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\MenuBoardListener(
+            $c->get('menuBoardFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\PlaylistListener(
+            $c->get('playlistFactory')
+        )));
+
+        // On Folder deleting listeners
+        $dispatcher->addListener(FolderDeletingEvent::$NAME, (new \Xibo\Listener\OnFolderDeleting(
+            $c->get('folderFactory')
+        )), -2);
     }
 }

@@ -401,4 +401,13 @@ trait EntityTrait
             $this->getLog()->debug('No Tags to assign');
         }
     }
+
+    public function updateFolders($table)
+    {
+        $this->getStore()->update('UPDATE `'. $table .'` SET permissionsFolderId = :permissionsFolderId, folderId = :folderId WHERE folderId = :oldFolderId', [
+            'permissionsFolderId' => $this->permissionsFolderId,
+            'folderId' => $this->folderId,
+            'oldFolderId' => $this->getOriginalValue('folderId')
+        ]);
+    }
 }
