@@ -665,13 +665,18 @@ class DisplayGroup extends Base
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
         $displayGroup->dynamicCriteriaLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
         $displayGroup->folderId = $sanitizedParams->getInt('folderId');
+
+        if ($displayGroup->folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($displayGroup->folderId)) {
             $displayGroup->folderId = $this->getUser()->homeFolderId;
         }
 
         if ($this->getUser()->featureEnabled('folder.view')) {
             $folder = $this->folderFactory->getById($displayGroup->folderId);
-            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         } else {
             $displayGroup->permissionsFolderId = 1;
         }
@@ -820,8 +825,11 @@ class DisplayGroup extends Base
         $displayGroup->folderId = $parsedRequestParams->getInt('folderId', ['default' => $displayGroup->folderId]);
 
         if ($displayGroup->hasPropertyChanged('folderId')) {
+            if ($displayGroup->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($displayGroup->folderId);
-            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
@@ -2563,6 +2571,10 @@ class DisplayGroup extends Base
 
         // Folders
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
