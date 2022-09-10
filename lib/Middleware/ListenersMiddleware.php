@@ -327,6 +327,11 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('playlistFactory')
         )));
 
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\UserListener(
+            $c->get('userFactory'),
+            $c->get('store')
+        )));
+
         // On Folder deleting listeners
         $dispatcher->addListener(FolderDeletingEvent::$NAME, (new \Xibo\Listener\OnFolderDeleting(
             $c->get('folderFactory')
