@@ -634,14 +634,15 @@
                   masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, el));
                 });
 
-                cardColumn.imagesLoaded().progress(function () {
-                  masonry.layout();
-                });
-
                 moreButton.prop('disabled', false);
               } else {
                 toastr.info('{{ "There are no more templates to show"|trans }}');
               }
+
+              cardColumn.imagesLoaded().progress(function () {
+                masonry.layout();
+              });
+
               spinner.addClass('d-none');
             }
           });
