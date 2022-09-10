@@ -152,13 +152,12 @@ function XiboInitialise(scope) {
                 return false;
             }
         });
-        
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
 
         // init the jsTree
-        initJsTreeAjax($(this).find('#container-folder-tree'), 'grid-folder-tree-state', false)
+        initJsTreeAjax($(this).find('#container-folder-tree'), 'grid_'+gridName, false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -3438,6 +3437,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
     ttl = (typeof ttl == 'undefined') ? false : ttl;
+    var homeNodeId;
     
 
     // if there is no modal appended to body and we are on a form that needs this modal, then append it
@@ -3604,6 +3604,24 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                         $(container).jstree().disable_node(node);
                     }
                 }
+
+                // get the home folder
+                if (e.type !== undefined && e.type === 'home') {
+                    homeNodeId = e.id;
+
+                    // check state
+                    let currentState = localStorage.getItem(id+'_folder_tree')
+                    // if we have no state saved, select the homeFolderId in the tree.
+                    if (currentState === undefined || currentState === null) {
+                        $(container).jstree(true).select_node(homeNodeId)
+                    } else {
+                        // if we have state saved, but nothing is selected, select homeFolderId in the tree.
+                        let currentStateParsed = JSON.parse(currentState);
+                        if (currentStateParsed.state.core.selected !== undefined && currentStateParsed.state.core.selected.length <= 0) {
+                            $(container).jstree(true).select_node(homeNodeId)
+                        }
+                    }
+                }
             });
 
             // if we are on the form, we need to select tree node (currentWorkingFolder)
@@ -3765,7 +3783,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                 $(container).jstree("deselect_all");
                 $('.XiboFilter').find('#folderId').val(null).trigger('change');
             } else {
-                $(container).jstree('select_node', 1)
+                $(container).jstree('select_node', homeNodeId ?? 1)
             }
         });
 
