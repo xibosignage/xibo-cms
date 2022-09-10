@@ -250,9 +250,13 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByFolderId($folderId)
+    public function getByFolderId($folderId, $isDisplaySpecific = -1)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'folderId' => $folderId,
+            'isDisplaySpecific' => $isDisplaySpecific
+        ]);
     }
 
     /**

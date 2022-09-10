@@ -156,9 +156,13 @@ class CampaignFactory extends BaseFactory
      * @return Campaign[]
      * @throws NotFoundException
      */
-    public function getByFolderId($folderId)
+    public function getByFolderId($folderId, $isLayoutSpecific = -1)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'folderId' => $folderId,
+            'isLayoutSpecific' => $isLayoutSpecific
+        ]);
     }
 
     /**
