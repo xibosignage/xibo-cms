@@ -115,7 +115,9 @@ class Folder extends Base
         $folder->type = '';
         if ($folder->isRoot === 1) {
             $folder->type = 'root';
-        } else if ($homeFolderId === $folder->id) {
+        }
+
+        if ($homeFolderId === $folder->id) {
             $folder->type = 'home';
         }
 
@@ -133,6 +135,10 @@ class Folder extends Base
                 if (!$this->getUser()->checkViewable($child)) {
                     $child->text = __('Private Folder');
                     $child->li_attr['disabled'] = true;
+                }
+
+                if ($homeFolderId === $child->id) {
+                    $child->type = 'home';
                 }
 
                 $childrenDetails[] = $child;
