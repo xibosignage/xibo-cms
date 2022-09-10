@@ -341,6 +341,75 @@ class Folder extends Base
             $buttons['share'] = true;
         }
 
+        if (!$folder->isRoot() && $user->checkViewable($folder) && $user->featureEnabled('folder.modify')) {
+            $buttons['move'] = true;
+        }
+
         return $response->withJson($buttons);
+    }
+
+    public function moveForm(Request $request, Response $response, $folderId)
+    {
+        $folder = $this->folderFactory->getById($folderId, 0);
+
+        if (!$this->getUser()->checkEditable($folder)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'folder-form-move';
+        $this->getState()->setData([
+            'folder' => $folder,
+            'deletable' => $this->getUser()->checkDeleteable($folder)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function move(Request $request, Response $response, $folderId)
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $folder = $this->folderFactory->getById($folderId);
+        $newParentFolder = $this->folderFactory->getById($params->getInt('folderId'), 0);
+
+        if (!$this->getUser()->checkEditable($folder)
+            || $folder->isRoot()
+            || !$this->getUser()->checkViewable($newParentFolder)
+        ) {
+            throw new AccessDeniedException();
+        }
+
+        if ($folder->id === $params->getInt('folderId')) {
+            throw new InvalidArgumentException(
+                __('Please select different folder, cannot move Folder to the same Folder')
+            );
+        }
+
+        if ($folder->isTheSameBranch($newParentFolder->getId())) {
+            throw new InvalidArgumentException(
+                __('Please select different folder, cannot move Folder inside of one of its sub-folders')
+            );
+        }
+
+        if ($folder->parentId === $newParentFolder->getId() && $params->getCheckbox('merge') !== 1) {
+            throw new InvalidArgumentException(
+                __(
+                    'This Folder is already a sub-folder of the selected Folder,
+                     if you wish to move its content to the parent Folder, please check the merge checkbox.'
+                )
+            );
+        }
+
+        // if we need to merge contents of the folder, dispatch an event that will move every object inside the folder
+        // to the new folder, any sub-folders will be moved to the new parent folder keeping the tree structure.
+        if ($params->getCheckbox('merge') === 1) {
+            $event = new \Xibo\Event\FolderMovingEvent($folder, $newParentFolder, true);
+            $this->getDispatcher()->dispatch($event, $event::$NAME);
+        } else {
+            // if we just want to move the Folder to new parent, we move folder and its sub-folders to the new parent
+            // changing the permissionsFolderId as well if needed.
+            $folder->updateFoldersAfterMove($folder->parentId, $newParentFolder->getId());
+        }
+
+        return $this->render($request, $response);
     }
 }

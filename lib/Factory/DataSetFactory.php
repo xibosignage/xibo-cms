@@ -168,6 +168,16 @@ class DataSetFactory extends BaseFactory
     }
 
     /**
+     * @param int $folderId
+     * @return DataSet[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId(int $folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DataSet]

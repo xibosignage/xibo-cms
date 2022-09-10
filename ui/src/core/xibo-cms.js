@@ -3531,6 +3531,18 @@ function initJsTreeAjax(container, id, isForm, ttl)
                                     }
                                 }
                             }
+
+                            if (isForm === false && buttonPermissions.move) {
+                                items['Move'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeMove,
+                                    "_class": "XiboFormRender",
+                                    "action": function (obj) {
+                                        XiboFormRender(foldersUrl + '/form/' + $node.id + '/move');
+                                    }
+                                }
+                            }
                         },
                         complete: function (data) {
                             checkContextMenuPermissions(items);
@@ -3555,9 +3567,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     "url": foldersUrl
                 }
             }
-        });
-
-        $(container).on('ready.jstree', function(e, data) {
+        }).bind('ready.jstree', function(e, data) {
             // depending on the state of folder tree, hide/show as needed when we load the grid page
             if (localStorage.getItem("hideFolderTree") !== undefined &&
                 localStorage.getItem("hideFolderTree") !== null &&
@@ -3601,9 +3611,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             }
-        });
-
-        $(container).on("rename_node.jstree", function (e, data) {
+        }).bind("rename_node.jstree", function (e, data) {
 
             var dataObject = {};
             var folderId  = data.node.id;
@@ -3621,9 +3629,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             });
-        });
-
-        $(container).on("create_node.jstree", function (e, data) {
+        }).bind("create_node.jstree", function (e, data) {
 
             var node = data.node;
             node.text = translations.folderNew;
@@ -3648,9 +3654,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 },
             });
-        });
-
-        $(container).on("delete_node.jstree", function (e, data) {
+        }).bind("delete_node.jstree", function (e, data) {
 
             var dataObject = {};
             dataObject['parentId'] = data.parent;
@@ -3679,9 +3683,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
                 }
             });
-        });
-
-        $(container).on("changed.jstree", function (e, data) {
+        }).bind("changed.jstree", function (e, data) {
             var selectedFolderId = data.selected[0];
             var folderIdInputSelector = (isForm) ? '#'+id+' #folderId' : '#folderId';
             var node = $(container).jstree("get_selected", true);

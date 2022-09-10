@@ -152,11 +152,21 @@ class CampaignFactory extends BaseFactory
     }
 
     /**
+     * @param $folderId
+     * @return Campaign[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId($folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * Query Campaigns
      * @param array $sortOrder
      * @param array $filterBy
      * @param array $options
-     * @return array[Campaign]
+     * @return Campaign[]
      * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])

@@ -719,3 +719,7 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/menuboard/{id}/product/form/edit', ['\Xibo\Controller\MenuBoardProduct', 'editForm'])->setName('menuBoard.product.edit.form');
     $group->get('/menuboard/{id}/product/form/delete', ['\Xibo\Controller\MenuBoardProduct', 'deleteForm'])->setName('menuBoard.product.delete.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.view']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/folders/form/{folderId}/move', ['\Xibo\Controller\Folder', 'moveForm'])->setName('folders.move.form');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
