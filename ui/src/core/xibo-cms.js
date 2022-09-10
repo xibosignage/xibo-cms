@@ -3433,7 +3433,7 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, id, isForm, ttl)
+function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [])
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
@@ -3469,7 +3469,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes", "types"],
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes", "types"].concat(plugins),
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3542,6 +3542,10 @@ function initJsTreeAjax(container, id, isForm, ttl)
                                         XiboFormRender(foldersUrl + '/form/' + $node.id + '/move');
                                     }
                                 }
+                            }
+
+                            if (onBuildContextMenu !== null && onBuildContextMenu instanceof Function) {
+                                items = onBuildContextMenu($node, items);
                             }
                         },
                         complete: function (data) {
@@ -3625,8 +3629,11 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             }
-        }).bind("rename_node.jstree", function (e, data) {
 
+            if (onReady && onReady instanceof Function) {
+                onReady($(container).jstree(true), $(container));
+            }
+        }).bind("rename_node.jstree", function (e, data) {
             var dataObject = {};
             var folderId  = data.node.id;
             dataObject['text'] = data.text;
@@ -3729,13 +3736,17 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
                 }
             }
+
+            if (onSelected && onSelected instanceof Function) {
+                onSelected(data);
+            }
         }).bind("open_node.jstree", function(e, data) {
             if (data.node.type !== 'root' && data.node.type !== 'home') {
                 data.instance.set_type(data.node,'open');
             }
         }).bind("close_node.jstree", function(e, data) {
             if (data.node.type !== 'root' && data.node.type !== 'home') {
-                data.instance.set_type(data.node,'default');
+                data.instance.set_type(data.node, 'default');
             }
         });
 

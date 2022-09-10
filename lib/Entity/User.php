@@ -56,6 +56,10 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property $libraryQuotaFormatted
+ * @property $twoFactorDescription
+ * @property $homePage
+ * @property $homeFolder
  */
 class User implements \JsonSerializable, UserEntityInterface
 {
@@ -96,6 +100,12 @@ class User implements \JsonSerializable, UserEntityInterface
      * @var int
      */
     public $homePageId;
+
+    /**
+     * @SWG\Property(description="This users home folder")
+     * @var int
+     */
+    public $homeFolderId;
 
     /**
      * @SWG\Property(description="A timestamp indicating the time the user last logged into the CMS")
@@ -813,8 +823,8 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, isPasswordChangeRequired, usertypeid, newUserWizard, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
-                     VALUES (:userName, :password, :isPasswordChangeRequired, :userTypeId, :newUserWizard, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, isPasswordChangeRequired, usertypeid, newUserWizard, email, homePageId, homeFolderId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
+                     VALUES (:userName, :password, :isPasswordChangeRequired, :userTypeId, :newUserWizard, :email, :homePageId, :homeFolderId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
 
         // Get the ID of the record we just inserted
         $this->userId = $this->getStore()->insert($sql, [
@@ -825,6 +835,7 @@ class User implements \JsonSerializable, UserEntityInterface
             'newUserWizard' => $this->newUserWizard,
             'email' => $this->email,
             'homePageId' => $this->homePageId,
+            'homeFolderId' => $this->homeFolderId,
             'CSPRNG' => $this->CSPRNG,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
@@ -860,6 +871,7 @@ class User implements \JsonSerializable, UserEntityInterface
 
         $sql = 'UPDATE `user` SET UserName = :userName,
                   homePageId = :homePageId,
+                  homeFolderId = :homeFolderId,
                   Email = :email,
                   Retired = :retired,
                   userTypeId = :userTypeId,
@@ -886,6 +898,7 @@ class User implements \JsonSerializable, UserEntityInterface
             'userTypeId' => $this->userTypeId,
             'email' => $this->email,
             'homePageId' => $this->homePageId,
+            'homeFolderId' => $this->homeFolderId,
             'retired' => $this->retired,
             'newUserWizard' => $this->newUserWizard,
             'CSPRNG' => $this->CSPRNG,
@@ -1051,10 +1064,19 @@ class User implements \JsonSerializable, UserEntityInterface
                     $new->delete = max($permission->delete, $old->delete);
 
                     $this->permissionCache[$entity][$permission->objectId] = $new;
-                }
-                else
+                } else {
                     $this->permissionCache[$entity][$permission->objectId] = $permission;
+                }
             }
+
+            // Always have our home folder with full permissions.
+            $this->getLog()->debug('Adding homeFolderId ' . $this->homeFolderId . ' to view permissions');
+            if (!array_key_exists($this->homeFolderId, $this->permissionCache[$entity])) {
+                $this->permissionCache[$entity][$this->homeFolderId] = $this->permissionFactory->createEmpty();
+            }
+            $this->permissionCache[$entity][$this->homeFolderId]->view = 1;
+            $this->permissionCache[$entity][$this->homeFolderId]->edit = 1;
+            $this->permissionCache[$entity][$this->homeFolderId]->delete = 1;
         }
 
         return $this->permissionCache[$entity];

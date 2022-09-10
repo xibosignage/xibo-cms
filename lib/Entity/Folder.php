@@ -34,7 +34,12 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * @package Xibo\Entity
  * @SWG\Definition()
  *
- * @property $type
+ * @property string $a_attr
+ * @property string $li_attr
+ * @property string $type The type of folder (home or root)
+ * @property int $homeFolderCount How many times the folder is used as a home folder, optionally decorated by Folder Factory
+ * @property array $sharing Sharing information, optionally decorated by Folder Factory
+ * @property array $usage Usage information, optionally decorated by Folder Factory
  */
 class Folder
 {
@@ -108,6 +113,11 @@ class Folder
         return $this->permissionsFolderId;
     }
 
+    /**
+     * When you set ACL on a folder the permissionsFolderId on the folder record is set to null
+     * any objects inside this folder get the permissionsFolderId set to this folderId
+     * @return int
+     */
     public function getPermissionFolderIdOrThis(): int
     {
         return $this->permissionsFolderId == null ? $this->id : $this->permissionsFolderId;

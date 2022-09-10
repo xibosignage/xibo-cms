@@ -664,7 +664,10 @@ class DisplayGroup extends Base
         $displayGroup->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
         $displayGroup->dynamicCriteriaLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
-        $displayGroup->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+        $displayGroup->folderId = $sanitizedParams->getInt('folderId');
+        if (empty($displayGroup->folderId)) {
+            $displayGroup->folderId = $this->getUser()->homeFolderId;
+        }
 
         if ($this->getUser()->featureEnabled('folder.view')) {
             $folder = $this->folderFactory->getById($displayGroup->folderId);
@@ -2558,12 +2561,15 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
+        // Folders
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
-        $displayGroup->folderId = $folderId;
-
-        $folder = $this->folderFactory->getById($displayGroup->folderId);
-        $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $folder = $this->folderFactory->getById($folderId, 0);
+        $displayGroup->folderId = $folder->id;
+        $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Save
         $displayGroup->save([

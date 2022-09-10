@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -40,9 +40,24 @@ class Folder extends Base
      * Set common dependencies.
      * @param FolderFactory $folderFactory
      */
-    public function __construct($folderFactory)
+    public function __construct(FolderFactory $folderFactory)
     {
         $this->folderFactory = $folderFactory;
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function displayPage(Request $request, Response $response)
+    {
+        $this->getState()->template = 'folders-page';
+        $this->getState()->setData([]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -66,38 +81,44 @@ class Folder extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response, $folderId = null)
     {
-        $parsedParams = $this->getSanitizer($request->getParams());
-        $treeJson = [];
+        // Should we return information for a specific folder?
+        if ($folderId !== null) {
+            $folder = $this->folderFactory->getById($folderId);
 
-        $folders = $this->folderFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter([
-            'folderId' => $parsedParams->getInt('folderId'),
-            'folderName' => $parsedParams->getString('folderName'),
-            'isRoot' => $parsedParams->getInt('isRoot'),
-            'includeRoot' => 1
-        ], $parsedParams));
+            $this->decorateWithButtons($folder);
+            $this->folderFactory->decorateWithHomeFolderCount($folder);
+            $this->folderFactory->decorateWithSharing($folder);
+            $this->folderFactory->decorateWithUsage($folder);
 
-        foreach ($folders as $folder) {
-            if ($folder->id === 1) {
-                $folder->text = 'Root Folder';
-                $folder->a_attr['title'] = __("Right click a Folder for further Options");
-                $this->buildTreeView($folder);
-                array_push($treeJson, $folder);
-            }
+            return $response->withJson($folder);
+        } else {
+            // Show a tree view of all folders.
+            $rootFolder = $this->folderFactory->getById(1);
+            $rootFolder->a_attr['title'] = __('Right click a Folder for further Options');
+            $this->buildTreeView($rootFolder, $this->getUser()->homeFolderId);
+            return $response->withJson([$rootFolder]);
         }
-
-        return $response->withJson($treeJson);
     }
 
     /**
      * @param \Xibo\Entity\Folder $folder
+     * @param int $homeFolderId
+     * @throws InvalidArgumentException
      */
-    private function buildTreeView(&$folder)
+    private function buildTreeView(\Xibo\Entity\Folder $folder, int $homeFolderId)
     {
+        // Set the folder type
+        $folder->type = '';
+        if ($folder->isRoot === 1) {
+            $folder->type = 'root';
+        } else if ($homeFolderId === $folder->id) {
+            $folder->type = 'home';
+        }
+
         $children = array_filter(explode(',', $folder->children));
         $childrenDetails = [];
 
@@ -106,7 +127,7 @@ class Folder extends Base
                 $child = $this->folderFactory->getById($childId);
 
                 if ($child->children != null) {
-                    $this->buildTreeView($child);
+                    $this->buildTreeView($child, $homeFolderId);
                 }
 
                 if (!$this->getUser()->checkViewable($child)) {
@@ -114,7 +135,7 @@ class Folder extends Base
                     $child->li_attr['disabled'] = true;
                 }
 
-                array_push($childrenDetails, $child);
+                $childrenDetails[] = $child;
             } catch (NotFoundException $exception) {
                 // this should be fine, just log debug message about it.
                 $this->getLog()->debug('User does not have permissions to Folder ID ' . $childId);
@@ -320,32 +341,44 @@ class Folder extends Base
      */
     public function getContextMenuButtons(Request $request, Response $response, $folderId)
     {
-        $user = $this->getUser();
         $folder = $this->folderFactory->getById($folderId);
+        $this->decorateWithButtons($folder);
 
-        $buttons = [];
+        return $response->withJson($folder->buttons);
+    }
+
+    private function decorateWithButtons($folder)
+    {
+        $user = $this->getUser();
 
         if ($user->featureEnabled('folder.add') &&  $user->checkViewable($folder)) {
-            $buttons['create'] = true;
+            $folder->buttons['create'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder) && !$folder->isRoot()) {
-            $buttons['modify'] = true;
+        $featureModify = $user->featureEnabled('folder.modify');
+        if ($featureModify
+            && $user->checkEditable($folder)
+            && !$folder->isRoot()
+            && ($this->getUser()->isSuperAdmin() || $folder->getId() !== $this->getUser()->homeFolderId)
+        ) {
+            $folder->buttons['modify'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder) && !$folder->isRoot()) {
-            $buttons['delete'] = true;
+        if ($featureModify
+            && $user->checkDeleteable($folder)
+            && !$folder->isRoot()
+            && ($this->getUser()->isSuperAdmin() || $folder->getId() !== $this->getUser()->homeFolderId)
+        ) {
+            $folder->buttons['delete'] = true;
         }
 
         if ($user->isSuperAdmin() && !$folder->isRoot()) {
-            $buttons['share'] = true;
+            $folder->buttons['share'] = true;
         }
 
         if (!$folder->isRoot() && $user->checkViewable($folder) && $user->featureEnabled('folder.modify')) {
-            $buttons['move'] = true;
+            $folder->buttons['move'] = true;
         }
-
-        return $response->withJson($buttons);
     }
 
     public function moveForm(Request $request, Response $response, $folderId)

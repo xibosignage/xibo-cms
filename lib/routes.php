@@ -473,10 +473,14 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.data']));
 
 /**
- *  Folders
+ * Folders
+ * @SWG\Tag(
+ *  name="folder",
+ *  description="Folders"
+ * )
  */
+$app->get('/folders[/{folderId}]', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
     $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
 

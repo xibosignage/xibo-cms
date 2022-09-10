@@ -789,6 +789,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'folders',
                     'title' => __('Rename and Delete existing Folders')
                 ],
+                'folder.userHome' => [
+                    'feature' => 'folder.userHome',
+                    'group' => 'folders',
+                    'title' => __('Set a home folder for a user')
+                ],
                 'menuBoard.view' => [
                     'feature' => 'menuBoard.view',
                     'group' => 'menuboard-design',

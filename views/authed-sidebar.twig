@@ -115,6 +115,10 @@
             {% if currentUser.featureEnabled("tag.view") %}
                 <li class="sidebar-list"><a href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a></li>
             {% endif %}
+
+            {% if currentUser.isSuperAdmin() %}
+                <li class="sidebar-list"><a href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a></li>
+            {% endif %}
         {% endif %}
 
 

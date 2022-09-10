@@ -1,0 +1,132 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{{ "Folders"|trans }} | {% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Folders" %}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div id="container-folder-tree"></div>
+                </div>
+                <div class="col-md-9">
+                    <div id="container-folder-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(function () {
+            var foldersInputPanelTemplate = Handlebars.compile($('#folders-info-panel').html());
+            var $folderInfo = $('#container-folder-info');
+
+            initJsTreeAjax(
+                '#container-folder-tree',
+                'folders-admin',
+                false,
+                600,
+                function(tree) {
+                    $('#container-folder-tree').jstree('open_all');
+                },
+                function(data) {
+                    if (data.action !== 'select_node') {
+                        return;
+                    }
+                    $.ajax({
+                        method: 'GET',
+                        url: '{{ url_for("folders.search") }}/' + data.node.id,
+                        success: function(response) {
+                            if (response) {
+                                $folderInfo.html(foldersInputPanelTemplate(response));
+                            } else {
+                                toastr.error(response.message || '{{ "Unknown error"|trans }}');
+                            }
+                        },
+                        error: function() {
+                            toastr.error(response.message || '{{ "Unknown error"|trans }}');
+                        },
+                    })
+                });
+        });
+    </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% verbatim %}
+    <script type="text/x-handlebars-template" id="folders-info-panel">
+        <div class="card p-3 mb-0" data-folder-id="{{ id }}">
+            <div class="card-body">
+                <h5 class="card-title">{% endverbatim %}{{ "Folder info"|trans }}{% verbatim %}</h5>
+                <p>{{text}}</p>
+                <ul>
+                    <li>{% endverbatim %}{{ "Number of times used as a home folder:"|trans }}{% verbatim %} {{homeFolderCount}}</li>
+                </ul>
+                <div class="folder-info-sharing">
+                    <h5>{% endverbatim %}{{ "Shared with:"|trans }}{% verbatim %}</h5>
+                    {{#if sharing}}
+                        {{#each sharing}}
+                        <li class="badge {{#if isGroup}}badge-info{{else}}badge-success{{/if}}"><span>{{name}}</span></li>
+                        {{/each}}
+                    {{else}}
+                        {% endverbatim %}{{ "Not shared"|trans }}{% verbatim %}
+                    {{/if}}
+                </div>
+                <div class="folder-info-usage mt-5">
+                    <h5>{% endverbatim %}{{ "Contents:"|trans }}{% verbatim %}</h5>
+                    {{#if usage}}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% endverbatim %}{{ "Section"|trans }}{% verbatim %}</th>
+                                <th>{% endverbatim %}{{ "Number of items"|trans }}{% verbatim %}</th>
+                                <th>{% endverbatim %}{{ "Size"|trans }}{% verbatim %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each usage}}
+                                <tr>
+                                    <td>{{type}}</td>
+                                    <td>{{count}}</td>
+                                    <td>{{size}}</td>
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                    {{else}}
+                    {% endverbatim %}{{ "Empty folder"|trans }}{% verbatim %}
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </script>
+    {% endverbatim %}
+{% endblock %}
