@@ -3469,7 +3469,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"],
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes", "types"],
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3551,6 +3551,20 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 }},
             "themes" : {
                 "responsive" : true
+            },
+            "types" : {
+                "root" : {
+                    "icon" : "fa fa-file text-warning"
+                },
+                "home" : {
+                    "icon" : "fa fa-home text-success"
+                },
+                "default" : {
+                    "icon" : "fa fa-folder text-warning"
+                },
+                "open" : {
+                    "icon" : "fa fa-folder-open text-warning"
+                }
             },
             'core' : {
                 "check_callback" : function (operation, node, parent, position, more) {
@@ -3714,6 +3728,14 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 if ($('#selectedFormFolder').length) {
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
                 }
+            }
+        }).bind("open_node.jstree", function(e, data) {
+            if (data.node.type !== 'root' && data.node.type !== 'home') {
+                data.instance.set_type(data.node,'open');
+            }
+        }).bind("close_node.jstree", function(e, data) {
+            if (data.node.type !== 'root' && data.node.type !== 'home') {
+                data.instance.set_type(data.node,'default');
             }
         });
 
