@@ -357,7 +357,7 @@ class User extends Base
             if ($this->getUser()->featureEnabled('folder.userHome')) {
                 $user->buttons[] = [
                     'id' => 'user_button_set_home',
-                    'url' => $this->urlFor($request,'user.homeFolder.form', ['id' => $user->userId]),
+                    'url' => $this->urlFor($request, 'user.homeFolder.form', ['id' => $user->userId]),
                     'text' => __('Set Home Folder'),
                     'multi-select' => true,
                     'dataAttributes' => [
