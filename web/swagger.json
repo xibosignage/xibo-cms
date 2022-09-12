@@ -2970,6 +2970,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "logicalOperatorName",
+                        "in": "formData",
+                        "description": "When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "dynamicCriteriaTags",
                         "in": "formData",
                         "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
@@ -3062,6 +3069,13 @@
                         "name": "dynamicCriteria",
                         "in": "formData",
                         "description": "The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "logicalOperatorName",
+                        "in": "formData",
+                        "description": "When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR",
                         "required": false,
                         "type": "string"
                     },
@@ -6907,6 +6921,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "logicalOperatorName",
+                        "in": "formData",
+                        "description": "When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "filterMediaTag",
                         "in": "formData",
                         "description": "Add Library Media matching the tag filter provided",
@@ -6999,6 +7020,13 @@
                         "name": "filterMediaName",
                         "in": "formData",
                         "description": "Add Library Media matching the name filter provided",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "logicalOperatorName",
+                        "in": "formData",
+                        "description": "When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
                         "required": false,
                         "type": "string"
                     },
@@ -9537,6 +9565,12 @@
                     },
                     {
                         "name": "showThumbnailColumn",
+                        "in": "formData",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rememberFolderTreeStateGlobally",
                         "in": "formData",
                         "required": false,
                         "type": "integer"
@@ -14871,6 +14905,10 @@
                     "description": "The Webkey serial number for this Display",
                     "type": "string"
                 },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this Display",
+                    "type": "string"
+                },
                 "createdDt": {
                     "description": "The datetime this entity was created",
                     "type": "string"
@@ -14890,6 +14928,10 @@
                 "countFaults": {
                     "description": "The count of Player reported faults",
                     "type": "integer"
+                },
+                "lanIpAddress": {
+                    "description": "LAN IP Address, if available on the Player",
+                    "type": "string"
                 }
             }
         },
@@ -14919,6 +14961,10 @@
                     "description": "Criteria for this dynamic group. A comma separated set of regular expressions to apply",
                     "type": "string"
                 },
+                "dynamicCriteriaLogicalOperator": {
+                    "description": "Which logical operator should be used when filtering by multiple dynamic criteria? OR|AND",
+                    "type": "string"
+                },
                 "dynamicCriteriaTags": {
                     "description": "Criteria for this dynamic group. A comma separated set of tags to apply",
                     "type": "string"
@@ -14927,7 +14973,7 @@
                     "description": "Flag indicating whether to filter by exact Tag match",
                     "type": "integer"
                 },
-                "dynamicCriteriaLogicalOperator": {
+                "dynamicCriteriaTagsLogicalOperator": {
                     "description": "Which logical operator should be used when filtering by multiple Tags? OR|AND",
                     "type": "string"
                 },
@@ -14945,6 +14991,10 @@
                 "bandwidthLimit": {
                     "description": "The display bandwidth limit",
                     "type": "integer"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this DisplayGroup",
+                    "type": "string"
                 },
                 "createdDt": {
                     "description": "The datetime this entity was created",
@@ -15322,6 +15372,14 @@
                 "orientation": {
                     "description": "The orientation of the Media file",
                     "type": "string"
+                },
+                "width": {
+                    "description": "The width of the Media file",
+                    "type": "integer"
+                },
+                "height": {
+                    "description": "The height of the Media file",
+                    "type": "integer"
                 },
                 "folderId": {
                     "description": "The id of the Folder this Media belongs to",
@@ -15767,6 +15825,10 @@
                     "description": "Filter Name for a Dynamic Playlist",
                     "type": "string"
                 },
+                "filterMediaNameLogicalOperator": {
+                    "description": "Which logical operator should be used when filtering by multiple Plalust names? OR|AND",
+                    "type": "string"
+                },
                 "filterMediaTags": {
                     "description": "Filter Tags for a Dynamic Playlist",
                     "type": "string"
@@ -15775,7 +15837,7 @@
                     "description": "Flag indicating whether to filter by exact Tag match",
                     "type": "integer"
                 },
-                "filterLogicalOperator": {
+                "filterMediaTagsLogicalOperator": {
                     "description": "Which logical operator should be used when filtering by multiple Tags? OR|AND",
                     "type": "string"
                 },
@@ -16347,6 +16409,10 @@
                     "description": "The pageId of the Homepage for this User",
                     "type": "integer"
                 },
+                "homeFolderId": {
+                    "description": "This users home folder",
+                    "type": "integer"
+                },
                 "lastAccessed": {
                     "description": "A timestamp indicating the time the user last logged into the CMS",
                     "type": "integer"
@@ -16907,6 +16973,10 @@
         {
             "name": "dataset",
             "description": "DataSets"
+        },
+        {
+            "name": "folder",
+            "description": "Folders"
         },
         {
             "name": "statistics",
