@@ -21,7 +21,6 @@
  */
 namespace Xibo\Listener\OnFolderMoving;
 
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\FolderMovingEvent;
 use Xibo\Factory\FolderFactory;
 
@@ -37,7 +36,7 @@ class FolderListener
         $this->folderFactory = $folderFactory;
     }
 
-    public function __invoke(FolderMovingEvent $event, $eventName, EventDispatcherInterface $dispatcher)
+    public function __invoke(FolderMovingEvent $event)
     {
         $merge = $event->getIsMerge();
 
@@ -51,11 +50,6 @@ class FolderListener
                 $childFolder = $this->folderFactory->getById($childFolderId, 0);
                 $childFolder->updateFoldersAfterMove($folder->getId(), $newFolder->getId());
             }
-
-            // at this point our original folder should be completely empty, dispatch event to delete it.
-            //$folder->children = null;
-            $deletingEvent = new \Xibo\Event\FolderDeletingEvent($folder->getId());
-            $dispatcher->dispatch($deletingEvent, $deletingEvent::$NAME);
         }
     }
 }

@@ -30,7 +30,6 @@ use Slim\App;
 use Xibo\Event\CampaignLoadEvent;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
-use Xibo\Event\FolderDeletingEvent;
 use Xibo\Event\FolderMovingEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
@@ -331,10 +330,5 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('userFactory'),
             $c->get('store')
         )));
-
-        // On Folder deleting listeners
-        $dispatcher->addListener(FolderDeletingEvent::$NAME, (new \Xibo\Listener\OnFolderDeleting(
-            $c->get('folderFactory')
-        )), -2);
     }
 }

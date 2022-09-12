@@ -21,10 +21,8 @@
  */
 namespace Xibo\Listener\OnFolderMoving;
 
-use Xibo\Event\FolderDeletingEvent;
 use Xibo\Event\FolderMovingEvent;
 use Xibo\Factory\MediaFactory;
-use Xibo\Listener\ListenerLoggerTrait;
 
 class MediaListener
 {

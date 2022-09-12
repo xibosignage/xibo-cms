@@ -443,6 +443,11 @@ class Folder extends Base
         if ($params->getCheckbox('merge') === 1) {
             $event = new \Xibo\Event\FolderMovingEvent($folder, $newParentFolder, true);
             $this->getDispatcher()->dispatch($event, $event::$NAME);
+
+            // after moving event is done, we should be able to safely delete the original folder
+            $folder = $this->folderFactory->getById($folderId, 0);
+            $folder->load();
+            $folder->delete();
         } else {
             // if we just want to move the Folder to new parent, we move folder and its sub-folders to the new parent
             // changing the permissionsFolderId as well if needed.
