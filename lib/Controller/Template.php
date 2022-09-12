@@ -488,6 +488,11 @@ class Template extends Base
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $folderId = $sanitizedParams->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
@@ -634,6 +639,11 @@ class Template extends Base
 
         $layout->description = $sanitizedParams->getString('description');
         $layout->folderId = $sanitizedParams->getInt('folderId');
+
+        if ($layout->folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         $layout->setOwner($this->getUser()->userId, true);
         $layout->save();
 

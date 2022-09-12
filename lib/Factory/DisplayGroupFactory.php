@@ -246,6 +246,20 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * @param $folderId
+     * @return DisplayGroup[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId($folderId, $isDisplaySpecific = -1)
+    {
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'folderId' => $folderId,
+            'isDisplaySpecific' => $isDisplaySpecific
+        ]);
+    }
+
+    /**
      * Set Bandwidth limit
      * @param int $bandwidthLimit
      * @param array $displayIds

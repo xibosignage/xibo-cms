@@ -190,6 +190,15 @@ class UserFactory extends BaseFactory
     }
 
     /**
+     * @param int $homeFolderId
+     * @return User[]
+     */
+    public function getByHomeFolderId(int $homeFolderId)
+    {
+        return $this->query(null, ['homeFolderId' => $homeFolderId]);
+    }
+
+    /**
      * Query for users
      * @param array[mixed] $sortOrder
      * @param array[mixed] $filterBy
@@ -341,6 +350,12 @@ class UserFactory extends BaseFactory
         if ($parsedFilter->getString('clientId') != null) {
             $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
             $params['clientId'] = $parsedFilter->getString('clientId');
+        }
+
+        // Home folderId
+        if ($parsedFilter->getInt('homeFolderId') !== null) {
+            $body .= ' AND user.homeFolderId = :homeFolderId ';
+            $params['homeFolderId'] = $parsedFilter->getInt('homeFolderId');
         }
 
         // Sorting?

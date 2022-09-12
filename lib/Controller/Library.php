@@ -1078,6 +1078,11 @@ class Library extends Base
 
         // Folders
         $folderId = $parsedBody->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
@@ -1301,6 +1306,9 @@ class Library extends Base
         $media->orientation = $sanitizedParams->getString('orientation', ['default' => $media->orientation]);
 
         if ($media->hasPropertyChanged('folderId')) {
+            if ($media->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($media->folderId);
             $media->permissionsFolderId = ($folder->getPermissionFolderId() == null)
                 ? $folder->id
@@ -2337,6 +2345,10 @@ class Library extends Base
 
         // Folders
         $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
@@ -2572,6 +2584,9 @@ class Library extends Base
         }
 
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
         $media->folderId = $folderId;
         $folder = $this->folderFactory->getById($media->folderId);

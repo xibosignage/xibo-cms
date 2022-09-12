@@ -135,6 +135,16 @@ class PlaylistFactory extends BaseFactory
     }
 
     /**
+     * @param $folderId
+     * @return Playlist[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId($folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * Create a Playlist
      * @param string $name
      * @param int $ownerId

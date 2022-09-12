@@ -443,6 +443,10 @@ class Campaign extends Base
 
         // Folders
         $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
@@ -622,8 +626,11 @@ class Campaign extends Base
         $campaign->folderId = $parsedRequestParams->getInt('folderId', ['default' => $campaign->folderId]);
 
         if ($campaign->hasPropertyChanged('folderId')) {
+            if ($campaign->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($campaign->folderId);
-            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
         // Cycle based playback
@@ -1080,6 +1087,10 @@ class Campaign extends Base
         }
 
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
         $campaign->folderId = $folderId;
         $folder = $this->folderFactory->getById($campaign->folderId);

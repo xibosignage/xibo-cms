@@ -378,4 +378,77 @@ class Folder
             'folderId' => $folderId
         ]);
     }
+
+    /**
+     * Update old parent, new parent records with adjusted children
+     * Update current folders records with new parent, permissionsFolderId
+     * Recursively go through the current folder's children folder and objects and adjust permissionsFolderId if needed.
+     * @param int $oldParentFolder
+     * @param int $newParentFolder
+     */
+    public function updateFoldersAfterMove(int $oldParentFolderId, int $newParentFolderId)
+    {
+        $oldParentFolder = $this->folderFactory->getById($oldParentFolderId, 0);
+        $newParentFolder = $this->folderFactory->getById($newParentFolderId, 0);
+
+        // new parent folder that adopted this folder, adjust children
+        $newParentChildren = array_filter(explode(',', $newParentFolder->children));
+        $newParentChildren[] = $this->id;
+        $newParentUpdatedChildren = implode(',', array_filter($newParentChildren));
+        $this->getStore()->update('UPDATE `folder` SET children = :children WHERE folderId = :folderId', [
+            'folderId' => $newParentFolder->id,
+            'children' => $newParentUpdatedChildren
+        ]);
+
+        // old parent that gave this folder for adoption, adjust children
+        $oldParentChildren = array_filter(explode(',', $oldParentFolder->children));
+        foreach ($oldParentChildren as $index => $child) {
+            if ((int)$child === $this->id) {
+                unset($oldParentChildren[$index]);
+            }
+        }
+
+        $oldParentUpdatedChildren = implode(',', array_filter($oldParentChildren));
+
+        $this->getStore()->update('UPDATE `folder` SET children = :children WHERE folderId = :folderId', [
+            'folderId' => $oldParentFolder->id,
+            'children' => $oldParentUpdatedChildren
+        ]);
+
+        // if we had permissions set on this folder, then permissionsFolderId stays as it was
+        if ($this->getPermissionFolderId() !== null) {
+            $this->permissionsFolderId = $newParentFolder->getPermissionFolderIdOrThis();
+            $this->manageChildPermissions($this->permissionsFolderId);
+        }
+
+        $this->getStore()->update('UPDATE `folder` SET parentId = :parentId, permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
+            'parentId' => $newParentFolder->id,
+            'permissionsFolderId' => $this->permissionsFolderId,
+            'folderId' => $this->id
+        ]);
+    }
+
+    /**
+     * We do not allow moving a parent Folder inside of one of its sub-folders
+     * If that's what was requested, throw an error
+     * @param int $newParentFolderId
+     * @return bool
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function isTheSameBranch(int $newParentFolderId): bool
+    {
+        $children = array_filter(explode(',', $this->children));
+        $found = false;
+
+        foreach ($children as $child) {
+            if ((int)$child === $newParentFolderId) {
+                $found = true;
+                break;
+            }
+            $childObject = $this->folderFactory->getById($child);
+            $childObject->isTheSameBranch($newParentFolderId);
+        }
+
+        return $found;
+    }
 }
