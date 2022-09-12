@@ -3614,12 +3614,6 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                     // if we have no state saved, select the homeFolderId in the tree.
                     if (currentState === undefined || currentState === null) {
                         $(container).jstree(true).select_node(homeNodeId)
-                    } else {
-                        // if we have state saved, but nothing is selected, select homeFolderId in the tree.
-                        let currentStateParsed = JSON.parse(currentState);
-                        if (currentStateParsed.state.core.selected !== undefined && currentStateParsed.state.core.selected.length <= 0) {
-                            $(container).jstree(true).select_node(homeNodeId)
-                        }
                     }
                 }
             });
