@@ -1051,9 +1051,8 @@ class User implements \JsonSerializable, UserEntityInterface
             // Store the results in the cache (default to empty result)
             $this->permissionCache[$entity] = array();
 
-            // Turn it into a ID keyed array
+            // Turn it into an ID keyed array
             foreach ($this->permissionFactory->getByUserId($entity, $this->userId) as $permission) {
-                /* @var \Xibo\Entity\Permission $permission */
                 // Always take the max
                 if (array_key_exists($permission->objectId, $this->permissionCache[$entity])) {
                     $old = $this->permissionCache[$entity][$permission->objectId];
@@ -1068,15 +1067,6 @@ class User implements \JsonSerializable, UserEntityInterface
                     $this->permissionCache[$entity][$permission->objectId] = $permission;
                 }
             }
-
-            // Always have our home folder with full permissions.
-            $this->getLog()->debug('Adding homeFolderId ' . $this->homeFolderId . ' to view permissions');
-            if (!array_key_exists($this->homeFolderId, $this->permissionCache[$entity])) {
-                $this->permissionCache[$entity][$this->homeFolderId] = $this->permissionFactory->createEmpty();
-            }
-            $this->permissionCache[$entity][$this->homeFolderId]->view = 1;
-            $this->permissionCache[$entity][$this->homeFolderId]->edit = 1;
-            $this->permissionCache[$entity][$this->homeFolderId]->delete = 1;
         }
 
         return $this->permissionCache[$entity];
@@ -1148,6 +1138,13 @@ class User implements \JsonSerializable, UserEntityInterface
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
         $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
+
+        // If we are checking for view permissions on a folder, then we always grant those to a users home folder.
+        if ($object->permissionsClass() === 'Xibo\Entity\Folder'
+            && $object->getId() === $this->homeFolderId
+        ) {
+            return true;
+        }
 
         // Check to see if our object is in the list
         if (array_key_exists($object->getId(), $permissions)) {

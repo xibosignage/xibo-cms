@@ -392,6 +392,20 @@
                     }));
         }
 
+        function userHomeFolderFormOpen(dialog) {
+            initFolderPanel(dialog, true);
+        }
+
+        function userHomeFolderMultiselectFormOpen(dialog) {
+            var $input = $('<div id="container-form-folder-tree" class="card card-body bg-light"></div>');
+            var $helpText = $('<span class="help-block">{{ "Set a home folder to use as the default folder for new content."|trans }}</span>');
+
+            $(dialog).find('.modal-body').append($input);
+            $(dialog).find('.modal-body').append($helpText);
+
+            initFolderPanel(dialog, true);
+        }
+
         function initFolderPanel(dialog, isHomeOnSelect = false, isHomeContext = false) {
             var plugins = [];
 
@@ -414,6 +428,9 @@
                 function(data) {
                     if (isHomeOnSelect && data.action === 'select_node') {
                         $(dialog).find('input[name=homeFolderId]').val(data.node.id);
+
+                        // In case we're in a multi-select.
+                        dialog.data().commitData = {homeFolderId: data.node.id};
                     }
                 },
                 function($node, items) {

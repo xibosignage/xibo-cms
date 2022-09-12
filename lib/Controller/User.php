@@ -354,6 +354,23 @@ class User extends Base
                 ];
             }
 
+            if ($this->getUser()->featureEnabled('folder.userHome')) {
+                $user->buttons[] = [
+                    'id' => 'user_button_set_home',
+                    'url' => $this->urlFor($request,'user.homeFolder.form', ['id' => $user->userId]),
+                    'text' => __('Set Home Folder'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.homeFolder', ['id' => $user->userId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'user_button_set_home'],
+                        ['name' => 'text', 'value' => __('Set home folder')],
+                        ['name' => 'rowtitle', 'value' => $user->userName],
+                        ['name' => 'form-callback', 'value' => 'userHomeFolderMultiselectFormOpen']
+                    ],
+                ];
+            }
+
             if ($this->getUser()->featureEnabled('users.modify')
                 && $this->getUser()->checkPermissionsModifyable($user)
             ) {
@@ -2452,6 +2469,72 @@ class User extends Base
             'groups' => $this->userGroupFactory->query(null, [
                 'isShownForAddUser' => 1
             ])
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Set home folder form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function setHomeFolderForm(Request $request, Response $response, $id)
+    {
+        $user = $this->userFactory->getById($id);
+        $user->setChildAclDependencies($this->userGroupFactory);
+
+        if (!$this->getUser()->checkEditable($user)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'user-form-home-folder';
+        $this->getState()->setData([
+            'user' => $user
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Set home folder form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function setHomeFolder(Request $request, Response $response, $id)
+    {
+        $user = $this->userFactory->getById($id);
+        $user->setChildAclDependencies($this->userGroupFactory);
+
+        if (!$this->getUser()->checkEditable($user)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('folder.userHome')) {
+            throw new AccessDeniedException();
+        }
+
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Build a user entity and save it
+        $user->setChildAclDependencies($this->userGroupFactory);
+        $user->load();
+        $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+        $user->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $user->userName),
+            'id' => $user->userId,
+            'data' => $user
         ]);
 
         return $this->render($request, $response);

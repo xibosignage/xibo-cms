@@ -324,6 +324,9 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/user/form/edit/{id}', ['\Xibo\Controller\User', 'editForm'])->setName('user.edit.form');
     $group->get('/user/form/delete/{id}', ['\Xibo\Controller\User', 'deleteForm'])->setName('user.delete.form');
     $group->get('/user/form/membership/{id}', ['\Xibo\Controller\User', 'membershipForm'])->setName('user.membership.form');
+    $group->get('/user/form/setHomeFolder/{id}', ['\Xibo\Controller\User', 'setHomeFolderForm'])
+        ->addMiddleware(new FeatureAuth($group->getContainer(), ['folder.userHome']))
+        ->setName('user.homeFolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['users.modify']));
 
 $app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])
