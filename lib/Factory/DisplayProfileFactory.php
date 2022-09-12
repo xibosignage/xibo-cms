@@ -296,7 +296,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'updateStartWindow', 'default' => '00:00'],
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
                 ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'embeddedServerPort', 'default' => 9696],
+                ['name' => 'serverPort', 'default' => 9696],
             ],
             'sssp' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -323,7 +323,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'updateStartWindow', 'default' => '00:00'],
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
                 ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'embeddedServerPort', 'default' => 9696],
+                ['name' => 'serverPort', 'default' => 9696],
             ]
         ];
 
