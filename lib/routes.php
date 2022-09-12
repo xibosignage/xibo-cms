@@ -556,6 +556,9 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/user/{id}', ['\Xibo\Controller\User','edit'])->setName('user.edit');
     $group->delete('/user/{id}', ['\Xibo\Controller\User','delete'])->setName('user.delete');
     $group->post('/user/{id}/usergroup/assign', ['\Xibo\Controller\User','assignUserGroup'])->setName('user.assign.userGroup');
+    $group->post('/user/{id}/setHomeFolder', ['\Xibo\Controller\User', 'setHomeFolder'])
+        ->addMiddleware(new FeatureAuth($group->getContainer(), ['folder.userHome']))
+        ->setName('user.homeFolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.modify']));
 
 /**
