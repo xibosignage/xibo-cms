@@ -156,8 +156,10 @@ function XiboInitialise(scope) {
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
 
+        // check to see if we need to share folder tree state globally or per page
+        var gridFolderState = rememberFolderTreeStateGlobally ? 'grid-folder-tree-state' : 'grid_'+gridName ;
         // init the jsTree
-        initJsTreeAjax($(this).find('#container-folder-tree'), 'grid_'+gridName, false)
+        initJsTreeAjax($(this).find('#container-folder-tree'), gridFolderState, false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms

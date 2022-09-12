@@ -187,6 +187,8 @@
                 imageDownloadUrl: "{{ url_for("library.download", {id: ':id'}) }}?preview=1"
             }
 
+            // User preference regarding Folder tree state
+            var rememberFolderTreeStateGlobally = {{ currentUser.getOptionValue("rememberFolderTreeStateGlobally", "1") }}
         </script>
 
         {% block javaScriptTemplates %}{% endblock %}
