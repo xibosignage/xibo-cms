@@ -2401,6 +2401,12 @@ class User extends Base
      *      required=false,
      *      type="integer"
      *   ),
+     *     @SWG\Parameter(
+     *      name="rememberFolderTreeStateGlobally",
+     *      in="formData",
+     *      required=false,
+     *      type="integer"
+     *   ),
      *   @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -2422,6 +2428,7 @@ class User extends Base
         $this->getUser()->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
         $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
         $this->getUser()->setOptionValue('isAlwaysUseManualAddUserForm', $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm'));
+        $this->getUser()->setOptionValue('rememberFolderTreeStateGlobally', $parsedParams->getCheckbox('rememberFolderTreeStateGlobally'));
 
         if ($this->getUser()->isSuperAdmin()) {
             $this->getUser()->showContentFrom = $parsedParams->getInt('showContentFrom');

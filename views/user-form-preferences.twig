@@ -77,6 +77,10 @@
                 {% set title %}{% trans "Always use manual Add User form?" %}{% endset %}
                 {% set helpText %}{% trans "If selected the manual Add User form will always open when you click Add User, otherwise the onboarding form will open." %}{% endset %}
                 {{ forms.checkbox("isAlwaysUseManualAddUserForm", title, currentUser.getOptionValue("isAlwaysUseManualAddUserForm", 0), helpText) }}
+
+                {% set title %}{% trans "Remember Folder tree state globally?" %}{% endset %}
+                {% set helpText %}{% trans "When enabled the Folder tree state will be saved globally, each Page will remember the same state. If disabled, the Folder tree state will be saved per Page." %}{% endset %}
+                {{ forms.checkbox("rememberFolderTreeStateGlobally", title, currentUser.getOptionValue("rememberFolderTreeStateGlobally", 1), helpText) }}
             </form>
         </div>
     </div>

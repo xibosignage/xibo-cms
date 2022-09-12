@@ -518,6 +518,16 @@ class MediaFactory extends BaseFactory
     }
 
     /**
+     * @param int $folderId
+     * @return Media[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId(int $folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * @param null $sortOrder
      * @param array $filterBy
      * @return Media[]

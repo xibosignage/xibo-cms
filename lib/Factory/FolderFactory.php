@@ -22,7 +22,6 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\Folder;
 use Xibo\Entity\User;
 use Xibo\Helper\ByteFormatter;

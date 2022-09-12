@@ -606,6 +606,10 @@ class Playlist extends Base
 
         // Folders
         $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
@@ -851,8 +855,11 @@ class Playlist extends Base
         $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => $playlist->folderId]);
 
         if ($playlist->hasPropertyChanged('folderId')) {
+            if ($playlist->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($playlist->folderId);
-            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
@@ -1884,10 +1891,13 @@ class Playlist extends Base
         }
 
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
         $playlist->folderId = $folderId;
         $folder = $this->folderFactory->getById($playlist->folderId);
-        $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Save
         $playlist->save();

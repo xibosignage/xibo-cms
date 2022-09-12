@@ -164,6 +164,16 @@ class MenuBoardFactory extends BaseFactory
     }
 
     /**
+     * @param $folderId
+     * @return MenuBoard[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId($folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * @param null $sortOrder
      * @param array $filterBy
      * @return MenuBoard[]

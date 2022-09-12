@@ -136,6 +136,11 @@ function openUploadForm(options) {
                     return true;
                 })
             .bind('fileuploaddone', function (e, data) {
+                    // if we throw an error in the backend, the data.result.files is undefined, check if we have a message
+                    if (data.result.files === undefined && data.result.message !== undefined && data.result.message != null) {
+                        toastr.error(data.result.message);
+                        return;
+                    }
 
                     // If the upload was an error, then don't process the remaining methods.
                     if (data.result.files[0].error != null && data.result.files[0].error !== "") {

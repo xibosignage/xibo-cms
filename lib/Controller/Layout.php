@@ -343,6 +343,10 @@ class Layout extends Base
 
         // Folders
         $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
@@ -678,6 +682,9 @@ class Layout extends Base
         }
 
         if ($layout->hasPropertyChanged('folderId')) {
+            if ($layout->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folderChanged = true;
         }
 
@@ -2479,6 +2486,11 @@ class Layout extends Base
 
         // Folders
         $folderId = $parsedBody->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }

@@ -491,6 +491,7 @@ $app->post('/folders', ['\Xibo\Controller\Folder', 'add'])
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/folders/{folderId}', ['\Xibo\Controller\Folder', 'edit'])->setName('folders.edit');
     $group->delete('/folders/{folderId}', ['\Xibo\Controller\Folder', 'delete'])->setName('folders.delete');
+    $group->put('/folders/{folderId}/move', ['\Xibo\Controller\Folder', 'move'])->setName('folders.move');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
 /**
