@@ -354,7 +354,7 @@ class UserFactory extends BaseFactory
 
         // Home folderId
         if ($parsedFilter->getInt('homeFolderId') !== null) {
-            $body .= " AND user.homeFolderId = :homeFolderId ";
+            $body .= ' AND user.homeFolderId = :homeFolderId ';
             $params['homeFolderId'] = $parsedFilter->getInt('homeFolderId');
         }
 
