@@ -1180,8 +1180,24 @@ pE.initElements = function() {
 
   // Enable multi select mode
   pE.editorContainer.find('.footer-actions [data-action="multi-select"]')
-    .click(function(e) {
+    .click(function() {
       pE.toggleMultiselectMode();
+    });
+
+  // Timeline zoom controls
+  pE.editorContainer.find('.footer-controls .btn[data-action="zoom-in"]')
+    .click(function() {
+      pE.timeline.changeZoomLevel(1);
+    });
+
+  pE.editorContainer.find('.footer-controls .btn[data-action="zoom-out"]')
+    .click(function() {
+      pE.timeline.changeZoomLevel(-1);
+    });
+
+  pE.editorContainer.find('.footer-controls .btn[data-action="zoom-reset"]')
+    .click(function() {
+      pE.timeline.changeZoomLevel(0);
     });
 };
 

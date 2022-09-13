@@ -337,13 +337,13 @@
             display: none;
         }
 
-        #viewer-preview iframe {
-            @include user-select-none();
-        }
-
-        #viewer-preview {
+        .widget-preview {
             color: $xibo-color-neutral-700;
             text-shadow: 0px 0px 2px $xibo-color-neutral-900;
+
+            iframe {
+                @include user-select-none();
+            }
         }
 
         .layout-player {
