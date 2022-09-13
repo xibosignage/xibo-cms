@@ -344,6 +344,15 @@
                                     {% if currentUser.featureEnabled("folder.view") %}
                                     // Submit the folder ownerships
                                     var selected = $(dialog).find("#container-form-folder-tree").jstree("get_selected");
+
+                                    // jsTree selects the root folder if all child folders are selected, we need to
+                                    // remove that.
+                                    var rootIndex = selected.indexOf('1');
+                                    if (rootIndex > -1) {
+                                        selected.splice(rootIndex, 1);
+                                    }
+
+                                    // View/edit for our group
                                     var groupIds = {};
                                     groupIds[xhr.data.groupId] = {
                                         "view": 1,

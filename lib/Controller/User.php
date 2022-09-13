@@ -1886,7 +1886,12 @@ class User extends Base
             throw new AccessDeniedException(__('This object is not shared with you with edit permission'));
         }
 
+        if ($object->permissionsClass() === 'Xibo\Entity\Folder' && $object->getId() === 1) {
+            throw new InvalidArgumentException(__('You cannot share the root folder'), 'id');
+        }
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Get all current permissions
         $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id);
 
@@ -2045,7 +2050,7 @@ class User extends Base
 
     /**
      * Updates a set of permissions from a set of groupIds
-     * @param array[Permission] $permissions
+     * @param Permission[] $permissions
      * @param array $groupIds
      */
     private function updatePermissions($permissions, $groupIds)
@@ -2054,8 +2059,6 @@ class User extends Base
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
-            /* @var \Xibo\Entity\Permission $row */
-
             // Check and see what permissions we have been provided for this selection
             // If all permissions are 0, then the record is deleted
             if (is_array($groupIds)) {
