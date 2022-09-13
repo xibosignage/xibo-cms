@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -282,7 +282,8 @@ class User extends Base
             'userTypeId' => $sanitizedParams->getInt('userTypeId'),
             'userName' => $sanitizedParams->getString('userName'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'retired' => $sanitizedParams->getInt('retired')
+            'retired' => $sanitizedParams->getInt('retired'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ];
 
         // Load results into an array
@@ -324,6 +325,9 @@ class User extends Base
                 $user->homePage = __('Unknown homepage, please edit to update.');
             }
 
+            // Set the home folder
+            $user->homeFolder = $user->getUnmatchedProperty('homeFolder', '/');
+
             // Super admins have some buttons
             if ($this->getUser()->featureEnabled('users.modify')
                 && $this->getUser()->checkEditable($user)
@@ -347,6 +351,23 @@ class User extends Base
                     'id' => 'user_button_delete',
                     'url' => $this->urlFor($request,'user.delete.form', ['id' => $user->userId]),
                     'text' => __('Delete')
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('folder.userHome')) {
+                $user->buttons[] = [
+                    'id' => 'user_button_set_home',
+                    'url' => $this->urlFor($request, 'user.homeFolder.form', ['id' => $user->userId]),
+                    'text' => __('Set Home Folder'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.homeFolder', ['id' => $user->userId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'user_button_set_home'],
+                        ['name' => 'text', 'value' => __('Set home folder')],
+                        ['name' => 'rowtitle', 'value' => $user->userName],
+                        ['name' => 'form-callback', 'value' => 'userHomeFolderMultiselectFormOpen']
+                    ],
                 ];
             }
 
@@ -556,6 +577,13 @@ class User extends Base
         $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
         $user->setNewPassword($sanitizedParams->getString('password'));
+
+        // Are user home folders enabled? If not, use the default.
+        if ($this->getUser()->featureEnabled('folder.userHome')) {
+            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+        } else {
+            $user->homeFolderId = 1;
+        }
 
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
@@ -804,6 +832,11 @@ class User extends Base
         $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
         $user->retired = $sanitizedParams->getCheckbox('retired');
+
+        // Are user home folders enabled? Don't change unless they are.
+        if ($this->getUser()->featureEnabled('folder.userHome')) {
+            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+        }
 
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
@@ -2368,6 +2401,12 @@ class User extends Base
      *      required=false,
      *      type="integer"
      *   ),
+     *     @SWG\Parameter(
+     *      name="rememberFolderTreeStateGlobally",
+     *      in="formData",
+     *      required=false,
+     *      type="integer"
+     *   ),
      *   @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -2389,6 +2428,7 @@ class User extends Base
         $this->getUser()->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
         $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
         $this->getUser()->setOptionValue('isAlwaysUseManualAddUserForm', $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm'));
+        $this->getUser()->setOptionValue('rememberFolderTreeStateGlobally', $parsedParams->getCheckbox('rememberFolderTreeStateGlobally'));
 
         if ($this->getUser()->isSuperAdmin()) {
             $this->getUser()->showContentFrom = $parsedParams->getInt('showContentFrom');
@@ -2436,6 +2476,72 @@ class User extends Base
             'groups' => $this->userGroupFactory->query(null, [
                 'isShownForAddUser' => 1
             ])
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Set home folder form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function setHomeFolderForm(Request $request, Response $response, $id)
+    {
+        $user = $this->userFactory->getById($id);
+        $user->setChildAclDependencies($this->userGroupFactory);
+
+        if (!$this->getUser()->checkEditable($user)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'user-form-home-folder';
+        $this->getState()->setData([
+            'user' => $user
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Set home folder form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function setHomeFolder(Request $request, Response $response, $id)
+    {
+        $user = $this->userFactory->getById($id);
+        $user->setChildAclDependencies($this->userGroupFactory);
+
+        if (!$this->getUser()->checkEditable($user)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('folder.userHome')) {
+            throw new AccessDeniedException();
+        }
+
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Build a user entity and save it
+        $user->setChildAclDependencies($this->userGroupFactory);
+        $user->load();
+        $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+        $user->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $user->userName),
+            'id' => $user->userId,
+            'data' => $user
         ]);
 
         return $this->render($request, $response);

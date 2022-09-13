@@ -38,23 +38,12 @@
     <div class="widget">
         <div class="widget-title">{% trans "DataSets" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="dataSetView">
                 <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline" onsubmit="return false">
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
-                                <div>
-                                    <div class="input-group">
-                                        <input class="form-control" name="dataSet" type="text" id="dataSet" value="">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.inputNameGrid('dataSet', title) }}
 
                             {% set title %}{% trans "Code" %}{% endset %}
                             {% set helpText %}{% trans "Show items which match the provided code" %}{% endset %}

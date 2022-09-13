@@ -51,19 +51,8 @@
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("displayId", title) }}
 
-                                    <div class="form-group mr-1 mb-1">
-                                        <label class="control-label mr-1" title="" for="display" accesskey="">{% trans "Name" %}</label>
-                                        <div>
-                                            <div class="input-group">
-                                                <input class="form-control" name="display" type="text" id="display" value="">
-                                                <div class="input-group-append input-group-addon">
-                                                    <div class="input-group-text">
-                                                        <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {% set title %}{% trans "Name" %}{% endset %}
+                                    {{ inline.inputNameGrid('display', title) }}
 
                                     {% set title %}{% trans "Status" %}{% endset %}
                                     {% set check %}{% trans "Up to date" %}{% endset %}
@@ -225,6 +214,7 @@
                                         <th>{% trans "XMR Registered" %}</th>
                                         <th>{% trans "Commercial Licence" %}</th>
                                         <th>{% trans "Remote" %}</th>
+                                        <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th>{% trans "Faults?" %}</th>
@@ -523,6 +513,12 @@
                         },
                         "visible": true,
                         "orderable": false
+                    },
+                    {
+                        "data": "groupsWithPermissions",
+                        visible: false,
+                        responsivePriority: 10,
+                        "render": dataTableCreatePermissions
                     },
                     {"data": "createdDt", "visible": false, responsivePriority: 6},
                     {"data": "modifiedDt", "visible": false, responsivePriority: 6},

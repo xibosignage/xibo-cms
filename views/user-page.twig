@@ -48,19 +48,8 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="" for="userName" accesskey="">{% trans "Name" %}</label>
-                                <div>
-                                    <div class="input-group">
-                                        <input class="form-control" name="userName" type="text" id="userName" value="">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.inputNameGrid('userName', title) }}
 
                             {% set title %}{% trans "User Type" %}{% endset %}
                             {{ inline.dropdown("userTypeId", "single", title, "", [{userTypeId:null, userType:""}]|merge(userTypes), "userTypeId", "userType") }}
@@ -77,6 +66,7 @@
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Homepage" %}</th>
+                                <th>{% trans "Home folder" %}</th>
                                 <th>{% trans "Email" %}</th>
                                 <th>{% trans "Library Quota" %}</th>
                                 <th>{% trans "Last Login" %}</th>
@@ -132,6 +122,10 @@
                         "data": "homePage",
                         "sortable": false,
                         responsivePriority: 3
+                    },
+                    {
+                        data: 'homeFolder',
+                        responsivePriority: 4
                     },
                     {"data": "email", responsivePriority: 3},
                     {
@@ -239,6 +233,8 @@
                 }
             });
 
+            initFolderPanel(dialog, true);
+
             // Bind to the add form submit
             $(".UserForm").validate({
                 submitHandler: function (form) {
@@ -282,7 +278,7 @@
 
             // Init the folder panel
             {% if currentUser.featureEnabled("folder.view") %}
-            initFolderPanel(dialog);
+            initFolderPanel(dialog, false, true);
             {% endif %}
 
             var navListItems = $(dialog).find('div.setup-panel div a'),
@@ -347,7 +343,7 @@
                                 if (xhr.success && xhr.id) {
                                     {% if currentUser.featureEnabled("folder.view") %}
                                     // Submit the folder ownerships
-                                    var selected = $(dialog).find("#container-folder-tree").jstree("get_selected");
+                                    var selected = $(dialog).find("#container-form-folder-tree").jstree("get_selected");
                                     var groupIds = {};
                                     groupIds[xhr.data.groupId] = {
                                         "view": 1,
@@ -396,27 +392,62 @@
                     }));
         }
 
-        function initFolderPanel(dialog) {
-            var $container = $(dialog).find("#container-folder-tree");
+        function userHomeFolderFormOpen(dialog) {
+            initFolderPanel(dialog, true);
+        }
 
-            $container.jstree({
-                "plugins": ["checkbox", "sort"],
-                "themes" : {
-                    "responsive" : true
+        function userHomeFolderMultiselectFormOpen(dialog) {
+            var $input = $('<div id="container-form-folder-tree" class="card card-body bg-light"></div>');
+            var $helpText = $('<span class="help-block">{{ "Set a home folder to use as the default folder for new content."|trans }}</span>');
+
+            $(dialog).find('.modal-body').append($input);
+            $(dialog).find('.modal-body').append($helpText);
+
+            initFolderPanel(dialog, true);
+        }
+
+        function initFolderPanel(dialog, isHomeOnSelect = false, isHomeContext = false) {
+            var plugins = [];
+
+            if (!isHomeOnSelect) {
+                plugins.push('checkbox');
+            }
+
+            initJsTreeAjax(
+                '#container-form-folder-tree',
+                'user-add_edit-form',
+                true,
+                600,
+                function(tree, $container) {
+                    if (!isHomeOnSelect) {
+                        tree.disable_checkbox(1);
+                        tree.disable_node(1);
+                    }
+                    $container.jstree('open_all');
                 },
-                "core": {
-                    "data": {
-                        "url": foldersUrl
+                function(data) {
+                    if (isHomeOnSelect && data.action === 'select_node') {
+                        $(dialog).find('input[name=homeFolderId]').val(data.node.id);
+
+                        // In case we're in a multi-select.
+                        dialog.data().commitData = {homeFolderId: data.node.id};
                     }
                 },
-                "checkbox" : {
-                    "three_state" : false
+                function($node, items) {
+                    if (isHomeContext) {
+                        items['home'] = {
+                            separator_before: false,
+                            separator_after: false,
+                            label: translations.folderTreeSetAsHome,
+                            action: function () {
+                                $(dialog).find('input[name=homeFolderId]').val($node.id);
+                            }
+                        }
+                    }
+                    return items;
                 },
-            }).on("ready.jstree", function(e, data) {
-                $(this).jstree().disable_checkbox(1);
-                $(this).jstree().disable_node(1);
-                $(this).jstree("open_all");
-            });
+                plugins
+            );
         }
     </script>
 {% endblock %}

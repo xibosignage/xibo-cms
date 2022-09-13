@@ -150,7 +150,8 @@ class MenuBoard extends Base
             'userId' => $parsedParams->getInt('userId'),
             'name' => $parsedParams->getString('name'),
             'code' => $parsedParams->getString('code'),
-            'folderId' => $parsedParams->getInt('folderId')
+            'folderId' => $parsedParams->getInt('folderId'),
+            'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
         ];
 
         $menuBoards = $this->menuBoardFactory->query(
@@ -330,6 +331,14 @@ class MenuBoard extends Base
         $code = $sanitizedParams->getString('code');
         $folderId = $sanitizedParams->getInt('folderId');
 
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($folderId) || $this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
+
         $menuBoard = $this->menuBoardFactory->create($name, $description, $code, $folderId);
         $menuBoard->save();
 
@@ -441,6 +450,9 @@ class MenuBoard extends Base
         $menuBoard->folderId = $sanitizedParams->getInt('folderId', ['default' => $menuBoard->folderId]);
 
         if ($menuBoard->hasPropertyChanged('folderId')) {
+            if ($menuBoard->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($menuBoard->folderId);
             $menuBoard->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
         }
@@ -613,6 +625,10 @@ class MenuBoard extends Base
         }
 
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
         $menuBoard->folderId = $folderId;
         $folder = $this->folderFactory->getById($menuBoard->folderId);

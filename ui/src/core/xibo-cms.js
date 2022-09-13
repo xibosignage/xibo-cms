@@ -152,13 +152,14 @@ function XiboInitialise(scope) {
                 return false;
             }
         });
-        
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
 
+        // check to see if we need to share folder tree state globally or per page
+        var gridFolderState = rememberFolderTreeStateGlobally ? 'grid-folder-tree-state' : 'grid_'+gridName ;
         // init the jsTree
-        initJsTreeAjax($(this).find('#container-folder-tree'), 'grid-folder-tree-state', false)
+        initJsTreeAjax($(this).find('#container-folder-tree'), gridFolderState, false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -3433,11 +3434,12 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, id, isForm, ttl)
+function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [])
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
     ttl = (typeof ttl == 'undefined') ? false : ttl;
+    var homeNodeId;
     
 
     // if there is no modal appended to body and we are on a form that needs this modal, then append it
@@ -3469,7 +3471,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"],
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes", "types"].concat(plugins),
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3531,6 +3533,22 @@ function initJsTreeAjax(container, id, isForm, ttl)
                                     }
                                 }
                             }
+
+                            if (isForm === false && buttonPermissions.move) {
+                                items['Move'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeMove,
+                                    "_class": "XiboFormRender",
+                                    "action": function (obj) {
+                                        XiboFormRender(foldersUrl + '/form/' + $node.id + '/move');
+                                    }
+                                }
+                            }
+
+                            if (onBuildContextMenu !== null && onBuildContextMenu instanceof Function) {
+                                items = onBuildContextMenu($node, items);
+                            }
                         },
                         complete: function (data) {
                             checkContextMenuPermissions(items);
@@ -3539,6 +3557,20 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 }},
             "themes" : {
                 "responsive" : true
+            },
+            "types" : {
+                "root" : {
+                    "icon" : "fa fa-file text-warning"
+                },
+                "home" : {
+                    "icon" : "fa fa-home text-success"
+                },
+                "default" : {
+                    "icon" : "fa fa-folder text-warning"
+                },
+                "open" : {
+                    "icon" : "fa fa-folder-open text-warning"
+                }
             },
             'core' : {
                 "check_callback" : function (operation, node, parent, position, more) {
@@ -3555,9 +3587,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     "url": foldersUrl
                 }
             }
-        });
-
-        $(container).on('ready.jstree', function(e, data) {
+        }).bind('ready.jstree', function(e, data) {
             // depending on the state of folder tree, hide/show as needed when we load the grid page
             if (localStorage.getItem("hideFolderTree") !== undefined &&
                 localStorage.getItem("hideFolderTree") !== null &&
@@ -3574,6 +3604,18 @@ function initJsTreeAjax(container, id, isForm, ttl)
                         $(container).jstree().hide_node(node);
                     } else {
                         $(container).jstree().disable_node(node);
+                    }
+                }
+
+                // get the home folder
+                if (e.type !== undefined && e.type === 'home') {
+                    homeNodeId = e.id;
+
+                    // check state
+                    let currentState = localStorage.getItem(id+'_folder_tree')
+                    // if we have no state saved, select the homeFolderId in the tree.
+                    if (currentState === undefined || currentState === null) {
+                        $(container).jstree(true).select_node(homeNodeId)
                     }
                 }
             });
@@ -3601,10 +3643,11 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             }
-        });
 
-        $(container).on("rename_node.jstree", function (e, data) {
-
+            if (onReady && onReady instanceof Function) {
+                onReady($(container).jstree(true), $(container));
+            }
+        }).bind("rename_node.jstree", function (e, data) {
             var dataObject = {};
             var folderId  = data.node.id;
             dataObject['text'] = data.text;
@@ -3621,9 +3664,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             });
-        });
-
-        $(container).on("create_node.jstree", function (e, data) {
+        }).bind("create_node.jstree", function (e, data) {
 
             var node = data.node;
             node.text = translations.folderNew;
@@ -3648,9 +3689,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 },
             });
-        });
-
-        $(container).on("delete_node.jstree", function (e, data) {
+        }).bind("delete_node.jstree", function (e, data) {
 
             var dataObject = {};
             dataObject['parentId'] = data.parent;
@@ -3679,9 +3718,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
                 }
             });
-        });
-
-        $(container).on("changed.jstree", function (e, data) {
+        }).bind("changed.jstree", function (e, data) {
             var selectedFolderId = data.selected[0];
             var folderIdInputSelector = (isForm) ? '#'+id+' #folderId' : '#folderId';
             var node = $(container).jstree("get_selected", true);
@@ -3713,6 +3750,18 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
                 }
             }
+
+            if (onSelected && onSelected instanceof Function) {
+                onSelected(data);
+            }
+        }).bind("open_node.jstree", function(e, data) {
+            if (data.node.type !== 'root' && data.node.type !== 'home') {
+                data.instance.set_type(data.node,'open');
+            }
+        }).bind("close_node.jstree", function(e, data) {
+            if (data.node.type !== 'root' && data.node.type !== 'home') {
+                data.instance.set_type(data.node, 'default');
+            }
         });
 
         // on froms that have more than one modal active, this is needed to not confuse bootstrap
@@ -3730,7 +3779,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 $(container).jstree("deselect_all");
                 $('.XiboFilter').find('#folderId').val(null).trigger('change');
             } else {
-                $(container).jstree('select_node', 1)
+                $(container).jstree('select_node', homeNodeId ?? 1)
             }
         });
 

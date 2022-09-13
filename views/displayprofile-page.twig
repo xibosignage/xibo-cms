@@ -42,19 +42,8 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="" for="displayProfile" accesskey="">{% trans "Name" %}</label>
-                                <div>
-                                    <div class="input-group">
-                                        <input class="form-control" name="displayProfile" type="text" id="displayProfile" value="">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.inputNameGrid('displayProfile', title) }}
 
                             {% set title %}{% trans "Type" %}{% endset %}
                             {{ inline.dropdown("type", "single", title, "", [{typeId:null, type:""}]|merge(types), "typeId","type") }}

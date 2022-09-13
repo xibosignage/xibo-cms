@@ -104,7 +104,8 @@ class SavedReport extends Base
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportName' => $sanitizedQueryParams->getString('reportName'),
-            'onlyMyReport' => $sanitizedQueryParams->getCheckbox('onlyMyReport')
+            'onlyMyReport' => $sanitizedQueryParams->getCheckbox('onlyMyReport'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ], $sanitizedQueryParams));
 
         foreach ($savedReports as $savedReport) {

@@ -253,8 +253,21 @@ class DisplayFactory extends BaseFactory
                   `display`.commercialLicence,
                   `display`.teamViewerSerial,
                   `display`.webkeySerial,
-                  (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults
+                  `display`.lanIpAddress,
+                  (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
+                  (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                    FROM `permission`
+                        INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group`
+                            ON `group`.groupId = `permission`.groupId
+                        WHERE entity = :entity
+                            AND objectId = `displaygroup`.displayGroupId
+                            AND view = 1
+                  ) AS groupsWithPermissions
               ';
+
+        $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
             $select .= ',
@@ -336,7 +349,16 @@ class DisplayFactory extends BaseFactory
         // Filter by Display Name?
         if ($parsedBody->getString('display') != null) {
             $terms = explode(',', $parsedBody->getString('display'));
-            $this->nameFilter('display', 'display', $terms, $body, $params, ($parsedBody->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedBody->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'display',
+                'display',
+                $terms,
+                $body,
+                $params,
+                ($parsedBody->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($parsedBody->getString('macAddress') != '') {
@@ -567,6 +589,7 @@ class DisplayFactory extends BaseFactory
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

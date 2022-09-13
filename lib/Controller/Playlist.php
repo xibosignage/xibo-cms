@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -269,7 +269,8 @@ class Playlist extends Base
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
             'folderId' => $sanitizedParams->getInt('folderId'),
             'layoutId' => $sanitizedParams->getInt('layoutId'),
-            'logicalOperator' => $sanitizedParams->getString('logicalOperator')
+            'logicalOperator' => $sanitizedParams->getString('logicalOperator'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ], $sanitizedParams));
 
         foreach ($playlists as $playlist) {
@@ -529,6 +530,13 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="logicalOperatorName",
+     *      in="formData",
+     *      description="When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="filterMediaTag",
      *      in="formData",
      *      description="Add Library Media matching the tag filter provided",
@@ -595,21 +603,29 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->create($sanitizedParams->getString('name'), $this->getUser()->getId());
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
-        $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($playlist->folderId);
-            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-        } else {
-            $playlist->permissionsFolderId = 1;
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
         }
 
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
+
+        $folder = $this->folderFactory->getById($folderId, 0);
+        $playlist->folderId = $folder->id;
+        $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
+
+        // Tags
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
         }
 
         // Do we have a tag or name filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
+        $nameFilterLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
         $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
         $logicalOperator = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('logicalOperator') : 'OR';
         $exactTags = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getCheckbox('exactTags') : 0;
@@ -620,10 +636,11 @@ class Playlist extends Base
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
             }
             $playlist->filterMediaName = $nameFilter;
+            $playlist->filterMediaNameLogicalOperator = $nameFilterLogicalOperator;
             if ($this->getUser()->featureEnabled('tag.tagging')) {
                 $playlist->filterMediaTags = $tagFilter;
                 $playlist->filterExactTags = $exactTags;
-                $playlist->filterLogicalOperator = $logicalOperator;
+                $playlist->filterMediaTagsLogicalOperator = $logicalOperator;
             }
             $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems', ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]);
         }
@@ -632,7 +649,17 @@ class Playlist extends Base
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1, 'exactTags' => $exactTags, 'logicalOperator' => $logicalOperator]);
+            $media = $this->mediaFactory->query(
+                null,
+                [
+                    'name' => $nameFilter,
+                    'tags' => $tagFilter,
+                    'assignable' => 1,
+                    'exactTags' => $exactTags,
+                    'logicalOperator' => $logicalOperator,
+                    'logicalOperatorName' => $nameFilterLogicalOperator
+                ]
+            );
 
             if (count($media) > 0) {
                 $widgets = [];
@@ -755,6 +782,13 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="logicalOperatorName",
+     *      in="formData",
+     *      description="When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="filterMediaTag",
      *      in="formData",
      *      description="Add Library Media matching the tag filter provided",
@@ -821,8 +855,11 @@ class Playlist extends Base
         $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => $playlist->folderId]);
 
         if ($playlist->hasPropertyChanged('folderId')) {
+            if ($playlist->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($playlist->folderId);
-            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
@@ -836,11 +873,12 @@ class Playlist extends Base
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
             }
             $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
+            $playlist->filterMediaNameLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
 
             if ($this->getUser()->featureEnabled('tag.tagging')) {
                 $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
                 $playlist->filterExactTags = $sanitizedParams->getCheckbox('exactTags');
-                $playlist->filterLogicalOperator = $sanitizedParams->getString('logicalOperator');
+                $playlist->filterMediaTagsLogicalOperator = $sanitizedParams->getString('logicalOperator');
             }
             $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems');
         }
@@ -1853,10 +1891,13 @@ class Playlist extends Base
         }
 
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
         $playlist->folderId = $folderId;
         $folder = $this->folderFactory->getById($playlist->folderId);
-        $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Save
         $playlist->save();

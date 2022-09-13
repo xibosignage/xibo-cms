@@ -1,0 +1,105 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set name = folder.text %}
+    {% trans %} Move Folder -  {{ name }} {% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, folderMoveSubmit()
+{% endblock %}
+
+
+{% block formFieldActions %}
+    [{
+    "field": "merge",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "none" }
+    }
+    },{
+    "field": "merge",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "none" }
+    }
+    },{
+    "field": "merge",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "" }
+    }
+    },{
+    "field": "merge",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="moveFolderForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("folders.move", {folderId: folder.id}) }}">
+                <div class="form-group row">
+                    <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
+                    <div class="col-sm-10" style="padding-top: 7px">
+                        <span id="originalFormFolder"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-2 control-label">{% trans "Move to Selected Folder:" %}</label>
+                    <div class="col-sm-10">
+                        <div class="card p-3 mb-3 bg-light" id="container-folder-form-tree"></div>
+                    </div>
+                </div>
+
+                {% if deletable %}
+                    {% set title %}{% trans "Merge?" %}{% endset %}
+                    {% set helpText %}{% trans "Should we merge content of the original folder into the selected folder?" %}{% endset %}
+                    {{ forms.checkbox("merge", title, 0, helpText) }}
+
+                    {% set message %}{% trans "With merge selected, all Objects (Media, Layouts etc) and any sub-folders currently in the original folder will be moved to the selected folder. Original folder will be deleted" %}{% endset %}
+                    {{ forms.message(message, 'merge-message', 'alert alert-info') }}
+                {% endif %}
+
+                {{ forms.hidden('folderId', folder.id) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

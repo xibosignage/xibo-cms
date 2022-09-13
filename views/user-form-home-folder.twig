@@ -1,0 +1,50 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Set home folder" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#userHomeFolderForm").submit()
+{% endblock %}
+
+{% block callBack %}userHomeFolderFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userHomeFolderForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("user.homeFolder", {id: user.userId}) }}">
+                <div class="tab-pane" id="home-folder">
+                    <p>{{ "Set a home folder to use as the default folder for new content."|trans }}</p>
+                    {{ forms.hidden("homeFolderId", user.homeFolderId) }}
+                    <div id="container-form-folder-tree" class="card card-body bg-light"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

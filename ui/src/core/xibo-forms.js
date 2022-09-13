@@ -1450,3 +1450,11 @@ function userApprovedApplicationsFormOpen(dialog) {
     })
 
 }
+
+function folderMoveSubmit() {
+    XiboFormSubmit($("#moveFolderForm"), null, function(xhr, form) {
+        if (xhr.success) {
+            $('#container-folder-tree').jstree(true).refresh()
+        }
+    });
+}

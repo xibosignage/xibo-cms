@@ -29,17 +29,8 @@
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("campaignId", title) }}
 
-                                    <div class="form-group mr-1 mb-1">
-                                        <label class="control-label mr-1" title="" for="layout" accesskey="">{% trans "Name" %}</label>
-                                        <div class="input-group">
-                                            <input class="form-control" name="layout" type="text" id="layout" value="">
-                                            <div class="input-group-append input-group-addon">
-                                                <div class="input-group-text">
-                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {% set title %}{% trans "Name" %}{% endset %}
+                                    {{ inline.inputNameGrid('layout', title) }}
 
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tags" %}{% endset %}
@@ -643,14 +634,15 @@
                   masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, el));
                 });
 
-                cardColumn.imagesLoaded().progress(function () {
-                  masonry.layout();
-                });
-
                 moreButton.prop('disabled', false);
               } else {
                 toastr.info('{{ "There are no more templates to show"|trans }}');
               }
+
+              cardColumn.imagesLoaded().progress(function () {
+                masonry.layout();
+              });
+
               spinner.addClass('d-none');
             }
           });

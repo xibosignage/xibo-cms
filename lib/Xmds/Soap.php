@@ -733,8 +733,8 @@ class Soap
                 $allRegions = array_merge($layout->regions, $layout->drawers);
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
-                // Append layout resources before layout so they are downloaded first. 
-                // If layouts are set to expire immediately, the new layout will use the old resources if 
+                // Append layout resources before layout so they are downloaded first.
+                // If layouts are set to expire immediately, the new layout will use the old resources if
                 // the layout is downloaded first.
                 foreach ($allRegions as $region) {
                     $playlist = $region->getPlaylist();
@@ -798,7 +798,7 @@ class Soap
 
                 // Append Layout
                 $fileElements->appendChild($file);
-                
+
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
 
@@ -857,8 +857,7 @@ class Soap
                 // Execute this on the default connection
                 $this->getStore()->updateWithDeadlockLoop(
                     'DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
-                    $rfIds,
-                    'default'
+                    $rfIds
                 );
             } catch (DeadlockException $deadlockException) {
                 $this->getLog()->error('Deadlock when deleting required files - ignoring and continuing with request');
@@ -1480,7 +1479,7 @@ class Soap
             }
 
             // Insert
-            $this->getStore()->isolated($sql, $data);
+            $this->getStore()->update($sql, $data);
         } else {
             $this->getLog()->info('0 logs resolved from log package');
         }

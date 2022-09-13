@@ -451,17 +451,18 @@ class SubPlaylist extends ModuleWidget
             $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
 
-            // Handle proof of play settings
-            // -----------------------------
-            // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit alter that option
-            // in memory for this widget.
+            // Assert top level options
+            // ------------------------
+            // options such as stats/cycle playback are asserted from the top down
             // this is not a saved change, we assess this every time
             $playlistEnableStat = empty($playlist->enableStat)
                 ? $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT')
                 : $playlist->enableStat;
 
             foreach ($expanded as $subPlaylistWidget) {
-
+                // Handle proof of play
+                // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit alter that option
+                // in memory for this widget.
                 $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat',
                     $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT')
                 );
@@ -472,6 +473,10 @@ class SubPlaylist extends ModuleWidget
                     $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
                 }
 
+                // Cycle Playback
+                // --------------
+                // currently we only support cycle playback on the topmost level.
+                // https://github.com/xibosignage/xibo/issues/2869
                 $subPlaylistWidget->setOptionValue('cyclePlayback', 'attrib', $cyclePlayback);
                 $subPlaylistWidget->setOptionValue('playCount', 'attrib', $playCount);
                 $subPlaylistWidget->setOptionValue('isRandom', 'attrib', $isRandom);

@@ -85,6 +85,12 @@ class Playlist implements \JsonSerializable
     public $filterMediaName;
 
     /**
+     * @SWG\Property(description="Which logical operator should be used when filtering by multiple Plalust names? OR|AND")
+     * @var string
+     */
+    public $filterMediaNameLogicalOperator;
+
+    /**
      * @SWG\Property(description="Filter Tags for a Dynamic Playlist")
      * @var string
      */
@@ -100,7 +106,7 @@ class Playlist implements \JsonSerializable
      * @SWG\Property(description="Which logical operator should be used when filtering by multiple Tags? OR|AND")
      * @var string
      */
-    public $filterLogicalOperator;
+    public $filterMediaTagsLogicalOperator;
 
     /**
      * @SWG\Property(description="Maximum number of Media items matching dynamic Playlist filters")
@@ -814,8 +820,8 @@ class Playlist implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `filterExactTags`, `filterLogicalOperator`, `maxNumberOfItems`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :filterExactTags, :filterLogicalOperator, :maxNumberOfItems, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaNameLogicalOperator`, `filterMediaTags`, `filterExactTags`, `filterMediaTagsLogicalOperator`, `maxNumberOfItems`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaNameLogicalOperator, :filterMediaTags, :filterExactTags, :filterMediaTagsLogicalOperator, :maxNumberOfItems, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -823,9 +829,10 @@ class Playlist implements \JsonSerializable
             'regionId' => $this->regionId == 0 ? null : $this->regionId,
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
+            'filterMediaNameLogicalOperator' => $this->filterMediaNameLogicalOperator ?? 'OR',
             'filterMediaTags' => $this->filterMediaTags,
             'filterExactTags' => $this->filterExactTags ?? 0,
-            'filterLogicalOperator' => $this->filterLogicalOperator ?? 'OR',
+            'filterMediaTagsLogicalOperator' => $this->filterMediaTagsLogicalOperator ?? 'OR',
             'maxNumberOfItems' => $this->isDynamic == 0 ? null : $this->maxNumberOfItems,
             'createdDt' => $time,
             'modifiedDt' => $time,
@@ -858,9 +865,10 @@ class Playlist implements \JsonSerializable
                 `duration` = :duration,
                 `isDynamic` = :isDynamic,
                 `filterMediaName` = :filterMediaName,
+                `filterMediaNameLogicalOperator` = :filterMediaNameLogicalOperator,
                 `filterMediaTags` = :filterMediaTags,
                 `filterExactTags` = :filterExactTags,
-                `filterLogicalOperator` = :filterLogicalOperator,
+                `filterMediaTagsLogicalOperator` = :filterMediaTagsLogicalOperator,
                 `maxNumberOfItems` = :maxNumberOfItems,
                 `requiresDurationUpdate` = :requiresDurationUpdate,
                 `enableStat` = :enableStat,
@@ -877,9 +885,10 @@ class Playlist implements \JsonSerializable
             'duration' => $this->duration,
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
+            'filterMediaNameLogicalOperator' => $this->filterMediaNameLogicalOperator ?? 'OR',
             'filterMediaTags' => $this->filterMediaTags,
             'filterExactTags' => $this->filterExactTags ?? 0,
-            'filterLogicalOperator' => $this->filterLogicalOperator ?? 'OR',
+            'filterMediaTagsLogicalOperator' => $this->filterMediaTagsLogicalOperator ?? 'OR',
             'maxNumberOfItems' => $this->maxNumberOfItems,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
