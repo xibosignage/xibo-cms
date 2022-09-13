@@ -77,6 +77,10 @@
             .info {
                 line-height: 2.5rem;
 
+                .fa-arrow-right {
+                    margin: 0 12px;
+                }
+
                 .label-name {
                     max-width: 20%;
                     overflow: hidden;

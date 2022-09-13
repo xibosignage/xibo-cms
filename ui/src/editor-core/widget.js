@@ -83,8 +83,8 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.loop = false;
   this.extend = false;
 
-  // by default, the widget duration is null ( to be calculated )
-  this.duration = null;
+  // by default, if not set, duration is null ( to be calculated )
+  this.duration = (data.useDuration == 1) ? data.duration : null;
 
   this.widgetDurationNotSet = false;
   // in the case of the duration has not being calculated
@@ -183,7 +183,7 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   };
 
   /**
-   * Get widget calculated duration ( could be differente for some widgets )
+   * Get widget calculated duration ( could be different for some widgets )
    * @param {boolean=} [recalculate] - Force the duration to be recalculated
    * @return {number} - Widget duration in seconds
    */

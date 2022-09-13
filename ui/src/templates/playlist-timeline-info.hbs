@@ -1,0 +1,20 @@
+<div class="playlist-info-block">
+    <i class="fa fa-tag " title="{{trans.name}}"></i>
+    <span class="label-name align-middle d-inline-block">
+        "{{playlist.name}}"
+    </span>
+</div>
+
+<div class="playlist-info-block">
+    <i class="fa fa-clock-o" title="{{trans.duration}}"></i>
+    <span class="label-name align-middle d-inline-block">
+        {{playlist.duration}}
+    </span>
+</div>
+
+{{#if widget}}
+    &nbsp;&nbsp;<i class="fas fa-arrow-right align-middle"></i>&nbsp;&nbsp;
+    <span class="label-name align-middle d-inline-block">
+        "{{widget.widgetName}}" ({{widget.moduleName}})
+    </span>
+{{/if}}

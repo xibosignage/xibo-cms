@@ -1518,6 +1518,9 @@ Toolbar.prototype.openSubMenu = function($card) {
     self.openMenu(openedMenu, true);
   });
 
+  // Clear tooltips
+  this.parent.common.clearTooltips();
+
   // Load content
   self.loadSubMenu($submenuContainer, cardData.dataType, cardData.subType);
 };

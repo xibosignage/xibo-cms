@@ -215,20 +215,31 @@ $timeline-left-margin-width: 100px;
                 min-height: 2px;
                 position: relative;
                 background-color: $xibo-color-neutral-500;
-                left: 40px;
-                width: calc(100% - 40px);
+                left: 70px;
+                width: calc(100% - 70px);
             }
 
             .time-grid-step-with-value {
-                left: 70px;
-                width: calc(100% - 70px);
+                left: 30px;
+                width: calc(100% - 30px);
 
                 .step-value {
                     position: relative;
-                    color: $xibo-color-neutral-500;
-                    top: -10px;
-                    left: -45px;
+                    color: $xibo-color-neutral-700;
+                    top: 0;
+                    left: 0;
                 }
+            }
+
+            &::after {
+                content: ' ';
+                position: absolute;
+                width: calc(100% - 100px);
+                height: 100%;
+                left: 100px;
+                top: 0;
+                background-color: $xibo-color-neutral-0;
+                opacity: 0.7;
             }
         }
 
@@ -244,13 +255,18 @@ $timeline-left-margin-width: 100px;
                 background-color: $xibo-color-primary-l10;
                 outline: 1px solid $xibo-color-primary-d60;
                 color: $xibo-color-secondary;
-                min-height: 56px;
                 width: 100%;
                 padding: 6px 6px 6px 0;
                 display: flex;
                 justify-content: space-between;
                 gap: 6px;
                 position: relative;
+
+                &.minimal-widget {
+                    &>* {
+                        display: none;
+                    }
+                }
 
                 .widgetLabel {
                     flex: 0;
@@ -262,7 +278,7 @@ $timeline-left-margin-width: 100px;
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
-                    padding: 8px 0;
+                    padding: 6px 0;
 
                     .widgetDuration {
                         text-overflow: ellipsis;
@@ -379,6 +395,7 @@ $timeline-left-margin-width: 100px;
             width: $left-bar-width;
             height: 100%;
             display: flex;
+            justify-content: space-evenly;
 
             .btn {
                 color: $xibo-color-neutral-100;
@@ -413,6 +430,25 @@ $timeline-left-margin-width: 100px;
 
             .selected-info {
                 color: $xibo-color-neutral-0;
+                padding: 0 12px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+
+                .fa-arrow-right {
+                    margin: 0 12px;
+                }
+
+                .playlist-info-block {
+                    &:first-child {
+                        margin-right: 8px;
+                    }
+
+                    i {
+                        margin-right: 4px;
+                    }
+                }
+
             }
 
             .footer-actions {
@@ -442,7 +478,7 @@ $timeline-left-margin-width: 100px;
                     }
 
                     &[data-action="remove-widget"] {
-                        background-color: $xibo-color-semantic-error !important;
+                        background-color: $xibo-color-semantic-error  !important;
 
                         &:hover:not(.inactive) {
                             background-color: darken($xibo-color-semantic-error, 10%) !important;
@@ -452,7 +488,7 @@ $timeline-left-margin-width: 100px;
                     &.hide-on-multi-select {
                         display: inline-block;
                     }
-    
+
                     &.show-on-multi-select {
                         display: none;
                     }
@@ -491,7 +527,8 @@ $timeline-left-margin-width: 100px;
                 position: relative;
                 z-index: $playlist-editor-z-index-select;
 
-                .widgetDelete, .widgetProperties {
+                .widgetDelete,
+                .widgetProperties {
                     display: none !important;
                 }
             }
@@ -523,7 +560,7 @@ $timeline-left-margin-width: 100px;
     &.multi-select {
         .playlist-widget {
             &:hover {
-                background: $playlist-editor-widget-multi-selected-hover-color !important;
+                background: $playlist-editor-widget-multi-selected-hover-color  !important;
             }
 
             &.multi-selected {

@@ -370,11 +370,20 @@ PropertiesPanel.prototype.render = function(element, step) {
     // Create the dynamic form fields
     // ( for now just for widget )
     if (element.type === 'widget') {
-      // Configure tab
-      forms.createFields(
-        res.data.module.properties,
-        self.DOMObject.find('#configureTab'),
-      );
+      // Create configure tab if we have properties
+      if (res.data.module.properties.length > 0) {
+        // Configure tab
+        forms.createFields(
+          res.data.module.properties,
+          self.DOMObject.find('#configureTab'),
+        );
+      } else {
+        // Remove configure tab
+        self.DOMObject.find('[href="#configureTab"]').parent().remove();
+
+        // Select advanced tab
+        self.DOMObject.find('[href="#advancedTab"]').tab('show');
+      }
 
       // Appearance tab ( if template exists )
       if (res.data.template) {
