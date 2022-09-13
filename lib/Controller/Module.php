@@ -790,7 +790,8 @@ class Module extends Base
             'module' => $module,
             'media' => $media,
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions),
-            'templatesAvailable' => $templates
+            'templatesAvailable' => $templates,
+            'isTopLevel' => $this->playlistFactory->getById($module->widget->playlistId)->isRegionPlaylist()
         ]));
 
         return $this->render($request, $response);
