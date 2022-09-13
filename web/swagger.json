@@ -10178,7 +10178,7 @@
                     "widget"
                 ],
                 "summary": "Parameters for editing existing audio widget on a layout",
-                "description": "For uploading new audio files, please refer to POST /library documentation.\n     *               For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "description": "For uploading new audio files, please refer to POST /library documentation.\r\n     *               For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\r\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetAudioEdit",
                 "parameters": [
                     {
@@ -12163,7 +12163,7 @@
                     "widget"
                 ],
                 "summary": "Parameters for editing existing image on a layout",
-                "description": "For uploading new image files, please refer to POST /library documentation.\n     *               For assigning existing image file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "description": "For uploading new image files, please refer to POST /library documentation.\r\n     *               For assigning existing image file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\r\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetImageEdit",
                 "parameters": [
                     {
@@ -13728,7 +13728,7 @@
                     "widget"
                 ],
                 "summary": "Parameters for editing existing video on a layout",
-                "description": "For uploading new video files, please refer to POST /library documentation.\n     *               For assigning existing video file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "description": "For uploading new video files, please refer to POST /library documentation.\r\n     *               For assigning existing video file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\r\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetVideoEdit",
                 "parameters": [
                     {
@@ -14871,6 +14871,10 @@
                     "description": "The Webkey serial number for this Display",
                     "type": "string"
                 },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this Display",
+                    "type": "string"
+                },
                 "createdDt": {
                     "description": "The datetime this entity was created",
                     "type": "string"
@@ -14945,6 +14949,10 @@
                 "bandwidthLimit": {
                     "description": "The display bandwidth limit",
                     "type": "integer"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this DisplayGroup",
+                    "type": "string"
                 },
                 "createdDt": {
                     "description": "The datetime this entity was created",
