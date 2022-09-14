@@ -141,6 +141,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
     $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
+    $group->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])->setName('layout.preview.connector');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
 
 // forms
@@ -324,6 +325,9 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/user/form/edit/{id}', ['\Xibo\Controller\User', 'editForm'])->setName('user.edit.form');
     $group->get('/user/form/delete/{id}', ['\Xibo\Controller\User', 'deleteForm'])->setName('user.delete.form');
     $group->get('/user/form/membership/{id}', ['\Xibo\Controller\User', 'membershipForm'])->setName('user.membership.form');
+    $group->get('/user/form/setHomeFolder/{id}', ['\Xibo\Controller\User', 'setHomeFolderForm'])
+        ->addMiddleware(new FeatureAuth($group->getContainer(), ['folder.userHome']))
+        ->setName('user.homeFolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['users.modify']));
 
 $app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])
@@ -355,8 +359,11 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/campaign/form/delete/{id}', ['\Xibo\Controller\Campaign', 'deleteForm'])->setName('campaign.delete.form');
     $group->get('/campaign/form/retire/{id}', ['\Xibo\Controller\Campaign', 'retireForm'])->setName('campaign.retire.form');
     $group->get('/campaign/form/layouts/{id}', ['\Xibo\Controller\Campaign', 'layoutsForm'])->setName('campaign.layouts.form');
-    $group->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolderForm'])->setName('campaign.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
+
+$app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolderForm'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify', 'layout.modify']))
+    ->setName('campaign.selectfolder.form');
 
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view']))
@@ -453,8 +460,11 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/displaygroup/form/media/{id}', ['\Xibo\Controller\DisplayGroup','mediaForm'])->setName('displayGroup.media.form');
     $group->get('/displaygroup/form/layout/{id}', ['\Xibo\Controller\DisplayGroup','layoutsForm'])->setName('displayGroup.layout.form');
     $group->get('/displaygroup/form/copy/{id}', ['\Xibo\Controller\DisplayGroup','copyForm'])->setName('displayGroup.copy.form');
-    $group->get('/displaygroup/form/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolderForm'])->setName('displayGroup.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.modify']));
+
+$app->get('/displaygroup/form/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolderForm'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.modify', 'display.modify']))
+    ->setName('displayGroup.selectfolder.form');
 
 //
 // displayprofile
@@ -503,6 +513,16 @@ $app->get('/admin/view', ['\Xibo\Controller\Settings','displayPage'])
 $app->get('/maintenance/form/tidy', ['\Xibo\Controller\Maintenance','tidyLibraryForm'])
     ->addMiddleware(new SuperAdminAuth($app->getContainer()))
     ->setName('maintenance.libraryTidy.form');
+
+//
+// Folders
+//
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/folders/view', ['\Xibo\Controller\Folder', 'displayPage'])->setName('folders.view');
+    $group->get('/folders/form/add', ['\Xibo\Controller\Folder', 'addForm'])->setName('folders.add.form');
+    $group->get('/folders/form/edit/{id}', ['\Xibo\Controller\Folder', 'editForm'])->setName('folders.edit.form');
+    $group->get('/folders/form/delete/{id}', ['\Xibo\Controller\Folder', 'deleteForm'])->setName('folders.delete.form');
+})->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
 //
 // Applications and connectors
@@ -719,3 +739,7 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/menuboard/{id}/product/form/edit', ['\Xibo\Controller\MenuBoardProduct', 'editForm'])->setName('menuBoard.product.edit.form');
     $group->get('/menuboard/{id}/product/form/delete', ['\Xibo\Controller\MenuBoardProduct', 'deleteForm'])->setName('menuBoard.product.delete.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.view']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/folders/form/{folderId}/move', ['\Xibo\Controller\Folder', 'moveForm'])->setName('folders.move.form');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));

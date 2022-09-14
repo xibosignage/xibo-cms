@@ -265,6 +265,7 @@ class DisplayGroup extends Base
             'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
@@ -602,6 +603,13 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="logicalOperatorName",
+     *      in="formData",
+     *      description="When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="dynamicCriteriaTags",
      *      in="formData",
      *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
@@ -655,11 +663,20 @@ class DisplayGroup extends Base
         $displayGroup->description = $sanitizedParams->getString('description');
         $displayGroup->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
-        $displayGroup->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+        $displayGroup->dynamicCriteriaLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
+        $displayGroup->folderId = $sanitizedParams->getInt('folderId');
+
+        if ($displayGroup->folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($displayGroup->folderId)) {
+            $displayGroup->folderId = $this->getUser()->homeFolderId;
+        }
 
         if ($this->getUser()->featureEnabled('folder.view')) {
             $folder = $this->folderFactory->getById($displayGroup->folderId);
-            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         } else {
             $displayGroup->permissionsFolderId = 1;
         }
@@ -668,7 +685,7 @@ class DisplayGroup extends Base
             $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
             $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
             $displayGroup->dynamicCriteriaExactTags = $sanitizedParams->getCheckbox('exactTags');
-            $displayGroup->dynamicCriteriaLogicalOperator = $sanitizedParams->getString('logicalOperator');
+            $displayGroup->dynamicCriteriaTagsLogicalOperator = $sanitizedParams->getString('logicalOperator');
         }
 
         if ($displayGroup->isDynamic === 1) {
@@ -748,6 +765,13 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="logicalOperatorName",
+     *      in="formData",
+     *      description="When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="dynamicCriteriaTags",
      *      in="formData",
      *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
@@ -797,18 +821,22 @@ class DisplayGroup extends Base
         $displayGroup->description = $parsedRequestParams->getString('description');
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
+        $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperatorName') : 'OR';
         $displayGroup->folderId = $parsedRequestParams->getInt('folderId', ['default' => $displayGroup->folderId]);
 
         if ($displayGroup->hasPropertyChanged('folderId')) {
+            if ($displayGroup->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($displayGroup->folderId);
-            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
             $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
             $displayGroup->dynamicCriteriaExactTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getCheckbox('exactTags') : 0;
-            $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperator') : 'OR';
+            $displayGroup->dynamicCriteriaTagsLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperator') : 'OR';
         }
 
         // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
@@ -2541,12 +2569,19 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
+        // Folders
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
-        $displayGroup->folderId = $folderId;
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
-        $folder = $this->folderFactory->getById($displayGroup->folderId);
-        $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $folder = $this->folderFactory->getById($folderId, 0);
+        $displayGroup->folderId = $folder->id;
+        $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Save
         $displayGroup->save([

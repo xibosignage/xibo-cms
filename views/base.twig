@@ -100,9 +100,11 @@
             translations.folderTreeEdit = "{{ "Rename"|trans }}";
             translations.folderTreeDelete = "{{ "Remove"|trans }}";
             translations.folderTreeShare = "{{ "Share"|trans }}";
+            translations.folderTreeSetAsHome = "{{ "Set as Home"|trans }}";
             translations.folderTreeError = "{{ "Cannot modify root folder."|trans }}";
             translations.folderWithContent = "{{ "Cannot remove Folder with content"|trans }}";
             translations.folderNew = "{{ "New Folder"|trans }}";
+            translations.folderTreeMove = "{{ "Move Folder"|trans }}";
             translations.dayPartExceptionErrorMessage = "{{ "You already set an exception for this day."|trans }}";
             translations.online = "{{ "Online"|trans }}";
             translations.offline = "{{ "Offline"|trans }}";
@@ -185,6 +187,8 @@
                 imageDownloadUrl: "{{ url_for("library.download", {id: ':id'}) }}?preview=1"
             }
 
+            // User preference regarding Folder tree state
+            var rememberFolderTreeStateGlobally = {{ currentUser.getOptionValue("rememberFolderTreeStateGlobally", "1") }}
         </script>
 
         {% block javaScriptTemplates %}{% endblock %}

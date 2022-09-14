@@ -486,6 +486,8 @@ class Layout implements \JsonSerializable
      */
     public function setOwner($ownerId, $cascade = false)
     {
+        $this->getLog()->debug('setOwner: layoutId=' . $this->layoutId . ', ownerId=' . $ownerId);
+
         $this->load();
         $this->ownerId = $ownerId;
 
@@ -2347,17 +2349,16 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->isLayoutSpecific = 1;
             $campaign->ownerId = $this->getOwnerId();
-            $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
             $campaign->cyclePlaybackEnabled = 0;
 
-            // if user has disabled folder feature, presumably said user also has no permissions to folder
-            // getById would fail here and prevent adding new Layout in web ui
-            try {
-                $folder = $this->folderFactory->getById($campaign->folderId);
-                $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-            } catch (NotFoundException $exception) {
-                $campaign->permissionsFolderId = 1;
-            }
+            // We shouldn't ever have a null folderId by now, but just in case.
+            $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+
+            // check that the user has access to the folder we're adding them to
+            $folder = $this->folderFactory->getById($campaign->folderId, 0);
+            $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
+
+            // Assign the layout
             $campaign->assignLayout($this);
 
             // Ready to save the Campaign

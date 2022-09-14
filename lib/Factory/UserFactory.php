@@ -190,6 +190,15 @@ class UserFactory extends BaseFactory
     }
 
     /**
+     * @param int $homeFolderId
+     * @return User[]
+     */
+    public function getByHomeFolderId(int $homeFolderId)
+    {
+        return $this->query(null, ['homeFolderId' => $homeFolderId]);
+    }
+
+    /**
      * Query for users
      * @param array[mixed] $sortOrder
      * @param array[mixed] $filterBy
@@ -219,6 +228,8 @@ class UserFactory extends BaseFactory
                 group.groupId,
                 group.group,
                 `user`.homePageId,
+                `user`.homeFolderId,
+                `folder`.folderName AS homeFolder,
                 `user`.firstName,
                 `user`.lastName,
                 `user`.phone,
@@ -241,6 +252,8 @@ class UserFactory extends BaseFactory
               FROM `user`
                 INNER JOIN lkusergroup
                 ON lkusergroup.userId = user.userId
+                INNER JOIN `folder`
+                ON `folder`.folderId = `user`.homeFolderId
                 INNER JOIN `group`
                 ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
@@ -296,6 +309,12 @@ class UserFactory extends BaseFactory
             $params['userTypeId'] = $parsedFilter->getInt('userTypeId');
         }
 
+        // Home Folder Id
+        if ($parsedFilter->getInt('homeFolderId') !== null) {
+            $body .= ' AND `user`.homeFolderId = :homeFolderId ';
+            $params['homeFolderId'] = $parsedFilter->getInt('homeFolderId');
+        }
+
         // User Name Provided
         if ($parsedFilter->getString('exactUserName') != null) {
             $body .= " AND user.userName = :exactUserName ";
@@ -304,7 +323,16 @@ class UserFactory extends BaseFactory
 
         if ($parsedFilter->getString('userName') != null) {
             $terms = explode(',', $parsedFilter->getString('userName'));
-            $this->nameFilter('user', 'userName', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'user',
+                'userName',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Email Provided
@@ -324,10 +352,17 @@ class UserFactory extends BaseFactory
             $params['clientId'] = $parsedFilter->getString('clientId');
         }
 
+        // Home folderId
+        if ($parsedFilter->getInt('homeFolderId') !== null) {
+            $body .= ' AND user.homeFolderId = :homeFolderId ';
+            $params['homeFolderId'] = $parsedFilter->getInt('homeFolderId');
+        }
+
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

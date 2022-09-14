@@ -557,7 +557,8 @@ class Library extends Base
             'layoutId' => $parsedQueryParams->getInt('layoutId'),
             'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0,
             'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
-            'logicalOperator' => $parsedQueryParams->getString('logicalOperator')
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ], $parsedQueryParams));
 
         // Add some additional row content
@@ -1074,7 +1075,17 @@ class Library extends Base
     {
         $parsedBody = $this->getSanitizer($request->getParams());
         $options = $parsedBody->getArray('options', ['default' => []]);
-        $oldFolderId = 1;
+
+        // Folders
+        $folderId = $parsedBody->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         $options = array_merge([
             'oldMediaId' => null,
@@ -1138,7 +1149,7 @@ class Library extends Base
             'widgetFromDt' => $widgetFromDt === null ? null : $widgetFromDt->format('U'),
             'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
             'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
-            'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId]),
+            'oldFolderId' => $folderId,
             'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         ];
 
@@ -1295,6 +1306,9 @@ class Library extends Base
         $media->orientation = $sanitizedParams->getString('orientation', ['default' => $media->orientation]);
 
         if ($media->hasPropertyChanged('folderId')) {
+            if ($media->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($media->folderId);
             $media->permissionsFolderId = ($folder->getPermissionFolderId() == null)
                 ? $folder->id
@@ -1437,7 +1451,7 @@ class Library extends Base
 
             // Eligible for delete
             $i++;
-            $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
+            $this->getDispatcher()->dispatch(new MediaDeleteEvent($item), MediaDeleteEvent::$NAME);
             $item->delete();
         }
 
@@ -2329,15 +2343,17 @@ class Library extends Base
             'default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')
         ]);
 
-        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($folderId);
-            $permissionsFolderId = ($folder->permissionsFolderId == null)
-                ? $folder->id
-                : $folder->permissionsFolderId;
-        } else {
-            $permissionsFolderId = 1;
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
         }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
+
+        $folder = $this->folderFactory->getById($folderId, 0);
 
         if ($sanitizedParams->hasParam('expires')) {
             if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
@@ -2403,8 +2419,8 @@ class Library extends Base
                 'duration' => $module->determineDuration(),
                 'extension' => $ext,
                 'enableStat' => $enableStat,
-                'folderId' => $folderId,
-                'permissionsFolderId' => $permissionsFolderId
+                'folderId' => $folder->getId(),
+                'permissionsFolderId' => $folder->getPermissionFolderIdOrThis()
             ]
         );
 
@@ -2478,7 +2494,9 @@ class Library extends Base
             throw new InvalidArgumentException(__('Invalid image data'));
         }
 
-        $media->orientation = ($image->getWidth() >= $image->getHeight()) ? 'landscape' : 'portrait';
+        $media->width = $image->getWidth();
+        $media->height = $image->getHeight();
+        $media->orientation = ($media->width >= $media->height) ? 'landscape' : 'portrait';
         $media->save(['saveTags' => false, 'validate' => false]);
 
         return $response->withStatus(204);
@@ -2566,6 +2584,9 @@ class Library extends Base
         }
 
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
         $media->folderId = $folderId;
         $folder = $this->folderFactory->getById($media->folderId);
@@ -2597,15 +2618,15 @@ class Library extends Base
     {
         $params = $this->getSanitizer($request->getParams());
         $items = $params->getArray('items');
-        $folderId = $params->getInt('folderId', ['default' => 1]);
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($folderId);
-            $permissionsFolderId = ($folder->permissionsFolderId == null)
-                ? $folder->id
-                : $folder->permissionsFolderId;
-        } else {
-            $permissionsFolderId = 1;
+
+        // Folders
+        $folderId = $params->getInt('folderId');
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
         }
+        $folder = $this->folderFactory->getById($folderId, 0);
+
+        // Stats
         $enableStat = $params->getString('enableStat', [
             'default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')
         ]);
@@ -2656,8 +2677,8 @@ class Library extends Base
                             'fileType' => strtolower($module->getModuleType()),
                             'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->determineDuration(),
                             'enableStat' => $enableStat,
-                            'folderId' => $folderId,
-                            'permissionsFolderId' => $permissionsFolderId
+                            'folderId' => $folder->getId(),
+                            'permissionsFolderId' => $folder->permissionsFolderId
                         ]
                     );
                 } else {
@@ -2691,7 +2712,7 @@ class Library extends Base
                             );
 
                             list($imgWidth, $imgHeight) = @getimagesize($filePath);
-                            $media->updateOrientation(($imgWidth >= $imgHeight) ? 'landscape' : 'portrait');
+                            $media->updateOrientation($imgWidth, $imgHeight);
                         } catch (\Exception $exception) {
                             // if we failed, corrupted file might still be created, remove it here
                             unlink($libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png');

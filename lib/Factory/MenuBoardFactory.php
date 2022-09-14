@@ -164,6 +164,16 @@ class MenuBoardFactory extends BaseFactory
     }
 
     /**
+     * @param $folderId
+     * @return MenuBoard[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId($folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * @param null $sortOrder
      * @param array $filterBy
      * @return MenuBoard[]
@@ -227,7 +237,16 @@ class MenuBoardFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_board', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'menu_board',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getInt('folderId') !== null) {

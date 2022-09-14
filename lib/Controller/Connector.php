@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ConnectorFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -37,10 +38,15 @@ class Connector extends Base
 {
     /** @var \Xibo\Factory\ConnectorFactory */
     private $connectorFactory;
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
 
-    public function __construct(ConnectorFactory $connectorFactory)
+    public function __construct(ConnectorFactory $connectorFactory, WidgetFactory $widgetFactory)
     {
         $this->connectorFactory = $connectorFactory;
+        $this->widgetFactory = $widgetFactory;
     }
 
     /**
@@ -159,5 +165,42 @@ class Connector extends Base
         }
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $token
+     * @return \Psr\Http\Message\ResponseInterface
+     * @throws AccessDeniedException
+     */
+    public function connectorPreview(Request $request, Response $response)
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $token = $params->getString('token');
+        $isDebug = $params->getCheckbox('isDebug');
+
+        if (empty($token)) {
+            throw new AccessDeniedException();
+        }
+
+        // Dispatch an event to check the token
+        $tokenEvent = new \Xibo\Event\XmdsConnectorTokenEvent();
+        $tokenEvent->setToken($token);
+        $this->getDispatcher()->dispatch($tokenEvent, \Xibo\Event\XmdsConnectorTokenEvent::$NAME);
+
+        if (empty($tokenEvent->getWidgetId())) {
+            throw new AccessDeniedException();
+        }
+
+        // Get the widget
+        $widget = $this->widgetFactory->getById($tokenEvent->getWidgetId());
+
+        // It has been found, so we raise an event here to see if any connector can provide a file for it.
+        $event = new \Xibo\Event\XmdsConnectorFileEvent($widget, $isDebug);
+        $this->getDispatcher()->dispatch($event, \Xibo\Event\XmdsConnectorFileEvent::$NAME);
+
+        // What now?
+        return $event->getResponse();
     }
 }

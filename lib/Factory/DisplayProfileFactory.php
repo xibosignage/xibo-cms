@@ -295,7 +295,8 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'updateStartWindow', 'default' => '00:00'],
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
+                ['name' => 'serverPort', 'default' => 9696],
             ],
             'sssp' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -321,7 +322,8 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'updateStartWindow', 'default' => '00:00'],
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
+                ['name' => 'serverPort', 'default' => 9696],
             ]
         ];
 
@@ -366,7 +368,16 @@ class DisplayProfileFactory extends BaseFactory
             // Filter by DisplayProfile Name?
             if ($parsedFilter->getString('displayProfile') != null) {
                 $terms = explode(',', $parsedFilter->getString('displayProfile'));
-                $this->nameFilter('displayprofile', 'name', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+                $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+                $this->nameFilter(
+                    'displayprofile',
+                    'name',
+                    $terms,
+                    $body,
+                    $params,
+                    ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                    $logicalOperator
+                );
             }
 
             if ($parsedFilter->getString('type') != null) {

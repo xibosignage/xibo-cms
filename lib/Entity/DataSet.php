@@ -514,7 +514,7 @@ class DataSet implements \JsonSerializable
         foreach ($this->getColumn() as $column) {
             /* @var DataSetColumn $column */
             $allowedOrderCols[] = $column->heading;
-            
+
             if ($column->dataSetColumnTypeId == 2 && !$options['includeFormulaColumns'])
                 continue;
 
@@ -1072,7 +1072,7 @@ class DataSet implements \JsonSerializable
 
     private function dropTable()
     {
-        $this->getStore()->isolated('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
+        $this->getStore()->update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, [], 'isolated', false, false, true);
     }
 
     /**

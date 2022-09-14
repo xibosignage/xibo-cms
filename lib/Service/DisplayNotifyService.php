@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,9 +26,9 @@ namespace Xibo\Service;
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
-use Xibo\Support\Exception\DeadlockException;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DeadlockException;
 use Xibo\XMR\CollectNowAction;
 
 /**
@@ -120,9 +120,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $qmarks = str_repeat('?,', count($displayIds) - 1) . '?';
 
         try {
+            // This runs on the default connection which will already be committed and closed by the time we get
+            // here. This doesn't run in a transaction.
             $this->store->updateWithDeadlockLoop(
                 'UPDATE `display` SET mediaInventoryStatus = 3 WHERE displayId IN (' . $qmarks . ')',
-                $displayIds
+                $displayIds,
+                'default',
+                false
             );
         } catch (DeadlockException $deadlockException) {
             $this->log->error('Failed to update media inventory status: ' . $deadlockException->getMessage());

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -206,6 +206,7 @@ class Campaign extends Base
             'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
             'layoutId' => $parsedParams->getInt('layoutId'),
             'logicalOperator' => $parsedParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
@@ -440,19 +441,26 @@ class Campaign extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
+
+        $folder = $this->folderFactory->getById($folderId, 0);
+
+        // Create Campaign
         $campaign = $this->campaignFactory->create(
             $sanitizedParams->getString('name'),
             $this->getUser()->userId,
             $sanitizedParams->getString('tags'),
-            $sanitizedParams->getInt('folderId', ['default' => 1])
+            $folder->getId()
         );
-
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($campaign->folderId);
-            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-        } else {
-            $campaign->permissionsFolderId = 1;
-        }
+        $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Cycle based playback
         $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
@@ -618,8 +626,11 @@ class Campaign extends Base
         $campaign->folderId = $parsedRequestParams->getInt('folderId', ['default' => $campaign->folderId]);
 
         if ($campaign->hasPropertyChanged('folderId')) {
+            if ($campaign->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($campaign->folderId);
-            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
         // Cycle based playback
@@ -1076,6 +1087,10 @@ class Campaign extends Base
         }
 
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
 
         $campaign->folderId = $folderId;
         $folder = $this->folderFactory->getById($campaign->folderId);

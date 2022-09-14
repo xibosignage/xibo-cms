@@ -936,6 +936,12 @@
                                     {% set helpText %}{% trans "Allow modifications to the transition configuration?" %}{% endset %}
                                     {{ forms.checkbox("TRANSITION_CONFIG_LOCKED_CHECKB", title, theme.getSetting("TRANSITION_CONFIG_LOCKED_CHECKB"), helpText, "", "", not theme.isSettingEditable("TRANSITION_CONFIG_LOCKED_CHECKB")) }}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("FOLDERS_ALLOW_SAVE_IN_ROOT") %}
+                                    {% set title %}{% trans "Allow saving in the root folder?" %}{% endset %}
+                                    {% set helpText %}{% trans "Users can use the top level folder to store content. Disable to force the use of folders." %}{% endset %}
+                                    {{ forms.checkbox("FOLDERS_ALLOW_SAVE_IN_ROOT", title, theme.getSetting("FOLDERS_ALLOW_SAVE_IN_ROOT"), helpText, "", "", not theme.isSettingEditable("FOLDERS_ALLOW_SAVE_IN_ROOT")) }}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_regional">
                                 <h3 class="section-heading">{% trans "Regional" %}</h3>
