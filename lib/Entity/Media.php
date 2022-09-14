@@ -201,6 +201,18 @@ class Media implements \JsonSerializable
      */
     public $orientation;
 
+    /**
+     * @var int
+     * @SWG\Property(description="The width of the Media file")
+     */
+    public $width;
+
+    /**
+     * @var int
+     * @SWG\Property(description="The height of the Media file")
+     */
+    public $height;
+
     // Private
     private $unassignTags = [];
     private $requestOptions = [];
@@ -641,8 +653,8 @@ class Media implements \JsonSerializable
         }
 
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`, `orientation`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId, :orientation)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`, `orientation`, `width`, `height`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId, :orientation, :width, :height)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -659,7 +671,9 @@ class Media implements \JsonSerializable
             'enableStat' => $this->enableStat,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId,
-            'orientation' => $this->orientation
+            'orientation' => $this->orientation,
+            'width' => ($this->width === null) ? null : $this->width,
+            'height' => ($this->height === null) ? null : $this->height,
         ]);
     }
 
@@ -684,7 +698,9 @@ class Media implements \JsonSerializable
                 expires = :expires,
                 folderId = :folderId,
                 permissionsFolderId = :permissionsFolderId,
-                orientation = :orientation
+                orientation = :orientation,
+                width = :width,
+                height = :height
            WHERE mediaId = :mediaId
         ';
 
@@ -704,7 +720,9 @@ class Media implements \JsonSerializable
             'expires' => $this->expires,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId,
-            'orientation' => $this->orientation
+            'orientation' => $this->orientation,
+            'width' => ($this->width === null) ? null : $this->width,
+            'height' => ($this->height === null) ? null : $this->height,
         ];
 
         $this->getStore()->update($sql, $params);
@@ -826,6 +844,8 @@ class Media implements \JsonSerializable
                     expires = :expires,
                     released = :released,
                     orientation = :orientation,
+                    width = :width,
+                    height = :height,
                     valid = :valid 
              WHERE mediaId = :mediaId
         ', [
@@ -836,7 +856,9 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'orientation' => $this->orientation,
             'valid' => $this->valid,
-            'mediaId' => $this->mediaId
+            'width' => ($this->width === null) ? null : $this->width,
+            'height' => ($this->height === null) ? null : $this->height,
+            'mediaId' => $this->mediaId,
         ]);
     }
 
@@ -850,6 +872,8 @@ class Media implements \JsonSerializable
             $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
             $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
 
+            $this->width = $imgWidth;
+            $this->height = $imgHeight;
             $this->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
 
             // Media released set to 0 for large size images
@@ -1012,20 +1036,28 @@ class Media implements \JsonSerializable
 
     /**
      * Update Media orientation.
-     * For videos from Library connectors, update the orientation once we have the the cover image saved.
-     * @param string $orientation
+     * For videos from Library connectors, update the orientation once we have the cover image saved.
+     * @param int $width
+     * @param int $height
      * @return Media
      */
-    public function updateOrientation(string $orientation): Media
+    public function updateOrientation(int $width, int $height): Media
     {
-        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+        $this->getLog()->debug('Updating orientation and resolution for MediaId '. $this->mediaId);
 
-        $this->getStore()->update('UPDATE `media` SET orientation = :orientation WHERE mediaId = :mediaId', [
-            'orientation' => $orientation,
+        $this->width = $width;
+        $this->height = $height;
+        $this->orientation = ($width >= $height) ? 'landscape' : 'portrait';
+
+        $this->getStore()->update('
+            UPDATE `media` SET orientation = :orientation, width = :width, height = :height
+             WHERE mediaId = :mediaId
+        ', [
+            'orientation' => $this->orientation,
+            'width' => $this->width,
+            'height' => $this->height,
             'mediaId' => $this->mediaId
         ]);
-
-        $this->orientation = $orientation;
 
         return $this;
     }

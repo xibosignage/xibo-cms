@@ -54,7 +54,6 @@ abstract class AlphaVantageBase extends ModuleWidget
             $data = $cache->get();
 
             if ($cache->isMiss()) {
-
                 $this->getLog()->debug('getCurrencyExchangeRate is served from the API.');
 
                 $cache->lock();
@@ -64,9 +63,9 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 $request = $client->request('GET', 'https://www.alphavantage.co/query', $this->getConfig()->getGuzzleProxy([
                     'query' => [
-                        'function' => 'CURRENCY_EXCHANGE_RATE',
-                        'from_currency' => $fromCurrency,
-                        'to_currency' => $toCurrency,
+                        'function' => 'FX_DAILY',
+                        'from_symbol' => $fromCurrency,
+                        'to_symbol' => $toCurrency,
                         'apikey' => $this->getApiKey()
                     ]
                 ]));
@@ -83,7 +82,6 @@ abstract class AlphaVantageBase extends ModuleWidget
             }
 
             return $data;
-
         } catch (GuzzleException $guzzleException) {
             throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }
@@ -103,7 +101,6 @@ abstract class AlphaVantageBase extends ModuleWidget
             $data = $cache->get();
 
             if ($cache->isMiss()) {
-
                 $this->getLog()->debug('getStockQuote is served from the API.');
 
                 $cache->lock();
@@ -145,8 +142,9 @@ abstract class AlphaVantageBase extends ModuleWidget
     {
         $apiKey = $this->getSetting('apiKey', null);
 
-        if ($apiKey == null)
+        if ($apiKey == null) {
             throw new ConfigurationException(__('Missing API Key'));
+        }
 
         return $apiKey;
     }
@@ -168,7 +166,6 @@ abstract class AlphaVantageBase extends ModuleWidget
             $data = $cache->get();
 
             if ($cache->isMiss()) {
-
                 $this->getLog()->debug('getPriorDay is served from the API.');
 
                 $cache->lock();
@@ -196,7 +193,6 @@ abstract class AlphaVantageBase extends ModuleWidget
             }
 
             return $data;
-
         } catch (GuzzleException $guzzleException) {
             throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }

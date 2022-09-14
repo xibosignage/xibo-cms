@@ -70,6 +70,8 @@ class MediaOrientationTask implements TaskInterface
 
             if (!empty($filePath)) {
                 list($imgWidth, $imgHeight) = @getimagesize($filePath);
+                $media->width = $imgWidth;
+                $media->height = $imgHeight;
                 $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
                 $media->save(['saveTags' => false, 'validate' => false]);
             }

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -155,10 +155,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 }
             }
 
-            $this->store->isolated($sql, $data);
-
+            $this->store->update($sql, $data);
         }
-
     }
 
     /** @inheritdoc */
@@ -294,7 +292,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         if ($statDate != null) {
             $body .= ' AND stat.statDate >= ' . $statDate->format('U');
         }
-        
+
         if ($statDateLessThan != null) {
             $body .= ' AND stat.statDate < ' . $statDateLessThan->format('U');
         }

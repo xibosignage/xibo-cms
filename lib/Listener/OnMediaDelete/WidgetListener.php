@@ -74,7 +74,10 @@ class WidgetListener
                 ]);
             } else {
                 // Also delete the `lkwidgetaudio`
-                $widget->unassignAudioById($media->mediaId);
+                foreach ($widget->audio as $audio) {
+                    $widget->unassignAudioById($audio->mediaId);
+                    $audio->delete();
+                }
             }
 
             // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)

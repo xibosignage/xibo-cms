@@ -1692,6 +1692,7 @@ abstract class ModuleWidget implements ModuleInterface
 
             if ($tries <= 0) {
                 // We've waited long enough
+                $this->getLog()->error('concurrentRequestLock: Record locked, no tries remaining. widgetId: ' . $this->getWidgetId());
                 throw new GeneralException('Concurrent record locked, time out.');
             } else {
                 $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);

@@ -521,6 +521,16 @@ class MediaFactory extends BaseFactory
     }
 
     /**
+     * @param int $folderId
+     * @return Media[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId(int $folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * @param null $sortOrder
      * @param array $filterBy
      * @return Media[]
@@ -575,6 +585,8 @@ class MediaFactory extends BaseFactory
                `media`.folderId,
                `media`.permissionsFolderId,
                `media`.orientation,
+               `media`.width,
+               `media`.height,
                ( 
                    SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
                         FROM tag
@@ -699,7 +711,16 @@ class MediaFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != null) {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('media', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'media',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getString('nameExact') != '') {
@@ -897,7 +918,15 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires', 'valid'
+                    'duration',
+                    'size',
+                    'released',
+                    'moduleSystemFile',
+                    'isEdited',
+                    'expires',
+                    'valid',
+                    'width',
+                    'height'
                 ]
             ]);
             $media->excludeProperty('layoutBackgroundImages');

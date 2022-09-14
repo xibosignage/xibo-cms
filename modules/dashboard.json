@@ -1,0 +1,7 @@
+{
+  "title": "Dashboards",
+  "author": "Xibo Signage Ltd",
+  "description": "Securely connect to services like Microsoft PowerPI and display dashboards",
+  "name": "dashboard",
+  "class": "Xibo\\Widget\\Dashboard"
+}

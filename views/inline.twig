@@ -237,3 +237,23 @@
         <input class="form-control XiboColorPicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
+
+{% macro inputNameGrid(name, title) %}
+    <div class="form-group mr-1 mb-1">
+        <label class="control-label mr-1" title="" for="{{ name }}" accesskey="">{{ title }}</label>
+        <div>
+            <div class="input-group">
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="">
+                <div class="input-group-append input-group-addon">
+                    <div class="input-group-text">
+                        <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                    </div>
+                    <select class="custom-select" id="logicalOperatorName" name="logicalOperatorName" title="{% trans "When filtering by multiple names, which logical operator should be used?" %}" style="min-width:auto!important">
+                        <option value="OR" selected>OR</option>
+                        <option value="AND">AND</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

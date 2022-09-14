@@ -202,7 +202,8 @@ class Tag extends Base
             'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
             'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
             'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions'),
-            'allTags' => $sanitizedQueryParams->getInt('allTags')
+            'allTags' => $sanitizedQueryParams->getInt('allTags'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ];
 
         $tags = $this->tagFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));

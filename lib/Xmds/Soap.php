@@ -961,7 +961,7 @@ class Soap
 
                 // Append Layout
                 $fileElements->appendChild($file);
-                
+
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
             } catch (GeneralException $e) {
@@ -1020,8 +1020,7 @@ class Soap
                 $this->getStore()->updateWithDeadlockLoop(
                     'DELETE FROM `requiredfile` WHERE rfId IN ('
                         . implode(',', array_fill(0, count($rfIds), '?')) . ')',
-                    $rfIds,
-                    'default'
+                    $rfIds
                 );
             } catch (DeadlockException $deadlockException) {
                 $this->getLog()->error('Deadlock when deleting required files - ignoring and continuing with request');
@@ -1643,7 +1642,7 @@ class Soap
             }
 
             // Insert
-            $this->getStore()->isolated($sql, $data);
+            $this->getStore()->update($sql, $data);
         } else {
             $this->getLog()->info('0 logs resolved from log package');
         }
@@ -2085,7 +2084,7 @@ class Soap
         $layoutId = $sanitizer->getInt('layoutId');
         $regionId = $sanitizer->getString('regionId');
         $mediaId = $sanitizer->getString('mediaId');
-        
+
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
@@ -2113,7 +2112,7 @@ class Soap
 
             $region = $this->regionFactory->getById($regionId);
             $widget = $this->widgetFactory->loadByWidgetId($mediaId);
-            
+
             // If this is a canvas region we add all our widgets to this.
             if ($region->type === 'canvas') {
                 // Render a canvas
@@ -2127,10 +2126,10 @@ class Soap
                 // We have a widget
                 $widgets = [$widget];
             }
-            
+
             // Module is always the first widget
             $module = $this->moduleFactory->getByType($widget->type);
-            
+
             // Get all templates
             $templates = $this->widgetFactory->getTemplatesForWidgets($module, $widgets);
 

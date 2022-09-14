@@ -477,10 +477,14 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.data']));
 
 /**
- *  Folders
+ * Folders
+ * @SWG\Tag(
+ *  name="folder",
+ *  description="Folders"
+ * )
  */
+$app->get('/folders[/{folderId}]', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
     $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
 
@@ -491,6 +495,7 @@ $app->post('/folders', ['\Xibo\Controller\Folder', 'add'])
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/folders/{folderId}', ['\Xibo\Controller\Folder', 'edit'])->setName('folders.edit');
     $group->delete('/folders/{folderId}', ['\Xibo\Controller\Folder', 'delete'])->setName('folders.delete');
+    $group->put('/folders/{folderId}/move', ['\Xibo\Controller\Folder', 'move'])->setName('folders.move');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
 /**
@@ -555,6 +560,9 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/user/{id}', ['\Xibo\Controller\User','edit'])->setName('user.edit');
     $group->delete('/user/{id}', ['\Xibo\Controller\User','delete'])->setName('user.delete');
     $group->post('/user/{id}/usergroup/assign', ['\Xibo\Controller\User','assignUserGroup'])->setName('user.assign.userGroup');
+    $group->post('/user/{id}/setHomeFolder', ['\Xibo\Controller\User', 'setHomeFolder'])
+        ->addMiddleware(new FeatureAuth($group->getContainer(), ['folder.userHome']))
+        ->setName('user.homeFolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.modify']));
 
 /**
