@@ -120,9 +120,11 @@
                         <h3 class="panel-title">{{ "Content"|trans }}</h3>
                     </div>
                     <div class="panel-body">
+                        {{ forms.hidden("homeFolderId", 1) }}
+
                         {% if currentUser.featureEnabled("folder.view") %}
                             <p>{{ "Select any folders the new user should have shared with them for viewing and editing."|trans }}</p>
-                            <div id="container-folder-tree" class="card card-body bg-light"></div>
+                            <div id="container-form-folder-tree" class="card card-body bg-light"></div>
                         {% endif %}
                     </div>
                 </div>

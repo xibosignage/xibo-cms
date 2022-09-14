@@ -152,11 +152,25 @@ class CampaignFactory extends BaseFactory
     }
 
     /**
+     * @param $folderId
+     * @return Campaign[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId($folderId, $isLayoutSpecific = -1)
+    {
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'folderId' => $folderId,
+            'isLayoutSpecific' => $isLayoutSpecific
+        ]);
+    }
+
+    /**
      * Query Campaigns
      * @param array $sortOrder
      * @param array $filterBy
      * @param array $options
-     * @return array[Campaign]
+     * @return Campaign[]
      * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
@@ -262,7 +276,16 @@ class CampaignFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('campaign', 'Campaign', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'campaign',
+                'Campaign',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Exclude templates by default

@@ -56,6 +56,10 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property $libraryQuotaFormatted
+ * @property $twoFactorDescription
+ * @property $homePage
+ * @property $homeFolder
  */
 class User implements \JsonSerializable, UserEntityInterface
 {
@@ -96,6 +100,12 @@ class User implements \JsonSerializable, UserEntityInterface
      * @var int
      */
     public $homePageId;
+
+    /**
+     * @SWG\Property(description="This users home folder")
+     * @var int
+     */
+    public $homeFolderId;
 
     /**
      * @SWG\Property(description="A timestamp indicating the time the user last logged into the CMS")
@@ -813,8 +823,8 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, isPasswordChangeRequired, usertypeid, newUserWizard, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
-                     VALUES (:userName, :password, :isPasswordChangeRequired, :userTypeId, :newUserWizard, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, isPasswordChangeRequired, usertypeid, newUserWizard, email, homePageId, homeFolderId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
+                     VALUES (:userName, :password, :isPasswordChangeRequired, :userTypeId, :newUserWizard, :email, :homePageId, :homeFolderId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
 
         // Get the ID of the record we just inserted
         $this->userId = $this->getStore()->insert($sql, [
@@ -825,6 +835,7 @@ class User implements \JsonSerializable, UserEntityInterface
             'newUserWizard' => $this->newUserWizard,
             'email' => $this->email,
             'homePageId' => $this->homePageId,
+            'homeFolderId' => $this->homeFolderId,
             'CSPRNG' => $this->CSPRNG,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
@@ -860,6 +871,7 @@ class User implements \JsonSerializable, UserEntityInterface
 
         $sql = 'UPDATE `user` SET UserName = :userName,
                   homePageId = :homePageId,
+                  homeFolderId = :homeFolderId,
                   Email = :email,
                   Retired = :retired,
                   userTypeId = :userTypeId,
@@ -886,6 +898,7 @@ class User implements \JsonSerializable, UserEntityInterface
             'userTypeId' => $this->userTypeId,
             'email' => $this->email,
             'homePageId' => $this->homePageId,
+            'homeFolderId' => $this->homeFolderId,
             'retired' => $this->retired,
             'newUserWizard' => $this->newUserWizard,
             'CSPRNG' => $this->CSPRNG,
@@ -1038,9 +1051,8 @@ class User implements \JsonSerializable, UserEntityInterface
             // Store the results in the cache (default to empty result)
             $this->permissionCache[$entity] = array();
 
-            // Turn it into a ID keyed array
+            // Turn it into an ID keyed array
             foreach ($this->permissionFactory->getByUserId($entity, $this->userId) as $permission) {
-                /* @var \Xibo\Entity\Permission $permission */
                 // Always take the max
                 if (array_key_exists($permission->objectId, $this->permissionCache[$entity])) {
                     $old = $this->permissionCache[$entity][$permission->objectId];
@@ -1051,9 +1063,9 @@ class User implements \JsonSerializable, UserEntityInterface
                     $new->delete = max($permission->delete, $old->delete);
 
                     $this->permissionCache[$entity][$permission->objectId] = $new;
-                }
-                else
+                } else {
                     $this->permissionCache[$entity][$permission->objectId] = $permission;
+                }
             }
         }
 
@@ -1126,6 +1138,13 @@ class User implements \JsonSerializable, UserEntityInterface
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
         $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
+
+        // If we are checking for view permissions on a folder, then we always grant those to a users home folder.
+        if ($object->permissionsClass() === 'Xibo\Entity\Folder'
+            && $object->getId() === $this->homeFolderId
+        ) {
+            return true;
+        }
 
         // Check to see if our object is in the list
         if (array_key_exists($object->getId(), $permissions)) {
@@ -1275,7 +1294,7 @@ class User implements \JsonSerializable, UserEntityInterface
                 ON group.groupId = lkusergroup.groupId
              WHERE lkusergroup.userId = :userId
             ORDER BY `group`.isUserSpecific DESC, IFNULL(group.libraryQuota, 0) DESC
-        ', ['userId' => $this->userId], null, $reconnect);
+        ', ['userId' => $this->userId], 'default', $reconnect);
 
         if (count($rows) <= 0) {
             throw new LibraryFullException('Problem calculating this users library quota.');

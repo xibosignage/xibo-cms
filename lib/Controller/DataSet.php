@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DataSetColumnFactory;
@@ -177,6 +176,7 @@ class DataSet extends Base
             'code' => $sanitizedParams->getString('code'),
             'userId' => $sanitizedParams->getInt('userId'),
             'folderId' => $sanitizedParams->getInt('folderId'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ];
 
         $dataSets = $this->dataSetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
@@ -547,14 +547,20 @@ class DataSet extends Base
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->userId = $this->getUser()->userId;
-        $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
-        if ($this->getUser()->featureEnabled('folder.view')) {
-            $folder = $this->folderFactory->getById($dataSet->folderId);
-            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-        } else {
-            $dataSet->permissionsFolderId = 1;
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
         }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
+
+        $folder = $this->folderFactory->getById($folderId, 0);
+        $dataSet->folderId = $folder->getId();
+        $dataSet->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Fields for remote
         if ($dataSet->isRemote === 1) {
@@ -860,6 +866,9 @@ class DataSet extends Base
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
+            if ($dataSet->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folder = $this->folderFactory->getById($dataSet->folderId);
             $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
         }

@@ -384,7 +384,7 @@ class Currencies extends AlphaVantageBase
         $items = $this->getOption('items');
         $base = $this->getOption('base');
 
-        if ($items == '' || $base == '' ) {
+        if ($items == '' || $base == '') {
             $this->getLog()->error('Missing Items for Currencies Module with WidgetId ' . $this->getWidgetId());
             return false;
         }
@@ -400,7 +400,7 @@ class Currencies extends AlphaVantageBase
             
             if (isset($template)) {
                 $itemTemplate = $template['item'];
-            }    
+            }
         } else {
             $itemTemplate = $this->getRawNode('itemTemplate');
         }
@@ -425,27 +425,28 @@ class Currencies extends AlphaVantageBase
                 }
 
                 $this->getLog()->debug('Results are: ' . var_export($result, true));
-                
-                if (!array_key_exists('Realtime Currency Exchange Rate', $result)) {
-                    throw new InvalidArgumentException(__('Currency data invalid'), 'Realtime Currency Exchange Rate');
+
+                if (!array_key_exists('Meta Data', $result)) {
+                    throw new InvalidArgumentException(__('Currency data invalid'), 'Meta Data');
+                }
+
+                if (!array_key_exists('Time Series FX (Daily)', $result)) {
+                    throw new InvalidArgumentException(__('Currency data invalid'), 'Time Series FX (Daily)');
                 }
 
                 $parsedResult = [
-                    'time' => $result['Realtime Currency Exchange Rate']['6. Last Refreshed'],
-                    'ToName' => $result['Realtime Currency Exchange Rate']['3. To_Currency Code'],
-                    'ToCurrency' => $result['Realtime Currency Exchange Rate']['4. To_Currency Name'],
-                    'FromName' => $result['Realtime Currency Exchange Rate']['1. From_Currency Code'],
-                    'FromCurrency' => $result['Realtime Currency Exchange Rate']['2. From_Currency Name'],
-                    'Bid' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
-                    'Ask' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
-                    'LastTradePriceOnly' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
-                    'RawLastTradePriceOnly' => $result['Realtime Currency Exchange Rate']['5. Exchange Rate'],
-                    'TimeZone' => $result['Realtime Currency Exchange Rate']['7. Time Zone'],
+                    'time' => $result['Meta Data']['5. Last Refreshed'],
+                    'ToName' => $result['Meta Data']['3. To Symbol'],
+                    'FromName' => $result['Meta Data']['2. From Symbol'],
+                    'Bid' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
+                    'Ask' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
+                    'LastTradePriceOnly' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
+                    'RawLastTradePriceOnly' => array_values($result['Time Series FX (Daily)'])[0]['1. open'],
+                    'TimeZone' => $result['Meta Data']['6. Time Zone'],
                 ];
 
                 // Set the name/currency to be the full name including the base currency
                 $parsedResult['Name'] = $parsedResult['FromName'] . '/' . $parsedResult['ToName'];
-                $parsedResult['Currency'] = $parsedResult['FromCurrency'] . '/' . $parsedResult['ToCurrency'];
 
                 // work out the change when compared to the previous day
                 if ($percentageChangeRequested) {
@@ -505,11 +506,12 @@ class Currencies extends AlphaVantageBase
         // Get the currencies' items
         $items = $this->getOption('items');
         
-        if (strstr($items, ','))
+        if (strstr($items, ',')) {
             $items = explode(',', $items);
-        else
+        } else {
             $items = [$items];
-        
+        }
+
         $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
 
         // Substitute
@@ -531,7 +533,6 @@ class Currencies extends AlphaVantageBase
                     $time = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $data['time'])->format($timeSplit[1]);
 
                     $replacement = $time;
-
                 } else if (stripos($replace, 'NameTrimmed|') > -1) {
                     $nameSplit = explode('|', $replace);
                     $name = $data['Name'];
@@ -542,20 +543,15 @@ class Currencies extends AlphaVantageBase
                     }
 
                     $replacement = strtoupper($name);
-
                 } else {
-                    
                     // Replace the other tags
                     switch ($replace) {
                         case 'NameShort':
-
                             $replacement = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
-
                             break;
                             
                         case 'Multiplier':
-                            
-                            // Initialize replacement with empty string 
+                            // Initialize replacement with empty string
                             $replacement = '';
                             
                             // Get the current currency name/code
@@ -563,13 +559,11 @@ class Currencies extends AlphaVantageBase
                             
                             // Search for the item that relates to the actual currency
                             foreach ($items as $item) {
-                                
                                 // Get the item name
                                 $itemName = trim(explode('|', $item)[0]);
                                 
                                 // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
-                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0 ){
-                                    
+                                if (sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0) {
                                     // Get the multiplier
                                     $replacement = explode('|', $item)[1];
                                 }
@@ -578,7 +572,6 @@ class Currencies extends AlphaVantageBase
                             break;
                             
                         case 'CurrencyFlag':
-
                             $currencyCode = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
                             
                             if (!file_exists(PROJECT_ROOT . '/modules/currencies/currency-flags/' . $currencyCode . '.svg'))
@@ -614,23 +607,23 @@ class Currencies extends AlphaVantageBase
                                 $itemName = trim(explode('|', $item)[0]);
                                 
                                 // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
-                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0 ){
+                                if (sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0) {
                                     // Get the multiplier
                                     $multiplier = explode('|', $item)[1];
                                     
                                     // Set the replacement to be the API value times the multiplier
                                     $replacement = $data[$fieldName] * (float)$multiplier;
                                 }
-                            }        
+                            }
                             
                             break;
 
                         case 'ChangePercentage':
                             // Protect against null values
-                            if(($data['Change'] == null || $data['LastTradePriceOnly'] == null)){
+                            if (($data['Change'] === null || $data['LastTradePriceOnly'] === null)) {
                                 $replacement = "NULL";
                             } else {
-                                // Calculate the percentage dividing the change by the ( previous value minus the change )
+                                // Calculate the percentage dividing the change by the ( previous value minus the change)
                                 $percentage = $data['Change'] / ( $data['LastTradePriceOnly'] - $data['Change'] );
 
                                 // Convert the value to percentage and round it
@@ -645,7 +638,6 @@ class Currencies extends AlphaVantageBase
                             
                             // Protect against null values
                             if (($data['Change'] != null && $data['LastTradePriceOnly'] != null)) {
-                    
                                 if ($data['Change'] > 0) {
                                     $replacement = 'value-up';
                                 } else if ( $data['Change'] < 0 ){
@@ -656,25 +648,17 @@ class Currencies extends AlphaVantageBase
                             break;
                             
                         case 'ChangeIcon':
-                        
                             // Default value as no change
                             $replacement = 'right-arrow';
                             
                             // Protect against null values
                             if (($data['Change'] != null && $data['LastTradePriceOnly'] != null)) {
-                    
-                                if ( $data['Change'] > 0 ) {
+                                if ($data['Change'] > 0) {
                                     $replacement = 'up-arrow';
-                                } else if ( $data['Change'] < 0 ){
+                                } else if ($data['Change'] < 0) {
                                     $replacement = 'down-arrow';
                                 }
                             }
-                            
-                            break;
-                            
-                        case 'CurrencyUpper':
-                            // Currency in uppercase
-                            $replacement = strtoupper($data['Currency']);
                             
                             break;
                                 
@@ -682,7 +666,7 @@ class Currencies extends AlphaVantageBase
                             $replacement = 'NULL';
                             
                             break;
-                    }    
+                    }
                 }
             }
             

@@ -48,6 +48,9 @@ trait EntityTrait
     /** @var array Original values hydrated */
     protected $originalValues = [];
 
+    /** @var array Unmatched properties */
+    private $unmatchedProperties = [];
+
     /**
      * @var StorageServiceInterface
      */
@@ -123,20 +126,22 @@ trait EntityTrait
         $htmlStringProperties = (array_key_exists('htmlStringProperties', $options)) ? $options['htmlStringProperties'] : [];
 
         foreach ($properties as $prop => $val) {
+            // Parse the property
+            if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties)) {
+                $val = intval($val);
+            } else if (in_array($prop, $doubleProperties)) {
+                $val = doubleval($val);
+            } else if (in_array($prop, $stringProperties)) {
+                $val = filter_var($val, FILTER_SANITIZE_STRING);
+            } else if (in_array($prop, $htmlStringProperties)) {
+                $val = htmlentities($val);
+            }
+
             if (property_exists($this, $prop)) {
-
-                if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties)) {
-                    $val = intval($val);
-                } else if (in_array($prop, $doubleProperties)) {
-                    $val = doubleval($val);
-                } else if (in_array($prop, $stringProperties)) {
-                    $val = filter_var($val, FILTER_SANITIZE_STRING);
-                } else if (in_array($prop, $htmlStringProperties)) {
-                    $val = htmlentities($val);
-                }
-
                 $this->{$prop} =  $val;
                 $this->originalValues[$prop] = $val;
+            } else {
+                $this->unmatchedProperties[$prop] = $val;
             }
         }
 
@@ -221,6 +226,17 @@ trait EntityTrait
         }
 
         return $changedProperties;
+    }
+
+    /**
+     * Get an unmatched property
+     * @param string $property
+     * @param mixed $default The default value to return if the unmatched property doesn't exist.
+     * @return null|mixed
+     */
+    public function getUnmatchedProperty(string $property, $default)
+    {
+        return $this->unmatchedProperties[$property] ?? $default;
     }
 
     /**
@@ -400,5 +416,14 @@ trait EntityTrait
         } else {
             $this->getLog()->debug('No Tags to assign');
         }
+    }
+
+    public function updateFolders($table)
+    {
+        $this->getStore()->update('UPDATE `'. $table .'` SET permissionsFolderId = :permissionsFolderId, folderId = :folderId WHERE folderId = :oldFolderId', [
+            'permissionsFolderId' => $this->permissionsFolderId,
+            'folderId' => $this->folderId,
+            'oldFolderId' => $this->getOriginalValue('folderId')
+        ]);
     }
 }

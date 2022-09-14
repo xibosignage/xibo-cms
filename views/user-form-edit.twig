@@ -41,6 +41,9 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
+                {% if currentUser.featureEnabled("folder.userHome") %}
+                    <li class="nav-item"><a class="nav-link" href="#home-folder" role="tab" data-toggle="tab"><span>{% trans "Home Folder" %}</span></a></li>
+                {% endif %}
                 <li class="nav-item"><a class="nav-link" href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
                 {% if currentUser.userTypeId == 1 %}
                     <li class="nav-item"><a class="nav-link" href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
@@ -112,6 +115,13 @@
                         {% set helpText %}{% trans "Is this user retired?" %}{% endset %}
                         {{ forms.checkbox("retired", title, user.retired, helpText) }}
                     </div>
+                    {% if currentUser.featureEnabled("folder.userHome") %}
+                        <div class="tab-pane" id="home-folder">
+                        <p>{{ "Set a home folder to use as the default folder for new content."|trans }}</p>
+                            {{ forms.hidden("homeFolderId", user.homeFolderId) }}
+                            <div id="container-form-folder-tree" class="card card-body bg-light"></div>
+                        </div>
+                    {% endif %}
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}
                         {% set helpText %}{% trans "The User's First Name." %}{% endset %}

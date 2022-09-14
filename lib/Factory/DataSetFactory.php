@@ -168,6 +168,16 @@ class DataSetFactory extends BaseFactory
     }
 
     /**
+     * @param int $folderId
+     * @return DataSet[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId(int $folderId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DataSet]
@@ -254,7 +264,16 @@ class DataSetFactory extends BaseFactory
 
         if ($parsedFilter->getString('dataSet') != null) {
             $terms = explode(',', $parsedFilter->getString('dataSet'));
-            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'dataset',
+                'dataSet',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($parsedFilter->getString('dataSetExact') != '') {
