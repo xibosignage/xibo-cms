@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -103,7 +103,9 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
         // Create a Display
         $this->display = $this->createDisplay();
 
-        // Our display should already be in our group via its name
+        // Run regular maintenance to add the new display to our group.
+        $this->runRegularMaintenance();
+
         $this->getLogger()->debug('Display created with ID ' . $this->display->displayId);
 
         $this->displaySetStatus($this->display, Display::$STATUS_DONE);
@@ -156,10 +158,24 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
 
         $this->assertLessThan(300, $response->getStatusCode(), 'Non-success status code, body =' . $response->getBody()->getContents());
 
+        // Initially we're expecting no change.
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+
+        // Run regular maintenance
+        $this->runRegularMaintenance();
+
         // Validate the display status afterwards
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');
 
-        // Validate that XMR has been called.
-        $this->assertTrue(in_array($this->display->displayId, $this->getPlayerActionQueue()), 'Player action not present');
+        // Our player action would have been sent by regular maintenance, not by the edit.
+        // Make sure we don't have one here.
+        $this->assertFalse(in_array($this->display->displayId, $this->getPlayerActionQueue()), 'Player action not present');
+    }
+
+    private function runRegularMaintenance()
+    {
+        $this->getLogger()->debug('Running Regular Maintenance');
+        exec('cd /var/www/cms; php bin/run.php 2');
+        $this->getLogger()->debug('Finished Regular Maintenance');
     }
 }
