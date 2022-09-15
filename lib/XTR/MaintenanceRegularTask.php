@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,8 +24,10 @@
 namespace Xibo\XTR;
 use Carbon\Carbon;
 use Xibo\Controller\Display;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
@@ -33,6 +35,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Profiler;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
@@ -54,6 +57,9 @@ class MaintenanceRegularTask implements TaskInterface
 
     /** @var DisplayFactory */
     private $displayFactory;
+
+    /** @var DisplayGroupFactory */
+    private $displayGroupFactory;
 
     /** @var NotificationFactory */
     private $notificationFactory;
@@ -80,6 +86,7 @@ class MaintenanceRegularTask implements TaskInterface
         $this->mediaService = $container->get('mediaService');
 
         $this->displayFactory = $container->get('displayFactory');
+        $this->displayGroupFactory = $container->get('displayGroupFactory');
         $this->notificationFactory = $container->get('notificationFactory');
         $this->userGroupFactory = $container->get('userGroupFactory');
         $this->layoutFactory = $container->get('layoutFactory');
@@ -111,6 +118,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->checkOverRequestedFiles();
 
         $this->publishLayouts();
+
+        $this->assessDynamicDisplayGroups();
 
         // Dispatch an event so that consumers can hook into regular maintenance.
         $event = new MaintenanceRegularEvent();
@@ -470,5 +479,48 @@ class MaintenanceRegularTask implements TaskInterface
         }
 
         $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
+    }
+
+    /**
+     * Assess any eligible dynamic display groups if necessary
+     * @return void
+     */
+    private function assessDynamicDisplayGroups()
+    {
+        $this->runMessage .= '## ' . __('Assess Dynamic Display Groups') . PHP_EOL;
+
+        if ($this->config->getSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 0) == 1) {
+            Profiler::start('RegularMaintenance::assessDynamicDisplayGroups', $this->log);
+
+            $this->config->changeSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 0);
+            $count = 0;
+
+            foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
+                $count++;
+                try {
+                    // Loads displays.
+                    $this->getDispatcher()->dispatch(
+                        new DisplayGroupLoadEvent($group),
+                        DisplayGroupLoadEvent::$NAME
+                    );
+                    $group->save([
+                        'validate' => false,
+                        'saveGroup' => false,
+                        'saveTags' => false,
+                        'manageLinks' => false,
+                        'manageDisplayLinks' => false,
+                        'manageDynamicDisplayLinks' => true,
+                        'allowNotify' => true
+                    ]);
+                } catch (GeneralException $exception) {
+                    $this->log->error('assessDynamicDisplayGroups: Unable to manage group: '
+                        . $group->displayGroup);
+                }
+            }
+            Profiler::end('RegularMaintenance::assessDynamicDisplayGroups', $this->log);
+            $this->runMessage .= ' - Done ' . $count . PHP_EOL . PHP_EOL;
+        } else {
+            $this->runMessage .= ' - Done (not required)' . PHP_EOL . PHP_EOL;
+        }
     }
 }
