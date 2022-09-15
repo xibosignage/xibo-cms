@@ -34,6 +34,43 @@
     {% trans "Save" %}, folderMoveSubmit()
 {% endblock %}
 
+
+{% block formFieldActions %}
+    [{
+    "field": "merge",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "none" }
+    }
+    },{
+    "field": "merge",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "none" }
+    }
+    },{
+    "field": "merge",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "" }
+    }
+    },{
+    "field": "merge",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".merge-message": { "display": "" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -57,8 +94,8 @@
                     {% set helpText %}{% trans "Should we merge content of the original folder into the selected folder?" %}{% endset %}
                     {{ forms.checkbox("merge", title, 0, helpText) }}
 
-                    {% set message %}{% trans "Objects (Media, Layouts etc) and any sub-folders currently in the original folder will be moved to the selected folder. Original folder will be deleted" %}{% endset %}
-                    {{ forms.message(message, 'alert alert-info') }}
+                    {% set message %}{% trans "With merge selected, all Objects (Media, Layouts etc) and any sub-folders currently in the original folder will be moved to the selected folder. Original folder will be deleted" %}{% endset %}
+                    {{ forms.message(message, 'merge-message', 'alert alert-info') }}
                 {% endif %}
 
                 {{ forms.hidden('folderId', folder.id) }}
