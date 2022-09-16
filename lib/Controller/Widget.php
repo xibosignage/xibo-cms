@@ -296,13 +296,6 @@ class Widget extends Base
         // Decorate the module properties with our current widgets data
         $module->decorateProperties($widget);
 
-        // Common properties
-        $properties = [];
-        $properties['name'] = $widget->getOptionValue('name', null);
-        $properties['enableStat'] = $widget->getOptionValue('enableStat', null);
-        $properties['duration'] = $widget->duration;
-        $properties['useDuration'] = $widget->useDuration;
-
         // Do we have a static template assigned to this widget?
         //  we don't worry about elements here, the layout editor manages those for us.
         $template = null;
@@ -323,8 +316,8 @@ class Widget extends Base
             'commonProperties' => [
                 'name' => $widget->getOptionValue('name', null),
                 'enableStat' => $widget->getOptionValue('enableStat', null),
-                'duration' => $properties['duration'],
-                'useDuration' => $properties['useDuration']
+                'duration' => $widget->duration,
+                'useDuration' => $widget->useDuration
             ],
         ]);
 

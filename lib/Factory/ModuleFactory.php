@@ -274,6 +274,13 @@ class ModuleFactory extends BaseFactory
             }
         }
 
+        // Match on legacy type
+        foreach ($modules as $module) {
+            if (in_array($type, $module->legacyTypes)) {
+                return $module;
+            }
+        }
+
         throw new NotFoundException();
     }
 
@@ -410,6 +417,15 @@ class ModuleFactory extends BaseFactory
         $sampleData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'sampleData');
         if (!empty($module->sampleData)) {
             $module->sampleData = json_decode(trim($sampleData), true);
+        }
+
+        // Legacy types.
+        $module->legacyTypes = [];
+        $legacyTypeNodes = $xml->getElementsByTagName('legacyType');
+        foreach ($legacyTypeNodes as $legacyTypeNode) {
+            if ($legacyTypeNode instanceof \DOMElement) {
+                $module->legacyTypes[] = $legacyTypeNode->textContent;
+            }
         }
 
         // Default values for remaining expected properties

@@ -76,6 +76,12 @@ class Module implements \JsonSerializable
     public $type;
 
     /**
+     * @SWG\Property(description="Legacy type codes for this module")
+     * @var string[]
+     */
+    public $legacyTypes;
+
+    /**
      * @SWG\Property(description="The data type of the data expected to be returned by this modules data provider")
      * @var string
      */

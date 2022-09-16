@@ -97,8 +97,8 @@ trait ModuleXmlTrait
                 $property->variant = $node->getAttribute('variant');
                 $property->format = $node->getAttribute('format');
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
-                $property->title = $this->getFirstValueOrDefaultFromXmlNode($node, 'title');
-                $property->helpText = $this->getFirstValueOrDefaultFromXmlNode($node, 'helpText');
+                $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
+                $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
 
                 // Default value
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');

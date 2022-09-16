@@ -23,7 +23,7 @@
 namespace Xibo\Entity;
 
 /**
- * A trait for common fuctionality with regards to properties on modules/module templates
+ * A trait for common functionality in regard to properties on modules/module templates
  */
 trait ModulePropertyTrait
 {

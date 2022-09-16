@@ -92,6 +92,10 @@ class ModuleTemplate implements \JsonSerializable
             if ($includeDefaults && $property->value === null) {
                 $property->value = $property->default;
             }
+
+            if ($property->variant === 'uri') {
+                $property->value = urldecode($property->value);
+            }
         }
         return $this;
     }

@@ -732,6 +732,12 @@ class Widget implements \JsonSerializable
     {
         foreach ($properties as $property) {
             $type = ($property->type === 'code') ? 'cdata' : 'attrib';
+
+            // Apply any filters on the data.
+            if ($property->type === 'input' && $property->variant === 'uri') {
+                $property->value = urlencode($property->value);
+            }
+
             $this->setOptionValue($property->id, $type, $property->value);
 
             if ($property->allowLibraryRefs) {
