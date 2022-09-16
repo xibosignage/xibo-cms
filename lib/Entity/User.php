@@ -1318,7 +1318,7 @@ class User implements \JsonSerializable, UserEntityInterface
                   INNER JOIN `lkusergroup`
                   ON lkusergroup.userId = media.userId
                WHERE lkusergroup.groupId = :groupId
-            ', ['groupId' => $groupId], null, true);
+            ', ['groupId' => $groupId], 'default', $reconnect);
 
             if (count($rows) <= 0) {
                 throw new LibraryFullException("Error Processing Request", 1);
