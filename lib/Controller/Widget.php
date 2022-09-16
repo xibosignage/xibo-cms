@@ -212,7 +212,11 @@ class Widget extends Base
 
         // Get the template
         if ($module->isTemplateExpected()) {
-            $templateId = $params->getString('templateId');
+            $templateId = $params->getString('templateId', [
+                'throw' => function () {
+                    throw new InvalidArgumentException(__('Please select a template'), 'templateId');
+                }
+            ]);
             if ($templateId !== 'elements') {
                 // Check it.
                 $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
@@ -1022,37 +1026,39 @@ class Widget extends Base
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
             $this->getLog()->debug('Pulling fresh data');
 
-            if ($widgetInterface !== null) {
-                $widgetInterface->fetchData($dataProvider);
-            } else {
-                $dataProvider->setIsUseEvent();
-            }
+            try {
+                if ($widgetInterface !== null) {
+                    $widgetInterface->fetchData($dataProvider);
+                } else {
+                    $dataProvider->setIsUseEvent();
+                }
 
-            if ($dataProvider->isUseEvent()) {
-                $this->getDispatcher()->dispatch(
-                    new WidgetDataRequestEvent($dataProvider),
-                    WidgetDataRequestEvent::$NAME
-                );
-            }
+                if ($dataProvider->isUseEvent()) {
+                    $this->getDispatcher()->dispatch(
+                        new WidgetDataRequestEvent($dataProvider),
+                        WidgetDataRequestEvent::$NAME
+                    );
+                }
 
-            // Do we have images?
-            $media = $dataProvider->getImages();
-            if (count($media) > 0) {
-                // Process the downloads.
-                $this->mediaFactory->processDownloads(function ($media) use ($widget) {
-                    // Success
-                    // We don't need to do anything else, references to mediaId will be built when we decorate
-                    // the HTML.
-                    $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
-                });
-            }
+                // Do we have images?
+                $media = $dataProvider->getImages();
+                if (count($media) > 0) {
+                    // Process the downloads.
+                    $this->mediaFactory->processDownloads(function ($media) use ($widget) {
+                        // Success
+                        // We don't need to do anything else, references to mediaId will be built when we decorate
+                        // the HTML.
+                        $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+                    });
+                }
 
-            // Save to cache
-            // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
-            if (count($dataProvider->getData()) > 0) {
-                $widgetDataProviderCache->saveToCache($dataProvider);
-            } else {
-                $widgetDataProviderCache->notifyNoCacheToSave();
+                // Save to cache
+                // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
+                if (count($dataProvider->getData()) > 0) {
+                    $widgetDataProviderCache->saveToCache($dataProvider);
+                }
+            } finally {
+                $widgetDataProviderCache->finaliseCache();
             }
         } else {
             $this->getLog()->debug('Returning cache');
