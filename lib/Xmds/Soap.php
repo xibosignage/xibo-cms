@@ -2187,7 +2187,7 @@ class Soap
                                 $widget,
                                 $this->display->displayId,
                                 $dataProvider,
-                                null
+                                $module->getWidgetProviderOrNull()
                             );
 
                             if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {

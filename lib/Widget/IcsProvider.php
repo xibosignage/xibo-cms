@@ -27,6 +27,7 @@ use GuzzleHttp\Exception\RequestException;
 use ICal\ICal;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\DataType\Event;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
@@ -163,10 +164,15 @@ class IcsProvider implements WidgetProviderInterface
     }
 
     /**
-     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function downloadIsc(DataProviderInterface $dataProvider): string
     {
+        $uri = $dataProvider->getProperty('uri');
+        if (empty($uri)) {
+            throw new InvalidArgumentException('Please enter a the URI to a valid ICS feed.', 'uri');
+        }
+
         try {
             // Create a Guzzle Client to get the Feed XML
             $response = $dataProvider

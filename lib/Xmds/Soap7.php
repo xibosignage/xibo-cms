@@ -190,7 +190,7 @@ class Soap7 extends Soap6
                         $widget,
                         $this->display->displayId,
                         $dataProvider,
-                        null
+                        $module->getWidgetProviderOrNull()
                     );
 
                     $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();

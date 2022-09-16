@@ -91,7 +91,7 @@ class WidgetDataProviderCache
         DataProviderInterface $dataProvider,
         string $cacheKey
     ): bool {
-        $this->cache = $this->pool->getItem('/widget/html/' . $cacheKey);
+        $this->cache = $this->pool->getItem('/widget/html/' . md5($cacheKey));
         $data = $this->cache->get();
         if ($this->cache->isMiss() || $data === null) {
             // Lock it up
@@ -111,7 +111,6 @@ class WidgetDataProviderCache
     public function saveToCache(DataProviderInterface $dataProvider): void
     {
         if ($this->cache === null) {
-            $this->concurrentRequestRelease();
             throw new GeneralException('No cache to save');
         }
 
@@ -122,16 +121,13 @@ class WidgetDataProviderCache
         // Save to the pool
         $this->pool->save($this->cache);
 
-        // Release the cache
-        $this->concurrentRequestRelease();
-
         $this->getLog()->debug('Cached for ' . $dataProvider->getCacheTtl() . ' seconds');
     }
 
     /**
-     * Notify the provider that there is no cache to save.
+     * Finalise the cache process
      */
-    public function notifyNoCacheToSave(): void
+    public function finaliseCache(): void
     {
         $this->concurrentRequestRelease();
     }
@@ -148,11 +144,15 @@ class WidgetDataProviderCache
             // This is either an object or an array
             if (is_array($item)) {
                 for ($i = 0; $i < count($item); $i++) {
-                    $item[$i] = $this->decorateMediaForPreview($libraryUrl, $item[$i]);
+                    if (is_string($item[$i])) {
+                        $item[$i] = $this->decorateMediaForPreview($libraryUrl, $item[$i]);
+                    }
                 }
             } else if (is_object($item)) {
                 foreach (ObjectVars::getObjectVars($item) as $key => $value) {
-                    $item->{$key} = $this->decorateMediaForPreview($libraryUrl, $value);
+                    if (is_string($value)) {
+                        $item->{$key} = $this->decorateMediaForPreview($libraryUrl, $value);
+                    }
                 }
             }
         }

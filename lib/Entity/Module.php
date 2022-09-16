@@ -278,6 +278,7 @@ class Module implements \JsonSerializable
     public function setWidgetProvider(WidgetProviderInterface $widgetProvider): Module
     {
         $this->widgetProvider = $widgetProvider;
+        $this->widgetProvider->setLog($this->getLog()->getLoggerInterface());
         return $this;
     }
 

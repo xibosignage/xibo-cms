@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Provider;
 
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * A trait to set common objects on a Widget Provider Interface
@@ -33,6 +34,9 @@ trait WidgetProviderTrait
 
     public function getLog(): LoggerInterface
     {
+        if ($this->log === null) {
+            $this->log = new NullLogger();
+        }
         return $this->log;
     }
 
