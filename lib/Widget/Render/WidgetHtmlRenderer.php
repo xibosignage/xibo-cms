@@ -403,7 +403,7 @@ class WidgetHtmlRenderer
         // Render out HBS from templates
         foreach ($moduleTemplates as $moduleTemplate) {
             // Render out any hbs
-            if ($moduleTemplate->stencil->hbs !== null) {
+            if ($moduleTemplate->stencil !== null && $moduleTemplate->stencil->hbs !== null) {
                 $twig['hbs'][$moduleTemplate->templateId] = [
                     'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
                     'width' => $moduleTemplate->stencil->width,

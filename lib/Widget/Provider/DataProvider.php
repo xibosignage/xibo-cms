@@ -139,7 +139,7 @@ class DataProvider implements DataProviderInterface
      */
     public function getProperty(string $property, $default = null)
     {
-        return $this->widget->getOptionValue($property, $default);
+        return $this->module->getPropertyValues()[$property] ?? $default;
     }
 
     /**

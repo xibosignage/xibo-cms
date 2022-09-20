@@ -21,9 +21,9 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Storage\StorageServiceInterface;
@@ -304,10 +304,20 @@ class Module extends Base
         // Get this template
         $template = $this->moduleTemplateFactory->getByDataTypeAndId($dataType, $templateId);
 
-        // TODO: does this template have an image?
-        //  moreover how do we actually store those template images.
+        // does this template have an image?
+        if (empty($template->thumbnail)) {
+            throw new NotFoundException(__('Template does not have a thumbnail'));
+        }
 
+        if (file_exists(PROJECT_ROOT . '/custom/modules/' . $template->thumbnail)) {
+            $file = PROJECT_ROOT . '/custom/modules/' . $template->thumbnail;
+        } else if (file_exists(PROJECT_ROOT . '/modules/' . $template->thumbnail)) {
+            $file = PROJECT_ROOT . '/modules/' . $template->thumbnail;
+        } else {
+            throw new NotFoundException(__('Specified thumbnail not found'));
+        }
 
-        return $response;
+        // Serve the file directly.
+        return $response->withBody(new Stream(fopen($file, 'r')));
     }
 }

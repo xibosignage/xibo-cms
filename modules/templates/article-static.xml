@@ -1,0 +1,64 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>article-custom-html</id>
+        <type>static</type>
+        <dataType>article</dataType>
+        <title>Articles shown with custom HTML</title>
+        <properties>
+            <property id="itemsSideBySide" type="checkbox">
+                <title>Show items side by side?</title>
+                <helpText>Should items be shown side by side?</helpText>
+                <default>0</default>
+            </property>
+            <property id="itemsPerPage" type="number">
+                <title>Items per page</title>
+                <helpText>If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
+                <default>1</default>
+            </property>
+            <property id="dateFormat" type="input" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+            </property>
+            <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+            </property>
+            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+            </property>
+            <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
+                <title>Optional Stylesheet Template</title>
+            </property>
+            <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
+                <title>Optional JavaScript</title>
+            </property>
+        </properties>
+    </template>
+</templates>

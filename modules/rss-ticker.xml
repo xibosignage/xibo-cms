@@ -23,7 +23,7 @@
     <name>RSS Ticker</name>
     <author>Core</author>
     <description>Display articles from an RSS feed</description>
-    <class></class>
+    <class>\Xibo\Widget\RssProvider</class>
     <type>rss-ticker</type>
     <legacyType>ticker</legacyType>
     <dataType>article</dataType>
@@ -71,11 +71,6 @@
             <helpText>Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order.</helpText>
             <default>0</default>
         </property>
-        <property id="itemsSideBySide" type="checkbox">
-            <title>Show items side by side?</title>
-            <helpText>Should items be shown side by side?</helpText>
-            <default>0</default>
-        </property>
         <property id="copyright" type="input">
             <title>Copyright</title>
             <helpText>Copyright information to display as the last item in this feed.</helpText>
@@ -100,6 +95,16 @@
             <title>Disable Date Sort</title>
             <helpText>Should the date sort applied to the feed be disabled?</helpText>
             <default>0</default>
+        </property>
+        <property id="updateInterval" type="number">
+            <title>Update Interval (mins)</title>
+            <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default>60</default>
+        </property>
+        <property id="updateIntervalImages" type="number">
+            <title>Update Interval Images (mins)</title>
+            <helpText>Override the update interval for images. This should be kept as high as possible and can be set for all Tickers in Module Settings.</helpText>
+            <default>%updateIntervalImages%</default>
         </property>
     </properties>
 </module>

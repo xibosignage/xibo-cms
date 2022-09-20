@@ -106,6 +106,8 @@ trait ModuleXmlTrait
                 // Is this a variable?
                 if ($module !== null && Str::startsWith($defaultValue, '%') && Str::endsWith($defaultValue, '%')) {
                     $defaultValue = $module->getSetting(str_replace('%', '', $defaultValue));
+                } else if (Str::startsWith($defaultValue, '#') && Str::endsWith($defaultValue, '#')) {
+                    $defaultValue = $this->getConfig()->getSetting(str_replace('#', '', $defaultValue));
                 }
                 $defaultValues[$property->id] = $defaultValue;
 

@@ -49,6 +49,14 @@ class ModuleTemplate implements \JsonSerializable
     /** @var string The title */
     public $title;
 
+    /**
+     * Thumbnail
+     * this is the location to a module template's thumbnail, which should be added to the installation
+     * relative to the module class file.
+     * @var string
+     */
+    public $thumbnail;
+
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;
 

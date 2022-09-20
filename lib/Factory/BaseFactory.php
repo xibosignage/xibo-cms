@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,6 +28,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\BaseDependenciesService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -162,6 +163,14 @@ class BaseFactory
     public function getDispatcher(): EventDispatcherInterface
     {
         return $this->baseDependenciesService->getDispatcher();
+    }
+
+    /**
+     * @return \Xibo\Service\ConfigServiceInterface
+     */
+    public function getConfig(): ConfigServiceInterface
+    {
+        return $this->baseDependenciesService->getConfig();
     }
 
     /**
