@@ -88,6 +88,7 @@
             <title>Trigger on page load error</title>
             <helpText>Code to be triggered when the page to be loaded returns an error, e.g. a 404 not found.</helpText>
             <default></default>
+            <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
         </property>
     </properties>
     <preview>
