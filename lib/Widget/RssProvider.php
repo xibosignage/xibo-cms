@@ -55,7 +55,10 @@ class RssProvider implements WidgetProviderInterface
         $picoFeedLoggingEnabled = Environment::isDevMode();
 
         // Date format for the feed items
+        // TODO: is this done client side now?
         $dateFormat = $dataProvider->getProperty('dateFormat');
+
+        // Image expiry
         $expiresImage = Carbon::now()
             ->addMinutes($dataProvider->getProperty('updateIntervalImages', 1440))
             ->format('U');
@@ -120,6 +123,18 @@ class RssProvider implements WidgetProviderInterface
             // Get all items
             $feedItems = $feed->getItems();
 
+            // Disable date sorting?
+            if ($dataProvider->getProperty('disableDateSort') == 0
+                && $dataProvider->getProperty('randomiseItems', 0) == 0
+            ) {
+                // Sort the items array by date
+                usort($feedItems, function($a, $b) {
+                    /* @var Item $a */
+                    /* @var Item $b */
+                    return ($a->getDate() < $b->getDate());
+                });
+            }
+
             // Parse each item into an article
             foreach ($feedItems as $item) {
                 /* @var Item $item */
@@ -166,8 +181,6 @@ class RssProvider implements WidgetProviderInterface
                     }
                     $article->content = $doc->saveHTML();
                 }
-
-                // TODO: how do we support non-standard RSS nodes? (do we?)
 
                 // Add the article.
                 $dataProvider->addItem($article);
