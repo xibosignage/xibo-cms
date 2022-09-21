@@ -1068,14 +1068,7 @@ class Playlist implements \JsonSerializable
                 }
             } else {
                 // Add the sub playlist duration
-                $module = $this->moduleFactory->getByType($widget->type);
-                $widgetInterface = $module->getWidgetProviderOrNull();
-                if ($widgetInterface !== null) {
-                    // We use a duration provider
-                    $durationProvider = $module->createDurationProvider($this);
-                    $widgetInterface->fetchDuration($durationProvider);
-                    $duration += $durationProvider->getDuration();
-                }
+                // TODO: sub-playlists are handled as a special case.
             }
         }
 

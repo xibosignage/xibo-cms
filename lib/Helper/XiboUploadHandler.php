@@ -141,7 +141,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Apply the duration from the old media, unless we're a video
                 if ($module->type === 'video') {
-                    $media->duration = $module->fetchDurationOrDefault($filePath);
+                    $media->duration = $module->fetchDurationOrDefaultFromFile($filePath);
                 } else {
                     $media->duration = $oldMedia->duration;
                 }
@@ -356,7 +356,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 }
 
                 // Set the duration
-                $media->duration = $module->fetchDurationOrDefault($filePath);
+                $media->duration = $module->fetchDurationOrDefaultFromFile($filePath);
 
                 if ($media->enableStat == null) {
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');

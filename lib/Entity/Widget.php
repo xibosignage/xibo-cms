@@ -431,6 +431,23 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Get all widget options for this widget
+     * @return array
+     */
+    public function getAllWidgetOptions(): array
+    {
+        $this->load();
+
+        $properties = [];
+
+        foreach ($this->widgetOptions as $widgetOption) {
+            $properties[$widgetOption->option] = $widgetOption->value;
+        }
+
+        return $properties;
+    }
+
+    /**
      * Assign File Media
      * @param int $mediaId
      */
@@ -641,18 +658,13 @@ class Widget implements \JsonSerializable
     ): Widget {
         $this->getLog()->debug('Calculating Duration - existing value is ' . $this->calculatedDuration);
 
-        // If we have been provided a widget interface, then we always use that to calculate the duration
-        $widgetInterface = $module->getWidgetProviderOrNull();
-        if ($widgetInterface !== null) {
-            // We use a duration provider
-            $durationProvider = $module->createDurationProvider($this);
-            $widgetInterface->fetchDuration($durationProvider);
-            $this->calculatedDuration = $durationProvider->getDuration();
-        } else {
-            // We base our decision on what we know about the module
-            // Does our widget have a durationIsPerItem and a Number of Items?
+        // Import
+        // ------
+        // If we are importing a layout we need to adjust the `duration` **before** we pass to any duration
+        // provider, as providers will use the duration set on the widget in their calculations.
+        // $this->duration from xml is `duration * (numItems/itemsPerPage)`
+        if ($import) {
             $numItems = $this->getOptionValue('numItems', 0);
-
             if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
                 // If we have paging involved then work out the page count.
                 $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
@@ -660,23 +672,28 @@ class Widget implements \JsonSerializable
                     $numItems = ceil($numItems / $itemsPerPage);
                 }
 
-                // For import
-                // in the layout.xml file the duration associated with widget that has all the above parameters
-                // will already be the calculatedDuration ie $this->duration from xml is
-                // duration * (numItems/itemsPerPage)
-                // since we preserve the itemsPerPage, durationIsPerItem and numItems on imported layout, we need to
-                // ensure we set the duration correctly
-                // this will ensure that both, the widget duration and calculatedDuration will be correct on import.
-                if ($import) {
-                    $this->duration = $this->useDuration == 1
-                        ? ($this->duration / $numItems)
-                        : $module->defaultDuration;
-                }
+                // This is a change to v3
+                //  in v3 we only divide by numItems if useDuration = 0, which I think was wrong.
+                $this->duration = ($this->useDuration == 1 ? $this->duration : $module->defaultDuration) / $numItems;
+            }
+        }
 
-                $this->calculatedDuration = $this->useDuration == 1
-                    ? $this->duration
-                    : ($module->defaultDuration * $numItems);
-            } else if ($this->useDuration == 1) {
+        // If we have been provided a widget interface, then we always use that to calculate the duration
+        $durationProvided = false;
+        $widgetInterface = $module->getWidgetProviderOrNull();
+        if ($widgetInterface !== null) {
+            // We use a duration provider
+            $durationProvider = $module->createDurationProvider($this->duration, $this->getAllWidgetOptions());
+            $widgetInterface->fetchDuration($durationProvider);
+
+            if ($durationProvider->isDurationSet()) {
+                $this->calculatedDuration = $durationProvider->getDuration();
+                $durationProvided = true;
+            }
+        }
+
+        if (!$durationProvided) {
+            if ($this->useDuration == 1) {
                 // Widget duration is as specified
                 $this->calculatedDuration = $this->duration;
             } else {

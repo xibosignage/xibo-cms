@@ -203,7 +203,20 @@ class RssProvider implements WidgetProviderInterface
 
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
     {
-        // No special duration requirements
+        // Duration can depend on the number of items per page for some widgets
+        // this is a legacy way of working, and our preference is to use elements
+        $numItems = $durationProvider->getProperty('numItems', 0);
+
+        if ($durationProvider->getProperty('durationIsPerItem', 0) == 1 && $numItems > 1) {
+            // If we have paging involved then work out the page count.
+            $itemsPerPage = $durationProvider->getProperty('itemsPerPage', 0);
+            if ($itemsPerPage > 0) {
+                $numItems = ceil($numItems / $itemsPerPage);
+            }
+
+            $durationProvider->setDuration($durationProvider->getDuration() / $numItems);
+        }
+
         return $this;
     }
 

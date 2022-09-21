@@ -86,12 +86,13 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $file
-     * @return \Xibo\Widget\Provider\DurationProviderInterface
+     * @param int $duration
+     * @param array $properties
+     * @return DurationProviderInterface
      */
-    public function createDurationProvider(string $file): DurationProviderInterface
+    public function createDurationProvider(int $duration, array $properties): DurationProviderInterface
     {
-        return new DurationProvider($file);
+        return new DurationProvider($duration, $properties);
     }
 
     /**

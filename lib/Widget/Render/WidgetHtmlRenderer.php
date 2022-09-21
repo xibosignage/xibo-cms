@@ -322,6 +322,7 @@ class WidgetHtmlRenderer
 
         // Max duration
         $duration = 0;
+        $numItems = 0;
 
         // Render each widget out into the html
         foreach ($widgets as $widget) {
@@ -377,6 +378,8 @@ class WidgetHtmlRenderer
 
             // Watermark duration
             $duration = max($duration, $widget->calculatedDuration);
+            // TODO: this won't always be right? can we make it right
+            $numItems = max($numItems, $widget->getOptionValue('numItems', 0));
 
             // What does our module have
             if ($module->stencil !== null) {
@@ -418,6 +421,7 @@ class WidgetHtmlRenderer
 
         // Duration
         $twig['duration'] = $duration;
+        $twig['numItems'] = $numItems;
 
         // We use the default get resource template.
         return $this->twig->fetch('widget-html-render.twig', $twig);

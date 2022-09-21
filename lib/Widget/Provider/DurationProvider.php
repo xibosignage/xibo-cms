@@ -27,19 +27,32 @@ namespace Xibo\Widget\Provider;
  */
 class DurationProvider implements DurationProviderInterface
 {
-    /** @var string */
-    private $file;
+    /** @var array */
+    private $properties;
 
     /** @var int Duration in seconds */
     private $duration;
 
+    /** @var bool Has the duration been set? */
+    private $isDurationSet = false;
+
     /**
      * Constructor
-     * @param string $file
+     * @param int $duration
+     * @param array $properties
      */
-    public function __construct(string $file)
+    public function __construct(int $duration, array $properties)
     {
-        $this->file = $file;
+        $this->duration = $duration;
+        $this->properties = $properties;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getProperty(string $property, $default = null)
+    {
+        return $this->properties[$property] ?? $default;
     }
 
     /**
@@ -47,7 +60,7 @@ class DurationProvider implements DurationProviderInterface
      */
     public function getFile(): string
     {
-        return $this->file;
+        return $this->getProperty('file');
     }
 
     /**
@@ -55,16 +68,24 @@ class DurationProvider implements DurationProviderInterface
      */
     public function setDuration(int $seconds): DurationProviderInterface
     {
+        $this->isDurationSet = true;
         $this->duration = $seconds;
         return $this;
     }
 
     /**
-     * Get the duration
-     * @return int the duration in seconds
+     * @inheritDoc
      */
     public function getDuration(): int
     {
         return $this->duration;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isDurationSet(): bool
+    {
+        return $this->isDurationSet;
     }
 }
