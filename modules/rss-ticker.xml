@@ -52,6 +52,11 @@
             <helpText>The Number of RSS items you want to display</helpText>
             <default>15</default>
         </property>
+        <property id="durationIsPerItem" type="checkbox">
+            <title>Duration is per item</title>
+            <helpText>The duration specified is per item otherwise it is per feed.</helpText>
+            <default>0</default>
+        </property>
         <property id="takeItemsFrom" type="dropdown" mode="single">
             <title>Take items from the</title>
             <helpText>Take the items from the beginning or the end of the list</helpText>

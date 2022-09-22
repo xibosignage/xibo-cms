@@ -458,23 +458,6 @@ class Widget implements \JsonSerializable
     }
 
     /**
-     * Get all widget options for this widget
-     * @return array
-     */
-    public function getAllWidgetOptions(): array
-    {
-        $this->load();
-
-        $properties = [];
-
-        foreach ($this->widgetOptions as $widgetOption) {
-            $properties[$widgetOption->option] = $widgetOption->value;
-        }
-
-        return $properties;
-    }
-
-    /**
      * Assign File Media
      * @param int $mediaId
      */
@@ -683,7 +666,8 @@ class Widget implements \JsonSerializable
         Module $module,
         bool $import = false
     ): Widget {
-        $this->getLog()->debug('Calculating Duration - existing value is ' . $this->calculatedDuration);
+        $this->getLog()->debug('calculateDuration: Calculating - existing value is ' . $this->calculatedDuration
+            . ' import is ' . ($import ? 'true' : 'false'));
 
         // Import
         // ------
@@ -691,7 +675,7 @@ class Widget implements \JsonSerializable
         // provider, as providers will use the duration set on the widget in their calculations.
         // $this->duration from xml is `duration * (numItems/itemsPerPage)`
         if ($import) {
-            $numItems = $this->getOptionValue('numItems', 0);
+            $numItems = $this->getOptionValue('numItems', 1);
             if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
                 // If we have paging involved then work out the page count.
                 $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
@@ -710,7 +694,10 @@ class Widget implements \JsonSerializable
         $widgetInterface = $module->getWidgetProviderOrNull();
         if ($widgetInterface !== null) {
             // We use a duration provider
-            $durationProvider = $module->createDurationProvider($this->duration, $this->getAllWidgetOptions());
+            $this->getLog()->debug('calculateDuration: using a widget provider');
+
+            $module->decorateProperties($this, true);
+            $durationProvider = $module->createDurationProvider($this->duration, $module->getPropertyValues(false));
             $widgetInterface->fetchDuration($durationProvider);
 
             if ($durationProvider->isDurationSet()) {
