@@ -142,7 +142,13 @@ class Module implements \JsonSerializable
      * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
      * @var string
      */
-    public $dataParser;
+    public $onParseData;
+
+    /**
+     * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
+     * @var string
+     */
+    public $onFinish;
 
     /**
      * @SWG\Property(description="Optional sample data item, only applicable when a dataType is present")

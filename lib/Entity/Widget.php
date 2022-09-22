@@ -391,6 +391,33 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Remove an option
+     * @param string $option
+     * @return $this
+     */
+    public function removeOption(string $option): Widget
+    {
+        try {
+            $widgetOption = $this->getOption($option);
+
+            $this->getLog()->debug('removeOption: ' . $option);
+
+            // Unassign
+            foreach ($this->widgetOptions as $key => $value) {
+                if ($value->option === $option) {
+                    unset($this->widgetOptions[$key]);
+                }
+            }
+
+            // Delete now
+            $widgetOption->delete();
+        } catch (NotFoundException $exception) {
+            // This is good, notihng to do.
+        }
+        return $this;
+    }
+
+    /**
      * Get Widget Option Value
      * @param string $option
      * @param mixed $default
@@ -748,22 +775,27 @@ class Widget implements \JsonSerializable
     public function applyProperties(array $properties): Widget
     {
         foreach ($properties as $property) {
-            $type = ($property->type === 'code') ? 'cdata' : 'attrib';
+            // Do not save null properties.
+            if ($property->value === null) {
+                $this->removeOption($property->id);
+            } else {
+                $type = ($property->type === 'code') ? 'cdata' : 'attrib';
 
-            // Apply any filters on the data.
-            if ($property->type === 'input' && $property->variant === 'uri') {
-                $property->value = urlencode($property->value);
-            }
+                // Apply any filters on the data.
+                if ($property->type === 'input' && $property->variant === 'uri') {
+                    $property->value = urlencode($property->value);
+                }
 
-            $this->setOptionValue($property->id, $type, $property->value);
+                $this->setOptionValue($property->id, $type, $property->value);
 
-            if ($property->allowLibraryRefs) {
-                // Parse them out and replace for our special syntax.
-                $matches = [];
-                preg_match_all('/\[(.*?)\]/', $property->value, $matches);
-                foreach ($matches[1] as $match) {
-                    if (is_numeric($match)) {
-                        $this->assignMedia(intval($match));
+                if ($property->allowLibraryRefs) {
+                    // Parse them out and replace for our special syntax.
+                    $matches = [];
+                    preg_match_all('/\[(.*?)\]/', $property->value, $matches);
+                    foreach ($matches[1] as $match) {
+                        if (is_numeric($match)) {
+                            $this->assignMedia(intval($match));
+                        }
                     }
                 }
             }

@@ -309,8 +309,9 @@ class WidgetHtmlRenderer
         $twig = [];
         $twig['hbs'] = [];
         $twig['twig'] = [];
-        $twig['renderers'] = [];
-        $twig['dataParsers'] = [];
+        $twig['onRender'] = [];
+        $twig['onParseData'] = [];
+        $twig['onFinish'] = [];
         $twig['templateProperties'] = [];
         $twig['elements'] = [];
         $twig['width'] = $region->width;
@@ -347,9 +348,12 @@ class WidgetHtmlRenderer
                 'properties' => $module->getPropertyValues(),
             ];
 
-            // Output data parsers for this widget
-            if (!empty($module->dataParser)) {
-                $twig['dataParsers'][$widget->widgetId] = $module->dataParser;
+            // Output event functions for this widget
+            if (!empty($module->onParseData)) {
+                $twig['onParseData'][$widget->widgetId] = $module->onParseData;
+            }
+            if (!empty($module->onFinish)) {
+                $twig['onFinish'][$widget->widgetId] = $module->onFinish;
             }
             
             // Find my template
@@ -414,8 +418,8 @@ class WidgetHtmlRenderer
                 ];
             }
 
-            if ($moduleTemplate->renderer !== null) {
-                $twig['renderers'][$moduleTemplate->templateId] = $moduleTemplate->renderer;
+            if ($moduleTemplate->onRender !== null) {
+                $twig['onRender'][$moduleTemplate->templateId] = $moduleTemplate->onRender;
             }
         }
 

@@ -147,7 +147,7 @@ class ModuleFactory extends BaseFactory
                 $cacheKey = $module->dataCacheKey;
 
                 // Properties
-                $properties = $module->getPropertyValues();
+                $properties = $module->getPropertyValues(false);
 
                 // Parse the cache key for variables.
                 $matches = [];
@@ -412,7 +412,8 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
-        $module->dataParser = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataParser');
+        $module->onParseData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onParseData');
+        $module->onFinish = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onFinish');
 
         // We might have sample data (usually only if there is a dataType)
         $sampleData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'sampleData');

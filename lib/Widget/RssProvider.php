@@ -54,10 +54,6 @@ class RssProvider implements WidgetProviderInterface
 
         $picoFeedLoggingEnabled = Environment::isDevMode();
 
-        // Date format for the feed items
-        // TODO: is this done client side now?
-        $dateFormat = $dataProvider->getProperty('dateFormat');
-
         // Image expiry
         $expiresImage = Carbon::now()
             ->addMinutes($dataProvider->getProperty('updateIntervalImages', 1440))
@@ -128,7 +124,7 @@ class RssProvider implements WidgetProviderInterface
                 && $dataProvider->getProperty('randomiseItems', 0) == 0
             ) {
                 // Sort the items array by date
-                usort($feedItems, function($a, $b) {
+                usort($feedItems, function ($a, $b) {
                     /* @var Item $a */
                     /* @var Item $b */
                     return ($a->getDate() < $b->getDate());

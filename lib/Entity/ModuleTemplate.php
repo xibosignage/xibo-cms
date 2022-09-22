@@ -64,14 +64,14 @@ class ModuleTemplate implements \JsonSerializable
     public $stencil;
 
     /** @var string A Renderer to run if custom rendering is required. */
-    public $renderer;
+    public $onRender;
 
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;
 
     /**
      * Entity constructor.
-     * @param StorageServiceInterface $store
+     * @param \Xibo\Storage\StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
@@ -84,50 +84,5 @@ class ModuleTemplate implements \JsonSerializable
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->moduleTemplateFactory = $moduleTemplateFactory;
-    }
-
-    /**
-     * @param \Xibo\Entity\Widget $widget
-     * @param bool $includeDefaults
-     * @return $this
-     */
-    public function decorateProperties(Widget $widget, bool $includeDefaults = false): ModuleTemplate
-    {
-        foreach ($this->properties as $property) {
-            $property->value = $widget->getOptionValue($property->id, null);
-
-            // Should we include defaults?
-            if ($includeDefaults && $property->value === null) {
-                $property->value = $property->default;
-            }
-
-            if ($property->variant === 'uri') {
-                $property->value = urldecode($property->value);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getPropertyValues(): array
-    {
-        $properties = [];
-        foreach ($this->properties as $property) {
-            $properties[$property->id] = $property->value;
-        }
-        return $properties;
-    }
-
-    /**
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     */
-    public function validateProperties(): void
-    {
-        // Go through all of our required properties, and validate that they are as they should be.
-        foreach ($this->properties as $property) {
-            $property->validate();
-        }
     }
 }
