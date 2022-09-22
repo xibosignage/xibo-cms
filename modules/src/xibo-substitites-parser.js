@@ -1,6 +1,5 @@
-{#
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,15 +18,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-#}
-
-{% extends "module-form-settings.twig" %}
-{% import "forms.twig" as forms %}
-
-{% block moduleFormFields %}
-
-    {% set title %}{% trans "Update Interval Images (mins)" %}{% endset %}
-    {% set helpText %}{% trans "Please enter the update interval for images in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
-    {{ forms.number("updateIntervalImages", title, module.getSetting("updateIntervalImages", 240), helpText) }}
-
-{% endblock %}
+jQuery.fn.extend({
+  xiboSubstitutesParser: function(template) {
+    var items = [];
+    this.each(function() {
+      // Parse the template for a list of things to substitute, and match those
+      // with content from items.
+      var replacement = template;
+      var parser = new RegExp('\[.*?\]', 'g');
+      var match = parser.exec(template);
+      while (match != null) {
+        // matched text: match[0]
+        // match start: match.index
+        // capturing group n: match[n]
+        match = parser.exec(template);
+      }
+    });
+    return items;
+  },
+});

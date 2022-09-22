@@ -1167,6 +1167,7 @@ class LayoutFactory extends BaseFactory
         $folder = $this->folderFactory->getById($folderId);
 
         // for old imports it may not exist and would error out without this check.
+        $importedFromXlf = false;
         if (array_key_exists('layoutDefinitions', $layoutDetails)) {
             // Construct the Layout
             if ($playlistDetails !== false) {
@@ -1200,6 +1201,7 @@ class LayoutFactory extends BaseFactory
                 }
             }
         } else {
+            $importedFromXlf = true;
             $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
         }
 
@@ -1764,7 +1766,7 @@ class LayoutFactory extends BaseFactory
         // We need one final pass through all widgets on the layout so that we can set the durations properly.
         foreach ($layout->getAllWidgets() as $widget) {
             $module = $this->moduleFactory->getByType($widget->type);
-            $widget->calculateDuration($module, true);
+            $widget->calculateDuration($module, $importedFromXlf);
 
             // Get global stat setting of widget to set to on/off/inherit
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));

@@ -179,7 +179,7 @@ class IcsProvider implements WidgetProviderInterface
                 ->getGuzzleClient([
                     'timeout' => 20, // wait no more than 20 seconds
                 ])
-                ->get(urldecode($dataProvider->getProperty('uri')));
+                ->get($uri);
 
             return $response->getBody()->getContents();
         } catch (RequestException $requestException) {

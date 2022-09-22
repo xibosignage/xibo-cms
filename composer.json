@@ -63,7 +63,6 @@
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "^8.0",
     "flynsarmy/slim-monolog": "~1.0",
-    "ezyang/htmlpurifier": "^4",
     "sallar/jdatetime": "dev-master",
     "gettext/gettext": "~4.0",
     "slim/twig-view": "3.0.x",

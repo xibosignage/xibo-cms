@@ -72,6 +72,9 @@ class ModulesTableVerFourMigration extends AbstractMigration
                    `settings`
               FROM `module_old`');
 
+            // Handle any specific renames
+            $this->execute('UPDATE `module` SET moduleId = \'core-rss-ticker\' WHERE moduleId = \'core-ticker\'');
+
             // Drop the old table
             $this->dropTable('module_old');
         } catch (Exception $e) {

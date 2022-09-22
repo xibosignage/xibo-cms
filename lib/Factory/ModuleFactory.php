@@ -86,12 +86,13 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $file
-     * @return \Xibo\Widget\Provider\DurationProviderInterface
+     * @param int $duration
+     * @param array $properties
+     * @return DurationProviderInterface
      */
-    public function createDurationProvider(string $file): DurationProviderInterface
+    public function createDurationProvider(int $duration, array $properties): DurationProviderInterface
     {
-        return new DurationProvider($file);
+        return new DurationProvider($duration, $properties);
     }
 
     /**
@@ -146,7 +147,7 @@ class ModuleFactory extends BaseFactory
                 $cacheKey = $module->dataCacheKey;
 
                 // Properties
-                $properties = $module->getPropertyValues();
+                $properties = $module->getPropertyValues(false);
 
                 // Parse the cache key for variables.
                 $matches = [];
@@ -270,6 +271,13 @@ class ModuleFactory extends BaseFactory
 
         foreach ($modules as $module) {
             if ($module->type === $type) {
+                return $module;
+            }
+        }
+
+        // Match on legacy type
+        foreach ($modules as $module) {
+            if (in_array($type, $module->legacyTypes)) {
                 return $module;
             }
         }
@@ -404,12 +412,22 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
-        $module->dataParser = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataParser');
+        $module->onParseData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onParseData');
+        $module->onFinish = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onFinish');
 
         // We might have sample data (usually only if there is a dataType)
         $sampleData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'sampleData');
         if (!empty($module->sampleData)) {
             $module->sampleData = json_decode(trim($sampleData), true);
+        }
+
+        // Legacy types.
+        $module->legacyTypes = [];
+        $legacyTypeNodes = $xml->getElementsByTagName('legacyType');
+        foreach ($legacyTypeNodes as $legacyTypeNode) {
+            if ($legacyTypeNode instanceof \DOMElement) {
+                $module->legacyTypes[] = $legacyTypeNode->textContent;
+            }
         }
 
         // Default values for remaining expected properties

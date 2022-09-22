@@ -30,6 +30,7 @@ window.Handlebars = require('handlebars/dist/handlebars.min.js');
 require('chart.js');
 window.Hls = require('hls.js');
 const pdflib = require('pdfjs-dist/legacy/build/pdf.min.js');
+
 import '../vendor/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
 import './xibo-countdown-render';
@@ -38,6 +39,7 @@ import './xibo-image-render';
 import './xibo-layout-scaler';
 import './xibo-menuboard-render';
 import './xibo-metro-render';
+import './xibo-substitites-parser';
 import './xibo-text-render';
 import './xibo-webpage-render';
 import './xibo-worldclock-render';

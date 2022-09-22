@@ -97,8 +97,8 @@ trait ModuleXmlTrait
                 $property->variant = $node->getAttribute('variant');
                 $property->format = $node->getAttribute('format');
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
-                $property->title = $this->getFirstValueOrDefaultFromXmlNode($node, 'title');
-                $property->helpText = $this->getFirstValueOrDefaultFromXmlNode($node, 'helpText');
+                $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
+                $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
 
                 // Default value
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
@@ -106,6 +106,8 @@ trait ModuleXmlTrait
                 // Is this a variable?
                 if ($module !== null && Str::startsWith($defaultValue, '%') && Str::endsWith($defaultValue, '%')) {
                     $defaultValue = $module->getSetting(str_replace('%', '', $defaultValue));
+                } else if (Str::startsWith($defaultValue, '#') && Str::endsWith($defaultValue, '#')) {
+                    $defaultValue = $this->getConfig()->getSetting(str_replace('#', '', $defaultValue));
                 }
                 $defaultValues[$property->id] = $defaultValue;
 

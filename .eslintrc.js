@@ -12,6 +12,5 @@ module.exports = {
     indent: ['error', 2],
     'quote-props': ['warn', 'as-needed'],
     'dot-location': ['warn', 'property'],
-    'linebreak-style': ['error', process.platform === 'win32' ? 'windows' : 'unix'],
   },
 };

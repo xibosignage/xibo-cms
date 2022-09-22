@@ -1,0 +1,105 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-rss-ticker</id>
+    <name>RSS Ticker</name>
+    <author>Core</author>
+    <description>Display articles from an RSS feed</description>
+    <class>\Xibo\Widget\RssProvider</class>
+    <type>rss-ticker</type>
+    <legacyType>ticker</legacyType>
+    <dataType>article</dataType>
+    <dataCacheKey>%uri%</dataCacheKey>
+    <schemaVersion>2</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings>
+        <property id="updateIntervalImages" type="number">
+            <title>Update Interval Images (mins)</title>
+            <helpText>Please enter the update interval for images in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default>240</default>
+        </property>
+    </settings>
+    <properties>
+        <property id="uri" type="input" variant="uri">
+            <title>Feed URL</title>
+            <helpText>The Link for the RSS feed</helpText>
+            <default></default>
+            <rule>required</rule>
+        </property>
+        <property id="numItems" type="number">
+            <title>Number of Items</title>
+            <helpText>The Number of RSS items you want to display</helpText>
+            <default>15</default>
+        </property>
+        <property id="takeItemsFrom" type="dropdown" mode="single">
+            <title>Take items from the</title>
+            <helpText>Take the items from the beginning or the end of the list</helpText>
+            <default>start</default>
+            <options>
+                <option name="start">Start of the Feed</option>
+                <option name="end">End of the Feed</option>
+            </options>
+        </property>
+        <property id="reverseOrder" type="checkbox">
+            <title>Reverse Order</title>
+            <helpText>Should we reverse the order of the feed items?</helpText>
+            <default>0</default>
+        </property>
+        <property id="randomiseItems" type="checkbox">
+            <title>Randomise</title>
+            <helpText>Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order.</helpText>
+            <default>0</default>
+        </property>
+        <property id="allowedAttributes" type="input">
+            <title>Allowable Attributes</title>
+            <helpText>A comma separated list of attributes that should not be stripped from the incoming feed.</helpText>
+            <default></default>
+        </property>
+        <property id="stripTags" type="input">
+            <title>Strip Tags</title>
+            <helpText>A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.</helpText>
+            <default></default>
+        </property>
+        <property id="decodeHtml" type="checkbox">
+            <title>Decode HTML</title>
+            <helpText>Should we decode the HTML entities in this feed before parsing it?</helpText>
+            <default>0</default>
+        </property>
+        <property id="disableDateSort" type="checkbox">
+            <title>Disable Date Sort</title>
+            <helpText>Should the date sort applied to the feed be disabled?</helpText>
+            <default>0</default>
+        </property>
+        <property id="updateInterval" type="number">
+            <title>Update Interval (mins)</title>
+            <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default>60</default>
+        </property>
+        <property id="updateIntervalImages" type="number">
+            <title>Update Interval Images (mins)</title>
+            <helpText>Override the update interval for images. This should be kept as high as possible and can be set for all Tickers in Module Settings.</helpText>
+            <default>%updateIntervalImages%</default>
+        </property>
+    </properties>
+</module>
