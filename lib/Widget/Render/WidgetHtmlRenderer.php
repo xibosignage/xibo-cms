@@ -383,7 +383,7 @@ class WidgetHtmlRenderer
             // Watermark duration
             $duration = max($duration, $widget->calculatedDuration);
             // TODO: this won't always be right? can we make it right
-            $numItems = max($numItems, $widget->getOptionValue('numItems', 0));
+            $numItems = max($numItems, $widgetData['properties']['numItems'] ?? 0);
 
             // What does our module have
             if ($module->stencil !== null) {

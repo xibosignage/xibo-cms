@@ -25,6 +25,33 @@
         <dataType>article</dataType>
         <title>Articles shown with custom HTML</title>
         <properties>
+            <property id="effect" type="dropdown" mode="single">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays.</helpText>
+                <default>noTransition</default>
+                <options>
+                    <option name="none">No effect - all items are shown</option>
+                    <option name="marqueeLeft">Marquee Left</option>
+                    <option name="marqueeRight">Marquee Right</option>
+                    <option name="marqueeUp">Marquee Up</option>
+                    <option name="marqueeDown">Marquee Down</option>
+                    <option name="noTransition">No transition</option>
+                    <option name="fade">Fade</option>
+                    <option name="fadeout">Fade Out</option>
+                    <option name="scrollHorz">Scroll Horizontal</option>
+                    <option name="scrollVert">Scroll Vertical</option>
+                    <option name="flipHorz">Flip Horizontal</option>
+                    <option name="flipVert">Flip Vertical</option>
+                    <option name="shuffle">Shuffle</option>
+                    <option name="tileSlide">Tile Slide</option>
+                    <option name="tileBlind">Tile Blind</option>
+                </options>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
+                <default>1000</default>
+            </property>
             <property id="itemsSideBySide" type="checkbox">
                 <title>Show items side by side?</title>
                 <helpText>Should items be shown side by side?</helpText>
@@ -44,6 +71,15 @@
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
+            </property>
+            <property id="textDirection" type="dropdown" mode="single">
+                <title>Text direction</title>
+                <helpText>Which direction does the text in the feed use?</helpText>
+                <default>ltr</default>
+                <options>
+                    <option name="ltr">Left to Right (LTR)</option>
+                    <option name="rtl">Right to Left (RTL)</option>
+                </options>
             </property>
             <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
@@ -85,7 +121,10 @@
 // globalOptions: The global rendering options
 // -------------------------------------------
 if (items.length > 0) {
-    items = $(items).xiboSubstitutesParser(properties.ta_text);
+    items = $(items).xiboSubstitutesParser(properties.ta_text, properties.dateFormat, ['date', 'publishedDate'], {
+        description: 'summary',
+        copyright: 'author',
+    });
 }
 
 // No data message

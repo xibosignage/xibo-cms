@@ -138,7 +138,14 @@ class Preview extends Base
      */
     public function playerBundle(Request $request, Response $response)
     {
-        $bundle = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
+        $params = $this->getSanitizer($request->getParams());
+        $isMap = $params->getCheckbox('map');
+        if ($isMap) {
+            $bundle = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js.map');
+        } else {
+            $bundle = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
+        }
+
         $response->getBody()->write($bundle);
         return $response->withStatus(200)
             ->withHeader('Content-Size', strlen($bundle))

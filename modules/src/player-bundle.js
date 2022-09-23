@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
@@ -19,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/* eslint-disable no-unused-vars */
 window.jQuery = window.$ = require('jquery');
 require('babel-polyfill');
 window.moment = require('moment');
@@ -39,7 +40,7 @@ import './xibo-image-render';
 import './xibo-layout-scaler';
 import './xibo-menuboard-render';
 import './xibo-metro-render';
-import './xibo-substitites-parser';
+import './xibo-substitutes-parser';
 import './xibo-text-render';
 import './xibo-webpage-render';
 import './xibo-worldclock-render';

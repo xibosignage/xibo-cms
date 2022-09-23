@@ -242,7 +242,7 @@ class Widget extends Base
         $this->getDispatcher()->dispatch(new WidgetAddEvent($module, $widget));
 
         // Save the widget
-        $widget->save();
+        $widget->calculateDuration($module)->save();
 
         // Module add will have saved our widget with the correct playlistId and displayOrder
         // if we have provided a displayOrder, then we ought to also save the Playlist so that new orders for those
@@ -386,7 +386,6 @@ class Widget extends Base
 
             // Set it
             $widget->setOptionValue('templateId', 'attrib', $templateId);
-            $existingTemplate = $templateId;
         } else if ($existingTemplate !== 'elements') {
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $existingTemplate);
         }
@@ -429,7 +428,7 @@ class Widget extends Base
         }
 
         // We've reached the end, so save
-        $widget->save();
+        $widget->calculateDuration($module)->save();
 
         // Successful
         $this->getState()->hydrate([

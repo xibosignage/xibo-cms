@@ -23,7 +23,7 @@ jQuery.fn.extend({
 
         // Default options
         var defaults = {
-            "fx": "none",
+            "effect": "none",
             "duration": "50",
             "durationIsPerItem": false,
             "numItems": 0,
@@ -143,11 +143,11 @@ jQuery.fn.extend({
             for (var i = 0; i < items.length; i++) {
 
                 // We don't add any pages for marquee / none transitions.
-                if (options.fx != "none" &&
-                    options.fx != "marqueeLeft" &&
-                    options.fx != "marqueeRight" &&
-                    options.fx != "marqueeUp" &&
-                    options.fx != "marqueeDown") {
+                if (options.effect != "none" &&
+                    options.effect != "marqueeLeft" &&
+                    options.effect != "marqueeRight" &&
+                    options.effect != "marqueeUp" &&
+                    options.effect != "marqueeDown") {
 
                     // If we need to set pages, have we switched over to a new page?
                     if (options.itemsPerPage > 1 && (itemsThisPage >= options.itemsPerPage || i === 0)) {
@@ -173,10 +173,10 @@ jQuery.fn.extend({
             //  speed (how fast we need to move)
             var marquee = false;
 
-            if (options.fx == "none") {
+            if (options.effect == "none") {
                 // Do nothing
             }
-            else if (options.fx != "marqueeLeft" && options.fx != "marqueeRight" && options.fx != "marqueeUp" && options.fx != "marqueeDown") {
+            else if (options.effect != "marqueeLeft" && options.effect != "marqueeRight" && options.effect != "marqueeUp" && options.effect != "marqueeDown") {
 
                 // Make sure the speed is something sensible
                 options.speed = (options.speed <= 200) ? 1000 : options.speed;
@@ -204,13 +204,13 @@ jQuery.fn.extend({
                 // Set the width on the cycled slides
                 $(slides, this).css({
                     width: width,
-                    height: height
+                    height: height,
                 });
 
                 var timeout = duration * 1000;
                 var noTransitionSpeed = 10;
 
-                if (options.fx !== "noTransition") {
+                if (options.effect !== "noTransition") {
                     timeout = timeout - options.speed;
                 } else {
                     timeout = timeout - noTransitionSpeed;
@@ -218,15 +218,15 @@ jQuery.fn.extend({
 
                 // Cycle handles this for us
                 $(this).cycle({
-                    fx: (options.fx === "noTransition") ? "none" : options.fx,
-                    speed: (options.fx === "noTransition") ? noTransitionSpeed : options.speed,
+                    fx: (options.effect === "noTransition") ? "none" : options.effect,
+                    speed: (options.effect === "noTransition") ? noTransitionSpeed : options.speed,
                     timeout: timeout,
                     slides: "> " + slides
                 });
             }
-            else if (options.fx == "marqueeLeft" || options.fx == "marqueeRight") {
+            else if (options.effect == "marqueeLeft" || options.effect == "marqueeRight") {
                 marquee = true;
-                options.direction = ((options.fx == "marqueeLeft") ? "left" : "right");
+                options.direction = ((options.effect == "marqueeLeft") ? "left" : "right");
 
                 // Make sure the speed is something sensible
                 options.speed = (options.speed == 0) ? 1 : options.speed;
@@ -237,10 +237,10 @@ jQuery.fn.extend({
                     "padding-left": "10px"
                 });
             }
-            else if (options.fx == "marqueeUp" || options.fx == "marqueeDown") {
+            else if (options.effect == "marqueeUp" || options.effect == "marqueeDown") {
                 // We want a marquee
                 marquee = true;
-                options.direction = ((options.fx == "marqueeUp") ? "up" : "down");
+                options.direction = ((options.effect == "marqueeUp") ? "up" : "down");
 
                 // Make sure the speed is something sensible
                 options.speed = (options.speed == 0) ? 1 : options.speed;
@@ -287,7 +287,7 @@ jQuery.fn.extend({
                 $(this).wrapInner(scroller);
 
                 // Correct for up / down
-                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
+                if (options.effect === "marqueeUp" || options.effect === "marqueeDown") {
                     $(this).css('height', '100%');
                     $(this).find('.scroll').css('height', '100%').children().css({"white-space": "normal", float: "none"});
                 }
