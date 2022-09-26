@@ -63,36 +63,91 @@
             <title>Page Width</title>
             <helpText>The width of the page. Leave empty to use the region width.</helpText>
             <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                    <condition field="#modeId" type="eq">3</condition>
+                </test>
+            </visibility>
         </property>
         <property id="pageHeight" type="number">
             <title>Page Height</title>
             <helpText>The height of the page. Leave empty to use the region height.</helpText>
             <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                    <condition field="#modeId" type="eq">3</condition>
+                </test>
+            </visibility>
         </property>
         <property id="offsetTop" type="number">
             <title>Offset Top</title>
             <helpText>The starting point from the top in pixels</helpText>
             <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                </test>
+            </visibility>
         </property>
         <property id="offsetLeft" type="number">
             <title>Offset Left</title>
             <helpText>The starting point from the left in pixels</helpText>
             <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                </test>
+            </visibility>
         </property>
         <property id="scaling" type="number">
             <title>Scale Percentage</title>
             <helpText>The Percentage to Scale this Webpage (0 - 100)</helpText>
             <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                </test>
+            </visibility>
         </property>
         <property id="pageLoadErrorTrigger" type="input">
             <title>Trigger on page load error</title>
             <helpText>Code to be triggered when the page to be loaded returns an error, e.g. a 404 not found.</helpText>
             <default></default>
             <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">1</condition>
+                </test>
+            </visibility>
         </property>
     </properties>
     <preview>
         <twig><![CDATA[
- ]]></twig>
+            <style>
+                #iframe { border:0; }
+            </style>
+
+            <iframe id="iframe" scrolling="no" src="{{ uri }}"></iframe>
+
+            <script type="text/javascript">
+                var options =
+                    {
+                    "modeId":"2",
+                    "originalWidth":1258,
+                    "originalHeight":938,
+                    "iframeWidth":1258,
+                    "iframeHeight":938,
+                    "offsetTop":0,
+                    "offsetLeft":0,
+                    "scale":1
+                    }
+                $(document).ready(function() {
+                    $("#content").xiboLayoutScaler(options);
+                    $("#iframe").xiboIframeScaler(options);
+                });
+            </script>
+        ]]></twig>
     </preview>
 </module>
