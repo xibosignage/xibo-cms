@@ -28,6 +28,7 @@ const Playlist = function(id, data) {
 
 /**
  * Create data structure
+ * @param {object} data - data to build the playlist object
  */
 Playlist.prototype.createDataStructure = function(data) {
   // Playlist duration calculated based on the longest region duration
@@ -38,32 +39,34 @@ Playlist.prototype.createDataStructure = function(data) {
 
   // Create widgets for this region
   for (const widget in widgets) {
-    const newWidget = new Widget(
-      widgets[widget].widgetId,
-      widgets[widget],
-    );
+    if (Object.prototype.hasOwnProperty.call(widgets, widget)) {
+      const newWidget = new Widget(
+        widgets[widget].widgetId,
+        widgets[widget],
+      );
 
-    if (newWidget.subType == 'image') {
-      newWidget.previewTemplate = '<div class="tooltip playlist-widget-preview" role="tooltip"><div class="arrow"></div><div class="tooltip-inner-image"><img src=' + imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) + '></div></div>';
+      if (newWidget.subType == 'image') {
+        newWidget.previewSrc =
+          imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]);
+      }
+
+      newWidget.designerObject = pE;
+
+      // calculate expire status
+      newWidget.calculateExpireStatus();
+
+      // Check if widget is enabled
+      newWidget.checkIfEnabled();
+
+      // Add newWidget to the playlist widget object
+      this.widgets[newWidget.id] = newWidget;
+
+      // Mark the playlist as not empty
+      this.isEmpty = false;
+
+      // Increase playlist Duration
+      playlistDuration += newWidget.getTotalDuration();
     }
-
-
-    newWidget.designerObject = pE;
-
-    // calculate expire status
-    newWidget.calculateExpireStatus();
-
-    // Check if widget is enabled
-    newWidget.checkIfEnabled();
-
-    // Add newWidget to the playlist widget object
-    this.widgets[newWidget.id] = newWidget;
-
-    // Mark the playlist as not empty
-    this.isEmpty = false;
-
-    // Increase playlist Duration
-    playlistDuration += newWidget.getTotalDuration();
   }
 
   // Set playlist duration
@@ -72,7 +75,8 @@ Playlist.prototype.createDataStructure = function(data) {
 
 
 /**
- * Calculate timeline values ( duration, loops ) based on widget and region duration
+ * Calculate timeline values ( duration, loops )
+ * based on widget and region duration
  */
 Playlist.prototype.calculateTimeValues = function() {
   // Widgets
@@ -80,12 +84,16 @@ Playlist.prototype.calculateTimeValues = function() {
   let loopSingleWidget = false;
   let singleWidget = false;
 
-  // If there is only one widget in the playlist, check the loop option for that region
+  // If there is only one widget in the playlist
+  // check the loop option for that region
   if (widgets.length === 1) {
     singleWidget = true;
     // Check the loop option
     for (const option in this.options) {
-      if (this.options[option].option === 'loop' && this.options[option].value === '1') {
+      if (
+        this.options[option].option === 'loop' &&
+        this.options[option].value === '1'
+      ) {
         this.loop = true;
         loopSingleWidget = true;
         break;
@@ -97,11 +105,13 @@ Playlist.prototype.calculateTimeValues = function() {
   }
 
   for (const widget in widgets) {
-    const currWidget = widgets[widget];
+    if (Object.prototype.hasOwnProperty.call(widgets, widget)) {
+      const currWidget = widgets[widget];
 
-    // If the widget needs to be extended
-    currWidget.singleWidget = singleWidget;
-    currWidget.loop = loopSingleWidget;
+      // If the widget needs to be extended
+      currWidget.singleWidget = singleWidget;
+      currWidget.loop = loopSingleWidget;
+    }
   }
 };
 
@@ -111,9 +121,14 @@ Playlist.prototype.calculateTimeValues = function() {
  * @param {object} draggable - Dragged object
  * @param {number=} addToPosition - Add to specific position in the widget list
  */
-Playlist.prototype.addElement = function(droppable, draggable, addToPosition = null) {
+Playlist.prototype.addElement = function(
+  droppable,
+  draggable,
+  addToPosition = null,
+) {
   const draggableType = $(draggable).data('type');
   const draggableSubType = $(draggable).data('subType');
+  const draggableData = $(draggable).data();
 
   // Get playlist Id
   const playlistId = this.playlistId;
@@ -129,7 +144,10 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
     } else {
       this.addMedia($(draggable).data('mediaId'), addToPosition);
     }
-  } else if (draggableType == 'module') { // Add widget/module
+  } else if (
+    draggableType == 'module' ||
+    draggableType == 'template'
+  ) { // Add widget/module/template
     // Get regionSpecific property
     const regionSpecific = $(draggable).data('regionSpecific');
 
@@ -164,7 +182,8 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
           upload: {
             maxSize: $(draggable).data().maxSize,
             maxSizeMessage: $(draggable).data().maxSizeMessage,
-            validExtensionsMessage: translations.validExtensions.replace('%s', $(draggable).data('validExt')),
+            validExtensionsMessage: translations.validExtensions
+              .replace('%s', $(draggable).data('validExt')),
             validExt: validExt,
           },
           playlistId: playlistId,
@@ -193,6 +212,12 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
         addOptions = {
           displayOrder: addToPosition,
         };
+      }
+
+      // Set template if if exists
+      if (draggableData.templateId) {
+        addOptions = addOptions || {};
+        addOptions.templateId = draggableData.templateId;
       }
 
       pE.manager.addChange(
@@ -235,30 +260,9 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
         // Remove added change from the history manager
         pE.manager.removeLastChange();
 
-        // Display message in form
-        formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
-
         // Show toast message
         toastr.error(errorMessage);
       });
-    }
-  } else if (draggableType == 'tool') { // Add tool
-    const widgetId = $(droppable).attr('id');
-    const widget = pE.getElementByTypeAndId('widget', widgetId);
-
-    // Select widget ( and avoid deselect if region was already selected )
-    pE.selectObject($(droppable), true);
-
-    if (draggableSubType == 'audio') {
-      widget.editAttachedAudio();
-    } else if (draggableSubType == 'expiry') {
-      widget.editExpiry();
-    } else if (draggableSubType == 'transitionIn') {
-      widget.editTransition('in');
-    } else if (draggableSubType == 'transitionOut') {
-      widget.editTransition('out');
-    } else if (draggableSubType == 'permissions') {
-      widget.editPermissions();
     }
   }
 };
@@ -336,24 +340,31 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
     }
 
     // Show toast message
-    toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
+    toastr.error(errorMessagesTrans.addMediaFailed
+      .replace('%error%', errorMessage));
   });
 };
 
 /**
  * Delete an element in the playlist, by ID
- * @param {number} elementId - element id
  * @param {string} elementType - element type (widget, region, ...)
+ * @param {number} elementId - element id
  * @param {object =} [options] - Delete submit params/options
+ * @return {Promise} - Promise object
  */
-Playlist.prototype.deleteElement = function(elementType, elementId, options = null) {
+Playlist.prototype.deleteElement = function(
+  elementType,
+  elementId,
+  options = null,
+) {
   pE.common.showLoadingScreen();
 
   // Remove changes from the history array
   return pE.manager.removeAllChanges(elementType, elementId).then((res) => {
     pE.common.hideLoadingScreen();
 
-    // Create a delete type change, upload it but don't add it to the history array
+    // Create a delete type change
+    // upload it but don't add it to the history array
     return pE.manager.addChange(
       'delete',
       elementType, // targetType
@@ -374,6 +385,7 @@ Playlist.prototype.deleteElement = function(elementType, elementId, options = nu
 /**
  * Save playlist order
  * @param {object} widgets - Widgets DOM objects array
+ * @return {Promise} - Promise object
  */
 Playlist.prototype.saveOrder = function(widgets) {
   if ($.isEmptyObject(pE.playlist.widgets)) {
@@ -386,15 +398,20 @@ Playlist.prototype.saveOrder = function(widgets) {
   const oldOrder = {};
   let orderIndex = 1;
   for (const element in pE.playlist.widgets) {
-    oldOrder[pE.playlist.widgets[element].widgetId] = orderIndex;
-    orderIndex++;
+    if (pE.playlist.widgets.hasOwnProperty(element)) {
+      oldOrder[pE.playlist.widgets[element].widgetId] = orderIndex;
+      orderIndex++;
+    }
   }
 
   // Get new order
   const newOrder = {};
 
   for (let index = 0; index < widgets.length; index++) {
-    const widget = pE.getElementByTypeAndId('widget', $(widgets[index]).attr('id'));
+    const widget = pE.getElementByTypeAndId(
+      'widget',
+      $(widgets[index]).attr('id'),
+    );
 
     newOrder[widget.widgetId] = index + 1;
   }

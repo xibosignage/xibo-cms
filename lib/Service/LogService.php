@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -107,10 +107,18 @@ class LogService implements LogServiceInterface
      */
     public function audit($entity, $entityId, $message, $object)
     {
-        $this->debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s from IP %s', $entity, $entityId, $message, $this->ipAddress));
+        $this->debug(sprintf(
+            'Audit Trail message recorded for %s with id %d. Message: %s from IP %s',
+            $entity,
+            $entityId,
+            $message,
+            $this->ipAddress
+        ));
 
         if ($this->_auditLogStatement == null) {
-            $dbh = PdoStorageService::newConnection();
+            // Use the default connection
+            //  audit log should rollback on failure.
+            $dbh = PdoStorageService::newConnection('default');
             $this->_auditLogStatement = $dbh->prepare('
                 INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter, ipAddress)
                   VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter, :ipAddress)
@@ -122,7 +130,8 @@ class LogService implements LogServiceInterface
             $object = json_encode($object);
         }
 
-        PdoStorageService::incrementStatStatic('auditlog', 'insert');
+        // Although we use the default connection, track audit status separately.
+        PdoStorageService::incrementStat('audit', 'insert');
 
         $this->_auditLogStatement->execute([
             'logDate' => Carbon::now()->format('U'),

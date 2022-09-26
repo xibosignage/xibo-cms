@@ -152,13 +152,14 @@ function XiboInitialise(scope) {
                 return false;
             }
         });
-        
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
 
+        // check to see if we need to share folder tree state globally or per page
+        var gridFolderState = rememberFolderTreeStateGlobally ? 'grid-folder-tree-state' : 'grid_'+gridName ;
         // init the jsTree
-        initJsTreeAjax($(this).find('#container-folder-tree'), 'grid-folder-tree-state', false)
+        initJsTreeAjax($(this).find('#container-folder-tree'), gridFolderState, false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -279,151 +280,6 @@ function XiboInitialise(scope) {
     $(scope + ' .dropdown-menu').on('click', function(e) {
         if($(this).hasClass('dropdown-menu-form')) {
             e.stopPropagation();
-        }
-    });
-
-    // Date time controls
-    $(scope + ' .datePicker:not(.datePickerHelper)').each(function() {
-        if(calendarType == 'Jalali') {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateOnlyFormat,
-                {
-                    altFieldFormatter: function(unixTime) {
-                        var newDate = moment.unix(unixTime / 1000);
-                        newDate.set('hour', 0);
-                        newDate.set('minute', 0);
-                        newDate.set('second', 0);
-                        return newDate.format(systemDateFormat);
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateOnlyFormat
-            );
-        }
-    });
-
-    $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
-        var enableSeconds = dateFormat.includes('s');
-        var enable24 = !dateFormat.includes('A');
-
-        if(calendarType == 'Jalali') {
-            initDatePicker(
-                $(this),
-                systemDateFormat, 
-                jsDateFormat, 
-                {
-                    timePicker: {
-                        enabled: true,
-                        second: {
-                            enabled: enableSeconds
-                        }
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateFormat,
-                {
-                    enableTime: true,
-                    time_24hr: enable24,
-                    enableSeconds: enableSeconds,
-                    altFormat: jsDateFormat
-                }
-            );
-        }
-    });
-
-    $(scope + ' .dateMonthPicker:not(.datePickerHelper)').each(function() {
-        if(calendarType == 'Jalali') {
-            var linkedFormat = $(this).data().linkFormat;
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateFormat,
-                {
-                    format: "MMMM YYYY",
-                    viewMode: 'month',
-                    dayPicker: {
-                        enabled: false
-                    },
-                    altFieldFormatter: function(unixTime) {
-                        var newDate = moment.unix(unixTime / 1000);
-                        newDate.set('date', 1);
-                        newDate.set('hour', 0);
-                        newDate.set('minute', 0);
-                        newDate.set('second', 0);
-
-                        return newDate.format(systemDateFormat);
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemDateFormat,
-                jsDateFormat,
-                {
-                    plugins: [new flatpickrMonthSelectPlugin({
-                        shorthand: false,
-                        dateFormat: systemDateFormat,
-                        altFormat: 'MMMM Y',
-                        parseDate: function(datestr, format) {
-                            return moment(datestr, format, true).toDate();
-                        },
-                        formatDate: function(date, format, locale) {
-                            return moment(date).format(format);
-                        }
-                    })]
-                }
-            );
-        }
-    });
-
-    $(scope + ' .timePicker:not(.datePickerHelper)').each(function() {
-        var enableSeconds = dateFormat.includes('s');
-
-        if(calendarType == 'Jalali') {
-            initDatePicker(
-                $(this),
-                systemTimeFormat,
-                jsTimeFormat,
-                {
-                    onlyTimePicker: true,
-                    format: jsTimeFormat,
-                    timePicker: {
-                        second: {
-                            enabled: enableSeconds
-                        }
-                    },
-                    altFieldFormatter: function(unixTime) {
-                        var newDate = moment.unix(unixTime / 1000);
-                        newDate.set('second', 0);
-
-                        return newDate.format(systemTimeFormat);
-                    }
-                }
-            );
-        } else {
-            initDatePicker(
-                $(this),
-                systemTimeFormat,
-                jsTimeFormat,
-                {
-                    enableTime: true,
-                    noCalendar: true,
-                    enableSeconds: enableSeconds,
-                    time_24hr: true,
-                    altFormat: jsTimeFormat
-                }
-            );
         }
     });
 
@@ -1326,32 +1182,13 @@ function XiboInitialise(scope) {
         }, 200);
     });
 
-    // Initialise code field
-    $(scope + " .xibo-code-input").each(function() {
-        const $textArea = $(this).find('.code-input');
-        const inputValue = $textArea.val();
-        const codeType = $textArea.data('codeType');
-        
-        var newEditor = monaco.editor.create($(this).find('.code-input-editor')[0], {
-            value: inputValue,
-            fontSize: 12,
-            theme: 'vs-dark',
-            language: codeType,
-            lineNumbers: 'off',
-            glyphMargin: false,
-            folding: false,
-            lineDecorationsWidth: 0,
-            lineNumbersMinChars: 0,
-            automaticLayout: true,
-            minimap: {
-                enabled: false
-            },
-        });
-    
-        newEditor.onDidChangeModelContent(() => {
-            $textArea.val(newEditor.getValue());
-        });
-    });
+    // Initalise remaining form fields
+    if (forms && typeof forms.initFields === 'function') {
+        // Initialise fields, with scope of body if we don't have a specific scope
+        forms.initFields(
+            (scope === " ") ? "body" : scope,
+        );
+    }
 }
 
 /**
@@ -3327,7 +3164,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
     }
 
     if ($element.data('customFormat')) {
-        baseFormat = $element.data('customFormat');
+        displayFormat = $element.data('customFormat');
     }
 
     var $inputElement = $element;
@@ -3465,11 +3302,12 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, id, isForm, ttl)
+function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [])
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
     ttl = (typeof ttl == 'undefined') ? false : ttl;
+    var homeNodeId;
     
 
     // if there is no modal appended to body and we are on a form that needs this modal, then append it
@@ -3501,7 +3339,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"],
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes", "types"].concat(plugins),
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3563,6 +3401,22 @@ function initJsTreeAjax(container, id, isForm, ttl)
                                     }
                                 }
                             }
+
+                            if (isForm === false && buttonPermissions.move) {
+                                items['Move'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeMove,
+                                    "_class": "XiboFormRender",
+                                    "action": function (obj) {
+                                        XiboFormRender(foldersUrl + '/form/' + $node.id + '/move');
+                                    }
+                                }
+                            }
+
+                            if (onBuildContextMenu !== null && onBuildContextMenu instanceof Function) {
+                                items = onBuildContextMenu($node, items);
+                            }
                         },
                         complete: function (data) {
                             checkContextMenuPermissions(items);
@@ -3571,6 +3425,20 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 }},
             "themes" : {
                 "responsive" : true
+            },
+            "types" : {
+                "root" : {
+                    "icon" : "fa fa-file text-warning"
+                },
+                "home" : {
+                    "icon" : "fa fa-home text-success"
+                },
+                "default" : {
+                    "icon" : "fa fa-folder text-warning"
+                },
+                "open" : {
+                    "icon" : "fa fa-folder-open text-warning"
+                }
             },
             'core' : {
                 "check_callback" : function (operation, node, parent, position, more) {
@@ -3587,9 +3455,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     "url": foldersUrl
                 }
             }
-        });
-
-        $(container).on('ready.jstree', function(e, data) {
+        }).bind('ready.jstree', function(e, data) {
             // depending on the state of folder tree, hide/show as needed when we load the grid page
             if (localStorage.getItem("hideFolderTree") !== undefined &&
                 localStorage.getItem("hideFolderTree") !== null &&
@@ -3606,6 +3472,18 @@ function initJsTreeAjax(container, id, isForm, ttl)
                         $(container).jstree().hide_node(node);
                     } else {
                         $(container).jstree().disable_node(node);
+                    }
+                }
+
+                // get the home folder
+                if (e.type !== undefined && e.type === 'home') {
+                    homeNodeId = e.id;
+
+                    // check state
+                    let currentState = localStorage.getItem(id+'_folder_tree')
+                    // if we have no state saved, select the homeFolderId in the tree.
+                    if (currentState === undefined || currentState === null) {
+                        $(container).jstree(true).select_node(homeNodeId)
                     }
                 }
             });
@@ -3633,10 +3511,11 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             }
-        });
 
-        $(container).on("rename_node.jstree", function (e, data) {
-
+            if (onReady && onReady instanceof Function) {
+                onReady($(container).jstree(true), $(container));
+            }
+        }).bind("rename_node.jstree", function (e, data) {
             var dataObject = {};
             var folderId  = data.node.id;
             dataObject['text'] = data.text;
@@ -3653,9 +3532,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 }
             });
-        });
-
-        $(container).on("create_node.jstree", function (e, data) {
+        }).bind("create_node.jstree", function (e, data) {
 
             var node = data.node;
             node.text = translations.folderNew;
@@ -3680,9 +3557,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     }
                 },
             });
-        });
-
-        $(container).on("delete_node.jstree", function (e, data) {
+        }).bind("delete_node.jstree", function (e, data) {
 
             var dataObject = {};
             dataObject['parentId'] = data.parent;
@@ -3711,9 +3586,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
                 }
             });
-        });
-
-        $(container).on("changed.jstree", function (e, data) {
+        }).bind("changed.jstree", function (e, data) {
             var selectedFolderId = data.selected[0];
             var folderIdInputSelector = (isForm) ? '#'+id+' #folderId' : '#folderId';
             var node = $(container).jstree("get_selected", true);
@@ -3745,6 +3618,18 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
                 }
             }
+
+            if (onSelected && onSelected instanceof Function) {
+                onSelected(data);
+            }
+        }).bind("open_node.jstree", function(e, data) {
+            if (data.node.type !== 'root' && data.node.type !== 'home') {
+                data.instance.set_type(data.node,'open');
+            }
+        }).bind("close_node.jstree", function(e, data) {
+            if (data.node.type !== 'root' && data.node.type !== 'home') {
+                data.instance.set_type(data.node, 'default');
+            }
         });
 
         // on froms that have more than one modal active, this is needed to not confuse bootstrap
@@ -3762,7 +3647,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 $(container).jstree("deselect_all");
                 $('.XiboFilter').find('#folderId').val(null).trigger('change');
             } else {
-                $(container).jstree('select_node', 1)
+                $(container).jstree('select_node', homeNodeId ?? 1)
             }
         });
 

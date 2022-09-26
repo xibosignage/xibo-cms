@@ -202,7 +202,8 @@ class Tag extends Base
             'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
             'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
             'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions'),
-            'allTags' => $sanitizedQueryParams->getInt('allTags')
+            'allTags' => $sanitizedQueryParams->getInt('allTags'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ];
 
         $tags = $this->tagFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
@@ -744,18 +745,8 @@ class Tag extends Base
 
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
             if ($targetType === 'display') {
-                foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                    $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($group), DisplayGroupLoadEvent::$NAME);
-                    $group->save([
-                        'validate' => false,
-                        'saveGroup' => false,
-                        'saveTags' => false,
-                        'manageLinks' => false,
-                        'manageDisplayLinks' => true,
-                        'manageDynamicDisplayLinks' => true,
-                        'allowNotify' => true
-                    ]);
-                }
+                // Background update.
+                $this->getConfig()->changeSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 1);
             }
         } else {
             $this->getLog()->debug('Tags were not changed');

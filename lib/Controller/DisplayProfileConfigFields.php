@@ -666,6 +666,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('serverPort')) {
+                    $this->handleChangedSettings('serverPort', ($ownConfig) ? $displayProfile->getSetting('serverPort') : $display->getSetting('serverPort'), $sanitizedParams->getInt('serverPort'), $changedSettings);
+                    $displayProfile->setSetting('serverPort', $sanitizedParams->getInt('serverPort'), $ownConfig, $config);
+                }
+
                 if ($sanitizedParams->hasParam('embeddedServerAllowWan')) {
                     $this->handleChangedSettings('embeddedServerAllowWan', ($ownConfig) ? $displayProfile->getSetting('embeddedServerAllowWan') : $display->getSetting('embeddedServerAllowWan'), $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $changedSettings);
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);

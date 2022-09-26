@@ -103,10 +103,10 @@ class MediaManager extends Base
         $rows = [];
 
         $widgets = $this->widgetFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
-            'layout' => $sanitizedQueryParams->getString('layout'),
-            'region' => $sanitizedQueryParams->getString('region'),
-            'media' => $sanitizedQueryParams->getString('media'),
-            'type' => $sanitizedQueryParams->getString('type'),
+            'layout' => $sanitizedQueryParams->getString('layout', ['defaultOnEmptyString' => true]),
+            'region' => $sanitizedQueryParams->getString('region', ['defaultOnEmptyString' => true]),
+            'media' => $sanitizedQueryParams->getString('media', ['defaultOnEmptyString' => true]),
+            'type' => $sanitizedQueryParams->getString('type', ['defaultOnEmptyString' => true]),
             'playlist' => $sanitizedQueryParams->getString('playlist'),
             'showWidgetsFrom' => $sanitizedQueryParams->getInt('showWidgetsFrom')
         ], $sanitizedQueryParams));

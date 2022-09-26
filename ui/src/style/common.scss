@@ -155,8 +155,8 @@ $fa-font-path: "~font-awesome/fonts";
         position: absolute;
         z-index: ($loading-overlay-z-index + 1);
         opacity: 0.9;
-        background: $xibo-color-primary;
-        border: $xibo-color-secondary solid 2px;
+        background: $xibo-color-primary-l10;
+        border: $xibo-color-primary-l60 solid 1px;
         @include box-shadow(2px 2px 5px $xibo-color-neutral-900);
 
         .sort-controls-container {
@@ -167,31 +167,31 @@ $fa-font-path: "~font-awesome/fonts";
                 color: $xibo-color-primary-l60;
 
                 &:hover {
-                    color: $xibo-color-primary-l30;
+                    color: $xibo-color-primary;
                 }
             }
         }
 
         .main-button-container {
-            margin: 2px 5px;
+            margin: 0.25rem 0.5rem;
         }
 
         .context-menu-btn {
             display: inline-block;
             font-size: 1.25rem;
-            color: $xibo-color-primary-l30;
+            color: $xibo-color-primary;
             cursor: pointer;
 
             &:hover {
-                color: $xibo-color-primary-l10;
+                color: darken($xibo-color-primary, 5%);
             }
         }
 
         .deleteBtn {
-            color: $xibo-color-primary-l30;
+            color: lighten($xibo-color-semantic-error, 5%);
 
             &:hover {
-                color: $xibo-color-primary-l10;
+                color: $xibo-color-semantic-error;
             }
         }
     }
@@ -274,6 +274,10 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-file-pdf-o;
 }
 
+.module-icon-playlist {
+    @extend .fa-list-ol;
+}
+
 .module-icon-powerpoint, .media-icon-powerpoint {
     @extend .fa-file-powerpoint-o;
 }
@@ -332,6 +336,10 @@ $fa-font-path: "~font-awesome/fonts";
 
 .module-icon-menuboard {
     @extend .fa-th;
+}
+
+.module-icon-dashboard {
+    @extend .fa-file-image;
 }
 
 /* Tools icons */

@@ -423,31 +423,28 @@ class DataSetData extends Base
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    if ($value != null) {
+                    if (isset($value)) {
                         $value = $sanitizedParams->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
                     } else {
                         $value = $existingValue;
                     }
-                }
-                else if ($column->dataTypeId == 3) {
+                } else if ($column->dataTypeId == 3) {
                     // Date
-                    if ($value != null) {
+                    if (isset($value)) {
                         $value = $sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId);
                     } else {
                         $value = $existingValue;
                     }
-                }
-                else if ($column->dataTypeId == 5) {
+                } else if ($column->dataTypeId == 5) {
                     // Media Id
                     if (isset($value)) {
                         $value = $sanitizedParams->getInt('dataSetColumnId_' . $column->dataSetColumnId);
                     } else {
                         $value = null;
                     }
-                }
-                else {
+                } else {
                     // String
-                    if ($value != null) {
+                    if (isset($value)) {
                         $value = $sanitizedParams->getString('dataSetColumnId_' . $column->dataSetColumnId);
                     } else {
                         $value = $existingValue;
@@ -459,11 +456,11 @@ class DataSetData extends Base
         }
 
         // Use the data set object to edit a row
-        if ($row != [])
+        if ($row != []) {
             $dataSet->editRow($rowId, $row);
-        else
+        } else {
             throw new InvalidArgumentException(__('Cannot edit data of remote columns'), 'dataSetColumnTypeId');
-
+        }
         // Save the dataSet
         $dataSet->save(['validate' => false, 'saveColumns' => false]);
 

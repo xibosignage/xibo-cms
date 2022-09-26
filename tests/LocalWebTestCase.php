@@ -249,6 +249,10 @@ class LocalWebTestCase extends PHPUnit_TestCase
                 $handlers[] = new NullHandler();
             }
 
+            if (isset($_SERVER['PHPUNIT_LOG_CONTAINER_TO_CONSOLE']) && $_SERVER['PHPUNIT_LOG_CONTAINER_TO_CONSOLE']) {
+                $handlers[] = new StreamHandler(STDERR, Logger::DEBUG);
+            }
+
             $container->set('logger', function (ContainerInterface $container) use ($handlers) {
                 $logger = new Logger('PHPUNIT');
 
@@ -322,6 +326,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
                 $user->userName = 'phpunit';
                 $user->libraryQuota = 0;
                 $user->homePageId = 'statusdashboard.view';
+                $user->homeFolderId = 1;
                 $user->isSystemNotification = 1;
                 $user->setNewPassword(\Xibo\Helper\Random::generateString());
                 $user->save();
@@ -431,6 +436,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
             ->setPool($c->get('pool'))
             ->setStore($c->get('store'))
             ->setTimeSeriesStore($c->get('timeSeriesStore'))
+            ->setDispatcher($c->get('dispatcher'))
             ->setFactories($c)
             ->setTask($task);
     }

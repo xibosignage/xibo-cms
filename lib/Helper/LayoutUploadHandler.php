@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -69,7 +69,6 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = $params->getCheckbox('importTags', ['default' => 0]);
             $useExistingDataSets = $params->getCheckbox('useExistingDataSets', ['default' => 0]);
             $importDataSetData = $params->getCheckbox('importDataSetData', ['default' => 0]);
-            $folderId = $params->getInt('folderId', ['default' => 1]);
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(
@@ -85,11 +84,11 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $tags,
                 $this->options['routeParser'],
                 $this->options['mediaService'],
-                $folderId
+                $this->options['folderId']
             );
 
             // set folderId, permissionFolderId is handled on Layout specific Campaign record.
-            $layout->folderId = $folderId;
+            $layout->folderId = $this->options['folderId'];
 
             $layout->save(['saveActions' => false, 'import' => $importTags]);
 
@@ -110,7 +109,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            // TODO for this the getState() had to be changed to public, we should do it in a better way I think.
+            // Don't commit
             $controller->getState()->setCommitState(false);
         }
     }

@@ -91,7 +91,7 @@ class WidgetDataProviderCache
         DataProviderInterface $dataProvider,
         string $cacheKey
     ): bool {
-        $this->cache = $this->pool->getItem('/widget/html/' . $cacheKey);
+        $this->cache = $this->pool->getItem('/widget/html/' . md5($cacheKey));
         $data = $this->cache->get();
         if ($this->cache->isMiss() || $data === null) {
             // Lock it up
@@ -111,7 +111,6 @@ class WidgetDataProviderCache
     public function saveToCache(DataProviderInterface $dataProvider): void
     {
         if ($this->cache === null) {
-            $this->concurrentRequestRelease();
             throw new GeneralException('No cache to save');
         }
 
@@ -122,14 +121,13 @@ class WidgetDataProviderCache
         // Save to the pool
         $this->pool->save($this->cache);
 
-        // Release the cache
-        $this->concurrentRequestRelease();
+        $this->getLog()->debug('Cached for ' . $dataProvider->getCacheTtl() . ' seconds');
     }
 
     /**
-     * Notify the provider that there is no cache to save.
+     * Finalise the cache process
      */
-    public function notifyNoCacheToSave(): void
+    public function finaliseCache(): void
     {
         $this->concurrentRequestRelease();
     }
@@ -146,11 +144,15 @@ class WidgetDataProviderCache
             // This is either an object or an array
             if (is_array($item)) {
                 for ($i = 0; $i < count($item); $i++) {
-                    $item[$i] = $this->decorateMediaForPreview($libraryUrl, $item[$i]);
+                    if (is_string($item[$i])) {
+                        $item[$i] = $this->decorateMediaForPreview($libraryUrl, $item[$i]);
+                    }
                 }
             } else if (is_object($item)) {
                 foreach (ObjectVars::getObjectVars($item) as $key => $value) {
-                    $item->{$key} = $this->decorateMediaForPreview($libraryUrl, $value);
+                    if (is_string($value)) {
+                        $item->{$key} = $this->decorateMediaForPreview($libraryUrl, $value);
+                    }
                 }
             }
         }
@@ -158,11 +160,11 @@ class WidgetDataProviderCache
     }
 
     /**
-     * @param string $libraryUrl
+     * @param string $libraryLocation
      * @param string|null $data
      * @return string
      */
-    private function decorateMediaForPreview(string $libraryUrl, ?string $data): ?string
+    private function decorateMediaForPreview(string $libraryLocation, ?string $data): ?string
     {
         if ($data === null) {
             return null;
@@ -174,7 +176,7 @@ class WidgetDataProviderCache
                 $value = explode('=', $match);
                 $data = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $libraryUrl),
+                    str_replace(':id', $value[1], $libraryLocation),
                     $data
                 );
             }
@@ -192,17 +194,46 @@ class WidgetDataProviderCache
         array $data,
         array $storedAs
     ): array {
-        for ($i = 0; $i < count($data); $i++) {
-            $matches = [];
-            preg_match_all('/\[\[(.*?)\]\]/', $data[$i], $matches);
-            foreach ($matches[1] as $match) {
-                if (Str::startsWith($match, 'mediaId')) {
-                    $value = explode('=', $match);
-                    if (array_key_exists($value[1], $storedAs)) {
-                        $data[$i] = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $data[$i]);
-                    } else {
-                        $data[$i] = str_replace('[[' . $match . ']]', '', $data[$i]);
+        foreach ($data as $item) {
+            // Each data item can be an array or an object
+            if (is_array($item)) {
+                for ($i = 0; $i < count($item); $i++) {
+                    if (is_string($item[$i])) {
+                        $item[$i] = $this->decorateMediaForPlayer($storedAs, $item[$i]);
                     }
+                }
+            } else if (is_object($item)) {
+                foreach (ObjectVars::getObjectVars($item) as $key => $value) {
+                    if (is_string($value)) {
+                        $item->{$key} = $this->decorateMediaForPlayer($storedAs, $value);
+                    }
+                }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * @param array $storedAs
+     * @param string|null $data
+     * @return string|null
+     */
+    private function decorateMediaForPlayer(array $storedAs, ?string $data): ?string
+    {
+        if ($data === null) {
+            return null;
+        }
+
+        // Media substitutes
+        $matches = [];
+        preg_match_all('/\[\[(.*?)\]\]/', $data, $matches);
+        foreach ($matches[1] as $match) {
+            if (Str::startsWith($match, 'mediaId')) {
+                $value = explode('=', $match);
+                if (array_key_exists($value[1], $storedAs)) {
+                    $data = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $data);
+                } else {
+                    $data = str_replace('[[' . $match . ']]', '', $data);
                 }
             }
         }

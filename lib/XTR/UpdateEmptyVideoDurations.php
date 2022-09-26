@@ -44,7 +44,7 @@ class UpdateEmptyVideoDurations implements TaskInterface
         foreach ($videos as $video) {
             if ($video->duration == 0) {
                 // Update
-                $video->duration = $module->fetchDurationOrDefault($libraryLocation . $video->storedAs);
+                $video->duration = $module->fetchDurationOrDefaultFromFile($libraryLocation . $video->storedAs);
                 $video->save(['validate' => false]);
             }
         }

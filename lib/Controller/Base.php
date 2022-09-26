@@ -41,6 +41,7 @@ use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Base
@@ -493,7 +494,6 @@ class Base
         }
 
         return $response->withJson($data);
-
     }
 
     /**
@@ -504,5 +504,16 @@ class Base
     public function getAutoSubmit(string $form)
     {
         return $this->getUser()->getOptionValue('autoSubmit.' . $form, 'false') === 'true';
+    }
+
+    public function checkRootFolderAllowSave()
+    {
+        if ($this->getConfig()->getSetting('FOLDERS_ALLOW_SAVE_IN_ROOT') == 0
+            && !$this->getUser()->isSuperAdmin()
+        ) {
+            throw new InvalidArgumentException(
+                __('Saving into root folder is disabled, please select a different folder')
+            );
+        }
     }
 }

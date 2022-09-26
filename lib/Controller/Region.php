@@ -172,7 +172,7 @@ class Region extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="formData",
-     *      description="The type of region this should be, either playlist or canvas. Default = playlist.",
+     *      description="The type of region this should be, frame, playlist or canvas. Default = frame.",
      *      type="string",
      *      required=false
      *   ),
@@ -606,15 +606,9 @@ class Region extends Base
             $region = $this->regionFactory->getById($id);
             $region->load();
             
-            // TODO: is this region a canvas type?
-
-            if ($widgetId !== null) {
-                // Single Widget Requested
-                $widget = $this->widgetFactory->getById($widgetId);
-                $widget->load();
-
-                $countWidgets = 1;
-            } else {
+            // What type of region are we?
+            $widget = null;
+            if ($region->type === 'canvas' || $region->type === 'playlist') {
                 // Get the first playlist we can find
                 $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
 
@@ -623,48 +617,59 @@ class Region extends Base
 
                 $countWidgets = count($widgets);
 
-                // We want to load the widget in the given sequence
-                if ($countWidgets <= 0) {
-                    // No media to preview
-                    throw new NotFoundException(__('No widgets to preview'));
+                if ($region->type === 'canvas') {
+                    // Select the widget at the required sequence
+                    $widget = $playlist->getWidgetAt($seq, $widgets);
+                    $widget->load();
+                } else {
+                    // Show a playlist
+                    $this->getState()->html = $this->getView()->fetch('region-playlist-preview.twig', [
+                        'countWidgets' => $countWidgets,
+                        'regionDuration' => $region->duration
+                    ]);
                 }
-
-                $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
-
-                // Select the widget at the required sequence
-                $widget = $playlist->getWidgetAt($seq, $widgets);
+            } else {
+                // Assume we're a frame, single Widget Requested
+                $widget = $this->widgetFactory->getById($widgetId);
                 $widget->load();
+
+                $countWidgets = 1;
             }
 
-            // Output a preview
-            $module = $this->moduleFactory->getByType($widget->type);
-            $this->getState()->html = $this->moduleFactory
-                ->createWidgetHtmlRenderer()
-                ->preview(
-                    $module,
-                    $region,
-                    $widget,
-                    $sanitizedQuery,
-                    $this->urlFor(
-                        $request,
-                        'library.download',
-                        [
-                            'regionId' => $region->regionId,
-                            'id' => $widget->getPrimaryMedia()[0] ?? null
-                        ]
-                    ) . '?preview=1'
-                );
+            $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
 
-            $this->getState()->extra['empty'] = false;
-            $this->getState()->extra['type'] = $widget->type;
-            $this->getState()->extra['duration'] = $widget->calculatedDuration;
+            // Output a preview
+            if ($widget !== null) {
+                $module = $this->moduleFactory->getByType($widget->type);
+                $this->getState()->html = $this->moduleFactory
+                    ->createWidgetHtmlRenderer()
+                    ->preview(
+                        $module,
+                        $region,
+                        $widget,
+                        $sanitizedQuery,
+                        $this->urlFor(
+                            $request,
+                            'library.download',
+                            [
+                                'regionId' => $region->regionId,
+                                'id' => $widget->getPrimaryMedia()[0] ?? null
+                            ]
+                        ) . '?preview=1'
+                    );
+
+                $this->getState()->extra['type'] = $widget->type;
+                $this->getState()->extra['duration'] = $widget->calculatedDuration;
+                $this->getState()->extra['moduleName'] = $module->name;
+                $this->getState()->extra['useDuration'] = $widget->useDuration;
+                $this->getState()->extra['tempId'] = $widget->tempId;
+            }
+
+            $this->getState()->extra['empty'] = $countWidgets <= 0;
             $this->getState()->extra['number_items'] = $countWidgets;
             $this->getState()->extra['current_item'] = $seqGiven;
-            $this->getState()->extra['moduleName'] = $module->name;
             $this->getState()->extra['regionDuration'] = $region->duration;
-            $this->getState()->extra['useDuration'] = $widget->useDuration;
             $this->getState()->extra['zIndex'] = $region->zIndex;
-            $this->getState()->extra['tempId'] = $widget->tempId;
         } catch (NotFoundException $e) {
             // No media to preview
             $this->getState()->extra['empty'] = true;

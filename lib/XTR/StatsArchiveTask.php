@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -221,7 +221,7 @@ class StatsArchiveTask implements TaskInterface
             $this->log->debug('Zipped to ' . $zipName);
 
             // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
-            $this->store->select('SELECT 1', [], null, true);
+            $this->store->select('SELECT 1', [], 'default', true);
 
             $this->log->debug('MySQL connection refreshed if necessary');
 
@@ -252,7 +252,7 @@ class StatsArchiveTask implements TaskInterface
             $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
 
             // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
-            $this->store->select('SELECT 1', [], null, true);
+            $this->store->select('SELECT 1', [], 'default', true);
 
             $this->log->debug('MySQL connection refreshed if necessary');
 

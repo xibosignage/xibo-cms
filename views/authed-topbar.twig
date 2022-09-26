@@ -189,6 +189,10 @@
             {% if currentUser.featureEnabled("tag.view") %}
                 <a class="{{ groupElementClass }}" href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a>
             {% endif %}
+
+            {% if currentUser.isSuperAdmin() %}
+                <a class="{{ groupElementClass }}" href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a>
+            {% endif %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
             </div>
         {% endif %}

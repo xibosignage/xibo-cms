@@ -272,7 +272,7 @@
         <div class="col-sm-10">
             <div class="input-group">
                 <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control datePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+                <input class="form-control dateControl date" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
                 <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
             </div>
             <small class="form-text text-muted">{{ helpText }}</small>
@@ -286,7 +286,7 @@
         <div class="col-sm-10">
             <div class="input-group">
                 <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control dateTimePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+                <input class="form-control dateControl dateTime" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
                 <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
             </div>
             <small class="form-text text-muted">{{ helpText }}</small>
@@ -300,7 +300,7 @@
         <div class="col-sm-10">
             <div class="input-group">
                 <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control dateMonthPicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+                <input class="form-control dateControl month" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
                 <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
             </div>
             <small class="form-text text-muted">{{ helpText }}</small>
@@ -314,7 +314,7 @@
         <div class="col-sm-10">
             <div class="input-group">
                 <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control timePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" {% if customFormat %}data-custom-format="{{ customFormat }}"{% endif %} />
+                <input class="form-control dateControl time" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" {% if customFormat %}data-custom-format="{{ customFormat }}"{% endif %} />
                 <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
             </div>
             <small class="form-text text-muted">{{ helpText }}</small>
@@ -351,4 +351,20 @@
                 {% if windows %}<li><span class="fa fa-windows"></span> {{ windows }}</li>{% endif %}
             </ul>'>
     </span>
+{% endmacro %}
+
+{% macro inputWithLogicalOperator(name, title, value, helpText, groupClass, validation, accessKey, logicalOperatorValue) %}
+    <div class="form-group row {{ groupClass }}">
+        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="input-group col-sm-10">
+            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
+            <div class="input-group-append input-group-addon">
+                <select class="custom-select" id="logicalOperatorName" name="logicalOperatorName" title="{% trans "When filtering by multiple names, which logical operator should be used?" %}">
+                        <option value="OR" {% if logicalOperatorValue != "AND" %}selected{% endif %}>OR</option>
+                        <option value="AND" {% if logicalOperatorValue == "AND" %}selected{% endif %}>AND</option>
+                </select>
+            </div>
+            <small class="form-text text-muted">{{ helpText }}</small>
+        </div>
+    </div>
 {% endmacro %}

@@ -246,6 +246,20 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * @param $folderId
+     * @return DisplayGroup[]
+     * @throws NotFoundException
+     */
+    public function getByFolderId($folderId, $isDisplaySpecific = -1)
+    {
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'folderId' => $folderId,
+            'isDisplaySpecific' => $isDisplaySpecific
+        ]);
+    }
+
+    /**
      * Set Bandwidth limit
      * @param int $bandwidthLimit
      * @param array $displayIds
@@ -290,9 +304,10 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.description,
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
+                `displaygroup`.dynamicCriteriaLogicalOperator,
                 `displaygroup`.dynamicCriteriaTags,
                 `displaygroup`.dynamicCriteriaExactTags,
-                `displaygroup`.dynamicCriteriaLogicalOperator,
+                `displaygroup`.dynamicCriteriaTagsLogicalOperator,
                 `displaygroup`.bandwidthLimit,
                 `displaygroup`.createdDt,
                 `displaygroup`.modifiedDt,
@@ -306,8 +321,21 @@ class DisplayGroupFactory extends BaseFactory
                         ON lktagdisplaygroup.tagId = tag.tagId
                         WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
                         GROUP BY lktagdisplaygroup.displayGroupId
-                ) as tags
+                ) as tags,
+                (
+                    SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                        FROM `permission`
+                        INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group`
+                            ON `group`.groupId = `permission`.groupId
+                        WHERE entity = :entity
+                            AND objectId = `displaygroup`.displayGroupId
+                            AND view = 1
+                ) AS groupsWithPermissions
         ';
+
+        $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
         $body = '
               FROM `displaygroup`
@@ -388,7 +416,16 @@ class DisplayGroupFactory extends BaseFactory
         // Filter by DisplayGroup Name?
         if ($parsedBody->getString('displayGroup') != null) {
             $terms = explode(',', $parsedBody->getString('displayGroup'));
-            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params, ($parsedBody->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedBody->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'displaygroup',
+                'displayGroup',
+                $terms,
+                $body,
+                $params,
+                ($parsedBody->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Tags
@@ -496,6 +533,7 @@ class DisplayGroupFactory extends BaseFactory
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Intervention\Image\ImageManagerStatic as Img;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
@@ -377,25 +378,42 @@ class Soap4 extends Soap
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
             } else if ($fileType == 'media') {
-                // Is this a request for the bundle?
-                if ($fileId == '-1') {
-                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
-                    $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, strlen($file));
-                    return $file;
+                // Is the ID negative?
+                if ($fileId < 0) {
+                    // Expect a dependency.
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndDependencyId(
+                        $this->display->displayId,
+                        $fileId
+                    );
+
+                    // use the path we saved in required files to work out which type of dependency we are.
+                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->realId);
+                    $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
+
+                    $path = $event->getFullPath();
+                    if (empty($path)) {
+                        throw new NotFoundException(__('File not found'));
+                    }
+
+                    $f = fopen($path, 'r');
+                } else {
+                    // A normal media file.
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
+                        $this->display->displayId,
+                        $fileId
+                    );
+
+                    $media = $this->mediaFactory->getById($fileId);
+                    $this->getLog()->debug(json_encode($media));
+
+                    if (!file_exists($libraryLocation . $media->storedAs)) {
+                        throw new NotFoundException(__('Media exists but file missing from library.'));
+                    }
+
+                    // Return the Chunk size specified
+                    $f = fopen($libraryLocation . $media->storedAs, 'r');
                 }
 
-                // Validate the nonce
-                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
-
-                $media = $this->mediaFactory->getById($fileId);
-                $this->getLog()->debug(json_encode($media));
-
-                if (!file_exists($libraryLocation . $media->storedAs)) {
-                    throw new NotFoundException(__('Media exists but file missing from library. ') . $libraryLocation);
-                }
-
-                // Return the Chunk size specified
-                $f = fopen($libraryLocation . $media->storedAs, 'r');
                 if (!$f) {
                     throw new NotFoundException(__('Unable to get file pointer'));
                 }
@@ -566,6 +584,7 @@ class Soap4 extends Soap
         $this->display->storageTotalSpace = $sanitizedStatus->getInt('totalSpace', ['default' => $this->display->storageTotalSpace]);
         $this->display->lastCommandSuccess = $sanitizedStatus->getCheckbox('lastCommandSuccess');
         $this->display->deviceName = $sanitizedStatus->getString('deviceName', ['default' => $this->display->deviceName]);
+        $this->display->lanIpAddress = $sanitizedStatus->getString('lanIpAddress', ['default' => $this->display->lanIpAddress]);
         $commercialLicenceString = $sanitizedStatus->getString('licenceResult',['default' => null]);
 
         // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable

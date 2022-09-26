@@ -212,7 +212,11 @@ class Widget extends Base
 
         // Get the template
         if ($module->isTemplateExpected()) {
-            $templateId = $params->getString('templateId');
+            $templateId = $params->getString('templateId', [
+                'throw' => function () {
+                    throw new InvalidArgumentException(__('Please select a template'), 'templateId');
+                }
+            ]);
             if ($templateId !== 'elements') {
                 // Check it.
                 $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
@@ -238,7 +242,7 @@ class Widget extends Base
         $this->getDispatcher()->dispatch(new WidgetAddEvent($module, $widget));
 
         // Save the widget
-        $widget->save();
+        $widget->calculateDuration($module)->save();
 
         // Module add will have saved our widget with the correct playlistId and displayOrder
         // if we have provided a displayOrder, then we ought to also save the Playlist so that new orders for those
@@ -292,13 +296,6 @@ class Widget extends Base
         // Decorate the module properties with our current widgets data
         $module->decorateProperties($widget);
 
-        // Common properties
-        $properties = [];
-        $properties['name'] = $widget->getOptionValue('name', null);
-        $properties['enableStat'] = $widget->getOptionValue('enableStat', null);
-        $properties['duration'] = $widget->duration;
-        $properties['useDuration'] = $widget->useDuration;
-
         // Do we have a static template assigned to this widget?
         //  we don't worry about elements here, the layout editor manages those for us.
         $template = null;
@@ -319,8 +316,8 @@ class Widget extends Base
             'commonProperties' => [
                 'name' => $widget->getOptionValue('name', null),
                 'enableStat' => $widget->getOptionValue('enableStat', null),
-                'duration' => $properties['duration'],
-                'useDuration' => $properties['useDuration']
+                'duration' => $widget->duration,
+                'useDuration' => $widget->useDuration
             ],
         ]);
 
@@ -389,7 +386,6 @@ class Widget extends Base
 
             // Set it
             $widget->setOptionValue('templateId', 'attrib', $templateId);
-            $existingTemplate = $templateId;
         } else if ($existingTemplate !== 'elements') {
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $existingTemplate);
         }
@@ -432,7 +428,7 @@ class Widget extends Base
         }
 
         // We've reached the end, so save
-        $widget->save();
+        $widget->calculateDuration($module)->save();
 
         // Successful
         $this->getState()->hydrate([
@@ -1022,37 +1018,39 @@ class Widget extends Base
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
             $this->getLog()->debug('Pulling fresh data');
 
-            if ($widgetInterface !== null) {
-                $widgetInterface->fetchData($dataProvider);
-            } else {
-                $dataProvider->setIsUseEvent();
-            }
+            try {
+                if ($widgetInterface !== null) {
+                    $widgetInterface->fetchData($dataProvider);
+                } else {
+                    $dataProvider->setIsUseEvent();
+                }
 
-            if ($dataProvider->isUseEvent()) {
-                $this->getDispatcher()->dispatch(
-                    new WidgetDataRequestEvent($dataProvider),
-                    WidgetDataRequestEvent::$NAME
-                );
-            }
+                if ($dataProvider->isUseEvent()) {
+                    $this->getDispatcher()->dispatch(
+                        new WidgetDataRequestEvent($dataProvider),
+                        WidgetDataRequestEvent::$NAME
+                    );
+                }
 
-            // Do we have images?
-            $media = $dataProvider->getImages();
-            if (count($media) > 0) {
-                // Process the downloads.
-                $this->mediaFactory->processDownloads(function ($media) use ($widget) {
-                    // Success
-                    // We don't need to do anything else, references to mediaId will be built when we decorate
-                    // the HTML.
-                    $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
-                });
-            }
+                // Do we have images?
+                $media = $dataProvider->getImages();
+                if (count($media) > 0) {
+                    // Process the downloads.
+                    $this->mediaFactory->processDownloads(function ($media) use ($widget) {
+                        // Success
+                        // We don't need to do anything else, references to mediaId will be built when we decorate
+                        // the HTML.
+                        $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+                    });
+                }
 
-            // Save to cache
-            // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
-            if (count($dataProvider->getData()) > 0) {
-                $widgetDataProviderCache->saveToCache($dataProvider);
-            } else {
-                $widgetDataProviderCache->notifyNoCacheToSave();
+                // Save to cache
+                // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
+                if (count($dataProvider->getData()) > 0) {
+                    $widgetDataProviderCache->saveToCache($dataProvider);
+                }
+            } finally {
+                $widgetDataProviderCache->finaliseCache();
             }
         } else {
             $this->getLog()->debug('Returning cache');

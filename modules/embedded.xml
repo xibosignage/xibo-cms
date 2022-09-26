@@ -49,14 +49,14 @@
             <helpText>Should this Widget be loaded entirely off-screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
             <default>1</default>
         </property>
-        <property id="embedHtml" type="code" allowLibraryRefs="true" codeType="html">
+        <property id="embedHtml" type="code" allowLibraryRefs="true" variant="html">
             <title>HTML to embed</title>
             <helpText>Enter text or HTML in the box below.</helpText>
         </property>
-        <property id="embedStyle" type="code" allowLibraryRefs="true" codeType="css">
+        <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
             <title>Custom Style Sheets</title>
         </property>
-        <property id="embedScript" type="code" allowLibraryRefs="true" codeType="javascript">
+        <property id="embedScript" type="code" allowLibraryRefs="true" variant="javascript">
             <title>JavaScript to embed</title>
             <helpText>Please include script tags.</helpText>
         </property>
@@ -71,17 +71,22 @@
             <style>
                 {{embedStyle}}
             </style>
-            <script type="text/javascript">
-                $(function() {
-                    if(typeof EmbedInit === "function"){
-                        EmbedInit();
-                    }
-                    {% if scaleContent %}
-                        window.scaleContent = true;
-                        $("body").xiboLayoutScaler(globalOptions);
-                    {% endif %}
-                });
-            </script>
         ]]></twig>
     </stencil>
+    <onFinish><![CDATA[
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+// globalOptions: The global rendering options
+// -------------------------------------------
+if(typeof EmbedInit === 'function') {
+    EmbedInit();
+}
+
+if(properties.scaleContent) {
+    window.scaleContent = true;
+    $('body').xiboLayoutScaler(globalOptions);
+}
+    ]]></onFinish>
 </module>

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,6 +28,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\BaseDependenciesService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -165,6 +166,14 @@ class BaseFactory
     }
 
     /**
+     * @return \Xibo\Service\ConfigServiceInterface
+     */
+    public function getConfig(): ConfigServiceInterface
+    {
+        return $this->baseDependenciesService->getConfig();
+    }
+
+    /**
      * Count of records returned for the last query.
      * @return int
      */
@@ -261,6 +270,13 @@ class BaseFactory
                 $params['currentUserId2'] = $user->userId;
             }
 
+            // Home folders (only for folder entity)
+            if ($entity === 'Xibo\Entity\Folder') {
+                $permissionSql .= ' OR folder.folderId = :permissionsHomeFolderId';
+                $permissionSql .= ' OR folder.permissionsFolderId = :permissionsHomeFolderId';
+                $params['permissionsHomeFolderId'] = $this->getUser()->homeFolderId;
+            }
+
             // Group Admin?
             if ($user->userTypeId == 2 && $ownerColumn != null) {
                 // OR the group admin and the owner of the media are in the same group
@@ -280,8 +296,8 @@ class BaseFactory
                 $params['currentUserId3'] = $user->userId;
             }
 
-        if ($permissionFolderIdColumn != null) {
-            $permissionSql .= '
+            if ($permissionFolderIdColumn != null) {
+                $permissionSql .= '
                     OR ' . $permissionFolderIdColumn . ' IN (
                         SELECT `permission`.objectId
                             FROM `permission`
@@ -307,10 +323,10 @@ class BaseFactory
                                 AND `group`.isEveryone = 1
                                 AND `permission`.view = 1
                     )
-                    ';
+                ';
 
-            $params['folderEntity'] = 'Xibo\Entity\Folder';
-        }
+                $params['folderEntity'] = 'Xibo\Entity\Folder';
+            }
 
             $permissionSql .= ' )';
 
@@ -361,7 +377,7 @@ class BaseFactory
      * @param array $params Array of parameters passed by reference
      * @param bool $useRegex flag to match against a regex pattern
      */
-    public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params, $useRegex = false)
+    public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params, $useRegex = false, $logicalOperator = 'OR')
     {
         $i = 0;
 
@@ -386,19 +402,17 @@ class BaseFactory
             if (substr($searchName, 0, 1) == '-') {
                 if ($i === 1) {
                     $body .= ' AND ( '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
-                    $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                 } else {
-                    $body .= ' OR '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
-                    $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                    $body .= ' ' . $logicalOperator . ' '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
                 }
+                $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
             } else {
                 if ($i === 1) {
                     $body .= ' AND ( '.$tableAndColumn.' RLIKE (:search'.$i.') ';
-                    $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
                 } else {
-                    $body .= ' OR  '.$tableAndColumn.' RLIKE (:search'.$i.') ';
-                    $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
+                    $body .= ' ' . $logicalOperator . ' '.$tableAndColumn.' RLIKE (:search'.$i.') ';
                 }
+                $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
             }
         }
 

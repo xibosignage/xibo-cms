@@ -253,7 +253,16 @@ class UserGroupFactory extends BaseFactory
         // Filter by Group Name
         if ($parsedFilter->getString('group') != null) {
             $terms = explode(',', $parsedFilter->getString('group'));
-            $this->nameFilter('group', 'group', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'group',
+                'group',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($parsedFilter->getString('exactGroup') != null) {
@@ -779,6 +788,11 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'folder.modify',
                     'group' => 'folders',
                     'title' => __('Rename and Delete existing Folders')
+                ],
+                'folder.userHome' => [
+                    'feature' => 'folder.userHome',
+                    'group' => 'folders',
+                    'title' => __('Set a home folder for a user')
                 ],
                 'menuBoard.view' => [
                     'feature' => 'menuBoard.view',

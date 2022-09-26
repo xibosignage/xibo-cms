@@ -250,17 +250,30 @@ Viewer.prototype.render = function(forceReload = false) {
       } else {
         clicks++;
 
+        // Single click
         if (clicks === 1 && e.which === 1) {
           timer = setTimeout(function() {
             // Single click action
             clicks = 0;
 
-            // Select widget if exists
+            // Edit region if it's a playlist
             if (
+              $(e.target).data('subType') === 'playlist' &&
+              !$(e.target).hasClass('selected')
+            ) {
+              // Get region object
+              const regionObject =
+                lD.getElementByTypeAndId('region', $(e.target).attr('id'));
+              // Open playlist editor
+              lD.openPlaylistEditor(
+                regionObject.playlists.playlistId,
+                regionObject);
+            } else if (
               $(e.target).find('.designer-widget').length > 0 &&
               !$(e.target).find('.designer-widget').hasClass('selected') &&
               !$(e.target).hasClass('selected')
             ) {
+              // Select widget if exists
               lD.selectObject($(e.target).find('.designer-widget'), true);
               self.selectElement($(e.target).find('.designer-widget'));
             }
@@ -366,7 +379,7 @@ Viewer.prototype.renderRegion = function(
   const widget = region.widgets[Object.keys(region.widgets)[0]];
 
   // If there's no widget, return
-  if (!widget) {
+  if (!widget && region.subType != 'playlist') {
     return;
   }
 
@@ -395,9 +408,13 @@ Viewer.prototype.renderRegion = function(
   );
 
   requestPath +=
-    '?widgetId=' + widget['widgetId'] +
-    '&width=' + containerElementDimensions.width +
+    '?width=' + containerElementDimensions.width +
     '&height=' + containerElementDimensions.height;
+
+  // If it's not a playlist, add widget to request 
+  if (region.subType != 'playlist') {
+    requestPath += '&widgetId=' + widget['widgetId'];
+  }
 
   // Get HTML for the given element from the API
   this.renderRequest = {
@@ -420,19 +437,30 @@ Viewer.prototype.renderRegion = function(
       return;
     }
 
-    const elementType = (widget.type + '_' + widget.subType);
+    const options = {
+      res: res,
+      regionId: region['id'],
+      trans: viewerTrans,
+    };
+
+    if (region.subType == 'playlist') {
+      $.extend(true, options, {
+        elementType: 'playlist',
+      });
+    } else {
+      $.extend(true, options, {
+        id: widget.id,
+        elementType: (widget.type + '_' + widget.subType),
+        editable: widget.isEditable,
+        parentId: widget.regionId,
+        selected: widget.selected,
+      });
+    }
+
+    $.extend(toolbarTrans, topbarTrans);
 
     // Replace container html
-    const html = viewerWidgetTemplate({
-      res: res,
-      id: widget.id,
-      regionId: region['id'],
-      type: elementType,
-      editable: widget.isEditable,
-      parentId: widget.regionId,
-      selected: widget.selected,
-      trans: viewerTrans,
-    });
+    const html = viewerWidgetTemplate(options);
 
     // Append layout html to the container div
     $container.html(html);
@@ -670,7 +698,9 @@ Viewer.prototype.updateMoveable = function() {
   // Update moveable if region is selected and belongs to the DOM
   if (
     $selectedElement &&
-    $selectedElement.hasClass('designer-region-playlist') &&
+    (
+      $selectedElement.hasClass('designer-region')
+    ) &&
     $.contains(document, $selectedElement[0])
   ) {
     this.moveable.target = $selectedElement[0];

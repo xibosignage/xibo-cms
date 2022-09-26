@@ -160,7 +160,7 @@
                                     {{ forms.message(message) }}
 
                                     {% set title %}{% trans "Name filter" %}{% endset %}
-                                    {{ forms.input("filterMediaName", title) }}
+                                    {{ forms.inputWithLogicalOperator("filterMediaName", title) }}
 
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tag filter" %}{% endset %}

@@ -120,7 +120,10 @@ class Template extends Base
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
             'layout' => $sanitizedQueryParams->getString('template'),
-            'folderId' => $sanitizedQueryParams->getInt('folderId')
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'folderId' => $sanitizedQueryParams->getInt('folderId'),
+            'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ], $sanitizedQueryParams));
 
         foreach ($templates as $template) {
@@ -484,7 +487,15 @@ class Template extends Base
         $resolutionId = $sanitizedParams->getInt('resolutionId');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
-        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+        $folderId = $sanitizedParams->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         // Tags
         if ($this->getUser()->featureEnabled('tag.tagging')) {
@@ -628,6 +639,11 @@ class Template extends Base
 
         $layout->description = $sanitizedParams->getString('description');
         $layout->folderId = $sanitizedParams->getInt('folderId');
+
+        if ($layout->folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
         $layout->setOwner($this->getUser()->userId, true);
         $layout->save();
 

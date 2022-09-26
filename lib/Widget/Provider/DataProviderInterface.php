@@ -61,6 +61,14 @@ interface DataProviderInterface
     public function getDisplayLongitude(): float;
 
     /**
+     * Get a configured Guzzle client
+     *  this will have its proxy configuration set and be ready to use.
+     * @param array $requestOptions An optional array of additional request options.
+     * @return \GuzzleHttp\Client
+     */
+    public function getGuzzleClient(array $requestOptions = []): \GuzzleHttp\Client;
+
+    /**
      * Get property
      * Properties are set on Widgets and can be things like "feedUrl"
      *  the property must exist in module properties for this type of widget

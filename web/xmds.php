@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@
 use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\ContainerFactory;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -77,6 +78,10 @@ $startTime = microtime(true);
 // Set connectors
 \Xibo\Middleware\ConnectorMiddleware::setConnectors($app);
 
+// XMDS specific listeners
+\Xibo\Middleware\ListenersMiddleware::setXmdsListeners($app);
+
+// Configure
 $container->get('configService')->setDependencies($container->get('store'), '/');
 $container->get('configService')->loadTheme();
 
@@ -141,13 +146,33 @@ if (isset($_GET['file'])) {
             throw new NotFoundException(__('Nonce mismatch'));
         }
 
+        /** @var \Xibo\Factory\RequiredFileFactory $requiredFileFactory */
+        $requiredFileFactory = $container->get('requiredFileFactory');
         switch ($_REQUEST['type']) {
             case 'L':
-                $file = $container->get('requiredFileFactory')->getByDisplayAndLayout($displayId, $itemId);
+                $file = $requiredFileFactory->getByDisplayAndLayout($displayId, $itemId);
                 break;
 
             case 'M':
-                $file = $container->get('requiredFileFactory')->getByDisplayAndMedia($displayId, $itemId);
+                $file = $requiredFileFactory->getByDisplayAndMedia($displayId, $itemId);
+                break;
+
+            case 'P':
+                $fileType = $_REQUEST['fileType'];
+                if (empty($fileType)) {
+                    throw new NotFoundException('Missing fileType');
+                }
+                $file = $requiredFileFactory->getByDisplayAndDependency($displayId, $fileType, $itemId);
+
+                // Update $file->path with the path on disk (likely /dependencies/$fileType/$itemId)
+                $event = new XmdsDependencyRequestEvent($fileType, $itemId);
+                $container->get('dispatcher')->dispatch($event);
+
+                // Path should be set - we only want the relative path here.
+                $file->path = $event->getRelativePath();
+                if (empty($file->path)) {
+                    throw new NotFoundException(__('File not found'));
+                }
                 break;
 
             default:

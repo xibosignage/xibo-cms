@@ -74,18 +74,27 @@
 {% for id, item in hbs %}
     <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}">{{ item.content|raw }}</script>
 {% endfor %}
-{% for widgetId, parser in dataParsers %}
-    <script type="text/javascript" id="dataParser-{{ widgetId }}">
-      function dataParser_{{ widgetId }}(item, options) {
+{% for widgetId, parser in onParseData %}
+    <script type="text/javascript" id="onParseData-{{ widgetId }}">
+      function onParseData_{{ widgetId }}(item, properties) {
         {{ parser|raw }}
       }
     </script>
 {% endfor %}
-{% for templateId, renderer in renderers %}
-    <script type="text/javascript" id="render-{{ templateId }}">
-      function render_{{ templateId }}({id, target, options} = {}) {
+{% for widgetId, parser in onFinish %}
+    <script type="text/javascript" id="onFinish-{{ widgetId }}">
+        function onFinish_{{ widgetId }}(id, target, items, properties, globalOptions) {
+          {{ parser|raw }}
+        }
+    </script>
+{% endfor %}
+{% for templateId, renderer in onRender %}
+    <script type="text/javascript" id="onRender-{{ templateId }}">
+      function onRender_{{ templateId }}({id, target, items, properties, globalOptions} = {}) {
         {{ renderer|raw  }}
       }
     </script>
 {% endfor %}
+    <!-- NUMITEMS={{ numItems }} -->
+    <!-- DURATION={{ duration }} -->
 </html>

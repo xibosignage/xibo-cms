@@ -14,7 +14,7 @@ RUN cd / && \
 
 # Stage 1
 # Run composer
-FROM composer:1.6 as composer
+FROM composer as composer
 COPY ./composer.json /app
 COPY ./composer.lock /app
 
@@ -41,22 +41,20 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
 FROM node:12 AS webpack
 WORKDIR /app
 
-# Install webpack
-RUN npm install webpack -g
-
 # Copy package.json and the webpack config file
 COPY webpack.config.js .
 COPY package.json .
 COPY package-lock.json .
 
 # Install npm packages
-RUN npm install --only=prod
+RUN npm install
 
 # Copy ui folder
 COPY ./ui ./ui
 
 # Copy modules source folder
 COPY ./modules/src ./modules/src
+COPY ./modules/vendor ./modules/vendor
 
 # Build webpack
 RUN npm run publish
@@ -159,6 +157,7 @@ ENV CMS_DEV_MODE=false \
     CMS_APACHE_TIMEOUT=30 \
     CMS_APACHE_OPTIONS_INDEXES=false \
     CMS_QUICK_CHART_URL=http://cms-quickchart:3400 \
+    CMS_APACHE_SERVER_TOKENS=OS \
     CMS_USE_MEMCACHED=false \
     MEMCACHED_HOST=memcached \
     MEMCACHED_PORT=11211 \

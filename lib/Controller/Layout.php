@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -329,7 +329,7 @@ class Layout extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function add(Request $request, Response $response)
+    public function add(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -338,7 +338,16 @@ class Layout extends Base
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
-        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        // Folders
+        $folderId = $sanitizedParams->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
@@ -394,24 +403,24 @@ class Layout extends Base
             @unlink($event->getFilePath());
         } else {
             // Template or Resolution?
-            $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
+            $isResolution = empty($templateId) || Str::startsWith($templateId, '0|');
 
             if (!$isResolution) {
+                $this->getLog()->debug('add: loading template for clone operation. templateId: ' . $templateId);
+
                 // Load the template
                 $template = $this->layoutFactory->loadById($templateId);
 
-                // Empty all of the ID's
+                // Empty all the ID's
                 $layout = clone $template;
 
                 // Overwrite our new properties
                 $layout->layout = $name;
                 $layout->description = $description;
                 $layout->code = $code;
+                $layout->tags = $tags;
 
-                // Create some tags (overwriting the old ones)
-                if ($this->getUser()->featureEnabled('tag.tagging')) {
-                    $layout->tags = $tags;
-                }
+                $this->getLog()->debug('add: loaded and cloned, about to setOwner. templateId: ' . $templateId);
 
                 // Set the owner
                 $layout->setOwner($this->getUser()->userId, true);
@@ -441,32 +450,74 @@ class Layout extends Base
                         // Main window - 80%
                         $mainWidth = $layout->width * 0.8;
                         $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, $layout->width - $mainWidth);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $mainWidth,
+                            $mainHeight,
+                            0,
+                            $layout->width - $mainWidth
+                        );
 
                         // Bottom bar
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width,
+                            $layout->height - $mainHeight,
+                            $mainHeight,
+                            0
+                        );
 
                         // Left bar
-                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width - $mainWidth,
+                            $mainHeight,
+                            0,
+                            0
+                        );
                         break;
 
                     case '0|l-bar-right':
                         // Main window - 80%
                         $mainWidth = $layout->width * 0.8;
                         $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, 0);
+                        $this->layoutFactory->addRegion($layout, 'playlist', $mainWidth, $mainHeight, 0, 0);
 
                         // Bottom bar
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width,
+                            $layout->height - $mainHeight,
+                            $mainHeight,
+                            0
+                        );
 
                         // Right bar
-                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, $mainWidth);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width - $mainWidth,
+                            $mainHeight,
+                            0,
+                            $mainWidth
+                        );
                         break;
 
                     case '0|full-screen':
                     default:
                         // Maintain backwards compatibility by creating an empty full screen region
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height, 0, 0);
+                        $this->layoutFactory->addRegion(
+                            $layout,
+                            'playlist',
+                            $layout->width,
+                            $layout->height,
+                            0,
+                            0
+                        );
                 }
             }
         }
@@ -671,6 +722,9 @@ class Layout extends Base
         }
 
         if ($layout->hasPropertyChanged('folderId')) {
+            if ($layout->folderId === 1) {
+                $this->checkRootFolderAllowSave();
+            }
             $folderChanged = true;
         }
 
@@ -1380,6 +1434,7 @@ class Layout extends Base
             'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
             'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
@@ -2473,6 +2528,7 @@ class Layout extends Base
     public function import(Request $request, Response $response)
     {
         $this->getLog()->debug('Import Layout');
+        $parsedBody = $this->getSanitizer($request->getParams());
 
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
@@ -2481,6 +2537,17 @@ class Layout extends Base
 
         // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+
+        // Folders
+        $folderId = $parsedBody->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
 
         $options = [
             'userId' => $this->getUser()->userId,
@@ -2496,7 +2563,8 @@ class Layout extends Base
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->mediaService->libraryUsage() > $libraryLimit),
             'routeParser' => RouteContext::fromRequest($request)->getRouteParser(),
             'mediaService' => $this->mediaService,
-            'sanitizerService' => $this->getSanitizerService()
+            'sanitizerService' => $this->getSanitizerService(),
+            'folderId' => $folderId,
         ];
 
         $this->setNoOutput(true);

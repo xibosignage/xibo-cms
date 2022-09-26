@@ -32,7 +32,6 @@ use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\Profiler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -370,6 +369,12 @@ class Display implements \JsonSerializable
     public $webkeySerial;
 
     /**
+     * @SWG\Property(description="A comma separated list of groups/users with permissions to this Display")
+     * @var string
+     */
+    public $groupsWithPermissions;
+
+    /**
      * @SWG\Property(description="The datetime this entity was created")
      * @var string
      */
@@ -398,6 +403,12 @@ class Display implements \JsonSerializable
      * @var int
      */
     public $countFaults;
+
+    /**
+     * @SWG\Property(description="LAN IP Address, if available on the Player")
+     * @var string
+     */
+    public $lanIpAddress;
 
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
@@ -684,8 +695,6 @@ class Display implements \JsonSerializable
             'checkDisplaySlotAvailability' => true
         ], $options);
 
-        $allowNotify = true;
-
         if ($options['validate']) {
             $this->validate();
         }
@@ -704,9 +713,6 @@ class Display implements \JsonSerializable
 
         if ($this->displayId == null || $this->displayId == 0) {
             $this->add();
-
-            // Never notify on add (there is little point, we've only just added).
-            $allowNotify = false;
         } else {
             $this->edit();
         }
@@ -717,22 +723,8 @@ class Display implements \JsonSerializable
 
         // Trigger an update of all dynamic DisplayGroups?
         if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags')) {
-            // TODO: Can we trigger a task to run which does this in the background?
-            Profiler::start('Display::save::dynamic', $this->getLog());
-            foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($group), DisplayGroupLoadEvent::$NAME);
-                $group->load();
-                $group->save([
-                    'validate' => false,
-                    'saveGroup' => false,
-                    'saveTags' => false,
-                    'manageLinks' => false,
-                    'manageDisplayLinks' => true,
-                    'manageDynamicDisplayLinks' => true,
-                    'allowNotify' => $allowNotify
-                ]);
-            }
-            Profiler::end('Display::save::dynamic', $this->getLog());
+            // Background update.
+            $this->config->changeSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 1);
         }
     }
 
@@ -775,8 +767,8 @@ class Display implements \JsonSerializable
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence, lanIpAddress)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
@@ -800,7 +792,8 @@ class Display implements \JsonSerializable
             'overrideConfig' => ($this->overrideConfig == '') ? null : json_encode($this->overrideConfig),
             'newCmsAddress' => null,
             'newCmsKey' => null,
-            'commercialLicence' => $this->commercialLicence
+            'commercialLicence' => $this->commercialLicence,
+            'lanIpAddress' => empty($this->lanIpAddress) ? null : $this->lanIpAddress,
         ]);
 
 
@@ -869,7 +862,8 @@ class Display implements \JsonSerializable
                     `resolution` = :resolution,
                     `commercialLicence` = :commercialLicence,
                     `teamViewerSerial` = :teamViewerSerial,
-                    `webkeySerial` = :webkeySerial
+                    `webkeySerial` = :webkeySerial,
+                    `lanIpAddress` = :lanIpAddress
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -915,6 +909,7 @@ class Display implements \JsonSerializable
             'commercialLicence' => $this->commercialLicence,
             'teamViewerSerial' => empty($this->teamViewerSerial) ? null : $this->teamViewerSerial,
             'webkeySerial' => empty($this->webkeySerial) ? null : $this->webkeySerial,
+            'lanIpAddress' => empty($this->lanIpAddress) ? null : $this->lanIpAddress,
             'displayId' => $this->displayId
         ]);
 
@@ -941,9 +936,10 @@ class Display implements \JsonSerializable
             }
 
             // If the folderId has changed, we should check this user has permissions to the new folderId
+            // it shouldn't ever be null, but just in case.
             $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
             if ($this->hasPropertyChanged('folderId')) {
-                $folder = $this->folderFactory->getById($displayGroup->folderId);
+                $folder = $this->folderFactory->getById($displayGroup->folderId, 0);
                 // We have permission, so assert the new folder's permission id
                 $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
             }

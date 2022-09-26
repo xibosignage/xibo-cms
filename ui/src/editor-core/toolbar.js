@@ -14,230 +14,277 @@ const MediaPlayerTemplate = require('../templates/toolbar-media-preview.hbs');
 const MediaInfoTemplate =
   require('../templates/toolbar-media-preview-info.hbs');
 
-// Modules to be used in Widgets
-const moduleListFiltered = [];
-
-// Modules to be used in other option
-const moduleListOtherFiltered = [];
-const usersListFiltered = [];
-
-// Filter module list to create the types for the filter
-modulesList.forEach((el) => {
-  // check if we have valid extension on settings
-  for (let index = 0; index < el.settings.length; index++) {
-    const setting = el.settings[index];
-
-    if (setting.id == 'validExtensions') {
-      el.validExtensions =
-          (setting.value) ? setting.value : setting.default;
-    }
-  }
-
-  // Create new list with "other" modules
-  if (
-    el.assignable == 1 &&
-    el.regionSpecific == 0 &&
-    ['image', 'audio', 'video'].indexOf(el.type) == -1
-  ) {
-    moduleListOtherFiltered.push({
-      type: el.type,
-      name: el.name,
-    });
-  }
-
-  // Filter out image/audio/video
-  if (['image', 'audio', 'video'].indexOf(el.type) == -1) {
-    moduleListFiltered.push(el);
-  }
-});
-
-// Sort modules by name
-moduleListFiltered.sort(function(a, b) {
-  return (a.name < b.name) ? -1 : 1;
-});
-
-usersList.forEach((element) => {
-  usersListFiltered.push({
-    userId: element.userId.toString(),
-    name: element.userName,
-  });
-});
-
-const defaultFilters = {
-  name: {
-    value: '',
-  },
-  tag: {
-    value: '',
-  },
-  type: {
-    value: '',
-  },
-  owner: {
-    value: '',
-  },
-  orientation: {
-    value: '',
-  },
-  provider: {
-    value: 'both',
-  },
-};
-
-const defaultMenuItems = [
-  {
-    name: 'widgets',
-    itemName: toolbarTrans.menuItems.widgetsName,
-    itemTitle: toolbarTrans.menuItems.widgetsTitle,
-    itemIcon: 'th-large',
-    content: [],
-    filters: {
-      name: {
-        value: '',
-      },
-    },
-    state: '',
-    itemCount: 0,
-    favouriteModules: [],
-  },
-  {
-    name: 'image',
-    itemName: toolbarTrans.menuItems.imageName,
-    itemIcon: 'image',
-    itemTitle: toolbarTrans.menuItems.imageTitle,
-    search: true,
-    filters: {
-      name: {
-        value: '',
-      },
-      tag: {
-        value: '',
-      },
-      type: {
-        value: 'image',
-        locked: true,
-      },
-      owner: {
-        value: '',
-        values: usersListFiltered,
-      },
-      orientation: {
-        value: '',
-      },
-      provider: {
-        value: 'both',
-      },
-    },
-    state: '',
-    itemCount: 0,
-  },
-  {
-    name: 'audio',
-    itemName: toolbarTrans.menuItems.audioName,
-    itemIcon: 'volume-up',
-    itemTitle: toolbarTrans.menuItems.audioTitle,
-    search: true,
-    filters: {
-      name: {
-        value: '',
-      },
-      tag: {
-        value: '',
-      },
-      type: {
-        value: 'audio',
-        locked: true,
-      },
-      owner: {
-        value: '',
-        values: usersListFiltered,
-      },
-      provider: {
-        value: 'both',
-      },
-    },
-    state: '',
-    itemCount: 0,
-  },
-  {
-    name: 'video',
-    itemName: toolbarTrans.menuItems.videoName,
-    itemIcon: 'video',
-    itemTitle: toolbarTrans.menuItems.videoTitle,
-    search: true,
-    filters: {
-      name: {
-        value: '',
-      },
-      tag: {
-        value: '',
-      },
-      type: {
-        value: 'video',
-        locked: true,
-      },
-      owner: {
-        value: '',
-        values: usersListFiltered,
-      },
-      orientation: {
-        value: '',
-      },
-      provider: {
-        value: 'both',
-      },
-    },
-    state: '',
-    itemCount: 0,
-  },
-  {
-    name: 'library',
-    itemName: toolbarTrans.menuItems.libraryName,
-    itemIcon: 'archive',
-    itemTitle: toolbarTrans.menuItems.libraryTitle,
-    search: true,
-    filters: {
-      name: {
-        value: '',
-      },
-      tag: {
-        value: '',
-      },
-      type: {
-        value: '',
-        values: moduleListOtherFiltered,
-      },
-      owner: {
-        value: '',
-        values: usersListFiltered,
-      },
-      provider: {
-        value: 'both',
-      },
-    },
-    state: '',
-    itemCount: 0,
-  },
-];
-
 /**
  * Bottom toolbar contructor
  * @param {object} parent - parent container
  * @param {object} container - the container to render the navigator to
  * @param {object} [customActions] - customized actions
- * @param {boolean=} [showOptions] - show options menu
+ * @param {boolean=} [isPlaylist] - is it a playlist toolbar?
  */
 const Toolbar = function(
   parent,
   container,
   customActions = {},
-  showOptions = false,
+  isPlaylist = false,
 ) {
   this.parent = parent;
-
   this.DOMObject = container;
   this.openedMenu = -1;
 
+  this.widgetMenuIndex = 0;
+  this.libraryMenuIndex = 4;
+
+  this.selectedCard = {};
+
+  // Flag to mark if the toolbar has been rendered at least one time
+  this.firstRun = true;
+
+  // Flag to mark if the toolbar is opened
+  this.opened = false;
+
+  // Use queue to add media
+  this.useQueue = true;
+
+  // Media queue
+  this.selectedQueue = [];
+
+  // Custom actions
+  this.customActions = customActions;
+
+  // Initialize toolbar
+  this.init({
+    isPlaylist: isPlaylist,
+  });
+};
+
+/**
+ * Initialize toolbar
+ * @param {object} [options] - options
+ * @param {boolean=} [options.isPlaylist] - is it a playlist toolbar?
+ */
+Toolbar.prototype.init = function({isPlaylist = false} = {}) {
+  console.log('isPlaylist', isPlaylist);
+
+  // Modules to be used in Widgets
+  const moduleListFiltered = [];
+
+  // Create user list
+  const usersListFiltered = [];
+
+  // Modules to be used in other option
+  const moduleListOtherFiltered = [];
+
+  // Filter module list to create the types for the filter
+  modulesList.forEach((el) => {
+    // Check if we have valid extension on settings
+    for (let index = 0; index < el.settings.length; index++) {
+      const setting = el.settings[index];
+
+      if (setting.id == 'validExtensions') {
+        el.validExtensions =
+            (setting.value) ? setting.value : setting.default;
+      }
+    }
+
+    // Create new list with "other" modules
+    if (
+      el.assignable == 1 &&
+    el.regionSpecific == 0 &&
+    ['image', 'audio', 'video'].indexOf(el.type) == -1
+    ) {
+      moduleListOtherFiltered.push({
+        type: el.type,
+        name: el.name,
+      });
+    }
+
+    // Filter out image/audio/video
+    if (['image', 'audio', 'video'].indexOf(el.type) == -1) {
+      moduleListFiltered.push(el);
+    }
+  });
+
+  // Add playlist to modules
+  if (!isPlaylist) {
+    moduleListFiltered.push({
+      moduleId: 'playlist',
+      name: toolbarTrans.playlist,
+      type: 'playlist',
+      dataType: '',
+      regionSpecific: 1,
+    });
+  }
+
+  // Sort modules by name
+  moduleListFiltered.sort(function(a, b) {
+    return (a.name < b.name) ? -1 : 1;
+  });
+
+  usersList.forEach((element) => {
+    usersListFiltered.push({
+      userId: element.userId.toString(),
+      name: element.userName,
+    });
+  });
+
+  this.defaultFilters = {
+    name: {
+      value: '',
+    },
+    tag: {
+      value: '',
+    },
+    type: {
+      value: '',
+    },
+    owner: {
+      value: '',
+    },
+    orientation: {
+      value: '',
+    },
+    provider: {
+      value: 'both',
+    },
+  };
+
+  const defaultMenuItems = [
+    {
+      name: 'widgets',
+      itemName: toolbarTrans.menuItems.widgetsName,
+      itemTitle: toolbarTrans.menuItems.widgetsTitle,
+      itemIcon: 'th-large',
+      content: [],
+      filters: {
+        name: {
+          value: '',
+        },
+      },
+      state: '',
+      itemCount: 0,
+      favouriteModules: [],
+    },
+    {
+      name: 'image',
+      itemName: toolbarTrans.menuItems.imageName,
+      itemIcon: 'image',
+      itemTitle: toolbarTrans.menuItems.imageTitle,
+      search: true,
+      filters: {
+        name: {
+          value: '',
+        },
+        tag: {
+          value: '',
+        },
+        type: {
+          value: 'image',
+          locked: true,
+        },
+        owner: {
+          value: '',
+          values: usersListFiltered,
+        },
+        orientation: {
+          value: '',
+        },
+        provider: {
+          value: 'both',
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'audio',
+      itemName: toolbarTrans.menuItems.audioName,
+      itemIcon: 'volume-up',
+      itemTitle: toolbarTrans.menuItems.audioTitle,
+      search: true,
+      filters: {
+        name: {
+          value: '',
+        },
+        tag: {
+          value: '',
+        },
+        type: {
+          value: 'audio',
+          locked: true,
+        },
+        owner: {
+          value: '',
+          values: usersListFiltered,
+        },
+        provider: {
+          value: 'both',
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'video',
+      itemName: toolbarTrans.menuItems.videoName,
+      itemIcon: 'video',
+      itemTitle: toolbarTrans.menuItems.videoTitle,
+      search: true,
+      filters: {
+        name: {
+          value: '',
+        },
+        tag: {
+          value: '',
+        },
+        type: {
+          value: 'video',
+          locked: true,
+        },
+        owner: {
+          value: '',
+          values: usersListFiltered,
+        },
+        orientation: {
+          value: '',
+        },
+        provider: {
+          value: 'both',
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'library',
+      itemName: toolbarTrans.menuItems.libraryName,
+      itemIcon: 'archive',
+      itemTitle: toolbarTrans.menuItems.libraryTitle,
+      search: true,
+      filters: {
+        name: {
+          value: '',
+        },
+        tag: {
+          value: '',
+        },
+        type: {
+          value: '',
+          values: moduleListOtherFiltered,
+        },
+        owner: {
+          value: '',
+          values: usersListFiltered,
+        },
+        provider: {
+          value: 'both',
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+  ];
+
+  // Menu items
   this.menuItems = defaultMenuItems;
 
   // Check if menu items based on modules are disabled
@@ -260,30 +307,9 @@ const Toolbar = function(
     }
   });
 
-  this.widgetMenuIndex = 0;
-  this.libraryMenuIndex = 4;
-
-  this.selectedCard = {};
-
-  // Custom actions
-  this.customActions = customActions;
-
-  // Flag to mark if the toolbar has been rendered at least one time
-  this.firstRun = true;
-
-  // Flag to mark if the toolbar is opened
-  this.opened = false;
-
-  // Use queue to add media
-  this.useQueue = true;
-
-  // Media queue
-  this.selectedQueue = [];
-
-  // Options menu
-  this.showOptions = showOptions;
-
+  // Filtered module list
   this.customModuleList = moduleListFiltered;
+  this.moduleListOtherFiltered = moduleListOtherFiltered;
 };
 
 /**
@@ -382,7 +408,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
       filters[menuIdx] = {};
       for (const filter in menu.filters) {
         if (
-          defaultFilters[filter].value != menu.filters[filter].value &&
+          this.defaultFilters[filter].value != menu.filters[filter].value &&
           menu.filters[filter].locked != true
         ) {
           filters[menuIdx][filter] = menu.filters[filter].value;
@@ -457,22 +483,6 @@ Toolbar.prototype.render = function() {
   // Get toolbar trans
   const newToolbarTrans = Object.assign({}, toolbarTrans);
 
-  // Check if trash bin is active
-  const trashBinActive =
-    app.selectedObject.isDeletable &&
-    (app.readOnlyMode === undefined ||
-      app.readOnlyMode === false);
-
-  // Get text for bin tooltip
-  newToolbarTrans.trashBinActiveTitle =
-    (trashBinActive) ?
-      toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type) :
-      '';
-
-  const checkHistory = app.checkHistory();
-  newToolbarTrans.undoActiveTitle =
-    (checkHistory) ? checkHistory.undoActiveTitle : '';
-
   const toolbarOpened =
     (this.openedMenu != -1) &&
     (app.readOnlyMode === undefined ||
@@ -482,11 +492,7 @@ Toolbar.prototype.render = function() {
   const html = ToolbarTemplate({
     opened: toolbarOpened,
     menuItems: this.menuItems,
-    displayTooltips: app.common.displayTooltips,
-    trashActive: trashBinActive,
-    undoActive: checkHistory.undoActive,
     trans: newToolbarTrans,
-    showOptions: self.showOptions,
     mainObjectType: app.mainObjectType,
   });
 
@@ -528,58 +534,6 @@ Toolbar.prototype.render = function() {
       this.DOMObject.find('#btn-menu-' + index).click(function() {
         toolbar.openMenu(index);
       });
-    }
-
-    // Delete object
-    this.DOMObject.find('.trash-container').click(function(e) {
-      if ($(e.target).hasClass('active')) {
-        app.deleteSelectedObject();
-      }
-    });
-
-    // Revert last action
-    this.DOMObject.find('.undo-container').click(function(e) {
-      if ($(e.target).hasClass('active')) {
-        app.undoLastAction();
-      }
-    });
-
-    // Enable multi select mode
-    this.DOMObject.find('#multiSelectContainer').click(function() {
-      self.toggleMultiselectMode();
-    });
-  }
-
-  // Options menu
-  if (self.showOptions) {
-    self.DOMObject.find('.navbar-submenu-options-container').off()
-      .click(function(e) {
-        e.stopPropagation();
-      });
-
-    // Toggle tooltips
-    self.DOMObject.find('#displayTooltips').off()
-      .click(function() {
-        app.common.displayTooltips =
-          self.DOMObject.find('#displayTooltips').prop('checked');
-
-        if (app.common.displayTooltips) {
-          toastr.success(editorsTrans.tooltipsEnabled);
-        } else {
-          toastr.error(editorsTrans.tooltipsDisabled);
-        }
-
-        self.savePrefs();
-
-        app.common.reloadTooltips(app.editorContainer);
-      });
-
-    // Reset tour
-    if (typeof app.resetTour === 'function') {
-      self.DOMObject.find('#resetTour').removeClass('d-none').off()
-        .click(function() {
-          app.resetTour();
-        });
     }
   }
 
@@ -796,9 +750,9 @@ Toolbar.prototype.selectCard = function(card) {
   // Deselect previous selections
   this.deselectCardsAndDropZones();
 
-  const previouslySelected = this.selectedCard;
+  const previouslySelected = this.selectedCard.mainObjectType;
 
-  if (previouslySelected[0] != card[0]) {
+  if (!previouslySelected || previouslySelected[0] != card[0]) {
     // Get card info
     const dropTo = $(card).attr('drop-to');
     const subType = $(card).attr('data-sub-type');
@@ -846,6 +800,10 @@ Toolbar.prototype.handleDroppables = function(type, subType) {
     // Drop to layout only, for now
     $('.layout.droppable' +
       selectorAppend).addClass('ui-droppable-active');
+
+    // Playlist timeline droppable
+    $('#playlist-timeline.ui-droppable' +
+      selectorAppend).addClass('ui-droppable-active');
   }
 };
 
@@ -853,6 +811,7 @@ Toolbar.prototype.handleDroppables = function(type, subType) {
  * Deselect all the cards and remove the overlay on the drop zones
  */
 Toolbar.prototype.deselectCardsAndDropZones = function() {
+  const app = this.parent;
   // Deselect other cards
   this.DOMObject.find('.toolbar-card.card-selected')
     .removeClass('card-selected');
@@ -873,12 +832,12 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
   $('.ui-droppable').removeClass('ui-droppable-active');
 
   // Disable multi-select mode
-  if (this.parent.editorContainer.hasClass('multi-select')) {
-    this.toggleMultiselectMode(false);
+  if (app.editorContainer.hasClass('multi-select')) {
+    app.toggleMultiselectMode(false);
   }
 
   // Hide designer overlay
-  $('.custom-overlay').hide().unbind();
+  $('.custom-overlay').hide().off();
 
   // Deselect card
   this.selectedCard = {};
@@ -957,7 +916,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       ).serializeObject();
 
     if (menu == self.libraryMenuIndex && filter.type == '') {
-      filter.types = moduleListOtherFiltered.map((el) => el.type);
+      filter.types = self.moduleListOtherFiltered.map((el) => el.type);
     }
 
     // Manage request length
@@ -1075,7 +1034,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             toastr.info(
               toolbarTrans.noShowMore,
               null,
-              {'positionClass': 'toast-bottom-center'},
+              {positionClass: 'toast-bottom-center'},
             );
           }
 
@@ -1266,69 +1225,6 @@ Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
     self.deselectCardsAndDropZones();
   }
 };
-
-/**
- * Toggle multiple element select mode
- * @param {boolean} forceSelect - Force select mode
- */
-Toolbar.prototype.toggleMultiselectMode = function(forceSelect = null) {
-  const self = this;
-  const app = this.parent;
-  const timeline = app.timeline;
-  const editorContainer = app.editorContainer;
-
-  const updateTrashContainer = function() {
-    // Upate trash container status
-    self.DOMObject.find('#trashContainer')
-      .toggleClass(
-        'active',
-        (
-          timeline.DOMObject.find('.playlist-widget.multi-selected').length > 0
-        ));
-  };
-
-  // Check if needs to be selected or unselected
-  const multiSelectFlag =
-    (forceSelect != null) ?
-      forceSelect :
-      !editorContainer.hasClass('multi-select');
-
-  // Toggle multi select class on container
-  editorContainer.toggleClass('multi-select', multiSelectFlag);
-
-  // Toggle class on button
-  this.DOMObject.find('#multiSelectContainer')
-    .toggleClass('multiselect-active', multiSelectFlag);
-
-  if (multiSelectFlag) {
-    // Show overlay
-    $('.custom-overlay').show().off().on('click', () => {
-      self.deselectCardsAndDropZones();
-    });
-
-    // Disable timeline sort
-    timeline.DOMObject.find('#timeline-container').sortable('disable');
-
-    // Enable select for each widget
-    timeline.DOMObject.find('.playlist-widget.deletable')
-      .removeClass('selected').off().on('click', function(e) {
-        e.stopPropagation();
-        $(e.target).toggleClass('multi-selected');
-
-        updateTrashContainer();
-      },
-      );
-
-    updateTrashContainer();
-  } else {
-    // Hide designer overlay
-    $('.custom-overlay').hide().unbind();
-
-    // Re-render toolbar
-    this.render();
-  }
-};
-
 /**
  * Handle toolbar cards behaviour
  */
@@ -1621,6 +1517,9 @@ Toolbar.prototype.openSubMenu = function($card) {
     $submenuContainer.removeClass('toolbar-elements-pane');
     self.openMenu(openedMenu, true);
   });
+
+  // Clear tooltips
+  this.parent.common.clearTooltips();
 
   // Load content
   self.loadSubMenu($submenuContainer, cardData.dataType, cardData.subType);

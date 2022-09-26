@@ -115,7 +115,7 @@ class WidgetHtmlRenderer
                     'options' => $module->getPropertyValues(),
                     'downloadUrl' => $downloadUrl
                 ]);
-            } else {
+            } else if ($module->renderAs === 'html') {
                 // Modules without a preview should render out as HTML
                 return $this->twig->fetch('module-html-preview.twig', [
                     'width' => $width,
@@ -124,13 +124,13 @@ class WidgetHtmlRenderer
                     'widgetId' => $widget->widgetId
                 ]);
             }
-        } else {
-            // Render an icon.
-            return $this->twig->fetch('module-icon-preview.twig', [
-                'moduleName' => $module->name,
-                'moduleType' => $module->type
-            ]);
         }
+        
+        // Render an icon.
+        return $this->twig->fetch('module-icon-preview.twig', [
+            'moduleName' => $module->name,
+            'moduleType' => $module->type
+        ]);
     }
 
     /**
@@ -309,8 +309,9 @@ class WidgetHtmlRenderer
         $twig = [];
         $twig['hbs'] = [];
         $twig['twig'] = [];
-        $twig['renderers'] = [];
-        $twig['dataParsers'] = [];
+        $twig['onRender'] = [];
+        $twig['onParseData'] = [];
+        $twig['onFinish'] = [];
         $twig['templateProperties'] = [];
         $twig['elements'] = [];
         $twig['width'] = $region->width;
@@ -322,6 +323,7 @@ class WidgetHtmlRenderer
 
         // Max duration
         $duration = 0;
+        $numItems = 0;
 
         // Render each widget out into the html
         foreach ($widgets as $widget) {
@@ -346,9 +348,12 @@ class WidgetHtmlRenderer
                 'properties' => $module->getPropertyValues(),
             ];
 
-            // Output data parsers for this widget
-            if (!empty($module->dataParser)) {
-                $twig['dataParsers'][$widget->widgetId] = $module->dataParser;
+            // Output event functions for this widget
+            if (!empty($module->onParseData)) {
+                $twig['onParseData'][$widget->widgetId] = $module->onParseData;
+            }
+            if (!empty($module->onFinish)) {
+                $twig['onFinish'][$widget->widgetId] = $module->onFinish;
             }
             
             // Find my template
@@ -377,6 +382,8 @@ class WidgetHtmlRenderer
 
             // Watermark duration
             $duration = max($duration, $widget->calculatedDuration);
+            // TODO: this won't always be right? can we make it right
+            $numItems = max($numItems, $widgetData['properties']['numItems'] ?? 0);
 
             // What does our module have
             if ($module->stencil !== null) {
@@ -403,7 +410,7 @@ class WidgetHtmlRenderer
         // Render out HBS from templates
         foreach ($moduleTemplates as $moduleTemplate) {
             // Render out any hbs
-            if ($moduleTemplate->stencil->hbs !== null) {
+            if ($moduleTemplate->stencil !== null && $moduleTemplate->stencil->hbs !== null) {
                 $twig['hbs'][$moduleTemplate->templateId] = [
                     'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
                     'width' => $moduleTemplate->stencil->width,
@@ -411,13 +418,14 @@ class WidgetHtmlRenderer
                 ];
             }
 
-            if ($moduleTemplate->renderer !== null) {
-                $twig['renderers'][$moduleTemplate->templateId] = $moduleTemplate->renderer;
+            if ($moduleTemplate->onRender !== null) {
+                $twig['onRender'][$moduleTemplate->templateId] = $moduleTemplate->onRender;
             }
         }
 
         // Duration
         $twig['duration'] = $duration;
+        $twig['numItems'] = $numItems;
 
         // We use the default get resource template.
         return $this->twig->fetch('widget-html-render.twig', $twig);

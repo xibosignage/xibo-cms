@@ -23,11 +23,13 @@ namespace Xibo\Xmds;
 
 use Carbon\Carbon;
 use Xibo\Entity\Bandwidth;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Soap3
  * @package Xibo\Xmds
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
  */
 class Soap3 extends Soap
 {
@@ -111,8 +113,7 @@ class Soap3 extends Soap
      */
     function RequiredFiles($serverKey, $hardwareKey, $version)
     {
-        $httpDownloads = false;
-        return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
+        return $this->doRequiredFiles($serverKey, $hardwareKey, false);
     }
 
     /**
@@ -130,7 +131,7 @@ class Soap3 extends Soap
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
+    public function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
     {
         $this->logProcessor->setRoute('GetFile');
 
@@ -151,7 +152,7 @@ class Soap3 extends Soap
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
 
-        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -160,12 +161,12 @@ class Soap3 extends Soap
 
         // Authenticate this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.");
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         if ($this->display->isAuditing()) {
@@ -181,7 +182,7 @@ class Soap3 extends Soap
 
         try {
             // Handle fetching the file
-            if ($fileType == "layout") {
+            if ($fileType == 'layout') {
                 $fileId = (int) $filePath;
 
                 // Validate the nonce
@@ -200,26 +201,42 @@ class Soap3 extends Soap
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
-
-            } else if ($fileType == "media") {
+            } else if ($fileType == 'media') {
                 // Get the ID
-                if (strstr($filePath, '/') || strstr($filePath, '\\'))
-                    throw new NotFoundException("Invalid file path.");
+                if (strstr($filePath, '/') || strstr($filePath, '\\')) {
+                    throw new NotFoundException('Invalid file path.');
+                }
 
                 $fileId = explode('.', $filePath);
 
-                // Is this a request for the bundle?
-                if ($fileId == '-1') {
-                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
-                    $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, strlen($file));
-                    return $file;
+                if (is_numeric($fileId)) {
+                    // Validate the nonce
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
+                        $this->display->displayId,
+                        $fileId[0]
+                    );
+
+                    // Return the Chunk size specified
+                    $f = fopen($libraryLocation . $filePath, 'r');
+                } else {
+                    // Non-numeric, so assume we're a dependency
+                    $this->getLog()->debug('Assumed dependency with path: ' . $filePath);
+
+                    $requiredFile = $this->requiredFileFactory->getByDisplayAndDependencyPath(
+                        $this->display->displayId,
+                        $filePath
+                    );
+                    
+                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->realId);
+                    $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
+
+                    $path = $event->getFullPath();
+                    if (empty($path)) {
+                        throw new NotFoundException(__('File not found'));
+                    }
+
+                    $f = fopen($path, 'r');
                 }
-
-                // Validate the nonce
-                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId[0]);
-
-                // Return the Chunk size specified
-                $f = fopen($libraryLocation . $filePath, 'r');
 
                 fseek($f, $chunkOffset);
 

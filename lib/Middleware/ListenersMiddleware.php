@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -30,6 +30,7 @@ use Slim\App;
 use Xibo\Event\CampaignLoadEvent;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\FolderMovingEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
@@ -37,6 +38,7 @@ use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Xmds\Listeners\XmdsPlayerBundleListener;
 
 /**
  * This middleware is used to register listeners against the dispatcher
@@ -295,5 +297,56 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(PlaylistMaxNumberChangedEvent::$NAME, (new \Xibo\Listener\OnPlaylistMaxNumberChange(
             $c->get('store')
         )));
+
+        // On Folder moving listeners
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\CampaignListener(
+            $c->get('campaignFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DataSetListener(
+            $c->get('dataSetFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DisplayGroupListener(
+            $c->get('displayGroupFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\FolderListener(
+            $c->get('folderFactory')
+        )), -1);
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\MediaListener(
+            $c->get('mediaFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\MenuBoardListener(
+            $c->get('menuBoardFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\PlaylistListener(
+            $c->get('playlistFactory')
+        )));
+
+        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\UserListener(
+            $c->get('userFactory'),
+            $c->get('store')
+        )));
+    }
+
+    /**
+     * Set XMDS specific listeners
+     * @param App $app
+     * @return void
+     */
+    public static function setXmdsListeners(App $app)
+    {
+        $c = $app->getContainer();
+        $dispatcher = $c->get('dispatcher');
+
+        $playerBundleListener = new XmdsPlayerBundleListener();
+        $playerBundleListener->useLogger($c->get('logger'));
+
+        $dispatcher->addListener('xmds.dependency.list', [$playerBundleListener, 'onDependencyList']);
+        $dispatcher->addListener('xmds.dependency.request', [$playerBundleListener, 'onDependencyRequest']);
     }
 }

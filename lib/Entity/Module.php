@@ -76,6 +76,12 @@ class Module implements \JsonSerializable
     public $type;
 
     /**
+     * @SWG\Property(description="Legacy type codes for this module")
+     * @var string[]
+     */
+    public $legacyTypes;
+
+    /**
      * @SWG\Property(description="The data type of the data expected to be returned by this modules data provider")
      * @var string
      */
@@ -136,7 +142,13 @@ class Module implements \JsonSerializable
      * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
      * @var string
      */
-    public $dataParser;
+    public $onParseData;
+
+    /**
+     * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
+     * @var string
+     */
+    public $onFinish;
 
     /**
      * @SWG\Property(description="Optional sample data item, only applicable when a dataType is present")
@@ -246,12 +258,13 @@ class Module implements \JsonSerializable
     }
 
     /**
-     * @param string $file a fully qualified path to this file
-     * @return \Xibo\Widget\Provider\DurationProvider
+     * @param int $duration
+     * @param array $properties
+     * @return DurationProvider
      */
-    public function createDurationProvider(string $file): DurationProvider
+    public function createDurationProvider(int $duration, array $properties): DurationProvider
     {
-        return $this->moduleFactory->createDurationProvider($file);
+        return $this->moduleFactory->createDurationProvider($duration, $properties);
     }
 
     /**
@@ -259,12 +272,12 @@ class Module implements \JsonSerializable
      * @param string $file
      * @return int
      */
-    public function fetchDurationOrDefault(string $file): int
+    public function fetchDurationOrDefaultFromFile(string $file): int
     {
         if ($this->widgetProvider === null) {
             return $this->defaultDuration;
         }
-        $durationProvider = $this->createDurationProvider($file);
+        $durationProvider = $this->createDurationProvider(0, ['file' => $file]);
         $this->widgetProvider->fetchDuration($durationProvider);
 
         return $durationProvider->getDuration();
@@ -278,6 +291,7 @@ class Module implements \JsonSerializable
     public function setWidgetProvider(WidgetProviderInterface $widgetProvider): Module
     {
         $this->widgetProvider = $widgetProvider;
+        $this->widgetProvider->setLog($this->getLog()->getLoggerInterface());
         return $this;
     }
 

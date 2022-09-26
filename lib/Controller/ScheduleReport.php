@@ -125,7 +125,8 @@ class ScheduleReport extends Base
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportScheduleId' => $sanitizedQueryParams->getInt('reportScheduleId'),
             'reportName' => $sanitizedQueryParams->getString('reportName'),
-            'onlyMySchedules' => $sanitizedQueryParams->getCheckbox('onlyMySchedules')
+            'onlyMySchedules' => $sanitizedQueryParams->getCheckbox('onlyMySchedules'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ], $sanitizedQueryParams));
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
