@@ -1,0 +1,153 @@
+<!--
+ ~ Copyright (C) 2022 Xibo Signage Ltd
+ ~
+ ~ Xibo - Digital Signage - http://www.xibo.org.uk
+ ~
+ ~ This file is part of Xibo.
+ ~
+ ~ Xibo is free software: you can redistribute it and/or modify
+ ~ it under the terms of the GNU Affero General Public License as published by
+ ~ the Free Software Foundation, either version 3 of the License, or
+ ~ any later version.
+ ~
+ ~ Xibo is distributed in the hope that it will be useful,
+ ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ~ GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License
+ ~ along with Xibo. If not, see <http://www.gnu.org/licenses/>.
+ -->
+<module>
+    <id>core-webpage</id>
+    <name>Webpage</name>
+    <author>Core</author>
+    <description>Embed a Webpage</description>
+    <class></class>
+    <type>webpage</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>native</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="uri" type="input" variant="uri">
+            <title>Link</title>
+            <helpText>The Location (URL) of the webpage</helpText>
+            <default></default>
+            <rule>required</rule>
+        </property>
+        <property id="transparency" type="checkbox">
+            <title>Background transparent?</title>
+            <helpText>Should the Widget be shown with a transparent background? Also requires the embedded content to have a transparent background.</helpText>
+            <default></default>
+        </property>
+        <property id="isPreNavigate" type="checkbox">
+            <title>Preload?</title>
+            <helpText>Should this Widget be loaded entirely off screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
+            <default></default>
+        </property>
+        <property id="modeId" type="dropdown" mode="single">
+            <title>Options</title>
+            <helpText>How should this web page be embedded?</helpText>
+            <default>1</default>
+            <options>
+                <option name="1">Open Natively</option>
+                <option name="2">Manual Position</option>
+                <option name="3">Best Fit</option>
+            </options>
+        </property>
+        <property id="pageWidth" type="number">
+            <title>Page Width</title>
+            <helpText>The width of the page. Leave empty to use the region width.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                    <condition field="#modeId" type="eq">3</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="pageHeight" type="number">
+            <title>Page Height</title>
+            <helpText>The height of the page. Leave empty to use the region height.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                    <condition field="#modeId" type="eq">3</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="offsetTop" type="number">
+            <title>Offset Top</title>
+            <helpText>The starting point from the top in pixels</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="offsetLeft" type="number">
+            <title>Offset Left</title>
+            <helpText>The starting point from the left in pixels</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="scaling" type="number">
+            <title>Scale Percentage</title>
+            <helpText>The Percentage to Scale this Webpage (0 - 100)</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">2</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="pageLoadErrorTrigger" type="input">
+            <title>Trigger on page load error</title>
+            <helpText>Code to be triggered when the page to be loaded returns an error, e.g. a 404 not found.</helpText>
+            <default></default>
+            <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
+            <visibility>
+                <test type="or">
+                    <condition field="#modeId" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+    </properties>
+    <preview>
+        <twig><![CDATA[
+            <style>
+                #iframe { border:0; }
+            </style>
+
+            <iframe id="iframe" scrolling="no" src="{{ uri }}"></iframe>
+
+            <script type="text/javascript">
+                var options =
+                    {
+                    "modeId":"2",
+                    "originalWidth":1258,
+                    "originalHeight":938,
+                    "iframeWidth":1258,
+                    "iframeHeight":938,
+                    "offsetTop":0,
+                    "offsetLeft":0,
+                    "scale":1
+                    }
+                $(document).ready(function() {
+                    $("#content").xiboLayoutScaler(options);
+                    $("#iframe").xiboIframeScaler(options);
+                });
+            </script>
+        ]]></twig>
+    </preview>
+</module>
