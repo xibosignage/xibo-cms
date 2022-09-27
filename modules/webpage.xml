@@ -123,31 +123,5 @@
             </visibility>
         </property>
     </properties>
-    <preview>
-        <twig><![CDATA[
-            <style>
-                #iframe { border:0; }
-            </style>
-
-            <iframe id="iframe" scrolling="no" src="{{ uri }}"></iframe>
-
-            <script type="text/javascript">
-                var options =
-                    {
-                    "modeId":"2",
-                    "originalWidth":1258,
-                    "originalHeight":938,
-                    "iframeWidth":1258,
-                    "iframeHeight":938,
-                    "offsetTop":0,
-                    "offsetLeft":0,
-                    "scale":1
-                    }
-                $(document).ready(function() {
-                    $("#content").xiboLayoutScaler(options);
-                    $("#iframe").xiboIframeScaler(options);
-                });
-            </script>
-        ]]></twig>
-    </preview>
+    <preview></preview>
 </module>
