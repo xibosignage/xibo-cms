@@ -149,9 +149,9 @@ class ModuleTemplateFactory extends BaseFactory
         $template->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $template->title = $this->getFirstValueOrDefaultFromXmlNode($xml, 'title');
         $template->thumbnail = $this->getFirstValueOrDefaultFromXmlNode($xml, 'thumbnail');
-        $template->onRender = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onRender');
-        if (!empty($template->onRender)) {
-            $template->onRender = trim($template->onRender);
+        $template->onTemplateRender = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onTemplateRender');
+        if (!empty($template->onTemplateRender)) {
+            $template->onTemplateRender = trim($template->onTemplateRender);
         }
 
         $template->isError = false;

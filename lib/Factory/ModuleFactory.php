@@ -414,14 +414,24 @@ class ModuleFactory extends BaseFactory
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
         
         // Event listeners
+        $module->onInitialize = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onInitialize');
+        if (!empty($module->onInitialize)) {
+            $module->onInitialize = trim($module->onInitialize);
+        }
+
         $module->onParseData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onParseData');
         if (!empty($module->onParseData)) {
             $module->onParseData = trim($module->onParseData);
         }
-        
-        $module->onFinish = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onFinish');
-        if (!empty($module->onFinish)) {
-            $module->onFinish = trim($module->onFinish);
+
+        $module->onRender = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onRender');
+        if (!empty($module->onRender)) {
+            $module->onRender = trim($module->onRender);
+        }
+
+        $module->onVisible = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onVisible');
+        if (!empty($module->onVisible)) {
+            $module->onVisible = trim($module->onVisible);
         }
 
         // We might have sample data (usually only if there is a dataType)

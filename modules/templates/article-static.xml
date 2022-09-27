@@ -113,7 +113,7 @@
 {% endif %}
             ]]></twig>
         </stencil>
-        <onRender><![CDATA[
+        <onTemplateRender><![CDATA[
 // id: The id of the widget
 // target: The target element to render
 // items: The items to render
@@ -150,6 +150,6 @@ if (xiboIC.checkVisible()) {
 } else {
     xiboIC.addToQueue(runOnVisible);
 }
-        ]]></onRender>
+        ]]></onTemplateRender>
     </template>
 </templates>

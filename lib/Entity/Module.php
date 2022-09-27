@@ -139,16 +139,28 @@ class Module implements \JsonSerializable
     public $properties;
 
     /**
+     * @SWG\Property(description="JavaScript function run when a module is initialised, before data is returned")
+     * @var string
+     */
+    public $onInitialize;
+
+    /**
      * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
      * @var string
      */
     public $onParseData;
 
     /**
-     * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
+     * @SWG\Property(description="JavaScript function run when a module is rendered, after data has been returned")
      * @var string
      */
-    public $onFinish;
+    public $onRender;
+
+    /**
+     * @SWG\Property(description="JavaScript function run when a module becomes visible")
+     * @var string
+     */
+    public $onVisible;
 
     /**
      * @SWG\Property(description="Optional sample data item, only applicable when a dataType is present")

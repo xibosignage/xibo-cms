@@ -157,7 +157,6 @@ class WidgetHtmlRenderer
 
         // Cache File
         // ----------
-        // width_height
         // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
         // being contained in a Playlist.
         // Region width/height only changes in Draft state, so the FE is responsible for asserting the correct
@@ -233,14 +232,15 @@ class WidgetHtmlRenderer
             } else if (Str::startsWith($match, 'data=')) {
                 // Not needed as this CMS is always capable of providing separate data.
                 $output = str_replace('"[[' . $match . ']]"', '[]', $output);
-            } else if (Str::startsWith($match, 'mediaId')) {
+            } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
+                $params = ['id' => ':id',];
+                if (Str::startsWith($match, 'mediaId')) {
+                    $params['type'] = 'image';
+                }
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $urlFor('library.download', [
-                        'id' => ':id',
-                        'type' => 'image'
-                    ]) . '?preview=1'),
+                    str_replace(':id', $value[1], $urlFor('library.download', $params) . '?preview=1'),
                     $output
                 );
             }
@@ -279,7 +279,7 @@ class WidgetHtmlRenderer
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
                 $output = str_replace('[[' . $match . ']]', $data[$value[1]] ?? [], $output);
-            } else if (Str::startsWith($match, 'mediaId')) {
+            } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
                     $output = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $output);
@@ -348,12 +348,23 @@ class WidgetHtmlRenderer
                 'properties' => $module->getPropertyValues(),
             ];
 
+            // Do we have a library file with this module?
+            if ($module->regionSpecific == 0) {
+                $widgetData['libraryId'] = '[[libraryId=' . $widget->getPrimaryMediaId() . ']]';
+            }
+
             // Output event functions for this widget
+            if (!empty($module->onInitialize)) {
+                $twig['onInitialize'][$widget->widgetId] = $module->onInitialize;
+            }
             if (!empty($module->onParseData)) {
                 $twig['onParseData'][$widget->widgetId] = $module->onParseData;
             }
-            if (!empty($module->onFinish)) {
-                $twig['onFinish'][$widget->widgetId] = $module->onFinish;
+            if (!empty($module->onRender)) {
+                $twig['onRender'][$widget->widgetId] = $module->onRender;
+            }
+            if (!empty($module->onVisible)) {
+                $twig['onVisible'][$widget->widgetId] = $module->onVisible;
             }
             
             // Find my template
@@ -418,8 +429,8 @@ class WidgetHtmlRenderer
                 ];
             }
 
-            if ($moduleTemplate->onRender !== null) {
-                $twig['onRender'][$moduleTemplate->templateId] = $moduleTemplate->onRender;
+            if ($moduleTemplate->onTemplateRender !== null) {
+                $twig['onRenderTemplate'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateRender;
             }
         }
 
