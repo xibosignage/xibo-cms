@@ -265,9 +265,6 @@ $app->get('/library/form/usage/{id}', ['\Xibo\Controller\Library','usageForm'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['schedule.view', 'layout.view']))
     ->setName('library.usage.form');
 
-$app->get('/library/fontcss', ['\Xibo\Controller\Library','fontCss'])->setName('library.font.css');
-$app->get('/library/fontlist', ['\Xibo\Controller\Library','fontList'])->setName('library.font.list');
-
 //
 // display
 //
@@ -739,3 +736,13 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/folders/form/{folderId}/move', ['\Xibo\Controller\Folder', 'moveForm'])->setName('folders.move.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
+
+$app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])->setName('library.font.css');
+$app->get('/fonts/fontlist', ['\Xibo\Controller\Font','fontList'])->setName('library.font.list');
+$app->get('/fonts/fontplayercss', ['\Xibo\Controller\Font','fontPlayerCss'])->setName('library.font.player.css');
+$app->get('/fonts/fontcss/download', ['\Xibo\Controller\Font','downloadFontsCss'])->setName('library.font.css.download');
+
+$app->group('', function(RouteCollectorProxy $group) {
+    $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');
+    $group->get('/fonts/{id}/form/delete', ['\Xibo\Controller\Font', 'deleteForm'])->setName('font.form.delete');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));
