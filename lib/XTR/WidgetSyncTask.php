@@ -193,40 +193,44 @@ class WidgetSyncTask implements TaskInterface
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
             $this->getLogger()->debug('Cache expired, pulling fresh');
 
-            if ($widgetInterface !== null) {
-                $widgetInterface->fetchData($dataProvider);
-            } else {
-                $dataProvider->setIsUseEvent();
-            }
+            try {
+                if ($widgetInterface !== null) {
+                    $widgetInterface->fetchData($dataProvider);
+                } else {
+                    $dataProvider->setIsUseEvent();
+                }
 
-            if ($dataProvider->isUseEvent()) {
-                $this->getDispatcher()->dispatch(
-                    new WidgetDataRequestEvent($dataProvider),
-                    WidgetDataRequestEvent::$NAME
-                );
-            }
+                if ($dataProvider->isUseEvent()) {
+                    $this->getDispatcher()->dispatch(
+                        new WidgetDataRequestEvent($dataProvider),
+                        WidgetDataRequestEvent::$NAME
+                    );
+                }
 
-            // Do we have images?
-            $media = $dataProvider->getImages();
-            if (count($media) > 0) {
-                // Process the downloads.
-                $this->mediaFactory->processDownloads(function ($media) use ($widget, &$mediaIds) {
-                    /** @var \Xibo\Entity\Media $media */
-                    // Success
-                    // We don't need to do anything else, references to mediaId will be built when we decorate
-                    // the HTML.
-                    $this->getLogger()->debug('Successfully downloaded ' . $media->mediaId);
+                // Do we have images?
+                $media = $dataProvider->getImages();
+                if (count($media) > 0) {
+                    // Process the downloads.
+                    $this->mediaFactory->processDownloads(function ($media) use ($widget, &$mediaIds) {
+                        /** @var \Xibo\Entity\Media $media */
+                        // Success
+                        // We don't need to do anything else, references to mediaId will be built when we decorate
+                        // the HTML.
+                        $this->getLogger()->debug('Successfully downloaded ' . $media->mediaId);
 
-                    if (!in_array($media->mediaId, $mediaIds)) {
-                        $mediaIds[] = $media->mediaId;
-                    }
-                });
-            }
+                        if (!in_array($media->mediaId, $mediaIds)) {
+                            $mediaIds[] = $media->mediaId;
+                        }
+                    });
+                }
 
-            // Save to cache
-            // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
-            if (count($dataProvider->getData()) > 0) {
-                $widgetDataProviderCache->saveToCache($dataProvider);
+                // Save to cache
+                // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
+                if (count($dataProvider->getData()) > 0) {
+                    $widgetDataProviderCache->saveToCache($dataProvider);
+                }
+            } finally {
+                $widgetDataProviderCache->finaliseCache();
             }
         } else {
             $this->getLogger()->debug('Cache still valid');

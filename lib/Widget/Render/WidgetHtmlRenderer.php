@@ -157,7 +157,6 @@ class WidgetHtmlRenderer
 
         // Cache File
         // ----------
-        // width_height
         // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
         // being contained in a Playlist.
         // Region width/height only changes in Draft state, so the FE is responsible for asserting the correct
@@ -233,14 +232,15 @@ class WidgetHtmlRenderer
             } else if (Str::startsWith($match, 'data=')) {
                 // Not needed as this CMS is always capable of providing separate data.
                 $output = str_replace('"[[' . $match . ']]"', '[]', $output);
-            } else if (Str::startsWith($match, 'mediaId')) {
+            } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
+                $params = ['id' => ':id',];
+                if (Str::startsWith($match, 'mediaId')) {
+                    $params['type'] = 'image';
+                }
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $urlFor('library.download', [
-                        'id' => ':id',
-                        'type' => 'image'
-                    ]) . '?preview=1'),
+                    str_replace(':id', $value[1], $urlFor('library.download', $params) . '?preview=1'),
                     $output
                 );
             }
@@ -279,7 +279,7 @@ class WidgetHtmlRenderer
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
                 $output = str_replace('[[' . $match . ']]', $data[$value[1]] ?? [], $output);
-            } else if (Str::startsWith($match, 'mediaId')) {
+            } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
                     $output = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $output);
@@ -309,8 +309,9 @@ class WidgetHtmlRenderer
         $twig = [];
         $twig['hbs'] = [];
         $twig['twig'] = [];
-        $twig['renderers'] = [];
-        $twig['dataParsers'] = [];
+        $twig['onRender'] = [];
+        $twig['onParseData'] = [];
+        $twig['onFinish'] = [];
         $twig['templateProperties'] = [];
         $twig['elements'] = [];
         $twig['width'] = $region->width;
@@ -322,6 +323,7 @@ class WidgetHtmlRenderer
 
         // Max duration
         $duration = 0;
+        $numItems = 0;
 
         // Render each widget out into the html
         foreach ($widgets as $widget) {
@@ -346,9 +348,23 @@ class WidgetHtmlRenderer
                 'properties' => $module->getPropertyValues(),
             ];
 
-            // Output data parsers for this widget
-            if (!empty($module->dataParser)) {
-                $twig['dataParsers'][$widget->widgetId] = $module->dataParser;
+            // Do we have a library file with this module?
+            if ($module->regionSpecific == 0) {
+                $widgetData['libraryId'] = '[[libraryId=' . $widget->getPrimaryMediaId() . ']]';
+            }
+
+            // Output event functions for this widget
+            if (!empty($module->onInitialize)) {
+                $twig['onInitialize'][$widget->widgetId] = $module->onInitialize;
+            }
+            if (!empty($module->onParseData)) {
+                $twig['onParseData'][$widget->widgetId] = $module->onParseData;
+            }
+            if (!empty($module->onRender)) {
+                $twig['onRender'][$widget->widgetId] = $module->onRender;
+            }
+            if (!empty($module->onVisible)) {
+                $twig['onVisible'][$widget->widgetId] = $module->onVisible;
             }
             
             // Find my template
@@ -377,6 +393,8 @@ class WidgetHtmlRenderer
 
             // Watermark duration
             $duration = max($duration, $widget->calculatedDuration);
+            // TODO: this won't always be right? can we make it right
+            $numItems = max($numItems, $widgetData['properties']['numItems'] ?? 0);
 
             // What does our module have
             if ($module->stencil !== null) {
@@ -403,7 +421,7 @@ class WidgetHtmlRenderer
         // Render out HBS from templates
         foreach ($moduleTemplates as $moduleTemplate) {
             // Render out any hbs
-            if ($moduleTemplate->stencil->hbs !== null) {
+            if ($moduleTemplate->stencil !== null && $moduleTemplate->stencil->hbs !== null) {
                 $twig['hbs'][$moduleTemplate->templateId] = [
                     'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
                     'width' => $moduleTemplate->stencil->width,
@@ -411,13 +429,14 @@ class WidgetHtmlRenderer
                 ];
             }
 
-            if ($moduleTemplate->renderer !== null) {
-                $twig['renderers'][$moduleTemplate->templateId] = $moduleTemplate->renderer;
+            if ($moduleTemplate->onTemplateRender !== null) {
+                $twig['onRenderTemplate'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateRender;
             }
         }
 
         // Duration
         $twig['duration'] = $duration;
+        $twig['numItems'] = $numItems;
 
         // We use the default get resource template.
         return $this->twig->fetch('widget-html-render.twig', $twig);

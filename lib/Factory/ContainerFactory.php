@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -238,6 +238,7 @@ class ContainerFactory
                 $repository->setSanitizer($c->get('sanitizerService'));
                 $repository->setStore($c->get('store'));
                 $repository->setDispatcher($c->get('dispatcher'));
+                $repository->setConfig($c->get('configService'));
                 return $repository;
             },
             'dispatcher' => function (ContainerInterface $c) {

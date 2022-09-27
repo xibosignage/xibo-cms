@@ -2438,7 +2438,7 @@ class Library extends Base
                 // Success
                 $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
                 $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-                $realDuration = $module->fetchDurationOrDefault($libraryFolder . $media->storedAs);
+                $realDuration = $module->fetchDurationOrDefaultFromFile($libraryFolder . $media->storedAs);
                 if ($realDuration !== $media->duration) {
                     $media->updateDuration($realDuration);
                 }

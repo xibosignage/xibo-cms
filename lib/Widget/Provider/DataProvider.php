@@ -22,6 +22,7 @@
 
 namespace Xibo\Widget\Provider;
 
+use GuzzleHttp\Client;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Factory\MediaFactory;
@@ -58,15 +59,26 @@ class DataProvider implements DataProviderInterface
     /** @var float the display longitude */
     private $longitude;
 
+    /** @var \GuzzleHttp\Client */
+    private $client;
+
+    /** @var array Guzzle proxy configuration */
+    private $guzzleProxy;
+
+    /** @var null cached property values. */
+    private $properties = null;
+
     /**
      * Constructor
      * @param \Xibo\Entity\Module $module
      * @param \Xibo\Entity\Widget $widget
+     * @param array $guzzleProxy
      */
-    public function __construct(Module $module, Widget $widget)
+    public function __construct(Module $module, Widget $widget, array $guzzleProxy)
     {
         $this->module = $module;
         $this->widget = $widget;
+        $this->guzzleProxy = $guzzleProxy;
     }
 
     /**
@@ -130,7 +142,10 @@ class DataProvider implements DataProviderInterface
      */
     public function getProperty(string $property, $default = null)
     {
-        return $this->widget->getOptionValue($property, $default);
+        if ($this->properties === null) {
+            $this->properties = $this->module->getPropertyValues(false);
+        }
+        return $this->properties[$property] ?? $default;
     }
 
     /**
@@ -237,5 +252,17 @@ class DataProvider implements DataProviderInterface
     public function getCacheTtl(): int
     {
         return $this->cacheTtl;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getGuzzleClient(array $requestOptions = []): Client
+    {
+        if ($this->client === null) {
+            $this->client = new Client(array_merge($this->guzzleProxy, $requestOptions));
+        }
+
+        return $this->client;
     }
 }

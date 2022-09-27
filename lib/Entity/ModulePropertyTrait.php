@@ -22,8 +22,10 @@
 
 namespace Xibo\Entity;
 
+use Xibo\Helper\DateFormatHelper;
+
 /**
- * A trait for common fuctionality with regards to properties on modules/module templates
+ * A trait for common functionality in regard to properties on modules/module templates
  */
 trait ModulePropertyTrait
 {
@@ -41,28 +43,43 @@ trait ModulePropertyTrait
             if ($includeDefaults && $property->value === null) {
                 $property->value = $property->default;
             }
+
+            if ($property->variant === 'uri') {
+                $property->value = urldecode($property->value);
+            }
         }
         return $this;
     }
 
     /**
-     * @param bool $decorateLibraryRefs
+     * @param bool $decorateForOutput true if we should decorate for output to either the preview or player
      * @return array
      */
-    public function getPropertyValues(bool $decorateLibraryRefs = true): array
+    public function getPropertyValues(bool $decorateForOutput = true): array
     {
         $properties = [];
         foreach ($this->properties as $property) {
             $value = $property->value;
-            // Does this property have library references?
-            if ($decorateLibraryRefs && $property->allowLibraryRefs) {
-                // Parse them out and replace for our special syntax.
-                $matches = [];
-                preg_match_all('/\[(.*?)\]/', $value, $matches);
-                foreach ($matches[1] as $match) {
-                    if (is_numeric($match)) {
-                        $value = str_replace('[' . $match . ']', '[[mediaId=' . $match . ']]', $value);
+
+            if ($decorateForOutput) {
+                // Does this property have library references?
+                if ($property->allowLibraryRefs) {
+                    // Parse them out and replace for our special syntax.
+                    $matches = [];
+                    preg_match_all('/\[(.*?)\]/', $value, $matches);
+                    foreach ($matches[1] as $match) {
+                        if (is_numeric($match)) {
+                            $value = str_replace(
+                                '[' . $match . ']',
+                                '[[mediaId=' . $match . ']]',
+                                $value
+                            );
+                        }
                     }
+                }
+
+                if ($property->variant === 'dateFormat') {
+                    $value = DateFormatHelper::convertPhpToMomentFormat($value);
                 }
             }
             $properties[$property->id] = $value;

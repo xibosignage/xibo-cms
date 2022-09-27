@@ -46,6 +46,7 @@ interface WidgetProviderInterface
      * indicating this widget's datatype, name, settings and currently configured options
      * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
      * @return \Xibo\Widget\Provider\WidgetProviderInterface
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface;
 
