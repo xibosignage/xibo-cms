@@ -190,6 +190,13 @@ class Factories
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
+            'fontFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\FontFactory(
+                    $c->get('configService')
+                );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
             'helpFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\HelpFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
@@ -212,7 +219,8 @@ class Factories
                     $c->get('playlistFactory'),
                     $c->get('widgetAudioFactory'),
                     $c->get('actionFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('fontFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
 
