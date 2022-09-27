@@ -73,12 +73,11 @@
             </style>
         ]]></twig>
     </stencil>
-    <onFinish><![CDATA[
+    <onInitialize><![CDATA[
 // id: The id of the widget
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
-// globalOptions: The global rendering options
 // -------------------------------------------
 if(typeof EmbedInit === 'function') {
     EmbedInit();
@@ -88,5 +87,5 @@ if(properties.scaleContent) {
     window.scaleContent = true;
     $('body').xiboLayoutScaler(globalOptions);
 }
-    ]]></onFinish>
+    ]]></onInitialize>
 </module>

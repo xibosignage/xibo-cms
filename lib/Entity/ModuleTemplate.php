@@ -64,7 +64,7 @@ class ModuleTemplate implements \JsonSerializable
     public $stencil;
 
     /** @var string A Renderer to run if custom rendering is required. */
-    public $onRender;
+    public $onTemplateRender;
 
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;
