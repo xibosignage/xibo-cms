@@ -1,0 +1,162 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-countdown</id>
+    <name>Countdown</name>
+    <author>Core</author>
+    <description>A module for displaying a Countdown timer</description>
+    <class></class>
+    <type>countdown</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="countdownType" type="dropdown" mode="single">
+            <title>Countdown Type</title>
+            <helpText>Please select the type of countdown.</helpText>
+            <default>1</default>
+            <options>
+                <option name="1">Widget Duration</option>
+                <option name="2">Custom Duration</option>
+                <option name="3">Use Date</option>
+            </options>
+        </property>
+        <property id="countdownDuration" type="input">
+            <title>Countdown Duration</title>
+            <helpText>The duration in seconds.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#countdownType" type="eq">2</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="countdownDate" type="date" format="DD/MM/YYYY HH:mm:ss" dateType="dateTime">
+            <title>Countdown Date</title>
+            <helpText>Select the target date and time.</helpText>
+            <default>10/10/2010 10:10:10</default>
+            <visibility>
+                <test type="or">
+                    <condition field="#countdownType" type="eq">3</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="countdownWarningDuration" type="input">
+            <title>Warning Duration</title>
+            <helpText>The countdown will show in a warning mode from the end duration entered.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#countdownType" type="eq">1</condition>
+                    <condition field="#countdownType" type="eq">2</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="countdownWarningDate" type="date" format="DD/MM/YYYY HH:mm:ss" dateType="dateTime">
+            <title>Warning Date</title>
+            <helpText>The countdown will show in a warning mode from the warning date entered.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#countdownType" type="eq">3</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="alignH" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this widget be horizontally aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+        </property>
+        <property id="alignV" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this widget be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+        </property>
+        <property id="templateId" type="dropdown" mode="single">
+            <title>Template</title>
+            <helpText>Select the template you would like to apply. This can be overridden using the check box below.</helpText>
+            <default></default>
+            <options>
+                <option name="x1">x1</option>
+                <option name="x2">x2</option>
+            </options>
+        </property>
+        <property id="overrideTemplate" type="checkbox">
+            <title>Override the template?</title>
+            <helpText>Tick if you would like to override the template.</helpText>
+            <default></default>
+        </property>
+        <property id="useTemplatesMessage" type="message">
+            <title>With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above.</title>
+            <default></default>
+        </property>
+        <property id="widgetOriginalWidth" type="number">
+            <title>Original Width</title>
+            <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#overrideTemplate" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="widgetOriginalHeight" type="number">
+            <title>Original Height</title>
+            <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#overrideTemplate" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="message" type="message">
+            <title>Enter a format for the Countdown e.g. [hha], [hh], [mm], [ss] or [DD]. See the manual for more information.</title>
+            <default></default>
+        </property>
+        <property id="simpleTextEditorMessage" type="message">
+            <title>Main Template - Enter text or HTML in the box below.</title>
+            <default></default>
+        </property>
+        <property id="mainTemplate" type="code">
+            <default></default>
+        </property>
+        <property id="styleSheet" type="code">
+            <title>Optional Stylesheet</title>
+            <default></default>
+        </property>
+    </properties>
+    <preview></preview>
+</module>

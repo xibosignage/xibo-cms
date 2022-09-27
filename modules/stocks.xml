@@ -1,0 +1,197 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-stocks</id>
+    <name>Stocks</name>
+    <author>Core</author>
+    <description>A module for displaying Stocks information</description>
+    <class></class>
+    <type>stocks</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>30</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="items" type="input">
+            <title>Stock Symbols</title>
+            <helpText>A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.</helpText>
+            <default></default>
+        </property>
+        <property id="backgroundColor" type="color">
+            <title>Background Colour</title>
+            <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+            <default></default>
+        </property>
+        <property id="dateFormat" type="date" format="DD/MM/YYYY" dateType="date">
+            <title>Date Format</title>
+            <helpText>The format to apply to all dates returned by the Widget.</helpText>
+            <default></default>
+        </property>
+        <property id="effect" type="dropdown" mode="single">
+            <title>Effect</title>
+            <helpText>Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.</helpText>
+            <default>none</default>
+            <options>
+                <option name="none">None</option>
+                <option name="fade">Fade</option>
+                <option name="fadeout">Fade Out</option>
+                <option name="scrollHorz">Scroll Horizontal</option>
+                <option name="scrollVert">Scroll Vertical</option>
+                <option name="flipHorz">Flip Horizontal</option>
+                <option name="flipVert">Flip Vertical</option>
+                <option name="shuffle">Shuffle</option>
+                <option name="tileSlide">Tile Slide</option>
+                <option name="tileBlind">Tile Blind</option>
+<!--                <option name="marqueeLeft">Marquee Left</option>-->
+<!--                <option name="marqueeRight">Marquee Right</option>-->
+<!--                <option name="marqueeUp">Marquee Up</option>-->
+<!--                <option name="marqueeDown">Marquee Down</option>-->
+            </options>
+        </property>
+        <property id="speed" type="number">
+            <title>Speed</title>
+            <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#effect" type="eq">fade</condition>
+                    <condition field="#effect" type="eq">fadeout</condition>
+                    <condition field="#effect" type="eq">scrollHorz</condition>
+                    <condition field="#effect" type="eq">scrollVert</condition>
+                    <condition field="#effect" type="eq">flipHorz</condition>
+                    <condition field="#effect" type="eq">flipVert</condition>
+                    <condition field="#effect" type="eq">shuffle</condition>
+                    <condition field="#effect" type="eq">tileSlide</condition>
+                    <condition field="#effect" type="eq">tileBlind</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="alignH" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this widget be horizontally aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+        </property>
+        <property id="alignV" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this widget be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+        </property>
+        <property id="templateId" type="dropdown" mode="single">
+            <title>Template</title>
+            <helpText>Select the template you would like to apply. This can be overridden using the check box below.</helpText>
+            <default></default>
+            <options>
+                <option name="xx">xx</option>
+                <option name="xx">xx</option>
+            </options>
+        </property>
+        <property id="overrideTemplate" type="checkbox">
+            <title>Override the template?</title>
+            <helpText>Tick if you would like to override the template.</helpText>
+            <default></default>
+        </property>
+        <property id="useTemplatesMessage" type="message">
+            <title>With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above.</title>
+            <default></default>
+        </property>
+        <property id="maxItemsPerPage" type="number">
+            <title>Items per Page</title>
+            <helpText>This is the intended number of items on each page.</helpText>
+            <default></default>
+            <rule>required</rule>
+            <visibility>
+                <test type="or">
+                    <condition field="#overrideTemplate" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="widgetOriginalWidth" type="number">
+            <title>Original Width</title>
+            <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#overrideTemplate" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="widgetOriginalHeight" type="number">
+            <title>Original Height</title>
+            <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#overrideTemplate" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="simpleTextEditorMessage" type="message">
+            <title>Main Template - Enter text or HTML in the box below.</title>
+            <default></default>
+        </property>
+        <property id="mainTemplate" type="code">
+            <default></default>
+        </property>
+        <property id="simpleTextEditorMessage" type="message">
+            <title>Main Template - Enter text or HTML in the box below.</title>
+            <default></default>
+        </property>
+        <property id="itemTemplate" type="code">
+            <helpText>Enter the template for each item. Replaces [itemsTemplate] in main template.</helpText>
+            <default></default>
+        </property>
+        <property id="styleSheet" type="code">
+            <title>Optional Stylesheet</title>
+            <default></default>
+        </property>
+        <property id="javaScript" type="code">
+            <title>Optional JavaScript</title>
+            <default></default>
+        </property>
+        <property id="noRecordsMessage" type="input">
+            <title>Message</title>
+            <helpText>A message to display when there are no records returned by the search query</helpText>
+            <default></default>
+        </property>
+        <property id="updateInterval" type="number">
+            <title>Update Interval (mins)</title>
+            <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default></default>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <twig><![CDATA[]]></twig>
+    </stencil>
+</module>

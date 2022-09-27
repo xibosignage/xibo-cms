@@ -1,0 +1,79 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-googletraffic</id>
+    <name>Google Traffic</name>
+    <author>Core</author>
+    <description>A module for displaying traffic information using Google Maps</description>
+    <class></class>
+    <type>googletraffic</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>600</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="useDisplayLocation" type="checkbox">
+            <title>Use the Display Location</title>
+            <helpText>Use the location configured on the display</helpText>
+            <default></default>
+        </property>
+        <property id="latitude" type="number">
+            <title>Latitude</title>
+            <helpText>The Latitude for this widget</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#useDisplayLocation" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="longitude" type="number">
+            <title>Longitude</title>
+            <helpText>The Longitude for this widget</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#useDisplayLocation" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="zoom" type="number">
+            <title>Zoom</title>
+            <helpText>How far should the map be zoomed in? The higher the number the closer, 1 represents the entire globe.</helpText>
+            <default></default>
+        </property>
+        <property type="message">
+            <title>This module is rendered on the Player which means the Player must have an internet connection.</title>
+            <default></default>
+        </property>
+        <property type="message">
+            <title>The Traffic Widget has not been configured yet, please ask your CMS Administrator to look at it for you.</title>
+            <default></default>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <twig><![CDATA[]]></twig>
+    </stencil>
+</module>

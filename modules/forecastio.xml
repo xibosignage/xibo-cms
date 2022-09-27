@@ -1,0 +1,169 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-forecastio</id>
+    <name>Weather</name>
+    <author>Core</author>
+    <description>A module for displaying weather information. Uses the Forecast API</description>
+    <class></class>
+    <type>forecastio</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="useDisplayLocation" type="checkbox">
+            <title>Use the Display Location</title>
+            <helpText>Use the location configured on the display</helpText>
+            <default></default>
+        </property>
+        <property id="latitude" type="number">
+            <title>Latitude</title>
+            <helpText>The Latitude for this widget</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#useDisplayLocation" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="longitude" type="number">
+            <title>Longitude</title>
+            <helpText>The Longitude for this widget</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#useDisplayLocation" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="units" type="dropdown" mode="single">
+            <title>Units</title>
+            <helpText>Select the units you would like to use.</helpText>
+            <default>x1</default>
+            <options>
+                <option name="x1">x1</option>
+                <option name="x2">x2</option>
+            </options>
+        </property>
+        <property id="lang" type="dropdown" mode="single">
+            <title>Language</title>
+            <helpText>Select the language you would like to use.</helpText>
+            <default>x1</default>
+            <options>
+                <option name="x1">x1</option>
+                <option name="x2">x2</option>
+            </options>
+        </property>
+        <property id="dayConditionsOnly" type="checkbox">
+            <title>Only show Daytime weather conditions</title>
+            <helpText>Tick if you would like to only show the Daytime weather conditions.</helpText>
+            <default></default>
+        </property>
+        <property id="alignH" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this widget be horizontally aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+        </property>
+        <property id="alignV" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this widget be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+        </property>
+        <property id="templateType" type="dropdown" mode="single">
+            <title>Type</title>
+            <helpText>Choose the type of template</helpText>
+            <default>all</default>
+            <options>
+                <option name="all">All</option>
+                <option name="current">Current</option>
+                <option name="forecast">Forecast</option>
+            </options>
+        </property>
+        <property id="templateOrientation" type="dropdown" mode="single">
+            <title>Orientation</title>
+            <helpText>Choose the orientation of template</helpText>
+            <default>all</default>
+            <options>
+                <option name="all">All</option>
+                <option name="square">Square</option>
+                <option name="landscape">Landscape</option>
+                <option name="portrait">Portrait</option>
+                <option name="scale">Scale</option>
+            </options>
+        </property>
+        <property id="templateId" type="dropdown" mode="single">
+            <title>Template</title>
+            <helpText>Select the template you would like to apply. This can be overridden using the check box below.</helpText>
+            <default></default>
+            <options>
+                <option name="xx">xx</option>
+                <option name="xx">xx</option>
+            </options>
+        </property>
+        <property id="overrideTemplate" type="checkbox">
+            <title>Override the template?</title>
+            <helpText>Tick if you would like to override the template.</helpText>
+            <default></default>
+        </property>
+        <property id="useTemplatesMessage" type="message">
+            <title>With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above.</title>
+            <default></default>
+        </property>
+        <property id="widgetOriginalWidth" type="number">
+            <title>Original Width</title>
+            <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#overrideTemplate" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="widgetOriginalHeight" type="number">
+            <title>Original Height</title>
+            <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#overrideTemplate" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <twig><![CDATA[]]></twig>
+    </stencil>
+</module>
