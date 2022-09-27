@@ -4,6 +4,7 @@ namespace Xibo\Report;
 
 use Carbon\Carbon;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Controller\DataTablesDotNetTrait;
 use Xibo\Entity\ReportForm;
 use Xibo\Entity\ReportResult;
@@ -86,6 +87,10 @@ class LibraryUsage implements ReportInterface
      * @var ApplicationState
      */
     private $state;
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $dispatcher;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -96,8 +101,14 @@ class LibraryUsage implements ReportInterface
         $this->reportService = $container->get('reportService');
         $this->configService = $container->get('configService');
         $this->sanitizer = $container->get('sanitizerService');
+        $this->dispatcher = $container->get('dispatcher');
 
         return $this;
+    }
+
+    public function getDispatcher()
+    {
+        return $this->dispatcher;
     }
 
     /** @inheritdoc */
@@ -153,6 +164,10 @@ class LibraryUsage implements ReportInterface
             $sth->execute($params);
 
             $results = $sth->fetchAll();
+            // add any dependencies fonts, player software etc to the results
+            $event = new \Xibo\Event\DependencyFileSizeEvent($results);
+            $this->getDispatcher()->dispatch($event, $event::$NAME);
+            $results = $event->getResults();
 
             // Do we base the units on the maximum size or the library limit
             $maxSize = 0;
