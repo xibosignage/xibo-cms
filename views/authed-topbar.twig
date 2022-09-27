@@ -193,6 +193,10 @@
             {% if currentUser.isSuperAdmin() %}
                 <a class="{{ groupElementClass }}" href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a>
             {% endif %}
+
+            {% if currentUser.featureEnabled("font.view") %}
+                <a class="{{ groupElementClass }}" href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a>
+            {% endif %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
             </div>
         {% endif %}

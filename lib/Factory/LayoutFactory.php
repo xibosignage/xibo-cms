@@ -112,6 +112,10 @@ class LayoutFactory extends BaseFactory
 
     /** @var FolderFactory */
     private $folderFactory;
+    /**
+     * @var FontFactory
+     */
+    private $fontFactory;
 
     /**
      * Construct a factory
@@ -131,6 +135,7 @@ class LayoutFactory extends BaseFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
+     * @param FontFactory $fontFactory
      */
     public function __construct(
         $user,
@@ -148,7 +153,8 @@ class LayoutFactory extends BaseFactory
         $playlistFactory,
         $widgetAudioFactory,
         $actionFactory,
-        $folderFactory
+        $folderFactory,
+        FontFactory $fontFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
@@ -165,6 +171,7 @@ class LayoutFactory extends BaseFactory
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->actionFactory = $actionFactory;
         $this->folderFactory = $folderFactory;
+        $this->fontFactory = $fontFactory;
     }
 
     /**
@@ -187,7 +194,8 @@ class LayoutFactory extends BaseFactory
             $this->moduleFactory,
             $this->playlistFactory,
             $this->actionFactory,
-            $this->folderFactory
+            $this->folderFactory,
+            $this->fontFactory
         );
     }
 
@@ -1333,55 +1341,84 @@ class LayoutFactory extends BaseFactory
             fclose($fileStream);
             fclose($temporaryFileStream);
 
-            // Check we don't already have one
-            $newMedia = false;
+            // Check if it's a font file
             $isFont = (isset($file['font']) && $file['font'] == 1);
-
-            try {
-                $media = $this->mediaFactory->getByName($intendedMediaName);
-
-                $this->getLog()->debug('Media already exists with name: ' .  $intendedMediaName);
-
-                if ($replaceExisting && !$isFont) {
-                    // Media with this name already exists, but we don't want to use it.
-                    $intendedMediaName = 'import_' . $layout->layout . '_' . uniqid();
-                    throw new NotFoundException();
-                }
-            } catch (NotFoundException $e) {
-                // Create it instead
-                $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
-
-                $media = $this->mediaFactory->create(
-                    $intendedMediaName,
-                    $file['file'],
-                    $file['type'],
-                    $userId,
-                    $file['duration']
-                );
-
-                if ($importTags && isset($file['tags'])) {
-                    foreach ($file['tags'] as $tagNode) {
-                        if ($tagNode == []) {
-                            continue;
-                        }
-
-                        $media->tags[] = $this->tagFactory->tagFromString(
-                            $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
-                        );
+            
+            if ($isFont) {
+                try {
+                    $font = $this->fontFactory->getByName($intendedMediaName);
+                    if (count($font) <= 0) {
+                        throw new NotFoundException();
                     }
+                    $this->getLog()->debug('Font already exists with name: ' . $intendedMediaName);
+                } catch (NotFoundException $exception) {
+                    $this->getLog()->debug('Font does not exist in Library, add it ' . $file['file']);
+                    // Add the Font
+                    $font = $this->fontFactory->createEmpty();
+                    $fontLib = \FontLib\Font::load($temporaryFileName);
+
+                    // check embed flag
+                    $embed = intval($fontLib->getData('OS/2', 'fsType'));
+                    // if it's not embeddable, log error and skip it
+                    if ($embed != 0 && $embed != 8) {
+                        throw new InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
+                    }
+
+                    $font->modifiedBy = $this->getUserFactory()->getById($userId)->userName;
+                    $font->name = $file['name'];
+                    $font->fileName = $file['file'];
+                    $font->size = filesize($temporaryFileName);
+                    $font->md5 = md5_file($temporaryFileName);
+                    $font->save();
+                    $fontsAdded = true;
+                    // everything is fine, move the file from temp folder.
+                    rename($temporaryFileName, $libraryLocation . 'fonts/' . $font->fileName);
                 }
+            } else {
+                try {
+                    $media = $this->mediaFactory->getByName($intendedMediaName);
 
-                $media->tags[] = $this->tagFactory->tagFromString('imported');
-                $media->folderId = $folder->id;
-                $media->permissionsFolderId =
-                    ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
-                // Get global stat setting of media to set to on/off/inherit
-                $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
-                $media->save();
+                    $this->getLog()->debug('Media already exists with name: ' . $intendedMediaName);
 
-                $newMedia = true;
+                    if ($replaceExisting) {
+                        // Media with this name already exists, but we don't want to use it.
+                        $intendedMediaName = 'import_' . $layout->layout . '_' . uniqid();
+                        throw new NotFoundException();
+                    }
+                } catch (NotFoundException $e) {
+                    // Create it instead
+                    $this->getLog()->debug('Media does not exist in Library, add it ' . $file['file']);
+
+                    $media = $this->mediaFactory->create(
+                        $intendedMediaName,
+                        $file['file'],
+                        $file['type'],
+                        $userId,
+                        $file['duration']
+                    );
+
+                    if ($importTags && isset($file['tags'])) {
+                        foreach ($file['tags'] as $tagNode) {
+                            if ($tagNode == []) {
+                                continue;
+                            }
+
+                            $media->tags[] = $this->tagFactory->tagFromString(
+                                $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                            );
+                        }
+                    }
+
+                    $media->tags[] = $this->tagFactory->tagFromString('imported');
+                    $media->folderId = $folder->id;
+                    $media->permissionsFolderId =
+                        ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+                    // Get global stat setting of media to set to on/off/inherit
+                    $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+                    $media->save();
+                }
             }
-
+            
             // Find where this is used and swap for the real mediaId
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
@@ -1391,11 +1428,6 @@ class LayoutFactory extends BaseFactory
             if ($file['background'] == 1) {
                 // Set the background image on the new layout
                 $layout->backgroundImageId = $newMediaId;
-            } else if ($isFont) {
-                // Just raise a flag to say that we've added some fonts to the library
-                if ($newMedia) {
-                    $fontsAdded = true;
-                }
             } else {
                 // Go through all widgets and replace if necessary
                 // Keep the keys the same? Doesn't matter

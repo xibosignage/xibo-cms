@@ -31,6 +31,7 @@ use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\MediaDeleteEvent;
+use Xibo\Factory\FontFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
@@ -69,6 +70,10 @@ class MediaService implements MediaServiceInterface
 
     /** @var EventDispatcherInterface */
     private $dispatcher;
+    /**
+     * @var FontFactory
+     */
+    private $fontFactory;
 
     /** @inheritDoc */
     public function __construct(
@@ -77,7 +82,8 @@ class MediaService implements MediaServiceInterface
         StorageServiceInterface $store,
         SanitizerService $sanitizerService,
         PoolInterface $pool,
-        MediaFactory $mediaFactory
+        MediaFactory $mediaFactory,
+        FontFactory $fontFactory
     ) {
         $this->configService = $configService;
         $this->log = $logService;
@@ -85,6 +91,7 @@ class MediaService implements MediaServiceInterface
         $this->sanitizerService = $sanitizerService;
         $this->pool = $pool;
         $this->mediaFactory = $mediaFactory;
+        $this->fontFactory = $fontFactory;
     }
 
     /** @inheritDoc */
@@ -232,7 +239,7 @@ class MediaService implements MediaServiceInterface
 
         // Each user has their own font cache (due to permissions) and the displays have their own font cache too
         // Get the item from the cache
-        $cssItem = $this->pool->getItem('fontCss/' . $this->getUser()->userId);
+        $cssItem = $this->pool->getItem('fontCss/');
         $cssItem->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         // Get the CSS
@@ -251,7 +258,7 @@ class MediaService implements MediaServiceInterface
 }';
 
             // Save a fonts.css file to the library for use as a module
-            $fonts = $this->mediaFactory->getByMediaType('font');
+            $fonts = $this->fontFactory->query();
 
             $css = '';
             $localCss = '';
@@ -265,63 +272,45 @@ class MediaService implements MediaServiceInterface
             if (count($fonts) > 0) {
                 // Build our font strings.
                 foreach ($fonts as $font) {
-                    // Skip unreleased fonts
-                    if ($font->released == 0) {
-                        continue;
-                    }
-
                     // Separate out the display name and the referenced name
                     // (referenced name cannot contain any odd characters or numbers)
                     $displayName = $font->name;
                     $familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
 
                     // Css for the player contains the actual stored as location of the font.
-                    $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
-                    // Test to see if this user should have access to this font
-                    if ($this->getUser()->checkViewable($font)) {
-                        // Css for the local CMS contains the full download path to the font
-                        $url = $routeParser->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]);
-                        $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
+                    $css .= str_replace('[url]', $font->fileName, str_replace('[family]', $familyName, $fontTemplate));
 
-                        // CKEditor string
-                        $ckEditorString .= $displayName . '/' . $familyName . ';';
+                    // Css for the local CMS contains the full download path to the font
+                    $url = $routeParser->urlFor('font.download', ['id' => $font->id]);
+                    $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
-                        // Font list
-                        $fontList[] = [
-                            'displayName' => $displayName,
-                            'familyName' => $familyName
-                        ];
-                    }
+                    // CKEditor string
+                    $ckEditorString .= $displayName . '/' . $familyName . ';';
+
+                    // Font list
+                    $fontList[] = [
+                        'displayName' => $displayName,
+                        'familyName' => $familyName
+                    ];
                 }
 
                 // If we're a full regenerate, we want to also update the fonts.css file.
                 if ($options['invalidateCache']) {
-                    // Pull out the currently stored fonts.css from the library (if it exists)
                     $existingLibraryFontsCss = '';
-                    if (file_exists($libraryLocation . 'fonts.css')) {
-                        $existingLibraryFontsCss = file_get_contents($libraryLocation . 'fonts.css');
+                    if (file_exists($libraryLocation . 'fonts/fonts.css')) {
+                        $existingLibraryFontsCss = file_get_contents($libraryLocation . 'fonts/fonts.css');
                     }
 
-                    // Put the player CSS into the temporary library location
-                    $tempUrl = $this->configService->getSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
-                    file_put_contents($tempUrl, $css);
-
-                    // Install it (doesn't expire, isn't a system file, force update)
-                    $media = $this->mediaFactory->createModuleSystemFile('fonts.css', $tempUrl);
-                    $media->expires = 0;
-                    $media->moduleSystemFile = true;
-                    $media->isSaveRequired = true;
-                    $media->save(['saveTags' => false]);
-
-                    // We can remove the temp file
-                    @unlink($tempUrl);
-
+                    $tempFontsCss = $libraryLocation . 'temp/fonts.css';
+                    file_put_contents($tempFontsCss, $css);
                     // Check to see if the existing file is different from the new one
-                    if ($existingLibraryFontsCss == '' || md5($existingLibraryFontsCss) !== $media->md5) {
+                    if ($existingLibraryFontsCss == '' || md5($existingLibraryFontsCss) !== md5($tempFontsCss)) {
                         $this->log->info('Detected change in fonts.css file, dropping the Display cache');
+                        rename($tempFontsCss, $libraryLocation . 'fonts/fonts.css');
                         // Clear the display cache
                         $this->pool->deleteItem('/display');
                     } else {
+                        @unlink($tempFontsCss);
                         $this->log->debug('Newly generated font cache is the same as the old cache. Ignoring.');
                     }
                 }
@@ -329,7 +318,8 @@ class MediaService implements MediaServiceInterface
                 $cssDetails = [
                     'css' => $localCss,
                     'ckeditor' => $ckEditorString,
-                    'list' => $fontList
+                    'list' => $fontList,
+                    'playerCss' => $css
                 ];
 
                 $cssItem->set($cssDetails);
@@ -339,7 +329,8 @@ class MediaService implements MediaServiceInterface
                 $cssDetails = [
                     'css' => '',
                     'ckeditor' => '',
-                    'list' => []
+                    'list' => [],
+                    'playerCss' => ''
                 ];
             }
         } else {
@@ -375,6 +366,10 @@ class MediaService implements MediaServiceInterface
 
         if (!file_exists($libraryFolder . '/thumbs')) {
             mkdir($libraryFolder . '/thumbs', 0777, true);
+        }
+
+        if(!file_exists($libraryFolder . '/fonts')) {
+            mkdir($libraryFolder . '/fonts', 0777, true);
         }
 
         // Check that we are now writable - if not then error

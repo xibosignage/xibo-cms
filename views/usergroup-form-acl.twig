@@ -176,6 +176,13 @@
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Fonts"|trans, "Administrative access to Fonts"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("fonts") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
                         </table>
                     </div>
                     <div class="tab-pane" id="displaysTab">

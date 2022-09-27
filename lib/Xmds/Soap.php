@@ -623,22 +623,11 @@ class Soap
             // Run a query to get all required files for this display.
             // Include the following:
             // DownloadOrder:
-            //  1 - TODO: this is removed. Module System Files and fonts
-            //  2 - Media Linked to Displays
-            //  3 - Media Linked to Widgets in the Scheduled Layouts (linked through Playlists)
-            //  4 - Background Images for all Scheduled Layouts
-            //  5 - Media linked to display profile (linked through PlayerSoftware)
+            //  1 - Media Linked to Displays
+            //  2 - Media Linked to Widgets in the Scheduled Layouts (linked through Playlists)
+            //  3 - Background Images for all Scheduled Layouts
+            //  4 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
-                SELECT 1 AS DownloadOrder,
-                    `media`.storedAs AS path,
-                    `media`.mediaID AS id,
-                    `media`.`MD5`,
-                    `media`.FileSize,
-                    `media`.released
-                  FROM `media`
-                 WHERE media.type = 'font'
-                    OR (media.type = 'module' AND media.moduleSystemFile = 1)
-                UNION ALL
                 SELECT 1 AS DownloadOrder,
                     `media`.storedAs AS path,
                     `media`.mediaID AS id,

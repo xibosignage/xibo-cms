@@ -1927,13 +1927,6 @@ class User extends Base
         if ($object->permissionsClass() === 'Xibo\Entity\Folder') {
             /** @var $object \Xibo\Entity\Folder */
             $object->managePermissions();
-        } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
-            // Are we a font?
-            /** @var $object Media */
-            if ($object->mediaType === 'font') {
-                // Drop permissions (we need to reassess).
-                $this->getMediaService($this->getUser())->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => true]);
-            }
         }
 
         // Return

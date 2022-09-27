@@ -26,6 +26,7 @@ use Slim\Routing\RouteParser;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
+use Xibo\Factory\FontFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
@@ -47,6 +48,7 @@ interface MediaServiceInterface
      * @param SanitizerService $sanitizerService
      * @param PoolInterface $pool
      * @param MediaFactory $mediaFactory
+     * @param FontFactory $fontFactory
      */
     public function __construct(
         ConfigServiceInterface $configService,
@@ -54,7 +56,8 @@ interface MediaServiceInterface
         StorageServiceInterface $store,
         SanitizerService $sanitizerService,
         PoolInterface $pool,
-        MediaFactory $mediaFactory
+        MediaFactory $mediaFactory,
+        FontFactory $fontFactory
     );
 
     /**
