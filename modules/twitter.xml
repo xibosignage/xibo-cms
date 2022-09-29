@@ -34,15 +34,20 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="searchTerm" type="input">
+        <property id="searchTerm" type="text">
             <title>Search Term</title>
             <helpText>Search term. You can test your search term in the twitter.com search box first.</helpText>
             <default></default>
         </property>
-        <property id="language" type="input">
+        <property id="language" type="text">
             <title>Language</title>
             <helpText>Language in which tweets should be returned</helpText>
             <default></default>
+        </property>
+        <property id="tweetCount" type="number">
+            <title>Count</title>
+            <helpText>The number of Tweets to return (default = 15).</helpText>
+            <default>15</default>
         </property>
         <property id="resultType" type="dropdown" mode="single">
             <title>Type</title>
@@ -86,25 +91,76 @@
             <default>1</default>
         </property>
     </properties>
-    <dataParser><![CDATA[
-        // item - element to be parsed
-        // options - object containing the values to be evaluated/used
-        if(options.removeMentions == 1) {
-            item.text = item.text.replace(/@[^\s]+/g, '');
-        }
-        if(options.removeHashtags == 1) {
-            item.text = item.text.replace(/#[^\s]+/g, '');
-        }
-        if(options.removeUrls == 1) {
-            item.text = item.text.replace(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9()@:%_\+.~#?&//=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, '');
-        }
-        // Return the parsed item
-        return item;
-    ]]></dataParser>
+    <onParseData><![CDATA[
+// item - element to be parsed
+// properties - object containing the values to be evaluated/used
+if(properties.removeMentions == 1) {
+    item.text = item.text.replace(/@[^\s]+/g, '');
+}
+if(properties.removeHashtags == 1) {
+    item.text = item.text.replace(/#[^\s]+/g, '');
+}
+if(properties.removeUrls == 1) {
+    item.text = item.text.replace(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9()@:%_\+.~#?&//=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, '');
+}
+// Return the parsed item
+return item;
+    ]]></onParseData>
+    <onVisible><![CDATA[
+        // Send already rendered items instead of the item object
+        $(target).xiboTextRender(properties, $(target).find('#content .container'));
+    ]]></onVisible>
     <sampleData><![CDATA[
-        {
-            "tweet": "Tweet text"
-        }
+[{
+    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "text": "This is a sample tweet text",
+    "location": "Tweet location",
+    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "user": "Tweet user",
+    "screenName": "@twitter_user",
+    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+},
+{
+    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "text": "This is a sample tweet text",
+    "location": "Tweet location",
+    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "user": "Tweet user",
+    "screenName": "@twitter_user",
+    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+},
+{
+    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "text": "This is a sample tweet text",
+    "location": "Tweet location",
+    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "user": "Tweet user",
+    "screenName": "@twitter_user",
+    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+},
+{
+    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "text": "This is a sample tweet text",
+    "location": "Tweet location",
+    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "user": "Tweet user",
+    "screenName": "@twitter_user",
+    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+},
+{
+    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "text": "This is a sample tweet text",
+    "location": "Tweet location",
+    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "user": "Tweet user",
+    "screenName": "@twitter_user",
+    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+}]
     ]]></sampleData>
     <preview></preview>
 </module>

@@ -311,7 +311,7 @@ class WidgetHtmlRenderer
         $twig['twig'] = [];
         $twig['onRender'] = [];
         $twig['onParseData'] = [];
-        $twig['onFinish'] = [];
+        $twig['onInitialize'] = [];
         $twig['templateProperties'] = [];
         $twig['elements'] = [];
         $twig['width'] = $region->width;
@@ -430,7 +430,7 @@ class WidgetHtmlRenderer
             }
 
             if ($moduleTemplate->onTemplateRender !== null) {
-                $twig['onRenderTemplate'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateRender;
+                $twig['onTemplateRender'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateRender;
             }
         }
 

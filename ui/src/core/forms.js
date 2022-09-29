@@ -112,6 +112,25 @@ window.forms = {
       });
     });
 
+    // Colour picker
+    $(container).find(
+      '.colorpicker-input',
+    ).each(function(_k, el) {
+      // Init the colour picker
+      $(el).colorpicker();
+
+      // If we have a default value, set it on unfocus
+      if ($(el).data('default') !== undefined) {
+        const defaultValue = $(el).data('default');
+        const $inputElement = $(el).find('input');
+        $inputElement.on('focusout', function() {
+          if ($inputElement.val() == '') {
+            $(el).colorpicker('setValue', defaultValue);
+          }
+        });
+      }
+    });
+
     // Date picker - date only
     $(container).find(
       '.dateControl.date:not(.datePickerHelper)',

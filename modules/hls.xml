@@ -33,7 +33,7 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="uri" type="input">
+        <property id="uri" type="text">
             <title>Video Path</title>
             <helpText>A URL to the HLS video stream. Requires Player running Windows 8.1 or later, or Android 6 or later. Earlier Android devices may play HLS via the LocalVideo widget.</helpText>
         </property>

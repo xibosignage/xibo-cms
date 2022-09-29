@@ -33,7 +33,7 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="uri" type="input" variant="uri">
+        <property id="uri" type="text" variant="uri">
             <title>Link</title>
             <helpText>The Location (URL) of the webpage</helpText>
             <default></default>
@@ -111,7 +111,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="pageLoadErrorTrigger" type="input">
+        <property id="pageLoadErrorTrigger" type="text">
             <title>Trigger on page load error</title>
             <helpText>Code to be triggered when the page to be loaded returns an error, e.g. a 404 not found.</helpText>
             <default></default>

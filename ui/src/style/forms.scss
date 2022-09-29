@@ -43,3 +43,16 @@
         }
     }
 }
+
+/* Header */
+.header {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: $xibo-color-primary;
+    margin-left: -4px;
+
+    &.main {
+        color: $xibo-color-primary-d60;
+        font-size: 1.3rem;
+    }
+}

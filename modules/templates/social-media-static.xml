@@ -65,6 +65,23 @@
                     </test>
                 </visibility>
             </property>
+            <property id="effect" type="dropdown" mode="single">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noAnim</default>
+                <options>
+                    <option name="noAnim">None</option>
+                    <option name="fade">Fade</option>
+                    <option name="fadeout">Fade Out</option>
+                    <option name="scrollHorz">Scroll Horizontal</option>
+                    <option name="scrollVert">Scroll Vertical</option>
+                    <option name="flipHorz">Flip Horizontal</option>
+                    <option name="flipVert">Flip Vertical</option>
+                    <option name="shuffle">Shuffle</option>
+                    <option name="tileSlide">Tile Slide</option>
+                    <option name="tileBlind">Tile Blind</option>
+                </options>
+            </property>
         </properties>
         <stencil>
             <width id="width">960</width>
@@ -145,6 +162,7 @@ body {
     color: #434343;
     overflow: hidden;
     max-height: 220px;
+    width: 100%;
 }
 
 .twitter-date, .twitter-location {
@@ -175,14 +193,6 @@ body {
 </style>
             ]]></twig>
         </stencil>
-        <renderer><![CDATA[
-            // Template renderer options
-            // id: The id of the widget
-            // target: The target element to render
-            // options: The options for the widget
-            $(target).xiboLayoutScaler(options);
-        ]]>
-        </renderer>
     </template>
     <template>
         <id>twitter2</id>
@@ -214,6 +224,23 @@ body {
                 <title>Tweets Per Page</title>
                 <helpText>The number of tweets to show per page (default = 5).</helpText>
                 <default>5</default>
+            </property>
+            <property id="effect" type="dropdown" mode="single">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noAnim</default>
+                <options>
+                    <option name="noAnim">None</option>
+                    <option name="fade">Fade</option>
+                    <option name="fadeout">Fade Out</option>
+                    <option name="scrollHorz">Scroll Horizontal</option>
+                    <option name="scrollVert">Scroll Vertical</option>
+                    <option name="flipHorz">Flip Horizontal</option>
+                    <option name="flipVert">Flip Vertical</option>
+                    <option name="shuffle">Shuffle</option>
+                    <option name="tileSlide">Tile Slide</option>
+                    <option name="tileBlind">Tile Blind</option>
+                </options>
             </property>
             <property id="displayDirection" type="dropdown" mode="single">
                 <title>Tweets direction</title>

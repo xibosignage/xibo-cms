@@ -232,13 +232,13 @@ pE.loadEditor = function(inline = false) {
  * Select a playlist object (playlist/widget)
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceUnselect - Clean selected object
- * @param {object =} [options] - selectObject options
- * @param {number=} [options.positionToAdd = null] - Order position for widget
+ * @param {number=} [positionToAdd = null] - Order position for widget
  */
-pE.selectObject = function(obj = null,
+pE.selectObject = function({
+  obj = null,
   forceUnselect = false,
-  {positionToAdd = null} = {},
-) {
+  positionToAdd = null,
+} = {}) {
   // Clear rogue tooltips
   pE.common.clearTooltips();
 
@@ -1158,7 +1158,7 @@ pE.initElements = function() {
         !$.isEmptyObject(pE.toolbar.selectedQueue)
       ) {
         e.stopPropagation();
-        pE.selectObject($(e.currentTarget));
+        pE.selectObject({target: $(e.currentTarget)});
       }
     });
 

@@ -100,12 +100,16 @@ PropertiesPanel.prototype.save = function(element) {
 
         // If we're saving a widget, reload region on the viewer
         if (element.type === 'widget' && app.viewer) {
-          app.viewer.renderRegion(
-            app.getElementByTypeAndId('region', element.regionId));
+          // Reload data, but only render the region that the widget is in
+          app.reloadData(mainObject).done(() => {
+            app.viewer.renderRegion(
+              app.getElementByTypeAndId('region', element.regionId),
+            );
+          });
+        } else {
+          // Reload data, and refresh viewer if layout
+          app.reloadData(mainObject, (element.type === 'layout'));
         }
-
-        // Reload data, and refresh viewer if we're saving the layout properties
-        app.reloadData(mainObject, false, (element.type === 'layout'));
       };
 
       // Check if its a drawer widget and
@@ -505,17 +509,6 @@ PropertiesPanel.prototype.render = function(element, step) {
           $newOption.appendTo($selectOptionContainer);
         }
       }
-    }
-
-    // Open panel if object is an invalid widget
-    if (
-      app.mainObjectType === 'layout' &&
-      element.type === 'widget' &&
-      element.isValid === 0 &&
-      !$togglePanel.hasClass('opened')
-    ) {
-      app.togglePanel($togglePanel);
-      app.savePrefs();
     }
   }).fail(function(data) {
     // Clear request var after response

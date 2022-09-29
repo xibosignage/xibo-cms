@@ -19,6 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 $(function() {
+  // Check the query params to see if we're in editor mode
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPreview = urlParams.get('preview') === '1';
+
   // Call the data url and parse out the template.
   $.each(widgetData, function(_key, widget) {
     // Load the template
@@ -27,25 +31,52 @@ $(function() {
       Handlebars.compile($template.html()) :
       null;
     const $content = $('#content');
+    widget.items = [];
     $.ajax({
       method: 'GET',
       url: widget.url,
     }).done(function(data) {
-      $.each(data, function(_key, item) {
-        // If we have items per page, add only the first n items
-        if (
-          !widget.templateProperties.itemsPerPage ||
-           _key < widget.templateProperties.itemsPerPage
-        ) {
-          // Parse the data if there is a parser function
-          if (typeof window['dataParser_' + widget.widgetId] === 'function') {
-            item = window[
-              'dataParser_' + widget.widgetId
-            ](item, widget.properties);
-          }
-          // Add the item to the content
-          (hbs) && $content.append(hbs(item));
+      const $target = $('body');
+      let dataItems = [];
+
+      // If the request failed, and we're in preview, show the error message
+      if (data.success === false && isPreview) {
+        $target.append(
+          '<div class="error-message" role="alert">' +
+          data.message +
+          '</div>');
+      } else if (data.length === 0 && widget.sampleData) {
+        // If data is empty, use sample data instead
+        // Add single element or array of elements
+        dataItems = (Array.isArray(widget.sample)) ?
+          widget.sample.slice(0) : [widget.sample];
+      } else {
+        // Add items to the widget
+        dataItems = data;
+      }
+
+      // Run the onInitialize function if it exists
+      if (typeof window['onInitialize_' + widget.widgetId] === 'function') {
+        window['onInitialize_' + widget.widgetId](
+          widget.widgetId,
+          $target,
+          widget.properties,
+        );
+      }
+
+      $.each(dataItems, function(_key, item) {
+        // Parse the data if there is a parser function
+        if (typeof window['onParseData_' + widget.widgetId] === 'function') {
+          item = window[
+            'onParseData_' + widget.widgetId
+          ](item, widget.properties);
         }
+
+        // Add the item to the content
+        (hbs) && $content.append(hbs(item));
+
+        // Add items to the widget object
+        (item) && widget.items.push(item);
       });
 
       // Save template height and width if exists to global options
@@ -54,43 +85,90 @@ $(function() {
         globalOptions.widgetDesignHeight = $template.data('height');
       }
 
-      // Save template properties as global options for scaling
+      // Save template properties to widget properties
       for (const key in widget.templateProperties) {
         if (widget.templateProperties.hasOwnProperty(key)) {
-          globalOptions[key] = widget.templateProperties[key];
+          widget.properties[key] = widget.templateProperties[key];
         }
       }
 
-      // Handle the scaling of the widget
-      const $target = $('body');
-      const targetId = widget.widgetId;
+      // Run the onRender function if it exists
+      if (typeof window['onRender_' + widget.widgetId] === 'function') {
+        window['onRender_' + widget.widgetId](
+          widget.widgetId,
+          $target,
+          widget.items,
+          widget.properties,
+        );
+      }
+
+      // Handle the rendering of the template
       if (
-        typeof window['render_' + widget.templateId] === 'function'
+        typeof window['onTemplateRender_' + widget.templateId] === 'function'
       ) { // Custom scaler
-        window.scaleContent =
-          window['render_' + widget.templateId];
-      } else { // Default scaler
+        window.renderContent =
+          window['onTemplateRender_' + widget.templateId];
+      } else {
         // Default scaler
-        window.scaleContent = function(
-          {
-            id,
-            item = $('body'),
-            options = globalOptions,
-          } = {},
+        window.renderContent = function(
+          _id,
+          target,
+          _items,
+          properties,
         ) {
-          // Scale the content
-          $(item).xiboLayoutScaler(options);
+          // If target is not defined, use the body
+          target = (target) ? target : $('body');
+
+          // If properties is empty
+          // use the global options with widget properties
+          properties = (properties) ?
+            properties : Object.assign(widget.properties, globalOptions);
+
+          // Scale the content if there's no scaleContent property
+          // or if it's set to true
+          if (
+            !properties.hasOwnProperty('scaleContent') ||
+            properties.scaleContent
+          ) {
+            // Scale the content
+            $(target).xiboLayoutScaler(properties);
+          }
         };
       }
 
-      // Call the scale function on body
-      window.scaleContent({
-        id: targetId,
-        target: $target,
-        options: globalOptions,
-      });
+      // Save widget as global variable
+      window.widget = widget;
+
+      // Call the render function on body
+      window.renderContent(
+        widget.widgetId,
+        $target,
+        widget.items,
+        Object.assign(widget.properties, globalOptions),
+      );
+
+      // Call the run on visible function if it exists
+      if (
+        typeof window['onVisible_' + widget.widgetId] === 'function'
+      ) {
+        const runOnVisible = function() {
+          window['onVisible_' + widget.widgetId](
+            widget.widgetId,
+            $target,
+            widget.items,
+            widget.properties,
+          );
+        };
+        if (xiboIC.checkVisible()) {
+          runOnVisible();
+        } else {
+          xiboIC.addToQueue(runOnVisible);
+        }
+      }
+
+      // Lock all interactions
+      xiboIC.lockAllInteractions();
     }).fail(function(jqXHR, textStatus, errorThrown) {
-      console.log( 'fail' );
       console.log(jqXHR, textStatus, errorThrown);
     });
   });

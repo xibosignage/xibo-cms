@@ -33,7 +33,7 @@
     <defaultDuration>0</defaultDuration>
     <hasThumbnail>0</hasThumbnail>
     <settings>
-        <property id="validExtensions" type="input">
+        <property id="validExtensions" type="text">
             <title>Valid Extensions</title>
             <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
             <default>mp3,wav</default>

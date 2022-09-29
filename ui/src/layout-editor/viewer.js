@@ -245,7 +245,11 @@ Viewer.prototype.render = function(forceReload = false) {
         self.containerElementDimensions.scale);
 
       if ($(e.target).hasClass('layout')) {
-        lD.selectObject(null, false, clickPosition);
+        lD.selectObject({
+          target: null,
+          reloadViewer: false,
+          clickPosition: clickPosition,
+        });
         self.selectElement();
       } else {
         clicks++;
@@ -274,7 +278,9 @@ Viewer.prototype.render = function(forceReload = false) {
               !$(e.target).hasClass('selected')
             ) {
               // Select widget if exists
-              lD.selectObject($(e.target).find('.designer-widget'), true);
+              lD.selectObject({
+                target: $(e.target).find('.designer-widget'),
+              });
               self.selectElement($(e.target).find('.designer-widget'));
             }
           }, 200);
@@ -285,7 +291,9 @@ Viewer.prototype.render = function(forceReload = false) {
 
           // Select region ( if not selected )
           if (!$(e.target).hasClass('selected')) {
-            lD.selectObject($(e.target));
+            lD.selectObject({
+              target: $(e.target),
+            });
             self.selectElement($(e.target));
           }
         }
@@ -368,6 +376,7 @@ Viewer.prototype.update = function() {
 /**
  * Render widget in region container
  * @param {object} region - region object
+ * @return {jqXHR} - ajax request object
  */
 Viewer.prototype.renderRegion = function(
   region,
@@ -496,6 +505,9 @@ Viewer.prototype.renderRegion = function(
       $container.html(errorMessagesTrans.previewFailed);
     }
   });
+
+  // Return request
+  return this.renderRequest;
 };
 
 /**
@@ -727,7 +739,7 @@ Viewer.prototype.updateRegionContent = function(region) {
     // We need to recalculate the scale inside of the iframe
     $iframe[0].contentWindow
       .postMessage({
-        method: 'scaleContent',
+        method: 'renderContent',
         options: {
           id: region.id,
           originalWidth: region.dimensions.width,

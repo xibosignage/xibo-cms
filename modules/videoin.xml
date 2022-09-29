@@ -53,7 +53,6 @@
         </property>
         <property id="message" type="message">
             <title>This Module is compatible with webOS, Tizen and Philips SOC Players only</title>
-            <default></default>
         </property>
     </properties>
     <preview></preview>

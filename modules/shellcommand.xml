@@ -85,7 +85,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="globalCommand" type="input">
+        <property id="globalCommand" type="text">
             <title>Global Command</title>
             <helpText>Enter a global (Android/Linux/Tizen/webOS/Windows) Command Line compatible command</helpText>
             <default></default>
@@ -95,7 +95,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="androidCommand" type="input">
+        <property id="androidCommand" type="text">
             <title>Android Command</title>
             <helpText>Enter an Android Command Line compatible command</helpText>
             <default></default>
@@ -105,7 +105,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="linuxCommand" type="input">
+        <property id="linuxCommand" type="text">
             <title>Linux Command</title>
             <helpText>Enter a Linux Command Line compatible command</helpText>
             <default></default>
@@ -115,7 +115,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="tizenCommand" type="input">
+        <property id="tizenCommand" type="text">
             <title>Tizen Command</title>
             <helpText>Enter a Tizen Command Line compatible command</helpText>
             <default></default>
@@ -125,7 +125,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="webosCommand" type="input">
+        <property id="webosCommand" type="text">
             <title>webOS Command</title>
             <helpText>Enter a webOS Command Line compatible command</helpText>
             <default></default>
@@ -135,7 +135,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="windowsCommand" type="input">
+        <property id="windowsCommand" type="text">
             <title>Windows Command</title>
             <helpText>Enter a Windows Command Line compatible command</helpText>
             <default></default>
