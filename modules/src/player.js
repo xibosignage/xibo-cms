@@ -45,7 +45,7 @@ $(function() {
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
-      } else if (data.length === 0 && widget.sampleData) {
+      } else if (data.length === 0 && widget.sample) {
         // If data is empty, use sample data instead
         // Add single element or array of elements
         dataItems = (Array.isArray(widget.sample)) ?
@@ -151,7 +151,7 @@ $(function() {
       if (
         typeof window['onVisible_' + widget.widgetId] === 'function'
       ) {
-        const runOnVisible = function() {
+        window.runOnVisible = function() {
           window['onVisible_' + widget.widgetId](
             widget.widgetId,
             $target,
@@ -160,9 +160,9 @@ $(function() {
           );
         };
         if (xiboIC.checkVisible()) {
-          runOnVisible();
+          window.runOnVisible();
         } else {
-          xiboIC.addToQueue(runOnVisible);
+          xiboIC.addToQueue(window.runOnVisible);
         }
       }
 

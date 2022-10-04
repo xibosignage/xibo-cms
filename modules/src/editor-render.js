@@ -29,14 +29,17 @@ $(function() {
       globalOptions.originalWidth = e.data.options.originalWidth;
       globalOptions.originalHeight = e.data.options.originalHeight;
 
+      // Arguments for both renderContent and runOnVisible
+      const args = (typeof widget != 'undefined') ? [
+        e.data.options.id, // id
+        $('body'), // target
+        widget.items, // items
+        Object.assign(widget.properties, globalOptions), // properties
+      ] : [];
+
       // Call render content if exists
       if (typeof renderContent === 'function') {
-        window.renderContent(
-          e.data.options.id, // id
-          $('body'), // target
-          widget.items, // items
-          Object.assign(widget.properties, globalOptions), // properties
-        );
+        window.renderContent(...args);
       }
     }
   };

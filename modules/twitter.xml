@@ -108,7 +108,7 @@ return item;
     ]]></onParseData>
     <onVisible><![CDATA[
         // Send already rendered items instead of the item object
-        $(target).xiboTextRender(properties, $(target).find('#content .container'));
+        $(target).xiboLayoutAnimate(properties, true);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{

@@ -193,6 +193,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <onTemplateRender><![CDATA[
+            $(target).xiboLayoutScaler(properties);
+        ]]></onTemplateRender>
     </template>
     <template>
         <id>twitter2</id>
