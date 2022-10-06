@@ -123,44 +123,6 @@
                 <option name="scale">Scale</option>
             </options>
         </property>
-        <property id="templateId" type="dropdown" mode="single">
-            <title>Template</title>
-            <helpText>Select the template you would like to apply. This can be overridden using the check box below.</helpText>
-            <default></default>
-            <options>
-                <option name="xx">xx</option>
-                <option name="xx">xx</option>
-            </options>
-        </property>
-        <property id="overrideTemplate" type="checkbox">
-            <title>Override the template?</title>
-            <helpText>Tick if you would like to override the template.</helpText>
-            <default></default>
-        </property>
-        <property id="useTemplatesMessage" type="message">
-            <title>With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above.</title>
-            <default></default>
-        </property>
-        <property id="widgetOriginalWidth" type="number">
-            <title>Original Width</title>
-            <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
-            <default></default>
-            <visibility>
-                <test type="or">
-                    <condition field="#overrideTemplate" type="eq">1</condition>
-                </test>
-            </visibility>
-        </property>
-        <property id="widgetOriginalHeight" type="number">
-            <title>Original Height</title>
-            <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
-            <default></default>
-            <visibility>
-                <test type="or">
-                    <condition field="#overrideTemplate" type="eq">1</condition>
-                </test>
-            </visibility>
-        </property>
     </properties>
     <preview></preview>
     <stencil>

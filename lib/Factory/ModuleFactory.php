@@ -436,7 +436,8 @@ class ModuleFactory extends BaseFactory
 
         // We might have sample data (usually only if there is a dataType)
         $sampleData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'sampleData');
-        if (!empty($module->sampleData)) {
+
+        if (!empty($sampleData)) {
             $module->sampleData = json_decode(trim($sampleData), true);
         }
 

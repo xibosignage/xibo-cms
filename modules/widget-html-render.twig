@@ -74,18 +74,18 @@
 {% for id, item in hbs %}
     <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}">{{ item.content|raw }}</script>
 {% endfor %}
-{% for widgetId, parser in onParseData %}
-    <script type="text/javascript" id="onParseData-{{ widgetId }}">
-      function onParseData_{{ widgetId }}(item, properties) {
-        {{ parser|raw }}
-      }
-    </script>
-{% endfor %}
 {% for widgetId, parser in onInitialize %}
     <script type="text/javascript" id="onInitialize-{{ widgetId }}">
         function onInitialize_{{ widgetId }}(id, target, properties) {
           {{ parser|raw }}
         }
+    </script>
+{% endfor %}
+{% for widgetId, parser in onParseData %}
+    <script type="text/javascript" id="onParseData-{{ widgetId }}">
+      function onParseData_{{ widgetId }}(item, properties) {
+        {{ parser|raw }}
+      }
     </script>
 {% endfor %}
 {% for widgetId, parser in onRender %}
@@ -97,16 +97,16 @@
 {% endfor %}
 {% for widgetId, parser in onVisible %}
     <script type="text/javascript" id="onVisible-{{ widgetId }}">
-        function onVisible_{{ widgetId }}(id, target) {
+        function onVisible_{{ widgetId }}(id, target, items, properties) {
           {{ parser|raw }}
         }
     </script>
 {% endfor %}
 {% for templateId, renderer in onTemplateRender %}
     <script type="text/javascript" id="onTemplateRender-{{ templateId }}">
-      function onTemplateRender_{{ templateId }}(id, target, items, properties) {
-        {{ renderer|raw  }}
-      }
+        function onTemplateRender_{{ templateId }}(id, target, items, properties) {
+            {{ renderer|raw  }}
+        }
     </script>
 {% endfor %}
     <!-- NUMITEMS={{ numItems }} -->

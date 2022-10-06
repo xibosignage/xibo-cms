@@ -22,15 +22,15 @@ jQuery.fn.extend({
   xiboLayoutScaler: function(options) {
     // Default options
     const defaults = {
-      'originalWidth': 0,
-      'originalHeight': 0,
-      'widgetDesignWidth': 0,
-      'widgetDesignHeight': 0,
-      'widgetDesignPadding': 0,
-      'itemsPerPage': 0,
-      'alignmentH': 'center',
-      'alignmentV': 'middle',
-      'displayDirection': 0,
+      originalWidth: 0,
+      originalHeight: 0,
+      widgetDesignWidth: 0,
+      widgetDesignHeight: 0,
+      widgetDesignPadding: 0,
+      itemsPerPage: 0,
+      alignmentH: 'center',
+      alignmentV: 'middle',
+      displayDirection: 0,
       // 0 = undefined (default), 1 = horizontal, 2 = vertical
     };
 
@@ -133,7 +133,7 @@ jQuery.fn.extend({
         // What IE are we?
         if ($('body').hasClass('ie7') || $('body').hasClass('ie8')) {
           $(el).css({
-            'filter': 'progid:DXImageTransform.Microsoft.Matrix(M11=' +
+            filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=' +
             ratio +
             ', M12=0, M21=0, M22=' +
              ratio +
@@ -141,7 +141,7 @@ jQuery.fn.extend({
           });
         } else {
           $(el).css({
-            'transform': 'scale(' + ratio + ')',
+            transform: 'scale(' + ratio + ')',
             'transform-origin': '0 0',
           });
         }

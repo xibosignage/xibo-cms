@@ -49,7 +49,7 @@ PlaylistTimeline.prototype.render = function() {
   this.DOMObject.find('.playlist-widget.selectable').click(function(e) {
     e.stopPropagation();
     if (!$(e.currentTarget).hasClass('to-be-saved')) {
-      pE.selectObject($(e.currentTarget));
+      pE.selectObject({target: $(e.currentTarget)});
     }
   });
 
@@ -72,11 +72,11 @@ PlaylistTimeline.prototype.render = function() {
       e.stopPropagation();
       const position = parseInt($(e.target).data('position')) + 1;
 
-      pE.selectObject(
-        $(e.target).parents('#playlist-timeline'),
-        false,
-        {positionToAdd: position},
-      );
+      pE.selectObject({
+        target: $(e.target).parents('#playlist-timeline'),
+        reloadViewer: true,
+        clickPosition: {positionToAdd: position},
+      });
     }
   });
 

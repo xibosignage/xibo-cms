@@ -33,7 +33,7 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="nominatedFile" type="input">
+        <property id="nominatedFile" type="text">
             <title>Nominated File</title>
             <helpText>Enter a nominated file name that player will attempt to open after extracting the .htz archive</helpText>
             <default>index.html</default>

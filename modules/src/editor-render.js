@@ -23,18 +23,29 @@ $(function() {
   // RUN ON IFRAME
   window.onmessage = function(e) {
     if (
-      e.data.method == 'scaleContent' &&
-      typeof window.scaleContent === 'function'
+      e.data.method == 'renderContent'
     ) {
       // Update global options for the widget
       globalOptions.originalWidth = e.data.options.originalWidth;
       globalOptions.originalHeight = e.data.options.originalHeight;
 
-      window.scaleContent({
-        id: e.data.options.id,
-        target: $('body'),
-        options: globalOptions,
-      });
+      // Set the pause state for animation to false
+      // To start right after the render effects are generated
+      globalOptions.pauseEffectOnStart =
+        e.data.options.pauseEffectOnStart ?? false;
+
+      // Arguments for both renderContent and runOnVisible
+      const args = (typeof widget != 'undefined') ? [
+        e.data.options.id, // id
+        $('body'), // target
+        widget.items, // items
+        Object.assign(widget.properties, globalOptions), // properties
+      ] : [];
+
+      // Call render content if exists
+      if (typeof renderContent === 'function') {
+        window.renderContent(...args);
+      }
     }
   };
 });
