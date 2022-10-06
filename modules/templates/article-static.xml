@@ -136,12 +136,11 @@ if (properties.copyright) {
     items.push(properties.copyright);
 }
 
-// Save items to widget
-widget.items = items;
-
 // Render
 $(target).find('img').xiboImageRender(properties);
+
 $(target).xiboLayoutScaler(properties);
+$(target).xiboTextRender(properties, items);
         ]]></onTemplateRender>
     </template>
 </templates>

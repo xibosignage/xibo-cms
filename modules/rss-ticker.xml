@@ -108,7 +108,8 @@
         </property>
     </properties>
     <onVisible><![CDATA[
-$(target).xiboTextRender(properties, widget.items);
+// Start effects for this widget
+$(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{

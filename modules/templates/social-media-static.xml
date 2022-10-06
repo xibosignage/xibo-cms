@@ -87,7 +87,7 @@
             <width id="width">960</width>
             <height id="height">350</height>
             <hbs><![CDATA[
-<div class="container">
+<div class="container main-container">
     <div class="twitter-container">
         <div class="twitter-col col-left">
             <div class="pic-container center-block"><img src="{{userProfileImage}}"/></div>
@@ -194,7 +194,8 @@ body {
             ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-            $(target).xiboLayoutScaler(properties);
+$(target).xiboLayoutScaler(properties);
+$(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
     </template>
     <template>
@@ -265,7 +266,7 @@ body {
             <width id="width">350</width>
             <height id="height">650</height>
             <hbs><![CDATA[
-<div class="container">
+<div class="container main-container">
     <div class="tweet">
         <div class="header">
             <div class="twitter-col image-div"><img src="{{userProfileImage}}"/></div>
@@ -377,5 +378,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <onTemplateRender><![CDATA[
+$(target).xiboLayoutScaler(properties);
+$(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+        ]]></onTemplateRender>
     </template>
 </templates>

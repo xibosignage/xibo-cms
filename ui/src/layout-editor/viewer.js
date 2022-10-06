@@ -736,15 +736,25 @@ Viewer.prototype.updateRegionContent = function(region) {
       height: region.scaledDimensions.height,
     });
 
+    // Options for the message
+    const options = {
+      id: region.id,
+      originalWidth: region.dimensions.width,
+      originalHeight: region.dimensions.height,
+    };
+
+    // Check if it's the first call
+    // If it is, send a flag to pause effects on start
+    if (!$iframe.data('firstCall')) {
+      $iframe.data('firstCall', true);
+      options.pauseEffectOnStart = true;
+    }
+
     // We need to recalculate the scale inside of the iframe
     $iframe[0].contentWindow
       .postMessage({
         method: 'renderContent',
-        options: {
-          id: region.id,
-          originalWidth: region.dimensions.width,
-          originalHeight: region.dimensions.height,
-        },
+        options: options,
       }, '*');
   };
 

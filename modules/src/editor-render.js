@@ -29,6 +29,11 @@ $(function() {
       globalOptions.originalWidth = e.data.options.originalWidth;
       globalOptions.originalHeight = e.data.options.originalHeight;
 
+      // Set the pause state for animation to false
+      // To start right after the render effects are generated
+      globalOptions.pauseEffectOnStart =
+        e.data.options.pauseEffectOnStart ?? false;
+
       // Arguments for both renderContent and runOnVisible
       const args = (typeof widget != 'undefined') ? [
         e.data.options.id, // id

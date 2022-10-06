@@ -23,6 +23,7 @@ jQuery.fn.extend({
     // Default options
     const defaults = {
       effect: 'none',
+      pauseEffectOnStart: true,
       duration: '50',
       durationIsPerItem: false,
       numItems: 0,
@@ -36,6 +37,9 @@ jQuery.fn.extend({
       randomiseItems: 0,
       marqueeInlineSelector: '.item, .item p',
       alignmentV: 'top',
+      widgetDesignWidth: 0,
+      widgetDesignHeight: 0,
+      widgetDesignPadding: 0,
     };
 
     options = $.extend({}, defaults, options);
@@ -59,7 +63,7 @@ jQuery.fn.extend({
     let paddingBottom = paddingRight = 0;
     if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
       if (options.itemsPerPage > 0) {
-        if ($(window).width() > $(window).height()) {
+        if ($(window).width() >= $(window).height()) {
           // Landscape or square size plus padding
           options.widgetDesignWidth =
             (options.itemsPerPage * options.widgetDesignWidth) +
@@ -85,6 +89,15 @@ jQuery.fn.extend({
     this.each(function(_key, element) {
       // console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
       // console.log("[Xibo] Options: " + JSON.stringify(options));
+
+      const $contentDiv = $(element).find('#content');
+
+      // Is marquee effect
+      const isMarquee =
+        options.effect === 'marqueeLeft' ||
+        options.effect === 'marqueeRight' ||
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown';
 
       // 1st Objective - filter the items array we have been given
       // settings involved:
@@ -149,34 +162,49 @@ jQuery.fn.extend({
       let itemsThisPage = 1;
 
       // console.log("[Xibo] We need to have " + numberOfPages + " pages");
-      let appendTo = element;
+      let appendTo = $contentDiv;
+
+
+      // Clear previous animation elements
+      if (isMarquee) {
+        // Destroy marquee plugin
+        $contentDiv.marquee('destroy');
+      } else {
+        // Destroy cycle plugin
+        $contentDiv.cycle('destroy');
+      }
+
+      // Remove previous created items
+      $contentDiv.find('.anim-item').remove();
 
       // Loop around each of the items we have been given
       // and append them to this element (in a div)
       for (let i = 0; i < items.length; i++) {
         // We don't add any pages for marquee / none transitions.
-        if (options.effect != 'none' &&
-                    options.effect != 'marqueeLeft' &&
-                    options.effect != 'marqueeRight' &&
-                    options.effect != 'marqueeUp' &&
-                    options.effect != 'marqueeDown') {
+        if (options.effect != 'none' && !isMarquee) {
           // If we need to set pages, have we switched over to a new page?
           if (
             options.itemsPerPage > 1 &&
             (itemsThisPage >= options.itemsPerPage || i === 0)
           ) {
             // Append a new page to the body
-            appendTo = $('<div/>').addClass('page').appendTo(element);
+            appendTo = $('<div/>').addClass('page anim-item')
+              .appendTo($contentDiv);
 
             // Reset the row count on this page
             itemsThisPage = 0;
           }
         }
 
-        // For each item output a DIV
-        $('<div/>')
-          .addClass('item')
-          .html(items[i]).appendTo(appendTo);
+        // For each item, create a DIV if element doesn't exist on the DOM
+        // Or clone the element if it does, hide the original and show the clone
+        const $newItem = $.contains(element, items[i]) ?
+          $(items[i]).hide().clone().show() :
+          $('<div/>').html(items[i]);
+
+        $newItem
+          .addClass('item anim-item')
+          .appendTo(appendTo);
 
         itemsThisPage++;
       }
@@ -189,12 +217,7 @@ jQuery.fn.extend({
 
       if (options.effect == 'none') {
         // Do nothing
-      } else if (
-        options.effect != 'marqueeLeft' &&
-        options.effect != 'marqueeRight' &&
-        options.effect != 'marqueeUp' &&
-        options.effect != 'marqueeDown'
-      ) {
+      } else if (!isMarquee) {
         // Make sure the speed is something sensible
         options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
@@ -223,10 +246,10 @@ jQuery.fn.extend({
         // ". Duration per slide is " + duration + " seconds.");
 
         // Set the content div to the height of the original window
-        $(element).css('height', height);
+        $contentDiv.css('height', height);
 
         // Set the width on the cycled slides
-        $(slides, element).css({
+        $(slides, $contentDiv).css({
           width: width,
           height: height,
         });
@@ -241,12 +264,15 @@ jQuery.fn.extend({
         }
 
         // Cycle handles this for us
-        $(element).cycle({
+        $contentDiv.cycle({
           fx: (options.effect === 'noTransition') ? 'none' : options.effect,
           speed: (options.effect === 'noTransition') ?
             noTransitionSpeed : options.speed,
           timeout: timeout,
           slides: '> ' + slides,
+          autoHeight: false, // To fix the rogue sentinel issue
+          paused: options.pauseEffectOnStart,
+          log: false,
         });
       } else if (
         options.effect == 'marqueeLeft' ||
@@ -260,7 +286,7 @@ jQuery.fn.extend({
         options.speed = (options.speed == 0) ? 1 : options.speed;
 
         // Stack the articles up and move them across the screen
-        $(options.marqueeInlineSelector, element).css({
+        $(options.marqueeInlineSelector, $contentDiv).css({
           display: 'inline',
           'padding-left': '10px',
         });
@@ -317,23 +343,26 @@ jQuery.fn.extend({
           });
         }
 
-        $(element).wrapInner(scroller);
+        $contentDiv.wrapInner(scroller);
 
         // Correct for up / down
         if (
           options.effect === 'marqueeUp' ||
           options.effect === 'marqueeDown'
         ) {
-          $(element).css('height', '100%');
-          $(element).find('.scroll').css('height', '100%').children()
+          $contentDiv.css('height', '100%');
+          $contentDiv.find('.scroll').css('height', '100%').children()
             .css({'white-space': 'normal', float: 'none'});
         }
 
-        // Set some options on the extra DIV and make it a marquee
-        if (!isAndroid) {
-          $(element).find('.scroll').marquee();
-        } else {
-          $(element).find('.scroll').overflowMarquee();
+
+        if (!options.pauseEffectOnStart) {
+          // Set some options on the extra DIV and make it a marquee
+          if (!isAndroid) {
+            $contentDiv.find('.scroll').marquee();
+          } else {
+            $contentDiv.find('.scroll').overflowMarquee();
+          }
         }
       }
 
@@ -353,21 +382,20 @@ jQuery.fn.extend({
 
       // Align the whole thing according to vAlignment
       if (options.type && options.type === 'text') {
-        const $textContent = $(element);
         // The timeout just yields a bit to let our content get rendered
         setTimeout(function() {
           if (options.alignmentV === 'bottom') {
-            $textContent.css(
+            $contentDiv.css(
               'margin-top',
               $(window).height() -
-              ($textContent.height() * $('body').data().ratio),
+              ($contentDiv.height() * $('body').data().ratio),
             );
           } else if (options.alignmentV === 'middle') {
-            $textContent.css(
+            $contentDiv.css(
               'margin-top',
               (
                 $(window).height() -
-                ($textContent.height() * $('body').data().ratio)
+                ($contentDiv.height() * $('body').data().ratio)
               ) / 2,
             );
           }

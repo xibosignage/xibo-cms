@@ -107,8 +107,8 @@ if(properties.removeUrls == 1) {
 return item;
     ]]></onParseData>
     <onVisible><![CDATA[
-        // Send already rendered items instead of the item object
-        $(target).xiboLayoutAnimate(properties, true);
+// Start effects for this widget
+$(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{

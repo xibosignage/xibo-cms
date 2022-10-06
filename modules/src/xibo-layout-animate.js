@@ -22,14 +22,32 @@ jQuery.fn.extend({
   xiboLayoutAnimate: function(options) {
     // Default options
     const defaults = {
+      effect: 'none',
     };
     options = $.extend({}, defaults, options);
 
-    console.log('xiboLayoutAnimate');
-    console.log(options);
+    this.each(function(_key, element) {
+      const $contentDiv = $(element).find('#content');
+      // Marquee effect
+      if (
+        options.effect == 'marqueeLeft' ||
+        options.effect == 'marqueeRight' ||
+        options.effect == 'marqueeUp' ||
+        options.effect == 'marqueeDown'
+      ) {
+        // Android user agent?
+        const isAndroid = navigator.userAgent.indexOf('Android') > -1;
 
-    this.each(function(element) {
-      console.log('xiboLayoutAnimate each');
+        // Start marquee
+        if (!isAndroid) {
+          $contentDiv.find('.scroll').marquee();
+        } else {
+          $contentDiv.find('.scroll').overflowMarquee();
+        }
+      } else if (options.effect != 'none') { // Cycle effect
+        // Resume effect
+        $contentDiv.cycle('resume');
+      }
     });
 
     return $(this);
