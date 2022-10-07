@@ -126,8 +126,7 @@ class Font
                 'modifiedBy' => $this->modifiedBy,
                 'name' => $this->name,
                 'id' => $this->id
-            ]
-        );
+            ]);
     }
 
     public function delete()
