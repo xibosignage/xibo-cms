@@ -337,18 +337,20 @@ $(() => {
 
 /**
  * Select a layout object (layout/region/widget)
- * @param {object=} obj - Object to be selected
+ * @param {object=} target - Object to be selected
  * @param {bool=} forceSelect - Select object even if it was already selected
  * @param {object=} clickPosition - Position of the click
  * @param {bool=} reloadViewer - Force viewer reload
+ * @param {bool=} refreshEditor - Force refresh of the editor
  */
 lD.selectObject =
-  function(
-    obj = null,
+  function({
+    target = null,
     forceSelect = false,
     clickPosition = null,
+    refreshEditor = true,
     reloadViewer = false,
-  ) {
+  } = {}) {
     // Clear rogue tooltips
     lD.common.clearTooltips();
 
@@ -357,7 +359,7 @@ lD.selectObject =
     if (!$.isEmptyObject(this.toolbar.selectedCard)) {
       // If selected card has the droppable type or "all"
       // TODO add to other than layout to be done
-      if (obj == null) {
+      if (target == null) {
         // Get card object
         const card = this.toolbar.selectedCard[0];
 
@@ -365,14 +367,14 @@ lD.selectObject =
         this.toolbar.deselectCardsAndDropZones();
 
         // Simulate drop item add
-        this.dropItemAdd(obj, card, clickPosition);
+        this.dropItemAdd(target, card, clickPosition);
       }
     } else if (
       !$.isEmptyObject(this.toolbar.selectedQueue)
     ) {
       // If there's a selected queue
       // use the drag&drop simulate to add those items to a object
-      const droppableId = $(obj).attr('id');
+      const droppableId = $(target).attr('id');
       const selectedQueue = lD.toolbar.selectedQueue;
 
       if (droppableId == 'actions-drawer-content') {
@@ -408,13 +410,14 @@ lD.selectObject =
       this.toolbar.deselectCardsAndDropZones();
     } else {
       // Get object properties from the DOM ( or set to layout if not defined )
-      const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
+      const newSelectedId =
+        (target === null) ? this.layout.id : target.attr('id');
       const newSelectedType =
-      (obj === null || obj.data('type') === undefined) ?
+      (target === null || target.data('type') === undefined) ?
         'layout' :
-        obj.data('type');
+        target.data('type');
       const newSelectedParentType =
-        (obj === null) ? 'layout' : obj.data('parentType');
+        (target === null) ? 'layout' : target.data('parentType');
 
       const oldSelectedId = this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
@@ -472,10 +475,11 @@ lD.selectObject =
             this.layout.drawer.widgets[newSelectedId].selected = true;
             this.selectedObject = this.layout.drawer.widgets[newSelectedId];
           } else {
-            this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId]
+            this.layout.regions[target.data('widgetRegion')]
+              .widgets[newSelectedId]
               .selected = true;
             this.selectedObject =
-              this.layout.regions[obj.data('widgetRegion')]
+              this.layout.regions[target.data('widgetRegion')]
                 .widgets[newSelectedId];
           }
         }
@@ -483,7 +487,7 @@ lD.selectObject =
         this.selectedObject.type = newSelectedType;
 
         // Refresh the designer containers
-        lD.refreshEditor(false, reloadViewer);
+        (refreshEditor) && lD.refreshEditor(false, reloadViewer);
       }
     }
   };
@@ -518,6 +522,7 @@ lD.refreshEditor = function(
  * @param {object=} layout  - previous layout
  * @param {boolean} [refreshEditor=false] - refresh editor
  * @param {boolean} captureThumbnail - capture thumbnail
+ * @return {Promise} - Promise
  */
 lD.reloadData = function(
   layout,
@@ -529,7 +534,7 @@ lD.reloadData = function(
 
   lD.common.showLoadingScreen();
 
-  $.get(
+  return $.get(
     urlsForApi.layout.get.url + '?layoutId=' + layoutId +
     '&embed=regions,playlists,widgets,widget_validity,tags,permissions,actions',
   ).done(function(res) {
@@ -543,13 +548,11 @@ lD.reloadData = function(
 
       // Select the same object ( that will refresh the layout too )
       const selectObjectId = lD.selectedObject.id;
-      lD.selectObject(
-        $('#' + selectObjectId),
-        true,
-        null,
-        false,
-        true,
-      );
+      lD.selectObject({
+        target: $('#' + selectObjectId),
+        forceSelect: true,
+        refreshEditor: false, // Don't refresh the editor here
+      });
 
       // Reload the form helper connection
       formHelpers.setup(lD, lD.layout);

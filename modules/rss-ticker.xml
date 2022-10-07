@@ -41,7 +41,7 @@
         </property>
     </settings>
     <properties>
-        <property id="uri" type="input" variant="uri">
+        <property id="uri" type="text" variant="uri">
             <title>Feed URL</title>
             <helpText>The Link for the RSS feed</helpText>
             <default></default>
@@ -76,12 +76,12 @@
             <helpText>Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order.</helpText>
             <default>0</default>
         </property>
-        <property id="allowedAttributes" type="input">
+        <property id="allowedAttributes" type="text">
             <title>Allowable Attributes</title>
             <helpText>A comma separated list of attributes that should not be stripped from the incoming feed.</helpText>
             <default></default>
         </property>
-        <property id="stripTags" type="input">
+        <property id="stripTags" type="text">
             <title>Strip Tags</title>
             <helpText>A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.</helpText>
             <default></default>
@@ -107,4 +107,65 @@
             <default>%updateIntervalImages%</default>
         </property>
     </properties>
+    <onVisible><![CDATA[
+// Start effects for this widget
+$(target).xiboLayoutAnimate(properties);
+    ]]></onVisible>
+    <sampleData><![CDATA[
+[{
+    "author": "author"
+    "content": "<p>Content</p>"
+    "date": "2000-01-01T01:00:30+00:00"
+    "image": ""
+    "link": "https://www.example.com"
+    "permalink": null
+    "publishedDate": "2000-01-01T01:00:30+00:00"
+    "summary": "Summary"
+    "title": "Title"
+},
+{
+    "author": "author"
+    "content": "<p>Content</p>"
+    "date": "2000-01-01T01:00:30+00:00"
+    "image": ""
+    "link": "https://www.example.com"
+    "permalink": null
+    "publishedDate": "2000-01-01T01:00:30+00:00"
+    "summary": "Summary"
+    "title": "Title"
+},
+{
+    "author": "author"
+    "content": "<p>Content</p>"
+    "date": "2000-01-01T01:00:30+00:00"
+    "image": ""
+    "link": "https://www.example.com"
+    "permalink": null
+    "publishedDate": "2000-01-01T01:00:30+00:00"
+    "summary": "Summary"
+    "title": "Title"
+},
+{
+    "author": "author"
+    "content": "<p>Content</p>"
+    "date": "2000-01-01T01:00:30+00:00"
+    "image": ""
+    "link": "https://www.example.com"
+    "permalink": null
+    "publishedDate": "2000-01-01T01:00:30+00:00"
+    "summary": "Summary"
+    "title": "Title"
+},
+{
+    "author": "author"
+    "content": "<p>Content</p>"
+    "date": "2000-01-01T01:00:30+00:00"
+    "image": ""
+    "link": "https://www.example.com"
+    "permalink": null
+    "publishedDate": "2000-01-01T01:00:30+00:00"
+    "summary": "Summary"
+    "title": "Title"
+}]
+    ]]></sampleData>
 </module>

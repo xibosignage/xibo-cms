@@ -1,0 +1,169 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-shellcommand</id>
+    <name>Shell Command</name>
+    <author>Core</author>
+    <description>Instruct a Display to execute a command using the operating system shell</description>
+    <class></class>
+    <type>shellcommand</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>native</renderAs>
+    <defaultDuration>3</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="terminateCommand" type="checkbox">
+            <title>Terminate the command once the duration elapses?</title>
+            <helpText>Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#useDuration" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="useTaskkill" type="checkbox">
+            <title>Use taskkill to terminate commands?</title>
+            <helpText>On Windows, should the player use taskkill to terminate commands.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#duration" type="eq">3</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="commandType" type="dropdown" mode="single">
+            <title>Command Type</title>
+            <helpText>Pick a command type</helpText>
+            <default>storedCommand</default>
+            <options>
+                <option name="storedCommand">Stored Command</option>
+                <option name="createCommand">Create Command</option>
+            </options>
+        </property>
+        <property id="commandCode" type="dropdown" mode="single">
+            <title>Stored Command</title>
+            <helpText>Pick a stored command</helpText>
+            <default>0</default>
+            <options>
+                <option name="0">X</option>
+            </options>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">storedCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="useGlobalCommand" type="checkbox">
+            <title>Use global command?</title>
+            <helpText>Use a global command to work with all the player types.</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="globalCommand" type="text">
+            <title>Global Command</title>
+            <helpText>Enter a global (Android/Linux/Tizen/webOS/Windows) Command Line compatible command</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="androidCommand" type="text">
+            <title>Android Command</title>
+            <helpText>Enter an Android Command Line compatible command</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="linuxCommand" type="text">
+            <title>Linux Command</title>
+            <helpText>Enter a Linux Command Line compatible command</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="tizenCommand" type="text">
+            <title>Tizen Command</title>
+            <helpText>Enter a Tizen Command Line compatible command</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="webosCommand" type="text">
+            <title>webOS Command</title>
+            <helpText>Enter a webOS Command Line compatible command</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="windowsCommand" type="text">
+            <title>Windows Command</title>
+            <helpText>Enter a Windows Command Line compatible command</helpText>
+            <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="#commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="launchThroughCmd" type="checkbox">
+            <title>Launch the command via Windows Command Line</title>
+            <helpText>On Windows, should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated.</helpText>
+            <default>1</default>
+        </property>
+    </properties>
+    <preview>
+        <twig><![CDATA[
+         {% if commandType == 'storedCommand' %}
+            <p>{% trans "Stored Command:" %} {{commandCode}}</p>
+         {% elseif useGlobalCommand == 1  and globalCommand != '' %}
+             <p>{% trans "Global Command:" %} {{globalCommand}}</p>
+         {% else %}
+              <p>{% trans "Android Command:" %} {{androidCommand}}</p>
+              <p>{% trans "Windows Command:" %} {{windowsCommand}}</p>
+              <p>{% trans "Linux Command:" %} {{linuxCommand}}</p>
+              <p>{% trans "webOS Command:" %} {{webosCommand}}</p>
+              <p>{% trans "Tizen Command:" %} {{tizenCommand}}</p>
+         {% endif %}
+]]></twig>
+    </preview>
+</module>

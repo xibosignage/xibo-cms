@@ -1,0 +1,1745 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <!-- Custom Calendar -->
+    <template>
+        <id>event_custom_html</id>
+        <type>static</type>
+        <dataType>event</dataType>
+        <title>Events shown with custom HTML</title>
+        <properties>
+            <property id="itemsSideBySide" type="checkbox">
+                <title>Show items side by side?</title>
+                <helpText>Should items be shown side by side?</helpText>
+                <default>0</default>
+            </property>
+            <property id="itemsPerPage" type="number">
+                <title>Items per page</title>
+                <helpText>If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
+                <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+            </property>
+            <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+            </property>
+            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+            </property>
+            <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
+                <title>Optional Stylesheet Template</title>
+            </property>
+            <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
+                <title>Optional JavaScript</title>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
+{% if ta_css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
+<style>
+{% if itemsSideBySide %}.item, .page { float: left; }{% endif %}
+{% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{{ta_css}}
+</style>
+{% endif %}
+            ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+// -------------------------------------------
+if (items.length > 0) {
+    items = $(items).xiboSubstitutesParser(properties.ta_text, properties.dateFormat, ['date', 'publishedDate'], {
+        description: 'summary',
+    });
+}
+
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
+// Render
+$(target).find('img').xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+        ]]></onTemplateRender>
+    </template>
+    <!-- End of Custom Calendar -->
+
+    <!-- Daily Calendar -->
+    <template>
+        <id>daily_light</id>
+        <type>static</type>
+        <dataType>event</dataType>
+        <title>Daily Calendar view with Light colours</title>
+        <properties>
+            <property id="startTime" type="date" variant="time">
+                <title>Start Time</title>
+                <helpText>Current view starting time.</helpText>
+                <default></default>
+            </property>
+            <property id="endTime" type="date" variant="time">
+                <title>End Time</title>
+                <helpText>Current view ending time.</helpText>
+                <default></default>
+            </property>
+            <property id="timeFormat" type="text">
+                <title>Time Format</title>
+                <helpText>The format to apply to event time (default HH:mm).</helpText>
+                <default>HH:mm</default>
+            </property>
+            <property id="showNowMarker" type="checkbox">
+                <title>Show now marker?</title>
+                <helpText>Should the calendar show a marker for the current time?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textScale" type="number">
+                <title>Text scale</title>
+                <helpText>Set the scale for the text element on the calendar.</helpText>
+                <default>1.0</default>
+            </property>
+            <property id="gridStep" type="number">
+                <title>Grid step</title>
+                <helpText>Duration, in minutes, for each row in the grid.</helpText>
+                <default>60</default>
+            </property>
+            <property type="header" variant="main">
+                <title>Colours</title>
+            </property>
+            <property type="message">
+                <title>Use the colour pickers to override the element colours.</title>
+            </property>
+            <property id="gridColor" type="color">
+                <title>Grid Colour</title>
+                <default>#dadada</default>
+            </property>
+            <property id="gridTextColor" type="color">
+                <title>Grid Text Colour</title>
+                <default>#505050</default>
+            </property>
+            <property type="header">
+                <title>Header (Weekdays)</title>
+            </property>
+            <property id="weekDaysHeaderBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="weekDaysHeaderTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#292929</default>
+            </property>
+            <property type="header">
+                <title>Calendar Days</title>
+            </property>
+            <property id="dayBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="dayTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property id="todayTextColor" type="color">
+                <title>Current day text Colour</title>
+                <default>#65668d</default>
+            </property>
+            <property id="nowMarkerColor" type="color">
+                <title>Now marker Colour</title>
+                <default>#ff2525</default>
+            </property>
+            <property type="header">
+                <title>Events</title>
+            </property>
+            <property id="eventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#9264A6</default>
+            </property>
+            <property id="eventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>All day events</title>
+            </property>
+            <property id="dailyEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#70497E</default>
+            </property>
+            <property id="dailyEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>Multiple days events</title>
+            </property>
+            <property id="multiDayEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#603D6B</default>
+            </property>
+            <property id="multiDayEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>Aditional days container</title>
+            </property>
+            <property id="aditionalEventsBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#dcdcdc</default>
+            </property>
+            <property id="aditionalEventsTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#656565</default>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+<div class="calendar-daily calendar-container">
+    <ol class="hour-grid"></ol>
+    <ol class="day-title"></ol>
+    <ol class="day-container"></ol>
+</div>
+
+<style>
+:root {
+  --grid-color: #dadada;
+  --grid-text-color: #505050;
+  --today-text-color: #fb8100;
+  --now-marker-color: #fb8100;
+  --day-bg-color: #f9f9f9;
+  --day-text-color: #3e4e63;
+  --weekdays-bg-color: #f9f9f9;
+  --weekdays-text-color: #292929;
+  --event-bg-color: #9264A6;
+  --event-text-color: #fff;
+  --daily-event-bg-color: #70497E;
+  --daily-event-text-color: #fff;
+  --multi-day-event-bg-color: #603D6B;
+  --multi-day-event-text-color: #fff;
+  --aditional-events-bg-color: #dcdcdc;
+  --aditional-events-text-color: #656565;
+  --all-day-events-container-height: 8rem;
+  font-size: 16px;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#content {
+  display: none;
+}
+
+ol, li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.calendar-daily {
+  position: relative;
+  height: 100%;
+  background-color: var(--day-bg-color);
+}
+
+.now-marker {
+  position: absolute;
+  background-color: var(--now-marker-color);
+  height: 0.2rem;
+  margin-top: -0.1rem;
+  width: 100%;
+  z-index: 4;
+}
+
+.hour-grid {
+  position: absolute;
+  width: 100%;
+  margin-top: 4rem;
+  height: calc(100% - 4rem);
+  z-index: 1;
+}
+
+.hour-grid .hour-time {
+  line-height: 0.125rem;
+  margin-left: 0.5rem;
+  text-align: right;
+  width: 4rem;
+  color: var(--grid-text-color);
+}
+
+.hour-grid .hour-time:after {
+  border-top: 1px solid var(--grid-color);
+  content: "";
+  width: calc(100% - 12px - 4rem);
+  margin-left: 0.75rem;
+  position: absolute;
+  z-index: 1;
+}
+
+.day-title {
+  color: var(--weekdays-text-color);
+  background-color: var(--weekdays-bg-color);
+  font-size: 1.75rem;
+  padding-top: 0.25rem;
+  height: 3.75rem;
+}
+
+.day-title, .day-container {
+  margin-left: 6rem;
+}
+
+.day-title>* {
+  padding-left: 1rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.day-title .week-day-date {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--today-text-color);
+}
+
+.day-title .week-day {
+  margin-left: 0.5rem;
+}
+
+.day-container {
+  height: calc(100% - 4rem);
+  position: relative;
+}
+
+.calendar-day {
+  position: relative;
+  height: 100%;
+  font-size: 1.2rem;
+  color: var(--day-text-color);
+  border: 1px solid var(--grid-color);
+}
+
+.calendar-day .calendar-events-container {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-day .calendar-all-day-events-container {
+  display: none;
+  height: var(--all-day-events-container-height);
+  font-size: 1.2rem;
+}
+
+.calendar-daily.show-all-day-events .calendar-day .calendar-events-container {
+  height: calc(100% - var(--all-day-events-container-height));
+}
+
+.calendar-daily.show-all-day-events .calendar-day .calendar-all-day-events-container {
+  display: block;
+  position: relative;
+}
+
+.calendar-daily.show-all-day-events .hour-grid {
+  margin-top: calc(4rem + var(--all-day-events-container-height));
+  height: calc(100% - calc(4rem + var(--all-day-events-container-height)));
+}
+
+.calendar-all-day-events-container .extra-events {
+  bottom: 1px;
+  opacity: 0.85;
+  z-index: 2;
+  text-align: right;
+  position: absolute;
+  font-weight: bold;
+  background-color: var(--aditional-events-bg-color);
+  color: var(--aditional-events-text-color);
+  width: 100%;
+  font-size: 1.2rem;
+  height: 1.25rem;
+}
+
+.calendar-all-day-events-container .extra-events span {
+  padding-right: 0.375rem;
+}
+
+.calendar-event {
+  width: 100%;
+  color: var(--event-text-color);
+  background-color: var(--event-bg-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  height: 1.25rem;
+  line-height: 1em;
+  z-index: 1;
+  border-radius: 0.375rem;
+  min-height: 1em;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-event.before-view {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.calendar-event.concurrent::after {
+  border: 1px solid var(--event-text-color);
+  content: " ";
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  left: 0px;
+  top: 0px;
+  position: absolute;
+  border-radius: 0.375rem;
+}
+
+.calendar-event.concurrent.level-1 {
+  margin-left: 20%;
+  width: 80%;
+  z-index: 1;
+  filter: brightness(1.05);
+}
+
+.calendar-event.concurrent.level-2 {
+  margin-left: 40%;
+  width: 60%;
+  z-index: 2;
+  filter: brightness(1.1);
+}
+
+.calendar-event.concurrent.level-3 {
+  margin-left: 60%;
+  width: 40%;
+  z-index: 3;
+  filter: brightness(1.15);
+}
+
+.calendar-event.concurrent.level-4 {
+  margin-left: 70%;
+  width: 30%;
+  z-index: 4;
+  filter: brightness(1.2);
+}
+
+.calendar-event.concurrent.level-5 {
+  margin-left: 80%;
+  width: 20%;
+  z-index: 5;
+  filter: brightness(1.25);
+}
+
+.calendar-event.shorter-event {
+  flex-direction: row;
+}
+
+.calendar-event .event-time {
+  font-size: 0.8em;
+  margin-left: 0.25em;
+  margin-top: 0.125rem;
+}
+
+.calendar-event .event-summary {
+  font-size: 0.9em;
+  margin-left: 0.25em;
+  font-weight: bold;
+  margin-top: 0.125rem;
+}
+
+.calendar-event.multi-day, .calendar-event.all-day {
+  flex-direction: row;
+  padding: 0.25rem 0;
+  border-radius: 0.375rem;
+}
+
+.calendar-event.all-day {
+  color: var(--daily-event-text-color);
+  background-color: var(--daily-event-bg-color);
+}
+
+.calendar-event.multi-day {
+  color: var(--multi-day-event-text-color);
+  background-color: var(--multi-day-event-bg-color);
+}
+
+.calendar-event.multi-day.cropped-event-start {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -0.125rem;
+}
+
+.calendar-event.multi-day.cropped-event-end {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.error-message {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  width: 100%;
+  padding: 12px 0;
+  background-color: #d05454;
+  color: white;
+  z-index: 2;
+  font-weight: bold;
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+</style>
+            ]]></twig>
+            <onTemplateRender><![CDATA[
+// Template renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+$(target).find("img").xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+
+// Add the calendar type to options
+properties.calendarType = 2;
+
+// Run calendar render
+$(target).xiboCalendarRender(properties, items);
+        ]]></onTemplateRender>
+        </stencil>
+    </template>
+    <!-- End of Daily Calendar -->
+
+    <!-- Weekly Calendar -->
+    <template>
+        <id>weekly_light</id>
+        <type>static</type>
+        <dataType>event</dataType>
+        <title>Weekly Calendar view with Light colours</title>
+        <properties>
+            <property id="startTime" type="date" variant="time">
+                <title>Start Time</title>
+                <helpText>Current view starting time.</helpText>
+                <default></default>
+            </property>
+            <property id="endTime" type="date" variant="time">
+                <title>End Time</title>
+                <helpText>Current view ending time.</helpText>
+                <default></default>
+            </property>
+            <property id="excludeWeekendDays" type="checkbox">
+                <title>Exclude weekend days?</title>
+                <helpText>Saturdays and Sundays wont be shown.</helpText>
+                <default></default>
+            </property>
+            <property id="timeFormat" type="text">
+                <title>Time Format</title>
+                <helpText>The format to apply to event time (default HH:mm).</helpText>
+                <default>HH:mm</default>
+            </property>
+            <property id="showNowMarker" type="checkbox">
+                <title>Show now marker?</title>
+                <helpText>Should the calendar show a marker for the current time?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textScale" type="number">
+                <title>Text scale</title>
+                <helpText>Set the scale for the text element on the calendar.</helpText>
+                <default>1.0</default>
+            </property>
+            <property id="weekdayNameLength" type="dropdown" mode="single">
+                <title>Week name length</title>
+                <helpText>Please select the lenght for the week names.</helpText>
+                <default>long</default>
+                <options>
+                    <option name="short">Short</option>
+                    <option name="medium">Medium</option>
+                    <option name="long">Long</option>
+                </options>
+            </property>
+            <property id="gridStep" type="number">
+                <title>Grid step</title>
+                <helpText>Duration, in minutes, for each row in the grid.</helpText>
+                <default>60</default>
+            </property>
+            <property type="header" variant="main">
+                <title>Colours</title>
+            </property>
+            <property type="message">
+                <title>Use the colour pickers to override the element colours.</title>
+            </property>
+            <property id="gridColor" type="color">
+                <title>Grid Colour</title>
+                <default>#dadada</default>
+            </property>
+            <property id="gridTextColor" type="color">
+                <title>Grid Text Colour</title>
+                <default>#505050</default>
+            </property>
+            <property type="header">
+                <title>Header (Weekdays)</title>
+            </property>
+            <property id="weekDaysHeaderBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="weekDaysHeaderTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property type="header">
+                <title>Calendar Days</title>
+            </property>
+            <property id="dayBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="dayTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property id="todayTextColor" type="color">
+                <title>Current day text Colour</title>
+                <default>#e37918</default>
+            </property>
+            <property id="nowMarkerColor" type="color">
+                <title>Now marker Colour</title>
+                <default>#e37918</default>
+            </property>
+            <property type="header">
+                <title>Events</title>
+            </property>
+            <property id="eventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#506DC3</default>
+            </property>
+            <property id="eventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>All day events</title>
+            </property>
+            <property id="dailyEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#4D3394</default>
+            </property>
+            <property id="dailyEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>Multiple days events</title>
+            </property>
+            <property id="multiDayEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#452E85</default>
+            </property>
+            <property id="multiDayEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>Aditional days container</title>
+            </property>
+            <property id="aditionalEventsBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#efefef</default>
+            </property>
+            <property id="aditionalEventsTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+<div class="calendar-weekly calendar-container">
+  <ol class="hour-grid"></ol>
+  <ol class="day-of-week"></ol>
+  <ol class="days-row"></ol>
+</div>
+
+<style>
+:root {
+  --grid-color: #dadada;
+  --grid-text-color: #505050;
+  --today-text-color: #e37918;
+  --now-marker-color: #e37918;
+  --day-bg-color: #f9f9f9;
+  --day-text-color: #3e4e63;
+  --weekdays-bg-color: #f9f9f9;
+  --weekdays-text-color: #3e4e63;
+  --event-bg-color: #506DC3;
+  --event-text-color: #fff;
+  --daily-event-bg-color: #4D3394;
+  --daily-event-text-color: #fff;
+  --multi-day-event-bg-color: #452E85;
+  --multi-day-event-text-color: #fff;
+  --aditional-events-bg-color: #efefef;
+  --aditional-events-text-color: #3e4e63;
+  --all-day-events-container-height: 6rem;
+  font-size: 16px;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#content {
+  display: none;
+}
+
+ol, li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.calendar-weekly {
+  position: relative;
+  height: 100%;
+  background-color: var(--day-bg-color);
+}
+
+.now-marker {
+  position: absolute;
+  background-color: var(--now-marker-color);
+  height: 0.2rem;
+  margin-top: -0.1rem;
+  width: 100%;
+  z-index: 4;
+}
+
+.hour-grid {
+  position: absolute;
+  width: 100%;
+  margin-top: 5rem;
+  height: calc(100% - 5rem);
+  z-index: 1;
+}
+
+.hour-grid .hour-time {
+  line-height: 0.125rem;
+  margin-left: 0.5rem;
+  text-align: right;
+  width: 4rem;
+  color: var(--grid-text-color);
+}
+
+.hour-grid .hour-time:after {
+  border-top: 1px solid var(--grid-color);
+  content: "";
+  width: calc(100% - 12px - 4rem);
+  margin-left: 0.75rem;
+  position: absolute;
+  z-index: 1;
+}
+
+.day-of-week {
+  color: var(--weekdays-text-color);
+  background-color: var(--weekdays-bg-color);
+  font-size: 1.5rem;
+  padding-top: 0.25rem;
+  height: 4.75rem;
+}
+
+.day-of-week, .days-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-left: 6rem;
+}
+
+.hide-weekend .days-row, .hide-weekend .day-of-week {
+  grid-template-columns: repeat(5, 1fr) 0 0;
+}
+
+.day-of-week>li {
+  overflow: hidden;
+  text-align: center;
+}
+
+.day-of-week .week-day-date {
+  font-size: 2.5rem;
+  line-height: 3rem;
+}
+
+.day-of-week>.week-day {
+  margin-top: 0.625rem;
+}
+
+.day-of-week--today .week-day-date {
+  font-weight: bold;
+  color: var(--today-text-color);
+}
+
+.days-row {
+  height: calc(100% - 5rem);
+  position: relative;
+}
+
+.calendar-day {
+  position: relative;
+  font-size: 1.2rem;
+  color: var(--day-text-color);
+  border: 1px solid var(--grid-color);
+}
+
+.calendar-day .calendar-events-container {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-day .calendar-all-day-events-container {
+  display: none;
+  height: var(--all-day-events-container-height);
+  font-size: 1.2rem;
+}
+
+.calendar-weekly.show-all-day-events .calendar-day .calendar-events-container {
+  height: calc(100% - var(--all-day-events-container-height));
+}
+
+.calendar-weekly.show-all-day-events .calendar-day .calendar-all-day-events-container {
+  display: block;
+  position: relative;
+}
+
+.calendar-weekly.show-all-day-events .hour-grid {
+  margin-top: calc(5rem + var(--all-day-events-container-height));
+  height: calc(100% - calc(5rem + var(--all-day-events-container-height)));
+}
+
+.calendar-all-day-events-container .extra-events {
+  bottom: 1px;
+  opacity: 0.85;
+  z-index: 2;
+  text-align: right;
+  position: absolute;
+  font-weight: bold;
+  background-color: var(--aditional-events-bg-color);
+  color: var(--aditional-events-text-color);
+  width: 100%;
+  font-size: 1.2rem;
+  height: 1.25rem;
+}
+
+.calendar-all-day-events-container .extra-events span {
+  padding-right: 0.375rem;
+}
+
+.calendar-event {
+  width: 100%;
+  color: var(--event-text-color);
+  background-color: var(--event-bg-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  height: 1.25rem;
+  line-height: 1em;
+  z-index: 1;
+  border-radius: 0.375rem;
+  min-height: 1em;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-event.before-view {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.calendar-event.concurrent::after {
+  border: 1px solid var(--event-text-color);
+  content: \" \";
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  left: 0px;
+  top: 0px;
+  position: absolute;
+  border-radius: 0.375rem;
+}
+
+.calendar-event.concurrent.level-1 {
+  margin-left: 10%;
+  width: 90%;
+  z-index: 1;
+  filter: brightness(1.05);
+}
+
+.calendar-event.concurrent.level-2 {
+  margin-left: 20%;
+  width: 80%;
+  z-index: 2;
+  filter: brightness(1.1);
+}
+
+.calendar-event.concurrent.level-3 {
+  margin-left: 30%;
+  width: 70%;
+  z-index: 3;
+  filter: brightness(1.15);
+}
+
+.calendar-event.concurrent.level-4 {
+  margin-left: 40%;
+  width: 60%;
+  z-index: 4;
+  filter: brightness(1.2);
+}
+
+.calendar-event.concurrent.level-5 {
+  margin-left: 50%;
+  width: 50%;
+  z-index: 5;
+  filter: brightness(1.25);
+}
+
+.calendar-event.shorter-event {
+  flex-direction: row;
+}
+
+.calendar-event .event-time {
+  font-size: 0.8em;
+  margin-left: 0.25em;
+  margin-top: 0.125rem;
+}
+
+.calendar-event .event-summary {
+  font-size: 0.9em;
+  margin-left: 0.25em;
+  font-weight: bold;
+  margin-top: 0.125rem;
+}
+
+.calendar-event.multi-day, .calendar-event.all-day {
+  flex-direction: row;
+  padding: 0.25rem 0;
+  border-radius: 0.375rem;
+}
+
+.calendar-event.all-day {
+  color: var(--daily-event-text-color);
+  background-color: var(--daily-event-bg-color);
+}
+
+.calendar-event.multi-day {
+  color: var(--multi-day-event-text-color);
+  background-color: var(--multi-day-event-bg-color);
+}
+
+.calendar-event.multi-day.cropped-event-start {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -0.125rem;
+}
+
+.calendar-event.multi-day.cropped-event-end {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.error-message {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  width: 100%;
+  padding: 12px 0;
+  background-color: #d05454;
+  color: white;
+  z-index: 2;
+  font-weight: bold;
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+</style>
+            ]]></twig>
+            <onTemplateRender><![CDATA[
+// Template renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+
+$(target).find("img").xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+
+// Add the calendar type to options
+properties.calendarType = 3;
+
+// Run calendar render
+$(target).xiboCalendarRender(properties, items);
+        ]]></onTemplateRender>
+        </stencil>
+    </template>
+    <!-- End of Weekly Calendar -->
+
+    <!-- Start of Monthly Calendar -->
+    <template>
+        <id>monthly_light</id>
+        <type>static</type>
+        <dataType>event</dataType>
+        <title>Monthly Calendar view with Light colours</title>
+        <properties>
+            <property id="excludeWeekendDays" type="checkbox">
+                <title>Exclude weekend days?</title>
+                <helpText>Saturdays and Sundays wont be shown.</helpText>
+                <default></default>
+            </property>
+            <property id="timeFormat" type="text">
+                <title>Time Format</title>
+                <helpText>The format to apply to event time (default HH:mm).</helpText>
+                <default>HH:mm</default>
+            </property>
+            <property id="showHeader" type="checkbox">
+                <title>Show header?</title>
+                <helpText>Should the selected template have a header?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textScale" type="number">
+                <title>Text scale</title>
+                <helpText>Set the scale for the text element on the calendar.</helpText>
+                <default>1.0</default>
+            </property>
+            <property id="weekdayNameLength" type="dropdown" mode="single">
+                <title>Week name length</title>
+                <helpText>Please select the lenght for the week names.</helpText>
+                <default>long</default>
+                <options>
+                    <option name="short">Short</option>
+                    <option name="medium">Medium</option>
+                    <option name="long">Long</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Colours</title>
+            </property>
+            <property type="message">
+                <title>Use the colour pickers to override the element colours.</title>
+            </property>
+            <property id="gridColor" type="color">
+                <title>Grid Colour</title>
+                <default>#dadada</default>
+            </property>
+            <property type="header">
+                <title>Header (Month)</title>
+            </property>
+            <property id="headerBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="headerTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property type="header">
+                <title>Header (Weekdays)</title>
+            </property>
+            <property id="weekDaysHeaderBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="weekDaysHeaderTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property type="header">
+                <title>Calendar Days</title>
+            </property>
+            <property id="dayBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="dayTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property id="todayTextColor" type="color">
+                <title>Current day text Colour</title>
+                <default>#fb8100</default>
+            </property>
+            <property type="header">
+                <title>Other Month Days</title>
+            </property>
+            <property id="dayOtherMonthBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#efefef</default>
+            </property>
+            <property id="dayOtherMonthTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property type="header">
+                <title>Events</title>
+            </property>
+            <property id="eventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>transparent</default>
+            </property>
+            <property id="eventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+            <property type="header">
+                <title>All day events</title>
+            </property>
+            <property id="dailyEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#4174B5</default>
+            </property>
+            <property id="dailyEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>Multiple days events</title>
+            </property>
+            <property id="multiDayEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#4174B5</default>
+            </property>
+            <property id="multiDayEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#fff</default>
+            </property>
+            <property type="header">
+                <title>Aditional days container</title>
+            </property>
+            <property id="aditionalEventsBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#efefef</default>
+            </property>
+            <property id="aditionalEventsTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+<div class="calendar-month">
+  <section class="calendar-month-header">
+    <div id="selectedMonth" class="calendar-month-header-selected-month"></div>
+  </section>
+  <ol id="daysOfWeek" class="day-of-week"></ol>
+  <ol id="calendarDays" class="days-grid"></ol>
+</div>
+
+<style>
+:root {
+  --grid-color: #dadada;
+  --today-text-color: #fb8100;
+  --day-bg-color: #f9f9f9;
+  --day-text-color: #3e4e63;
+  --day-other-month-bg-color: #efefef;
+  --day-other-month-text-color: #3e4e63;
+  --header-bg-color: #f9f9f9;
+  --header-text-color: #3e4e63;
+  --weekdays-bg-color: #f9f9f9;
+  --weekdays-text-color: #3e4e63;
+  --event-bg-color: transparent;
+  --event-text-color: #3e4e63;
+  --daily-event-bg-color: #4174B5;
+  --daily-event-text-color: #fff;
+  --multi-day-event-bg-color: #4174B5;
+  --multi-day-event-text-color: #fff;
+  --aditional-events-bg-color: #efefef;
+  --aditional-events-text-color: #3e4e63;
+  font-size: 16px;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#content {
+  display: none;
+}
+
+ol,
+li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.calendar-month {
+  position: relative;
+  height: 100%;
+  background-color: var(--day-bg-color);
+}
+
+.calendar-month-header {
+  justify-content: space-between;
+  line-height: 3rem;
+}
+
+.hide-header .calendar-month-header {
+  display: none;
+}
+
+.calendar-month-header-selected-month {
+  font-size: 1.8rem;
+  padding-left: 0.5rem;
+  color: var(--header-text-color);
+  background-color: var(--header-bg-color);
+}
+
+.day-of-week {
+  color: var(--weekdays-text-color);
+  background-color: var(--weekdays-bg-color);
+  font-size: 1.5rem;
+  padding-bottom: 0.25rem;
+  padding-top: 0.75rem;
+  height: 1.75rem;
+}
+
+.day-of-week,
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.day-of-week>* {
+  text-align: left;
+  overflow: hidden;
+  padding-left: 0.5rem;
+}
+
+.days-grid {
+  height: calc(100% - 5.75rem);
+  position: relative;
+  grid-template-rows: repeat(5, calc(100% / 5));
+  grid-template-columns: repeat(7, calc(100% / 7));
+}
+
+.hide-weekend .days-grid, .hide-weekend .day-of-week {
+  grid-template-columns: repeat(5, 1fr) 0 0;
+}
+
+.hide-header .days-grid {
+  height: calc(100% - 2.75rem);
+}
+
+.calendar-day {
+  position: relative;
+  min-height: 20%;
+  font-size: 1.2rem;
+  color: var(--day-text-color);
+  background-color: var(--day-bg-color);
+  border: 1px solid var(--grid-color);
+}
+
+.calendar-day>span.date {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  left: 0.25rem;
+  top: 0.375rem;
+}
+
+.calendar-day--not-current {
+  background-color: var(--day-other-month-bg-color);
+  color: var(--day-other-month-text-color);
+}
+
+.calendar-day--today>span.date {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--today-text-color);
+}
+
+.calendar-events-container {
+  height: calc(100% - 2rem);
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  overflow: hidden;
+}
+
+.calendar-events-container .extra-events {
+  bottom: 1px;
+  opacity: 0.85;
+  z-index: 2;
+  text-align: right;
+  position: absolute;
+  font-weight: bold;
+  background-color: var(--aditional-events-bg-color);
+  color: var(--aditional-events-text-color);
+  width: 100%;
+  font-size: 1.2rem;
+  height: 1.25rem;
+}
+
+.calendar-events-container .extra-events span {
+  padding-right: 0.375rem;
+}
+
+.calendar-event {
+  width: 100%;
+  color: var(--event-text-color);
+  background-color: var(--event-bg-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  padding: 0.25rem 0;
+  height: 1.25rem;
+  line-height: 1em;
+  top: 2rem;
+  z-index: 1;
+}
+
+.calendar-event .event-time {
+  font-size: 1.1rem;
+  margin-left: 0.25rem;
+}
+
+.calendar-event .event-summary {
+  font-size: 1.1rem;
+  margin-left: 0.25rem;
+  font-weight: bold;
+}
+
+.calendar-event.multi-day, .calendar-event.all-day {
+  border-radius: 0.375rem;
+}
+
+.calendar-event.all-day {
+  color: var(--daily-event-text-color);
+  background-color: var(--daily-event-bg-color);
+}
+
+.calendar-event.multi-day {
+  color: var(--multi-day-event-text-color);
+  background-color: var(--multi-day-event-bg-color);
+}
+
+.calendar-event.multi-day.cropped-event-start {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -0.125rem;
+}
+
+.calendar-event.multi-day.cropped-event-end {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.calendar-day--not-current .calendar-event {
+  opacity: 0.8;
+}
+
+.error-message {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    padding: 12px 0;
+    background-color: #d05454;
+    color: white;
+    z-index: 2;
+    font-weight: bold;
+    font-size: 1.1rem;
+    opacity: 0.85;
+}
+</style>
+            ]]></twig>
+            <onTemplateRender><![CDATA[
+// Template renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+
+$(target).find("img").xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+
+// Add the calendar type to options
+properties.calendarType = 4;
+
+// Run calendar render
+$(target).xiboCalendarRender(properties, items);
+        ]]></onTemplateRender>
+        </stencil>
+    </template>
+    <!-- End of Monthly Calendar -->
+
+    <!-- Schedule View -->
+    <template>
+        <id>schedule_light</id>
+        <type>static</type>
+        <dataType>event</dataType>
+        <title>Schedule Calendar view with Light colours</title>
+        <properties>
+            <property id="noEventsMessage" type="text">
+                <title>No events message</title>
+                <helpText>Message to be shown if no events are returned.</helpText>
+                <default>"No upcoming events"</default>
+            </property>
+            <property id="customInterval" type="text">
+                <title>Interval</title>
+                <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
+                <default></default>
+            </property>
+            <property id="useDateRange" type="checkbox">
+                <title>Select a Date range to return events instead?</title>
+                <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
+                <default>0</default>
+            </property>
+            <property id="rangeStart" type="date" variant="dateTime">
+                <title>Start Date</title>
+                <visibility>
+                    <test>
+                        <condition field="#useDateRange" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rangeEnd" type="date" variant="dateTime">
+                <title>End Date</title>
+                <visibility>
+                    <test>
+                        <condition field="#useDateRange" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="timeFormat" type="text">
+                <title>Time Format</title>
+                <helpText>The format to apply to event time (default HH:mm).</helpText>
+                <default>HH:mm</default>
+            </property>
+            <property id="showNowMarker" type="checkbox">
+                <title>Show now marker?</title>
+                <helpText>Should the calendar show a marker for the current time?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showDescription" type="checkbox">
+                <title>Show event description?</title>
+                <helpText>Should events with descriptions display them?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textScale" type="number">
+                <title>Text scale</title>
+                <helpText>Set the scale for the text element on the calendar.</helpText>
+                <default>1.0</default>
+            </property>
+            <property type="header" variant="main">
+                <title>Colours</title>
+            </property>
+            <property type="message">
+                <title>Use the colour pickers to override the element colours.</title>
+            </property>
+            <property id="mainBackgroundColor" type="color">
+                <title>Main Background Colour</title>
+                <default>#ffffff</default>
+            </property>
+            <property id="gridColor" type="color">
+                <title>Grid Colour</title>
+                <default>#6e6e6e</default>
+            </property>
+            <property type="header">
+                <title>Header (Weekdays)</title>
+            </property>
+            <property id="weekDaysHeaderBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#ffffff</default>
+            </property>
+            <property id="weekDaysHeaderTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#3e3e3e</default>
+            </property>
+            <property type="header">
+                <title>Calendar Days</title>
+            </property>
+            <property id="dayBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="todayTextColor" type="color">
+                <title>Current day text Colour</title>
+                <default>#f53030</default>
+            </property>
+            <property id="nowMarkerColor" type="color">
+                <title>Now marker Colour</title>
+                <default>#f53030</default>
+            </property>
+            <property type="header">
+                <title>Events</title>
+            </property>
+            <property id="eventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#e2ddff</default>
+            </property>
+            <property id="eventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#353535</default>
+            </property>
+            <property type="header">
+                <title>All day events</title>
+            </property>
+            <property id="dailyEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#8174d4</default>
+            </property>
+            <property id="dailyEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#ffffff</default>
+            </property>
+            <property type="header">
+                <title>Multiple days events</title>
+            </property>
+            <property id="multiDayEventBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#695ac6</default>
+            </property>
+            <property id="multiDayEventTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#ffffff</default>
+            </property>
+            <property type="header">
+                <title>No events message</title>
+            </property>
+            <property id="noEventsBgColor" type="color">
+                <title>Background Colour</title>
+                <default>#695ac6</default>
+            </property>
+            <property id="noEventsTextColor" type="color">
+                <title>Text Colour</title>
+                <default>#ffffff</default>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+<div class="calendar-schedule calendar-container"></div>
+
+<style>
+:root {
+  --main-background-color: #ffffff;
+  --grid-color: #6e6e6e;
+  --weekdays-bg-color: #ffffff;
+  --weekdays-text-color: #3e3e3e;
+  --day-bg-color: #f9f9f9;
+  --today-text-color: #f53030;
+  --now-marker-color: #f53030;
+  --event-bg-color: #e2ddff;
+  --event-text-color: #353535;
+  --daily-event-bg-color: #8174d4;
+  --daily-event-text-color: #ffffff;
+  --multi-day-event-bg-color: #695ac6;
+  --multi-day-event-text-color: #ffffff;
+  --no-events-bg-color: #695ac6;
+  --no-events-text-color: #ffffff;
+  font-size: 16px;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#content {
+  display: none;
+}
+
+ol, li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.calendar-schedule {
+  position: relative;
+  height: 100%;
+}
+
+.day-container {
+  display: flex;
+  background-color: var(--day-bg-color);
+  border-bottom: 1px solid var(--grid-color);
+}
+
+.title-container {
+  width: 8rem;
+  padding: 0.25rem;
+  margin: 0.25rem;
+  color: var(--weekdays-text-color);
+  background-color: var(--weekdays-bg-color);
+  border-radius: 0.25rem;
+}
+
+.day-title-date, .day-title-month {
+  display: inline-block;
+}
+
+.day-title-date {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 0.25rem;
+}
+
+.day-container.today .day-title-date {
+  color: var(--today-text-color);
+  font-size: 1.8rem;
+}
+
+.day-title-weekday {
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
+.day-events {
+  width: calc(100% - 9rem);
+  padding: 0 0.25rem 0.25rem 0;
+}
+
+.calendar-event {
+  color: var(--event-text-color);
+  background-color: var(--event-bg-color);
+  padding: 0.25rem;
+  min-height: 1.75rem;
+  top: 2rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  border-radius: 0.25rem;
+  margin: 0.3rem 0;
+}
+
+.calendar-event.all-day {
+  color: var(--daily-event-text-color);
+  background-color: var(--daily-event-bg-color);
+}
+
+.calendar-event.multi {
+  color: var(--multi-day-event-text-color);
+  background-color: var(--multi-day-event-bg-color);
+}
+
+.event-description {
+  font-size: 0.9em;
+  opacity: 0.8;
+  margin-top: 0.2rem;
+  flex-basis: 100%;
+  width: 0;
+  margin-left: 0.6rem;
+}
+
+.event-summary {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 0.3rem;
+}
+
+.event-start-time, .event-end-time {
+  font-weight: bold;
+}
+
+.now-marker {
+  background-color: var(--now-marker-color);
+  height: 0.2rem;
+  width: calc(100% + 1rem);
+  margin: 0.4rem 0 0.4rem -1rem;
+  position: relative;
+}
+
+.now-marker::before {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  background-color: var(--now-marker-color);
+  top: -0.4rem;
+  left: -0.5rem;
+  position: absolute;
+  border-radius: 50%;
+}
+
+.no-events-message {
+  width: 100%;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  background-color: var(--no-events-bg-color);
+  color: var(--no-events-text-color);
+  border-bottom: 0.5rem solid var(--no-events-text-color);
+}
+
+.error-message {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    padding: 12px 0;
+    background-color: #d05454;
+    color: white;
+    z-index: 2;
+    font-weight: bold;
+    font-size: 1.1rem;
+    opacity: 0.85;
+}
+</style>
+            ]]></twig>
+            <onTemplateRender><![CDATA[
+// Template renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+
+$(target).find("img").xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+
+// Add the calendar type to options
+properties.calendarType = 1;
+
+// Run calendar render
+$(target).xiboCalendarRender(properties, items);
+        ]]></onTemplateRender>
+        </stencil>
+    </template>
+    <!-- End of Schedule View -->
+</templates>

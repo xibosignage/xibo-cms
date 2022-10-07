@@ -2,7 +2,7 @@
 window.templates = {
   forms: {
     button: require('./src/templates/forms/button.hbs'),
-    input: require('./src/templates/forms/inputs/text.hbs'),
+    text: require('./src/templates/forms/inputs/text.hbs'),
     checkbox: require('./src/templates/forms/inputs/checkbox.hbs'),
     number: require('./src/templates/forms/inputs/number.hbs'),
     dropdown: require('./src/templates/forms/inputs/dropdown.hbs'),
@@ -11,6 +11,7 @@ window.templates = {
     message: require('./src/templates/forms/inputs/message.hbs'),
     hidden: require('./src/templates/forms/inputs/hidden.hbs'),
     date: require('./src/templates/forms/inputs/date.hbs'),
+    header: require('./src/templates/forms/inputs/header.hbs'),
     // More to be added
   },
 };

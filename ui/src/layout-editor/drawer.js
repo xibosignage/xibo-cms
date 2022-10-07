@@ -218,7 +218,9 @@ Drawer.prototype.render = function() {
   this.DOMObject.find('.selectable:not(.ui-draggable-dragging)')
     .click(function(e) {
       e.stopPropagation();
-      lD.selectObject($(self));
+      lD.selectObject({
+        target: $(self),
+      });
     });
 
   // Set drawer number of rows in grid
@@ -267,7 +269,9 @@ Drawer.prototype.render = function() {
         !$.isEmptyObject(lD.toolbar.selectedQueue)
       ) {
         e.stopPropagation();
-        lD.selectObject($(e.target));
+        lD.selectObject({
+          target: $(e.target),
+        });
       }
     });
 

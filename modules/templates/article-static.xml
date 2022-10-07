@@ -62,7 +62,7 @@
                 <helpText>If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
                 <default>1</default>
             </property>
-            <property id="dateFormat" type="input" variant="dateFormat">
+            <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
                 <default>#DATE_FORMAT#</default>
@@ -95,7 +95,7 @@
             <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
                 <title>Optional JavaScript</title>
             </property>
-            <property id="copyright" type="input">
+            <property id="copyright" type="text">
                 <title>Copyright</title>
                 <helpText>Copyright information to display as the last item in this feed.</helpText>
             </property>
@@ -118,7 +118,6 @@
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
-// globalOptions: The global rendering options
 // -------------------------------------------
 if (items.length > 0) {
     items = $(items).xiboSubstitutesParser(properties.ta_text, properties.dateFormat, ['date', 'publishedDate'], {
@@ -128,8 +127,8 @@ if (items.length > 0) {
 }
 
 // No data message
-if (items.length <= 0 && items.noDataMessage && items.noDataMessage !== '') {
-    items.push(items.noDataMessage);
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
 }
 
 // Copyright
@@ -138,18 +137,10 @@ if (properties.copyright) {
 }
 
 // Render
-$(target).find('img').xiboImageRender(globalOptions);
-$(target).xiboLayoutScaler(globalOptions);
+$(target).find('img').xiboImageRender(properties);
 
-var runOnVisible = function() {
-    $(target).xiboTextRender(properties, items);
-};
-
-if (xiboIC.checkVisible()) {
-    runOnVisible();
-} else {
-    xiboIC.addToQueue(runOnVisible);
-}
+$(target).xiboLayoutScaler(properties);
+$(target).xiboTextRender(properties, items);
         ]]></onTemplateRender>
     </template>
 </templates>

@@ -19,28 +19,30 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <module>
-    <id>core-powerpoint</id>
-    <name>PowerPoint</name>
+    <id>core-pdf</id>
+    <name>PDF</name>
     <author>Core</author>
-    <description>Upload a PowerPoint file to assign to Layouts</description>
+    <description>A module for displaying pdf</description>
     <class></class>
-    <type>powerpoint</type>
+    <type>pdf</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>0</regionSpecific>
-    <renderAs>native</renderAs>
-    <defaultDuration>10</defaultDuration>
+    <renderAs>html</renderAs>
+    <defaultDuration>0</defaultDuration>
     <settings>
         <property id="validExtensions" type="text">
             <title>Valid Extensions</title>
             <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
-            <default>ppt,pps,pptx</default>
+            <default>pdf</default>
         </property>
     </settings>
-    <properties></properties>
+    <properties>
+        <property id="durationIsPerItem" type="checkbox">
+            <title>Duration is per page</title>
+            <helpText>The duration specified is per page otherwise it is per document.</helpText>
+        </property>
+    </properties>
     <preview></preview>
-    <stencil>
-        <twig><![CDATA[]]></twig>
-    </stencil>
 </module>

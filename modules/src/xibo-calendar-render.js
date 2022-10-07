@@ -75,7 +75,8 @@ jQuery.fn.extend({
      */
     function applyStyleOptions() {
       $('#content').toggleClass('hide-header', options.showHeader != '1');
-      $('#content').toggleClass('hide-weekend', options.excludeWeekendDays === '1');
+      $('#content')
+        .toggleClass('hide-weekend', options.excludeWeekendDays === '1');
 
       $(':root').css('font-size', DEFAULT_FONT_SIZE * DEFAULT_FONT_SCALE);
 
@@ -640,6 +641,10 @@ jQuery.fn.extend({
     if (options.calendarType == 1) {
       // Schedule View
       const $calendarContainer = $('.calendar-container');
+
+      // Clear container
+      $calendarContainer.empty();
+
       let addedEvents = 0;
 
       /**
@@ -838,6 +843,11 @@ jQuery.fn.extend({
       const $dayTitle = $('.day-title');
       const $dayContainer = $('.day-container');
 
+      // Clear containers
+      $hourGrid.empty();
+      $dayTitle.empty();
+      $dayContainer.empty();
+
       createCalendar = function() {
         // Add day label
         const $weekDay = $('<li>');
@@ -888,6 +898,11 @@ jQuery.fn.extend({
       const $daysOfWeek = $('.day-of-week');
       const $calendarDays = $('.days-row');
       const $hourGrid = $('.hour-grid');
+
+      // Clear containers
+      $daysOfWeek.empty();
+      $calendarDays.empty();
+      $hourGrid.empty();
 
       createCalendar = function() {
         const year = INITIAL_YEAR;
