@@ -319,7 +319,6 @@ class MediaService implements MediaServiceInterface
                     'css' => $localCss,
                     'ckeditor' => $ckEditorString,
                     'list' => $fontList,
-                    'playerCss' => $css
                 ];
 
                 $cssItem->set($cssDetails);
@@ -330,7 +329,6 @@ class MediaService implements MediaServiceInterface
                     'css' => '',
                     'ckeditor' => '',
                     'list' => [],
-                    'playerCss' => ''
                 ];
             }
         } else {

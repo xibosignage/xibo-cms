@@ -87,16 +87,16 @@ class FontTest extends LocalWebTestCase
 
     public function testUpload()
     {
-        $uploadResponse = $this->uploadFontFile();;
+        $uploadResponse = $this->uploadFontFile();
         $uploadedFileObject = $uploadResponse['files'][0];
         $this->assertNotEmpty($uploadedFileObject);
         $this->assertSame(filesize($this->testFilePath), $uploadedFileObject['size']);
         $this->assertSame(basename($this->testFilePath), $uploadedFileObject['fileName']);
 
         $this->getLogger()->debug(
-            'Uploaded font ' . $uploadResponse['files'][0]['name'] .
-            ' with ID ' . $uploadResponse['files'][0]['id'] .
-            ' Stored as ' . $uploadResponse['files'][0]['fileName']
+            'Uploaded font ' . $uploadedFileObject['name'] .
+            ' with ID ' . $uploadedFileObject['id'] .
+            ' Stored as ' . $uploadedFileObject['fileName']
         );
 
         $fontRecord = $this->getEntityProvider()->get('/fonts', ['name' => $this->testFileName])[0];

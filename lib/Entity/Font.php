@@ -151,5 +151,4 @@ class Font
             unlink($libraryLocation . 'fonts/' . $this->fileName);
         }
     }
-
 }

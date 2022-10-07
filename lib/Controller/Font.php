@@ -8,12 +8,13 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Xibo\Factory\FontFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\FontUploadHandler;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\Random;
-use Xibo\Helper\XiboUploadHandler;
+use Xibo\Helper\UploadHandler;
+use Xibo\Service\DownloadService;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
+use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
@@ -172,13 +173,14 @@ class Font extends Base
         $this->getLog()->debug('Download request for fontId ' . $id);
 
         $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-        $libraryPath = $library . 'fonts/' . DIRECTORY_SEPARATOR . $font->fileName;
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
         $attachmentName = urlencode($font->fileName);
-        // Issue some headers
-        $response = HttpCacheProvider::withEtag($response, $font->md5);
-        $response = HttpCacheProvider::withExpires($response, '+1 week');
+        $libraryPath = $library . 'fonts' . DIRECTORY_SEPARATOR . $font->fileName;
 
-        return $this->returnFile($response, $libraryPath, $attachmentName, '/font/download/' . $font->fileName);
+        $downLoadService = new DownloadService($libraryPath, $sendFileMode);
+        $downLoadService->useLogger($this->getLog()->getLoggerInterface());
+
+        return $downLoadService->returnFile($response, $attachmentName, '/font/download/' . $font->fileName);
     }
 
     /**
@@ -195,9 +197,6 @@ class Font extends Base
             throw new AccessDeniedException();
         }
 
-        $parsedBody = $this->getSanitizer($request->getParams());
-        $options = $parsedBody->getArray('options', ['default' => []]);
-
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
@@ -208,10 +207,7 @@ class Font extends Base
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = [
-            'userId' => $this->getUser()->userId,
-            'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
             'script_url' => $this->urlFor($request,'font.add'),
             'upload_url' => $this->urlFor($request,'font.add'),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
@@ -225,7 +221,60 @@ class Font extends Base
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        new FontUploadHandler($options);
+        $uploadService = new UploadService($options, $this->getLog(), $this->getState());
+        $uploadHandler = $uploadService->createUploadHandler();
+
+        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) {
+            // Return right away if the file already has an error.
+            if (!empty($file->error)) {
+                return $file;
+            }
+
+            $this->getUser()->isQuotaFullByUser(true);
+
+            /** @var UploadHandler $uploadHandler */
+            $filePath = $uploadHandler->getUploadPath() . $file->fileName;
+            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+            // Add the Font
+            $font = $this->getFontFactory()->createEmpty();
+            $fontLib = \FontLib\Font::load($filePath);
+
+            // check embed flag
+            $embed = intval($fontLib->getData('OS/2', 'fsType'));
+            // if it's not embeddable, throw exception
+            if ($embed != 0 && $embed != 8) {
+                throw new InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
+            }
+
+            $name = ($file->name == '') ? $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily() : $file->name;
+
+            $font->modifiedBy = $this->getUser()->userName;
+            $font->name = $name;
+            $font->fileName = $file->fileName;
+            $font->size = filesize($filePath);
+            $font->md5 = md5_file($filePath);
+            $font->save();
+
+            // Test to ensure the final file size is the same as the file size we're expecting
+            if ($file->size != $font->size) {
+                throw new InvalidArgumentException(
+                    __('Sorry this is a corrupted upload, the file size doesn\'t match what we\'re expecting.'),
+                    'size'
+                );
+            }
+
+            // everything is fine, move the file from temp folder.
+            rename($filePath, $libraryLocation . 'fonts/' . $font->fileName);
+
+            // return
+            $file->id = $font->id;
+            $file->md5 = $font->md5;
+
+            return $file;
+        });
+
+        $uploadHandler->post();
 
         // all done, refresh fonts.css
         $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser());
@@ -313,8 +362,13 @@ class Font extends Base
         // Regenerate the CSS for fonts
         $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
         $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fontcss_' . Random::generateString();
+        // Work out the etag
+        $response = HttpCacheProvider::withEtag($response, md5($css['css']));
 
-        $response = $this->createTempFontCssFile($response, $tempFileName, $css['css']);
+        // Return the CSS to the browser as a file
+        $out = fopen($tempFileName, 'w');
+        fputs($out, $css['css']);
+        fclose($out);
 
         $this->setNoOutput(true);
 
@@ -322,101 +376,5 @@ class Font extends Base
             ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Return the Player flavored font css
-     * @param Request|null $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function fontPlayerCss(Request $request, Response $response)
-    {
-        // Regenerate the CSS for fonts
-        $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
-        $fontsCss = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'fonts/fonts.css';
-
-        $this->setNoOutput(true);
-
-        $response = $response->withHeader('Content-Type', 'text/css')
-            ->withBody(new Stream(fopen($fontsCss, 'r')));
-
-        return $this->render($request, $response);
-    }
-
-    public function downloadFontsCss(Request $request, Response $response)
-    {
-        // Regenerate the CSS for fonts
-        $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fontcss_' . Random::generateString();
-
-        $params = $this->getSanitizer($request->getParams());
-        $isPlayer = $params->getCheckbox('forPlayer');
-
-        // which css file we want to return?
-        $cssDetails = $isPlayer ? $css['playerCss'] : $css['css'];
-
-        $response = $this->createTempFontCssFile($response, $tempFileName, $cssDetails);
-
-        return $this->returnFile($response, $tempFileName, 'fonts.css', '/library/fontcss/download?forPlayer='.$isPlayer);
-    }
-
-    private function createTempFontCssFile($response, $tempFileName, $css)
-    {
-        // Work out the etag
-        // Issue some headers
-        $response = HttpCacheProvider::withEtag($response, md5($css));
-        $response = HttpCacheProvider::withExpires($response, '+1 week');
-
-        // Return the CSS to the browser as a file
-        $out = fopen($tempFileName, 'w');
-        fputs($out, $css);
-        fclose($out);
-
-        return $response;
-    }
-
-    private function returnFile($response, $filePath, $attachmentName, $nginxRedirect)
-    {
-        $this->setNoOutput(true);
-        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
-        // Set some headers
-        $headers = [];
-        $headers['Content-Length'] = filesize($filePath);
-        $headers['Content-Type'] = 'application/octet-stream';
-        $headers['Content-Transfer-Encoding'] = 'Binary';
-        $headers['Content-disposition'] = 'attachment; filename="' . $attachmentName . '"';
-
-        // Output the file
-        if ($sendFileMode === 'Apache') {
-            // Send via Apache X-Sendfile header?
-            $headers['X-Sendfile'] = $filePath;
-        } else if ($sendFileMode === 'Nginx') {
-            // Send via Nginx X-Accel-Redirect?
-            $headers['X-Accel-Redirect'] = $nginxRedirect;
-        }
-
-        // Add the headers we've collected to our response
-        foreach ($headers as $header => $value) {
-            $response = $response->withHeader($header, $value);
-        }
-
-        // Should we output the file via the application stack, or directly by reading the file.
-        if ($sendFileMode == 'Off') {
-            // Return the file with PHP
-            $response = $response->withBody(new Stream(fopen($filePath, 'r')));
-
-            $this->getLog()->debug('Returning Stream with response body, sendfile off.');
-        } else {
-            $this->getLog()->debug('Using sendfile to return the file, only output headers.');
-        }
-
-        return $response;
     }
 }

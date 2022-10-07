@@ -353,7 +353,7 @@ class ListenersMiddleware implements MiddlewareInterface
         $playerBundleListener = new XmdsPlayerBundleListener();
         $playerBundleListener->useLogger($c->get('logger'));
 
-        $fontsListener = new XmdsFontsListener($c->get('fontFactory'), $c->get('mediaService'));
+        $fontsListener = new XmdsFontsListener($c->get('fontFactory'));
         $fontsListener->useLogger($c->get('logger'));
 
         $dispatcher->addListener('xmds.dependency.list', [$playerBundleListener, 'onDependencyList']);

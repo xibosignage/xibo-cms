@@ -26,5 +26,4 @@ class FontsListener
             'count' => $fontsSize['totalCount']
         ]);
     }
-
 }

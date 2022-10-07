@@ -6,7 +6,6 @@ use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\FontFactory;
 use Xibo\Listener\ListenerLoggerTrait;
-use Xibo\Service\MediaServiceInterface;
 
 class XmdsFontsListener
 {
@@ -16,15 +15,10 @@ class XmdsFontsListener
      * @var FontFactory
      */
     private $fontFactory;
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
 
-    public function __construct(FontFactory $fontFactory, MediaServiceInterface $mediaService)
+    public function __construct(FontFactory $fontFactory)
     {
         $this->fontFactory = $fontFactory;
-        $this->mediaService = $mediaService;
     }
 
     public function onDependencyList(XmdsDependencyListEvent $event)
@@ -45,7 +39,7 @@ class XmdsFontsListener
 
         $event->addDependency(
             'fontCss',
-            -2222222,
+            1,
             'fonts/fonts.css',
             filesize($fontsCssPath),
             md5($fontsCssPath),
