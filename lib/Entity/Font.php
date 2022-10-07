@@ -121,20 +121,13 @@ class Font
 
     private function edit()
     {
-        $this->getStore()->update(
-            '
-                    UPDATE `fonts`
-                    SET modifiedAt = :modifiedAt,
-                        modifiedBy = :modifiedBy,
-                        name = :name
-                    WHERE id = :id
-            ',
-            [
+        $this->getStore()->update('UPDATE `fonts` SET modifiedAt = :modifiedAt, modifiedBy = :modifiedBy, name = :name WHERE id = :id', [
                 'modifiedAt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'modifiedBy' => $this->modifiedBy,
                 'name' => $this->name,
                 'id' => $this->id
-            ]);
+            ]
+        );
     }
 
     public function delete()
@@ -145,7 +138,7 @@ class Font
         ]);
 
         // delete file
-        $libraryLocation = $this->config->getSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         if (file_exists($libraryLocation . 'fonts/' . $this->fileName)) {
             unlink($libraryLocation . 'fonts/' . $this->fileName);

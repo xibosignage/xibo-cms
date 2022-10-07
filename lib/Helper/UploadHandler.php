@@ -5,6 +5,9 @@ namespace Xibo\Helper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\LibraryFullException;
 
+/**
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName
+ */
 class UploadHandler extends BlueImpUploadHandler
 {
     /**

@@ -50,7 +50,7 @@ class AddFontsTableMigration extends AbstractMigration
 
         // create fonts sub-folder in the library location
         $libraryLocation = $this->fetchRow('SELECT `setting`.value FROM `setting` WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0];
-        if(!file_exists($libraryLocation . 'fonts')) {
+        if (!file_exists($libraryLocation . 'fonts')) {
             mkdir($libraryLocation . 'fonts', 0777, true);
         }
 

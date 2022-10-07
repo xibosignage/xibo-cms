@@ -366,7 +366,7 @@ class MediaService implements MediaServiceInterface
             mkdir($libraryFolder . '/thumbs', 0777, true);
         }
 
-        if(!file_exists($libraryFolder . '/fonts')) {
+        if (!file_exists($libraryFolder . '/fonts')) {
             mkdir($libraryFolder . '/fonts', 0777, true);
         }
 

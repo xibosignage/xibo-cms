@@ -101,7 +101,7 @@ class Font extends Base
             // font details from fontLib and preview text
             $font->buttons[] = [
                 'id' => 'font_button_details',
-                'url' => $this->urlFor($request,'font.details', ['id' => $font->id]),
+                'url' => $this->urlFor($request, 'font.details', ['id' => $font->id]),
                 'text' => __('Details')
             ];
 
@@ -208,8 +208,8 @@ class Font extends Base
 
         $options = [
             'upload_dir' => $libraryFolder . 'temp/',
-            'script_url' => $this->urlFor($request,'font.add'),
-            'upload_url' => $this->urlFor($request,'font.add'),
+            'script_url' => $this->urlFor($request, 'font.add'),
+            'upload_url' => $this->urlFor($request, 'font.add'),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->getMediaService()->libraryUsage() > $libraryLimit),

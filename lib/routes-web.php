@@ -742,7 +742,7 @@ $app->get('/fonts/fontlist', ['\Xibo\Controller\Font','fontList'])->setName('lib
 $app->get('/fonts/fontplayercss', ['\Xibo\Controller\Font','fontPlayerCss'])->setName('library.font.player.css');
 $app->get('/fonts/fontcss/download', ['\Xibo\Controller\Font','downloadFontsCss'])->setName('library.font.css.download');
 
-$app->group('', function(RouteCollectorProxy $group) {
+$app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');
     $group->get('/fonts/{id}/form/delete', ['\Xibo\Controller\Font', 'deleteForm'])->setName('font.form.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));

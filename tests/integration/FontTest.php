@@ -75,7 +75,7 @@ class FontTest extends LocalWebTestCase
     public function testListAll()
     {
         # Get all library items
-        $response = $this->sendRequest('GET','/fonts');
+        $response = $this->sendRequest('GET', '/fonts');
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
@@ -109,7 +109,7 @@ class FontTest extends LocalWebTestCase
     {
         $upload = $this->uploadFontFile();
 
-        $response = $this->sendRequest('DELETE','/fonts/' . $upload['files'][0]['id']. '/delete');
+        $response = $this->sendRequest('DELETE', '/fonts/' . $upload['files'][0]['id']. '/delete');
 
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
     }
@@ -160,6 +160,6 @@ class FontTest extends LocalWebTestCase
             ]
         ];
 
-        return $this->getEntityProvider()->post('/fonts',  ['multipart' => $payload]);
+        return $this->getEntityProvider()->post('/fonts', ['multipart' => $payload]);
     }
 }
