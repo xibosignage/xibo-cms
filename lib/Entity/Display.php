@@ -745,7 +745,7 @@ class Display implements \JsonSerializable
             $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
             $displayGroup->load();
             $displayGroup->unassignDisplay($this);
-            $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
+            $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false, 'allowNotify' => false]);
         }
 
         // Delete our display specific group
