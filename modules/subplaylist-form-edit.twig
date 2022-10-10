@@ -52,6 +52,12 @@
                         {% set helpText %}{% trans "Setting Spots to 0 will omit the first Playlist from the play order, and will be used as a Spot Fill option." %}{% endset %}
                         {{ forms.message(helpText) }}
 
+                        <div class="row">
+                            <div class="col-sm-12 d-none sub-playlist-no-playlists-message">
+                                <p>{% trans "You don't have available playlists" %}</p>
+                            </div>
+                        </div>
+
                         <div class="row row-special">
                             <div class="col-sm-1 text-right" for="subPlaylistId[]">#</div>
                             <div class="col-sm-3 text-center">
