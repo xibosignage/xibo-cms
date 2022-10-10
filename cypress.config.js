@@ -28,8 +28,8 @@ module.exports = defineConfig({
   defaultCommandTimeout: 10000,
   requestTimeout: 10000,
   env: {
-      client_id: "7dd456e9e26d128e0c9d61045212d0afbcd5ea64",
-      client_secret: "9004c8edaea588a16ea8c4334d41683ccc9af48036b0d798da5ab8d038e69704e8d768483ea0c7870058cdf60f1c320386bd8702413c226d0ba75dcb617e2dc1f7693cb4e285bbe81d1cf1a5cbf8c7f9288a4ff912b5c73d59fe9f4f7b7e3383e5d276ccbdd1302c3be8acd176fa3d07aaa8dc0903a825d98eec0ee94e10b4"
+      client_id: "MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d",
+      client_secret: "Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz"
   },
   e2e: {
     // We've imported your old cypress plugins here.
