@@ -1096,6 +1096,9 @@ Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
             self.deselectCardsAndDropZones();
         });
 
+        // Toggle drop areas
+        $('.toggle-drop').css('z-index', 'initial');
+
         // Set droppable areas as active
         $('[data-type="region"].ui-droppable.editable, [data-parent="region"].widget-preview.ui-droppable.parent-editable').addClass('ui-droppable-active');
     } else {
