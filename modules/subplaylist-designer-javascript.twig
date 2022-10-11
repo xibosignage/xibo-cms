@@ -27,10 +27,11 @@
     function subplaylist_form_edit_open() {
 
         // Get form object
-        var $form = $(this);
+        var $dialog = $(this);
+        var $form = $dialog.find('form');
 
         // setup checkbox behaviour for cycle based playback
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#cyclePlaybackEnabled', '.cycle-based-playback');
+        formHelpers.setupCheckboxInputFields($form, '#cyclePlaybackEnabled', '.cycle-based-playback');
 
         // Bind our tooltips
         $form.find('[data-toggle="tooltip"]').tooltip();
@@ -42,10 +43,6 @@
         var padHelpText = "{% trans "Pad - use the first Playlist to pad any remaining Spots" %}";
         var repeatTitle = "{% trans "Repeat" %}";
         var repeatHelpText = "{% trans "Repeat - repeat the Widgets in this Playlist until the number of Spots have been filled" %}";
-        var noPlaylistsMessage = "{% trans "No playlists" %}";
-        var noPlaylistsHelpMessage = "{% trans "You don't have available playlists" %}";
-        var noPlaylistsAccessHelpMessage = "{% trans "You don't have access to this playlist" %}";
-        var playlistIdMessage = "{% trans "Playlist Id " %}";
 
         // Order Clause
         var subPlaylistFields = $(".sub-playlists", $form);
@@ -53,14 +50,13 @@
         // Get template
         var subPlaylistFormTemplate = formHelpers.getTemplate('subPlaylistFormTemplate');
 
-        if(subPlaylistFields.length === 0)
+        if(subPlaylistFields.length === 0) {
             return;
+        }
 
-        if($form.data().extra.subPlaylistId.length === 0) {
+        if($dialog.data().extra.subPlaylistId.length === 0) {
             // Add a template row
             subPlaylistFields.append(subPlaylistFormTemplate({
-                playlists: $form.data().extra.playlists,
-                isPlaylistEditable: true,
                 title: "1",
                 subPlaylistId: "",
                 subPlaylistIdSpots: "",
@@ -73,33 +69,18 @@
                 fillHelpText: fillHelpText,
                 padHelpText: padHelpText,
                 repeatHelpText: repeatHelpText,
-                noPlaylistsMessage: noPlaylistsMessage,
-                noPlaylistsHelpMessage: noPlaylistsHelpMessage,
-                noPlaylistsAccessHelpMessage: noPlaylistsAccessHelpMessage,
-                playlistIdMessage: playlistIdMessage
             }));
         } else {
             // For each of the existing codes, create form components
             var i = 0;
-            $.each($form.data().extra.subPlaylistId, function(index, field) {
+            $.each($dialog.data().extra.subPlaylistId, function(index, field) {
                 i++;
-
-                var isPlaylistEditable = false;
-
-                $.each($form.data().extra.playlists, function(index2, field2) {
-                    if(field == field2.playlistId) {
-                        isPlaylistEditable = true;
-                    }
-                });
-
                 subPlaylistFields.append(subPlaylistFormTemplate({
-                    playlists: $form.data().extra.playlists,
                     title: i,
-                    isPlaylistEditable: isPlaylistEditable,
                     subPlaylistId: field,
-                    subPlaylistIdSpots: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpots,
-                    subPlaylistIdSpotLength: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpotLength,
-                    subPlaylistIdSpotFill: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpotFill,
+                    subPlaylistIdSpots: ($dialog.data().extra.subPlaylistOptions[field] === undefined) ? "" : $dialog.data().extra.subPlaylistOptions[field].subPlaylistIdSpots,
+                    subPlaylistIdSpotLength: ($dialog.data().extra.subPlaylistOptions[field] === undefined) ? "" : $dialog.data().extra.subPlaylistOptions[field].subPlaylistIdSpotLength,
+                    subPlaylistIdSpotFill: ($dialog.data().extra.subPlaylistOptions[field] === undefined) ? "" : $dialog.data().extra.subPlaylistOptions[field].subPlaylistIdSpotFill,
                     buttonGlyph: ((i === 1) ? "fa-plus" : "fa-minus"),
                     fillTitle: fillTitle,
                     padTitle: padTitle,
@@ -107,10 +88,6 @@
                     fillHelpText: fillHelpText,
                     padHelpText: padHelpText,
                     repeatHelpText: repeatHelpText,
-                    noPlaylistsMessage: noPlaylistsMessage,
-                    noPlaylistsHelpMessage: noPlaylistsHelpMessage,
-                    noPlaylistsAccessHelpMessage: noPlaylistsAccessHelpMessage,
-                    playlistIdMessage: playlistIdMessage
                 }));
             });
         }
@@ -121,9 +98,7 @@
 
             // find the gylph
             if($(this).find("i").hasClass("fa-plus")) {
-                subPlaylistFields.append(subPlaylistFormTemplate({
-                    playlists: $form.data().extra.playlists,
-                    isPlaylistEditable: true,
+                var $newRow = $(subPlaylistFormTemplate({
                     title: subPlaylistFields.find('.row-special').length + 1,
                     subPlaylistId: "",
                     subPlaylistIdSpots: "",
@@ -136,26 +111,53 @@
                     fillHelpText: fillHelpText,
                     padHelpText: padHelpText,
                     repeatHelpText: repeatHelpText,
-                    noPlaylistsMessage: noPlaylistsMessage,
-                    noPlaylistsHelpMessage: noPlaylistsHelpMessage,
-                    noPlaylistsAccessHelpMessage: noPlaylistsAccessHelpMessage,
-                    playlistIdMessage: playlistIdMessage
                 }));
+                subPlaylistFields.append($newRow);
 
-                subplaylist_init_row($form);
+                subplaylist_init_row($form, $newRow);
             } else {
                 // Remove this row
                 $(this).closest(".row-special").remove();
             }
         });
 
-        subplaylist_init_row($form);
+        subPlaylistFields.find('.row').each(function(index, element) {
+            subplaylist_init_row($form, $(element));
+        });
     }
 
-    function subplaylist_init_row($row) {
-        $row.find('.subPlaylistSelect').select2({
-            dropdownAutoWidth: true
-        });
+    function subplaylist_init_row($form, $row) {
+        var $select = $row.find('.subPlaylistSelect');
+
+        // Get the initial value.
+        if ($select.data('fieldId')) {
+            $.ajax({
+                method: 'GET',
+                url: '{{ url_for("playlist.search") }}?playlistId=' + $select.data('fieldId'),
+                success: function (response) {
+                    if (response.data && response.data.length > 0) {
+                        // Append our initial option
+                        $select.append('<option value="' + response.data[0].playlistId +
+                            '" data-tags="' + response.data[0].tags +
+                            '" selected>' + response.data[0].name + '</option>');
+
+                        subplaylist_init_select2($form, $select);
+                    } else {
+                        // No permissions.
+                        $select.parent().append('<input type="hidden" value="' + $select.data('fieldId') + '" name="subPlaylistId[]">' +
+                            '<span title="{% trans "You do not have access to this playlist" %}"><i class="fa fa-lock"></i>&nbsp;{% trans "Playlist Id " %}' +
+                            $select.data('fieldId') + '</span>');
+                        $select.remove();
+                    }
+                },
+                error: function () {
+                    $select.parent().append('{% trans "An unknown error has occurred. Please refresh" %}');
+                }
+            });
+        } else {
+            subplaylist_init_select2($form, $select);
+        }
+
         $row.find('select[name="subPlaylistIdSpotFill[]"]').select2({
             templateResult: function(state) {
                 if (!state.id) {
@@ -165,6 +167,51 @@
             },
             dropdownAutoWidth: true,
             minimumResultsForSearch: -1
+        });
+    }
+
+    function subplaylist_init_select2($form, $el) {
+        $el.select2({
+            dropdownAutoWidth: true,
+            ajax: {
+                url: '{{ url_for("playlist.search") }}?notPlaylistId=' + $form.data('playlistId'),
+                dataType: 'json',
+                data: function (params) {
+                    var query = {
+                        start: 0,
+                        length: 10,
+                        name: params.term
+                    };
+                    if (params.page != null) {
+                        query.start = (params.page - 1) * 10;
+                    }
+                    return query;
+                },
+                processResults: function (data, params) {
+                    var results = [];
+
+                    $.each(data.data, function (index, el) {
+                        results.push({
+                            id: el.playlistId,
+                            text: el.name,
+                        });
+                    });
+
+                    var page = params.page || 1;
+                    page = (page > 1) ? page - 1 : page;
+
+                    if (page === 1 && results.length <= 0) {
+                        $form.find('.sub-playlist-no-playlists-message').removeClass('d-none');
+                    }
+
+                    return {
+                        results: results,
+                        pagination: {
+                            more: (page * 10 < data.recordsTotal)
+                        }
+                    };
+                }
+            },
         });
     }
 

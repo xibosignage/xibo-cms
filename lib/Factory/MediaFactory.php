@@ -891,8 +891,8 @@ class MediaFactory extends BaseFactory
             $params['orientation'] = $sanitizedFilter->getString('orientation');
         }
 
-        if ($sanitizedFilter->getInt('noOrientation') === 1) {
-            $body .= ' AND media.orientation IS NULL ';
+        if ($sanitizedFilter->getInt('requiresMetaUpdate') === 1) {
+            $body .= ' AND (`media`.orientation IS NULL OR IFNULL(`media`.width, 0) = 0)';
         }
 
         // View Permissions
