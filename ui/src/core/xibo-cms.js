@@ -156,6 +156,9 @@ function XiboInitialise(scope) {
         $(this).find(".XiboFilter form input").on("keyup", filterRefresh);
         $(this).find(".XiboFilter form select").on("change", filterRefresh);
 
+        // Folder navigation relies on triggering the change event on this hidden field.
+        $(this).find('.XiboFilter form #folderId').on('change', filterRefresh);
+
         // check to see if we need to share folder tree state globally or per page
         var gridFolderState = rememberFolderTreeStateGlobally ? 'grid-folder-tree-state' : 'grid_'+gridName ;
         // init the jsTree
