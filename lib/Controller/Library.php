@@ -2009,7 +2009,14 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
-        $layouts = $this->layoutFactory->query(null, ['mediaId' => $id, 'showDrafts' => 1]);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $layouts = $this->layoutFactory->query(
+            $this->gridRenderSort($sanitizedParams),
+            $this->gridRenderFilter([
+                'mediaId' => $id,
+                'showDrafts' => 1
+            ], $sanitizedParams)
+        );
 
         if (!$this->isApi($request)) {
             foreach ($layouts as $layout) {

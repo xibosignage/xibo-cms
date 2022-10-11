@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -18,17 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * 
- * Template strings to be translated, that will be used to replace tags in the ||tag|| format
- * __('Wind')
- * __('Humidity')
- * __('Feels Like')
- * __('Right now')
- * __('Pressure')
- * __('Visibility')
- * __('TODAY')
- * __('RIGHT NOW')
  */
 
 namespace Xibo\Widget;
@@ -217,6 +206,7 @@ class ForecastIo extends ModuleWidget
         // Process any module settings you asked for.
         $apiKey = $sanitizedParams->getString('apiKey');
         $owmApiKey = $sanitizedParams->getString('owmApiKey');
+        $owmApiVersion = $sanitizedParams->getString('owmApiVersion');
         $owmIsPaidPlan = $sanitizedParams->getCheckbox('owmIsPaidPlan');
         $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 1440]);
 
@@ -230,6 +220,7 @@ class ForecastIo extends ModuleWidget
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['owmApiKey'] = $owmApiKey;
+        $this->module->settings['owmApiVersion'] = $owmApiVersion;
         $this->module->settings['owmIsPaidPlan'] = $owmIsPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
@@ -589,7 +580,7 @@ class ForecastIo extends ModuleWidget
         // Create a provider
         return $this->getProvider()
             ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
-            //->enableLogging($this->getLog())
+            ->enableLogging($this->getLog())
             ->setLocation(round($defaultLat, 3), round($defaultLong, 3))
             ->setUnits($this->getOption('units', 'auto'))
             ->setLang($this->getOption('lang', 'en'));
@@ -614,7 +605,8 @@ class ForecastIo extends ModuleWidget
             : (new OpenWeatherMapProvider($this->getPool()))->setKey($owmApiKey))
             ->setCachePeriod($this->getSetting('cachePeriod', 1440))
             ->setOptions([
-                'isPaidPlan' => $this->getSetting('owmIsPaidPlan', 0)
+                'isPaidPlan' => $this->getSetting('owmIsPaidPlan', 0),
+                'owmApiVersion' => $this->getSetting('owmApiVersion', '2.5')
             ]);
     }
 

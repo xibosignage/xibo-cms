@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -18,9 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Template strings to be translated, that will be used to replace tags in the ||tag|| format
- * __('RATE')
  */
 namespace Xibo\Widget;
 
@@ -109,6 +106,7 @@ class Currencies extends AlphaVantageBase
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $apiKey = $sanitizedParams->getString('apiKey');
+        $isPaidPlan = $sanitizedParams->getCheckbox('isPaidPlan');
         $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 14400]);
 
         if ($this->module->enabled != 0) {
@@ -122,6 +120,7 @@ class Currencies extends AlphaVantageBase
         }
 
         $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['isPaidPlan'] = $isPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         // Return an array of the processed settings.
@@ -424,26 +423,31 @@ class Currencies extends AlphaVantageBase
                     $result = $this->getCurrencyExchangeRate($base, $currency);
                 }
 
-                $this->getLog()->debug('Results are: ' . var_export($result, true));
+                // $this->getLog()->debug('Results are: ' . var_export($result, true));
 
-                if (!array_key_exists('Meta Data', $result)) {
-                    throw new InvalidArgumentException(__('Currency data invalid'), 'Meta Data');
+                if ($this->getSetting('isPaidPlan', 0) == 1) {
+                    $parsedResult = [
+                        'time' => $result['Realtime Currency Exchange Rate']['6. Last Refreshed'],
+                        'ToName' => $result['Realtime Currency Exchange Rate']['3. To_Currency Code'],
+                        'FromName' => $result['Realtime Currency Exchange Rate']['1. From_Currency Code'],
+                        'Bid' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                        'Ask' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                        'LastTradePriceOnly' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                        'RawLastTradePriceOnly' => $result['Realtime Currency Exchange Rate']['5. Exchange Rate'],
+                        'TimeZone' => $result['Realtime Currency Exchange Rate']['7. Time Zone'],
+                    ];
+                } else {
+                    $parsedResult = [
+                        'time' => $result['Meta Data']['5. Last Refreshed'],
+                        'ToName' => $result['Meta Data']['3. To Symbol'],
+                        'FromName' => $result['Meta Data']['2. From Symbol'],
+                        'Bid' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
+                        'Ask' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
+                        'LastTradePriceOnly' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
+                        'RawLastTradePriceOnly' => array_values($result['Time Series FX (Daily)'])[0]['1. open'],
+                        'TimeZone' => $result['Meta Data']['6. Time Zone'],
+                    ];
                 }
-
-                if (!array_key_exists('Time Series FX (Daily)', $result)) {
-                    throw new InvalidArgumentException(__('Currency data invalid'), 'Time Series FX (Daily)');
-                }
-
-                $parsedResult = [
-                    'time' => $result['Meta Data']['5. Last Refreshed'],
-                    'ToName' => $result['Meta Data']['3. To Symbol'],
-                    'FromName' => $result['Meta Data']['2. From Symbol'],
-                    'Bid' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
-                    'Ask' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
-                    'LastTradePriceOnly' => round(array_values($result['Time Series FX (Daily)'])[0]['1. open'], 4),
-                    'RawLastTradePriceOnly' => array_values($result['Time Series FX (Daily)'])[0]['1. open'],
-                    'TimeZone' => $result['Meta Data']['6. Time Zone'],
-                ];
 
                 // Set the name/currency to be the full name including the base currency
                 $parsedResult['Name'] = $parsedResult['FromName'] . '/' . $parsedResult['ToName'];
@@ -455,8 +459,8 @@ class Currencies extends AlphaVantageBase
                         ? $this->getPriorDay($currency, $base)
                         : $this->getPriorDay($base, $currency);
 
-                    $this->getLog()->debug('Percentage change requested, prior day is '
-                        . var_export($priorDay['Time Series FX (Daily)'], true));
+                    /*$this->getLog()->debug('Percentage change requested, prior day is '
+                        . var_export($priorDay['Time Series FX (Daily)'], true));*/
 
                     $priorDay = count($priorDay['Time Series FX (Daily)']) < 2
                         ? ['1. open' => 1]
