@@ -59,7 +59,7 @@
     .main-panel-wrapper {
         position: relative;
         height: 100%;
-        padding: 8px;
+        padding: 4px;
         background-color: $xibo-color-neutral-900;
         border-width: 2px;
         border-style: solid;
@@ -317,6 +317,7 @@
         height: 100%;
         border: none;
         background: $xibo-color-neutral-900;
+        padding: 32px;
 
         .layout-viewer-border {
             @include set-transparent-color(background, $xibo-color-neutral-900, 0.9);
@@ -325,7 +326,8 @@
 
         .viewer-element {
             position: relative;
-            overflow: hidden;
+            overflow: clip;
+            overflow-clip-margin: 6px;
         }
 
         .viewer-element .module-preview-icon {
@@ -854,12 +856,6 @@
             outline: 2px solid $xibo-color-neutral-100;
             outline-offset: 1px;
         }
-
-        &.selected:not(.designer-region-info) {
-            &::before {
-                outline-color: $xibo-color-region-selected;
-            }
-        }
     }
 
     .designer-widget {
@@ -867,6 +863,9 @@
         height: 100%;
 
         &.selected {
+            outline: 1px solid $xibo-color-neutral-100;
+            outline-offset: 6px;
+
             &::before {
                 content: '';
                 position: absolute;
@@ -875,7 +874,7 @@
                 width: 100%;
                 height: 100%;
                 outline: 3px solid $xibo-color-widget-selected;
-                outline-offset: 4px;
+                outline-offset: 3px;
             }
         }
     }
@@ -918,6 +917,11 @@
 
         .layout.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
+        }
+
+        &.ui-droppable-active {
+            @include z-index-set($designer-z-index-select);
+            position: relative;
         }
     }
 

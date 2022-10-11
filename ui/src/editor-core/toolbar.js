@@ -797,6 +797,9 @@ Toolbar.prototype.handleDroppables = function(type, subType) {
       selectorAppend += ':not(#actions-drawer-content)';
     }
 
+    // Drop to layout wrapper
+    $('.layout-wrapper.droppable').addClass('ui-droppable-active');
+
     // Drop to layout only, for now
     $('.layout.droppable' +
       selectorAppend).addClass('ui-droppable-active');
