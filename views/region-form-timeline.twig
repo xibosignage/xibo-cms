@@ -31,7 +31,8 @@
             <div class="modal-content editor-modal-content">
                 <div class="modal-header editor-modal-header">
                     <h4 class="modal-title editor-modal-title">
-                        {% trans "Edit Playlist" %}
+                        {% set playlistName = playlist.name %}
+                        {% trans %}Edit Playlist - {{ playlistName }}{% endtrans %}
                     </h4>
                     
                     <div class="">
