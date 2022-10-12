@@ -71,15 +71,15 @@ interface MediaServiceInterface
     public function getUser(): User;
 
     /**
+     * @return PoolInterface
+     */
+    public function getPool() : PoolInterface;
+
+    /**
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @return MediaServiceInterface
      */
     public function setDispatcher(EventDispatcherInterface $dispatcher): MediaServiceInterface;
-
-    /**
-     * @param \Slim\Routing\RouteParser $routeParser
-     */
-    public function fontCKEditorConfig(RouteParser $routeParser): string;
 
     /**
      * Library Usage
@@ -115,8 +115,6 @@ interface MediaServiceInterface
     public function getDownloadInfo($url): array;
 
     /**
-     * @param \Slim\Routing\RouteParser $routeParser
-     * @param array $options
      * @return array|mixed
      * @throws ConfigurationException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
@@ -124,7 +122,7 @@ interface MediaServiceInterface
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function installFonts(RouteParser $routeParser, $options = []);
+    public function updateFontsCss();
 
     /**
      * @param $libraryFolder

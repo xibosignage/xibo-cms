@@ -23,7 +23,6 @@
 namespace Xibo\Factory;
 
 use Carbon\Carbon;
-use Slim\Interfaces\RouteParserInterface;
 use Stash\Invalidation;
 use Stash\Pool;
 use Xibo\Entity\DataSet;
@@ -1122,7 +1121,6 @@ class LayoutFactory extends BaseFactory
      * @param bool $importDataSetData
      * @param DataSetFactory $dataSetFactory
      * @param string $tags
-     * @param RouteParserInterface $routeParser $routeParser
      * @param MediaServiceInterface $mediaService
      * @param int $folderId
      * @return Layout
@@ -1143,7 +1141,6 @@ class LayoutFactory extends BaseFactory
         $importDataSetData,
         $dataSetFactory,
         $tags,
-        $routeParser,
         MediaServiceInterface $mediaService,
         int $folderId
     ) {
@@ -1368,6 +1365,7 @@ class LayoutFactory extends BaseFactory
 
                     $font->modifiedBy = $this->getUserFactory()->getById($userId)->userName;
                     $font->name = $file['name'];
+                    $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily())));
                     $font->fileName = $file['file'];
                     $font->size = filesize($temporaryFileName);
                     $font->md5 = md5_file($temporaryFileName);
@@ -1804,9 +1802,9 @@ class LayoutFactory extends BaseFactory
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
-        if ($fontsAdded && $routeParser != null) {
+        if ($fontsAdded) {
             $this->getLog()->debug('Fonts have been added');
-            $mediaService->setUser($this->getUser())->installFonts($routeParser);
+            $mediaService->setUser($this->getUser())->updateFontsCss();
         }
 
         return $layout;

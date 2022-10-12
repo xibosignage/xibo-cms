@@ -58,6 +58,12 @@ class Font
     public $fileName;
 
     /**
+     * @SWG\Property(description="The Font family name")
+     * @var string
+     */
+    public $familyName;
+
+    /**
      * @SWG\Property(description="The Font file size in bytes")
      * @var int
      */
@@ -106,14 +112,15 @@ class Font
     private function add()
     {
         $this->id = $this->getStore()->insert('
-            INSERT INTO `fonts` (`createdAt`, `modifiedAt`, modifiedBy, name, fileName, size, md5)
-              VALUES (:createdAt, :modifiedAt, :modifiedBy, :name, :fileName, :size, :md5)
+            INSERT INTO `fonts` (`createdAt`, `modifiedAt`, modifiedBy, name, fileName, familyName, size, md5)
+              VALUES (:createdAt, :modifiedAt, :modifiedBy, :name, :fileName, :familyName, :size, :md5)
         ', [
             'createdAt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'modifiedAt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'modifiedBy' => $this->modifiedBy,
             'name' => $this->name,
             'fileName' => $this->fileName,
+            'familyName' => $this->familyName,
             'size' => $this->size,
             'md5' => $this->md5
         ]);

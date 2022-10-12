@@ -5,11 +5,10 @@ namespace Xibo\Controller;
 use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
+use Stash\Invalidation;
 use Xibo\Factory\FontFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\HttpCacheProvider;
-use Xibo\Helper\Random;
 use Xibo\Helper\UploadHandler;
 use Xibo\Service\DownloadService;
 use Xibo\Service\MediaService;
@@ -251,6 +250,7 @@ class Font extends Base
 
             $font->modifiedBy = $this->getUser()->userName;
             $font->name = $name;
+            $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily())));
             $font->fileName = $file->fileName;
             $font->size = filesize($filePath);
             $font->md5 = md5_file($filePath);
@@ -270,6 +270,7 @@ class Font extends Base
             // return
             $file->id = $font->id;
             $file->md5 = $font->md5;
+            $file->name = $font->name;
 
             return $file;
         });
@@ -277,7 +278,7 @@ class Font extends Base
         $uploadHandler->post();
 
         // all done, refresh fonts.css
-        $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser());
+        $this->getMediaService()->updateFontsCss();
 
         return $this->render($request, $response);
     }
@@ -318,31 +319,9 @@ class Font extends Base
         $font->delete();
 
         // refresh fonts.css
-        $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser());
+        $this->getMediaService()->updateFontsCss();
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Return the CMS flavored font css
-     * @param Request|null $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function fontList(Request $request, Response $response)
-    {
-        // Regenerate the CSS for fonts
-        $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
-
-        return $response->withJson([
-            'list' => $css['list']
-        ]);
     }
 
     /**
@@ -359,16 +338,44 @@ class Font extends Base
      */
     public function fontCss(Request $request, Response $response)
     {
-        // Regenerate the CSS for fonts
-        $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fontcss_' . Random::generateString();
-        // Work out the etag
-        $response = HttpCacheProvider::withEtag($response, md5($css['css']));
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'fonts/local_fontcss';
 
-        // Return the CSS to the browser as a file
-        $out = fopen($tempFileName, 'w');
-        fputs($out, $css['css']);
-        fclose($out);
+        $cacheItem = $this->getMediaService()->getPool()->getItem('localFontCss');
+        $cacheItem->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
+
+        if ($cacheItem->isMiss()) {
+            $this->getLog()->debug('local font css cache has expired, regenerating');
+
+            $cacheItem->lock(60);
+            $localCss = '';
+            // Regenerate the CSS for fonts
+            foreach ($this->fontFactory->query() as $font) {
+                // Go through all installed fonts each time and regenerate.
+                $fontTemplate = '@font-face {
+    font-family: \'[family]\';
+    src: url(\'[url]\');
+}';
+                // Css for the local CMS contains the full download path to the font
+                $url = $this->urlFor($request, 'font.download', ['id' => $font->id]);
+                $localCss .= str_replace('[url]', $url, str_replace('[family]', $font->familyName, $fontTemplate));
+            }
+
+            // cache
+            $cacheItem->set($localCss);
+            $cacheItem->expiresAfter(new \DateInterval('P30D'));
+            $this->getMediaService()->getPool()->saveDeferred($cacheItem);
+
+            // Return the CSS to the browser as a file
+            $out = fopen($tempFileName, 'w');
+            fputs($out, $localCss);
+            fclose($out);
+        } else {
+            $this->getLog()->debug('local font css file served from cache ');
+            $localCss = $cacheItem->get();
+        }
+
+        // Work out the etag
+        $response = HttpCacheProvider::withEtag($response, md5($localCss));
 
         $this->setNoOutput(true);
 

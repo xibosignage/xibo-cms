@@ -87,6 +87,7 @@ class FontFactory extends BaseFactory
             `modifiedBy`,
             `name`,
             `fileName`,
+            `familyName`,
             `size`,
             `md5`
         ';

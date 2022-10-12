@@ -90,7 +90,6 @@ class Actions implements Middleware
                             true,
                             $container->get('dataSetFactory'),
                             null,
-                            $routeContext->getRouteParser(),
                             $container->get('mediaService'),
                             1
                         );
@@ -117,7 +116,7 @@ class Actions implements Middleware
             foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
                 // check if we already have this font file
                 if (count($container->get('fontFactory')->getByFileName($file)) <= 0) {
-                    // if we don't add it
+                    // if we don't, add it
                     $filePath = $fontFolder . DIRECTORY_SEPARATOR . $file;
                     $fontLib = \FontLib\Font::load($filePath);
 
@@ -133,6 +132,7 @@ class Actions implements Middleware
                     $font = $container->get('fontFactory')->createEmpty();
                     $font->modifiedBy = $user->userName;
                     $font->name = $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily();
+                    $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
                     $font->fileName = $file;
                     $font->size = filesize($filePath);
                     $font->md5 = md5_file($filePath);
@@ -143,9 +143,9 @@ class Actions implements Middleware
                 }
             }
 
-            // if we added any fonts here, refresh fonts cache and fonts.css file
+            // if we added any fonts here fonts.css file
             if ($fontAdded) {
-                $container->get('mediaService')->setUser($container->get('user'))->installFonts($routeContext->getRouteParser());
+                $container->get('mediaService')->setUser($container->get('user'))->updateFontsCss();
             }
 
             // Layouts and fonts imported

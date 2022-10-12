@@ -143,7 +143,11 @@ class FontTest extends LocalWebTestCase
         // read css file
         $fontsCss = file_get_contents($fontCssPath);
 
-        $this->assertContains('font-family: \''.strtolower($this->testFileName).'\';', $fontsCss, 'Font not in fonts.css');
+        // get the record
+        $fontRecord = $this->getEntityProvider()->get('/fonts', ['name' => $this->testFileName])[0];
+
+        // check if the uploaded font was added to player fonts.css file.
+        $this->assertContains('font-family: \''.$fontRecord['familyName'].'\';', $fontsCss, 'Font not in fonts.css');
         $this->assertContains('src: url(\''.basename($this->testFilePath).'\');', $fontsCss, 'Font not in fonts.css');
     }
 

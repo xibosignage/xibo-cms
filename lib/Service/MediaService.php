@@ -107,20 +107,16 @@ class MediaService implements MediaServiceInterface
         return $this->user;
     }
 
+    public function getPool() : PoolInterface
+    {
+        return $this->pool;
+    }
+
     /** @inheritDoc */
     public function setDispatcher(EventDispatcherInterface $dispatcher): MediaServiceInterface
     {
         $this->dispatcher = $dispatcher;
         return $this;
-    }
-
-    /** @inheritDoc */
-    public function fontCKEditorConfig(RouteParser $routeParser): string
-    {
-        // Regenerate the CSS for fonts
-        $css = $this->installFonts($routeParser, ['invalidateCache' => false]);
-
-        return $css['ckeditor'];
     }
 
     /** @inheritDoc */
@@ -219,124 +215,52 @@ class MediaService implements MediaServiceInterface
     }
 
     /** @inheritDoc */
-    public function installFonts(RouteParser $routeParser, $options = [])
+    public function updateFontsCss()
     {
-        $options = array_merge([
-            'invalidateCache' => true
-        ], $options);
+        // delete local cms fonts.css from cache
+        $this->pool->deleteItem('localFontCss');
 
-        $this->log->debug('Install Fonts called with options: ' . json_encode($options));
+        $this->log->debug('Regenerating player fonts.css file');
 
-        // Drop the entire font cache as we cannot selectively tell whether the change that caused
-        // this effects all users or not.
-        // Important to note, that we aren't regenerating each user at this point in time, we're only clearing the cache
-        // for them all and generating the current user.
-        // We then make sure that subsequent generates do not change the library fonts.css
-        if ($options['invalidateCache']) {
-            $this->log->debug('Dropping font cache and regenerating.');
-            $this->pool->deleteItem('fontCss/');
-        }
-
-        // Each user has their own font cache (due to permissions) and the displays have their own font cache too
-        // Get the item from the cache
-        $cssItem = $this->pool->getItem('fontCss/');
-        $cssItem->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
-
-        // Get the CSS
-        $cssDetails = $cssItem->get();
-
-        if ($options['invalidateCache'] || $cssItem->isMiss()) {
-            $this->log->debug('Regenerating font cache');
-
-            // lock the cache
-            $cssItem->lock(60);
-
-            // Go through all installed fonts each time and regenerate.
-            $fontTemplate = '@font-face {
+        // Go through all installed fonts each time and regenerate.
+        $fontTemplate = '@font-face {
     font-family: \'[family]\';
     src: url(\'[url]\');
 }';
 
-            // Save a fonts.css file to the library for use as a module
-            $fonts = $this->fontFactory->query();
+        // Save a fonts.css file to the library for use as a module
+        $fonts = $this->fontFactory->query();
 
-            $css = '';
-            $localCss = '';
-            $ckEditorString = '';
-            $fontList = [];
+        $css = '';
 
-            // Check the library exists
-            $libraryLocation = $this->configService->getSetting('LIBRARY_LOCATION');
-            MediaService::ensureLibraryExists($this->configService->getSetting('LIBRARY_LOCATION'));
+        // Check the library exists
+        $libraryLocation = $this->configService->getSetting('LIBRARY_LOCATION');
+        MediaService::ensureLibraryExists($this->configService->getSetting('LIBRARY_LOCATION'));
 
-            if (count($fonts) > 0) {
-                // Build our font strings.
-                foreach ($fonts as $font) {
-                    // Separate out the display name and the referenced name
-                    // (referenced name cannot contain any odd characters or numbers)
-                    $displayName = $font->name;
-                    $familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
-
-                    // Css for the player contains the actual stored as location of the font.
-                    $css .= str_replace('[url]', $font->fileName, str_replace('[family]', $familyName, $fontTemplate));
-
-                    // Css for the local CMS contains the full download path to the font
-                    $url = $routeParser->urlFor('font.download', ['id' => $font->id]);
-                    $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
-
-                    // CKEditor string
-                    $ckEditorString .= $displayName . '/' . $familyName . ';';
-
-                    // Font list
-                    $fontList[] = [
-                        'displayName' => $displayName,
-                        'familyName' => $familyName
-                    ];
-                }
-
-                // If we're a full regenerate, we want to also update the fonts.css file.
-                if ($options['invalidateCache']) {
-                    $existingLibraryFontsCss = '';
-                    if (file_exists($libraryLocation . 'fonts/fonts.css')) {
-                        $existingLibraryFontsCss = file_get_contents($libraryLocation . 'fonts/fonts.css');
-                    }
-
-                    $tempFontsCss = $libraryLocation . 'temp/fonts.css';
-                    file_put_contents($tempFontsCss, $css);
-                    // Check to see if the existing file is different from the new one
-                    if ($existingLibraryFontsCss == '' || md5($existingLibraryFontsCss) !== md5($tempFontsCss)) {
-                        $this->log->info('Detected change in fonts.css file, dropping the Display cache');
-                        rename($tempFontsCss, $libraryLocation . 'fonts/fonts.css');
-                        // Clear the display cache
-                        $this->pool->deleteItem('/display');
-                    } else {
-                        @unlink($tempFontsCss);
-                        $this->log->debug('Newly generated font cache is the same as the old cache. Ignoring.');
-                    }
-                }
-
-                $cssDetails = [
-                    'css' => $localCss,
-                    'ckeditor' => $ckEditorString,
-                    'list' => $fontList,
-                ];
-
-                $cssItem->set($cssDetails);
-                $cssItem->expiresAfter(new \DateInterval('P30D'));
-                $this->pool->saveDeferred($cssItem);
-            } else {
-                $cssDetails = [
-                    'css' => '',
-                    'ckeditor' => '',
-                    'list' => [],
-                ];
-            }
-        } else {
-            $this->log->debug('CMS font CSS returned from Cache.');
+        // Build our font strings.
+        foreach ($fonts as $font) {
+            // Css for the player contains the actual stored as location of the font.
+            $css .= str_replace('[url]', $font->fileName, str_replace('[family]', $font->familyName, $fontTemplate));
         }
 
-        // Return a fonts css string for use locally (in the CMS)
-        return $cssDetails;
+        // If we're a full regenerate, we want to also update the fonts.css file.
+        $existingLibraryFontsCss = '';
+        if (file_exists($libraryLocation . 'fonts/fonts.css')) {
+            $existingLibraryFontsCss = file_get_contents($libraryLocation . 'fonts/fonts.css');
+        }
+
+        $tempFontsCss = $libraryLocation . 'temp/fonts.css';
+        file_put_contents($tempFontsCss, $css);
+        // Check to see if the existing file is different from the new one
+        if ($existingLibraryFontsCss == '' || md5($existingLibraryFontsCss) !== md5($tempFontsCss)) {
+            $this->log->info('Detected change in fonts.css file, dropping the Display cache');
+            rename($tempFontsCss, $libraryLocation . 'fonts/fonts.css');
+            // Clear the display cache
+            $this->pool->deleteItem('/display');
+        } else {
+            @unlink($tempFontsCss);
+            $this->log->debug('Newly generated fonts.css is the same as the old file. Ignoring.');
+        }
     }
 
     /** @inheritDoc */

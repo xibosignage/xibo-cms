@@ -28,7 +28,6 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Connector\ProviderDetails;
 use Xibo\Connector\ProviderImport;
@@ -55,7 +54,6 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
-use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
@@ -1153,7 +1151,6 @@ class Library extends Base
             'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
             'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
             'oldFolderId' => $folderId,
-            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         ];
 
         // Output handled by UploadHandler

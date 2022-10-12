@@ -739,8 +739,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 
 $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])->setName('library.font.css');
 $app->get('/fonts/fontlist', ['\Xibo\Controller\Font','fontList'])->setName('library.font.list');
-$app->get('/fonts/fontplayercss', ['\Xibo\Controller\Font','fontPlayerCss'])->setName('library.font.player.css');
-$app->get('/fonts/fontcss/download', ['\Xibo\Controller\Font','downloadFontsCss'])->setName('library.font.css.download');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');
