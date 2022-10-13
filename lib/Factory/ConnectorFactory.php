@@ -78,6 +78,7 @@ class ConnectorFactory extends BaseFactory
 
         return $out
             ->useLogger($this->getLog()->getLoggerInterface())
+            ->useSettings($this->config->getConnectorSettings($out->getSourceName()), true)
             ->useSettings($connector->settings)
             ->useHttpOptions($this->config->getGuzzleProxy())
             ->useJwtService($this->jwtService)

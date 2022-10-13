@@ -24,8 +24,6 @@ namespace Xibo\Connector;
 use GuzzleHttp\Exception\RequestException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Connector\ConnectorInterface;
-use Xibo\Connector\ConnectorTrait;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Event\XmdsConnectorFileEvent;
@@ -105,7 +103,10 @@ class XiboDashboardConnector implements ConnectorInterface
     {
         // Remember the old service URL
         $existingApiKey = $this->getSetting('apiKey');
-        $settings['apiKey'] = $params->getString('apiKey');
+
+        if (!$this->isProviderSetting('apiKey')) {
+            $settings['apiKey'] = $params->getString('apiKey');
+        }
 
         // What if the user changes their API key?
         // Handle existing credentials

@@ -28,9 +28,6 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboFormButton" title="{% trans "Add an Application" %}" href="{{ url_for("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</button>
-        {% if currentUser.isSuperAdmin() %}
-            <button class="btn btn-success XiboFormButton" title="{% trans "Add a DOOH Application" %}" href="{{ url_for("application.addDooh.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DOOH Application" %}</button>
-        {% endif %}
     </div>
 {% endblock %}
 

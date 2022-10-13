@@ -24,6 +24,8 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\ConnectorDeletingEvent;
+use Xibo\Event\ConnectorEnabledChangeEvent;
 use Xibo\Factory\ConnectorFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -105,14 +107,10 @@ class Connector extends Base
         }
         $interface = $this->connectorFactory->create($connector);
 
-        // Are some settings provided?
-        $platformProvidesSettings = count($this->getConfig()->getConnectorSettings($interface->getSourceName())) > 0;
-
         $this->getState()->template = $interface->getSettingsFormTwig() ?: 'connector-form-edit';
         $this->getState()->setData([
             'connector' => $connector,
-            'interface' => $interface,
-            'platformProvidesSettings' => $platformProvidesSettings
+            'interface' => $interface
         ]);
 
         return $this->render($request, $response);
@@ -144,6 +142,8 @@ class Connector extends Base
 
         // Is this an uninstallation request
         if ($params->getCheckbox('shouldUninstall')) {
+            $this->getDispatcher()->dispatch(new ConnectorDeletingEvent($connector, $this->getConfig()));
+
             $connector->delete();
 
             // Successful
@@ -153,6 +153,11 @@ class Connector extends Base
         } else {
             // Core properties
             $connector->isEnabled = $params->getCheckbox('isEnabled');
+
+            if ($connector->hasPropertyChanged('isEnabled')) {
+                $this->getDispatcher()->dispatch(new ConnectorEnabledChangeEvent($connector, $this->getConfig()));
+            }
+
             $connector->settings = $interface->processSettingsForm($params, $connector->settings);
             $connector->save();
 

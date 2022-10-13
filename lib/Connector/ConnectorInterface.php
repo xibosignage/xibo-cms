@@ -36,7 +36,7 @@ interface ConnectorInterface
 {
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface;
     public function useLogger(LoggerInterface $logger): ConnectorInterface;
-    public function useSettings(array $settings): ConnectorInterface;
+    public function useSettings(array $settings, bool $isProvider = true): ConnectorInterface;
     public function usePool(PoolInterface $pool): ConnectorInterface;
     public function useHttpOptions(array $httpOptions): ConnectorInterface;
     public function useJwtService(JwtServiceInterface $jwtService): ConnectorInterface;
@@ -46,6 +46,7 @@ interface ConnectorInterface
     public function getDescription(): string;
     public function getThumbnail(): string;
     public function getSetting($setting, $default = null);
+    public function isProviderSetting($setting): bool;
     public function getSettingsFormTwig(): string;
     public function processSettingsForm(SanitizerInterface $params, array $settings): array;
 }
