@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
-    "cypress": "^10.1.0",
+    "cypress": "^10.9.0",
     "eslint": "^7.19.0",
     "eslint-config-google": "^0.14.0"
   },

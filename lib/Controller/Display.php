@@ -1720,7 +1720,7 @@ class Display extends Base
         }
 
         // Go through each ID to assign
-        foreach ($sanitizedParams->getIntArray('displayGroupId') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupId', ['default' => []]) as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->load();
             $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
@@ -1734,7 +1734,7 @@ class Display extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId', ['default' => []]) as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->load();
             $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));

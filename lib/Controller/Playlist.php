@@ -264,6 +264,7 @@ class Playlist extends Base
             'tags' => $sanitizedParams->getString('tags'),
             'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
             'playlistId' => $sanitizedParams->getInt('playlistId'),
+            'notPlaylistId' => $sanitizedParams->getInt('notPlaylistId'),
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
