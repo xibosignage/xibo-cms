@@ -72,6 +72,45 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Prints out a Table of all Font items
+     *
+     * @SWG\Get(
+     *  path="/fonts",
+     *  operationId="fontSearch",
+     *  tags={"font"},
+     *  summary="Font Search",
+     *  description="Search the available Fonts",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="query",
+     *      description="Filter by Font Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="query",
+     *      description="Filter by Font Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Font")
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
     public function grid(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
@@ -135,6 +174,44 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Font details provided by FontLib
+     *
+     * @SWG\Get(
+     *  path="/fonts/details/{id}",
+     *  operationId="fontDetails",
+     *  tags={"font"},
+     *  summary="Font Details",
+     *  description="Get the Font details",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Font ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={
+     *              "title"="details",
+     *              "type"="array"
+     *          }
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \FontLib\Exception\FontNotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
     public function getFontLibDetails(Request $request, Response $response, $id)
     {
         $font = $this->fontFactory->getById($id);
@@ -161,6 +238,44 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @SWG\Get(
+     *  path="/fonts/download/{id}",
+     *  operationId="fontDownload",
+     *  tags={"font"},
+     *  summary="Download Font",
+     *  description="Download a Font file from the Library",
+     *  produces={"application/octet-stream"},
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Font ID to Download",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(type="file"),
+     *      @SWG\Header(
+     *          header="X-Sendfile",
+     *          description="Apache Send file header - if enabled.",
+     *          type="string"
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Accel-Redirect",
+     *          description="nginx send file header - if enabled.",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
     public function download(Request $request, Response $response, $id)
     {
         if (is_numeric($id)) {
@@ -190,6 +305,46 @@ class Font extends Base
         return ['otf', 'ttf', 'eot', 'svg', 'woff'];
     }
 
+    /**
+     * Font Upload
+     *
+     * @SWG\Post(
+     *  path="/fonts",
+     *  operationId="fontUpload",
+     *  tags={"font"},
+     *  summary="Font Upload",
+     *  description="Upload a new Font file",
+     *  @SWG\Parameter(
+     *      name="files",
+     *      in="formData",
+     *      description="The Uploaded File",
+     *      type="file",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Font Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
     public function add(Request $request, Response $response)
     {
         if (!$this->getUser()->featureEnabled('font.add')) {
@@ -283,6 +438,17 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Font Delete Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
     public function deleteForm(Request $request, Response $response, $id)
     {
         if (!$this->getUser()->featureEnabled('font.delete')) {
@@ -303,6 +469,40 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Font Delete
+     *
+     * @SWG\Delete(
+     *  path="/fonts/{id}/delete",
+     *  operationId="fontDelete",
+     *  tags={"font"},
+     *  summary="Font Delete",
+     *  description="Delete existing Font file",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Font ID to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
     public function delete(Request $request, Response $response, $id)
     {
         if (!$this->getUser()->featureEnabled('font.delete')) {
