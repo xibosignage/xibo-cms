@@ -1129,7 +1129,7 @@ class Display extends Base
             }
         }
 
-        if ($versionId !== $profileVersionId && $profileDayPartId !== null) {
+        if ($versionId !== $profileVersionId && $profileVersionId !== null) {
             try {
                 $playerVersions[] = $this->playerVersionFactory->getById($profileVersionId);
             } catch (NotFoundException $e) {
