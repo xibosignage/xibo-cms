@@ -39,23 +39,16 @@ class PlayerVersionFactory extends BaseFactory
     private $config;
 
     /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
      * Construct a factory
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
-     * @param MediaFactory $mediaFactory
      */
-    public function __construct($user, $userFactory, $config, $mediaFactory)
+    public function __construct($user, $userFactory, $config)
     {
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
-        $this->mediaFactory = $mediaFactory;
 
     }
 
@@ -70,7 +63,6 @@ class PlayerVersionFactory extends BaseFactory
             $this->getLog(),
             $this->getDispatcher(),
             $this->config,
-            $this->mediaFactory,
             $this
         );
     }
@@ -80,37 +72,36 @@ class PlayerVersionFactory extends BaseFactory
      * @param string $type
      * @param int $version
      * @param int $code
-     * @param int $mediaId
      * @param string $playerShowVersion
+     * @param string $modifiedBy
+     * @param string $fileName
+     * @param int $size
+     * @param string $md5
      * @return PlayerVersion
      */
-    public function create($type, $version, $code, $mediaId, $playerShowVersion)
+    public function create(
+        $type,
+        $version,
+        $code,
+        $playerShowVersion,
+        $modifiedBy,
+        $fileName,
+        $size,
+        $md5
+    )
     {
         $playerVersion = $this->createEmpty();
         $playerVersion->type = $type;
         $playerVersion->version = $version;
         $playerVersion->code = $code;
-        $playerVersion->mediaId = $mediaId;
         $playerVersion->playerShowVersion = $playerShowVersion;
+        $playerVersion->modifiedBy = $modifiedBy;
+        $playerVersion->fileName = $fileName;
+        $playerVersion->size = $size;
+        $playerVersion->md5 = $md5;
         $playerVersion->save();
 
         return $playerVersion;
-    }
-
-    /**
-     * Get by Media Id
-     * @param int $mediaId
-     * @return PlayerVersion
-     * @throws NotFoundException
-     */
-    public function getByMediaId($mediaId)
-    {
-        $versions = $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId]);
-
-        if (count($versions) <= 0)
-            throw new NotFoundException(__('Cannot find media'));
-
-        return $versions[0];
     }
 
     /**
@@ -163,39 +154,22 @@ class PlayerVersionFactory extends BaseFactory
         $entries = [];
 
         $select = '
-            SELECT  player_software.versionId,
-               player_software.player_type AS type,
-               player_software.player_version AS version,
-               player_software.player_code AS code,
-               player_software.playerShowVersion,
-               media.mediaId,
-               media.originalFileName,
-               media.storedAs,
+            SELECT  `player_software`.versionId,
+               `player_software`.player_type AS type,
+               `player_software`.player_version AS version,
+               `player_software`.player_code AS code,
+               `player_software`.playerShowVersion,
+               `player_software`.createdAt,
+               `player_software`.modifiedAt,
+               `player_software`.modifiedBy,
+               `player_software`.fileName,
+               `player_software`.size,
+               `player_software`.md5
             ';
-
-        $select .= " (SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                              FROM `permission`
-                                INNER JOIN `permissionentity`
-                                ON `permissionentity`.entityId = permission.entityId
-                                INNER JOIN `group`
-                                ON `group`.groupId = `permission`.groupId
-                             WHERE entity = :entity
-                                AND objectId = media.mediaId
-                                AND view = 1
-                            ) AS groupsWithPermissions ";
-        $params['entity'] = 'Xibo\\Entity\\Media';
 
         $body = ' FROM player_software 
-                    INNER JOIN media
-                    ON  player_software.mediaId = media.mediaId
                   WHERE 1 = 1 
             ';
-
-        // by media ID
-        if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
-            $body .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
-        }
 
         if ($sanitizedFilter->getInt('versionId', ['default' => -1]) != -1) {
             $body .= " AND player_software.versionId = :versionId ";
@@ -222,9 +196,6 @@ class PlayerVersionFactory extends BaseFactory
             $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
-
         // Sorting?
         $order = '';
         if (is_array($sortOrder)) {
@@ -240,9 +211,9 @@ class PlayerVersionFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $version = $this->createEmpty()->hydrate($row, [
+            $entries[] = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'mediaId', 'code'
+                    'versionId', 'code', 'size'
                 ]
             ]);
         }
@@ -255,8 +226,6 @@ class PlayerVersionFactory extends BaseFactory
         }
 
         return $entries;
-
-
     }
 
     public function getDistinctType()
@@ -270,7 +239,16 @@ class PlayerVersionFactory extends BaseFactory
         ';
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $version = $this->createEmpty()->hydrate($row);
+            $entry = $this->createEmpty()->hydrate($row);
+            if ($entry->type === 'sssp') {
+                $entry->typeShow = 'Tizen';
+            } else if ($entry->type === 'lg') {
+                $entry->typeShow = 'webOS';
+            } else {
+                $entry->typeShow = ucfirst($row['type']);
+            }
+
+            $entries[] = $entry;
         }
 
         return $entries;
@@ -287,9 +265,14 @@ class PlayerVersionFactory extends BaseFactory
         ';
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $version = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;
+    }
+
+    public function getSizeAndCount()
+    {
+        return $this->getStore()->select('SELECT IFNULL(SUM(size), 0) AS SumSize, COUNT(*) AS totalCount FROM `player_software`', [])[0];
     }
 }

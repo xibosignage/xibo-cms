@@ -22,17 +22,21 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
-* Class PlayerVersion
-* @package Xibo\Entity
-*
-* @SWG\Definition()
+ * Class PlayerVersion
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ * @property string $fileSizeFormatted
+ * @property string $typeShow
 */
 class PlayerVersion implements \JsonSerializable
 {
@@ -63,44 +67,51 @@ class PlayerVersion implements \JsonSerializable
     public $code;
 
     /**
-     * @SWG\Property(description="A comma separated list of groups/users with permissions to this Media")
-     * @var string
-     */
-    public $groupsWithPermissions;
-
-    /**
-     * @SWG\Property(description="The Media ID")
-     * @var int
-     */
-    public $mediaId;
-
-    /**
      * @SWG\Property(description="Player version to show")
      * @var string
      */
     public $playerShowVersion;
 
     /**
-     * @SWG\Property(description="Original name of the uploaded installer file")
+     * @SWG\Property(description="The Player Version created date")
      * @var string
      */
-    public $originalFileName;
+    public $createdAt;
 
     /**
-     * @SWG\Property(description="Stored As")
+     * @SWG\Property(description="The Player Version modified date")
      * @var string
      */
-    public $storedAs;
+    public $modifiedAt;
+
+    /**
+     * @SWG\Property(description="The name of the user that modified this Player Version last")
+     * @var string
+     */
+    public $modifiedBy;
+
+    /**
+     * @SWG\Property(description="The Player Version file name")
+     * @var string
+     */
+    public $fileName;
+
+    /**
+     * @SWG\Property(description="The Player Version file size in bytes")
+     * @var int
+     */
+    public $size;
+
+    /**
+     * @SWG\Property(description="A MD5 checksum of the stored Player Version file")
+     * @var string
+     */
+    public $md5;
 
     /**
      * @var ConfigServiceInterface
      */
     private $config;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
 
     /**
      * @var PlayerVersionFactory
@@ -116,12 +127,11 @@ class PlayerVersion implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $playerVersionFactory)
+    public function __construct($store, $log, $dispatcher, $config, $playerVersionFactory)
     {
         $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
-        $this->mediaFactory = $mediaFactory;
         $this->playerVersionFactory = $playerVersionFactory;
     }
 
@@ -131,14 +141,19 @@ class PlayerVersion implements \JsonSerializable
     private function add()
     {
         $this->versionId = $this->getStore()->insert('
-            INSERT INTO `player_software` (`player_type`, `player_version`, `player_code`, `mediaId`, `playerShowVersion`)
-              VALUES (:type, :version, :code, :mediaId, :playerShowVersion)
+            INSERT INTO `player_software` (`player_type`, `player_version`, `player_code`, `playerShowVersion`,`createdAt`, `modifiedAt`, `modifiedBy`, `fileName`, `size`, `md5`)
+              VALUES (:type, :version, :code, :playerShowVersion, :createdAt, :modifiedAt, :modifiedBy, :fileName, :size, :md5)
         ', [
             'type' => $this->type,
             'version' => $this->version,
             'code' => $this->code,
-            'mediaId' => $this->mediaId,
-            'playerShowVersion' => $this->playerShowVersion
+            'playerShowVersion' => $this->playerShowVersion,
+            'createdAt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'modifiedAt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'modifiedBy' => $this->modifiedBy,
+            'fileName' => $this->fileName,
+            'size' => $this->size,
+            'md5' => $this->md5
         ]);
     }
 
@@ -151,7 +166,9 @@ class PlayerVersion implements \JsonSerializable
           UPDATE `player_software`
             SET `player_version` = :version,
                 `player_code` = :code,
-                `playerShowVersion` = :playerShowVersion
+                `playerShowVersion` = :playerShowVersion,
+                `modifiedAt` = :modifiedAt,
+                `modifiedBy` = :modifiedBy
            WHERE versionId = :versionId
         ';
 
@@ -159,6 +176,8 @@ class PlayerVersion implements \JsonSerializable
             'version' => $this->version,
             'code' => $this->code,
             'playerShowVersion' => $this->playerShowVersion,
+            'modifiedAt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'modifiedBy' => $this->modifiedBy,
             'versionId' => $this->versionId
         ];
 
@@ -173,9 +192,18 @@ class PlayerVersion implements \JsonSerializable
     {
         $this->load();
 
+        // delete record
         $this->getStore()->update('DELETE FROM `player_software` WHERE `versionId` = :versionId', [
             'versionId' => $this->versionId
         ]);
+
+        // Library location
+        $libraryLocation = $this->config->getSetting("LIBRARY_LOCATION");
+
+        // delete file
+        if (file_exists($libraryLocation . 'playersoftware/'. $this->fileName)) {
+            unlink($libraryLocation  . 'playersoftware/'. $this->fileName);
+        }
     }
 
     /**
@@ -203,5 +231,74 @@ class PlayerVersion implements \JsonSerializable
             $this->add();
         else
             $this->edit();
+    }
+
+    public function decorateRecord()
+    {
+        $version = '';
+        $code = null;
+        $type = '';
+        $explode = explode('_', $this->fileName);
+        $explodeExt = explode('.', $this->fileName);
+        $playerShowVersion = $explodeExt[0];
+
+        // standard releases
+        if (count($explode) === 5) {
+            if (strpos($explode[4], '.') !== false) {
+                $explodeExtension = explode('.', $explode[4]);
+                $explode[4] = $explodeExtension[0];
+            }
+
+            if (strpos($explode[3], 'v') !== false) {
+                $version = strtolower(substr(strrchr($explode[3], 'v'), 1, 3)) ;
+            }
+            if (strpos($explode[4], 'R') !== false) {
+                $code = strtolower(substr(strrchr($explode[4], 'R'), 1, 3)) ;
+            }
+            $playerShowVersion = $version . ' Revision ' . $code;
+            // for DSDevices specific apk
+        } elseif (count($explode) === 6) {
+            if (strpos($explode[5], '.') !== false) {
+                $explodeExtension = explode('.', $explode[5]);
+                $explode[5] = $explodeExtension[0];
+            }
+            if (strpos($explode[3], 'v') !== false) {
+                $version = strtolower(substr(strrchr($explode[3], 'v'), 1, 3)) ;
+            }
+            if (strpos($explode[4], 'R') !== false) {
+                $code = strtolower(substr(strrchr($explode[4], 'R'), 1, 3)) ;
+            }
+            $playerShowVersion = $version . ' Revision ' . $code . ' ' . $explode[5];
+            // for white labels
+        } elseif (count($explode) === 3) {
+            if (strpos($explode[2], '.') !== false) {
+                $explodeExtension = explode('.', $explode[2]);
+                $explode[2] = $explodeExtension[0];
+            }
+            if (strpos($explode[1], 'v') !== false) {
+                $version = strtolower(substr(strrchr($explode[1], 'v'), 1, 3)) ;
+            }
+            if (strpos($explode[2], 'R') !== false) {
+                $code = strtolower(substr(strrchr($explode[2], 'R'), 1, 3)) ;
+            }
+            $playerShowVersion = $version . ' Revision ' . $code . ' ' . $explode[0];
+        }
+
+        $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
+
+        if ($extension == 'apk') {
+            $type = 'android';
+        } elseif ($extension == 'ipk') {
+            $type = 'lg';
+        } elseif ($extension == 'wgt') {
+            $type = 'sssp';
+        }
+
+        $this->version = $version;
+        $this->code = $code;
+        $this->playerShowVersion = $playerShowVersion;
+        $this->type = $type;
+
+        return $this;
     }
 }

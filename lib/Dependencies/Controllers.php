@@ -260,7 +260,6 @@ class Controllers
                     $c->get('userGroupFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('playerVersionFactory'),
                     $c->get('folderFactory')
                 );
                 $controller->useMediaService($c->get('mediaService'));
@@ -375,12 +374,11 @@ class Controllers
             '\Xibo\Controller\PlayerSoftware' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\PlayerSoftware(
                     $c->get('pool'),
-                    $c->get('mediaFactory'),
                     $c->get('playerVersionFactory'),
                     $c->get('displayProfileFactory'),
-                    $c->get('moduleFactory'),
                     $c->get('displayFactory')
                 );
+                $controller->useMediaService($c->get('mediaService'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

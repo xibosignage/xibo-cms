@@ -104,11 +104,11 @@
                         { name: "data-placeholder--value", value: "" },
                         { name: "data-search-url", value: url_for("playersoftware.search") },
                         { name: "data-search-term", value: "playerShowVersion" },
-                        { name: "data-id-property", value: "mediaId" },
+                        { name: "data-id-property", value: "versionId" },
                         { name: "data-text-property", value: "playerShowVersion" },
                         { name: "data-filter-options", value: '{"playerType":"android"}' }
                     ] %}
-                    {{ forms.dropdown("versionMediaId", "single", title, displayProfile.getSetting("versionMediaId"), [{mediaId:null, playerShowVersion:""}]|merge(versions), "mediaId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
+                    {{ forms.dropdown("versionMediaId", "single", title, displayProfile.getSetting("versionMediaId"), [{versionId:null, playerShowVersion:""}]|merge(versions), "versionId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
                 </div>
 
                 <div class="tab-pane" id="network">

@@ -27,7 +27,7 @@
 {% block actionMenu %}
     {% if currentUser.featureEnabled("playersoftware.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success" href="#" id="playerSoftwareUploadForm" title="{% trans "Add a new media item to the player software library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</button>
+        <button class="btn btn-success" href="#" id="playerSoftwareUploadForm" title="{% trans "Upload a new Player Software file" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</button>
     </div>
     {% endif %}
 {% endblock %}
@@ -42,18 +42,7 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Type" %}{% endset %}
-                            {% set android %}{% trans "Android" %}{% endset %}
-                            {% set windows %}{% trans "Windows" %}{% endset %}
-                            {% set webos %}{% trans "webOS" %}{% endset %}
-                            {% set sssp %}{% trans "Tizen" %}{% endset %}
-                            {% set options = [
-                                { optionid: "", option: "" },
-                                { optionid: "android", option: android},
-                                { optionid: "windows", option: windows},
-                                { optionid: "lg", option: webos},
-                                { optionid: "sssp", option: sssp}
-                            ] %}
-                            {{ inline.dropdown("playerType", "single", title, "", options, "optionid", "option") }}
+                            {{ inline.dropdown("playerType", "single", title, "", [{"type": none, "typeShow": none}]|merge(types), "type", "typeShow") }}
 
                             {% set title %}{% trans "Version" %}{% endset %}
                             {{ inline.dropdown("playerVersion", "single", title, "", [{"version": none, "version": none}]|merge(versions), "version", "version") }}
@@ -72,9 +61,11 @@
                             <th>{% trans "Type" %}</th>
                             <th>{% trans "Version" %}</th>
                             <th>{% trans "Code" %}</th>
-                            <th>{% trans "Media ID" %}</th>
-                            <th>{% trans "Original File Name" %}</th>
-                            <th>{% trans "Sharing" %}</th>
+                            <th>{% trans "File Name" %}</th>
+                            <th>{% trans "Size" %}</th>
+                            <th>{% trans "Created At" %}</th>
+                            <th>{% trans "Modified At" %}</th>
+                            <th>{% trans "Modified By" %}</th>
                             <th class="rowMenu"></th>
                         </tr>
                         </thead>
@@ -98,6 +89,7 @@
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
+                responsive: true,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
@@ -110,19 +102,24 @@
                     }
                 },
                 "columns": [
-                    {"data": "versionId"},
-                    {"data": "playerShowVersion" },
-                    {"data": "type"},
-                    {"data": "version"},
-                    {"data": "code"},
-                    {"data": "mediaId"},
-                    {"data": "originalFileName"},
+                    {"data": "versionId", responsivePriority: 2},
+                    {"data": "playerShowVersion", responsivePriority: 2},
+                    {"data": "type", responsivePriority: 2},
+                    {"data": "version", responsivePriority: 2},
+                    {"data": "code", responsivePriority: 2},
+                    {"data": "fileName", responsivePriority: 4},
                     {
-                        "data": "groupsWithPermissions",
-                        "render": dataTableCreatePermissions
+                        "name": "size",
+                        responsivePriority: 3,
+                        "data": null,
+                        "render": {"_": "size", "display": "fileSizeFormatted", "sort": "size"}
                     },
+                    {"data": "createdAt", responsivePriority: 6, visible: false},
+                    {"data": "modifiedAt", responsivePriority: 6, visible: false},
+                    {"data": "modifiedBy", responsivePriority: 6, visible: false},
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ],
@@ -144,7 +141,7 @@
             e.preventDefault();
 
             openUploadForm({
-                url: "{{ url_for("library.add") }}",
+                url: "{{ url_for("playersoftware.add") }}",
                 title: "{% trans "Upload Version" %}",
                 videoImageCovers: false,
                 buttons: {
@@ -158,6 +155,7 @@
                     }
                 },
                 templateOptions: {
+                    includeTagsInput: false,
                     multi: false,
                     trans: {
                         addFiles: "{% trans "Add files" %}",

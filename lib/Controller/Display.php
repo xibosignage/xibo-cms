@@ -1123,15 +1123,15 @@ class Display extends Base
         // Get the Player Version for this display profile type
         if ($versionId !== null) {
             try {
-                $playerVersions[] = $this->playerVersionFactory->getByMediaId($versionId);
+                $playerVersions[] = $this->playerVersionFactory->getById($versionId);
             } catch (NotFoundException $e) {
                 $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
             }
         }
 
-        if ($versionId !== $profileVersionId) {
+        if ($versionId !== $profileVersionId && $profileDayPartId !== null) {
             try {
-                $playerVersions[] = $this->playerVersionFactory->getByMediaId($profileVersionId);
+                $playerVersions[] = $this->playerVersionFactory->getById($profileVersionId);
             } catch (NotFoundException $e) {
                 $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
             }
@@ -1145,7 +1145,7 @@ class Display extends Base
             }
         }
 
-        if ($dayPartId !== $profileDayPartId) {
+        if ($dayPartId !== $profileDayPartId && $profileDayPartId !== null) {
             try {
                 $dayparts[] = $this->dayPartFactory->getById($profileDayPartId);
             } catch (NotFoundException $e) {

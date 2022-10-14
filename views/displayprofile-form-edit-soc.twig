@@ -97,7 +97,7 @@
                             { name: "data-placeholder--value", value: "" },
                             { name: "data-search-url", value: url_for("playersoftware.search") },
                             { name: "data-search-term", value: "playerShowVersion" },
-                            { name: "data-id-property", value: "mediaId" },
+                            { name: "data-id-property", value: "versionId" },
                             { name: "data-text-property", value: "playerShowVersion" },
                             { name: "data-filter-options", value: '{"playerType":"lg"}' }
                         ] %}
@@ -110,12 +110,12 @@
                             { name: "data-placeholder--value", value: "" },
                             { name: "data-search-url", value: url_for("playersoftware.search") },
                             { name: "data-search-term", value: "playerShowVersion" },
-                            { name: "data-id-property", value: "mediaId" },
+                            { name: "data-id-property", value: "versionId" },
                             { name: "data-text-property", value: "playerShowVersion" },
                             { name: "data-filter-options", value: '{"playerType":"sssp"}' }
                         ] %}
                     {% endif %}
-                    {{ forms.dropdown("versionMediaId", "single", title, displayProfile.getSetting("versionMediaId"), [{mediaId:null, playerShowVersion:""}]|merge(versions), "mediaId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
+                    {{ forms.dropdown("versionMediaId", "single", title, displayProfile.getSetting("versionMediaId"), [{versionId:null, playerShowVersion:""}]|merge(versions), "versionId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
 
                     {% set title = "Orientation"|trans %}
                     {% set helpText = "Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required."|trans %}
