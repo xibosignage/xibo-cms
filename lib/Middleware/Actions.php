@@ -22,15 +22,18 @@
 
 namespace Xibo\Middleware;
 
+use Carbon\Carbon;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
+use Xibo\Entity\Font;
 use Xibo\Entity\User;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -87,7 +90,6 @@ class Actions implements Middleware
                             true,
                             $container->get('dataSetFactory'),
                             null,
-                            $routeContext->getRouteParser(),
                             $container->get('mediaService'),
                             1
                         );
@@ -108,7 +110,45 @@ class Actions implements Middleware
                 }
             }
 
-            // Layouts imported
+            // install fonts from the theme folder
+            $fontFolder =  $container->get('configService')->uri('fonts', true);
+            $fontAdded = false;
+            foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
+                // check if we already have this font file
+                if (count($container->get('fontFactory')->getByFileName($file)) <= 0) {
+                    // if we don't, add it
+                    $filePath = $fontFolder . DIRECTORY_SEPARATOR . $file;
+                    $fontLib = \FontLib\Font::load($filePath);
+
+                    // check embed flag, just in case
+                    $embed = intval($fontLib->getData('OS/2', 'fsType'));
+                    // if it's not embeddable, log error and skip it
+                    if ($embed != 0 && $embed != 8) {
+                        $container->get('logService')->error('Unable to install default Font: ' . $file . ' . Font file is not embeddable due to its permissions');
+                        continue;
+                    }
+
+                    /** @var Font $font */
+                    $font = $container->get('fontFactory')->createEmpty();
+                    $font->modifiedBy = $user->userName;
+                    $font->name = $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily();
+                    $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
+                    $font->fileName = $file;
+                    $font->size = filesize($filePath);
+                    $font->md5 = md5_file($filePath);
+                    $font->save();
+
+                    copy($filePath, $container->get('configService')->getSetting('LIBRARY_LOCATION') . 'fonts/' . $file);
+                    $fontAdded = true;
+                }
+            }
+
+            // if we added any fonts here fonts.css file
+            if ($fontAdded) {
+                $container->get('mediaService')->setUser($container->get('user'))->updateFontsCss();
+            }
+
+            // Layouts and fonts imported
             $container->get('configService')->changeSetting('DEFAULTS_IMPORTED', 1);
         }
 

@@ -29,6 +29,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
 use Xibo\Event\CampaignLoadEvent;
 use Xibo\Event\CommandDeleteEvent;
+use Xibo\Event\DependencyFileSizeEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\FolderMovingEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
@@ -38,6 +39,7 @@ use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Xmds\Listeners\XmdsFontsListener;
 use Xibo\Xmds\Listeners\XmdsPlayerBundleListener;
 
 /**
@@ -331,6 +333,11 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('userFactory'),
             $c->get('store')
         )));
+
+        // dependencies file size
+        $dispatcher->addListener(DependencyFileSizeEvent::$NAME, (new \Xibo\Listener\OnGettingDependencyFileSize\FontsListener(
+            $c->get('fontFactory')
+        )));
     }
 
     /**
@@ -346,7 +353,12 @@ class ListenersMiddleware implements MiddlewareInterface
         $playerBundleListener = new XmdsPlayerBundleListener();
         $playerBundleListener->useLogger($c->get('logger'));
 
+        $fontsListener = new XmdsFontsListener($c->get('fontFactory'));
+        $fontsListener->useLogger($c->get('logger'));
+
         $dispatcher->addListener('xmds.dependency.list', [$playerBundleListener, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$playerBundleListener, 'onDependencyRequest']);
+        $dispatcher->addListener('xmds.dependency.list', [$fontsListener, 'onDependencyList']);
+        $dispatcher->addListener('xmds.dependency.request', [$fontsListener, 'onDependencyRequest']);
     }
 }

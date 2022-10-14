@@ -26,6 +26,7 @@ use Slim\Routing\RouteParser;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
+use Xibo\Factory\FontFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
@@ -47,6 +48,7 @@ interface MediaServiceInterface
      * @param SanitizerService $sanitizerService
      * @param PoolInterface $pool
      * @param MediaFactory $mediaFactory
+     * @param FontFactory $fontFactory
      */
     public function __construct(
         ConfigServiceInterface $configService,
@@ -54,7 +56,8 @@ interface MediaServiceInterface
         StorageServiceInterface $store,
         SanitizerService $sanitizerService,
         PoolInterface $pool,
-        MediaFactory $mediaFactory
+        MediaFactory $mediaFactory,
+        FontFactory $fontFactory
     );
 
     /**
@@ -68,15 +71,15 @@ interface MediaServiceInterface
     public function getUser(): User;
 
     /**
+     * @return PoolInterface
+     */
+    public function getPool() : PoolInterface;
+
+    /**
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @return MediaServiceInterface
      */
     public function setDispatcher(EventDispatcherInterface $dispatcher): MediaServiceInterface;
-
-    /**
-     * @param \Slim\Routing\RouteParser $routeParser
-     */
-    public function fontCKEditorConfig(RouteParser $routeParser): string;
 
     /**
      * Library Usage
@@ -112,8 +115,6 @@ interface MediaServiceInterface
     public function getDownloadInfo($url): array;
 
     /**
-     * @param \Slim\Routing\RouteParser $routeParser
-     * @param array $options
      * @return array|mixed
      * @throws ConfigurationException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
@@ -121,7 +122,7 @@ interface MediaServiceInterface
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function installFonts(RouteParser $routeParser, $options = []);
+    public function updateFontsCss();
 
     /**
      * @param $libraryFolder

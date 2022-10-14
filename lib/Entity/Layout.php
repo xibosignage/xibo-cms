@@ -29,6 +29,7 @@ use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
+use Xibo\Factory\FontFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -376,6 +377,10 @@ class Layout implements \JsonSerializable
 
     /** @var FolderFactory */
     private $folderFactory;
+    /**
+     * @var FontFactory
+     */
+    private $fontFactory;
 
     /**
      * Entity constructor.
@@ -394,8 +399,23 @@ class Layout implements \JsonSerializable
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $config,
+        $permissionFactory,
+        $regionFactory,
+        $tagFactory,
+        $campaignFactory,
+        $layoutFactory,
+        $mediaFactory,
+        $moduleFactory,
+        $playlistFactory,
+        $actionFactory,
+        $folderFactory,
+        FontFactory $fontFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
@@ -409,6 +429,7 @@ class Layout implements \JsonSerializable
         $this->playlistFactory = $playlistFactory;
         $this->actionFactory = $actionFactory;
         $this->folderFactory = $folderFactory;
+        $this->fontFactory = $fontFactory;
     }
 
     public function __clone()
@@ -1923,23 +1944,22 @@ class Layout implements \JsonSerializable
             $this->getLog()->debug(sprintf('Matched fonts: %s', json_encode($fonts)));
 
             foreach ($fonts[1] as $font) {
-                $matches = $this->mediaFactory->query(null, array('disableUserCheck' => 1, 'nameExact' => $font, 'allModules' => 1, 'type' => 'font'));
+                $matches = $this->fontFactory->getByName($font);
 
                 if (count($matches) <= 0) {
                     $this->getLog()->info(sprintf('Unmatched font during export: %s', $font));
                     continue;
                 }
 
-                $media = $matches[0];
+                $fontFile = $matches[0];
 
-                $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
+                $zip->addFile($libraryLocation . 'fonts/'. $fontFile->fileName, 'library/' . $fontFile->fileName);
 
                 $mappings[] = [
-                    'file' => $media->fileName,
-                    'mediaid' => $media->mediaId,
-                    'name' => $media->name,
-                    'type' => $media->mediaType,
-                    'duration' => $media->duration,
+                    'file' => $fontFile->fileName,
+                    'fontId' => $fontFile->id,
+                    'name' => $fontFile->name,
+                    'type' => 'font',
                     'background' => 0,
                     'font' => 1
                 ];

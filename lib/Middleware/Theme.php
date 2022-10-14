@@ -127,7 +127,6 @@ class Theme implements Middleware
             'validExt' => implode('|', $container->get('moduleFactory')->getValidExtensions()),
             'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image']))
         ];
-        $view['ckeditorConfig'] = $container->get('mediaService')->setUser($container->get('user'))->fontCKEditorConfig(RouteContext::fromRequest($request)->getRouteParser());
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
         $view['revision'] = Environment::getGitCommit();
         $samlSettings = $container->get('configService')->samlSettings;

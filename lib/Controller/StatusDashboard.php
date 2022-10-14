@@ -258,6 +258,10 @@ class StatusDashboard extends Base
             $sth->execute($params);
 
             $results = $sth->fetchAll();
+            // add any dependencies fonts, player software etc to the results
+            $event = new \Xibo\Event\DependencyFileSizeEvent($results);
+            $this->getDispatcher()->dispatch($event, $event::$NAME);
+            $results = $event->getResults();
 
             // Do we base the units on the maximum size or the library limit
             $maxSize = 0;

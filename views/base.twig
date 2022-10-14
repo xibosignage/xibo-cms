@@ -183,13 +183,6 @@
 
             toastr.options.positionClass = "toast-bottom-center";
 
-            // CKEditor default config
-            var CKEDITOR_DEFAULT_CONFIG = {
-                contentsCss: [ CKEDITOR.getUrl('contents.css'), "{{ url_for("library.font.css") }}" ],
-                font_names: '{{ ckeditorConfig }}' + CKEDITOR.config.font_names,
-                imageDownloadUrl: "{{ url_for("library.download", {id: ':id'}) }}?preview=1"
-            }
-
             // User preference regarding Folder tree state
             var rememberFolderTreeStateGlobally = {{ currentUser.getOptionValue("rememberFolderTreeStateGlobally", "1") }}
         </script>

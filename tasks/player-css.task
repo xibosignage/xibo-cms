@@ -1,0 +1,5 @@
+{
+  "name": "Generate Player font css",
+  "class": "\\Xibo\\XTR\\GeneratePlayerCssTask",
+  "options": []
+}

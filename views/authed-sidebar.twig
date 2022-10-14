@@ -119,6 +119,10 @@
             {% if currentUser.isSuperAdmin() %}
                 <li class="sidebar-list"><a href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a></li>
             {% endif %}
+
+            {% if currentUser.featureEnabled("font.view") %}
+                <li class="sidebar-list"><a href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a></li>
+            {% endif %}
         {% endif %}
 
 

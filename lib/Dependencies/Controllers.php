@@ -208,6 +208,14 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\Font' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Font(
+                    $c->get('fontFactory')
+                );
+                $controller->useMediaService($c->get('mediaService'));
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
             '\Xibo\Controller\Help' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Help(
                     $c->get('helpFactory')
@@ -253,7 +261,6 @@ class Controllers
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('playerVersionFactory'),
-                    $c->get('httpCache'),
                     $c->get('folderFactory')
                 );
                 $controller->useMediaService($c->get('mediaService'));

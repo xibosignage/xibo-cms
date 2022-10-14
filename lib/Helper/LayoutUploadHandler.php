@@ -82,7 +82,6 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $importDataSetData,
                 $this->options['dataSetFactory'],
                 $tags,
-                $this->options['routeParser'],
                 $this->options['mediaService'],
                 $this->options['folderId']
             );

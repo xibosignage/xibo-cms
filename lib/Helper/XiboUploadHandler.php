@@ -400,12 +400,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 );
             }
 
-            // Fonts, then install
-            // TODO: remove fonts.
-            if ($module->type == 'font') {
-                $controller->getMediaService()->installFonts($this->options['routeParser']);
-            }
-
             // Are we assigning to a Playlist?
             if ($this->options['playlistId'] != 0 && $this->options['widgetId'] == 0) {
                 $controller->getLog()->debug('Assigning uploaded media to playlistId '

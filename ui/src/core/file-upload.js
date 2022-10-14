@@ -35,6 +35,7 @@ function openUploadForm(options) {
     templateOptions: {
       layoutImport: false,
       multi: true,
+      includeTagsInput: true
     },
   }, options);
 
@@ -69,6 +70,7 @@ function openUploadForm(options) {
       previewCrop: true,
       acceptFileTypes: new RegExp('\\.(' + options.templateOptions.upload.validExt + ')$', 'i'),
       maxFileSize: options.templateOptions.upload.maxSize,
+      includeTagsInput: options.templateOptions.includeTagsInput
     };
     let refreshSessionInterval;
 
@@ -176,7 +178,9 @@ function openUploadForm(options) {
         // Get uploaded and downloaded files and toggle Done button
         const filesToUploadCount = form.find('tr.template-upload').length;
         const $button = form.parents('.modal:first').find('button.btn-bb-main');
-
+        if (!options.templateOptions.includeTagsInput) {
+          $('.tags-input-container').addClass('d-none');
+        }
         if (filesToUploadCount === 0) {
           $button.removeAttr('disabled');
           videoImageCovers = {};

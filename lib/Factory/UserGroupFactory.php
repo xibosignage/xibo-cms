@@ -809,6 +809,21 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'menuboard-design',
                     'title' => __('Allow edits, creation of Menu Board Categories and Products including deletion for all created Menu Board content')
                 ],
+                'font.view' => [
+                    'feature' => 'font.view',
+                    'group' => 'fonts',
+                    'title' => __('View the Fonts page')
+                ],
+                'font.add' => [
+                    'feature' => 'font.add',
+                    'group' => 'fonts',
+                    'title' => __('Upload new Fonts')
+                ],
+                'font.delete' => [
+                    'feature' => 'font.delete',
+                    'group' => 'fonts',
+                    'title' => __('Delete existing Fonts')
+                ]
             ];
         }
         return $this->features;

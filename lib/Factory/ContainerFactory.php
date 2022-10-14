@@ -214,7 +214,8 @@ class ContainerFactory
                     $c->get('store'),
                     $c->get('sanitizerService'),
                     $c->get('pool'),
-                    $c->get('mediaFactory')
+                    $c->get('mediaFactory'),
+                    $c->get('fontFactory')
                 );
                 $mediaSevice->setDispatcher($c->get('dispatcher'));
                 return $mediaSevice;

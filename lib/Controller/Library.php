@@ -23,13 +23,11 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Stream;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Connector\ProviderDetails;
 use Xibo\Connector\ProviderImport;
@@ -56,8 +54,6 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
-use Xibo\Helper\HttpCacheProvider;
-use Xibo\Helper\Random;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
@@ -132,9 +128,6 @@ class Library extends Base
     /** @var ScheduleFactory  */
     private $scheduleFactory;
 
-    /** @var HttpCacheProvider */
-    private $cacheProvider;
-
     /** @var FolderFactory */
     private $folderFactory;
     /**
@@ -156,7 +149,6 @@ class Library extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PlayerVersionFactory $playerVersionFactory
-     * @param HttpCacheProvider $cacheProvider
      * @param FolderFactory $folderFactory
      */
     public function __construct(
@@ -172,8 +164,6 @@ class Library extends Base
         $displayFactory,
         $scheduleFactory,
         $playerVersionFactory,
-        HttpCacheProvider
-        $cacheProvider,
         $folderFactory
     ) {
         $this->moduleFactory = $moduleFactory;
@@ -188,7 +178,6 @@ class Library extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->playerVersionFactory = $playerVersionFactory;
-        $this->cacheProvider = $cacheProvider;
         $this->folderFactory = $folderFactory;
     }
 
@@ -967,11 +956,6 @@ class Library extends Base
         // Delete
         $media->delete();
 
-        // Do we need to reassess fonts?
-        if ($media->mediaType == 'font') {
-            $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser());
-        }
-
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -1167,7 +1151,6 @@ class Library extends Base
             'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
             'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
             'oldFolderId' => $folderId,
-            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         ];
 
         // Output handled by UploadHandler
@@ -1353,12 +1336,6 @@ class Library extends Base
         }
 
         $media->save();
-
-        // Are we a font
-        if ($media->mediaType == 'font') {
-            // We may have made changes and need to regenerate
-            $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser());
-        }
 
         // Return
         $this->getState()->hydrate([
@@ -1670,67 +1647,6 @@ class Library extends Base
         $response = $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));
 
         $this->setNoOutput(true);
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Return the CMS flavored font css
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface
-     * @throws ConfigurationException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function fontCss(Request $request, Response $response)
-    {
-        // Regenerate the CSS for fonts
-        $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
-
-        // Work out the etag
-        /** @var $httpCache HttpCacheProvider*/
-        $httpCache = $this->cacheProvider;
-        // Issue some headers
-        $response = $httpCache->withEtag($response, md5($css['css']));
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fontcss_' . Random::generateString();
-        // Return the CSS to the browser as a file
-        $out = fopen($tempFileName, 'w');
-        fputs($out, $css['css']);
-        fclose($out);
-
-        $this->setNoOutput(true);
-
-        $response = $response->withHeader('Content-Type', 'text/css')
-                             ->withBody(new Stream(fopen($tempFileName, 'r')));
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Return the CMS flavored font css
-     * @param Request|null $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function fontList(Request $request, Response $response)
-    {
-        // Regenerate the CSS for fonts
-        $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
-
-        // Return
-        $this->getState()->hydrate([
-            'data' => $css['list']
-        ]);
-
         return $this->render($request, $response);
     }
 

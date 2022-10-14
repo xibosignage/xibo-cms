@@ -1,0 +1,32 @@
+{% extends "form-base.twig" %}
+{% block formTitle %}{{ "Font Details"|trans }} {% endblock %}
+{% block formHtml %}
+    <div class="card">
+        <div class="card-header">
+             {{ "Font details provided by fontLib"|trans }}
+        </div>
+        <div class="card-body">
+            <ul>
+            {% for key, value in details %}
+                <li><b>{{ key }}</b> : {{ value }}</li>
+            {% endfor %}
+            </ul>
+            <div id="exampleText">
+                <span class="example-text">
+                    This is an example text using the selected font style.
+                </span>
+            </div>
+        </div>
+    </div>
+    <style>
+        @font-face {
+            font-family: {{ details.Name }};
+            src: url({{url_for("font.download", {id: fontId})}});
+        }
+
+        .example-text {
+            font-family: {{ details.Name }}, serif;
+            font-size: 48px;
+        }
+    </style>
+{% endblock %}

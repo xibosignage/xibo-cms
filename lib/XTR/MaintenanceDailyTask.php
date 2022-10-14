@@ -24,8 +24,10 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Xibo\Controller\Module;
+use Xibo\Entity\Font;
 use Xibo\Event\MaintenanceDailyEvent;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\FontFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DatabaseLogHandler;
@@ -56,6 +58,10 @@ class MaintenanceDailyTask implements TaskInterface
 
     /** @var DataSetFactory */
     private $dataSetFactory;
+    /**
+     * @var FontFactory
+     */
+    private $fontFactory;
 
     /** @inheritdoc */
     public function setFactories($container)
@@ -65,6 +71,7 @@ class MaintenanceDailyTask implements TaskInterface
         $this->userFactory = $container->get('userFactory');
         $this->dataSetFactory = $container->get('dataSetFactory');
         $this->mediaService = $container->get('mediaService');
+        $this->fontFactory = $container->get('fontFactory');
         return $this;
     }
 
@@ -131,7 +138,7 @@ class MaintenanceDailyTask implements TaskInterface
      */
     private function importLayouts()
     {
-        $this->runMessage .= '## ' . __('Import Layouts') . PHP_EOL;
+        $this->runMessage .= '## ' . __('Import Layouts and Fonts') . PHP_EOL;
 
         if ($this->config->getSetting('DEFAULTS_IMPORTED') == 0) {
             $folder = $this->config->uri('layouts', true);
@@ -149,7 +156,6 @@ class MaintenanceDailyTask implements TaskInterface
                             false,
                             true,
                             $this->dataSetFactory,
-                            null,
                             null,
                             $this->mediaService,
                             1
@@ -170,6 +176,44 @@ class MaintenanceDailyTask implements TaskInterface
                         $this->log->debug($exception->getTraceAsString());
                     }
                 }
+            }
+
+            // install fonts from the theme folder
+            $fontFolder =  $this->config->uri('fonts', true);
+            $fontsAdded = false;
+            foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
+                // check if we already have this font file
+                if (count($this->fontFactory->getByFileName($file)) <= 0) {
+                    // if we don't add it
+                    $filePath = $fontFolder . DIRECTORY_SEPARATOR . $file;
+                    $fontLib = \FontLib\Font::load($filePath);
+
+                    // check embed flag, just in case
+                    $embed = intval($fontLib->getData('OS/2', 'fsType'));
+                    // if it's not embeddable, log error and skip it
+                    if ($embed != 0 && $embed != 8) {
+                        $this->log->error('Unable to install default Font: ' . $file . ' . Font file is not embeddable due to its permissions');
+                        continue;
+                    }
+
+                    /** @var Font $font */
+                    $font = $this->fontFactory->createEmpty();
+                    $font->modifiedBy = $this->userFactory->getSystemUser()->userName;
+                    $font->name = $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily();
+                    $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
+                    $font->fileName = $file;
+                    $font->size = filesize($filePath);
+                    $font->md5 = md5_file($filePath);
+                    $font->save();
+
+                    $fontsAdded = true;
+                    copy($filePath, $this->config->getSetting('LIBRARY_LOCATION') . 'fonts/' . $file);
+                }
+            }
+
+            if ($fontsAdded) {
+                // if we added any fonts here fonts.css file
+                $this->mediaService->setUser($this->userFactory->getSystemUser())->updateFontsCss();
             }
 
             $this->config->changeSetting('DEFAULTS_IMPORTED', 1);

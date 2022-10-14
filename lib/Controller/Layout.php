@@ -29,7 +29,6 @@ use Mimey\MimeTypes;
 use Parsedown;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
@@ -388,7 +387,6 @@ class Layout extends Base
                 1,
                 $this->getDataSetFactory(),
                 '',
-                RouteContext::fromRequest($request)->getRouteParser(),
                 $this->mediaService,
                 $folderId
             );
@@ -2561,7 +2559,6 @@ class Layout extends Base
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->mediaService->libraryUsage() > $libraryLimit),
-            'routeParser' => RouteContext::fromRequest($request)->getRouteParser(),
             'mediaService' => $this->mediaService,
             'sanitizerService' => $this->getSanitizerService(),
             'folderId' => $folderId,

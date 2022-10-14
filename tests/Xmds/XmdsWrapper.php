@@ -40,7 +40,7 @@ class XmdsWrapper
      * @param string $version
      * @throws \SoapFault
      */
-    function __construct($URL = "http://localhost/xmds.php", $KEY="test", $version='5')
+    public function __construct($URL = 'http://localhost/xmds.php', $KEY = 'test', $version = '7')
     {
         $this->URL = $URL;
         $this->KEY = $KEY;
