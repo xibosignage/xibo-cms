@@ -31,6 +31,10 @@ class XmdsDependencyListEvent extends Event
     private static $NAME = 'xmds.dependency.list';
 
     private $dependencies = [];
+    /**
+     * @var int
+     */
+    private $playerVersionId = null;
 
     /**
      * @return Dependency[]
@@ -60,5 +64,15 @@ class XmdsDependencyListEvent extends Event
     ): XmdsDependencyListEvent {
         $this->dependencies[] = new Dependency($fileType, $id, $path, $size, $md5, $isAvailableOverHttp);
         return $this;
+    }
+
+    public function setPlayerVersion(int $playerVersionId)
+    {
+        $this->playerVersionId = $playerVersionId;
+    }
+
+    public function getPlayerVersion()
+    {
+        return $this->playerVersionId;
     }
 }

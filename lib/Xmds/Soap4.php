@@ -164,21 +164,21 @@ class Soap4 extends Soap
                 // Player upgrades
                 $version = '';
                 try {
-                    $upgradeMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+                    $versionId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
 
-                    if ($clientType != 'windows' && $upgradeMediaId != null) {
-                        $version = $this->playerVersionFactory->getByMediaId($upgradeMediaId);
+                    if ($clientType != 'windows' && $versionId != null) {
+                        $version = $this->playerVersionFactory->getById($versionId);
 
                         if ($clientType == 'android') {
                             $version = json_encode([
-                                'id' => $upgradeMediaId,
-                                'file' => $version->storedAs,
+                                'id' => $versionId,
+                                'file' => $version->fileName,
                                 'code' => $version->code
                             ]);
                         } elseif ($clientType == 'lg') {
                             $version = json_encode([
-                                'id' => $upgradeMediaId,
-                                'file' => $version->storedAs,
+                                'id' => $versionId,
+                                'file' => $version->fileName,
                                 'code' => $version->code
                             ]);
                         } elseif ($clientType == 'sssp') {
@@ -190,8 +190,8 @@ class Soap4 extends Soap
                             $this->getPool()->saveDeferred($cache);
 
                             $version = json_encode([
-                                'id' => $upgradeMediaId,
-                                'file' => $version->storedAs,
+                                'id' => $versionId,
+                                'file' => $version->fileName,
                                 'code' => $version->code,
                                 'url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce
                             ]);
