@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -34,7 +34,10 @@ class XiboSspConnector implements ConnectorInterface
 {
     use ConnectorTrait;
 
-    /** @var mixed */
+    /** @var string */
+    private $formError;
+
+    /** @var array */
     private $partners;
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
@@ -70,6 +73,11 @@ class XiboSspConnector implements ConnectorInterface
         return 'xibo-ssp-connector-form-settings';
     }
 
+    public function getFormError(): string
+    {
+        return $this->formError ?? __('Unknown error');
+    }
+
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
         $existingApiKey = $this->getSetting('apiKey');
@@ -78,12 +86,26 @@ class XiboSspConnector implements ConnectorInterface
         }
 
         // Set partners.
-        $this->getAvailablePartners(false, $settings['apiKey']);
+        $partners = [];
+        $available = $this->getAvailablePartners(false, $settings['apiKey']);
 
-
+        // Pull in expected fields.
+        foreach ($available as $partner) {
+            $partners[] = [
+                'name' => $params->getString($partner['name'] . '_name'),
+                'enabled' => $params->getCheckbox($partner['name'] . '_enabled'),
+                'currency' => $params->getString($partner['name'] . '_currency'),
+                'key' => $params->getString($partner['name'] . '_key'),
+                'sov' => $params->getInt($partner['name'] . '_sov'),
+                'mediaTypesAllowed' => $params->getString($partner['name'] . '_mediaTypesAllowed'),
+                'duration' => $params->getInt($partner['name'] . '_duration'),
+                'minDuration' => $params->getInt($partner['name'] . '_minDuration'),
+                'maxDuration' => $params->getInt($partner['name'] . '_maxDuration'),
+            ];
+        }
 
         // Update API config.
-        $this->setPartners($settings['apiKey']);
+        $this->setPartners($settings['apiKey'], $partners);
 
         // If the API key has changed during this request, clear out displays on the old API key
         if ($existingApiKey !== $settings['apiKey']) {
@@ -109,7 +131,7 @@ class XiboSspConnector implements ConnectorInterface
             } else {
                 $apiKey = $this->getSetting('apiKey');
                 if (empty($apiKey)) {
-                    return [];
+                    return null;
                 }
             }
 
@@ -136,31 +158,56 @@ class XiboSspConnector implements ConnectorInterface
                 $message = json_decode($e->getResponse()->getBody()->getContents(), true);
 
                 if ($isThrowError) {
-                    throw new GeneralException(empty($message)
+                    $this->formError = empty($message)
                         ? __('Cannot contact SSP service, please try again shortly.')
-                        : $message['message']);
+                        : $message['message'];
+
+                    throw new GeneralException($this->formError);
                 } else {
-                    return [];
+                    return null;
                 }
             } catch (\Exception $e) {
                 $this->getLogger()->error('getAvailableServices: e = ' . $e->getMessage());
 
+                $this->formError = __('Cannot contact SSP service, please try again shortly.');
                 if ($isThrowError) {
-                    throw new GeneralException(__('Cannot contact SSP service, please try again shortly.'));
+                    throw new GeneralException($this->formError);
                 } else {
-                    return [];
+                    return null;
                 }
             }
         }
 
-        return $this->partners;
+        return $this->partners['available'] ?? [];
+    }
+
+    /**
+     * Get a setting for a partner
+     * @param string $partnerKey
+     * @param string $setting
+     * @param $default
+     * @return mixed|string|null
+     */
+    public function getPartnerSetting(string $partnerKey, string $setting, $default = null)
+    {
+        if (!is_array($this->partners) || !array_key_exists('partners', $this->partners)) {
+            return $default;
+        }
+
+        foreach ($this->partners['partners'] as $partner) {
+            if ($partner['name'] === $partnerKey) {
+                return $partner[$setting] ?? $default;
+            }
+        }
+
+        return $default;
     }
 
     /**
      * @throws InvalidArgumentException
      * @throws GeneralException
      */
-    public function setPartners(string $apiKey)
+    public function setPartners(string $apiKey, array $partners)
     {
         $this->getLogger()->debug('setPartners: updating');
 
@@ -170,7 +217,7 @@ class XiboSspConnector implements ConnectorInterface
                     'X-API-KEY' => $apiKey
                 ],
                 'json' => [
-                    'partners' => $this->partners
+                    'partners' => $partners
                 ]
             ]);
         } catch (RequestException $e) {

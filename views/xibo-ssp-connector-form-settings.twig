@@ -27,93 +27,116 @@
 
 {% block connectorFormFields %}
     {% set partners = interface.getAvailablePartners() %}
-    <h3>Xibo SSP Connector<small> - work with world leading supply side platforms</small></h3>
-    <p>
-        Onboard with one of the below SSP's, enter your API key and configure which displays you want to activate. <br>
-        In most cases you will need to list your displays with the SSP and copy your SSP ID into the CMS.
-    </p>
-    <p>
-        Please note that your players will require HTTP access to <code>https://exchange.xibo-adspace.com</code>
-        to receive ads from any SSP.
-    </p>
 
-    {% if partners is not iterable %}
-        <p class="alert alert-danger">{{ partners }}</p>
-    {% endif %}
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" href="#tab-general" role="tab" data-toggle="tab">
+                <span>{% trans "General" %}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#tab-ssp-config" role="tab" data-toggle="tab">
+                <span>{% trans "SSP Config" %}</span>
+            </a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="tab-general">
+            <h3>Xibo SSP Connector<small> - work with world leading supply side platforms</small></h3>
+            <p>
+                Onboard with one of the below SSP's, enter your API key and configure which displays you want to activate. <br>
+                In most cases you will need to list your displays with the SSP and copy your SSP ID into the CMS.
+            </p>
+            <p>
+                Please note that your players will require HTTP access to <code>https://exchange.xibo-adspace.com</code>
+                to receive ads from any SSP.
+            </p>
 
-    {% if not interface.isProviderSetting("apiKey") %}
-        <h4>Settings</h4>
-        <p>Your API key allows for secure communication between the CMS and the Xibo SSP connector service. It is used
-            to orchestrate the delivery of ads to your players.</p>
+            {% if partners is not iterable %}
+                <p class="alert alert-danger">{{ interface.getFormError() }}</p>
+            {% endif %}
 
-        {% set title %}{% trans "API Key" %}{% endset %}
-        {% set helpText %}{% trans "Enter your API Key from Xibo." %}{% endset %}
-        {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
-    {% endif %}
+            {% if not interface.isProviderSetting("apiKey") %}
+                <h4>API Key</h4>
+                <p>Your API key allows for secure communication between the CMS and the Xibo SSP connector service. It is used
+                    to orchestrate the delivery of ads to your players.</p>
 
-    <h4>Credentials</h4>
-    {% if partners is iterable and partners|length > 0 %}
-        <p>Choose SSP</p>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Type</th>
-                <th>Status</th>
-                <th>User</th>
-                <th></th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for service in interface.getAvailableServices() %}
-                {% set credential = interface.getCredentialForType(service.type) %}
-                <tr>
-                    <input type="hidden" name="{{ service.type }}_id" value="{{ credential.id }}">
-                    <td>{{ service.name }}</td>
-                    {% if credential %}
-                        <td>{% if interface.isCredentialInErrorState(service.type) %}Error{% else %}Connected{% endif %}</td>
-                        <td>{{ credential.userName }}</td>
-                        <td>
-                            {% set title %}{% trans "Change Password" %}{% endset %}
-                            {% set helpText %}{{ "Please enter the password you use to connect to %service%"|trans({'%service%': service.name}) }}{% endset %}
-                            {{ inline.password((service.type ~ "_password"), title, null, helpText) }}
+                {% set title %}{% trans "API Key" %}{% endset %}
+                {% set helpText %}{% trans "Enter your API Key from Xibo." %}{% endset %}
+                {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
+            {% endif %}
+        </div>
+        <div class="tab-pane" id="tab-ssp-config">
+            <h4>SSP configuration</h4>
+            <div class="row">
+                {% if partners is iterable and partners|length > 0 %}
+                    <div class="col-3">
+                        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            {% for partnerKey, available in partners %}
+                                <button class="nav-link{% if loop.first %} active{% endif %}"
+                                        id="v-pills-{{ partnerKey }}-tab"
+                                        data-toggle="pill"
+                                        data-target="#v-pills-{{ partnerKey }}"
+                                        type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
+                                    {{ available.name }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-9">
+                        <div class="tab-content">
+                            {% for partnerKey, available in partners %}
+                                <div class="tab-pane fade show{% if loop.first %} active{% endif %}"
+                                     id="v-pills-{{ partnerKey }}" role="tabpanel" aria-labelledby="v-pills-{{ partnerKey }}-tab">
+                                    <h4>{{ available.name }}</h4>
 
-                            {% set title %}{% trans "Change second factor secret" %}{% endset %}
-                            {% set helpText %}{% trans "We support Google Authenticator or similar two factor codes. You get this secret by scanning the QR code." %}{% endset %}
-                            {{ inline.input((service.type ~ "_twoFactorSecret"), title, null, helpText) }}
-                        </td>
-                        <td>{{ inline.checkbox((service.type ~ "_remove"), "Check to remove"|trans)}}</td>
-                    {% else %}
-                        <td colspan="4">
-                            {% set title %}{% trans "Username" %}{% endset %}
-                            {% set helpText %}{% trans "Please enter the username you use to connect to your dashboard service." %}{% endset %}
-                            {{ inline.input((service.type ~ "_userName"), title, null, helpText) }}
+                                    {% set title %}{% trans "Enabled?" %}{% endset %}
+                                    {% set helpText %}{% trans "Connect to this partner" %}{% endset %}
+                                    {{ forms.checkbox(partnerKey ~ "_enabled", title, interface.getPartnerSetting(partnerKey, "enabled"), helpText) }}
 
-                            {% set title %}{% trans "Password" %}{% endset %}
-                            {% set helpText %}{{ "Please enter the password you use to connect to %service%"|trans({'%service%': service.name}) }}{% endset %}
-                            {{ inline.password((service.type ~ "_password"), title, null, helpText) }}
+                                    {% set title %}{% trans "API Key" %}{% endset %}
+                                    {% set helpText %}{% trans "Enter your API Key from this SSP." %}{% endset %}
+                                    {{ forms.input(partnerKey ~ "_key", title, interface.getPartnerSetting(partnerKey, "key"), helpText) }}
 
-                            {% set title %}{% trans "Second factor secret" %}{% endset %}
-                            {% set helpText %}{% trans "We support Google Authenticator or similar two factor codes. You get this secret by scanning the QR code." %}{% endset %}
-                            {{ inline.input((service.type ~ "_twoFactorSecret"), title, null, helpText) }}
+                                    {% set title %}{% trans "Share of voice" %}{% endset %}
+                                    {% set helpText %}{% trans "How many seconds per hour would you like to dedicate to this SSP?" %}{% endset %}
+                                    {{ forms.number(partnerKey ~ "_sov", title, interface.getPartnerSetting(partnerKey, "sov"), helpText) }}
 
-                            {% if service.isUrl %}
-                                {% set title %}{% trans "URL" %}{% endset %}
-                                {% set helpText %}{{ "The URL where the %service% is hosted"|trans({'%service%':service.name}) }}{% endset %}
-                                {{ inline.input((service.type ~ "_url"), title, null, helpText) }}
-                            {% endif %}
-                        </td>
-                    {% endif %}
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>To see a list of available partners please enter your API key, save this form and then come back here.</p>
-    {% endif %}
+                                    {% set title %}{% trans "Duration (s)" %}{% endset %}
+                                    {% set helpText %}{% trans "The expected duration of each ad served by the SSP." %}{% endset %}
+                                    {{ forms.number(partnerKey ~ "_duration", title, interface.getPartnerSetting(partnerKey, "duration"), helpText) }}
+
+                                    {% set title %}{% trans "Min Duration (s)" %}{% endset %}
+                                    {% set helpText %}{% trans "The minimum duration of an ad served by the SSP." %}{% endset %}
+                                    {{ forms.number(partnerKey ~ "_minDuration", title, interface.getPartnerSetting(partnerKey, "minDuration"), helpText) }}
+
+                                    {% set title %}{% trans "Max Duration (s)" %}{% endset %}
+                                    {% set helpText %}{% trans "The maximum duration of an ad served by the SSP." %}{% endset %}
+                                    {{ forms.number(partnerKey ~ "_maxDuration", title, interface.getPartnerSetting(partnerKey, "maxDuration"), helpText) }}
+
+                                    {% set all %}{% trans "Images and Video" %}{% endset %}
+                                    {% set image %}{% trans "Images only" %}{% endset %}
+                                    {% set video %}{% trans "Videos only" %}{% endset %}
+                                    {% set options = [
+                                        { id: "imagesAndVideo", value: all },
+                                        { id: "imageOnly", value: image },
+                                        { id: "videoOnly", value: video }
+                                    ] %}
+                                    {{ forms.dropdown(partnerKey ~ "_mediaTypesAllowed", "single", title, interface.getPartnerSetting(partnerKey, "mediaTypesAllowed"), options, "id", "value", helpText) }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p>To see a list of available partners please enter your API key, save this form and then come back here.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <hr>
 
     <h4>Enable/Disable</h4>
-    <p>Disabling this connector will stop new displays being registered with the SSP, but will not stop existing
-    displays making ad requests. If you want to stop all requests, disable the SSP in the list above.</p>
+    <p>Disabling this connector will stop all displays from making ad requests.</p>
 
 {% endblock %}
