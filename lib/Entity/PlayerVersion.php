@@ -198,7 +198,7 @@ class PlayerVersion implements \JsonSerializable
         ]);
 
         // Library location
-        $libraryLocation = $this->config->getSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         // delete file
         if (file_exists($libraryLocation . 'playersoftware/'. $this->fileName)) {

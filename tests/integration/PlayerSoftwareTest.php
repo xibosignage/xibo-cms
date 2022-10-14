@@ -200,6 +200,6 @@ class PlayerSoftwareTest extends LocalWebTestCase
             ]
         ];
 
-        return $this->getEntityProvider()->post('/playersoftware',  ['multipart' => $payload]);
+        return $this->getEntityProvider()->post('/playersoftware', ['multipart' => $payload]);
     }
 }

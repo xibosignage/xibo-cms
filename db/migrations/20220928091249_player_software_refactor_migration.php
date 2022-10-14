@@ -45,7 +45,7 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
 
         // create playersoftware sub-folder in the library location
         $libraryLocation = $this->fetchRow('SELECT `setting`.value FROM `setting` WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0];
-        if(!file_exists($libraryLocation . 'playersoftware')) {
+        if (!file_exists($libraryLocation . 'playersoftware')) {
             mkdir($libraryLocation . 'playersoftware', 0777, true);
         }
 
@@ -56,8 +56,7 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                                     fileName = \''.$playersoftwareMedia['originalFileName']. '\',
                                     size = '.$playersoftwareMedia['fileSize']. ',
                                     md5 = \''.$playersoftwareMedia['md5']. '\'
-                                WHERE `player_software`.mediaId = ' . $playersoftwareMedia['mediaId']
-            );
+                                WHERE `player_software`.mediaId = ' . $playersoftwareMedia['mediaId']);
 
             // move the stored files with new id to fonts folder
             rename($libraryLocation . $playersoftwareMedia['storedAs'], $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']);
