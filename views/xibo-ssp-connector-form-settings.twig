@@ -39,6 +39,11 @@
                 <span>{% trans "SSP Config" %}</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#tab-activity-log" role="tab" data-toggle="tab">
+                <span>{% trans "Activity Log" %}</span>
+            </a>
+        </li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="tab-general">
@@ -130,6 +135,46 @@
                 {% else %}
                     <p>To see a list of available partners please enter your API key, save this form and then come back here.</p>
                 {% endif %}
+            </div>
+        </div>
+        <div class="tab-pane" id="tab-activity-log">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="connector-ssp-activity-log">
+                <div class="XiboFilterCustom card bg-light mb-3">
+                    <div class="FilterDiv card-body" id="connector-ssp-activity-log">
+                        <form class="form-inline">
+                            <div class="w-100">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">
+                                    {% trans "Warning: This may return a lot of data and may take several minutes to process." %}
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData card pt-3">
+                    <table id="stats" class="table table-striped" data-state-preference-name="connector-ssp-activity-log">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Scheduled At" %}</th>
+                            <th>{% trans "Campaign" %}</th>
+                            <th>{% trans "Display ID" %}</th>
+                            <th>{% trans "Played?" %}</th>
+                            <th>{% trans "Errored?" %}</th>
+                            <th>{% trans "Impressions" %}</th>
+                            <th>{% trans "Impression Date" %}</th>
+                            <th>{% trans "Impression Actual" %}</th>
+                            <th>{% trans "Errors" %}</th>
+                            <th>{% trans "Error Date" %}</th>
+                            <th>{% trans "Error Code" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
