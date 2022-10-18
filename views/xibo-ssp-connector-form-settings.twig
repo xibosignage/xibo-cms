@@ -128,6 +128,22 @@
                                         { id: "videoOnly", value: video }
                                     ] %}
                                     {{ forms.dropdown(partnerKey ~ "_mediaTypesAllowed", "single", title, interface.getPartnerSetting(partnerKey, "mediaTypesAllowed"), options, "id", "value", helpText) }}
+
+                                    {% set title %}{% trans "Displays" %}{% endset %}
+                                    {% set helpText %}{% trans "Which displays would you like to enroll with this SSP. Leave blank to enroll them all." %}{% endset %}
+                                    {% set attributes = [
+                                        { name: "data-width", value: "200px" },
+                                        { name: "data-allow-clear", value: "true" },
+                                        { name: "data-placeholder--id", value: null },
+                                        { name: "data-placeholder--value", value: "" },
+                                        { name: "data-search-url", value:  url_for("displayGroup.search") },
+                                        { name: "data-search-term", value: "displayGroup" },
+                                        { name: "data-search-term-tags", value: "tags" },
+                                        { name: "data-id-property", value: "displayGroupId" },
+                                        { name: "data-text-property", value: "displayGroup" }
+                                    ] %}
+                                    {{ forms.dropdown("displayGroupId", "single", title, interface.getSetting(partnerKey ~ "_displayGroupId"), null, "displayGroupId", "displayGroup", helpText, "pagedSelect", "", "d", "", attributes) }}
+
                                 </div>
                             {% endfor %}
                         </div>

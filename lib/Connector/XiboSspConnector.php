@@ -22,6 +22,7 @@
 namespace Xibo\Connector;
 
 use GuzzleHttp\Exception\RequestException;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\ConnectorDeletingEvent;
 use Xibo\Event\ConnectorEnabledChangeEvent;
@@ -29,6 +30,7 @@ use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
+use Xibo\Xmds\Wsdl;
 
 class XiboSspConnector implements ConnectorInterface
 {
@@ -39,6 +41,20 @@ class XiboSspConnector implements ConnectorInterface
 
     /** @var array */
     private $partners;
+
+    /** @var \Xibo\Factory\DisplayFactory */
+    private $displayFactory;
+
+    /**
+     * TODO: Hidden API not in the interface?
+     * @param \Psr\Container\ContainerInterface $container
+     * @return \Xibo\Connector\ConnectorInterface
+     */
+    public function setFactories(ContainerInterface $container): ConnectorInterface
+    {
+        $this->displayFactory = $container->get('displayFactory');
+        return $this;
+    }
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
@@ -102,6 +118,9 @@ class XiboSspConnector implements ConnectorInterface
                 'minDuration' => $params->getInt($partner['name'] . '_minDuration'),
                 'maxDuration' => $params->getInt($partner['name'] . '_maxDuration'),
             ];
+
+            // Also grab the displayGroupId if one has been set.
+            $this->settings[$partner . '_displayGroupId'] = $params->getInt($partner . '_displayGroupId');
         }
 
         // Update API config.
@@ -207,7 +226,7 @@ class XiboSspConnector implements ConnectorInterface
      * @throws InvalidArgumentException
      * @throws GeneralException
      */
-    public function setPartners(string $apiKey, array $partners)
+    private function setPartners(string $apiKey, array $partners)
     {
         $this->getLogger()->debug('setPartners: updating');
 
@@ -233,6 +252,56 @@ class XiboSspConnector implements ConnectorInterface
         }
     }
 
+    private function setDisplays(string $apiKey, array $partners)
+    {
+        $displayGroupIds = [];
+        foreach ($partners as $partner) {
+            $displayGroupId = $this->getSetting($partner . '_displayGroupId', null);
+            if ($displayGroupId !== null) {
+                $displayGroupIds[] = $displayGroupId;
+            }
+        }
+
+        // Query for displays
+
+
+        foreach ($partners as $partner) {
+
+        }
+
+        try {
+            $this->getClient()->post($this->getServiceUrl() . '/configure', [
+                'headers' => [
+                    'X-API-KEY' => $apiKey,
+                ],
+                'json' => [
+                    'cmsUrl' => Wsdl::getRoot(),
+                    'displays' => [
+                        'hardwareKey' => '',
+                        'width' => 0,
+                        'height' => 0,
+                        'partners' => [
+                            [
+                                'name' => '',
+                                'sspId' => ''
+                            ],
+                        ],
+                    ],
+                ],
+            ]);
+        } catch (RequestException $e) {
+            $this->getLogger()->error('setDisplays: e = ' . $e->getMessage());
+            $message = json_decode($e->getResponse()->getBody()->getContents(), true);
+
+            throw new GeneralException(empty($message)
+                ? __('Cannot contact SSP service, please try again shortly.')
+                : $message['message']);
+        } catch (\Exception $e) {
+            $this->getLogger()->error('setDisplays: e = ' . $e->getMessage());
+            throw new GeneralException(__('Cannot contact SSP service, please try again shortly.'));
+        }
+    }
+
     /**
      * Get the service url, either from settings or a default
      * @return string
@@ -248,8 +317,12 @@ class XiboSspConnector implements ConnectorInterface
     {
         $this->getLogger()->debug('onRegularMaintenance');
 
-        // TODO: send displays.
+        $this->getAvailablePartners();
+        $partners = $this->partners['partners'] ?? [];
 
+        if (count($partners) > 0) {
+            $this->setDisplays($this->getSetting('apiKey'), $partners);
+        }
     }
 
     public function onDeleting(ConnectorDeletingEvent $event)
