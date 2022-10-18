@@ -277,6 +277,7 @@ class XiboSspConnector implements ConnectorInterface
                 'json' => [
                     'cmsUrl' => Wsdl::getRoot(),
                     'displays' => [
+                        'displayId' => 0,
                         'hardwareKey' => '',
                         'width' => 0,
                         'height' => 0,
