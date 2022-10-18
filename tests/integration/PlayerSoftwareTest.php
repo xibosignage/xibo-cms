@@ -1,6 +1,6 @@
 <?php
 /**
-* Copyright (C) 2020 Xibo Signage Ltd
+* Copyright (C) 2022 Xibo Signage Ltd
 *
 * Xibo - Digital Signage - http://www.xibo.org.uk
 *
@@ -50,11 +50,8 @@ class PlayerSoftwareTest extends LocalWebTestCase
     /** @var XiboDisplayProfile */
     protected $displayProfile;
 
-    /** @var PlayerVersion */
     protected $version;
-
-    protected $versionId;
-    protected $versionId2;
+    protected $version2;
 
     // <editor-fold desc="Init">
     public function setup()
@@ -63,26 +60,11 @@ class PlayerSoftwareTest extends LocalWebTestCase
 
         $this->getLogger()->debug('Setup test for  ' . get_class() . ' Test');
 
-        // Add a media items
-        $this->media = (new XiboLibrary($this->getEntityProvider()))
-            ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
-
-        // upload second version
-        $this->media2 = (new XiboLibrary($this->getEntityProvider()))
-            ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.8_R108.apk');
-
-        // Get the versions
-        $version = $this->getEntityProvider()->get('/playersoftware', ['mediaId' => $this->media->mediaId]);
-
-        foreach ($version as $actualVersion) {
-            $this->versionId = $actualVersion['versionId'];
-        }
-
-        $version2 = $this->getEntityProvider()->get('/playersoftware', ['mediaId' => $this->media2->mediaId]);
-
-        foreach ($version2 as $actualVersion) {
-            $this->versionId2 = $actualVersion['versionId'];
-        }
+        // Upload version files
+        $uploadVersion = $this->uploadVersionFile(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
+        $this->version = $uploadVersion['files'][0];
+        $uploadVersion2 = $this->uploadVersionFile(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.8_R108.apk');
+        $this->version2 = $uploadVersion2['files'][0];
 
         // Create a Display
         $this->display = $this->createDisplay(null, 'android');
@@ -98,7 +80,7 @@ class PlayerSoftwareTest extends LocalWebTestCase
             'name' => $this->displayProfile->name,
             'type' => $this->displayProfile->type,
             'isDefault' => $this->displayProfile->isDefault,
-            'versionMediaId' => $this->media->mediaId
+            'versionMediaId' => $this->version['id']
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->getLogger()->debug('Finished Setup');
@@ -108,9 +90,9 @@ class PlayerSoftwareTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        // Delete the media we've been working with
-        $this->getEntityProvider()->delete('/playersoftware/' . $this->versionId);
-        $this->getEntityProvider()->delete('/playersoftware/' . $this->versionId2);
+        // Delete the version files we've been working with
+        $this->getEntityProvider()->delete('/playersoftware/' . $this->version['id']);
+        $this->getEntityProvider()->delete('/playersoftware/' . $this->version2['id']);
         // Delete the Display
         $this->deleteDisplay($this->display);
         // Delete the Display profile
@@ -155,7 +137,7 @@ class PlayerSoftwareTest extends LocalWebTestCase
 
         $this->getLogger()->debug($register);
 
-        $this->assertContains($this->media->storedAs, $register, 'Version information not in Register');
+        $this->assertContains($this->version['fileName'], $register, 'Version information not in Register');
         $this->assertContains('61', $register, 'Version information Code not in Register');
     }
 
@@ -168,7 +150,7 @@ class PlayerSoftwareTest extends LocalWebTestCase
             'display' => $this->display->display,
             'licensed' => $this->display->licensed,
             'license' => $this->display->license,
-            'versionMediaId' => $this->media2->mediaId,
+            'versionMediaId' => $this->version2['id'],
             'defaultLayoutId' => $this->display->defaultLayoutId,
             'displayProfileId' => $this->displayProfile->displayProfileId
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded'] );
@@ -184,7 +166,7 @@ class PlayerSoftwareTest extends LocalWebTestCase
 
         foreach ($object->data->overrideConfig as $override) {
             if ($override->name === 'versionMediaId') {
-                $this->assertSame($this->media2->mediaId, $override->value, json_encode($object->data->overrideConfig));
+                $this->assertSame($this->version2['id'], $override->value, json_encode($object->data->overrideConfig));
             }
         }
 
@@ -201,7 +183,23 @@ class PlayerSoftwareTest extends LocalWebTestCase
         );
         // make sure the media ID set on the display itself is in the register
         $this->getLogger()->debug($register);
-        $this->assertContains($this->media2->storedAs, $register, 'Version information not in Register');
+        $this->assertContains($this->version2['fileName'], $register, 'Version information not in Register');
         $this->assertContains('108', $register, 'Version information Code not in Register');
+    }
+
+    private function uploadVersionFile($fileName, $filePath)
+    {
+        $payload = [
+            [
+                'name' => 'name',
+                'contents' => $fileName
+            ],
+            [
+                'name' => 'files',
+                'contents' => fopen($filePath, 'r')
+            ]
+        ];
+
+        return $this->getEntityProvider()->post('/playersoftware', ['multipart' => $payload]);
     }
 }

@@ -410,6 +410,16 @@ class Soap
         // Output player dependencies such as the player bundle, fonts, etc.
         // 1) get a list of dependencies.
         $dependencyListEvent = new XmdsDependencyListEvent();
+        $playerVersionMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+        if ($this->display->clientType == 'sssp') {
+            $playerVersionMediaId = null;
+        }
+
+        if ($playerVersionMediaId !== null) {
+            $dependencyListEvent->setPlayerVersion($playerVersionMediaId);
+        }
+
         $this->getDispatcher()->dispatch($dependencyListEvent, 'xmds.dependency.list');
 
         // 2) Each dependency returned needs to be added to RF.
@@ -611,12 +621,6 @@ class Soap
         // Create a comma separated list to pass into the query which gets file nodes
         $layoutIdList = implode(',', $layouts);
 
-        $playerVersionMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
-
-        if ($this->display->clientType == 'sssp') {
-            $playerVersionMediaId = null;
-        }
-
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -688,21 +692,6 @@ class Soap
             ";
 
             $params = ['displayId' => $this->display->displayId];
-
-            if ($playerVersionMediaId != null) {
-                $SQL .= ' UNION ALL 
-                    SELECT 5 AS DownloadOrder,
-                        `media`.storedAs AS path,
-                        `media`.mediaId AS id,
-                        `media`.`MD5`,
-                        `media`.fileSize,
-                        `media`.released
-                      FROM `media`
-                     WHERE `media`.type = \'playersoftware\' 
-                        AND `media`.mediaId = :playerVersionMediaId
-                ';
-                $params['playerVersionMediaId'] = $playerVersionMediaId;
-            }
 
             $SQL .= ' ORDER BY DownloadOrder ';
 

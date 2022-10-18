@@ -294,6 +294,10 @@ class MediaService implements MediaServiceInterface
             mkdir($libraryFolder . '/fonts', 0777, true);
         }
 
+        if (!file_exists($libraryFolder . '/playersoftware')) {
+            mkdir($libraryFolder . '/playersoftware', 0777, true);
+        }
+
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder)) {
             throw new ConfigurationException(__('Library not writable'));

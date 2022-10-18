@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,19 +24,22 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Media;
-use Xibo\Entity\PlayerVersion;
-use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
+use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\UploadHandler;
+use Xibo\Service\DownloadService;
+use Xibo\Service\MediaService;
+use Xibo\Service\MediaServiceInterface;
+use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\Render\WidgetDownloader;
 
 /**
 * Class PlayerSoftware
@@ -50,17 +53,15 @@ class PlayerSoftware extends Base
     /** @var  DisplayProfileFactory */
     private $displayProfileFactory;
 
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
-    /** @var  ModuleFactory */
-    private $moduleFactory;
-
     /** @var  PlayerVersionFactory */
     private $playerVersionFactory;
 
     /** @var  DisplayFactory */
     private $displayFactory;
+    /**
+     * @var MediaServiceInterface
+     */
+    private $mediaService;
 
     /**
      * Notification constructor.
@@ -70,14 +71,27 @@ class PlayerSoftware extends Base
      * @param ModuleFactory $moduleFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $displayFactory)
+    public function __construct($pool, $playerVersionFactory, $displayProfileFactory, $displayFactory)
     {
         $this->pool = $pool;
-        $this->mediaFactory = $mediaFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->displayProfileFactory = $displayProfileFactory;
-        $this->moduleFactory = $moduleFactory;
         $this->displayFactory = $displayFactory;
+    }
+
+    public function getPlayerVersionFactory() : PlayerVersionFactory
+    {
+        return $this->playerVersionFactory;
+    }
+
+    public function useMediaService(MediaServiceInterface $mediaService)
+    {
+        $this->mediaService = $mediaService;
+    }
+
+    public function getMediaService(): MediaServiceInterface
+    {
+        return $this->mediaService->setUser($this->getUser());
     }
 
     /**
@@ -92,8 +106,9 @@ class PlayerSoftware extends Base
     {
         $this->getState()->template = 'playersoftware-page';
         $this->getState()->setData([
+            'types' => $this->playerVersionFactory->getDistinctType(),
             'versions' => $this->playerVersionFactory->getDistinctVersion(),
-            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['type' => 'playersoftware'])),
+            'validExt' => implode('|', $this->getValidExtensions()),
             'warningLabel' => __("Please set Player Software Version")
         ]);
 
@@ -110,7 +125,6 @@ class PlayerSoftware extends Base
      */
     function grid(Request $request, Response $response)
     {
-        $user = $this->getUser();
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
 
         $filter = [
@@ -118,7 +132,6 @@ class PlayerSoftware extends Base
             'playerVersion' => $sanitizedQueryParams->getString('playerVersion'),
             'playerCode' => $sanitizedQueryParams->getInt('playerCode'),
             'versionId' => $sanitizedQueryParams->getInt('versionId'),
-            'mediaId' => $sanitizedQueryParams->getInt('mediaId'),
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'playerShowVersion' => $sanitizedQueryParams->getString('playerShowVersion')
         ];
@@ -127,68 +140,49 @@ class PlayerSoftware extends Base
 
         // add row buttons
         foreach ($versions as $version) {
+            $version->fileSizeFormatted = ByteFormatter::format($version->size);
             if ($this->isApi($request)) {
-                break;
+                continue;
             }
 
-            $media = $this->mediaFactory->getById($version->mediaId);
             $version->includeProperty('buttons');
             $version->buttons = [];
 
             // Buttons
-            if ($user->checkEditable($media)) {
-                // Edit
-                $version->buttons[] = [
-                    'id' => 'content_button_edit',
-                    'url' => $this->urlFor($request, 'playersoftware.edit.form', ['id' => $version->versionId]),
-                    'text' => __('Edit')
-                ];
-            }
 
-            if ($user->checkDeleteable($media)) {
-                // Delete Button
-                $version->buttons[] = [
-                    'id' => 'content_button_delete',
-                    'url' => $this->urlFor($request, 'playersoftware.delete.form', ['id' => $version->versionId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'playersoftware.delete', ['id' => $version->versionId])],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'content_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $version->originalFileName]
-                    ]
-                ];
-            }
+            // Edit
+            $version->buttons[] = [
+                'id' => 'content_button_edit',
+                'url' => $this->urlFor($request, 'playersoftware.edit.form', ['id' => $version->versionId]),
+                'text' => __('Edit')
+            ];
 
-            if ($user->checkPermissionsModifyable($media)) {
-                // Permissions
-                $version->buttons[] = [
-                    'id' => 'content_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'content_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $media->name],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'Media'])],
-                        ['name' => 'content-id-name', 'value' => 'mediaId']
-                    ]
-                ];
-            }
+            // Delete Button
+            $version->buttons[] = [
+                'id' => 'content_button_delete',
+                'url' => $this->urlFor($request, 'playersoftware.delete.form', ['id' => $version->versionId]),
+                'text' => __('Delete'),
+                'multi-select' => true,
+                'dataAttributes' => [
+                    [
+                        'name' => 'commit-url',
+                        'value' => $this->urlFor($request, 'playersoftware.delete', ['id' => $version->versionId])
+                    ],
+                    ['name' => 'commit-method', 'value' => 'delete'],
+                    ['name' => 'id', 'value' => 'content_button_delete'],
+                    ['name' => 'text', 'value' => __('Delete')],
+                    ['name' => 'sort-group', 'value' => 1],
+                    ['name' => 'rowtitle', 'value' => $version->fileName]
+                ]
+            ];
+
 
             // Download
             $version->buttons[] = array(
                 'id' => 'content_button_download',
-                'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor($request, 'library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
+                'linkType' => '_self',
+                'external' => true,
+                'url' => $this->urlFor($request, 'playersoftware.download', ['id' => $version->versionId]) . '?attachment=' . $version->fileName,
                 'text' => __('Download')
             );
         }
@@ -214,11 +208,6 @@ class PlayerSoftware extends Base
     public function deleteForm(Request $request, Response $response, $id)
     {
         $version = $this->playerVersionFactory->getById($id);
-        $media = $this->mediaFactory->getById($version->mediaId);
-
-        if (!$this->getUser()->checkDeleteable($media)) {
-            throw new AccessDeniedException();
-        }
 
         $version->load();
 
@@ -263,27 +252,18 @@ class PlayerSoftware extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        /** @var PlayerVersion $version */
         $version = $this->playerVersionFactory->getById($id);
-        /** @var Media $media */
-        $media = $this->mediaFactory->getById($version->mediaId);
-
-        if (!$this->getUser()->checkDeleteable($media)) {
-            throw new AccessDeniedException();
-        }
 
         $version->load();
-        $media->load(['deleting' => true]);
 
         // Unset player version from Display Profile
         $displayProfiles = $this->displayProfileFactory->query();
 
         foreach($displayProfiles as $displayProfile) {
             if (in_array($displayProfile->type, ['android', 'lg', 'sssp'])) {
-
                 $currentVersionId = $displayProfile->getSetting('versionMediaId');
 
-                if ($currentVersionId === $media->mediaId) {
+                if ($currentVersionId === $version->versionId) {
                     $displayProfile->setSetting('versionMediaId', null);
                     $displayProfile->save();
                 }
@@ -292,8 +272,6 @@ class PlayerSoftware extends Base
 
         // Delete
         $version->delete();
-        $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
-        $media->delete();
 
         // Return
         $this->getState()->hydrate([
@@ -318,17 +296,10 @@ class PlayerSoftware extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $version = $this->playerVersionFactory->getById($id);
-        $media = $this->mediaFactory->getById($version->mediaId);
-
-        if (!$this->getUser()->checkEditable($media)) {
-            throw new AccessDeniedException();
-        }
 
         $this->getState()->template = 'playersoftware-form-edit';
         $this->getState()->setData([
-            'media' => $media,
             'version' => $version,
-            'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => 'playersoftware'])),
             'help' => $this->getHelp()->link('Player Software', 'Edit')
         ]);
 
@@ -389,16 +360,12 @@ class PlayerSoftware extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $version = $this->playerVersionFactory->getById($id);
-        $media = $this->mediaFactory->getById($version->mediaId);
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        if (!$this->getUser()->checkEditable($media)) {
-            throw new AccessDeniedException();
-        }
 
         $version->version = $sanitizedParams->getString('version');
         $version->code = $sanitizedParams->getInt('code');
         $version->playerShowVersion = $sanitizedParams->getString('playerShowVersion');
+        $version->modifiedBy = $this->getUser()->userName;
 
         $version->save();
 
@@ -427,14 +394,12 @@ class PlayerSoftware extends Base
         $profile = $this->displayProfileFactory->getDefaultByType('sssp');
 
         // See if it has a version file (if not or we can't load it, 404)
-        $mediaId = $profile->getSetting('versionMediaId');
+        $versionId = $profile->getSetting('versionMediaId');
 
-        if ($mediaId !== null) {
-            $media = $this->mediaFactory->getById($mediaId);
+        if ($versionId !== null) {
+            $version = $this->playerVersionFactory->getById($versionId);
 
-            $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
-
-            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $xml = $this->outputSsspXml($version->version . '.' . $version->code, $version->size);
             $response = $response
                 ->withHeader('Content-Type', 'application/xml')
                 ->write($xml);
@@ -461,18 +426,10 @@ class PlayerSoftware extends Base
         $profile = $this->displayProfileFactory->getDefaultByType('sssp');
 
         // See if it has a version file (if not, or we can't load it, 404)
-        $mediaId = $profile->getSetting('versionMediaId');
+        $versionId = $profile->getSetting('versionMediaId');
 
-        if ($mediaId !== null) {
-            $media = $this->mediaFactory->getById($mediaId);
-            
-            // Hand over to the widget downloader
-            $downloader = new WidgetDownloader(
-                $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-                $this->getConfig()->getSetting('SENDFILE_MODE')
-            );
-            $downloader->useLogger($this->getLog()->getLoggerInterface());
-            $response = $downloader->download($media, $response, $media->getMimeType());
+        if ($versionId !== null) {
+            $response = $this->download($request, $response, $versionId);
         } else {
             return $response->withStatus(404);
         }
@@ -518,14 +475,12 @@ class PlayerSoftware extends Base
         $response = $response->withHeader('content-type', 'application/xml');
 
         // get the media ID from display profile
-        $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+        $versionId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
 
-        if ($mediaId !== null) {
-            $media = $this->mediaFactory->getById($mediaId);
+        if ($versionId !== null) {
+            $versionInformation = $this->playerVersionFactory->getById($versionId);
 
-            $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
-
-            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $versionInformation->size);
             $response = $response->write($xml);
         } else {
             return $response->withStatus(404);
@@ -561,23 +516,183 @@ class PlayerSoftware extends Base
 
         // Get display and media
         $display = $this->displayFactory->getById($displayId);
-        $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+        $versionId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
 
-        if ($mediaId !== null) {
-            $media = $this->mediaFactory->getById($mediaId);
-            // Hand over to the widget downloader
-            $downloader = new WidgetDownloader(
-                $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-                $this->getConfig()->getSetting('SENDFILE_MODE')
-            );
-            $downloader->useLogger($this->getLog()->getLoggerInterface());
-            $response = $downloader->download($media, $response, $media->getMimeType());
+        if ($versionId !== null) {
+            $response = $this->download($request, $response, $versionId);
         } else {
             return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
         return $this->render($request, $response);
+    }
+
+    /**
+     * Player Software Upload
+     *
+     * @SWG\Post(
+     *  path="/playersoftware",
+     *  operationId="playersoftwareUpload",
+     *  tags={"Player Software"},
+     *  summary="Player Software Upload",
+     *  description="Upload a new Player version file",
+     *  @SWG\Parameter(
+     *      name="files",
+     *      in="formData",
+     *      description="The Uploaded File",
+     *      type="file",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
+    public function add(Request $request, Response $response)
+    {
+        if (!$this->getUser()->featureEnabled('playersoftware.add')) {
+            throw new AccessDeniedException();
+        }
+
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        MediaService::ensureLibraryExists($libraryFolder);
+        $validExt = $this->getValidExtensions();
+
+        // Make sure there is room in the library
+        $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+
+        $options = [
+            'upload_dir' => $libraryFolder . 'temp/',
+            'script_url' => $this->urlFor($request, 'playersoftware.add'),
+            'upload_url' => $this->urlFor($request, 'playersoftware.add'),
+            'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
+            'libraryLimit' => $libraryLimit,
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->getMediaService()->libraryUsage() > $libraryLimit),
+        ];
+
+        // Output handled by UploadHandler
+        $this->setNoOutput(true);
+
+        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        $uploadService = new UploadService($options, $this->getLog(), $this->getState());
+        $uploadHandler = $uploadService->createUploadHandler();
+
+        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) {
+            // Return right away if the file already has an error.
+            if (!empty($file->error)) {
+                $this->getState()->setCommitState(false);
+                return $file;
+            }
+
+            $this->getUser()->isQuotaFullByUser(true);
+
+            /** @var UploadHandler $uploadHandler */
+            $filePath = $uploadHandler->getUploadPath() . $file->fileName;
+            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+            // Add the Player Software record
+            $playerSoftware = $this->getPlayerVersionFactory()->createEmpty();
+            $playerSoftware->modifiedBy = $this->getUser()->userName;
+            $playerSoftware->fileName = $file->fileName;
+            $playerSoftware->size = filesize($filePath);
+            $playerSoftware->md5 = md5_file($filePath);
+            $playerSoftware->decorateRecord();
+            $playerSoftware->save();
+
+            // Test to ensure the final file size is the same as the file size we're expecting
+            if ($file->size != $playerSoftware->size) {
+                throw new InvalidArgumentException(
+                    __('Sorry this is a corrupted upload, the file size doesn\'t match what we\'re expecting.'),
+                    'size'
+                );
+            }
+
+            // everything is fine, move the file from temp folder.
+            rename($filePath, $libraryLocation . 'playersoftware/' . $playerSoftware->fileName);
+
+            // return
+            $file->id = $playerSoftware->versionId;
+            $file->md5 = $playerSoftware->md5;
+            $file->name = $playerSoftware->fileName;
+
+            return $file;
+        });
+
+        $uploadHandler->post();
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/playersoftware/download/{id}",
+     *  operationId="playersoftwareDownload",
+     *  tags={"Player Software"},
+     *  summary="Download Player Version file",
+     *  description="Download Player Version file",
+     *  produces={"application/octet-stream"},
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Player Version ID to Download",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(type="file"),
+     *      @SWG\Header(
+     *          header="X-Sendfile",
+     *          description="Apache Send file header - if enabled.",
+     *          type="string"
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Accel-Redirect",
+     *          description="nginx send file header - if enabled.",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function download(Request $request, Response $response, $id)
+    {
+        $playerVersion = $this->playerVersionFactory->getById($id);
+
+        $this->getLog()->debug('Download request for player software versionId: ' . $id);
+
+        $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
+        $libraryPath = $library . 'playersoftware' . DIRECTORY_SEPARATOR . $playerVersion->fileName;
+        $attachmentName = urlencode($playerVersion->fileName);
+
+        $downLoadService = new DownloadService($libraryPath, $sendFileMode);
+        $downLoadService->useLogger($this->getLog()->getLoggerInterface());
+
+        return $downLoadService->returnFile($response, $attachmentName, '/playersoftware/download/' . $playerVersion->fileName);
     }
 
     /**
@@ -605,5 +720,13 @@ class PlayerSoftware extends Base
         $ssspDocument->formatOutput = true;
 
         return $ssspDocument->saveXML();
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getValidExtensions()
+    {
+        return ['apk','ipk','wgt'];
     }
 }

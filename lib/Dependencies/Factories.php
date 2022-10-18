@@ -319,8 +319,7 @@ class Factories
                 $repository = new \Xibo\Factory\PlayerVersionFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
-                    $c->get('configService'),
-                    $c->get('mediaFactory')
+                    $c->get('configService')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;

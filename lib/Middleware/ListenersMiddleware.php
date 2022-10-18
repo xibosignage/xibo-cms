@@ -41,6 +41,7 @@ use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Xmds\Listeners\XmdsFontsListener;
 use Xibo\Xmds\Listeners\XmdsPlayerBundleListener;
+use Xibo\Xmds\Listeners\XmdsPlayerVersionListener;
 
 /**
  * This middleware is used to register listeners against the dispatcher
@@ -338,6 +339,10 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(DependencyFileSizeEvent::$NAME, (new \Xibo\Listener\OnGettingDependencyFileSize\FontsListener(
             $c->get('fontFactory')
         )));
+
+        $dispatcher->addListener(DependencyFileSizeEvent::$NAME, (new \Xibo\Listener\OnGettingDependencyFileSize\PlayerVersionListener(
+            $c->get('playerVersionFactory')
+        )));
     }
 
     /**
@@ -356,9 +361,14 @@ class ListenersMiddleware implements MiddlewareInterface
         $fontsListener = new XmdsFontsListener($c->get('fontFactory'));
         $fontsListener->useLogger($c->get('logger'));
 
+        $playerVersionListner = new XmdsPlayerVersionListener($c->get('playerVersionFactory'));
+        $playerVersionListner->useLogger($c->get('logger'));
+
         $dispatcher->addListener('xmds.dependency.list', [$playerBundleListener, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$playerBundleListener, 'onDependencyRequest']);
         $dispatcher->addListener('xmds.dependency.list', [$fontsListener, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$fontsListener, 'onDependencyRequest']);
+        $dispatcher->addListener('xmds.dependency.list', [$playerVersionListner, 'onDependencyList']);
+        $dispatcher->addListener('xmds.dependency.request', [$playerVersionListner, 'onDependencyRequest']);
     }
 }

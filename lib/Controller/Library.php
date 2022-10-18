@@ -44,7 +44,6 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
@@ -99,9 +98,6 @@ class Library extends Base
      */
     private $widgetFactory;
 
-    /** @var PlayerVersionFactory */
-    private $playerVersionFactory;
-
     /**
      * @var PlaylistFactory
      */
@@ -148,7 +144,6 @@ class Library extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param PlayerVersionFactory $playerVersionFactory
      * @param FolderFactory $folderFactory
      */
     public function __construct(
@@ -163,7 +158,6 @@ class Library extends Base
         $userGroupFactory,
         $displayFactory,
         $scheduleFactory,
-        $playerVersionFactory,
         $folderFactory
     ) {
         $this->moduleFactory = $moduleFactory;
@@ -177,7 +171,6 @@ class Library extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->playerVersionFactory = $playerVersionFactory;
         $this->folderFactory = $folderFactory;
     }
 
@@ -233,15 +226,6 @@ class Library extends Base
     public function getPlaylistFactory()
     {
         return $this->playlistFactory;
-    }
-
-    /**
-     * Get PlayerVersion Factory
-     * @return PlayerVersionFactory
-     */
-    public function getPlayerVersionFactory()
-    {
-        return $this->playerVersionFactory;
     }
 
     /**
