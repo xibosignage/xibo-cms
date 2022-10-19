@@ -738,7 +738,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
 $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])->setName('library.font.css');
-$app->get('/fonts/fontlist', ['\Xibo\Controller\Font','fontList'])->setName('library.font.list');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');
