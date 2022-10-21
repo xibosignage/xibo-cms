@@ -130,7 +130,7 @@
 
                 &::-webkit-scrollbar-track {
                     background: lighten($xibo-color-primary, 40%) !important;
-                    border-radius: 0 !important;
+                    @include border-radius(0 !important);
                 }
 
                 /* Internet explorer fix */
@@ -171,7 +171,6 @@
                 overflow: hidden;
                 background: $xibo-color-primary;
                 color: $xibo-color-primary-l5;
-                @include border-radius(4px);
                 font-size: 0.95rem;
                 width: calc(50% - 4px);
 
@@ -201,10 +200,10 @@
                     position: absolute;
                     background-color: $xibo-color-primary-l5;
                     color: $xibo-color-neutral-100;
-                    @include box-shadow(0px 0px 2px 1px $xibo-color-neutral-700);
-                    top: 2px;
-                    left: 2px;
-                    border-radius: 50%;
+                    @include box-shadow(0px 0px 2px $xibo-color-shadow-2);
+                    top: 0;
+                    left: 0;
+                    @include border-radius(4px);
                     width: 15px;
                     height: 15px;
                     opacity: 0.8;
@@ -219,8 +218,9 @@
                         font-size: 14px;
                         line-height: 14px;
                         position: absolute;
-                        top: 2px;
-                        left: 3px;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
 
                         &.fa-check {
                             left: 1px;
@@ -246,22 +246,24 @@
 
                 .preview-button {
                     left: auto;
-                    right: 2px;
+                    right: 0;
+                    background-color: $xibo-color-primary;
+                    @include border-radius(0 0 0 4px);
 
                     i {
-                        font-size: 10px;
-                        left: 5px;
-                        top: 0;
+                        font-size: 9px;
                     }
                 }
 
                 &.card-selected, &.ui-draggable-dragging{
-                    background-color: $xibo-color-primary-d60;
-                    z-index: $toolbar-card-z-index;
                     .select-button {
                         display: none; // hide for now
                         background-color: $xibo-color-selected !important;
                         opacity: 1;
+                    }
+
+                    .btn-favourite {
+                        display: none !important;
                     }
 
                     .selectedHide {
@@ -270,16 +272,6 @@
 
                     .selectedShow {
                         display: block;
-                    }
-
-                    &::after {
-                        content: '';
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        @include box-shadow(inset 0px 0px 0px 3px $xibo-color-selected);
                     }
                 }
 
@@ -311,17 +303,9 @@
 
                 .toolbar-card {
                     cursor: grab;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    background-size: cover;
+                    background: none;
                     margin-bottom: 8px;
                     height: auto;
-
-                    &.upload-card {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                    }
 
                     .thumb {
                         width: 100%;
@@ -346,47 +330,66 @@
                         100% { background-position: 0% 100%; }
                     }
 
-                    &.no-thumbnail {
+                    &.no-thumbnail, &.upload-card {
                         min-height: 85px;
+
+                        .toolbar-card-preview {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            background: $xibo-color-primary;
+                        }
+                    }
+
+                    &.upload-card .toolbar-card-preview {
+                        background: $xibo-color-primary-d60;
+                    }
+
+                    .toolbar-card-preview {
+                        @include border-radius(4px);
+                        position: relative;
+                        font-size: 0;
+                        overflow: hidden;
+                        border: 2px solid $xibo-color-primary-l30;
                     }
 
                     .media-title {
                         display: block;
-                        background-color: $xibo-color-primary-d60;
-                        color: $xibo-color-neutral-300;
-                        padding: 0 6px;
+                        color: $xibo-color-primary-d60;
                         width: 100%;
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
-                        line-height: 18px;
+                        font-weight: bold;
+                        font-size: 0.85rem;
+                        padding: 0 3px;
                     }
 
                     .card-icon {
                         font-size: 2.5rem;
-                        color: $xibo-color-neutral-300;
+                        color: $xibo-color-primary-l10;
                         margin: 20px 0;
+                        font-size: 1.5rem;
                     }
 
                     .media-duration {
-                        display: none;
                         position: absolute;
-                        top: 0;
-                        background: $xibo-color-primary;
+                        font-size: 0.85rem;
+                        bottom: 0;
+                        left: 0;
+                        background: $xibo-color-primary-d60;
                         padding: 0px 4px;
-                        @include border-radius(4px);
-                        opacity: 0.8;
+                        @include border-radius(0 4px 0 0);
+                        opacity: 0.9;
                         line-height: 20px;
-                        left: 50%;
-                        transform: translateX(-50%);
                     }
 
                     .provider {
-                        display: block;
                         background-color: $xibo-color-neutral-0;
                         position: absolute;
                         opacity: 0.6;
-                        bottom: 18px;
+                        bottom: 0;
+                        right: 0;
                         width: 60%;
 
                         &:hover {
@@ -400,18 +403,26 @@
                     }
 
                     &:hover {
-                        .preview-button {
-                            display: block;
-                            color: $xibo-color-secondary;
-                            background-color: $xibo-color-primary-l5;
+                        .toolbar-card-preview {
+                            border-color: $xibo-color-primary-l60;
                         }
 
-                        .media-duration {
+                        .preview-button {
                             display: block;
+                            color: $xibo-color-primary-l10;
+                            background-color: $xibo-color-primary;
                         }
 
                         .card-icon {
                             color: $xibo-color-primary-l5;
+                        }
+                    }
+
+                    &.card-selected, &.ui-draggable-dragging{
+                        z-index: $toolbar-card-z-index;
+
+                        .toolbar-card-preview {
+                            border-color: $xibo-color-accent;
                         }
                     }
                 }
@@ -437,6 +448,7 @@
                     margin-bottom: $toolbar-widgets-card-margin-bottom;
                     display: flex;
                     align-items: center;
+                    @include border-radius(4px);
 
                     &.toolbar-card-menu {
                         background: $xibo-color-primary-l10;
@@ -455,10 +467,6 @@
                             &.fa-twitter {
                                 color: #1d9bf0;
                             }
-                        }
-
-                        .btn-favourite {
-                            @include border-radius(4px);
                         }
                     }
     
@@ -481,17 +489,17 @@
                         cursor: pointer;
                         color: $xibo-color-semantic-warning;
                         position: absolute;
-                        z-index: 3;
+                        z-index: 2;
                         background: $xibo-color-primary;
                         width: 16px;
-                        @include border-radius(4px 0 4px 0);
+                        @include border-radius(0px 0 4px 0);
                         margin: 0;
                         height: 16px;
                         text-align: center;
                         font-size: 0.85rem;
-                        top: 2px;
-                        right: 2px;
-                        left: auto;
+                        top: 0;
+                        right: auto;
+                        left: 0;
                     }
     
                     &:not(.card-selected):hover, &.favourited {
@@ -515,6 +523,34 @@
                         top: 50%;
                         left: auto;
                         transform: translateY(-50%);
+                    }
+
+                    &.card-selected, &.ui-draggable-dragging{
+                        background-color: $xibo-color-primary-d60;
+                        z-index: $toolbar-card-z-index;
+                        .select-button {
+                            display: none; // hide for now
+                            background-color: $xibo-color-selected !important;
+                            opacity: 1;
+                        }
+    
+                        .selectedHide {
+                            display: none;
+                        }
+    
+                        .selectedShow {
+                            display: block;
+                        }
+    
+                        &::after {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            @include box-shadow(inset 0px 0px 0px 3px $xibo-color-selected);
+                        }
                     }
                 }
             }

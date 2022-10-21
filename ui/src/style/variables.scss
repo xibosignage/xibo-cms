@@ -32,8 +32,9 @@ $xibo-color-semantic-info: #5593BF;
 $xibo-color-overlay: rgba(0, 0, 0, 0.6);
 
 // Specific
-$xibo-color-selected: #4adc52;
+$xibo-color-selected: $xibo-color-accent;
 $xibo-color-shadow: rgba(0, 0, 0, 0.1);
+$xibo-color-shadow-2: rgba(0, 0, 0, 0.25);
 
 $xibo-color-region-hover: $xibo-color-accent;
 $xibo-color-region-selected: $xibo-color-accent;

@@ -108,7 +108,7 @@ Viewer.prototype.render = function(forceReload = false) {
   // Render the viewer
   this.DOMObject.html(viewerTemplate());
 
-  const viewerContainer = this.DOMObject;
+  const $viewerContainer = this.DOMObject;
 
   // If preview is playing, refresh the bottombar
   if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
@@ -116,21 +116,21 @@ Viewer.prototype.render = function(forceReload = false) {
   }
 
   // Show loading template
-  viewerContainer.html(loadingTemplate());
+  $viewerContainer.html(loadingTemplate());
 
   // Set preview play as false
   this.previewPlaying = false;
 
   // Reset container properties
-  viewerContainer.css('background', '#111');
-  viewerContainer.css('border', 'none');
+  $viewerContainer.css('background', '#111');
+  $viewerContainer.css('border', 'none');
 
   // Apply viewer scale to the layout
   this.containerElementDimensions =
-    this.scaleElement(lD.layout, viewerContainer);
+    this.scaleElement(lD.layout, $viewerContainer);
 
   // Apply viewer scale to the layout
-  const scaledLayout = lD.layout.scale(viewerContainer);
+  const scaledLayout = lD.layout.scale($viewerContainer);
 
   const html = viewerTemplate({
     type: 'layout',
@@ -142,11 +142,11 @@ Viewer.prototype.render = function(forceReload = false) {
   });
 
   // Replace container html
-  viewerContainer.html(html);
+  $viewerContainer.html(html);
 
   // Render background image or color to the preview
   if (lD.layout.backgroundImage === null) {
-    viewerContainer.find('.viewer-element')
+    $viewerContainer.find('.viewer-element')
       .css('background', lD.layout.backgroundColor);
   } else {
     // Get API link
@@ -154,7 +154,7 @@ Viewer.prototype.render = function(forceReload = false) {
     // Replace ID in the link
     linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
 
-    viewerContainer.find('.viewer-element')
+    $viewerContainer.find('.viewer-element')
       .css(
         'background',
         'url(\'' + linkToAPI + '?preview=1&width=' +
@@ -176,8 +176,8 @@ Viewer.prototype.render = function(forceReload = false) {
     }
   }
 
-  // Handle droppable regions
-  const $droppableArea = viewerContainer.find('.layout.droppable');
+  // Handle droppable layout area
+  const $droppableArea = $viewerContainer.find('.layout.droppable');
   $droppableArea.droppable({
     greedy: true,
     tolerance: 'pointer',
@@ -216,10 +216,19 @@ Viewer.prototype.render = function(forceReload = false) {
     }, 200),
   });
 
+  // Handle droppable on the main container
+  $viewerContainer.droppable({
+    greedy: true,
+    tolerance: 'pointer',
+    drop: _.debounce(function(event, ui) {
+      lD.dropItemAdd(event.target, ui.draggable[0]);
+    }, 200),
+  });
+
   // Handle click and double click
   let clicks = 0;
   let timer = null;
-  viewerContainer.find('.viewer-element-select').off()
+  $viewerContainer.parent().find('.viewer-element-select').off()
     .on('mousedown', function(e) {
       e.stopPropagation();
 
@@ -231,9 +240,9 @@ Viewer.prototype.render = function(forceReload = false) {
       // Get click position
       const clickPosition = {
         left: e.pageX -
-          viewerContainer.find('.viewer-element-select').offset().left,
+          $viewerContainer.find('.layout.viewer-element-select').offset().left,
         top: e.pageY -
-          viewerContainer.find('.viewer-element-select').offset().top,
+          $viewerContainer.find('.layout.viewer-element-select').offset().top,
       };
 
       // Scale value to original size ( and parse to int )
@@ -244,14 +253,21 @@ Viewer.prototype.render = function(forceReload = false) {
         clickPosition.left /
         self.containerElementDimensions.scale);
 
-      if ($(e.target).hasClass('layout')) {
+      // Click on layout or layout wrapper to clear selection
+      // or add item to the layout
+      if (
+        $(e.target).hasClass('layout-wrapper') ||
+        $(e.target).hasClass('layout')
+      ) {
+        // Clear selected object
         lD.selectObject({
           target: null,
           reloadViewer: false,
-          clickPosition: clickPosition,
+          clickPosition: $(e.target).hasClass('layout') ? clickPosition : null,
         });
         self.selectElement();
       } else {
+        // Select elements inside the layout
         clicks++;
 
         // Single click
@@ -295,6 +311,10 @@ Viewer.prototype.render = function(forceReload = false) {
               target: $(e.target),
             });
             self.selectElement($(e.target));
+          } else {
+            // Move out from region editing
+            lD.selectObject();
+            self.selectElement();
           }
         }
       }
@@ -320,7 +340,7 @@ Viewer.prototype.render = function(forceReload = false) {
     });
 
   // Handle fullscreen button
-  viewerContainer.parent().find('#fullscreenBtn').off().click(function() {
+  $viewerContainer.parent().find('#fullscreenBtn').off().click(function() {
     this.reload = true;
     this.toggleFullscreen();
   }.bind(this));
@@ -420,7 +440,7 @@ Viewer.prototype.renderRegion = function(
     '?width=' + containerElementDimensions.width +
     '&height=' + containerElementDimensions.height;
 
-  // If it's not a playlist, add widget to request 
+  // If it's not a playlist, add widget to request
   if (region.subType != 'playlist') {
     requestPath += '&widgetId=' + widget['widgetId'];
   }
@@ -781,6 +801,7 @@ Viewer.prototype.updateRegionContent = function(region) {
   if ($imageContainer.length) {
     const $image = $imageContainer.find('img');
     const $imageParent = $image.parent();
+    const $imageParentContainer = $image.parents('.img-container');
     const urlSplit = $image.attr('src').split('&proportional=');
 
     // If the URL is not parsed
@@ -829,6 +850,11 @@ Viewer.prototype.updateRegionContent = function(region) {
       // Which triggers the onload event
       $image.attr('src', urlSplit[0]);
     }
+
+    // Update image container height
+    $imageParentContainer.css({
+      height: region.scaledDimensions.height,
+    });
 
     // Update image dimensions
     $image.css({
