@@ -46,7 +46,6 @@ class XiboSspConnector implements ConnectorInterface
     private $displayFactory;
 
     /**
-     * TODO: Hidden API not in the interface?
      * @param \Psr\Container\ContainerInterface $container
      * @return \Xibo\Connector\ConnectorInterface
      */
@@ -89,6 +88,11 @@ class XiboSspConnector implements ConnectorInterface
         return 'xibo-ssp-connector-form-settings';
     }
 
+    public function getSettingsFormJavaScript(): string
+    {
+        return 'xibo-ssp-connector-form-javascript';
+    }
+
     public function getFormError(): string
     {
         return $this->formError ?? __('Unknown error');
@@ -106,21 +110,27 @@ class XiboSspConnector implements ConnectorInterface
         $available = $this->getAvailablePartners(false, $settings['apiKey']);
 
         // Pull in expected fields.
-        foreach ($available as $partner) {
+        foreach ($available as $partnerId => $partner) {
             $partners[] = [
-                'name' => $params->getString($partner['name'] . '_name'),
-                'enabled' => $params->getCheckbox($partner['name'] . '_enabled'),
-                'currency' => $params->getString($partner['name'] . '_currency'),
-                'key' => $params->getString($partner['name'] . '_key'),
-                'sov' => $params->getInt($partner['name'] . '_sov'),
-                'mediaTypesAllowed' => $params->getString($partner['name'] . '_mediaTypesAllowed'),
-                'duration' => $params->getInt($partner['name'] . '_duration'),
-                'minDuration' => $params->getInt($partner['name'] . '_minDuration'),
-                'maxDuration' => $params->getInt($partner['name'] . '_maxDuration'),
+                'name' => $partnerId,
+                'enabled' => $params->getCheckbox($partnerId . '_enabled'),
+                'currency' => $params->getString($partnerId . '_currency'),
+                'key' => $params->getString($partnerId . '_key'),
+                'sov' => $params->getInt($partnerId . '_sov'),
+                'mediaTypesAllowed' => $params->getString($partnerId . '_mediaTypesAllowed'),
+                'duration' => $params->getInt($partnerId . '_duration'),
+                'minDuration' => $params->getInt($partnerId . '_minDuration'),
+                'maxDuration' => $params->getInt($partnerId . '_maxDuration'),
             ];
 
             // Also grab the displayGroupId if one has been set.
-            $this->settings[$partner . '_displayGroupId'] = $params->getInt($partner . '_displayGroupId');
+            $displayGroupId = $params->getInt($partnerId . '_displayGroupId');
+            if (empty($displayGroupId)) {
+                unset($settings[$partnerId . '_displayGroupId']);
+            } else {
+                $settings[$partnerId . '_displayGroupId'] = $displayGroupId;
+            }
+            $settings[$partnerId . '_sspIdField'] = $params->getString($partnerId . '_sspIdField');
         }
 
         // Update API config.
@@ -229,6 +239,7 @@ class XiboSspConnector implements ConnectorInterface
     private function setPartners(string $apiKey, array $partners)
     {
         $this->getLogger()->debug('setPartners: updating');
+        $this->getLogger()->debug(json_encode($partners));
 
         try {
             $this->getClient()->post($this->getServiceUrl() . '/configure', [

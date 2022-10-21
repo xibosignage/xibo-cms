@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -540,6 +540,8 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
     $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
         ->setName('connector.edit.form');
+    $group->get('/connectors/form/{id}/proxy/{method}', ['\Xibo\Controller\Connector', 'editFormProxy'])
+        ->setName('connector.edit.form.proxy');
     $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 

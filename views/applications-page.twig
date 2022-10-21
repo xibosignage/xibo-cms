@@ -88,7 +88,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-    
+
         {% autoescape "js" %}
             var copyToClipboardTrans = "{{ "Copy to Clipboard"|trans }}";
             var couldNotCopyTrans = "{{ "Could not copy"|trans }}";
@@ -166,13 +166,13 @@
             $('#copy-button').tooltip();
 
             $('#copy-button').bind('click', function() {
-                
+
               var input = $('#clientSecret');
-              
-              // Select the input to copy 
+
+              // Select the input to copy
               input.focus();
               input.select();
-              
+
               // Try to copy to clipboard and give feedback
               try {
                 var success = document.execCommand('copy');
@@ -184,7 +184,7 @@
               } catch (err) {
                 $('#copy-button').trigger('copied', [couldNotCopyTrans]);
               }
-              
+
               // Unselect the input
               input.blur();
             });
@@ -219,6 +219,10 @@
             }
         }
     </script>
+
+    {% for js in connectorJavaScript %}
+        {% include js ~ ".twig" %}
+    {% endfor %}
 {% endblock %}
 
 {% block javaScriptTemplates %}

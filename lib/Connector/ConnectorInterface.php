@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Connector;
 
 use GuzzleHttp\Client;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -34,6 +35,7 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
  */
 interface ConnectorInterface
 {
+    public function setFactories(ContainerInterface $container): ConnectorInterface;
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface;
     public function useLogger(LoggerInterface $logger): ConnectorInterface;
     public function useSettings(array $settings, bool $isProvider = true): ConnectorInterface;
@@ -48,5 +50,6 @@ interface ConnectorInterface
     public function getSetting($setting, $default = null);
     public function isProviderSetting($setting): bool;
     public function getSettingsFormTwig(): string;
+    public function getSettingsFormJavaScript(): string;
     public function processSettingsForm(SanitizerInterface $params, array $settings): array;
 }

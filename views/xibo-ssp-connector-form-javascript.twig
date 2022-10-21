@@ -1,0 +1,61 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<script type="text/javascript">
+    window.sspFormOpen = function() {
+        // Make a datatable
+      var table;
+      $(document).ready(function() {
+        table = $("#ssp-activity").DataTable({
+          language: dataTablesLanguage,
+          dom: dataTablesTemplate,
+          serverSide: false,
+          stateSave: true,
+          responsive: true,
+          stateDuration: 0,
+          stateLoadCallback: dataTableStateLoadCallback,
+          stateSaveCallback: dataTableStateSaveCallback,
+          filter: false,
+          searchDelay: 3000,
+          order: [[ 0, 'asc']],
+          ajax: '{{ url_for("application.search") }}',
+          columns: [
+            { data: 'scheduledAt' },
+            { data: 'campaignId' },
+            { data: 'displayId' },
+            { data: 'isPlayed' },
+            { data: 'isErrored' },
+            { data: 'impressions' },
+            { data: 'impressionDate', responsivePriority: 10 },
+            { data: 'impressionActual', responsivePriority: 10 },
+            { data: 'errors', responsivePriority: 10 },
+            { data: 'errorDate', responsivePriority: 10 },
+            { data: 'errorCode', responsivePriority: 10 },
+          ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#ssp-activity_wrapper').find('.dataTables_buttons'));
+      });
+    };
+</script>
