@@ -1354,7 +1354,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       // Stop propagation
       e.stopPropagation();
 
-      self.createMediaPreview($(e.currentTarget).parent());
+      self.createMediaPreview($(e.currentTarget).parents('.toolbar-card'));
     });
 
     // Play video on hover
@@ -1471,7 +1471,7 @@ Toolbar.prototype.createMediaPreview = function(media) {
       '"]');
 
     if (!$card.hasClass('card-selected')) {
-      self.addToQueue(self.openedMenu, $card);
+      self.selectCard($card);
     }
   });
 
