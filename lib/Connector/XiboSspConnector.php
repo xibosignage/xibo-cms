@@ -21,6 +21,7 @@
  */
 namespace Xibo\Connector;
 
+use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -30,7 +31,6 @@ use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
-use Xibo\Xmds\Wsdl;
 
 class XiboSspConnector implements ConnectorInterface
 {
@@ -80,7 +80,7 @@ class XiboSspConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return '';
+        return 'theme/default/img/connectors/xibo-ssp.png';
     }
 
     public function getSettingsFormTwig(): string
@@ -103,6 +103,11 @@ class XiboSspConnector implements ConnectorInterface
         $existingApiKey = $this->getSetting('apiKey');
         if (!$this->isProviderSetting('apiKey')) {
             $settings['apiKey'] = $params->getString('apiKey');
+        }
+
+        $existingCmsUrl = $this->getSetting('cmsUrl');
+        if (!$this->isProviderSetting('cmsUrl')) {
+            $settings['cmsUrl'] = $params->getString('cmsUrl');
         }
 
         // Set partners.
@@ -138,11 +143,15 @@ class XiboSspConnector implements ConnectorInterface
 
         // If the API key has changed during this request, clear out displays on the old API key
         if ($existingApiKey !== $settings['apiKey']) {
-            // TODO: We should clear all displays for this CMS on the existing key
+            // Clear all displays for this CMS on the existing key
+            $this->setDisplays($existingApiKey, $existingCmsUrl, []);
+        } else if ($existingCmsUrl !== $settings['cmsUrl']) {
+            // Clear all displays for this CMS on the existing key
+            $this->setDisplays($settings['apiKey'], $existingCmsUrl, []);
         }
 
         // Add displays on the new API key (maintenance also does this, but do it now).
-
+        $this->setDisplays($settings['apiKey'], $settings['cmsUrl'], $partners);
 
         return $settings;
     }
@@ -263,42 +272,59 @@ class XiboSspConnector implements ConnectorInterface
         }
     }
 
-    private function setDisplays(string $apiKey, array $partners)
+    private function setDisplays(string $apiKey, string $cmsUrl, array $partners)
     {
-        $displayGroupIds = [];
+        $displays = [];
         foreach ($partners as $partner) {
-            $displayGroupId = $this->getSetting($partner . '_displayGroupId', null);
-            if ($displayGroupId !== null) {
-                $displayGroupIds[] = $displayGroupId;
+            // If this partner is enabled?
+            if (!$partner['enabled']) {
+                continue;
+            }
+
+            // Get displays for this partner
+            $partnerKey = $partner['name'];
+            $sspIdField = $this->getSetting($partnerKey . '_sspIdField');
+            foreach ($this->displayFactory->query(null, [
+                'disableUserCheck' => 1,
+                'displayGroupId' => $this->getSetting($partnerKey . '_displayGroupId'),
+                'authorised' => 1,
+            ]) as $display) {
+                if (!array_key_exists($display->displayId, $displays)) {
+                    $resolution = explode('x', $display->resolution);
+                    $displays[$display->displayId] = [
+                        'displayId' => $display->displayId,
+                        'hardwareKey' => $display->license,
+                        'width' => trim($resolution[0] ?? 1920),
+                        'height' => trim($resolution[1] ?? 1080),
+                        'partners' => [],
+                    ];
+                }
+
+                switch ($sspIdField) {
+                    case 'customId':
+                        // TODO: new fields (ref1 to 5)
+                        break;
+
+                    case 'displayId':
+                    default:
+                        $sspId = $display->displayId;
+                }
+
+                $displays[$display->displayId]['partners'][] = [
+                    'name' => $partnerKey,
+                    'sspId' => '' . $sspId,
+                ];
             }
         }
 
-        // Query for displays
-
-
-        foreach ($partners as $partner) {
-
-        }
-
         try {
-            $this->getClient()->post($this->getServiceUrl() . '/configure', [
+            $this->getClient()->post($this->getServiceUrl() . '/displays', [
                 'headers' => [
                     'X-API-KEY' => $apiKey,
                 ],
                 'json' => [
-                    'cmsUrl' => Wsdl::getRoot(),
-                    'displays' => [
-                        'displayId' => 0,
-                        'hardwareKey' => '',
-                        'width' => 0,
-                        'height' => 0,
-                        'partners' => [
-                            [
-                                'name' => '',
-                                'sspId' => ''
-                            ],
-                        ],
-                    ],
+                    'cmsUrl' => $cmsUrl,
+                    'displays' => array_values($displays),
                 ],
             ]);
         } catch (RequestException $e) {
@@ -323,17 +349,74 @@ class XiboSspConnector implements ConnectorInterface
         return $this->getSetting('serviceUrl', 'https://exchange.xibo-adspace.com/api');
     }
 
+    // <editor-fold desc="Proxy methods">
+
+    /**
+     * Activity data
+     */
+    public function activity(SanitizerInterface $params): array
+    {
+        $fromDt = $params->getDate('fromDt', [
+            'default' => Carbon::now()->startOfHour()
+        ]);
+        $toDt = $params->getDate('toDt', [
+            'default' => $fromDt->addHour()
+        ]);
+
+        // Call the api
+        try {
+            $response = $this->getClient()->get($this->getServiceUrl() . '/activity', [
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey'),
+                ],
+                'json' => [
+                    'cmsUrl' => $this->getSetting('cmsUrl'),
+                    'fromDt' => $fromDt->toAtomString(),
+                    'toDt' => $toDt->toAtomString(),
+                ],
+            ]);
+
+            $body = json_decode($response->getBody()->getContents(), true);
+
+            if (!$body) {
+                throw new GeneralException(__('No response'));
+            }
+
+            return $body;
+        } catch (\Exception $e) {
+            $this->getLogger()->error('activity: e = ' . $e->getMessage());
+        }
+
+        return [
+            'data' => [],
+            'recordsTotal' => 0,
+        ];
+    }
+
+    // </editor-fold>
+
     // <editor-fold desc="Listeners">
 
     public function onRegularMaintenance(MaintenanceRegularEvent $event)
     {
         $this->getLogger()->debug('onRegularMaintenance');
 
-        $this->getAvailablePartners();
-        $partners = $this->partners['partners'] ?? [];
+        try {
+            $this->getAvailablePartners();
+            $partners = $this->partners['partners'] ?? [];
 
-        if (count($partners) > 0) {
-            $this->setDisplays($this->getSetting('apiKey'), $partners);
+            if (count($partners) > 0) {
+                $this->setDisplays(
+                    $this->getSetting('apiKey'),
+                    $this->getSetting('cmsUrl'),
+                    $partners
+                );
+            }
+
+            $event->addMessage('SSP: done');
+        } catch (\Exception $exception) {
+            $this->getLogger()->error('SSP connector: ' . $exception->getMessage());
+            $event->addMessage('Error processing SSP configuration.');
         }
     }
 

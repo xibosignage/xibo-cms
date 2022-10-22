@@ -22,7 +22,6 @@
 #}
 
 {% extends "connector-form-edit.twig" %}
-{% block callBack %}sspFormOpen{% endblock %}
 {% import "forms.twig" as forms %}
 {% import "inline.twig" as inline %}
 
@@ -35,22 +34,22 @@
                 <span>{% trans "General" %}</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#tab-ssp-config" role="tab" data-toggle="tab">
-                <span>{% trans "SSP Config" %}</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#tab-activity-log" role="tab" data-toggle="tab">
-                <span>{% trans "Activity Log" %}</span>
-            </a>
-        </li>
+        {% if partners is iterable and partners|length > 0 %}
+            {% for partnerKey, available in partners %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#tab-{{ partnerKey }}" role="tab" data-toggle="tab">
+                        <span>{{ available.name }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        {% endif %}
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="tab-general">
-            <h3>Xibo SSP Connector<small> - work with world leading supply side platforms</small></h3>
+            <h3>Xibo SSP Connector</h3>
+            <h4>work with world leading supply side platforms</h4>
             <p>
-                Onboard with one of the below SSP's, enter your API key and configure which displays you want to activate. <br>
+                Onboard with one of our supported SSP's, enter your API key and configure which displays you want to activate. <br>
                 In most cases you will need to list your displays with the SSP and copy your SSP ID into the CMS.
             </p>
             <p>
@@ -63,157 +62,96 @@
             {% endif %}
 
             {% if not interface.isProviderSetting("apiKey") %}
-                <h4>API Key</h4>
-                <p>Your API key allows for secure communication between the CMS and the Xibo SSP connector service. It is used
-                    to orchestrate the delivery of ads to your players.</p>
-
                 {% set title %}{% trans "API Key" %}{% endset %}
-                {% set helpText %}{% trans "Enter your API Key from Xibo." %}{% endset %}
+                {% set helpText %}{% trans "Your API key allows for secure communication between the CMS and the Xibo SSP connector service. It is used to orchestrate the delivery of ads to your players. Enter your API Key from Xibo." %}{% endset %}
                 {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
             {% endif %}
+
+            {% if not interface.isProviderSetting("cmsUrl") %}
+                {% set title %}{% trans "CMS URL" %}{% endset %}
+                {% set helpText %}{% trans "The URL your players use to connect to your CMS." %}{% endset %}
+                {{ forms.input("cmsUrl", title, interface.getSetting("cmsUrl", url_for("home")), helpText) }}
+            {% endif %}
         </div>
-        <div class="tab-pane" id="tab-ssp-config">
-            <h4>SSP configuration</h4>
-            <div class="row">
-                {% if partners is iterable and partners|length > 0 %}
-                    <div class="col-3">
-                        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                            {% for partnerKey, available in partners %}
-                                <button class="nav-link{% if loop.first %} active{% endif %}"
-                                        id="v-pills-{{ partnerKey }}-tab"
-                                        data-toggle="pill"
-                                        data-target="#v-pills-{{ partnerKey }}"
-                                        type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
-                                    {{ available.name }}
-                                </button>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="col-9">
-                        <div class="tab-content">
-                            {% for partnerKey, available in partners %}
-                                <div class="tab-pane fade show{% if loop.first %} active{% endif %}"
-                                     id="v-pills-{{ partnerKey }}" role="tabpanel" aria-labelledby="v-pills-{{ partnerKey }}-tab">
-                                    <h4>{{ available.name }}</h4>
+        {% if partners is iterable and partners|length > 0 %}
+            {% for partnerKey, available in partners %}
+                <div class="tab-pane" id="tab-{{ partnerKey }}">
+                    <h4>{{ available.name }}</h4>
 
-                                    {% set title %}{% trans "Enabled?" %}{% endset %}
-                                    {% set helpText %}{% trans "Connect to this partner" %}{% endset %}
-                                    {{ forms.checkbox(partnerKey ~ "_enabled", title, interface.getPartnerSetting(partnerKey, "enabled"), helpText) }}
+                    {% set title %}{% trans "Enabled?" %}{% endset %}
+                    {% set helpText %}{% trans "Connect to this partner" %}{% endset %}
+                    {{ forms.checkbox(partnerKey ~ "_enabled", title, interface.getPartnerSetting(partnerKey, "enabled"), helpText) }}
 
-                                    {% set title %}{% trans "API Key" %}{% endset %}
-                                    {% set helpText %}{% trans "Enter your API Key from this SSP." %}{% endset %}
-                                    {{ forms.input(partnerKey ~ "_key", title, interface.getPartnerSetting(partnerKey, "key"), helpText) }}
+                    {% set title %}{% trans "API Key" %}{% endset %}
+                    {% set helpText %}{% trans "Enter your API Key from this SSP." %}{% endset %}
+                    {{ forms.input(partnerKey ~ "_key", title, interface.getPartnerSetting(partnerKey, "key"), helpText) }}
 
-                                    {% set title %}{% trans "Share of voice" %}{% endset %}
-                                    {% set helpText %}{% trans "How many seconds per hour would you like to dedicate to this SSP?" %}{% endset %}
-                                    {{ forms.number(partnerKey ~ "_sov", title, interface.getPartnerSetting(partnerKey, "sov"), helpText) }}
+                    {% set title %}{% trans "Share of voice" %}{% endset %}
+                    {% set helpText %}{% trans "How many seconds per hour would you like to dedicate to this SSP?" %}{% endset %}
+                    {{ forms.number(partnerKey ~ "_sov", title, interface.getPartnerSetting(partnerKey, "sov"), helpText) }}
 
-                                    {% set title %}{% trans "Duration (s)" %}{% endset %}
-                                    {% set helpText %}{% trans "The expected duration of each ad served by the SSP." %}{% endset %}
-                                    {{ forms.number(partnerKey ~ "_duration", title, interface.getPartnerSetting(partnerKey, "duration"), helpText) }}
+                    {% set title %}{% trans "Duration (s)" %}{% endset %}
+                    {% set helpText %}{% trans "The expected duration of each ad served by the SSP." %}{% endset %}
+                    {{ forms.number(partnerKey ~ "_duration", title, interface.getPartnerSetting(partnerKey, "duration"), helpText) }}
 
-                                    {% set title %}{% trans "Min Duration (s)" %}{% endset %}
-                                    {% set helpText %}{% trans "The minimum duration of an ad served by the SSP." %}{% endset %}
-                                    {{ forms.number(partnerKey ~ "_minDuration", title, interface.getPartnerSetting(partnerKey, "minDuration"), helpText) }}
+                    {% set title %}{% trans "Min Duration (s)" %}{% endset %}
+                    {% set helpText %}{% trans "The minimum duration of an ad served by the SSP." %}{% endset %}
+                    {{ forms.number(partnerKey ~ "_minDuration", title, interface.getPartnerSetting(partnerKey, "minDuration"), helpText) }}
 
-                                    {% set title %}{% trans "Max Duration (s)" %}{% endset %}
-                                    {% set helpText %}{% trans "The maximum duration of an ad served by the SSP." %}{% endset %}
-                                    {{ forms.number(partnerKey ~ "_maxDuration", title, interface.getPartnerSetting(partnerKey, "maxDuration"), helpText) }}
+                    {% set title %}{% trans "Max Duration (s)" %}{% endset %}
+                    {% set helpText %}{% trans "The maximum duration of an ad served by the SSP." %}{% endset %}
+                    {{ forms.number(partnerKey ~ "_maxDuration", title, interface.getPartnerSetting(partnerKey, "maxDuration"), helpText) }}
 
-                                    {% set all %}{% trans "Images and Video" %}{% endset %}
-                                    {% set image %}{% trans "Images only" %}{% endset %}
-                                    {% set video %}{% trans "Videos only" %}{% endset %}
-                                    {% set options = [
-                                        { id: "imagesAndVideo", value: all },
-                                        { id: "imageOnly", value: image },
-                                        { id: "videoOnly", value: video }
-                                    ] %}
-                                    {{ forms.dropdown(partnerKey ~ "_mediaTypesAllowed", "single", title, interface.getPartnerSetting(partnerKey, "mediaTypesAllowed"), options, "id", "value", helpText) }}
+                    {% set all %}{% trans "Images and Video" %}{% endset %}
+                    {% set image %}{% trans "Images only" %}{% endset %}
+                    {% set video %}{% trans "Videos only" %}{% endset %}
+                    {% set options = [
+                        { id: "imagesAndVideo", value: all },
+                        { id: "imageOnly", value: image },
+                        { id: "videoOnly", value: video }
+                    ] %}
+                    {{ forms.dropdown(partnerKey ~ "_mediaTypesAllowed", "single", title, interface.getPartnerSetting(partnerKey, "mediaTypesAllowed"), options, "id", "value", helpText) }}
 
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {% set helpText %}{% trans "Which displays would you like to enroll with this SSP. Leave blank to enroll them all." %}{% endset %}
-                                    {% set attributes = [
-                                        { name: "data-width", value: "200px" },
-                                        { name: "data-allow-clear", value: "true" },
-                                        { name: "data-placeholder--id", value: null },
-                                        { name: "data-placeholder--value", value: "" },
-                                        { name: "data-search-url", value:  url_for("displayGroup.search") },
-                                        { name: "data-search-term", value: "displayGroup" },
-                                        { name: "data-search-term-tags", value: "tags" },
-                                        { name: "data-id-property", value: "displayGroupId" },
-                                        { name: "data-text-property", value: "displayGroup" },
-                                    ] %}
-                                    {% if interface.getSetting(partnerKey ~ "_displayGroupId")  %}
-                                        {% set attributes = attributes|merge([
-                                            { name: "data-initial-key", value: "displayGroupId" },
-                                            { name: "data-initial-value", value: interface.getSetting(partnerKey ~ "_displayGroupId") },
-                                        ]) %}
-                                    {% endif %}
-                                    {{ forms.dropdown(partnerKey ~ "_displayGroupId", "single", title, null, null, "displayGroupId", "displayGroup", helpText, "pagedSelect", "", "d", "", attributes) }}
+                    {% set title %}{% trans "Display Group" %}{% endset %}
+                    {% set helpText %}{% trans "Which displays would you like to enroll with this SSP. Leave blank to enroll them all." %}{% endset %}
+                    {% set attributes = [
+                        { name: "data-width", value: "200px" },
+                        { name: "data-allow-clear", value: "true" },
+                        { name: "data-placeholder--id", value: null },
+                        { name: "data-placeholder--value", value: "" },
+                        { name: "data-search-url", value:  url_for("displayGroup.search") },
+                        { name: "data-search-term", value: "displayGroup" },
+                        { name: "data-search-term-tags", value: "tags" },
+                        { name: "data-id-property", value: "displayGroupId" },
+                        { name: "data-text-property", value: "displayGroup" },
+                    ] %}
+                    {% if interface.getSetting(partnerKey ~ "_displayGroupId")  %}
+                        {% set attributes = attributes|merge([
+                            { name: "data-initial-key", value: "displayGroupId" },
+                            { name: "data-initial-value", value: interface.getSetting(partnerKey ~ "_displayGroupId") },
+                        ]) %}
+                    {% endif %}
+                    {{ forms.dropdown(partnerKey ~ "_displayGroupId", "single", title, null, null, "displayGroupId", "displayGroup", helpText, "pagedSelect", "", "d", "", attributes) }}
 
-                                    {% set title %}{% trans "ID field" %}{% endset %}
-                                    {% set helpText %}{% trans "Which field would you like to use as the ID for this SSP?" %}{% endset %}
-                                    {% set options = [
-                                        { id: "displayId", value: "Display ID"|trans },
-                                        { id: "customId", value: "Custom ID"|trans },
-                                        { id: "ref1", value: "Reference 1"|trans },
-                                        { id: "ref2", value: "Reference 2"|trans },
-                                        { id: "ref3", value: "Reference 3"|trans },
-                                        { id: "ref4", value: "Reference 4"|trans },
-                                        { id: "ref5", value: "Reference 5"|trans },
-                                    ] %}
-                                    {{ forms.dropdown(partnerKey ~ "_sspIdField", "single", title, interface.getPartnerSetting(partnerKey, "sspIdField"), options, "id", "value", helpText) }}
+                    {% set title %}{% trans "ID field" %}{% endset %}
+                    {% set helpText %}{% trans "Which field would you like to use as the ID for this SSP?" %}{% endset %}
+                    {% set options = [
+                        { id: "displayId", value: "Display ID"|trans },
+                        { id: "customId", value: "Custom ID"|trans },
+                        { id: "ref1", value: "Reference 1"|trans },
+                        { id: "ref2", value: "Reference 2"|trans },
+                        { id: "ref3", value: "Reference 3"|trans },
+                        { id: "ref4", value: "Reference 4"|trans },
+                        { id: "ref5", value: "Reference 5"|trans },
+                    ] %}
+                    {{ forms.dropdown(partnerKey ~ "_sspIdField", "single", title, interface.getPartnerSetting(partnerKey, "sspIdField"), options, "id", "value", helpText) }}
 
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% else %}
-                    <p>To see a list of available partners please enter your API key, save this form and then come back here.</p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="tab-pane" id="tab-activity-log">
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="connector-ssp-activity-log">
-                <div class="XiboFilterCustom card bg-light mb-3">
-                    <div class="FilterDiv card-body" id="connector-ssp-activity-log">
-                        <form class="form-inline">
-                            <div class="w-100">
-                                <a id="applyBtn" class="btn btn-success">
-                                    <span>{% trans "Apply" %}</span>
-                                </a>
-                            </div>
-                        </form>
-                    </div>
                 </div>
-                <div class="XiboData card pt-3">
-                    <table id="ssp-activity" class="table table-striped"
-                           data-connector-id="{{ connector.connectorId }}"
-                           data-url="{{ url_for("connector.edit.form.proxy", {id: connector.edit.form.proxy, method: ""}) }}"
-                           data-state-preference-name="connector-ssp-activity-log">
-                        <thead>
-                        <tr>
-                            <th>{% trans "Scheduled At" %}</th>
-                            <th>{% trans "Campaign" %}</th>
-                            <th>{% trans "Display ID" %}</th>
-                            <th>{% trans "Played?" %}</th>
-                            <th>{% trans "Errored?" %}</th>
-                            <th>{% trans "Impressions" %}</th>
-                            <th>{% trans "Impression Date" %}</th>
-                            <th>{% trans "Impression Actual" %}</th>
-                            <th>{% trans "Errors" %}</th>
-                            <th>{% trans "Error Date" %}</th>
-                            <th>{% trans "Error Code" %}</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            {% endfor %}
     </div>
+    {% else %}
+        <p>To see a list of available partners please enter your API key, save this form and then come back here.</p>
+    {% endif %}
 
     <hr>
 

@@ -141,13 +141,18 @@
             success: function(xhr, textStatus, error) {
               $.each(xhr.data, function(index, element) {
                 element.configureUrl = '{{ url_for("connector.edit.form", {id: ":id"}) }}'.replace(':id', element.connectorId);
+                element.proxyUrl = '{{ url_for("connector.edit.form.proxy", {id: ":id", method: ":method"}) }}'.replace(':id', element.connectorId);
                 element.thumbnail = element.thumbnail || 'theme/default/img/thumbs/placeholder.png';
                 if (!element.thumbnail.startsWith('http')) {
                   element.thumbnail = '{{ theme.rootUri() }}' + element.thumbnail;
                 }
                 element.enabledIcon = (element.isEnabled) ? 'fa-check' : 'fa-times';
+                element.classNameLast = element.className.substr(element.className.lastIndexOf('\\') + 1);
                 $connectorContainer.append(connectorTemplate(element));
               });
+
+              // Raise an event to say we've been successful.
+              $connectorContainer.trigger('connectors.loaded');
 
               // Bind to any configure buttons.
               XiboInitialise('#connectors');
@@ -230,7 +235,11 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="template-connector-cards">
-        <div class="connector card p3 mt-2" style="min-width: 250px; max-width: 250px;">
+        <div class="connector card p3 mt-2" style="min-width: 250px; max-width: 250px;"
+            data-proxy-url="{{proxyUrl}}"
+            data-connector-class-name="{{className}}"
+            data-connector-class-name-last="{{classNameLast}}"
+            data-connector-id="{{ connectorId }}">
             {{#if thumbnail}}<img class="card-img-top" style="max-height: 250px" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
             <div class="card-body">
                 <h5 class="card-title">{{ title }}</h5>

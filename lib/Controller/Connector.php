@@ -134,7 +134,7 @@ class Connector extends Base
         $interface = $this->connectorFactory->create($connector);
 
         if (method_exists($interface, $method)) {
-            return $response->withJson($interface->{$method}($request));
+            return $response->withJson($interface->{$method}($this->getSanitizer($request->getParams())));
         } else {
             throw new HttpMethodNotAllowedException($request);
         }
