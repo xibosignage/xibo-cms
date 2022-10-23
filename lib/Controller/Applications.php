@@ -86,7 +86,8 @@ class Applications extends Base
      * @param \Xibo\Factory\ConnectorFactory $connectorFactory
      */
     public function __construct(
-        $session, $applicationFactory,
+        $session,
+        $applicationFactory,
         $applicationRedirectUriFactory,
         $applicationScopeFactory,
         $userFactory,
