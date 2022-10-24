@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1094,6 +1094,7 @@ class Soap
                         $layout->setAttribute('cyclePlayback', $row['cyclePlayback'] ?? 0);
                         $layout->setAttribute('groupKey', $row['groupKey'] ?? 0);
                         $layout->setAttribute('playCount', $row['playCount'] ?? 0);
+                        $layout->setAttribute('maxPlaysPerHour', $row['maxPlaysPerHour'] ?? 0);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {

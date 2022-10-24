@@ -175,6 +175,10 @@
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
                         {{ forms.number("isPriority", title, "", helpText, 'priority-control') }}
 
+                        {% set title %}{% trans "Maximum plays per hour" %}{% endset %}
+                        {% set helpText %}{% trans "Limit the number of times this event will play per hour on each display. For unlimited plays set to 0." %}{{ forms.playerCompat("R308", "R306", "", "", "") }}{% endset %}
+                        {{ forms.number("maxPlaysPerHour", title, 0, helpText, 'max-plays-control') }}
+
                         {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
                         {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
                         {{ forms.checkbox("syncTimezone", title, 0, helpText) }}
@@ -185,7 +189,7 @@
                             {{ forms.checkbox("syncEvent", title, 0, helpText, "sync-schedule-control") }}
                         {% endif %}
                     </div>
-                    
+
                     <div class="tab-pane" id="repeats">
                         {% set title %}{% trans "Repeats" %}{% endset %}
                         {% set helpText %}{% trans "Select the type of Repeat required for this Event." %}{% endset %}

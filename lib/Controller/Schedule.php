@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -177,7 +177,7 @@ class Schedule extends Base
         // Render the Theme and output
         $this->getState()->template = 'schedule-page';
         $this->getState()->setData($data);
-        
+
         return $this->render($request, $response);
     }
 
@@ -238,7 +238,7 @@ class Schedule extends Base
 
         $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()]);
         $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()]);
-        
+
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
@@ -978,11 +978,25 @@ class Schedule extends Base
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
         $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $customDayPart->dayPartId]);
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->actionType = $sanitizedParams->getString('actionType');
         $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
         $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
+        $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
+
+        // Fields only collected for interrupt events
+        if ($schedule->eventTypeId == 4) {
+            $schedule->shareOfVoice = $sanitizedParams->getInt('shareOfVoice', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Share of Voice must be a whole number between 0 and 3600'),
+                        'shareOfVoice'
+                    );
+                }
+            ]);
+        } else {
+            $schedule->shareOfVoice = null;
+        }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {
@@ -1520,11 +1534,25 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
         $schedule->displayGroups = [];
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->actionType = $sanitizedParams->getString('actionType');
         $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
         $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
+        $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
+
+        // Fields only collected for interrupt events
+        if ($schedule->eventTypeId == 4) {
+            $schedule->shareOfVoice = $sanitizedParams->getInt('shareOfVoice', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Share of Voice must be a whole number between 0 and 3600'),
+                        'shareOfVoice'
+                    );
+                }
+            ]);
+        } else {
+            $schedule->shareOfVoice = null;
+        }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -250,6 +250,12 @@ class Schedule implements \JsonSerializable
      * @var int
      */
     public $shareOfVoice;
+
+    /**
+     * @SWG\Property(description="The maximum number of plays per hour per display for this event")
+     * @var int
+     */
+    public $maxPlaysPerHour;
 
     /**
      * @SWG\Property(description="Flag (0-1), whether this event is using Geo Location")
@@ -731,8 +737,56 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`, `isGeoAware`, `geoLocation`, `actionType`, `actionTriggerCode`, `actionLayoutCode`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice, :isGeoAware, :geoLocation, :actionType, :actionTriggerCode, :actionLayoutCode)
+            INSERT INTO `schedule` (
+                eventTypeId,
+                CampaignId,
+                commandId,
+                userID,
+                is_priority,
+                FromDT,
+                ToDT,
+                DisplayOrder,
+                recurrence_type,
+                recurrence_detail,
+                recurrence_range,
+                `recurrenceRepeatsOn`,
+                `recurrenceMonthlyRepeatsOn`,
+                `dayPartId`,
+                `syncTimezone`,
+                `syncEvent`,
+                `shareOfVoice`,
+                `isGeoAware`,
+                `geoLocation`,
+                `actionType`,
+                `actionTriggerCode`,
+                `actionLayoutCode`,
+                `maxPlaysPerHour`
+            )
+            VALUES (
+                :eventTypeId,
+                :campaignId,
+                :commandId,
+                :userId,
+                :isPriority,
+                :fromDt,
+                :toDt,
+                :displayOrder,
+                :recurrenceType,
+                :recurrenceDetail,
+                :recurrenceRange,
+                :recurrenceRepeatsOn,
+                :recurrenceMonthlyRepeatsOn,
+                :dayPartId,
+                :syncTimezone,
+                :syncEvent,
+                :shareOfVoice,
+                :isGeoAware,
+                :geoLocation,
+                :actionType,
+                :actionTriggerCode,
+                :actionLayoutCode,
+                :maxPlaysPerHour
+            )
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -746,7 +800,9 @@ class Schedule implements \JsonSerializable
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
-            'recurrenceMonthlyRepeatsOn' => ($this->recurrenceMonthlyRepeatsOn == null) ? 0 : $this->recurrenceMonthlyRepeatsOn,
+            'recurrenceMonthlyRepeatsOn' => ($this->recurrenceMonthlyRepeatsOn == null)
+                ? 0 :
+                $this->recurrenceMonthlyRepeatsOn,
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent,
@@ -755,7 +811,8 @@ class Schedule implements \JsonSerializable
             'geoLocation' => $this->geoLocation,
             'actionType' => $this->actionType,
             'actionTriggerCode' => $this->actionTriggerCode,
-            'actionLayoutCode' => $this->actionLayoutCode
+            'actionLayoutCode' => $this->actionLayoutCode,
+            'maxPlaysPerHour' => $this->maxPlaysPerHour,
         ]);
     }
 
@@ -787,7 +844,8 @@ class Schedule implements \JsonSerializable
             `geoLocation` = :geoLocation,
             `actionType` = :actionType,
             `actionTriggerCode` = :actionTriggerCode,
-            `actionLayoutCode` = :actionLayoutCode
+            `actionLayoutCode` = :actionLayoutCode,
+            `maxPlaysPerHour` = :maxPlaysPerHour
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -812,7 +870,8 @@ class Schedule implements \JsonSerializable
             'actionType' => $this->actionType,
             'actionTriggerCode' => $this->actionTriggerCode,
             'actionLayoutCode' => $this->actionLayoutCode,
-            'eventId' => $this->eventId
+            'maxPlaysPerHour' => $this->maxPlaysPerHour,
+            'eventId' => $this->eventId,
         ]);
     }
 
