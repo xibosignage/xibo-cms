@@ -67,26 +67,53 @@
         }
       },
       columns: [
-        { data: 'scheduledAt', responsivePriority: 1 },
+        {
+          data: 'scheduledAt',
+          responsivePriority: 1,
+          render: function(data, type) {
+            if (type !== 'display' && type !== 'export' || data == null) {
+              return data;
+            }
+            return moment(data).format(jsDateFormat);
+          },
+        },
         { data: 'campaignId', responsivePriority: 1 },
         { data: 'displayId', responsivePriority: 1 },
         { data: 'isPlayed', responsivePriority: 1 },
         { data: 'isErrored', responsivePriority: 1 },
         { data: 'impressions', responsivePriority: 2 },
-        { data: 'impressionDate', responsivePriority: 10 },
+        {
+          data: 'impressionDate',
+          responsivePriority: 10,
+          render: function(data, type) {
+            if (type !== 'display' && type !== 'export' || data == null) {
+              return data;
+            }
+            return moment(data).format(jsDateFormat);
+          },
+        },
         { data: 'impressionActual', responsivePriority: 10 },
         { data: 'errors', responsivePriority: 10 },
-        { data: 'errorDate', responsivePriority: 10 },
+        {
+          data: 'errorDate',
+          responsivePriority: 10,
+          render: function(data, type) {
+            if (type !== 'display' && type !== 'export' || data == null) {
+              return data;
+            }
+            return moment(data).format(jsDateFormat);
+          },
+        },
         { data: 'errorCode', responsivePriority: 10 },
       ],
 
       footerCallback: function(row, data, start, end, display) {
         var json = this.api().ajax.json();
         if (json) {
-           $(this.api().column(0).footer()).html(json.scheduled || 0);
-           $(this.api().column(3).footer()).html(json.played || 0);
-           $(this.api().column(4).footer()).html(json.errored || 0);
-           $(this.api().column(5).footer()).html(json.actualImpressions || 0);
+           $(this.api().column(0).footer()).html(json.stats.scheduled || 0);
+           $(this.api().column(3).footer()).html(json.stats.played || 0);
+           $(this.api().column(4).footer()).html(json.stats.errored || 0);
+           $(this.api().column(5).footer()).html(json.stats.actualImpressions || 0);
         }
       },
 
@@ -114,10 +141,10 @@
           <div class="FilterDiv card-body" id="connector-ssp-activity-log">
               <form class="form-inline">
                   {% set title %}{% trans "From Date" %}{% endset %}
-                  {{ inline.date("statsFromDt", title, "", "", "stats-from-dt", "", "") }}
+                  {{ inline.date("activityFromDt", title, "", "", "activity-from-dt", "", "") }}
 
                   {% set title %}{% trans "To Date" %}{% endset %}
-                  {{ inline.date("statsToDt", title, "", "", "stats-to-dt", "", "") }}
+                  {{ inline.date("activityToDt", title, "", "", "activity-to-dt", "", "") }}
                   <div class="w-100">
                       <a data-apply-button="true" class="btn btn-success">
                           <span>{% trans "Apply" %}</span>

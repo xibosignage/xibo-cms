@@ -110,6 +110,11 @@ class XiboSspConnector implements ConnectorInterface
             $settings['cmsUrl'] = $params->getString('cmsUrl');
         }
 
+        // If our API key was empty, then do not set partners.
+        if (empty($existingApiKey) || empty($settings['apiKey'])) {
+            return $settings;
+        }
+
         // Set partners.
         $partners = [];
         $available = $this->getAvailablePartners(false, $settings['apiKey']);
@@ -145,7 +150,7 @@ class XiboSspConnector implements ConnectorInterface
         if ($existingApiKey !== $settings['apiKey']) {
             // Clear all displays for this CMS on the existing key
             $this->setDisplays($existingApiKey, $existingCmsUrl, []);
-        } else if ($existingCmsUrl !== $settings['cmsUrl']) {
+        } else if (!empty($existingCmsUrl) && $existingCmsUrl !== $settings['cmsUrl']) {
             // Clear all displays for this CMS on the existing key
             $this->setDisplays($settings['apiKey'], $existingCmsUrl, []);
         }
@@ -356,16 +361,17 @@ class XiboSspConnector implements ConnectorInterface
      */
     public function activity(SanitizerInterface $params): array
     {
-        $fromDt = $params->getDate('fromDt', [
+        $fromDt = $params->getDate('activityFromDt', [
             'default' => Carbon::now()->startOfHour()
         ]);
-        $toDt = $params->getDate('toDt', [
+        $toDt = $params->getDate('activityToDt', [
             'default' => $fromDt->addHour()
         ]);
 
-        // Call the api
+        // Call the api (override the timeout)
         try {
             $response = $this->getClient()->get($this->getServiceUrl() . '/activity', [
+                'timeout' => 120,
                 'headers' => [
                     'X-API-KEY' => $this->getSetting('apiKey'),
                 ],
