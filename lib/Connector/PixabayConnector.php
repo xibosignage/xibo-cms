@@ -71,7 +71,9 @@ class PixabayConnector implements ConnectorInterface
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
-        $settings['apiKey'] = $params->getString('apiKey');
+        if (!$this->isProviderSetting('apiKey')) {
+            $settings['apiKey'] = $params->getString('apiKey');
+        }
         return $settings;
     }
 

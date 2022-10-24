@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -50,7 +50,8 @@ class Controllers
                     $c->get('applicationRedirectUriFactory'),
                     $c->get('applicationScopeFactory'),
                     $c->get('userFactory'),
-                    $c->get('pool')
+                    $c->get('pool'),
+                    $c->get('connectorFactory')
                 );
 
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

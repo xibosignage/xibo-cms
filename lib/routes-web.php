@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -531,7 +531,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/application/view', ['\Xibo\Controller\Applications','displayPage'])->setName('application.view');
     $group->get('/application/data/activity', ['\Xibo\Controller\Applications','viewActivity'])->setName('application.view.activity');
     $group->get('/application/form/add', ['\Xibo\Controller\Applications','addForm'])->setName('application.add.form');
-    $group->get('/application/form/addDooh', ['\Xibo\Controller\Applications','addDoohForm'])->setName('application.addDooh.form');
     $group->get('/application/form/edit/{id}', ['\Xibo\Controller\Applications','editForm'])->setName('application.edit.form');
     $group->get('/application/form/delete/{id}', ['\Xibo\Controller\Applications','deleteForm'])->setName('application.delete.form');
     $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
@@ -541,6 +540,8 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
     $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
         ->setName('connector.edit.form');
+    $group->get('/connectors/form/{id}/proxy/{method}', ['\Xibo\Controller\Connector', 'editFormProxy'])
+        ->setName('connector.edit.form.proxy');
     $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 

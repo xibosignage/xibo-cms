@@ -590,7 +590,6 @@ $app->get('/application', ['\Xibo\Controller\Applications','grid'])->setName('ap
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
-    $group->post('/application/dooh', ['\Xibo\Controller\Applications','addDooh'])->setName('application.addDooh');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));
 
 /**

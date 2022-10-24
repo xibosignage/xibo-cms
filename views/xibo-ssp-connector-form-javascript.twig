@@ -1,0 +1,168 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% import "inline.twig" as inline %}
+{% set gridId = random() %}
+<script type="text/javascript">
+  $(function() {
+    $('#connectors').on('connectors.loaded', function() {
+      var $sspConnector = $('#connectors').find('div[data-connector-class-name-last="XiboSspConnector"]');
+      var $button = $('<button class="btn btn-info" role="button">{% trans "Activity Report" %}</button>');
+      $button.on('click', function() {
+        sspFormOpen($sspConnector);
+      });
+      $sspConnector.find('.card-footer').append($button);
+    });
+  });
+
+  window.sspFormOpen = function($sspConnector) {
+    bootbox.hideAll();
+    // Put the template into a modal.
+    var template = Handlebars.compile($('#connector-ssp-activity').html());
+    var dialog = bootbox.dialog({
+      message: template({}),
+      title: '{{ "Activity Report"|trans }}',
+      animate: false,
+      size: 'large'
+    });
+
+    XiboInitialise('#{{ gridId }}');
+
+    dialog.closest('.modal').addClass('modal-big');
+
+    // Make a datatable
+    var table;
+    table = $('#ssp-activity').DataTable({
+      language: dataTablesLanguage,
+      dom: dataTablesTemplate,
+      serverSide: false,
+      stateSave: false,
+      responsive: true,
+      filter: false,
+      searchDelay: 3000,
+      order: [[ 0, 'asc']],
+      ajax: {
+        url: $sspConnector.data('proxyUrl').replace(':method', 'activity'),
+        data: function (d) {
+          $.extend(d, $('#ssp-activity').closest('.XiboGrid').find('.FilterDiv form').serializeObject());
+        }
+      },
+      columns: [
+        { data: 'scheduledAt', responsivePriority: 1 },
+        { data: 'campaignId', responsivePriority: 1 },
+        { data: 'displayId', responsivePriority: 1 },
+        { data: 'isPlayed', responsivePriority: 1 },
+        { data: 'isErrored', responsivePriority: 1 },
+        { data: 'impressions', responsivePriority: 2 },
+        { data: 'impressionDate', responsivePriority: 10 },
+        { data: 'impressionActual', responsivePriority: 10 },
+        { data: 'errors', responsivePriority: 10 },
+        { data: 'errorDate', responsivePriority: 10 },
+        { data: 'errorCode', responsivePriority: 10 },
+      ],
+
+      footerCallback: function(row, data, start, end, display) {
+        var json = this.api().ajax.json();
+        if (json) {
+           $(this.api().column(0).footer()).html(json.scheduled || 0);
+           $(this.api().column(3).footer()).html(json.played || 0);
+           $(this.api().column(4).footer()).html(json.errored || 0);
+           $(this.api().column(5).footer()).html(json.actualImpressions || 0);
+        }
+      },
+
+      drawCallback: function(settings) {
+        setTimeout(function() {
+          dialog.find('a[data-apply-button="true"]').removeClass('disabled');
+        }, 300);
+      },
+    });
+
+    table.on('draw', dataTableDraw);
+    table.on('processing.dt', dataTableProcessing);
+    dataTableAddButtons(table, $('#ssp-activity_wrapper').find('.dataTables_buttons'));
+
+    // Find the apply button
+    dialog.find('a[data-apply-button="true"]').on('click', function() {
+      $(this).addClass('disabled');
+      table.ajax.reload(null, true);
+    });
+  };
+</script>
+<script type="text/x-handlebars-template" id="connector-ssp-activity">
+  <div class="XiboGrid" id="{{ gridId }}" data-grid-name="connector-ssp-activity-log">
+      <div class="XiboFilterCustom card bg-light mb-3">
+          <div class="FilterDiv card-body" id="connector-ssp-activity-log">
+              <form class="form-inline">
+                  {% set title %}{% trans "From Date" %}{% endset %}
+                  {{ inline.date("statsFromDt", title, "", "", "stats-from-dt", "", "") }}
+
+                  {% set title %}{% trans "To Date" %}{% endset %}
+                  {{ inline.date("statsToDt", title, "", "", "stats-to-dt", "", "") }}
+                  <div class="w-100">
+                      <a data-apply-button="true" class="btn btn-success">
+                          <span>{% trans "Apply" %}</span>
+                      </a>
+                  </div>
+              </form>
+          </div>
+      </div>
+      <div class="XiboData card pt-3">
+          <table id="ssp-activity" class="table table-striped"
+                 data-state-preference-name="connector-ssp-activity-log">
+              <thead>
+                <tr>
+                    <th>{% trans "Scheduled At" %}</th>
+                    <th>{% trans "Campaign" %}</th>
+                    <th>{% trans "Display ID" %}</th>
+                    <th>{% trans "Played?" %}</th>
+                    <th>{% trans "Errored?" %}</th>
+                    <th>{% trans "Impressions" %}</th>
+                    <th>{% trans "Impression Date" %}</th>
+                    <th>{% trans "Impression Actual" %}</th>
+                    <th>{% trans "Errors" %}</th>
+                    <th>{% trans "Error Date" %}</th>
+                    <th>{% trans "Error Code" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+
+              </tbody>
+              <tfoot>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+              </tfoot>
+          </table>
+      </div>
+  </div>
+</script>
