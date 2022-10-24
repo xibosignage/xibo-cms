@@ -28,13 +28,27 @@
       var $sspConnector = $('#connectors').find('div[data-connector-class-name-last="XiboSspConnector"]');
       var $button = $('<button class="btn btn-info" role="button">{% trans "Activity Report" %}</button>');
       $button.on('click', function() {
-        sspFormOpen($sspConnector);
+        sspActivityDialogOpen($sspConnector);
       });
       $sspConnector.find('.card-footer').append($button);
     });
   });
 
-  window.sspFormOpen = function($sspConnector) {
+  window.sspFormOpen = function(dialog) {
+    // Share of voice
+    var $shareOfVoice = dialog.find('.share-of-voice-control');
+    $shareOfVoice.on('change paste keyup', function() {
+      dialog.find($(this).data('partner')).val(((100 * $(this).val()) / 3600).toFixed(2));
+    }).trigger('change');
+
+    $shareOfVoice.each(function(index, element) {
+      dialog.find($(element).data('partner')).on('change paste keyup', function() {
+        $(element).val(Math.round((3600 * $(this).val()) / 100));
+      });
+    });
+  };
+
+  window.sspActivityDialogOpen = function($sspConnector) {
     bootbox.hideAll();
     // Put the template into a modal.
     var template = Handlebars.compile($('#connector-ssp-activity').html());
