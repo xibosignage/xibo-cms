@@ -93,11 +93,25 @@
                                 <thead>
                                     <tr>
                                         <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Type" %}</th>
+                                        <th>{% trans "Start Date" %}</th>
+                                        <th>{% trans "End Date" %}</th>
                                         <th>{% trans "# Layouts" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Duration" %}</th>
                                         <th>{% trans "Cycle based Playback" %}</th>
                                         <th>{% trans "Play Count" %}</th>
+                                        <th>{% trans "Plays" %}</th>
+                                        <th>{% trans "Spend" %}</th>
+                                        <th>{% trans "Impressions" %}</th>
+                                        <th>{% trans "Ref 1" %}</th>
+                                        <th>{% trans "Ref 2" %}</th>
+                                        <th>{% trans "Ref 3" %}</th>
+                                        <th>{% trans "Ref 4" %}</th>
+                                        <th>{% trans "Ref 5" %}</th>
+                                        <th>{% trans "Created At" %}</th>
+                                        <th>{% trans "Modified At" %}</th>
+                                        <th>{% trans "Modified By" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -145,6 +159,30 @@
                         responsivePriority: 2,
                         "render": dataTableSpacingPreformatted
                     },
+                  {
+                    data: 'type',
+                    responsivePriority: 2,
+                    render: function(data, type) {
+                      if (type !== 'display') {
+                        return data;
+                      } else if (data === 'list') {
+                        return '{{ "List"|trans }}';
+                      } else if (data === 'ad') {
+                        return '{{ "Ad"|trans }}';
+                      }
+                      return data;
+                    }
+                  },
+                  {
+                    data: 'startDt',
+                    responsivePriority: 2,
+                    render: dataTableDateFromUnix,
+                  },
+                  {
+                    data: 'endDt',
+                    responsivePriority: 2,
+                    render: dataTableDateFromUnix,
+                  },
                     { "data": "numberLayouts", responsivePriority: 2 },
                     {% if currentUser.featureEnabled("tag.tagging") %} {
                         "sortable": false,
@@ -178,7 +216,7 @@
                         "name": "playCount",
                         responsivePriority: 3,
                         "data": function (data, type) {
-                            if (type != 'display') {
+                            if (type !== 'display') {
                                 return data.playCount;
                             }
 
@@ -188,6 +226,60 @@
                                return data.playCount;
                             }
                         }
+                    },
+                    {
+                      data: 'plays',
+                      responsivePriority: 6,
+                    },
+                    {
+                      data: 'spend',
+                      responsivePriority: 6,
+                    },
+                    {
+                      data: 'impressions',
+                      responsivePriority: 6,
+                    },
+                    {
+                      data: 'ref1',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref2',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref3',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref4',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref5',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'createdAt',
+                      responsivePriority: 5,
+                      render: dataTableDateFromIso,
+                      visible: false,
+                    },
+                    {
+                      data: 'modifiedAt',
+                      responsivePriority: 5,
+                      render: dataTableDateFromIso,
+                      visible: false,
+                    },
+                    {
+                      data: 'modifiedByName',
+                      responsivePriority: 5,
+                      visible: false,
                     },
                     {
                         "orderable": false,
@@ -321,7 +413,7 @@
                         layoutId: data.layoutId,
                         layoutName: data.layout,
                         locked: false
-                    }); 
+                    });
 
                     $(newItem).appendTo("#LayoutAssignSortable");
                 });
@@ -356,7 +448,7 @@
             // Submit form
             $form.submit();
         }
-        
+
         function layoutAssignSubmit($form) {
             // Get the final sortable positions
             var finalLayoutPositions = [];

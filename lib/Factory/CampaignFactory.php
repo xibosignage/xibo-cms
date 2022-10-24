@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -46,7 +46,7 @@ class CampaignFactory extends BaseFactory
 
     /** @var DisplayNotifyServiceInterface */
     private $displayNotifyService;
-    
+
     /**
      * @var TagFactory
      */
@@ -101,7 +101,7 @@ class CampaignFactory extends BaseFactory
         $campaign->ownerId = $userId;
         $campaign->campaign = $name;
         $campaign->folderId = $folderId;
-        
+
         // Create some tags
         $campaign->tags = $this->tagFactory->tagsFromString($tags);
 
@@ -185,7 +185,30 @@ class CampaignFactory extends BaseFactory
         $params = [];
 
         $select = '
-        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId, `campaign`.folderId, campaign.permissionsFolderId, campaign.cyclePlaybackEnabled, campaign.playCount,
+        SELECT `campaign`.campaignId,
+           `campaign`.campaign,
+           `campaign`.type,
+           `campaign`.isLayoutSpecific,
+           `campaign`.userId AS ownerId,
+           `campaign`.folderId,
+           `campaign`.permissionsFolderId,
+           `campaign`.cyclePlaybackEnabled,
+           `campaign`.playCount,
+           `campaign`.startDt,
+           `campaign`.endDt,
+           `campaign`.plays,
+           `campaign`.spend,
+           `campaign`.impressions,
+           `campaign`.lastPopId,
+           `campaign`.ref1,
+           `campaign`.ref2,
+           `campaign`.ref3,
+           `campaign`.ref4,
+           `campaign`.ref5,
+           `campaign`.createdAt,
+           `campaign`.modifiedAt,
+           `campaign`.modifiedBy,
+           modifiedBy.userName AS modifiedByName,
             (
                 SELECT COUNT(*)
                 FROM lkcampaignlayout
@@ -209,6 +232,8 @@ class CampaignFactory extends BaseFactory
               ON lkcampaignlayout.LayoutID = layout.LayoutID
               INNER JOIN `user`
               ON user.userId = campaign.userId 
+              LEFT OUTER JOIN `user` modifiedBy
+              ON modifiedBy.userId = campaign.modifiedBy 
            WHERE 1 = 1
         ';
 
@@ -235,7 +260,7 @@ class CampaignFactory extends BaseFactory
             $body .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
             $params['layoutId'] = $sanitizedFilter->getInt('layoutId', ['default' => 0]);
         }
-        
+
         if ($sanitizedFilter->getInt('hasLayouts', ['default' => 0]) != 0) {
 
             $body .= " AND (
@@ -243,7 +268,7 @@ class CampaignFactory extends BaseFactory
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
                 )";
-    
+
             $body .= ($sanitizedFilter->getInt('hasLayouts', ['default' => 0]) == 1) ? " = 0 " : " > 0";
         }
 
@@ -348,7 +373,14 @@ class CampaignFactory extends BaseFactory
                     'totalDuration',
                     'displayOrder',
                     'cyclePlaybackEnabled',
-                    'playCount'
+                    'playCount',
+                    'startDt',
+                    'endDt',
+                    'impressions',
+                    'modifiedBy',
+                ],
+                'stringProperties' => [
+                    'lastPopId'
                 ]
             ]);
         }

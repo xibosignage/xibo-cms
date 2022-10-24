@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -56,6 +56,12 @@ class Campaign implements \JsonSerializable
     public $ownerId;
 
     /**
+     * @SWG\Property(description="The type of campaign, either list or ad")
+     * @var string
+     */
+    public $type;
+
+    /**
      * @SWG\Property(description="The name of the Campaign")
      * @var string
      */
@@ -99,12 +105,81 @@ class Campaign implements \JsonSerializable
      */
     public $cyclePlaybackEnabled;
 
-
     /**
      * @SWG\Property(description="In cycle based playback, how many plays should each Layout have before moving on?")
      * @var int
      */
     public $playCount;
+
+    /**
+     * @SWG\Property(description="For an ad campaign, what's the start date")
+     * @var int
+     */
+    public $startDt;
+
+    /**
+     * @SWG\Property(description="For an ad campaign, what's the end date")
+     * @var int
+     */
+    public $endDt;
+
+    /**
+     * @SWG\Property(description="The number of plays achived by this campaign")
+     * @var int
+     */
+    public $plays;
+
+    /**
+     * @SWG\Property(description="The amount of spend in cents/pence/etc")
+     * @var int
+     */
+    public $spend;
+
+    /**
+     * @SWG\Property(description="The number of impressions achived by this campaign")
+     * @var int
+     */
+    public $impressions;
+
+    /**
+     * @SWG\Property(description="The latest proof of play ID aggregated into the stats")
+     * @var int
+     */
+    public $lastPopId;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref1;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref2;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref3;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref4;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref5;
+
+    public $createdAt;
+    public $modifiedAt;
+    public $modifiedBy;
 
     /**
      * @var Layout[]
@@ -120,7 +195,7 @@ class Campaign implements \JsonSerializable
      * @var Schedule[]
      */
     private $events = [];
-    
+
     // Private
     private $unassignTags = [];
 
@@ -131,7 +206,7 @@ class Campaign implements \JsonSerializable
      * @var PermissionFactory
      */
     private $permissionFactory;
-    
+
     /**
      * @var TagFactory
      */
@@ -220,7 +295,7 @@ class Campaign implements \JsonSerializable
             'loadTags' => true,
             'loadEvents' => true
         ], $options);
-        
+
         // If we are already loaded, then don't do it again
         if ($this->campaignId == null || $this->loaded) {
             return;
@@ -257,8 +332,8 @@ class Campaign implements \JsonSerializable
             throw new InvalidArgumentException(__('Please enter play count'), 'playCount');
         }
     }
-    
-    
+
+
     /**
      * Does the campaign have the provided tag?
      * @param $searchTag
@@ -419,7 +494,7 @@ class Campaign implements \JsonSerializable
             /* @var Permission $permission */
             $permission->delete();
         }
-        
+
         // Unassign all Tags
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
