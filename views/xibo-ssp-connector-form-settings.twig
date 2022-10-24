@@ -20,11 +20,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
-
 {% extends "connector-form-edit.twig" %}
 {% import "forms.twig" as forms %}
 {% import "inline.twig" as inline %}
 
+{% block callBack %}sspFormOpen{% endblock %}
 {% block connectorFormFields %}
     {% set partners = interface.getAvailablePartners() %}
 
@@ -76,7 +76,26 @@
         {% if partners is iterable and partners|length > 0 %}
             {% for partnerKey, available in partners %}
                 <div class="tab-pane" id="tab-{{ partnerKey }}">
-                    <h4>{{ available.name }}</h4>
+                    {% if available.logo %}
+                        <div class="ssp-logo" style="text-align: center">
+                            {% if available.url %}
+                                <a href="{{ available.url }}" title="{{ available.name }}" target="_blank">
+                                    <img src="{{ available.logo }}" alt="{{ available.name }} Logo" style="width: 250px">
+                                </a>
+                            {% else %}
+                                <img src="{{ available.logo }}" alt="{{ available.name }} Logo" style="width: 250px">
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        {% if available.url %}
+                            <h4><a href="{{ available.url }}" title="{{ available.name }}" target="_blank">{{ available.name }}</a></h4>
+                        {% else %}
+                            <h4>{{ available.name }}</h4>
+                        {% endif %}
+                    {% endif %}
+                    {% if available.description %}
+                        <p>{{ available.description }}</p>
+                    {% endif %}
 
                     {% set title %}{% trans "Enabled?" %}{% endset %}
                     {% set helpText %}{% trans "Connect to this partner" %}{% endset %}
@@ -86,9 +105,23 @@
                     {% set helpText %}{% trans "Enter your API Key from this SSP." %}{% endset %}
                     {{ forms.input(partnerKey ~ "_key", title, interface.getPartnerSetting(partnerKey, "key"), helpText) }}
 
-                    {% set title %}{% trans "Share of voice" %}{% endset %}
-                    {% set helpText %}{% trans "How many seconds per hour would you like to dedicate to this SSP?" %}{% endset %}
-                    {{ forms.number(partnerKey ~ "_sov", title, interface.getPartnerSetting(partnerKey, "sov"), helpText) }}
+                    <div class="form-group" style="display: flex;">
+                        <label class="col-sm-2 control-label" for="{{ partnerKey ~ "_sov" }}">{% trans "Share of Voice" %}</label>
+                        <div class="col-sm-5">
+                            <input class="form-control share-of-voice-control"
+                                   name="{{ partnerKey ~ "_sov" }}"
+                                   type="number" id="{{ partnerKey ~ "_sov" }}"
+                                   data-partner="#{{ partnerKey ~ "_sovPercent" }}"
+                                   value="{{ interface.getPartnerSetting(partnerKey, "sov") }}"
+                                   min="0" max="3600" step="1">
+                            <small class="form-text text-muted">{% trans "How many seconds per hour would you like to dedicate to this SSP?" %}</small>
+                        </div>
+
+                        <div class="col-sm-5">
+                            <input class="form-control" type="number" id="{{ partnerKey ~ "_sovPercent" }}" value="">
+                            <small class="form-text text-muted">{% trans "As a percentage" %}</small>
+                        </div>
+                    </div>
 
                     {% set title %}{% trans "Duration (s)" %}{% endset %}
                     {% set helpText %}{% trans "The expected duration of each ad served by the SSP." %}{% endset %}
