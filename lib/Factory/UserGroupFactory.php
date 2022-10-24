@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -523,6 +523,11 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'campaign.modify',
                     'group' => 'campaigns',
                     'title' => __('Allow edits including deletion to all created Campaigns')
+                ],
+                'ad.campaign' => [
+                    'feature' => 'ad.campaign',
+                    'group' => 'campaigns',
+                    'title' => __('Access to Ad Campaigns')
                 ],
                 'template.view' => [
                     'feature' => 'template.view',

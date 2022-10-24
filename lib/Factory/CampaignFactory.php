@@ -88,6 +88,7 @@ class CampaignFactory extends BaseFactory
 
     /**
      * Create Campaign
+     * @param string $type
      * @param string $name
      * @param int $userId
      * @param string $tags
@@ -95,9 +96,10 @@ class CampaignFactory extends BaseFactory
      * @return Campaign
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function create($name, $userId, $tags, $folderId)
+    public function create($type, $name, $userId, $tags, $folderId)
     {
         $campaign = $this->createEmpty();
+        $campaign->type = $type;
         $campaign->ownerId = $userId;
         $campaign->campaign = $name;
         $campaign->folderId = $folderId;
