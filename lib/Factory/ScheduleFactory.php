@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -205,6 +205,7 @@ class ScheduleFactory extends BaseFactory
                 schedule.syncTimezone,
                 schedule.syncEvent,
                 schedule.shareOfVoice,
+                schedule.maxPlaysPerHour,
                 schedule.isGeoAware,
                 schedule.geoLocation,
                 schedule.actionTriggerCode,
@@ -309,6 +310,7 @@ class ScheduleFactory extends BaseFactory
             `schedule`.syncTimezone,
             `schedule`.syncEvent,
             `schedule`.shareOfVoice,
+            `schedule`.maxPlaysPerHour,
             `schedule`.isGeoAware,
             `schedule`.geoLocation,
             `schedule`.actionTriggerCode,
@@ -454,7 +456,18 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone', 'isAlways', 'isCustom', 'syncEvent', 'recurrenceMonthlyRepeatsOn', 'isGeoAware']]);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'isPriority',
+                    'syncTimezone',
+                    'isAlways',
+                    'isCustom',
+                    'syncEvent',
+                    'recurrenceMonthlyRepeatsOn',
+                    'isGeoAware',
+                    'maxPlaysPerHour',
+                ]
+            ]);
         }
 
         return $entries;
