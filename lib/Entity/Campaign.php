@@ -180,6 +180,7 @@ class Campaign implements \JsonSerializable
     public $createdAt;
     public $modifiedAt;
     public $modifiedBy;
+    public $modifiedByName;
 
     /**
      * @var Layout[]
@@ -324,6 +325,10 @@ class Campaign implements \JsonSerializable
      */
     public function validate()
     {
+        if ($this->type !== 'list' && $this->type !== 'ad') {
+            throw new InvalidArgumentException(__('Invalid type'), 'type');
+        }
+
         if (!v::stringType()->notEmpty()->validate($this->campaign)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
         }
@@ -648,15 +653,37 @@ class Campaign implements \JsonSerializable
      */
     private function add()
     {
-        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, cyclePlaybackEnabled, playCount, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :cyclePlaybackEnabled, :playCount, :folderId, :permissionsFolderId)', array(
+        $this->campaignId = $this->getStore()->insert('
+            INSERT INTO `campaign` (
+                campaign,
+                type,
+                isLayoutSpecific,
+                userId,
+                cyclePlaybackEnabled,
+                playCount,
+                folderId,
+                permissionsFolderId
+            ) 
+            VALUES (
+                :campaign,
+                :type,
+                :isLayoutSpecific,
+                :userId,
+                :cyclePlaybackEnabled,
+                :playCount,
+                :folderId,
+                :permissionsFolderId
+            )
+        ', [
             'campaign' => $this->campaign,
+            'type' => $this->type,
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
-        ));
+        ]);
     }
 
     /**

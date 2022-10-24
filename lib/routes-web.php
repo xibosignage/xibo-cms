@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -358,7 +358,10 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/campaign/form/copy/{id}', ['\Xibo\Controller\Campaign', 'copyForm'])->setName('campaign.copy.form');
     $group->get('/campaign/form/delete/{id}', ['\Xibo\Controller\Campaign', 'deleteForm'])->setName('campaign.delete.form');
     $group->get('/campaign/form/retire/{id}', ['\Xibo\Controller\Campaign', 'retireForm'])->setName('campaign.retire.form');
-    $group->get('/campaign/form/layouts/{id}', ['\Xibo\Controller\Campaign', 'layoutsForm'])->setName('campaign.layouts.form');
+
+    $group->get('/campaign-builder/{id}', ['\Xibo\Controller\Campaign', 'displayCampaignBuilder'])
+        ->addMiddleware(new FeatureAuth($group->getContainer(), ['ad.campaign']))
+        ->setName('campaign.builder');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
 
 $app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolderForm'])

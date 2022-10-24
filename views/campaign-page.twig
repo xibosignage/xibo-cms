@@ -300,7 +300,7 @@
         // Fired when the media form opens
         function campaignAssignLayoutsFormOpen(dialog) {
             // setup checkbox behaviour for cycle based playback
-            formHelpers.setupCheckboxInputFields($(dialog).find('form:not(.form-inline)'), '#cyclePlaybackEnabled', '.cycle-based-playback');
+            formHelpers.setupCheckboxInputFields($(dialog).find('form:not(.form-inline)'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback');
 
             // Layout element template
             var layoutElementTemplate = Handlebars.compile($("#campaign-assign-layout").html());
@@ -470,6 +470,35 @@
                     name: 'layoutIds[' + i + ']'
                 }).val(finalLayoutPositions[i]).appendTo($form.find('#assignLayouts'));
             }
+        }
+
+        /**
+         * Called when the campaign add form is opened
+         * @param dialog
+         */
+        function campaignAddFormOpen(dialog) {
+          // setup checkbox behaviour for cycle based playback
+          formHelpers.setupCheckboxInputFields($(dialog).find('form'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback');
+          $(dialog).find('select[name=type]').on('change', function () {
+            $(dialog).find('.campaign-type-list').toggle($(this).val() === 'list');
+            $(dialog).find('.cycle-based-playback').toggle($('input[name="cyclePlaybackEnabled"]').is(':checked'));
+          });
+        }
+
+        /**
+         * Called when the campaign add form is submitted.
+         * @param xhr
+         * @param form
+         */
+        function campaignAddFormSubmitCallback(xhr, form) {
+          if (xhr.success) {
+            if (xhr.data.type === 'ad') {
+              // Navigate to the campaign builder
+            } else {
+              // Open the edit form.
+              XiboFormRender($(form).data("editFormUrl").replace(':id', xhr.data.campaignId));
+            }
+          }
         }
     </script>
 

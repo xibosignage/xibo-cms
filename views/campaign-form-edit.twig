@@ -26,7 +26,8 @@
 {% import "inline.twig" as inline %}
 
 {% block formTitle %}
-    {% trans "Edit Campaign" %}
+    {% set campaignName = campaign.campaign %}
+    {% trans %}Edit Campaign "{{ campaignName }}"{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}
@@ -87,11 +88,11 @@
 
                 {% set title %}{% trans "Enable cycle based playback" %}{% endset %}
                 {% set helpText %}{% trans "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved." %}{% endset %}
-                {{ forms.checkbox("cyclePlaybackEnabled", title, campaign.cyclePlaybackEnabled, helpText) }}
+                {{ forms.checkbox("cyclePlaybackEnabled", title, campaign.cyclePlaybackEnabled, helpText, "campaign-type-list", null, false, "input-cycle-playback-enabled") }}
 
                 {% set title %}{% trans "Play count" %}{% endset %}
                 {% set helpText %}{% trans "In cycle based playback, how many plays should each Layout have before moving on?" %}{% endset %}
-                {{ forms.number("playCount", title, campaign.playCount, helpText, 'cycle-based-playback') }}
+                {{ forms.number("playCount", title, campaign.playCount, helpText, "cycle-based-playback campaign-type-list") }}
 
                 <div id="assignLayouts"></div>
             </form>
@@ -99,8 +100,6 @@
     </div>
     <div class="row">
         <div class="col-md-12 card p-3 mb-3 bg-light">
-            {% set campaignName = campaign.campaign %}
-            <h4>{% trans %}Layouts on {{campaignName}}{% endtrans %}</h4>
             <div id="LayoutAssign" class="card p-3 mb-3 bg-light" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
                     <ul id="LayoutAssignSortable" data-layouts="{{layouts|json_encode()}}"></ul>
