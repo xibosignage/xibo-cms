@@ -27,7 +27,7 @@ namespace Xibo\Entity;
  * @package Xibo\Entity
  *
  */
-class ReportResult
+class ReportResult implements \JsonSerializable
 {
     /**
      * Number of total records
@@ -64,21 +64,18 @@ class ReportResult
      * @param array $metadata
      * @param array $table
      * @param int $recordsTotal
-     * @param null|array $chart
-     * @param bool|false $hasChartData
+     * @param array $chart
      */
     public function __construct(
         array $metadata = [],
         array $table = [],
-        $recordsTotal = 0,
-        $chart = null,
-        $hasChartData = false
+        int   $recordsTotal = 0,
+        array $chart = []
     ) {
         $this->metadata = $metadata;
         $this->table = $table;
-        $this->chart = $chart;
-        $this->hasChartData = $hasChartData;
         $this->recordsTotal = $recordsTotal;
+        $this->chart = $chart;
 
         return $this;
     }
@@ -96,5 +93,15 @@ class ReportResult
     public function countLast(): int
     {
         return $this->recordsTotal;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'metadata' => $this->metadata,
+            'table' => $this->table,
+            'recordsTotal' => $this->recordsTotal,
+            'chart' => $this->chart
+        ];
     }
 }

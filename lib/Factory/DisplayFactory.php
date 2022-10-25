@@ -304,6 +304,15 @@ class DisplayFactory extends BaseFactory
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
         }
 
+        // Restrict to members of display groups
+        if ($parsedBody->getIntArray('displayGroupIds') !== null) {
+            $body .= '
+                INNER JOIN `lkdisplaydg` othergroups
+                ON othergroups.displayId = `display`.displayId
+                    AND othergroups.displayGroupId IN (' . implode(',', $parsedBody->getIntArray('displayGroupIds')) . ')
+            ';
+        }
+
         $body .= ' WHERE 1 = 1 ';
 
         // Filter by map bound?

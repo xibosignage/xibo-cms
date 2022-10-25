@@ -53,7 +53,7 @@
     }
 
     /* Reports of summary, distribution */
-    #reportChart {
+    #canvas {
         max-width: 25cm;
         max-height: 7cm;
     }
