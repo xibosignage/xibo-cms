@@ -191,49 +191,30 @@ class TimeConnected implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        $metadata = [
+            'periodStart' => $json['metadata']['periodStart'],
+            'periodEnd' => $json['metadata']['periodEnd'],
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                ->format(DateFormatHelper::getSystemFormat()),
+            'title' => $savedReport->saveAs,
+        ];
+
         // Report result object
         return new ReportResult(
-            [
-                'periodStart' => $json['metadata']['periodStart'],
-                'periodEnd' => $json['metadata']['periodEnd'],
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
-                    ->format(DateFormatHelper::getSystemFormat()),
-                'title' => $savedReport->saveAs,
-            ],
+            $metadata,
             $json['table'],
             $json['recordsTotal'],
-            $json['chart'],
-            $json['hasChartData']
+            $json['chart']
         );
     }
 
     /** @inheritdoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
-        $displayIds = [];
+        // Filter by displayId?
+        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
-        // Get an array of display id this user has access to.
-        $accessibleDisplayIds = $this->getDisplayIdFilter($sanitizedParams);
 
-        if (count($displayGroupIds) > 0) {
-            foreach ($displayGroupIds as $displayGroupId) {
-                // Get all displays by Display Group
-                $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
-                foreach ($displays as $display) {
-                    if (in_array($display->displayId, $accessibleDisplayIds)) {
-                        // User has access to the display
-                        $displayIds[] = $display->displayId;
-                    }
-                }
-            }
-        } else {
-            $displayIds = $accessibleDisplayIds;
-        }
-
-        if (count($displayIds) <= 0) {
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-        }
 
         // From and To Date Selection
         // --------------------------
@@ -366,10 +347,7 @@ class TimeConnected implements ReportInterface
             [
                 'timeConnected' => $timeConnected,
                 'displays' => $displays
-            ],
-            0,
-            [],
-            true // to set state->extra
+            ]
         );
     }
 

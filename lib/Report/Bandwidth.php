@@ -122,19 +122,20 @@ class Bandwidth implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        $metadata = [
+            'periodStart' => $json['metadata']['periodStart'],
+            'periodEnd' => $json['metadata']['periodEnd'],
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                ->format(DateFormatHelper::getSystemFormat()),
+            'title' => $savedReport->saveAs,
+        ];
+
         // Report result object
         return new ReportResult(
-            [
-                'periodStart' => $json['metadata']['periodStart'],
-                'periodEnd' => $json['metadata']['periodEnd'],
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
-                    ->format(DateFormatHelper::getSystemFormat()),
-                'title' => $savedReport->saveAs,
-            ],
+            $metadata,
             $json['table'],
             $json['recordsTotal'],
-            $json['chart'],
-            $json['hasChartData']
+            $json['chart']
         );
     }
 
@@ -211,7 +212,13 @@ class Bandwidth implements ReportInterface
 
         $SQL .= ' FROM `bandwidth` ' .
                 $joinType . ' `display`
-                ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+                ON display.displayid = bandwidth.displayid    ';
+
+
+        // Displays
+        if (count($displayIds) > 0) {
+            $SQL .= ' AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
 
         if ($displayId != 0) {
             $SQL .= '
@@ -255,19 +262,32 @@ class Bandwidth implements ReportInterface
         $data = [];
         $backgroundColor = [];
 
-        foreach ($results as $row) {
-            // label depends whether we are filtered by display
-            if ($displayId != 0) {
-                $labels[] = $row['type'];
-            } else {
-                $labels[] = $row['display'] === null ? __('Deleted Displays') : $row['display'];
-            }
-            $backgroundColor[] = ($row['display'] === null) ? 'rgb(255,0,0)' : 'rgb(11, 98, 164)';
-            $data[] = round((double)$row['size'] / (pow(1024, $base)), 2);
-        }
+        $rows = [];
+
 
         // Set up some suffixes
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
+        foreach ($results as $row) {
+            // label depends whether we are filtered by display
+            if ($displayId != 0) {
+                $label = $row['type'];
+                $labels[] = $label;
+            } else {
+                $label = $row['display'] === null ? __('Deleted Displays') : $row['display'];
+                $labels[] = $label;
+            }
+            $backgroundColor[] = ($row['display'] === null) ? 'rgb(255,0,0)' : 'rgb(11, 98, 164)';
+            $bandwidth = round((double)$row['size'] / (pow(1024, $base)), 2);
+            $data[] = $bandwidth;
+
+            // ----
+            // Build Tabular data
+            $entry = [];
+            $entry['label'] = $label;
+            $entry['bandwidth'] = $bandwidth;
+            $entry['unit'] = (isset($suffixes[$base]) ? $suffixes[$base] : '');
+            $rows[] = $entry;
+        }
 
         //
         // Output Results
@@ -302,19 +322,23 @@ class Bandwidth implements ReportInterface
             ]
         ];
 
+        $metadata =   [
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+        ];
+
+        // Total records
+        $recordsTotal = count($rows);
+
         // ----
         // Chart Only
         // Return data to build chart/table
         // This will get saved to a json file when schedule runs
         return new ReportResult(
-            [
-                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            ],
-            [],
-            0,
-            $chart,
-            count($data) > 0
+            $metadata,
+            $rows,
+            $recordsTotal,
+            $chart
         );
     }
 }

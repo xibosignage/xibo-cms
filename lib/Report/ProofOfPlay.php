@@ -36,6 +36,7 @@ use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -154,6 +155,7 @@ class ProofOfPlay implements ReportInterface
         $filterCriteria = [
             'filter' => $filter,
             'displayId' => $sanitizedParams->getInt('displayId'),
+            'displayIds' => $sanitizedParams->getIntArray('displayIds'),
             'layoutIds' => $sanitizedParams->getIntArray('layoutId'),
             'mediaIds' => $sanitizedParams->getIntArray('mediaId'),
             'type' => $sanitizedParams->getString('type'),
@@ -315,7 +317,6 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $displayId = $sanitizedParams->getInt('displayId');
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
         $type = strtolower($sanitizedParams->getString('type'));
@@ -324,25 +325,13 @@ class ProofOfPlay implements ReportInterface
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
 
-        // Do not filter by display if super admin and no display is selected
-        // Super admin will be able to see stat records of deleted display, we will not filter by display later
-        $displayIds = [];
-
-        // Get user
-        $user = $this->getUser();
-
         // Display filter.
-        if (!$user->isSuperAdmin()) {
+        try {
             // Get an array of display id this user has access to.
             $displayIds = $this->getDisplayIdFilter($sanitizedParams);
-
-            // If we don't have permission to any displays, then filter by one we know not to exist.
-            if (count($displayIds) <= 0) {
-                $displayIds = [-1];
-            }
-        } else if ($displayId !== null) {
-            // Super admin, so only filter if we've selected one.
-            $displayIds[] = $displayId;
+        } catch (GeneralException $exception) {
+            // stop the query
+            return new ReportResult();
         }
 
         // web
@@ -354,16 +343,8 @@ class ProofOfPlay implements ReportInterface
             if (is_array($sortOrder)) {
                 $columns = $sortOrder;
             }
-
-            // Paging
-            $start = intval($sanitizedParams->getInt('start'), 0);
-            $length = $sanitizedParams->getInt('length', ['default' => 10]);
         } else {
-            // xtr
-            $start = 0;
-            $length = -1;
             $sortBy = $sanitizedParams->getString('sortBy');
-
             $columns = ($sortBy == '') ? ['widgetId'] : [$sortBy];
         }
 
@@ -463,9 +444,7 @@ class ProofOfPlay implements ReportInterface
                 $tags,
                 $tagsType,
                 $exactTags,
-                $operator,
-                $start,
-                $length
+                $operator
             );
         } else {
             $result = $this->getProofOfPlayReportMySql(
@@ -479,9 +458,7 @@ class ProofOfPlay implements ReportInterface
                 $tags,
                 $tagsType,
                 $exactTags,
-                $operator,
-                $start,
-                $length
+                $operator
             );
         }
 
@@ -512,7 +489,6 @@ class ProofOfPlay implements ReportInterface
             $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
 
-
             $rows[] = $entry;
         }
 
@@ -522,11 +498,7 @@ class ProofOfPlay implements ReportInterface
             'periodEnd' => $result['periodEnd'],
         ];
 
-        // Paging
-        $recordsTotal = 0;
-        if ($result['count'] > 0) {
-            $recordsTotal = intval($result['totalStats']);
-        }
+        $recordsTotal = $result['count'];
 
         // ----
         // Table Only
@@ -551,8 +523,6 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
-     * @param $start int
-     * @param $length int
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      */
     private function getProofOfPlayReportMySql(
@@ -566,9 +536,7 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $logicalOperator,
-        $start,
-        $length
+        $logicalOperator
     ) {
         $fromDt = $fromDt->format('U');
         $toDt = $toDt->format('U');
@@ -805,13 +773,8 @@ class ProofOfPlay implements ReportInterface
             $order = 'ORDER BY ' . implode(',', $columns);
         }
 
-        $limit= '';
-        if (($length != null) && ($length != -1)) {
-            $limit = ' LIMIT ' . $start . ', ' . $length;
-        }
-
         /*Execute sql statement*/
-        $sql = $select . $body . $order . $limit;
+        $sql = $select . $body . $order;
 
         $rows = [];
         foreach ($this->store->select($sql, $params) as $row) {
@@ -834,20 +797,11 @@ class ProofOfPlay implements ReportInterface
             $rows[] = $entry;
         }
 
-        // Paging
-        $results = [];
-        if ($limit != '' && count($rows) > 0) {
-            $results = $this->store->select('
-              SELECT COUNT(*) AS total FROM (SELECT stat.type, display.Display, layout.Layout, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ' . $body . ') total
-            ', $params);
-        }
-
         return [
-            'result' => $rows,
             'periodStart' => Carbon::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => Carbon::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
-            'count' => count($rows),
-            'totalStats' => $results[0]['total'] ?? 0,
+            'result' => $rows,
+            'count' => count($rows)
         ];
     }
 
@@ -863,8 +817,6 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
-     * @param $start int
-     * @param $length int
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
@@ -880,9 +832,7 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $operator,
-        $start,
-        $length
+        $operator
     ) {
         $fromDt = new UTCDateTime($filterFromDt->format('U')*1000);
         $toDt = new UTCDateTime($filterToDt->format('U')*1000);
@@ -1061,61 +1011,23 @@ class ProofOfPlay implements ReportInterface
             ],
         ];
 
-        // Task run
-        if ($length == -1) {
-            $query = [
-                $match,
-                $project,
-                $group, [
-                    '$facet' => [
-                        'totalData' => [
-                            ['$sort' => $order],
-                        ]
+        $query = [
+            $match,
+            $project,
+            $group, [
+                '$facet' => [
+                    'totalData' => [
+                        ['$sort' => $order],
                     ]
-                ],
+                ]
+            ],
 
-            ];
-        } else { // Frontend
-            $query = [
-                $match,
-                $project,
-                $group,
-                [
-                    '$facet' => [
-                        'totalData' => [
-
-                            ['$skip' => $start],
-                            ['$limit' => $length],
-                            ['$sort' => $order],
-                        ],
-                        'totalCount' => [
-                            [
-                                '$group' => [
-                                    '_id' => [],
-                                    'totals' => ['$sum' => '$total'],
-
-                                ],
-                            ]
-                        ]
-                    ]
-                ],
-            ];
-        }
+        ];
 
         $result = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->table, 'query' => $query]);
 
-        $totalStats = 0;
         $rows = [];
         if (count($result) > 0) {
-            if ($length == -1) { // Task run
-                $totalCount = [];
-            } else { // Get total for pagination in UI (grid)
-                $totalCount = $result[0]['totalCount'];
-            }
-
-            if (count($totalCount) > 0) {
-                $totalStats = $totalCount[0]['totals'];
-            }
 
             // Grid results
             foreach ($result[0]['totalData'] as $row) {
@@ -1140,11 +1052,10 @@ class ProofOfPlay implements ReportInterface
         }
 
         return [
-            'result' => $rows,
             'periodStart' => $filterFromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $filterToDt->format(DateFormatHelper::getSystemFormat()),
-            'count' => count($rows),
-            'totalStats' => $totalStats,
+            'result' => $rows,
+            'count' => count($rows)
         ];
     }
 }

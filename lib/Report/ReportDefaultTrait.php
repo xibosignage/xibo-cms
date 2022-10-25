@@ -23,6 +23,7 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
+use http\Exception\RuntimeException;
 use Psr\Log\NullLogger;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ReportResult;
@@ -279,31 +280,55 @@ trait ReportDefaultTrait
     }
 
     /**
+     * Get an array of displayIds we should pass into the query,
+     *  if an exception is thrown, we should stop the report and return no results.
      * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
-     * @return array
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return array displayIds
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function getDisplayIdFilter(SanitizerInterface $params): array
     {
-        // Filter by displayId?
         $displayIds = [];
+
+        // Filters
         $displayId = $params->getInt('displayId');
+        $displayGroupIds = $params->getIntArray('displayGroupId', ['default' => null]);
 
         if ($displayId !== null) {
-            $display = $this->displayFactory->getById($displayId);
-            if ($this->getUser()->checkViewable($display)) {
+
+            // Don't bother checking if we are a super admin
+            if (!$this->getUser()->isSuperAdmin()) {
+                $display = $this->displayFactory->getById($displayId);
+                if ($this->getUser()->checkViewable($display)) {
+                    $displayIds[] = $displayId;
+                }
+            } else {
                 $displayIds[] = $displayId;
             }
         } else {
-            // Get an array of display id this user has access to.
+
+            // If we are NOT a super admin OR we have some display group filters
+            // get an array of display id this user has access to.
             // we cannot rely on the logged-in user because this will be run by the task runner which is a sysadmin
-            foreach ($this->displayFactory->query(null, ['userCheckUserId' => $this->getUser()->userId]) as $display) {
-                $displayIds[] = $display->displayId;
+            if (!$this->getUser()->isSuperAdmin() || $displayGroupIds !== null) {
+
+                // This will be the displayIds the user has access to, and are in the displayGroupIds provided.
+                foreach ($this->displayFactory->query(
+                    null,
+                    [
+                        'userCheckUserId' => $this->getUser()->userId,
+                        'displayGroupIds' => $displayGroupIds,
+                    ]
+                ) as $display) {
+                    $displayIds[] = $display->displayId;
+                }
             }
         }
 
-        if (count($displayIds) <= 0) {
+        // If we are a super admin without anything filtered, the object of this method is to return an empty
+        // array.
+        // If we are any other user, we must return something in the array.
+        if (!$this->getUser()->isSuperAdmin() && count($displayIds) <= 0) {
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
         }
 
