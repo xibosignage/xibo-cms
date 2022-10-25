@@ -69,7 +69,8 @@ class Controllers
                     $c->get('campaignFactory'),
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('displayGroupFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

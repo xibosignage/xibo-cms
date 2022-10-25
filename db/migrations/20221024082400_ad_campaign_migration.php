@@ -111,5 +111,19 @@ class AdCampaignMigration extends AbstractMigration
                 'default' => 0,
             ])
             ->save();
+
+        $this->table('lkcampaigndisplaygroup', [
+            'id' => false,
+            'primary_key' => ['campaignId', 'displayGroupId']
+        ])
+            ->addColumn('campaignId', 'integer', [
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+            ])
+            ->addColumn('displayGroupId', 'integer', [
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+            ])
+            ->addForeignKey('campaignId', 'campaign', 'campaignId')
+            ->addForeignKey('displayGroupId', 'displaygroup', 'displayGroupId')
+            ->save();
     }
 }
