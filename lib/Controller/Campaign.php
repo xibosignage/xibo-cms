@@ -926,7 +926,7 @@ class Campaign extends Base
 
         // If we are an ad campaign, then expect some other parameters.
         if ($campaign->type === 'ad') {
-            // TODO: dayParts[], geoFence[]
+            // TODO: dayPartId, geoFence
         }
 
         // Assign to the campaign

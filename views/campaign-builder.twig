@@ -218,7 +218,7 @@
             ] %}
             {% set title %}{% trans "Dayparting" %}{% endset %}
             {% set helpText %}{% trans "Should this layout only be shown on selected day parts?" %}{% endset %}
-            {{ forms.dropdown("dayPartId[]", "dropdownmulti", title, null, null, "dayPartId", "name", helpText, "", "", "", "", attributes) }}
+            {{ forms.dropdown("dayPartId", "single", title, null, null, "dayPartId", "name", helpText, "", "", "", "", attributes) }}
 
             {{ forms.hidden("geoLocation", event.geoLocation) }}
 
