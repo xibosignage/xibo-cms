@@ -36,12 +36,6 @@ class ReportResult implements \JsonSerializable
     public $recordsTotal;
 
     /**
-     * Is it a chart based report?
-     * @var bool|false
-     */
-    public $hasChartData;
-
-    /**
      * Chart data points
      * @var array|null
      */
