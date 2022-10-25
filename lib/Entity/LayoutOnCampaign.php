@@ -31,6 +31,6 @@ class LayoutOnCampaign implements \JsonSerializable
     public $layoutId;
     public $displayOrder;
 
-    public $dayParts = [];
+    public $dayPartId;
     public $geoFence;
 }
