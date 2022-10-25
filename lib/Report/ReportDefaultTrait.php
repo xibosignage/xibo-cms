@@ -295,7 +295,6 @@ trait ReportDefaultTrait
         $displayGroupIds = $params->getIntArray('displayGroupId', ['default' => null]);
 
         if ($displayId !== null) {
-
             // Don't bother checking if we are a super admin
             if (!$this->getUser()->isSuperAdmin()) {
                 $display = $this->displayFactory->getById($displayId);
@@ -306,12 +305,10 @@ trait ReportDefaultTrait
                 $displayIds[] = $displayId;
             }
         } else {
-
             // If we are NOT a super admin OR we have some display group filters
             // get an array of display id this user has access to.
             // we cannot rely on the logged-in user because this will be run by the task runner which is a sysadmin
             if (!$this->getUser()->isSuperAdmin() || $displayGroupIds !== null) {
-
                 // This will be the displayIds the user has access to, and are in the displayGroupIds provided.
                 foreach ($this->displayFactory->query(
                     null,

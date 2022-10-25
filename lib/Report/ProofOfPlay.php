@@ -1028,7 +1028,6 @@ class ProofOfPlay implements ReportInterface
 
         $rows = [];
         if (count($result) > 0) {
-
             // Grid results
             foreach ($result[0]['totalData'] as $row) {
                 $entry = [];
