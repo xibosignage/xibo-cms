@@ -58,6 +58,9 @@ class Campaign extends Base
     /** @var FolderFactory */
     private $folderFactory;
 
+    /** @var \Xibo\Factory\DisplayGroupFactory */
+    private $displayGroupFactory;
+
     /**
      * Set common dependencies.
      * @param CampaignFactory $campaignFactory
@@ -65,12 +68,13 @@ class Campaign extends Base
      * @param TagFactory $tagFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($campaignFactory, $layoutFactory, $tagFactory, $folderFactory)
+    public function __construct($campaignFactory, $layoutFactory, $tagFactory, $folderFactory, $displayGroupFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
         $this->folderFactory = $folderFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -106,9 +110,18 @@ class Campaign extends Base
             throw new InvalidArgumentException(__('This campaign is not compatible with the Campaign builder'));
         }
 
+        // Load in our current display groups for the form.
+        $displayGroups = [];
+        $displayGroupIds = $campaign->loadDisplayGroupIds();
+        foreach ($displayGroupIds as $displayGroupId) {
+            $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
+        }
+
         $this->getState()->template = 'campaign-builder';
         $this->getState()->setData([
             'campaign' => $campaign,
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
         ]);
         return $this->render($request, $response);
     }
@@ -689,53 +702,68 @@ class Campaign extends Base
             $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
-        // Cycle based playback
-        $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
-        $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
+        // What type of campaign are we editing?
+        if ($campaign->type === 'ad') {
+            // Ad campaign
+            // -----------
+            $campaign->startDt = $parsedRequestParams->getDate('startDt')->format('U');
+            $campaign->endDt = $parsedRequestParams->getDate('endDt')->format('U');
+            $campaign->playCount = $parsedRequestParams->getInt('playCount');
 
-        // Assign layouts?
-        if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
-            // Can't assign layouts to an ad campaign during creation
-            if ($campaign->type === 'ad') {
-                throw new InvalidArgumentException(
-                    __('Cannot assign layouts to an ad campaign during its creation'),
-                    'layoutIds'
-                );
+            // Display groups
+            $displayGroupIds = [];
+            foreach ($parsedRequestParams->getIntArray('displayGroupIds') as $displayGroupId) {
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+                if (!$this->getUser()->checkViewable($displayGroup)) {
+                    throw new AccessDeniedException();
+                }
+                $displayGroupIds[] = $displayGroup->displayGroupId;
             }
 
-            // Fully decorate our Campaign
-            $this->getDispatcher()->dispatch(new CampaignLoadEvent($campaign), CampaignLoadEvent::$NAME);
+            $campaign->replaceDisplayGroupIds($displayGroupIds);
+        } else {
+            // Cycle based playback
+            $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
+            $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
 
-            // Remove all we've currently got assigned, keeping track of them for sharing check
-            $originalLayoutAssignments = array_map(function ($element) {
-                return $element->layoutId;
-            }, $campaign->getLayouts());
+            // Assign layouts?
+            if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
+                // Fully decorate our Campaign
+                $this->getDispatcher()->dispatch(new CampaignLoadEvent($campaign), CampaignLoadEvent::$NAME);
 
-            $campaign->unassignAllLayouts();
+                // Remove all we've currently got assigned, keeping track of them for sharing check
+                $originalLayoutAssignments = array_map(function ($element) {
+                    return $element->layoutId;
+                }, $campaign->getLayouts());
 
-            foreach ($parsedRequestParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
-                // Check permissions.
-                $layout = $this->layoutFactory->getById($layoutId);
+                $campaign->unassignAllLayouts();
 
-                if (!$this->getUser()->checkViewable($layout) && !in_array($layoutId, $originalLayoutAssignments)) {
-                    throw new AccessDeniedException(__('You are trying to assign a Layout that is not shared with you.'));
+                foreach ($parsedRequestParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+                    // Check permissions.
+                    $layout = $this->layoutFactory->getById($layoutId);
+
+                    if (!$this->getUser()->checkViewable($layout) && !in_array($layoutId, $originalLayoutAssignments)) {
+                        throw new AccessDeniedException(
+                            __('You are trying to assign a Layout that is not shared with you.')
+                        );
+                    }
+
+                    // Assign.
+                    $campaign->assignLayout($layout);
                 }
-
-                // Assign.
-                $campaign->assignLayout($layout);
             }
         }
 
+        // Tags
+        // ----
+        $saveTags = false;
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
-            $campaign->save([
-                'saveTags' => true
-            ]);
-        } else {
-            $campaign->save([
-                'saveTags' => false
-            ]);
+            $saveTags = true;
         }
+
+        // Save the campaign.
+        $campaign->save(['saveTags' => $saveTags]);
 
         // Return
         $this->getState()->hydrate([
@@ -862,7 +890,7 @@ class Campaign extends Base
      *  )
      * )
      */
-    public function assignLayout( Request $request, Response $response, $id)
+    public function assignLayout(Request $request, Response $response, $id)
     {
         $this->getLog()->debug('assignLayout with campaignId ' . $id);
 
@@ -874,10 +902,13 @@ class Campaign extends Base
 
         // Make sure this is a non-layout specific campaign
         if ($campaign->isLayoutSpecific == 1) {
-            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'), 'campaignId');
+            throw new InvalidArgumentException(
+                __('You cannot change the assignment of a Layout Specific Campaign'),
+                'campaignId'
+            );
         }
 
-        $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+        $this->getDispatcher()->dispatch(new CampaignLoadEvent($campaign), CampaignLoadEvent::$NAME);
 
         // Get the layout we want to add
         $params = $this->getSanitizer($request->getParams());
@@ -891,6 +922,11 @@ class Campaign extends Base
 
         if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
+        }
+
+        // If we are an ad campaign, then expect some other parameters.
+        if ($campaign->type === 'ad') {
+            // TODO: dayParts[], geoFence[]
         }
 
         // Assign to the campaign

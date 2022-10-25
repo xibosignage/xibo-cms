@@ -35,13 +35,13 @@
     </div>
 {% endmacro %}
 
-{% macro button(title, type, link, groupClass, id) %}
+{% macro button(title, type, link, groupClass, id, buttonClass) %}
     <div class="form-group row {{ groupClass }}">
         <div class="offset-sm-2 col-sm-10">
             {% if type == "link" %}
-            <a class="btn btn-white" href="{{ link }}">{{ title }}</a>
+            <a class="btn {% if buttonClass %}{{ buttonClass }}{% else %}btn-white{% endif %}" href="{{ link }}">{{ title }}</a>
             {% else %}
-            <button id="{{ id }}" class="btn btn-white ml-0" type="{{ type }}">{{ title }}</button>
+            <button id="{{ id }}" class="btn {% if buttonClass %}{{ buttonClass }}{% else %}btn-white{% endif %} ml-0" type="{{ type }}">{{ title }}</button>
             {% endif %}
         </div>
     </div>
@@ -245,10 +245,10 @@
 
                             {% if optionFilter %}
                                 {% if optionFilter[0] is not defined %}
-                                    data-filter-class="{{ attribute(option, optionFilter) }}" 
+                                    data-filter-class="{{ attribute(option, optionFilter) }}"
                                 {% else %}
                                     {% for filter in optionFilter %}
-                                        data-filter{{ loop.index0 }}-class="{{  attribute(option, filter) }}" 
+                                        data-filter{{ loop.index0 }}-class="{{  attribute(option, filter) }}"
                                     {% endfor %}
                                 {% endif %}
                             {% endif %}
@@ -327,7 +327,7 @@
         <div class="offset-sm-2 col-sm-10">
             <div class="checkbox" title="{{ helpText }}">
                 <input type="checkbox" class="bootstrap-switch-target" id="{{ name }}" name="{{ name }}" accesskey="{{ accessKey }}"
-                    {% if value == 1 %}checked{% endif %} 
+                    {% if value == 1 %}checked{% endif %}
                     {% if disabled == 1 %}disabled{% endif %}
                     data-label-text="{{ title }}"
                     {% if onText not in [null, undefined, ""] %} data-on-text="{{ onText }}"{% endif %}

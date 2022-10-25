@@ -23,6 +23,7 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -187,6 +188,9 @@ class Campaign implements \JsonSerializable
      */
     public $layouts = [];
 
+    /** @var int[] */
+    public $displayGroupIds = [];
+
     /**
      * @var Permission[]
      */
@@ -202,6 +206,8 @@ class Campaign implements \JsonSerializable
 
     /** @var bool Have the Layout assignments changed? */
     private $layoutAssignmentsChanged = false;
+
+    private $displayGroupAssignmentsChanged = false;
 
     /**
      * @var PermissionFactory
@@ -286,6 +292,22 @@ class Campaign implements \JsonSerializable
     }
 
     /**
+     * @return \Carbon\Carbon|false
+     */
+    public function getStartDt()
+    {
+        return Carbon::createFromFormat('U', $this->startDt);
+    }
+
+    /**
+     * @return \Carbon\Carbon|false
+     */
+    public function getEndDt()
+    {
+        return Carbon::createFromFormat('U', $this->endDt);
+    }
+
+    /**
      * @param array $options
      * @throws NotFoundException
      */
@@ -294,7 +316,8 @@ class Campaign implements \JsonSerializable
         $options = array_merge([
             'loadPermissions' => true,
             'loadTags' => true,
-            'loadEvents' => true
+            'loadEvents' => true,
+            'loadDisplayGroupIds' => true,
         ], $options);
 
         // If we are already loaded, then don't do it again
@@ -317,6 +340,10 @@ class Campaign implements \JsonSerializable
             $this->events = $this->scheduleFactory->getByCampaignId($this->campaignId);
         }
 
+        if ($options['loadDisplayGroupIds']) {
+            $this->displayGroupIds = $this->loadDisplayGroupIds();
+        }
+
         $this->loaded = true;
     }
 
@@ -335,6 +362,16 @@ class Campaign implements \JsonSerializable
 
         if ($this->cyclePlaybackEnabled === 1 && empty($this->playCount)) {
             throw new InvalidArgumentException(__('Please enter play count'), 'playCount');
+        }
+
+        if ($this->type === 'ad') {
+            if ($this->playCount <= 0) {
+                throw new InvalidArgumentException(__('Please enter play count'), 'playCount');
+            }
+
+            if (count($this->displayGroupIds) <= 0) {
+                throw new InvalidArgumentException(__('Please select one or more displays'), 'displayGroupId[]');
+            }
         }
     }
 
@@ -473,6 +510,7 @@ class Campaign implements \JsonSerializable
                 }
             }
         }
+
         // Manage assignments
         $this->manageAssignments();
 
@@ -648,6 +686,28 @@ class Campaign implements \JsonSerializable
         return $this;
     }
 
+    public function loadDisplayGroupIds(): array
+    {
+        $displayGroupIds = [];
+        foreach ($this->getStore()->select('SELECT * FROM lkcampaigndisplaygroup WHERE campaignId = :campaignId', [
+            'campaignId' => $this->campaignId,
+        ]) as $link) {
+            $displayGroupIds[] = intval($link['displayGroupId']);
+        }
+        return $displayGroupIds;
+    }
+
+    /**
+     * @param $displayGroupIds
+     * @return $this
+     */
+    public function replaceDisplayGroupIds($displayGroupIds): Campaign
+    {
+        $this->displayGroupAssignmentsChanged = true;
+        $this->displayGroupIds = $displayGroupIds;
+        return $this;
+    }
+
     /**
      * Add
      */
@@ -691,12 +751,25 @@ class Campaign implements \JsonSerializable
      */
     private function update()
     {
-        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, cyclePlaybackEnabled = :cyclePlaybackEnabled, playCount = :playCount, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('
+            UPDATE `campaign`
+                SET campaign = :campaign,
+                    userId = :userId,
+                    cyclePlaybackEnabled = :cyclePlaybackEnabled,
+                    playCount = :playCount,
+                    startDt = :startDt,
+                    endDt = :endDt,
+                    folderId = :folderId,
+                    permissionsFolderId = :permissionsFolderId
+             WHERE campaignID = :campaignId
+        ', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
+            'startDt' => empty($this->startDt) ? null : $this->startDt,
+            'endDt' => empty($this->endDt) ? null : $this->endDt,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ]);
@@ -713,6 +786,23 @@ class Campaign implements \JsonSerializable
             $this->linkLayouts();
         } else {
             $this->getLog()->debug('Assignments have not changed on ' . $this);
+        }
+
+        if ($this->displayGroupAssignmentsChanged) {
+            $this->getStore()->update('DELETE FROM `lkcampaigndisplaygroup` WHERE campaignId = :campaignId', [
+                'campaignId' => $this->campaignId,
+            ]);
+
+            foreach ($this->displayGroupIds as $displayGroupId) {
+                $this->getStore()->update('
+                INSERT INTO `lkcampaigndisplaygroup` (campaignId, displayGroupId) 
+                    VALUES (:campaignId, :displayGroupId)
+                ON DUPLICATE KEY UPDATE campaignId = :campaignId
+            ', [
+                    'campaignId' => $this->campaignId,
+                    'displayGroupId' => $displayGroupId,
+                ]);
+            }
         }
     }
 
