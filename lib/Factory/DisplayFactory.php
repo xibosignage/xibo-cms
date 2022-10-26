@@ -114,8 +114,9 @@ class DisplayFactory extends BaseFactory
     {
         $displays = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'showTags' => $showTags]);
 
-        if (count($displays) <= 0)
+        if (count($displays) <= 0) {
             throw new NotFoundException();
+        }
 
         return $displays[0];
     }
@@ -133,8 +134,9 @@ class DisplayFactory extends BaseFactory
 
         $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
 
-        if (count($displays) <= 0)
+        if (count($displays) <= 0) {
             throw new NotFoundException();
+        }
 
         return $displays[0];
     }
@@ -159,8 +161,9 @@ class DisplayFactory extends BaseFactory
     {
         $parsedBody = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['display'];
+        }
 
         $newSortOrder = [];
         foreach ($sortOrder as $sort) {
@@ -304,6 +307,23 @@ class DisplayFactory extends BaseFactory
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
         }
 
+        // Restrict to members of display groups
+        if ($parsedBody->getIntArray('displayGroupIds') !== null) {
+            $body .= '
+                INNER JOIN `lkdisplaydg` othergroups
+                ON othergroups.displayId = `display`.displayId
+                    AND othergroups.displayGroupId IN (0 
+            ';
+
+            $i = 0;
+            foreach ($parsedBody->getIntArray('displayGroupIds') as $displayGroupId) {
+                $i++;
+                $body .= ',:displayGroupId' . $i;
+                $params['displayGroupId' . $i] = $displayGroupId;
+            }
+            $body .= ')';
+        }
+
         $body .= ' WHERE 1 = 1 ';
 
         // Filter by map bound?
@@ -400,7 +420,6 @@ class DisplayFactory extends BaseFactory
 
         if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) != '') {
             if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) === -1) {
-
                 $body .= ' AND display.mediaInventoryStatus <> 1 ';
             } else {
                 $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';
@@ -415,7 +434,7 @@ class DisplayFactory extends BaseFactory
 
         if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {
             $body .= ' AND display.lastAccessed > :lastAccessed ';
-            $params['lastAccessed'] = $parsedBody->getDate('lastAccessed',['dateFormat' => 'U'])->format('U');
+            $params['lastAccessed'] = $parsedBody->getDate('lastAccessed', ['dateFormat' => 'U'])->format('U');
         }
 
         // Exclude a group?
@@ -432,7 +451,6 @@ class DisplayFactory extends BaseFactory
 
         // Media ID - direct assignment
         if ($parsedBody->getInt('mediaId') !== null) {
-
             $body .= '
                 AND display.displayId IN (
                     SELECT `lkdisplaydg`.displayId
@@ -507,7 +525,8 @@ class DisplayFactory extends BaseFactory
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
                 $displayId = $this->getSanitizer($row)->getInt('displayId');
 
-                if ($this->getStore()->exists('SELECT display.display, display.displayId, displaygroup.displayGroupId
+                if ($this->getStore()->exists(
+                    'SELECT display.display, display.displayId, displaygroup.displayGroupId
                                                     FROM display
                                                       INNER JOIN `lkdisplaydg` 
                                                           ON lkdisplaydg.displayId = `display`.displayId 
@@ -542,7 +561,7 @@ class DisplayFactory extends BaseFactory
         // Sorting?
         $order = '';
 
-        if (isset($members) && $members != [] ) {
+        if (isset($members) && $members != []) {
             $sqlOrderMembers = 'ORDER BY FIELD(display.displayId,' . implode(',', $members) . ')';
 
             foreach ($sortOrder as $sort) {

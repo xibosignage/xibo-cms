@@ -23,10 +23,26 @@
 {% extends "base-report.twig" %}
 
 {% block content %}
-<div>
-    <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
-</div>
-<p></p>
-<span>{{ placeholder }}</span>
-<img src="{{ src|raw }}" >
+    <div>
+        <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
+    </div>
+    <p></p>
+    <span>{{ placeholder }}</span>
+    <img src="{{ src|raw }}" >
+    <p></p>
+
+    <table class="saved-report-table">
+        <tr>
+            <th>{% trans "Period" %}</th>
+            <th>{% trans "Duration" %}</th>
+            <th>{% trans "Count" %}</th>
+        </tr>
+        {% for item in tableData %}
+            <tr>
+                <td>{{ item.label }}</td>
+                <td>{{ item.duration }}</td>
+                <td>{{ item.count }}</td>
+            </tr>
+        {% endfor %}
+    </table>
 {% endblock %}
