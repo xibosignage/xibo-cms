@@ -137,7 +137,7 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->assertNotEmpty($body);
         $object = json_decode($body);
         $this->assertObjectHasAttribute('table', $object, $body);
-        $this->assertSame(1, $object->data[0]->numberPlays);
+        $this->assertSame(1, $object->table[0]->numberPlays);
     }
     
     /**
@@ -160,7 +160,7 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->assertNotEmpty($body);
         $object = json_decode($body);
         $this->assertObjectHasAttribute('table', $object, $response->getBody());
-        $this->assertSame(1, $object->data[0]->numberPlays);
+        $this->assertSame(1, $object->table[0]->numberPlays);
     }
 
     /**
