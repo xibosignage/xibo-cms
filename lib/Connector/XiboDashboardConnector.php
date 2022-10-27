@@ -118,9 +118,9 @@ class XiboDashboardConnector implements ConnectorInterface
 
             // The new key is valid, clear out the old key's credentials.
             if (!empty($existingApiKey)) {
-                foreach ($this->getCredentials() as $credential) {
+                foreach ($this->getCredentials() as $type => $credential) {
                     $this->getClient()->delete(
-                        $this->getServiceUrl() . '/services/' . $credential['type'] . '/' . $credential['id'],
+                        $this->getServiceUrl() . '/services/' . $type . '/' . $credential['id'],
                         [
                             'headers' => [
                                 'X-API-KEY' => $existingApiKey
