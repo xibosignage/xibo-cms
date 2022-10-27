@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
@@ -183,9 +184,7 @@ class Campaign implements \JsonSerializable
     public $modifiedBy;
     public $modifiedByName;
 
-    /**
-     * @var Layout[]
-     */
+    /** @var \Xibo\Entity\LayoutOnCampaign[] */
     public $layouts = [];
 
     /** @var int[] */
@@ -204,10 +203,16 @@ class Campaign implements \JsonSerializable
     // Private
     private $unassignTags = [];
 
+    /** @var bool Have the Layout assignments been loaded? */
+    private $layoutAssignmentsLoaded = false;
+
     /** @var bool Have the Layout assignments changed? */
     private $layoutAssignmentsChanged = false;
 
     private $displayGroupAssignmentsChanged = false;
+
+    /** @var \Xibo\Factory\CampaignFactory */
+    private $campaignFactory;
 
     /**
      * @var PermissionFactory
@@ -237,9 +242,18 @@ class Campaign implements \JsonSerializable
      * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $dispatcher, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        CampaignFactory $campaignFactory,
+        $permissionFactory,
+        $scheduleFactory,
+        $displayNotifyService,
+        $tagFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
+        $this->campaignFactory = $campaignFactory;
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayNotifyService = $displayNotifyService;
@@ -256,7 +270,12 @@ class Campaign implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('CampaignId %d, Campaign %s, LayoutSpecific %d', $this->campaignId, $this->campaign, $this->isLayoutSpecific);
+        return sprintf(
+            'CampaignId %d, Campaign %s, LayoutSpecific %d',
+            $this->campaignId,
+            $this->campaign,
+            $this->isLayoutSpecific
+        );
     }
 
     /**
@@ -345,6 +364,18 @@ class Campaign implements \JsonSerializable
         }
 
         $this->loaded = true;
+    }
+
+    /**
+     * @return \Xibo\Entity\LayoutOnCampaign[]
+     */
+    public function loadLayouts(): array
+    {
+        if (!$this->layoutAssignmentsLoaded && $this->campaignId !== null) {
+            $this->layouts = $this->campaignFactory->getLinkedLayouts($this->campaignId);
+            $this->layoutAssignmentsLoaded = true;
+        }
+        return $this->layouts;
     }
 
     /**
@@ -561,124 +592,108 @@ class Campaign implements \JsonSerializable
     }
 
     /**
-     * @return \Xibo\Entity\Layout[]
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function getLayouts(): array
-    {
-        return $this->layouts;
-    }
-
-    /**
      * Assign Layout
-     * @param Layout $layout
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @param int $layoutId
+     * @param int|null $displayOrder
+     * @param int|null $dayPartId
+     * @param string|null $daysOfWeek
+     * @param string|null $geoFence
+     * @return \Xibo\Entity\LayoutOnCampaign
      */
-    public function assignLayout($layout)
-    {
-        // Validate if we're a full campaign
-        if ($this->isLayoutSpecific === 0) {
-            // Make sure we're not a draft
-            if ($layout->isChild()) {
-                throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
-            }
+    public function assignLayout(
+        int $layoutId,
+        ?int $displayOrder = null,
+        ?int $dayPartId = null,
+        ?string $daysOfWeek = null,
+        ?string $geoFence = null
+    ): LayoutOnCampaign {
+        $this->getLog()->debug('assignLayout: starting with layoutId: ' . $layoutId);
 
-            // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
-            if ($layout->isTemplate()) {
-                throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
-            }
-        }
+        // Load the layouts we do have already
+        $this->loadLayouts();
 
-        $this->load();
+        // Make a new assignment
+        $assignment = $this->campaignFactory->createEmptyLayoutAssignment();
+        $assignment->layoutId = $layoutId;
 
-        $layout->displayOrder = ($layout->displayOrder == null || $layout->displayOrder == 0)
-            ? count($this->layouts) + 1
-            : $layout->displayOrder;
+        // Props
+        $assignment->displayOrder = empty($displayOrder) ? count($this->layouts) + 1 : $displayOrder;
+        $assignment->dayPartId = $dayPartId;
+        $assignment->daysOfWeek = $daysOfWeek;
+        $assignment->geoFence = $geoFence;
 
-        $found = false;
-        foreach ($this->layouts as $existingLayout) {
-            if ($existingLayout->getId() === $layout->getId()
-                    && $existingLayout->displayOrder === $layout->displayOrder
-                    && $this->isLayoutSpecific !== 1) {
-                $found = true;
-                break;
-            }
-        }
+        // We've changed assignments.
+        $this->layoutAssignmentsChanged = true;
+        $this->layouts[] = $assignment;
+        $this->numberLayouts++;
 
-        if (!$found) {
-            $this->getLog()->debug('Layout assignment doesnt exist, adding it. ' . $layout . ', display order ' . $layout->displayOrder);
-            $this->layoutAssignmentsChanged = true;
-            $this->layouts[] = $layout;
-            $this->numberLayouts++;
-        }
+        return $assignment;
     }
 
     /**
      * Unassign Layout
-     * @param Layout $layout
-     * @param bool $unassignCompletely
-     * @throws NotFoundException
+     * @param int $layoutId
+     * @param int|null $displayOrder
+     * @return \Xibo\Entity\Campaign
      */
-    public function unassignLayout($layout, $unassignCompletely = false)
-    {
-        $this->load();
+    public function unassignLayout(
+        int $layoutId,
+        ?int $displayOrder = null
+    ): Campaign {
+        // Load the layouts we do have already
+        $this->loadLayouts();
 
         $countBefore = count($this->layouts);
-        $this->getLog()->debug('Unassigning Layout, count before assign = ' . $countBefore);
+        $this->getLog()->debug('unassignLayout: Count before assign = ' . $countBefore);
 
-        $found = false;
+        // Keep track of keys to remove
         $existingKeys = [];
 
         foreach ($this->layouts as $key => $existing) {
+            $this->getLog()->debug('unassignLayout: Comparing existing ['
+                . $existing->layoutId . ', ' . $existing->displayOrder
+                . '] with unassign [' . $layoutId . ', ' . $displayOrder . '].');
 
-            /** @var Layout $existing */
-            $this->getLog()->debug('Comparing existing [' . $existing->layoutId . ', ' . $existing->displayOrder . '] with unassign [' . $layout->layoutId . ', ' . $layout->displayOrder . '].');
-
-            if (!$unassignCompletely) {
-                if ($layout->displayOrder == null) {
-                    if ($existing->getId() == $layout->getId()) {
-                        $found = true;
-                        $existingKeys[] = $key;
-                        break;
-                    }
-                } else {
-                    if ($existing->getId() == $layout->getId() && $existing->displayOrder == $layout->displayOrder) {
-                        $found = true;
-                        $existingKeys[] = $key;
-                        break;
-                    }
-                }
-            } else {
-                // we came here from Layout delete, make sure to unassign all occurrences of that Layout from the campaign
-                // https://github.com/xibosignage/xibo/issues/1960
-                if ($existing->getId() == $layout->getId()) {
-                    $found = true;
+            // Does this layoutId match?
+            if ($layoutId === $existing->layoutId) {
+                // Are we looking to remove a specific one?
+                if ($displayOrder === null || $displayOrder === $existing->displayOrder) {
                     $existingKeys[] = $key;
+                    $this->layoutAssignmentsChanged = true;
                 }
             }
         }
 
-        if ($found) {
-            foreach ($existingKeys as $existingKey) {
-                $this->getLog()->debug('Removing item at key ' . $existingKey);
-                unset($this->layouts[$existingKey]);
+        // Remove the keys necessary
+        foreach ($existingKeys as $existingKey) {
+            $this->getLog()->debug('Removing item at key ' . $existingKey);
+            unset($this->layouts[$existingKey]);
+        }
+
+        return $this;
+    }
+
+    private function orderLayoutAssignments(): void
+    {
+        // Sort the layouts by their display order
+        usort($this->layouts, function ($a, $b) {
+            if ($a->displayOrder === null) {
+                return 1;
             }
-        }
 
-        $countAfter = count($this->layouts);
-        $this->getLog()->debug('Count after unassign ' . $countAfter);
+            if ($a->displayOrder === $b->displayOrder) {
+                return 0;
+            }
 
-        if ($countBefore !== $countAfter) {
-            $this->layoutAssignmentsChanged = true;
-            $this->numberLayouts = $countAfter;
-        }
+            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
+        });
     }
 
     /**
+     * Unassign all layouts
      * @return $this
      */
-    public function unassignAllLayouts()
+    public function unassignAllLayouts(): Campaign
     {
         $this->layoutAssignmentsChanged = true;
         $this->numberLayouts = 0;
@@ -686,6 +701,10 @@ class Campaign implements \JsonSerializable
         return $this;
     }
 
+    /**
+     * Load displayGroupIds
+     * @return int[]
+     */
     public function loadDisplayGroupIds(): array
     {
         $displayGroupIds = [];
@@ -816,31 +835,34 @@ class Campaign implements \JsonSerializable
             return;
         }
 
-        // Sort the layouts by their display order
-        usort($this->layouts, function($a, $b) {
-            /** @var Layout $a */
-            /** @var Layout $b */
-            if ($a->displayOrder === null)
-                return 1;
-
-            if ($a->displayOrder === $b->displayOrder)
-                return 0;
-
-            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
-        });
+        $this->orderLayoutAssignments();
 
         // Update the layouts, in order to have display order 1 to n
         $i = 0;
-        $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES ';
+        $sql = '
+            INSERT INTO `lkcampaignlayout` (campaignID, layoutID, displayOrder, dayPartId, daysOfWeek, geoFence)
+             VALUES 
+        ';
         $params = ['campaignId' => $this->campaignId];
 
         foreach ($this->layouts as $layout) {
             $i++;
             $layout->displayOrder = $i;
 
-            $sql .= '(:campaignId, :layoutId_' . $i . ', :displayOrder_' . $i . '),';
+            $sql .= '(
+                :campaignId,
+                :layoutId_' . $i . ',
+                :displayOrder_' . $i . ',
+                :dayPartId_' . $i . ',
+                :daysOfWeek_' . $i . ',
+                :geoFence_' . $i . '
+            ),';
+
             $params['layoutId_' . $i] = $layout->layoutId;
             $params['displayOrder_' . $i] = $layout->displayOrder;
+            $params['dayPartId_' . $i] = $layout->dayPartId == null ? null : $layout->dayPartId;
+            $params['daysOfWeek_' . $i] = $layout->daysOfWeek == null ? null : $layout->daysOfWeek;
+            $params['geoFence_' . $i] = $layout->geoFence == null ? null : json_encode($layout->geoFence);
         }
 
         $sql = rtrim($sql, ',');
@@ -854,7 +876,9 @@ class Campaign implements \JsonSerializable
     private function unlinkLayouts()
     {
         // Delete all the links
-        $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId', ['campaignId' => $this->campaignId]);
+        $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId', [
+            'campaignId' => $this->campaignId
+        ]);
     }
 
     /**

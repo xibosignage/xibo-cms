@@ -125,5 +125,23 @@ class AdCampaignMigration extends AbstractMigration
             ->addForeignKey('campaignId', 'campaign', 'campaignId')
             ->addForeignKey('displayGroupId', 'displaygroup', 'displayGroupId')
             ->save();
+
+        $this->table('lkcampaignlayout')
+            ->addColumn('dayPartId', 'integer', [
+                'default' => null,
+                'null' => true,
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+            ])
+            ->addColumn('daysOfWeek', 'string', [
+                'default' => null,
+                'null' => true,
+                'limit' => 50,
+            ])
+            ->addColumn('geoFence', 'text', [
+                'default' => null,
+                'null' => true,
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_MEDIUM,
+            ])
+            ->save();
     }
 }

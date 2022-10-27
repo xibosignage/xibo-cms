@@ -22,6 +22,10 @@
 
 namespace Xibo\Entity;
 
+/**
+ * @SWG\Definition("Layout linked to a Campaign")
+ * @property bool $locked Is this layout locked
+ */
 class LayoutOnCampaign implements \JsonSerializable
 {
     use EntityTrait;
@@ -32,5 +36,12 @@ class LayoutOnCampaign implements \JsonSerializable
     public $displayOrder;
 
     public $dayPartId;
+    public $daysOfWeek;
     public $geoFence;
+
+    /** @var string The Layout name (readonly) */
+    public $layout;
+
+    /** @var int The owner id (readonly) */
+    public $ownerId;
 }

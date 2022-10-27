@@ -318,11 +318,11 @@
 
             // Update all the layout element positions
             var updateSortablePositions = function() {
-                var layoutElements = $layoutAssignSortable.find('li');
+              dialog.find('input[name="manageLayouts"]').val(1);
 
-                layoutElements.each(function(idx, el) {
-                    $(el).find('.layout-order').html(idx+1);
-                })
+              $layoutAssignSortable.find('li').each(function(idx, el) {
+                $(el).find('.layout-order').html(idx+1);
+              });
             };
 
             // Populate layouts
@@ -416,6 +416,8 @@
                     });
 
                     $(newItem).appendTo("#LayoutAssignSortable");
+
+                  dialog.find('input[name="manageLayouts"]').val(1);
                 });
             });
             layoutTable.on('processing.dt', dataTableProcessing);
@@ -450,26 +452,21 @@
         }
 
         function layoutAssignSubmit($form) {
+          if (parseInt($form.find('input[name="manageLayouts"]').val()) === 1) {
             // Get the final sortable positions
-            var finalLayoutPositions = [];
-            $("#LayoutAssignSortable").find("li").each(function(){
-                finalLayoutPositions.push($(this).data("layoutId"));
+            const finalLayoutPositions = [];
+            $('#LayoutAssignSortable').find('li').each(function() {
+              finalLayoutPositions.push($(this).data('layoutId'));
             });
 
-            // Send flag to manage layouts
-            $('<input>').attr({
+            // Build the array of layouts
+            for (let i = 0; i < finalLayoutPositions.length; i++) {
+              $('<input>').attr({
                 type: 'hidden',
-                name: 'manageLayouts'
-            }).val(1).appendTo($form);
-
-            //Build the array of layouts
-            var layoutOrderArray = [];
-            for (i = 0; i < finalLayoutPositions.length; i++) {
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: 'layoutIds[' + i + ']'
-                }).val(finalLayoutPositions[i]).appendTo($form.find('#assignLayouts'));
+                name: 'layoutIds[' + i + ']'
+              }).val(finalLayoutPositions[i]).appendTo($form.find('#assignLayouts'));
             }
+          }
         }
 
         /**

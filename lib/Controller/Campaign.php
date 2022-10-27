@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Event\CampaignLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -256,7 +255,7 @@ class Campaign extends Base
             /* @var \Xibo\Entity\Campaign $campaign */
             if (count($embed) > 0) {
                 if (in_array('layouts', $embed)) {
-                    $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+                    $campaign->loadLayouts();
                 }
 
                 $campaign->load([
@@ -544,8 +543,11 @@ class Campaign extends Base
                 throw new AccessDeniedException(__('You do not have permission to assign this Layout'));
             }
 
+            // Make sure we can assign this layout
+            $this->checkLayoutAssignable($layout);
+
             // Assign.
-            $campaign->assignLayout($layout);
+            $campaign->assignLayout($layout->layoutId);
         }
 
         // All done, save.
@@ -583,18 +585,16 @@ class Campaign extends Base
 
         // Load layouts
         $layouts = [];
-        foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
-            if (!$this->getUser()->checkViewable($layout)) {
+        foreach ($campaign->loadLayouts() as $layout) {
+            // TODO: more efficient way than loading an entire layout just to check permissions?
+            if (!$this->getUser()->checkViewable($this->layoutFactory->getById($layout->layoutId))) {
                 // Hide all layout details from the user
-                $emptyLayout = $this->layoutFactory->createEmpty();
-                $emptyLayout->layoutId = $layout->layoutId;
-                $emptyLayout->layout = __('Layout');
-                $emptyLayout->locked = true;
-
-                $layouts[] = $emptyLayout;
+                $layout->layout = __('Layout');
+                $layout->locked = true;
             } else {
-                $layouts[] = $layout;
+                $layout->locked = false;
             }
+            $layouts[] = $layout;
         }
 
         $this->getState()->template = 'campaign-form-edit';
@@ -729,12 +729,12 @@ class Campaign extends Base
             // Assign layouts?
             if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
                 // Fully decorate our Campaign
-                $this->getDispatcher()->dispatch(new CampaignLoadEvent($campaign), CampaignLoadEvent::$NAME);
+                $campaign->loadLayouts();
 
                 // Remove all we've currently got assigned, keeping track of them for sharing check
                 $originalLayoutAssignments = array_map(function ($element) {
                     return $element->layoutId;
-                }, $campaign->getLayouts());
+                }, $campaign->loadLayouts());
 
                 $campaign->unassignAllLayouts();
 
@@ -748,8 +748,11 @@ class Campaign extends Base
                         );
                     }
 
+                    // Make sure we can assign this layout
+                    $this->checkLayoutAssignable($layout);
+
                     // Assign.
-                    $campaign->assignLayout($layout);
+                    $campaign->assignLayout($layout->layoutId);
                 }
             }
         }
@@ -895,7 +898,6 @@ class Campaign extends Base
         $this->getLog()->debug('assignLayout with campaignId ' . $id);
 
         $campaign = $this->campaignFactory->getById($id);
-
         if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
         }
@@ -908,7 +910,8 @@ class Campaign extends Base
             );
         }
 
-        $this->getDispatcher()->dispatch(new CampaignLoadEvent($campaign), CampaignLoadEvent::$NAME);
+        // Load our existing layouts
+        $campaign->loadLayouts();
 
         // Get the layout we want to add
         $params = $this->getSanitizer($request->getParams());
@@ -924,13 +927,21 @@ class Campaign extends Base
             throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
         }
 
+        // Make sure we can assign this layout
+        $this->checkLayoutAssignable($layout);
+
         // If we are an ad campaign, then expect some other parameters.
-        if ($campaign->type === 'ad') {
-            // TODO: dayPartId, geoFence
-        }
+        $daysOfWeek = $params->getIntArray('daysOfWeek');
+        $daysOfWeek = (empty($daysOfWeek)) ? null : implode(',', $daysOfWeek);
 
         // Assign to the campaign
-        $campaign->assignLayout($layout);
+        $campaign->assignLayout(
+            $layout->layoutId,
+            null,
+            $params->getInt('dayPartId'),
+            $daysOfWeek,
+            $params->getString('geoFence')
+        );
         $campaign->save(['validate' => false, 'saveTags' => false]);
 
         // Return
@@ -1031,9 +1042,6 @@ class Campaign extends Base
         $campaign = $this->campaignFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        // get the Layouts assigned to the original Campaign
-        $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
-
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
             throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
         }
@@ -1042,8 +1050,14 @@ class Campaign extends Base
         $newCampaign->campaign = $sanitizedParams->getString('name');
 
         // assign the same layouts to the new Campaign
-        foreach ($layouts as $layout) {
-            $newCampaign->assignLayout($layout);
+        foreach ($campaign->layouts as $layout) {
+            $newCampaign->assignLayout(
+                $layout->layoutId,
+                $layout->displayOrder,
+                $layout->dayPartId,
+                $layout->daysOfWeek,
+                $layout->geoFence
+            );
         }
 
         $newCampaign->save();
@@ -1178,5 +1192,21 @@ class Campaign extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    private function checkLayoutAssignable(\Xibo\Entity\Layout $layout)
+    {
+        // Make sure we're not a draft
+        if ($layout->isChild()) {
+            throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
+        }
+
+        // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
+        if ($layout->isTemplate()) {
+            throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
+        }
     }
 }

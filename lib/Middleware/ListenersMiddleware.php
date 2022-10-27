@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,7 +27,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
-use Xibo\Event\CampaignLoadEvent;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\FolderMovingEvent;
@@ -280,11 +279,6 @@ class ListenersMiddleware implements MiddlewareInterface
         // On Command delete event listener
         $dispatcher->addListener(CommandDeleteEvent::$NAME, (new \Xibo\Listener\OnCommandDelete(
             $c->get('displayProfileFactory')
-        )));
-
-        // On CampaignLoad event listener
-        $dispatcher->addListener(CampaignLoadEvent::$NAME, (new \Xibo\Listener\OnCampaignLoad(
-            $c->get('layoutFactory')
         )));
 
         // On System User change event listener
