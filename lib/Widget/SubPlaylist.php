@@ -73,10 +73,9 @@ class SubPlaylist extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function getExtra($userId)
+    public function getExtra()
     {
         return [
-            'playlists' => $this->getAssignablePlaylists($userId),
             'subPlaylistId' => $this->getAssignedPlaylistIds(),
             'subPlaylistOptions'=> $this->getSubPlaylistOptions()
         ];

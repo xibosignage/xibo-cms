@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -30,6 +30,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Stash\Invalidation;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class AlphaVantageBase
@@ -47,8 +48,9 @@ abstract class AlphaVantageBase extends ModuleWidget
      */
     protected function getCurrencyExchangeRate($fromCurrency, $toCurrency)
     {
+        $isPaidPlan = $this->getSetting('isPaidPlan', 0) == 1;
         try {
-            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($fromCurrency . $toCurrency)));
+            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($fromCurrency . $toCurrency . $isPaidPlan)));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
@@ -61,16 +63,45 @@ abstract class AlphaVantageBase extends ModuleWidget
                 // Use a web request
                 $client = new Client();
 
-                $request = $client->request('GET', 'https://www.alphavantage.co/query', $this->getConfig()->getGuzzleProxy([
-                    'query' => [
+                // Use a different function depending on whether we have a paid plan or not.
+                if ($isPaidPlan) {
+                    $query = [
+                        'function' => 'CURRENCY_EXCHANGE_RATE',
+                        'from_currency' => $fromCurrency,
+                        'to_currency' => $toCurrency,
+                        'apikey' => $this->getApiKey()
+                    ];
+                } else {
+                    $query = [
                         'function' => 'FX_DAILY',
                         'from_symbol' => $fromCurrency,
                         'to_symbol' => $toCurrency,
-                        'apikey' => $this->getApiKey()
-                    ]
+                    ];
+                }
+                $query['apikey'] = $this->getApiKey();
+
+                $request = $client->request('GET', 'https://www.alphavantage.co/query', $this->getConfig()->getGuzzleProxy([
+                    'query' => $query,
                 ]));
 
                 $data = json_decode($request->getBody(), true);
+
+                if ($isPaidPlan) {
+                    if (!array_key_exists('Realtime Currency Exchange Rate', $data)) {
+                        $this->getLog()->debug('Data: ' . var_export($data, true));
+                        throw new InvalidArgumentException(__('Currency data invalid'), 'Realtime Currency Exchange Rate');
+                    }
+                } else {
+                    if (!array_key_exists('Meta Data', $data)) {
+                        $this->getLog()->debug('Data: ' . var_export($data, true));
+                        throw new InvalidArgumentException(__('Currency data invalid'), 'Meta Data');
+                    }
+
+                    if (!array_key_exists('Time Series FX (Daily)', $data)) {
+                        $this->getLog()->debug('Data: ' . var_export($data, true));
+                        throw new InvalidArgumentException(__('Currency data invalid'), 'Time Series FX (Daily)');
+                    }
+                }
 
                 // Cache this and expire in the cache period
                 $cache->set($data);
@@ -157,10 +188,15 @@ abstract class AlphaVantageBase extends ModuleWidget
      */
     protected function getPriorDay($fromCurrency, $toCurrency)
     {
-        $yesterday = Carbon::yesterday()->format('Y-m-d');
+        $isPaidPlan = $this->getSetting('isPaidPlan', 0) == 1;
+        if ($isPaidPlan) {
+            $key = md5($fromCurrency . $toCurrency . Carbon::yesterday()->format('Y-m-d') . '1');
+        } else {
+            $key = md5($fromCurrency . $toCurrency . '0');
+        }
 
         try {
-            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($fromCurrency . $toCurrency . $yesterday)));
+            $cache = $this->getPool()->getItem($this->makeCacheKey($key));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
@@ -182,6 +218,16 @@ abstract class AlphaVantageBase extends ModuleWidget
                 ]));
 
                 $data = json_decode($request->getBody(), true);
+
+                if (!array_key_exists('Meta Data', $data)) {
+                    $this->getLog()->debug('Data: ' . var_export($data, true));
+                    throw new InvalidArgumentException(__('Currency data invalid'), 'Meta Data');
+                }
+
+                if (!array_key_exists('Time Series FX (Daily)', $data)) {
+                    $this->getLog()->debug('Data: ' . var_export($data, true));
+                    throw new InvalidArgumentException(__('Currency data invalid'), 'Time Series FX (Daily)');
+                }
 
                 // Cache this and expire tomorrow (results are valid for the entire day regardless of settings)
                 $cache->set($data);

@@ -507,16 +507,6 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * @param $userId
-     * @return \Xibo\Entity\Playlist[]
-     * @throws NotFoundException
-     */
-    final public function getAssignablePlaylists($userId)
-    {
-        return $this->playlistFactory->query(null, ['regionSpecific' => 0, 'notPlaylistId' => $this->widget->playlistId, 'userCheckUserId' => $userId]);
-    }
-
-    /**
      * Save the Module
      */
     protected final function saveSettings()
