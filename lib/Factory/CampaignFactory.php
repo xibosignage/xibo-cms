@@ -24,6 +24,7 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
+use Xibo\Entity\LayoutOnCampaign;
 use Xibo\Entity\User;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -73,17 +74,26 @@ class CampaignFactory extends BaseFactory
     /**
      * @return Campaign
      */
-    public function createEmpty()
+    private function createEmpty()
     {
         return new Campaign(
             $this->getStore(),
             $this->getLog(),
             $this->getDispatcher(),
+            $this,
             $this->permissionFactory,
             $this->scheduleFactory,
             $this->displayNotifyService,
             $this->tagFactory
         );
+    }
+
+    /**
+     * @return \Xibo\Entity\LayoutOnCampaign
+     */
+    public function createEmptyLayoutAssignment(): LayoutOnCampaign
+    {
+        return new LayoutOnCampaign();
     }
 
     /**
@@ -398,5 +408,37 @@ class CampaignFactory extends BaseFactory
         }
 
         return $campaigns;
+    }
+
+    /**
+     * Get layouts linked to the campaignId provided.
+     * @param int $campaignId
+     * @return LayoutOnCampaign[]
+     */
+    public function getLinkedLayouts(int $campaignId): array
+    {
+        $layouts = [];
+        foreach ($this->getStore()->select('
+            SELECT lkcampaignlayout.*, layout.layout, layout.userId AS ownerId
+              FROM lkcampaignlayout
+                INNER JOIN layout 
+                ON layout.layoutId = lkcampaignlayout.layoutId
+             WHERE campaignId = :campaignId
+            ORDER BY displayOrder
+        ', [
+            'campaignId' => $campaignId,
+        ]) as $row) {
+            $link = (new LayoutOnCampaign())->hydrate($row, [
+                'intProperties' => ['displayOrder']
+            ]);
+
+            if (!empty($link->geoFence)) {
+                $link->geoFence = json_decode($link->geoFence, true);
+            }
+
+            $layouts[] = $link;
+        }
+
+        return $layouts;
     }
 }
