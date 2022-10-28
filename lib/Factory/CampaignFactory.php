@@ -419,17 +419,19 @@ class CampaignFactory extends BaseFactory
     {
         $layouts = [];
         foreach ($this->getStore()->select('
-            SELECT lkcampaignlayout.*, layout.layout, layout.userId AS ownerId
+            SELECT lkcampaignlayout.*, layout.layout, layout.userId AS ownerId, layout.duration, daypart.name AS dayPart
               FROM lkcampaignlayout
                 INNER JOIN layout 
                 ON layout.layoutId = lkcampaignlayout.layoutId
+                LEFT OUTER JOIN daypart
+                ON daypart.dayPartId = lkcampaignlayout.dayPartId
              WHERE campaignId = :campaignId
             ORDER BY displayOrder
         ', [
             'campaignId' => $campaignId,
         ]) as $row) {
             $link = (new LayoutOnCampaign())->hydrate($row, [
-                'intProperties' => ['displayOrder']
+                'intProperties' => ['displayOrder', 'duration'],
             ]);
 
             if (!empty($link->geoFence)) {

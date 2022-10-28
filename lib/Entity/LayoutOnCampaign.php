@@ -44,4 +44,10 @@ class LayoutOnCampaign implements \JsonSerializable
 
     /** @var int The owner id (readonly) */
     public $ownerId;
+
+    /** @var int The duration (readonly) */
+    public $duration;
+
+    /** @var string The dayPart (readonly) */
+    public $dayPart;
 }
