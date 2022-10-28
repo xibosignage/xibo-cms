@@ -223,12 +223,14 @@ class TimeConnected implements ReportInterface
         if ($displayId !== null) {
             // only filter if we've selected one.
             $displayIds[] = $displayId;
-        } else if ($user->isSuperAdmin()) {
-            foreach ($this->displayFactory->query(null,
+        } elseif ($user->isSuperAdmin()) {
+            foreach ($this->displayFactory->query(
+                null,
                 [
                     'userCheckUserId' => $this->getUser()->userId,
                     'displayGroupIds' => $displayGroupIds,
-                ]) as $display) {
+                ]
+            ) as $display) {
                 $displayIds[] = $display->displayId;
             }
         } else {
