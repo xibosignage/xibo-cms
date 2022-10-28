@@ -885,7 +885,7 @@ class DistributionReport implements ReportInterface
                 ]
             ];
 
-            if (count($displayIds) > 0 ){
+            if (count($displayIds) > 0) {
                 $match['$match']['displayId'] = [
                     '$in' => $displayIds
                 ];

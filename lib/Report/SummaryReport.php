@@ -371,7 +371,7 @@ class SummaryReport implements ReportInterface
         ) {
             // We have nothing to return because the filter selections don't make sense.
             $result = [];
-        } else if ($this->getTimeSeriesStore()->getEngine() === 'mongodb') {
+        } elseif ($this->getTimeSeriesStore()->getEngine() === 'mongodb') {
             $result = $this->getSummaryReportMongoDb(
                 $fromDt,
                 $toDt,
