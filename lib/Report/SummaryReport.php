@@ -922,6 +922,49 @@ class SummaryReport implements ReportInterface
             'query' => $cursorPeriodQuery
         ]);
 
+        if (count($displayIds) > 0) {
+            $matchExpr = [
+
+                // match media id / layout id
+                $matchType,
+                $matchId,
+
+                // display ids
+                [
+                    '$in' => [ '$displayId', $displayIds ]
+                ],
+
+                // stat.start < period end AND stat.end > period start
+                // for example, when report filter 'today' is selected
+                // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+                // and end is greater than or equal first hour of the day
+                [
+                    '$lt' => [ '$start', '$statdata.periods.end' ]
+                ],
+                [
+                    '$gt' => [ '$end', '$statdata.periods.start' ]
+                ],
+            ];
+        } else {
+            $matchExpr = [
+
+                // match media id / layout id
+                $matchType,
+                $matchId,
+
+                // stat.start < period end AND stat.end > period start
+                // for example, when report filter 'today' is selected
+                // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+                // and end is greater than or equal first hour of the day
+                [
+                    '$lt' => [ '$start', '$statdata.periods.end' ]
+                ],
+                [
+                    '$gt' => [ '$end', '$statdata.periods.start' ]
+                ],
+            ];
+        }
+
         // STAT AGGREGATION QUERY
         $statQuery = [
 
@@ -963,28 +1006,7 @@ class SummaryReport implements ReportInterface
             [
                 '$match' => [
                     '$expr' => [
-                        '$and' => [
-
-                            // match media id / layout id
-                            $matchType,
-                            $matchId,
-
-                            // display ids
-                            [
-                                '$in' => [ '$displayId', $displayIds ]
-                            ],
-
-                            // stat.start < period end AND stat.end > period start
-                            // for example, when report filter 'today' is selected
-                            // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
-                            // and end is greater than or equal first hour of the day
-                            [
-                                '$lt' => [ '$start', '$statdata.periods.end' ]
-                            ],
-                            [
-                                '$gt' => [ '$end', '$statdata.periods.start' ]
-                            ],
-                        ]
+                        '$and' => $matchExpr
                     ]
                 ]
             ],

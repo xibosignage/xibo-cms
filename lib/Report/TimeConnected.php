@@ -211,10 +211,30 @@ class TimeConnected implements ReportInterface
     /** @inheritdoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        // Filter by displayId?
-        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
+        $displayId = $sanitizedParams->getInt('displayId');
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => null]);
 
+        $displayIds = [];
 
+        // Get user
+        $user = $this->getUser();
+
+        // If we are a super admin we take all displays
+        if ($displayId !== null) {
+            // only filter if we've selected one.
+            $displayIds[] = $displayId;
+        } else if ($user->isSuperAdmin()) {
+            foreach ($this->displayFactory->query(null,
+                [
+                    'userCheckUserId' => $this->getUser()->userId,
+                    'displayGroupIds' => $displayGroupIds,
+                ]) as $display) {
+                $displayIds[] = $display->displayId;
+            }
+        } else {
+            // Get an array of display id this user has access to.
+            $displayIds = $this->getDisplayIdFilter($sanitizedParams);
+        }
 
         // From and To Date Selection
         // --------------------------
