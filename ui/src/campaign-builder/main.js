@@ -27,6 +27,7 @@ require('../style/campaign-builder.scss');
 window.cB = {
   $container: null,
   templateLayoutAddForm: null,
+  layoutAssignments: null,
   map: null,
 
   initialise: function($container) {
@@ -150,6 +151,10 @@ window.cB = {
     makePagedSelect($selector);
     const cb = this;
     $selector.on('select2:select', function(e) {
+      if (!e.params.data) {
+        return;
+      }
+
       if (cb.templateLayoutAddForm === null) {
         cb.templateLayoutAddForm =
           Handlebars.compile(
@@ -158,35 +163,154 @@ window.cB = {
       }
 
       // Open a modal
-      bootbox.dialog({
+      const $dialog = bootbox.dialog({
+        title: campaignBuilderTrans.addLayoutFormTitle,
         message: cb.templateLayoutAddForm({
           layoutId: e.params.data.id,
         }),
         size: 'large',
         buttons: {
-          fee: {
+          cancel: {
+            label: campaignBuilderTrans.cancelButton,
+            className: 'btn-white',
+            callback: () => {
+              // eslint-disable-next-line new-cap
+              XiboDialogClose();
+            },
+          },
+          add: {
             label: campaignBuilderTrans.addLayoutButton,
-            className: 'btn-primary',
+            className: 'btn-primary save-button',
             callback: function() {
-              // TODO: make a call to assign layout.
+              $dialog.find('.XiboForm').submit();
+              return false;
             },
           },
         },
       }).on('shown.bs.modal', function() {
+        // Modal open
         // Init
-        const $dialog = $(this);
         $dialog.find('select[name="daysOfWeek[]"]').select2({
           width: '100%',
         });
 
-        makePagedSelect($dialog.find('select[name="dayPartId[]"]'));
+        makePagedSelect($dialog.find('select[name="dayPartId"]'));
 
         // Load a map
         cB.initialiseMap('campaign-builder-map');
+
+        $dialog.find('.XiboForm').validate({
+          submitHandler: function(form) {
+            // eslint-disable-next-line new-cap
+            XiboFormSubmit($(form), null, () => {
+              // Reload the data table
+              if (cB.layoutAssignments) {
+                cB.layoutAssignments.ajax.reload();
+              }
+            });
+          },
+          errorElement: 'span',
+          highlight: function(element) {
+            $(element).closest('.form-group')
+              .removeClass('has-success')
+              .addClass('has-error');
+          },
+          success: function(element) {
+            $(element).closest('.form-group')
+              .removeClass('has-error')
+              .addClass('has-success');
+          },
+          invalidHandler: function(event, validator) {
+            // Remove the spinner
+            $(this).closest('.modal-dialog').find('.saving').remove();
+            $(this).closest('.modal-dialog').find('.save-button')
+              .removeClass('disabled');
+          },
+        });
       }).on('hidden.bs.modal', function() {
         // Clear the layout select
-        $selector.trigger('select2:clear');
+        $selector.val(null).trigger('change');
       });
+    });
+  },
+
+  initialiseLayoutAssignmentsTable: function($selector) {
+    // eslint-disable-next-line new-cap
+    this.layoutAssignments = $selector.DataTable({
+      language: dataTablesLanguage,
+      responsive: true,
+      dom: dataTablesTemplate,
+      filter: false,
+      searchDelay: 3000,
+      order: [[0, 'asc']],
+      ajax: {
+        url: $selector.data('searchUrl'),
+        dataSrc: function(json) {
+          if (json && json.data && json.data.length > 0) {
+            return json.data[0].layouts;
+          } else {
+            return [];
+          }
+        },
+      },
+      columns: [
+        {
+          data: 'layoutId',
+          responsivePriority: 5,
+        },
+        {
+          data: 'layout',
+          responsivePriority: 1,
+        },
+        {
+          data: 'duration',
+          responsivePriority: 1,
+        },
+        {
+          data: 'dayPart',
+          responsivePriority: 1,
+        },
+        {
+          data: 'daysOfWeek',
+          responsivePriority: 3,
+          render: function(data) {
+            if (data) {
+              const readable = [];
+              data.split(',').forEach((e) => {
+                readable.push(campaignBuilderTrans.daysOfWeek[e] || e);
+              });
+              return readable.join(', ');
+            } else {
+              return '';
+            }
+          },
+        },
+        {
+          data: 'geoFence',
+          responsivePriority: 10,
+        },
+        {
+          data: function(data, type, row, meta) {
+            const buttons = [
+              {
+                id: 'assignment_button_edit',
+                text: campaignBuilderTrans.assignmentEditButton,
+                url: $selector.data('assignmentEditUrl')
+                  .replace(':id', data.displayOrder),
+              },
+              {
+                id: 'assignment_button_delete',
+                text: campaignBuilderTrans.assignmentDeleteButton,
+                url: $selector.data('assignmentDeleteUrl')
+                  .replace(':id', data.displayOrder),
+              },
+            ];
+            return dataTableButtonsColumn({buttons: buttons}, type, row, meta);
+          },
+          orderable: false,
+          responsivePriority: 1,
+        },
+      ],
     });
   },
 };
@@ -203,5 +327,9 @@ $(function() {
 
   cB.initialiseLayoutSelect(
     $container.find('select[name="layoutId"]'),
+  );
+
+  cB.initialiseLayoutAssignmentsTable(
+    $container.find('table#table-campaign-builder-layout-assignments'),
   );
 });

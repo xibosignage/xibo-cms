@@ -48,7 +48,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-lg-6">
                         <form id="campaign-builder-form-details" class="XiboForm form-horizontal"
                              method="put"
                              action="{{ url_for("campaign.edit", {id: campaign.campaignId}) }}">
@@ -123,26 +123,7 @@
                             {{ forms.button("Save"|trans, "submit", null, null, null, "btn-success") }}
                         </form>
                     </div>
-                    <div class="col-6">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table id="table-campaign-builder-layout-assignments" class="table table-striped">
-                                    <thead>
-                                    <tr>
-                                        <th>{% trans "ID" %}</th>
-                                        <th>{% trans "Name" %}</th>
-                                        <th>{% trans "Duration" %}</th>
-                                        <th>{% trans "Day Parts" %}</th>
-                                        <th>{% trans "Geofence" %}</th>
-                                        <th></th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <div class="col-lg-6">
                         <div class="row">
                             <div class="col-md-12">
                                 {# Layouts #}
@@ -157,9 +138,33 @@
                                     { name: "data-placeholder--value", value: "Add a layout"|trans },
                                 ] %}
 
-                                {% set title %}{% trans "Layout" %}{% endset %}
-                                {% set helpText %}{% trans "Please select a Layout" %}{% endset %}
+                                {% set title %}{% trans "Add Layout" %}{% endset %}
+                                {% set helpText %}{% trans "Please select a Layout to add to this Campaign" %}{% endset %}
                                 {{ forms.dropdown("layoutId", "single", title, event.campaignId, null, "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                    <table id="table-campaign-builder-layout-assignments"
+                                           data-search-url="{{ url_for("campaign.search") }}?campaignId={{ campaign.campaignId }}&embed=layouts"
+                                           data-assignment-edit-url="TODO"
+                                           data-assignment-delete-url="TODO"
+                                           class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Duration" %}</th>
+                                        <th>{% trans "Day Parts" %}</th>
+                                        <th>{% trans "Days of the week" %}</th>
+                                        <th>{% trans "Geofence" %}</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -177,25 +182,34 @@
             {# Insert custom translations here #}
             const campaignBuilderTrans = {
               addLayoutButton: '{{ "Add Layout"|trans }}',
+              cancelButton: '{{ "Cancel"|trans }}',
+              addLayoutFormTitle: '{{ "Add Layout"|trans }}',
+              assignmentEditButton: '{{ "Edit"|trans }}',
+              assignmentDeleteButton: '{{ "Delete"|trans }}',
+              daysOfWeek: {
+                1: "{{ "Monday"|trans }}",
+                2: "{{ "Tuesday"|trans }}",
+                3: "{{ "Wednesday"|trans }}",
+                4: "{{ "Thursday"|trans }}",
+                5: "{{ "Friday"|trans }}",
+                6: "{{ "Saturday"|trans }}",
+                7: "{{ "Sunday"|trans }}",
+              },
             };
         {% endautoescape %}
     </script>
 {% endblock %}
 
 {% block javaScriptTemplates %}
+    {{ parent() }}
     <script type="text/x-handlebars-template" id="campaign-builder-layout-add-form-template">
-        <form action="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}" class="form-horizontal">
+        <form action="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}"
+            method="POST"
+            class="form-horizontal XiboForm">
             <input type="hidden" name="layoutId" value="{% verbatim %}{{layoutId}}{% endverbatim %}">
 
                 {% set title %}{% trans "Days of the week" %}{% endset %}
                 {% set helpText %}{% trans "Which days of the week should the layout be active?" %}{% endset %}
-                {% set monday %}{% trans "Monday" %}{% endset %}
-                {% set tuesday %}{% trans "Tuesday" %}{% endset %}
-                {% set wednesday %}{% trans "Wednesday" %}{% endset %}
-                {% set thursday %}{% trans "Thursday" %}{% endset %}
-                {% set friday %}{% trans "Friday" %}{% endset %}
-                {% set saturday %}{% trans "Saturday" %}{% endset %}
-                {% set sunday %}{% trans "Sunday" %}{% endset %}
                 {% set options = [
                     { id: 1, name: "Monday"|trans },
                     { id: 2, name: "Tuesday"|trans },
@@ -205,7 +219,7 @@
                     { id: 6, name: "Saturday"|trans },
                     { id: 7, name: "Sunday"|trans },
                 ] %}
-            {{ forms.dropdown("daysOfWeek[]", "dropdownmulti", title, event.recurrenceRepeatsOn, options, "id", "name", helpText) }}
+            {{ forms.dropdown("daysOfWeek[]", "dropdownmulti", title, [1,2,3,4,5,6,7], options, "id", "name", helpText) }}
 
             {# Day Part #}
             {% set attributes = [

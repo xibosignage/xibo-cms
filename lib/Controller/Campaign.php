@@ -887,6 +887,28 @@ class Campaign extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="daysOfWeek[]",
+     *      in="formData",
+     *      description="Ad campaigns: restrict this to certain days of the week (iso week)",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="formData",
+     *      description="Ad campaigns: restrict this to a day part",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="geoFence",
+     *      in="formData",
+     *      description="Ad campaigns: restrict this to a geofence",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
