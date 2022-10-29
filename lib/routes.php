@@ -262,6 +262,8 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
     $group->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])
         ->setName('campaign.assign.layout');
+    $group->delete('/campaign/layout/remove/{id}', ['\Xibo\Controller\Campaign','removeLayout'])
+        ->setName('campaign.remove.layout');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
 
 /**

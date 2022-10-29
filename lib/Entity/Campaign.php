@@ -391,6 +391,21 @@ class Campaign implements \JsonSerializable
     }
 
     /**
+     * @param int $displayOrder
+     * @return \Xibo\Entity\LayoutOnCampaign
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getLayoutAt(int $displayOrder): LayoutOnCampaign
+    {
+        foreach ($this->layouts as $layout) {
+            if ($layout->displayOrder === $displayOrder) {
+                return $layout;
+            }
+        }
+        throw new NotFoundException();
+    }
+
+    /**
      * @throws InvalidArgumentException
      */
     public function validate()

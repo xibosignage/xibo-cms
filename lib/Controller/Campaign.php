@@ -232,6 +232,7 @@ class Campaign extends Base
         $parsedParams = $this->getSanitizer($request->getQueryParams());
         $filter = [
             'campaignId' => $parsedParams->getInt('campaignId'),
+            'type' => $parsedParams->getString('type'),
             'name' => $parsedParams->getString('name'),
             'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
             'tags' => $parsedParams->getString('tags'),
@@ -1029,6 +1030,108 @@ class Campaign extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Remove Layout Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function removeLayoutForm(Request $request, Response $response, $id)
+    {
+        $this->getLog()->debug('removeLayoutForm: ' . $id);
+
+        $campaign = $this->campaignFactory->getById($id);
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+        $campaign->loadLayouts();
+
+        $this->getState()->template = 'campaign-form-layout-delete';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'layout' => $campaign->getLayoutAt($this->getSanitizer($request->getParams())->getInt('displayOrder')),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Remove a layout from a Campaign
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @SWG\Delete(
+     *  path="/campaign/layout/remove/{campaignId}",
+     *  operationId="campaignAssignLayout",
+     *  tags={"campaign"},
+     *  summary="Remove Layout",
+     *  description="Remove a Layout from a Campaign.",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="Layout ID to remove",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="The display order. Omit to remove all occurences of the layout",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function removeLayout(Request $request, Response $response, $id)
+    {
+        $this->getLog()->debug('removeLayout with campaignId ' . $id);
+
+        $campaign = $this->campaignFactory->getById($id);
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+
+        // Make sure this is a non-layout specific campaign
+        if ($campaign->isLayoutSpecific == 1) {
+            throw new InvalidArgumentException(
+                __('You cannot change the assignment of a Layout Specific Campaign'),
+                'campaignId'
+            );
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+        $layoutId = $params->getInt('layoutId', [
+            'throw' => function () {
+                throw new InvalidArgumentException(__('Please provide a layout'), 'layoutId');
+            },
+            ['rules' => ['notEmpty']],
+        ]);
+        $displayOrder = $params->getInt('displayOrder');
+
+        // Load our existing layouts
+        $campaign->loadLayouts();
+
+        $campaign->unassignLayout($layoutId, $displayOrder);
+        $campaign->save(['validate' => false]);
 
         return $this->render($request, $response);
     }
