@@ -23,6 +23,8 @@
 require('../../public_path');
 require('../style/campaign-builder.scss');
 
+window.Gauge = require('gaugeJS');
+
 // Campaign builder name space
 window.cB = {
   $container: null,
@@ -35,12 +37,13 @@ window.cB = {
     this.$container = $container;
   },
 
-  initialiseMap: function(containerSelector) {
+  initialiseMap: function(containerSelector, $dialog) {
     if (this.map !== null) {
       this.map.remove();
     }
 
     const $containerSelector = $('#' + containerSelector);
+    const $geoFenceField = $dialog.find('input[name="geoFence"]');
 
     this.map = L.map(containerSelector).setView(
       [
@@ -58,6 +61,66 @@ window.cB = {
       ),
       subdomains: ['a', 'b', 'c'],
     }).addTo(this.map);
+
+    // Add a layer for drawn items
+    const drawnItems = new L.FeatureGroup();
+    this.map.addLayer(drawnItems);
+
+    // Add draw control (toolbar)
+    const drawControl = new L.Control.Draw({
+      position: 'topright',
+      draw: {
+        polyline: false,
+        circle: false,
+        marker: false,
+        circlemarker: false,
+      },
+      edit: {
+        featureGroup: drawnItems,
+      },
+    });
+
+    this.map.addControl(drawControl);
+
+    // add search Control - allows searching by country/city and automatically
+    // moves map to that location
+    const searchControl = new L.Control.Search({
+      url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+      propertyName: 'display_name',
+      propertyLoc: ['lat', 'lon'],
+      marker: L.circleMarker([0, 0], {radius: 30}),
+      autoCollapse: true,
+      autoType: false,
+      minLength: 2,
+      hideMarkerOnCollapse: true,
+    });
+
+    this.map.addControl(searchControl);
+
+    // Draw events
+    this.map.on('draw:created', function(e) {
+      drawnItems.addLayer(e.layer);
+      $geoFenceField.val(JSON.stringify(drawnItems.toGeoJSON()));
+    });
+    this.map.on('draw:edited', function(e) {
+      $geoFenceField.val(JSON.stringify(drawnItems.toGeoJSON()));
+    });
+    this.map.on('draw:deleted', function(e) {
+      e.layers.eachLayer(function(layer) {
+        drawnItems.removeLayer(layer);
+      });
+      $geoFenceField.val(JSON.stringify(drawnItems.toGeoJSON()));
+    });
+
+    // Load existing geoJSON
+    if ($geoFenceField.val()) {
+      L.geoJSON(JSON.parse($geoFenceField.val()), {
+        onEachFeature: function(feature, layer) {
+          drawnItems.addLayer(layer);
+          cB.map.fitBounds(drawnItems.getBounds());
+        },
+      });
+    }
   },
 
   getDataProperty: function($element, property, defaultValue = null) {
@@ -214,7 +277,7 @@ window.cB = {
       makePagedSelect($dayPartId);
 
       // Load a map
-      cB.initialiseMap('campaign-builder-map');
+      cB.initialiseMap('campaign-builder-map', $dialog);
 
       $dialog.find('.XiboForm').validate({
         submitHandler: function(form) {
@@ -352,6 +415,7 @@ window.cB = {
       const $target = $('#' + e.target.id);
       $target.find('.button-assignment-remove').on('click', function(e) {
         e.preventDefault();
+        // eslint-disable-next-line no-invalid-this
         const $button = $(this);
         if ($button.hasClass('assignment_button_edit')) {
           // Open a form.
