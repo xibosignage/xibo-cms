@@ -114,6 +114,18 @@ class Campaign implements \JsonSerializable
     public $playCount;
 
     /**
+     * @SWG\Property(description="For an ad campaign, what's the target type, plays|budget")
+     * @var string
+     */
+    public $targetType;
+
+    /**
+     * @SWG\Property(description="For an ad campaign, what's the target (expressed in targetType)")
+     * @var int
+     */
+    public $target;
+
+    /**
      * @SWG\Property(description="For an ad campaign, what's the start date")
      * @var int
      */
@@ -311,19 +323,19 @@ class Campaign implements \JsonSerializable
     }
 
     /**
-     * @return \Carbon\Carbon|false
+     * @return \Carbon\Carbon|false|null
      */
     public function getStartDt()
     {
-        return Carbon::createFromFormat('U', $this->startDt);
+        return $this->startDt == 0 ? null : Carbon::createFromFormat('U', $this->startDt);
     }
 
     /**
-     * @return \Carbon\Carbon|false
+     * @return \Carbon\Carbon|false|null
      */
     public function getEndDt()
     {
-        return Carbon::createFromFormat('U', $this->endDt);
+        return $this->endDt == 0 ? null : Carbon::createFromFormat('U', $this->endDt);
     }
 
     /**
@@ -396,11 +408,15 @@ class Campaign implements \JsonSerializable
         }
 
         if ($this->type === 'ad') {
-            if ($this->playCount <= 0) {
-                throw new InvalidArgumentException(__('Please enter play count'), 'playCount');
+            if ($this->targetType !== 'plays' && $this->targetType !== 'budget') {
+                throw new InvalidArgumentException(__('Invalid target type'), 'targetType');
             }
 
-            if (count($this->displayGroupIds) <= 0) {
+            if ($this->target <= 0) {
+                throw new InvalidArgumentException(__('Please enter a target'), 'target');
+            }
+
+            if ($this->campaignId !== null && count($this->displayGroupIds) <= 0) {
                 throw new InvalidArgumentException(__('Please select one or more displays'), 'displayGroupId[]');
             }
         }
@@ -740,6 +756,8 @@ class Campaign implements \JsonSerializable
                 userId,
                 cyclePlaybackEnabled,
                 playCount,
+                targetType,
+                target,
                 folderId,
                 permissionsFolderId
             ) 
@@ -750,6 +768,8 @@ class Campaign implements \JsonSerializable
                 :userId,
                 :cyclePlaybackEnabled,
                 :playCount,
+                :targetType,
+                :target,    
                 :folderId,
                 :permissionsFolderId
             )
@@ -760,6 +780,8 @@ class Campaign implements \JsonSerializable
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
+            'targetType' => empty($this->targetType) ? null : $this->targetType,
+            'target' => empty($this->target) ? null : $this->target,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ]);
@@ -776,6 +798,8 @@ class Campaign implements \JsonSerializable
                     userId = :userId,
                     cyclePlaybackEnabled = :cyclePlaybackEnabled,
                     playCount = :playCount,
+                    targetType = :targetType,
+                    target = :target,
                     startDt = :startDt,
                     endDt = :endDt,
                     folderId = :folderId,
@@ -787,6 +811,8 @@ class Campaign implements \JsonSerializable
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
+            'targetType' => empty($this->targetType) ? null : $this->targetType,
+            'target' => empty($this->target) ? null : $this->target,
             'startDt' => empty($this->startDt) ? null : $this->startDt,
             'endDt' => empty($this->endDt) ? null : $this->endDt,
             'folderId' => $this->folderId,

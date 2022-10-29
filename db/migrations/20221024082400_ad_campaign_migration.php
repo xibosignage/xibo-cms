@@ -55,6 +55,16 @@ class AdCampaignMigration extends AbstractMigration
                 'null' => true,
                 'default' => null,
             ])
+            ->addColumn('targetType', 'string', [
+                'length' => '6',
+                'null' => true,
+                'default' => null,
+            ])
+            ->addColumn('target', 'integer', [
+                'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+                'null' => true,
+                'default' => null,
+            ])
             ->addColumn('plays', 'integer', [
                 'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
                 'default' => 0,
