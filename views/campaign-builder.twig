@@ -155,8 +155,7 @@
                             <div class="col-md-12">
                                     <table id="table-campaign-builder-layout-assignments"
                                            data-search-url="{{ url_for("campaign.search") }}?campaignId={{ campaign.campaignId }}&embed=layouts"
-                                           data-assignment-edit-url="TODO"
-                                           data-assignment-delete-url="TODO"
+                                           data-assignment-delete-url="{{ url_for("campaign.layout.remove.form", {id: campaign.campaignId}) }}"
                                            class="table table-striped">
                                     <thead>
                                     <tr>
@@ -189,9 +188,10 @@
         {% autoescape "js" %}
             {# Insert custom translations here #}
             const campaignBuilderTrans = {
-              addLayoutButton: '{{ "Add Layout"|trans }}',
+              saveButton: '{{ "Save"|trans }}',
               cancelButton: '{{ "Cancel"|trans }}',
               addLayoutFormTitle: '{{ "Add Layout"|trans }}',
+              editLayoutFormTitle: '{{ "Edit Layout"|trans }}',
               assignmentEditButton: '{{ "Edit"|trans }}',
               assignmentDeleteButton: '{{ "Delete"|trans }}',
               daysOfWeek: {
@@ -212,6 +212,8 @@
     {{ parent() }}
     <script type="text/x-handlebars-template" id="campaign-builder-layout-add-form-template">
         <form action="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}"
+            data-assignment-remove-url="{{ url_for("campaign.remove.layout", {id: campaign.campaignId}) }}?layoutId={% verbatim %}{{layoutId}}{% endverbatim %}"
+            data-existing-display-order="{% verbatim %}{{displayOrder}}{% endverbatim %}"
             method="POST"
             class="form-horizontal XiboForm">
             <input type="hidden" name="layoutId" value="{% verbatim %}{{layoutId}}{% endverbatim %}">
@@ -227,7 +229,7 @@
                     { id: 6, name: "Saturday"|trans },
                     { id: 7, name: "Sunday"|trans },
                 ] %}
-            {{ forms.dropdown("daysOfWeek[]", "dropdownmulti", title, [1,2,3,4,5,6,7], options, "id", "name", helpText) }}
+            {{ forms.dropdown("daysOfWeek[]", "dropdownmulti", title, null, options, "id", "name", helpText) }}
 
             {# Day Part #}
             {% set attributes = [
@@ -235,6 +237,7 @@
                 { name: "data-search-term", value: "name" },
                 { name: "data-id-property", value: "dayPartId" },
                 { name: "data-text-property", value: "name" },
+                { name: "data-initial-key", value: "dayPartId" },
                 { name: "data-placeholder--id", value: null },
                 { name: "data-placeholder--value", value: "" },
             ] %}
@@ -242,7 +245,7 @@
             {% set helpText %}{% trans "Should this layout only be shown on selected day parts?" %}{% endset %}
             {{ forms.dropdown("dayPartId", "single", title, null, null, "dayPartId", "name", helpText, "", "", "", "", attributes) }}
 
-            {{ forms.hidden("geoLocation", event.geoLocation) }}
+            {{ forms.hidden("geoLocation", "{{geoLocation}}") }}
 
             {{ forms.message("Draw areas on the map where you want this layout to play."|trans) }}
 

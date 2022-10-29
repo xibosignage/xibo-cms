@@ -263,6 +263,11 @@ class CampaignFactory extends BaseFactory
             $params['campaignId'] = $sanitizedFilter->getInt('campaignId', ['default' => 0]);
         }
 
+        if ($sanitizedFilter->getString('type') !== null) {
+            $body .= " AND campaign.type = :type ";
+            $params['type'] = $sanitizedFilter->getString('type');
+        }
+
         if ($sanitizedFilter->getInt('ownerId', ['default' => 0]) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.userId = :ownerId ";
