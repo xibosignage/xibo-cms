@@ -101,6 +101,8 @@
                                         <th>{% trans "Duration" %}</th>
                                         <th>{% trans "Cycle based Playback" %}</th>
                                         <th>{% trans "Play Count" %}</th>
+                                        <th>{% trans "Target Type" %}</th>
+                                        <th>{% trans "Target" %}</th>
                                         <th>{% trans "Plays" %}</th>
                                         <th>{% trans "Spend" %}</th>
                                         <th>{% trans "Impressions" %}</th>
@@ -226,6 +228,22 @@
                                return data.playCount;
                             }
                         }
+                    },
+                    {
+                      data: 'targetType',
+                      responsivePriority: 3,
+                      render: function(data, type) {
+                        if (data === 'plays') {
+                          return '{{ "Plays"|trans }}';
+                        } else if (data === 'budget') {
+                          return '{{ "Budget"|trans }}';
+                        }
+                        return data;
+                      },
+                    },
+                    {
+                      data: 'target',
+                      responsivePriority: 3,
                     },
                     {
                       data: 'plays',
@@ -476,9 +494,17 @@
         function campaignAddFormOpen(dialog) {
           // setup checkbox behaviour for cycle based playback
           formHelpers.setupCheckboxInputFields($(dialog).find('form'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback');
-          $(dialog).find('select[name=type]').on('change', function () {
-            $(dialog).find('.campaign-type-list').toggle($(this).val() === 'list');
-            $(dialog).find('.cycle-based-playback').toggle($('input[name="cyclePlaybackEnabled"]').is(':checked'));
+
+          const $type = $(dialog).find('select[name=type]');
+          const $cycleBased = $('input[name="cyclePlaybackEnabled"]');
+
+          $(dialog).find('.campaign-type-ad').toggle($type.val() === 'ad');
+
+          $type.on('change', function () {
+            $(dialog).find('.campaign-type-list').toggle($type.val() === 'list');
+            $(dialog).find('.campaign-type-ad').toggle($type.val() === 'ad');
+
+            $(dialog).find('.cycle-based-playback').toggle($cycleBased.is(':checked') && $type.val() === 'list');
           });
         }
 

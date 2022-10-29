@@ -94,6 +94,18 @@
                 {% set title %}{% trans "Play count" %}{% endset %}
                 {% set helpText %}{% trans "In cycle based playback, how many plays should each Layout have before moving on?" %}{% endset %}
                 {{ forms.number("playCount", title, "", helpText, "cycle-based-playback campaign-type-list") }}
+
+                {% set title %}{% trans "Target Type" %}{% endset %}
+                {% set helpText %}{% trans "How would you like to set the target for this campaign?" %}{% endset %}
+                {% set options = [
+                    { id: "plays", name: "Plays"|trans },
+                    { id: "budget", name: "Budget"|trans }
+                ] %}
+                {{ forms.dropdown("targetType", "single", title, "both", options, "id", "name", helpText, "campaign-type-ad") }}
+
+                {% set title %}{% trans "Target" %}{% endset %}
+                {% set helpText %}{% trans "What is the target number for this Campaign over its entire playtime" %}{% endset %}
+                {{ forms.number("target", title, null, helpText, "campaign-type-ad") }}
             </form>
         </div>
     </div>

@@ -95,9 +95,17 @@
                             ] %}
                             {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, displayGroups, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes) }}
 
-                            {% set title %}{% trans "Target Plays" %}{% endset %}
-                            {% set helpText %}{% trans "What are the target number of plays for this Campaign over its entire playtime" %}{% endset %}
-                            {{ forms.number("playCount", title, campaign.playCount, helpText) }}
+                            {% set title %}{% trans "Target Type" %}{% endset %}
+                            {% set helpText %}{% trans "How would you like to set the target for this campaign?" %}{% endset %}
+                            {% set options = [
+                                { id: "plays", name: "Plays"|trans },
+                                { id: "budget", name: "Budget"|trans }
+                            ] %}
+                            {{ forms.dropdown("targetType", "single", title, campaign.targetType, options, "id", "name", helpText, "campaign-type-ad") }}
+
+                            {% set title %}{% trans "Target" %}{% endset %}
+                            {% set helpText %}{% trans "What is the target number for this Campaign over its entire playtime" %}{% endset %}
+                            {{ forms.number("target", title, campaign.target, helpText) }}
 
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}

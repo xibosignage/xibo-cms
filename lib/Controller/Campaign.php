@@ -476,6 +476,20 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="targetType",
+     *      in="formData",
+     *      description="For ad campaigns, how do we measure the target? plays|budget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="target",
+     *      in="formData",
+     *      description="For ad campaigns, what is the target count for playback over the entire campaign",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -523,8 +537,13 @@ class Campaign extends Base
         $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Cycle based playback
-        $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
-        $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
+        if ($campaign->type === 'list') {
+            $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
+            $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
+        } else if ($campaign->type === 'ad') {
+            $campaign->targetType = $sanitizedParams->getString('targetType');
+            $campaign->target = $sanitizedParams->getInt('target');
+        }
 
         // Assign layouts?
         foreach ($sanitizedParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
@@ -675,6 +694,44 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="targetType",
+     *      in="formData",
+     *      description="For ad campaigns, how do we measure the target? plays|budget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="target",
+     *      in="formData",
+     *      description="For ad campaigns, what is the target count for playback over the entire campaign",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startDt",
+     *      in="formData",
+     *      description="For ad campaigns, what is the start date",
+     *      type="string",
+     *      format="date-time",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="endDt",
+     *      in="formData",
+     *      description="For ad campaigns, what is the start date",
+     *      type="string",
+     *      format="date-time",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroupIds[]",
+     *      in="formData",
+     *      description="For ad campaigns, which display groups should the campaign be run on?",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -708,11 +765,12 @@ class Campaign extends Base
             // -----------
             $campaign->startDt = $parsedRequestParams->getDate('startDt')->format('U');
             $campaign->endDt = $parsedRequestParams->getDate('endDt')->format('U');
-            $campaign->playCount = $parsedRequestParams->getInt('playCount');
+            $campaign->targetType = $parsedRequestParams->getString('targetType');
+            $campaign->target = $parsedRequestParams->getInt('target');
 
             // Display groups
             $displayGroupIds = [];
-            foreach ($parsedRequestParams->getIntArray('displayGroupIds') as $displayGroupId) {
+            foreach ($parsedRequestParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
                 $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
                 if (!$this->getUser()->checkViewable($displayGroup)) {
                     throw new AccessDeniedException();
