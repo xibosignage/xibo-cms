@@ -37,6 +37,9 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ *
+ * @property Carbon $adjustedStart Adjusted start datetime
+ * @property Carbon $adjustedEnd Adjusted end datetime
  */
 class DayPart implements \JsonSerializable
 {
@@ -172,6 +175,34 @@ class DayPart implements \JsonSerializable
         $this->timeHash = $this->calculateTimeHash();
 
         return $this;
+    }
+
+    /**
+     * @param \Carbon\Carbon $date
+     * @return void
+     */
+    public function adjustForDate(Carbon $date)
+    {
+        // Matching exceptions?
+        // we use a lookup because the form control uses the below date abbreviations
+        $dayOfWeekLookup = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        foreach ($this->exceptions as $exception) {
+            if ($exception['day'] === $dayOfWeekLookup[$date->dayOfWeekIso]) {
+                $this->adjustedStart = $date->copy()->setTimeFromTimeString($exception['start']);
+                $this->adjustedEnd = $date->copy()->setTimeFromTimeString($exception['end']);
+                if ($this->adjustedStart >= $this->adjustedEnd) {
+                    $this->adjustedEnd->addDay();
+                }
+                return;
+            }
+        }
+
+        // No matching exceptions.
+        $this->adjustedStart = $date->copy()->setTimeFromTimeString($this->startTime);
+        $this->adjustedEnd = $date->copy()->setTimeFromTimeString($this->endTime);
+        if ($this->adjustedStart >= $this->adjustedEnd) {
+            $this->adjustedEnd->addDay();
+        }
     }
 
     /**
