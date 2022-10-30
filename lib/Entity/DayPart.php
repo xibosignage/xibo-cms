@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
+use Xibo\Event\DayPartDeleteEvent;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -219,6 +220,8 @@ class DayPart implements \JsonSerializable
         if ($this->isSystemDayPart()) {
             throw new InvalidArgumentException('Cannot delete system dayParts');
         }
+
+        $this->getDispatcher()->dispatch(new DayPartDeleteEvent($this), DayPartDeleteEvent::$NAME);
 
         // Delete all events using this daypart
         $schedules = $this->scheduleFactory->getByDayPartId($this->dayPartId);

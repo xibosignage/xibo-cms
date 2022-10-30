@@ -346,6 +346,18 @@ class CampaignFactory extends BaseFactory
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
+        // startDt
+        if ($sanitizedFilter->getInt('startDt') !== null) {
+            $body .= ' AND campaign.startDt >= :startDt ';
+            $params['startDt'] = $sanitizedFilter->getInt('startDt');
+        }
+
+        // endDt
+        if ($sanitizedFilter->getInt('endDt') !== null) {
+            $body .= ' AND campaign.endDt < :endDt ';
+            $params['endDt'] = $sanitizedFilter->getInt('endDt');
+        }
+
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy, '`campaign`.permissionsFolderId');
 
