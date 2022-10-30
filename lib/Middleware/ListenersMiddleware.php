@@ -37,6 +37,7 @@ use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Listener\CampaignListener;
 
 /**
  * This middleware is used to register listeners against the dispatcher
@@ -78,6 +79,15 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher = $c->get('dispatcher');
 
         // Register listeners
+        // ------------------
+        // Listen for events that affect campaigns
+        (new CampaignListener(
+            $c->get('campaignFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
         // Media Delete Events
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\MenuBoardListener(
             $c->get('menuBoardCategoryFactory')
@@ -105,11 +115,6 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\ActionListener(
             $c->get('store'),
             $c->get('actionFactory')
-        ))->useLogger($c->get('logger')));
-
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\CampaignListener(
-            $c->get('store'),
-            $c->get('campaignFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\CommandListener(
@@ -228,10 +233,6 @@ class ListenersMiddleware implements MiddlewareInterface
         ));
 
         // Parse Permissions Event Listeners
-        $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'campaign', (new \Xibo\Listener\OnParsePermissions\PermissionsCampaignListener(
-            $c->get('campaignFactory')
-        )));
-
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'command', (new \Xibo\Listener\OnParsePermissions\PermissionsCommandListener(
             $c->get('commandFactory')
         )));
@@ -292,10 +293,6 @@ class ListenersMiddleware implements MiddlewareInterface
         )));
 
         // On Folder moving listeners
-        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\CampaignListener(
-            $c->get('campaignFactory')
-        )));
-
         $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DataSetListener(
             $c->get('dataSetFactory')
         )));
