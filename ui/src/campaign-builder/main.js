@@ -23,8 +23,6 @@
 require('../../public_path');
 require('../style/campaign-builder.scss');
 
-window.Gauge = require('gaugeJS');
-
 // Campaign builder name space
 window.cB = {
   $container: null,
@@ -86,6 +84,7 @@ window.cB = {
     // moves map to that location
     const searchControl = new L.Control.Search({
       url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+      jsonpParam: 'json_callback',
       propertyName: 'display_name',
       propertyLoc: ['lat', 'lon'],
       marker: L.circleMarker([0, 0], {radius: 30}),
@@ -93,6 +92,7 @@ window.cB = {
       autoType: false,
       minLength: 2,
       hideMarkerOnCollapse: true,
+      firstTipSubmit: true,
     });
 
     this.map.addControl(searchControl);
@@ -380,6 +380,13 @@ window.cB = {
         {
           data: 'geoFence',
           responsivePriority: 10,
+          render: function(data, type) {
+            if (type !== 'display') {
+              return !!data;
+            } else {
+              return '<i class="fa fa-' + (data ? 'check' : 'times') + '"></i>';
+            }
+          },
         },
         {
           data: function(data, type, row, meta) {

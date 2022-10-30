@@ -458,6 +458,13 @@
             $(".layoutAssignFilterOptions").find("input, select").change(function() {
                 layoutTable.ajax.reload();
             });
+
+          // Adjust the datatable width once we've activated the tab
+          $(dialog).find('.nav-tabs a').on('shown.bs.tab', function(event) {
+            if ($(event.target).attr('href') === '#tab-layouts') {
+              layoutTable.columns.adjust().draw();
+            }
+          });
         }
 
         function campaignFormSubmit($form) {

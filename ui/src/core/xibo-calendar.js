@@ -1135,7 +1135,8 @@ var generateGeoMap = function () {
         autoCollapse: true,
         autoType: false,
         minLength: 2,
-        hideMarkerOnCollapse: true
+        hideMarkerOnCollapse: true,
+        firstTipSubmit: true,
     });
 
     mymap.addControl(searchControl);

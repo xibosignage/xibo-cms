@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\CampaignFactory;
@@ -116,11 +117,35 @@ class Campaign extends Base
             $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
         }
 
+        // Work out the percentage complete/target.
+        $now = Carbon::now();
+        $startDt = $campaign->getStartDt();
+        if ($startDt->isAfter($now)) {
+            $complete = 0;
+            $target = 0;
+        } else {
+            $daysIn = $now->diffInDays($startDt);
+            $daysTotal = $campaign->getEndDt()->diffInDays($startDt);
+            $complete = $daysIn / $daysTotal * 100;
+
+            if ($campaign->targetType === 'budget') {
+                $target = ($campaign->spend / $campaign->target) * 100;
+            } else if ($campaign->targetType === 'impressions') {
+                $target = ($campaign->impressions / $campaign->target) * 100;
+            } else {
+                $target = ($campaign->plays / $campaign->target) * 100;
+            }
+        }
+
         $this->getState()->template = 'campaign-builder';
         $this->getState()->setData([
             'campaign' => $campaign,
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
+            'stats' => [
+                'complete' => round($complete, 2),
+                'target' => round($target, 2),
+            ],
         ]);
         return $this->render($request, $response);
     }
@@ -759,6 +784,13 @@ class Campaign extends Base
             $folder = $this->folderFactory->getById($campaign->folderId);
             $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
+
+        // Reference fields
+        $campaign->ref1 = $parsedRequestParams->getString('ref1');
+        $campaign->ref2 = $parsedRequestParams->getString('ref2');
+        $campaign->ref3 = $parsedRequestParams->getString('ref3');
+        $campaign->ref4 = $parsedRequestParams->getString('ref4');
+        $campaign->ref5 = $parsedRequestParams->getString('ref5');
 
         // What type of campaign are we editing?
         if ($campaign->type === 'ad') {
