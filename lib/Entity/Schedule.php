@@ -1318,7 +1318,7 @@ class Schedule implements \JsonSerializable
         $dayOfWeekLookup = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
         if (!$this->isAlwaysDayPart() && !$this->isCustomDayPart()) {
-
+            // TODO: replace with $dayPart->adjustForDate()?
             // End is always based on Start
             $end->setTimestamp($start->format('U'));
 

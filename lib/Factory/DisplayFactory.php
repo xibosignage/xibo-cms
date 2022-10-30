@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -147,6 +147,16 @@ class DisplayFactory extends BaseFactory
     public function getByDisplayGroupId($displayGroupId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+    }
+
+    /**
+     * @param array $displayGroupIds
+     * @return Display[]
+     * @throws NotFoundException
+     */
+    public function getByDisplayGroupIds(array $displayGroupIds)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => $displayGroupIds]);
     }
 
     /**
@@ -304,6 +314,23 @@ class DisplayFactory extends BaseFactory
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
         }
 
+        // Restrict to members of display groups
+        if ($parsedBody->getIntArray('displayGroupIds') !== null) {
+            $body .= '
+                INNER JOIN `lkdisplaydg` othergroups
+                ON othergroups.displayId = `display`.displayId
+                    AND othergroups.displayGroupId IN (0 
+            ';
+
+            $i = 0;
+            foreach ($parsedBody->getIntArray('displayGroupIds') as $displayGroupId) {
+                $i++;
+                $body .= ',:displayGroupId' . $i;
+                $params['displayGroupId' . $i] = $displayGroupId;
+            }
+            $body .= ')';
+        }
+
         $body .= ' WHERE 1 = 1 ';
 
         // Filter by map bound?
@@ -346,7 +373,7 @@ class DisplayFactory extends BaseFactory
             $body .= ' AND display.license = :license ';
             $params['license'] = $parsedBody->getString('license');
         }
-        
+
         // Filter by authorised?
         if ($parsedBody->getInt('authorised', ['default' => -1]) != -1) {
             $body .= ' AND display.licensed = :authorised ';
