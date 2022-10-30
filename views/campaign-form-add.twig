@@ -99,7 +99,8 @@
                 {% set helpText %}{% trans "How would you like to set the target for this campaign?" %}{% endset %}
                 {% set options = [
                     { id: "plays", name: "Plays"|trans },
-                    { id: "budget", name: "Budget"|trans }
+                    { id: "budget", name: "Budget"|trans },
+                    { id: "impressions", name: "Impressions"|trans },
                 ] %}
                 {{ forms.dropdown("targetType", "single", title, "both", options, "id", "name", helpText, "campaign-type-ad") }}
 

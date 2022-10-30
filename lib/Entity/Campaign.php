@@ -423,7 +423,7 @@ class Campaign implements \JsonSerializable
         }
 
         if ($this->type === 'ad') {
-            if ($this->targetType !== 'plays' && $this->targetType !== 'budget') {
+            if (!in_array($this->targetType, ['plays', 'budget', 'impressions'])) {
                 throw new InvalidArgumentException(__('Invalid target type'), 'targetType');
             }
 
@@ -813,6 +813,11 @@ class Campaign implements \JsonSerializable
                     userId = :userId,
                     cyclePlaybackEnabled = :cyclePlaybackEnabled,
                     playCount = :playCount,
+                    ref1 = :ref1,
+                    ref2 = :ref2,
+                    ref3 = :ref3,
+                    ref4 = :ref4,
+                    ref5 = :ref5,
                     targetType = :targetType,
                     target = :target,
                     startDt = :startDt,
@@ -830,6 +835,11 @@ class Campaign implements \JsonSerializable
             'target' => empty($this->target) ? null : $this->target,
             'startDt' => empty($this->startDt) ? null : $this->startDt,
             'endDt' => empty($this->endDt) ? null : $this->endDt,
+            'ref1' => empty($this->ref1) ? null : $this->ref1,
+            'ref2' => empty($this->ref2) ? null : $this->ref2,
+            'ref3' => empty($this->ref3) ? null : $this->ref3,
+            'ref4' => empty($this->ref4) ? null : $this->ref4,
+            'ref5' => empty($this->ref5) ? null : $this->ref5,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ]);

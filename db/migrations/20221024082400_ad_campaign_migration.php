@@ -39,6 +39,7 @@ class AdCampaignMigration extends AbstractMigration
             ])
             ->save();
 
+        // More information on each campaign.
         $this->table('campaign')
             ->addColumn('type', 'string', [
                 'default' => 'list',
@@ -122,6 +123,7 @@ class AdCampaignMigration extends AbstractMigration
             ])
             ->save();
 
+        // Direct links between the campaign and its target displays/groups
         $this->table('lkcampaigndisplaygroup', [
             'id' => false,
             'primary_key' => ['campaignId', 'displayGroupId']
@@ -136,6 +138,7 @@ class AdCampaignMigration extends AbstractMigration
             ->addForeignKey('displayGroupId', 'displaygroup', 'displayGroupId')
             ->save();
 
+        // Links between the campaign and the layout are extended to cover scheduling and geo fences.
         $this->table('lkcampaignlayout')
             ->addColumn('dayPartId', 'integer', [
                 'default' => null,
@@ -151,6 +154,18 @@ class AdCampaignMigration extends AbstractMigration
                 'default' => null,
                 'null' => true,
                 'limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_MEDIUM,
+            ])
+            ->save();
+
+        // Add a task for keeping ad campaigns up to date
+        $this->table('task')
+            ->insert([
+                'name' => 'Campaign Scheduler',
+                'class' => '\Xibo\XTR\CampaignSchedulerTask',
+                'options' => '[]',
+                'schedule' => '*/45 * * * *',
+                'isActive' => '1',
+                'configFile' => '/tasks/campaign-scheduler.task'
             ])
             ->save();
     }
