@@ -42,6 +42,9 @@ class LayoutOnCampaign implements \JsonSerializable
     /** @var string The Layout name (readonly) */
     public $layout;
 
+    /** @var string The Layout campaignId (readonly) */
+    public $layoutCampaignId;
+
     /** @var int The owner id (readonly) */
     public $ownerId;
 

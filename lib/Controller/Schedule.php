@@ -315,7 +315,7 @@ class Schedule extends Base
 
             // Event Permissions
             $editable = $this->getUser()->featureEnabled('schedule.modify')
-                && $this->isEventEditable($row->displayGroups);
+                && $this->isEventEditable($row);
 
             // Event Title
             if ($row->campaignId == 0) {
@@ -984,8 +984,13 @@ class Schedule extends Base
         $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
         $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
 
+        // Set the parentCampaignId for campaign events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
+            $schedule->parentCampaignId = $schedule->campaignId;
+        }
+
         // Fields only collected for interrupt events
-        if ($schedule->eventTypeId == 4) {
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
             $schedule->shareOfVoice = $sanitizedParams->getInt('shareOfVoice', [
                 'throw' => function () {
                     new InvalidArgumentException(
@@ -1178,7 +1183,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1246,7 +1251,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1295,7 +1300,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1516,7 +1521,7 @@ class Schedule extends Base
         ]);
 
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1540,8 +1545,13 @@ class Schedule extends Base
         $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
         $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
 
+        // Set the parentCampaignId for campaign events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
+            $schedule->parentCampaignId = $schedule->campaignId;
+        }
+
         // Fields only collected for interrupt events
-        if ($schedule->eventTypeId == 4) {
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
             $schedule->shareOfVoice = $sanitizedParams->getInt('shareOfVoice', [
                 'throw' => function () {
                     new InvalidArgumentException(
@@ -1769,7 +1779,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1816,7 +1826,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1835,13 +1845,18 @@ class Schedule extends Base
 
     /**
      * Is this event editable?
-     * @param array[\Xibo\Entity\DisplayGroup] $displayGroups
+     * @param \Xibo\Entity\Schedule $event
      * @return bool
-     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    private function isEventEditable($displayGroups)
+    private function isEventEditable(\Xibo\Entity\Schedule $event): bool
     {
         if (!$this->getUser()->featureEnabled('schedule.modify')) {
+            return false;
+        }
+
+        // Is this an event coming from an ad campaign?
+        if ($event->parentCampaignId !== null && $event->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
             return false;
         }
 
@@ -1849,16 +1864,16 @@ class Schedule extends Base
 
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
-        foreach ($displayGroups as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
-
+        foreach ($event->displayGroups as $displayGroup) {
             // Can schedule with view, but no view permissions
-            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup))
+            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup)) {
                 return false;
+            }
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup)) {
                 return false;
+            }
         }
 
         return true;
