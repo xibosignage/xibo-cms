@@ -211,32 +211,9 @@ class TimeConnected implements ReportInterface
     /** @inheritdoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $displayId = $sanitizedParams->getInt('displayId');
-        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => null]);
-
-        $displayIds = [];
-
-        // Get user
-        $user = $this->getUser();
-
-        // If we are a super admin we take all displays
-        if ($displayId !== null) {
-            // only filter if we've selected one.
-            $displayIds[] = $displayId;
-        } elseif ($user->isSuperAdmin()) {
-            foreach ($this->displayFactory->query(
-                null,
-                [
-                    'userCheckUserId' => $this->getUser()->userId,
-                    'displayGroupIds' => $displayGroupIds,
-                ]
-            ) as $display) {
-                $displayIds[] = $display->displayId;
-            }
-        } else {
-            // Get an array of display id this user has access to.
+        // Get an array of display id this user has access to.
             $displayIds = $this->getDisplayIdFilter($sanitizedParams);
-        }
+
 
         // From and To Date Selection
         // --------------------------
@@ -320,6 +297,8 @@ class TimeConnected implements ReportInterface
         // -------------
         $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds);
 
+
+        /*
         //
         // Output Results
         // --------------
@@ -354,6 +333,67 @@ class TimeConnected implements ReportInterface
         foreach ($displayIdsArrayChunk as $key => $display) {
             foreach ($display as $displayId) {
                 $displays[$key][$displayId] = $this->displayFactory->getById($displayId)->display;
+            }
+        }
+
+        */
+
+        // WHERE display.displayID IN (' . implode(',', $displayIds) . ')
+        // Output Results
+        // --------------
+       if ($this->getUser()->isSuperAdmin()) {
+           $sql = 'SELECT displayId, display FROM display WHERE 1 = 1';
+           if (count($displayIds) > 0) {
+               $sql .= ' AND displayId IN (' . implode(',', $displayIds) . ')';
+           }
+       }
+
+        /*$sql = 'SELECT campaign.campaignId FROM layout INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND layout.layoutId = :layoutId';
+        $params = ['layoutId' => $this->layoutId];
+        $results = $this->store->select($sql, $params);
+        foreach ($results as $row) {
+            $campaignId = $row['campaignId'];
+        }*/
+//        var_dump('Here');
+//        die();
+
+
+        $timeConnected = [];
+        $displays = [];
+        $i = 0;
+        $key = 0;
+        foreach ($this->store->select($sql, []) as $row) {
+            $displayId = intval($row['displayId']);
+            $displayName = $row['display'];
+
+            // Set the display name for the displays in this row.
+            $displays[$key][$displayId] = $displayName;
+
+            // Go through each period
+            foreach ($result['periods'] as $resPeriods) {
+                //
+                $temp = $resPeriods['customLabel'];
+                if (empty($timeConnected[$temp][$displayId]['percent'])) {
+                    $timeConnected[$key][$temp][$displayId]['percent'] = 100;
+                }
+                if (empty($timeConnected[$temp][$displayId]['label'])) {
+                    $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
+                }
+
+                foreach ($result['result'] as $res) {
+                    if ($res['displayId'] == $displayId && $res['customLabel'] == $resPeriods['customLabel']) {
+                        $timeConnected[$key][$temp][$displayId]['percent'] =  100 - round($res['percent'], 2);
+                        $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
+                    } else {
+                        continue;
+                    }
+                }
+            }
+
+            $i++;
+            if ($i >= 3) {
+                $i = 0;
+                $key++;
             }
         }
 
@@ -437,7 +477,6 @@ class TimeConnected implements ReportInterface
                           FROM displayevent
                             INNER JOIN display
                             ON display.displayId = displayevent.displayId
-                          WHERE display.displayID IN (' . implode(',', $displayIds) . ')
                     ) down
                     ON down.start < periods.`end`
                         AND down.end > periods.`start`
