@@ -78,7 +78,8 @@ class CampaignSchedulerTask implements TaskInterface
             'endDt' => $nextHour->unix(),
         ]);
 
-        // Sort these by priority.
+        // Do not schedule more than an hours worth of schedules.
+        $totalSovAvailable = 3600;
 
         // See what we can schedule for each one.
         $notifyDisplayGroupIds = [];
@@ -144,19 +145,28 @@ class CampaignSchedulerTask implements TaskInterface
                 }
 
                 // What is the total amount of time we want this campaign to play in this hour period?
+                // We work out how much we should have played vs how much we have played
+                $progress = $campaign->getProgress($nextHour->copy());
+
                 // TODO: need to think about this.
-                $shareOfVoice = 120;
+                //  can we calculate a fudge factor for whether we over or under schedule?
+                $playsNeeded = $progress->targetPerDay / 24;
 
                 // Spread across the layouts
-                $shareOfVoicePerLayout = intval(ceil($shareOfVoice / $countActiveLayouts));
+                $playsNeededPerLayout = intval(ceil($playsNeeded / $countActiveLayouts));
 
-                $this->log->debug('campaignSchedulerTask: shareOfVoicePerLayout is ' . $shareOfVoicePerLayout);
+                $this->log->debug('campaignSchedulerTask: playsNeededPerLayout is ' . $playsNeededPerLayout);
 
                 foreach ($activeLayouts as $layout) {
                     // We are on an active day of the week and within an active day part
                     // create a scheduled event for all displays assigned.
                     // and for each geo fence
                     // how much time do we need to schedule?
+                    if ($totalSovAvailable <= 0) {
+                        $this->log->debug('campaignSchedulerTask: total SOV available has been consumed');
+                        break 2;
+                    }
+
                     $schedule = $this->scheduleFactory->createEmpty();
                     $schedule->setCampaignFactory($this->campaignFactory);
 
@@ -180,12 +190,14 @@ class CampaignSchedulerTask implements TaskInterface
                         ? $this->getCustomDayPart()->dayPartId
                         : $layout->dayPartId;
                     $schedule->isGeoAware = 0;
-                    $schedule->maxPlaysPerHour = ceil($shareOfVoicePerLayout / $layout->duration);
                     $schedule->syncTimezone = 0;
                     $schedule->syncEvent = 0;
-                    $schedule->shareOfVoice = $shareOfVoicePerLayout;
 
-                    // Do we have a geofence?
+                    // We cap SOV at 3600
+                    $schedule->shareOfVoice = min($playsNeededPerLayout * $layout->duration, $totalSovAvailable);
+                    $schedule->maxPlaysPerHour = $playsNeededPerLayout;
+
+                    // Do we have a geofence? (geo schedules do not count against totalSovAvailable)
                     if (!empty($layout->geoFence)) {
                         $this->log->debug('campaignSchedulerTask: layout has a geo fence');
                         $schedule->isGeoAware = 1;
@@ -206,6 +218,9 @@ class CampaignSchedulerTask implements TaskInterface
                             $schedule->save(['notify' => false]);
                         }
                     } else {
+                        // Reduce the total available
+                        // (geo schedules do not count against totalSovAvailable)
+                        $totalSovAvailable -= $schedule->shareOfVoice;
                         $schedule->save(['notify' => false]);
                     }
                 }
