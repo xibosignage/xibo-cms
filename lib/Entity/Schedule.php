@@ -288,6 +288,12 @@ class Schedule implements \JsonSerializable
     public $actionLayoutCode;
 
     /**
+     * @SWG\Property(description="If the schedule should be considered part of a larger campaign")
+     * @var int
+     */
+    public $parentCampaignId;
+
+    /**
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
@@ -760,7 +766,8 @@ class Schedule implements \JsonSerializable
                 `actionType`,
                 `actionTriggerCode`,
                 `actionLayoutCode`,
-                `maxPlaysPerHour`
+                `maxPlaysPerHour`,
+                `parentCampaignId`
             )
             VALUES (
                 :eventTypeId,
@@ -785,7 +792,8 @@ class Schedule implements \JsonSerializable
                 :actionType,
                 :actionTriggerCode,
                 :actionLayoutCode,
-                :maxPlaysPerHour
+                :maxPlaysPerHour,
+                :parentCampaignId
             )
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -813,6 +821,7 @@ class Schedule implements \JsonSerializable
             'actionTriggerCode' => $this->actionTriggerCode,
             'actionLayoutCode' => $this->actionLayoutCode,
             'maxPlaysPerHour' => $this->maxPlaysPerHour,
+            'parentCampaignId' => $this->parentCampaignId == 0 ? null : $this->parentCampaignId,
         ]);
     }
 
@@ -845,7 +854,8 @@ class Schedule implements \JsonSerializable
             `actionType` = :actionType,
             `actionTriggerCode` = :actionTriggerCode,
             `actionLayoutCode` = :actionLayoutCode,
-            `maxPlaysPerHour` = :maxPlaysPerHour
+            `maxPlaysPerHour` = :maxPlaysPerHour,
+            `parentCampaignId` = :parentCampaignId
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -871,6 +881,7 @@ class Schedule implements \JsonSerializable
             'actionTriggerCode' => $this->actionTriggerCode,
             'actionLayoutCode' => $this->actionLayoutCode,
             'maxPlaysPerHour' => $this->maxPlaysPerHour,
+            'parentCampaignId' => $this->parentCampaignId == 0 ? null : $this->parentCampaignId,
             'eventId' => $this->eventId,
         ]);
     }

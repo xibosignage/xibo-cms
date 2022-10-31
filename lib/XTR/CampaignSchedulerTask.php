@@ -23,6 +23,10 @@
 namespace Xibo\XTR;
 
 use Carbon\Carbon;
+use GeoJson\Feature\FeatureCollection;
+use GeoJson\GeoJson;
+use Xibo\Entity\DayPart;
+use Xibo\Entity\Schedule;
 
 /**
  * Campaign Scheduler task
@@ -42,8 +46,14 @@ class CampaignSchedulerTask implements TaskInterface
     /** @var \Xibo\Factory\DayPartFactory */
     private $dayPartFactory;
 
-    /** @var \Xibo\Factory\DisplayFactory */
-    private $displayFactory;
+    /** @var \Xibo\Factory\DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var \Xibo\Service\DisplayNotifyServiceInterface */
+    private $displayNotifyService;
+
+    /** @var \Xibo\Entity\DayPart */
+    private $customDayPart = null;
 
     /** @inheritDoc */
     public function setFactories($container)
@@ -51,7 +61,8 @@ class CampaignSchedulerTask implements TaskInterface
         $this->campaignFactory = $container->get('campaignFactory');
         $this->scheduleFactory = $container->get('scheduleFactory');
         $this->dayPartFactory = $container->get('dayPartFactory');
-        $this->displayFactory = $container->get('displayFactory');
+        $this->displayGroupFactory = $container->get('displayGroupFactory');
+        $this->displayNotifyService = $container->get('displayNotifyService');
         return $this;
     }
 
@@ -59,6 +70,7 @@ class CampaignSchedulerTask implements TaskInterface
     public function run()
     {
         $nextHour = Carbon::now()->startOfHour()->addHour();
+        $nextHourEnd = $nextHour->copy()->addHour();
         $activeCampaigns = $this->campaignFactory->query(null, [
             'disableUserCheck' => 1,
             'type' => 'ad',
@@ -69,43 +81,151 @@ class CampaignSchedulerTask implements TaskInterface
         // Sort these by priority.
 
         // See what we can schedule for each one.
+        $notifyDisplayGroupIds = [];
         foreach ($activeCampaigns as $campaign) {
             try {
-                // Get displays
-                $displays = $this->displayFactory->getByDisplayGroupIds($campaign->loadDisplayGroupIds());
+                $this->log->debug('campaignSchedulerTask: active campaign found, id: ' . $campaign->campaignId);
+
+                // Display groups
+                $displayGroups = [];
+                foreach ($campaign->loadDisplayGroupIds() as $displayGroupId) {
+                    $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
+
+                    // Add to our list of displays to notify once finished.
+                    if (!in_array($displayGroupId, $notifyDisplayGroupIds)) {
+                        $notifyDisplayGroupIds[] = $displayGroupId;
+                    }
+                }
+
+                $this->log->debug('campaignSchedulerTask: campaign has ' . count($displayGroups) . ' displays');
 
                 // What schedules should I create?
+                $activeLayouts = [];
                 foreach ($campaign->loadLayouts() as $layout) {
+                    $this->log->debug('campaignSchedulerTask: layout assignment: ' . $layout->layoutId);
+
+                    // Is the layout value
+                    if ($layout->duration <= 0) {
+                        $this->log->error('campaignSchedulerTask: layout without duration');
+                        continue;
+                    }
+
                     // Are we on an active day of the week?
-                    if (!in_array($nextHour->dayOfWeekIso, $layout->daysOfWeek)) {
+                    if (!in_array($nextHour->dayOfWeekIso, explode(',', $layout->daysOfWeek))) {
+                        $this->log->debug('campaignSchedulerTask: day of week not active');
                         continue;
                     }
 
                     // Is this on an active day part?
                     if ($layout->dayPartId != 0) {
+                        $this->log->debug('campaignSchedulerTask: dayPartId set, testing');
+
+                        // Check the day part
                         $dayPart = $this->dayPartFactory->getById($layout->dayPartId);
                         $dayPart->adjustForDate($nextHour);
 
                         // Is this day part active
                         if (!$nextHour->betweenIncluded($dayPart->adjustedStart, $dayPart->adjustedEnd)) {
+                            $this->log->debug('campaignSchedulerTask: dayPart not active');
                             continue;
                         }
                     }
 
+                    $this->log->debug('campaignSchedulerTask: layout is valid and needs a schedule');
+                    $activeLayouts[] = $layout;
+                }
+
+                $countActiveLayouts = count($activeLayouts);
+                $this->log->debug('campaignSchedulerTask: there are ' . $countActiveLayouts . ' active layouts');
+
+                if ($countActiveLayouts <= 0) {
+                    $this->log->debug('campaignSchedulerTask: no active layouts for campaign');
+                    continue;
+                }
+
+                // What is the total amount of time we want this campaign to play in this hour period?
+                // TODO: need to think about this.
+                $shareOfVoice = 120;
+
+                // Spread across the layouts
+                $shareOfVoicePerLayout = intval(ceil($shareOfVoice / $countActiveLayouts));
+
+                $this->log->debug('campaignSchedulerTask: shareOfVoicePerLayout is ' . $shareOfVoicePerLayout);
+
+                foreach ($activeLayouts as $layout) {
                     // We are on an active day of the week and within an active day part
                     // create a scheduled event for all displays assigned.
                     // and for each geo fence
                     // how much time do we need to schedule?
-                    if (!empty($layout->geoFence)) {
-                        // Get some GeoJSON and pull out each Feature (create a schedule for each one)
-                    } else {
-                        // No geofence, so we just create for each layout/display.
+                    $schedule = $this->scheduleFactory->createEmpty();
+                    $schedule->setCampaignFactory($this->campaignFactory);
+
+                    // Date
+                    $schedule->fromDt = $nextHour->unix();
+                    $schedule->toDt = $nextHourEnd->unix();
+
+                    // Displays
+                    foreach ($displayGroups as $displayGroup) {
+                        $schedule->assignDisplayGroup($displayGroup);
                     }
+
+                    // Interrupt Layout
+                    $schedule->eventTypeId = Schedule::$INTERRUPT_EVENT;
+                    $schedule->userId = $campaign->ownerId;
+                    $schedule->parentCampaignId = $campaign->campaignId;
+                    $schedule->campaignId = $layout->layoutCampaignId;
+                    $schedule->displayOrder = 0;
+                    $schedule->isPriority = 0;
+                    $schedule->dayPartId = $layout->dayPartId == 0
+                        ? $this->getCustomDayPart()->dayPartId
+                        : $layout->dayPartId;
+                    $schedule->isGeoAware = 0;
+                    $schedule->maxPlaysPerHour = ceil($shareOfVoicePerLayout / $layout->duration);
+                    $schedule->syncTimezone = 0;
+                    $schedule->syncEvent = 0;
+                    $schedule->shareOfVoice = $shareOfVoicePerLayout;
+
+                    // Do we have a geofence?
+                    if (!empty($layout->geoFence)) {
+                        $this->log->debug('campaignSchedulerTask: layout has a geo fence');
+                        $schedule->isGeoAware = 1;
+
+                        // Get some GeoJSON and pull out each Feature (create a schedule for each one)
+                        $geoJson = GeoJson::jsonUnserialize(json_decode($layout->geoFence, true));
+                        if ($geoJson instanceof FeatureCollection) {
+                            $this->log->debug('campaignSchedulerTask: layout has multiple features');
+                            foreach ($geoJson->getFeatures() as $feature) {
+                                $schedule->geoLocation = json_encode($feature->jsonSerialize());
+                                $schedule->save(['notify' => false]);
+
+                                // Clone a new one
+                                $schedule = clone $schedule;
+                            }
+                        } else {
+                            $schedule->geoLocation = $layout->geoFence;
+                            $schedule->save(['notify' => false]);
+                        }
+                    } else {
+                        $schedule->save(['notify' => false]);
+                    }
+                }
+
+                // Handle notify
+                foreach ($notifyDisplayGroupIds as $displayGroupId) {
+                    $this->displayNotifyService->notifyByDisplayGroupId($displayGroupId);
                 }
             } catch (\Exception $exception) {
                 $this->log->error('campaignSchedulerTask: ' . $exception->getMessage());
                 $this->appendRunMessage($campaign->campaign . ' failed');
             }
         }
+    }
+
+    private function getCustomDayPart(): DayPart
+    {
+        if ($this->customDayPart === null) {
+            $this->customDayPart = $this->dayPartFactory->getCustomDayPart();
+        }
+        return $this->customDayPart;
     }
 }

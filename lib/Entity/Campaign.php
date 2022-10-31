@@ -590,6 +590,11 @@ class Campaign implements \JsonSerializable
     {
         $this->load();
 
+        // Unassign display groups
+        $this->getStore()->update('DELETE FROM `lkcampaigndisplaygroup` WHERE campaignId = :campaignId', [
+            'campaignId' => $this->campaignId,
+        ]);
+
         // Unassign all Layouts
         $this->layouts = [];
         $this->unlinkLayouts();

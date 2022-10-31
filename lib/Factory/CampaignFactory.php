@@ -348,13 +348,13 @@ class CampaignFactory extends BaseFactory
 
         // startDt
         if ($sanitizedFilter->getInt('startDt') !== null) {
-            $body .= ' AND campaign.startDt >= :startDt ';
+            $body .= ' AND campaign.startDt <= :startDt ';
             $params['startDt'] = $sanitizedFilter->getInt('startDt');
         }
 
         // endDt
         if ($sanitizedFilter->getInt('endDt') !== null) {
-            $body .= ' AND campaign.endDt < :endDt ';
+            $body .= ' AND campaign.endDt > :endDt ';
             $params['endDt'] = $sanitizedFilter->getInt('endDt');
         }
 
@@ -439,13 +439,23 @@ class CampaignFactory extends BaseFactory
     {
         $layouts = [];
         foreach ($this->getStore()->select('
-            SELECT lkcampaignlayout.*, layout.layout, layout.userId AS ownerId, layout.duration, daypart.name AS dayPart
+            SELECT lkcampaignlayout.*,
+                   layout.layout,
+                   layout.userId AS ownerId,
+                   layout.duration,
+                   daypart.name AS dayPart,
+                   campaign.campaignId AS layoutCampaignId
               FROM lkcampaignlayout
                 INNER JOIN layout 
                 ON layout.layoutId = lkcampaignlayout.layoutId
+                INNER JOIN lkcampaignlayout layoutspecific
+                ON layoutspecific.layoutId = layout.layoutId
+                INNER JOIN campaign 
+                ON layoutspecific.campaignId = campaign.campaignId
+                    AND campaign.isLayoutSpecific = 1
                 LEFT OUTER JOIN daypart
                 ON daypart.dayPartId = lkcampaignlayout.dayPartId
-             WHERE campaignId = :campaignId
+             WHERE lkcampaignlayout.campaignId = :campaignId
             ORDER BY displayOrder
         ', [
             'campaignId' => $campaignId,

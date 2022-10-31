@@ -31,11 +31,18 @@ class AdCampaignMigration extends AbstractMigration
     /** @inheritDoc */
     public function change()
     {
-        // Add a new field for the home folder
+        // Schedule table gets some new fields.
+        // one to set the maximum number of plays per hour
+        // the other to indicate if the schedule is part of a parent campaign
         $this->table('schedule')
             ->addColumn('maxPlaysPerHour', 'integer', [
                 'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL,
-                'default' => 0
+                'default' => 0,
+            ])
+            ->addColumn('parentCampaignId', 'integer', [
+                'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+                'null' => true,
+                'default' => null,
             ])
             ->save();
 

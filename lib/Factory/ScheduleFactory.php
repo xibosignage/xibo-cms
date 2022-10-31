@@ -316,6 +316,7 @@ class ScheduleFactory extends BaseFactory
             `schedule`.actionTriggerCode,
             `schedule`.actionType,
             `schedule`.actionLayoutCode,
+            `schedule`.parentCampaignId,
             `daypart`.isAlways,
             `daypart`.isCustom
           FROM `schedule`
