@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\CampaignFactory;
@@ -118,24 +117,7 @@ class Campaign extends Base
         }
 
         // Work out the percentage complete/target.
-        $now = Carbon::now();
-        $startDt = $campaign->getStartDt();
-        if ($startDt->isAfter($now)) {
-            $complete = 0;
-            $target = 0;
-        } else {
-            $daysIn = $now->diffInDays($startDt);
-            $daysTotal = $campaign->getEndDt()->diffInDays($startDt);
-            $complete = $daysIn / $daysTotal * 100;
-
-            if ($campaign->targetType === 'budget') {
-                $target = ($campaign->spend / $campaign->target) * 100;
-            } else if ($campaign->targetType === 'impressions') {
-                $target = ($campaign->impressions / $campaign->target) * 100;
-            } else {
-                $target = ($campaign->plays / $campaign->target) * 100;
-            }
-        }
+        $progress = $campaign->getProgress();
 
         $this->getState()->template = 'campaign-builder';
         $this->getState()->setData([
@@ -143,8 +125,8 @@ class Campaign extends Base
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'stats' => [
-                'complete' => round($complete, 2),
-                'target' => round($target, 2),
+                'complete' => round($progress->progressTime, 2),
+                'target' => round($progress->progressTarget, 2),
             ],
         ]);
         return $this->render($request, $response);

@@ -339,6 +339,45 @@ class Campaign implements \JsonSerializable
     }
 
     /**
+     * @param \Carbon\Carbon|null $testDate
+     * @return \Xibo\Entity\CampaignProgress
+     */
+    public function getProgress(?Carbon $testDate = null): CampaignProgress
+    {
+        $progress = new CampaignProgress();
+
+        if ($this->type !== 'ad') {
+            $progress->progressTime = 0;
+            $progress->progressTarget = 0;
+            return $progress;
+        }
+
+        if ($testDate === null) {
+            $testDate = Carbon::now();
+        }
+        $startDt = $this->getStartDt();
+        $progress->daysTotal = $this->getEndDt()->diffInDays($startDt);
+        $progress->targetPerDay = $this->target / $progress->daysTotal;
+
+        if ($startDt->isAfter($testDate)) {
+            $progress->progressTime = 0;
+            $progress->progressTarget = 0;
+        } else {
+            $progress->daysIn = $testDate->diffInDays($startDt);
+            $progress->progressTime = $progress->daysIn / $progress->daysTotal * 100;
+
+            if ($this->targetType === 'budget') {
+                $progress->progressTarget = ($this->spend / $this->target) * 100;
+            } else if ($this->targetType === 'impressions') {
+                $progress->progressTarget = ($this->impressions / $this->target) * 100;
+            } else {
+                $progress->progressTarget = ($this->plays / $this->target) * 100;
+            }
+        }
+        return $progress;
+    }
+
+    /**
      * @param array $options
      * @throws NotFoundException
      */
