@@ -2918,8 +2918,11 @@ function XiboSwapDialog(formUrl, data) {
 function XiboRefreshAllGrids() {
     // We should refresh the grids (this is a global refresh)
     $(" .XiboGrid table.dataTable").each(function() {
-        // Render
-        $(this).DataTable().ajax.reload(null, false);
+        const refresh = $(this).closest('.XiboGrid').data('refreshOnFormSubmit');
+        if (refresh === undefined || refresh === null || refresh) {
+            // Render
+            $(this).DataTable().ajax.reload(null, false);
+        }
     });
 }
 

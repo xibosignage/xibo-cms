@@ -289,8 +289,11 @@ class TimeDisconnectedSummary implements ReportInterface
 
         $body .= 'WHERE `start` <= :end
                   AND IFNULL(`end`, :end) >= :start
-                  AND :end <= UNIX_TIMESTAMP(NOW())
-                  AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+                  AND :end <= UNIX_TIMESTAMP(NOW()) ';
+
+        if (count($displayIds) > 0) {
+            $body .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
 
         if ($displayGroupId != 0) {
             $body .= '

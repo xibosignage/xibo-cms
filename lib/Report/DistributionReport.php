@@ -882,11 +882,14 @@ class DistributionReport implements ReportInterface
                         '$gt' => $filterRangeStart
                     ],
                     'type' => $type,
-                    'displayId' => [
-                        '$in' => $displayIds
-                    ]
                 ]
             ];
+
+            if (count($displayIds) > 0) {
+                $match['$match']['displayId'] = [
+                    '$in' => $displayIds
+                ];
+            }
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {

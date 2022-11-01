@@ -40,7 +40,7 @@
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
                 <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="summaryReport">
                         <!-- Form Filter -->
@@ -275,6 +275,27 @@
                         'sortable': false,
                     }
                 ],
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+
+                    // Total over all pages
+                    let totalDuration = api.column(1).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalNumberPlays = api.column(2).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalDurationPage = api.column(1, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalNumberPlaysPage = api.column(2, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    // Update footer
+                    $(api.column(1).footer()).html(totalDurationPage + ' (' + totalDuration + ' total)');
+                    $(api.column(2).footer()).html(Math.floor(totalNumberPlaysPage) + ' (' + Math.floor(totalNumberPlays) + ' total)');
+                },
             });
 
             // Get Data
