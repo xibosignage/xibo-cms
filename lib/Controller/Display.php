@@ -39,6 +39,7 @@ use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\DisplayTypeFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -112,6 +113,11 @@ class Display extends Base
      */
     private $displayProfileFactory;
 
+    /**
+     * @var DisplayTypeFactory
+     */
+    private $displayTypeFactory;
+
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
 
@@ -137,6 +143,7 @@ class Display extends Base
      * @param PlayerActionServiceInterface $playerAction
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayTypeFactory $displayTypeFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param DisplayEventFactory $displayEventFactory
@@ -147,13 +154,14 @@ class Display extends Base
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
+    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $displayTypeFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayTypeFactory = $displayTypeFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->displayEventFactory = $displayEventFactory;
@@ -573,6 +581,12 @@ class Display extends Base
             $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
         }
 
+        // Get all Display Types
+        $displayTypes = [];
+        foreach ($this->displayTypeFactory->query() as $displayType) {
+            $displayTypes[$displayType->displayTypeId] = $displayType->displayType;
+        }
+
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
 
@@ -612,6 +626,7 @@ class Display extends Base
 
             // Add in the display profile information
             $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
+            $display->displayTypeId = $displayTypes[$display->displayTypeId];
 
             $display->includeProperty('buttons');
 
@@ -1096,6 +1111,7 @@ class Display extends Base
 
         // Get the settings from the profile
         $profile = $display->getSettings();
+        $displayTypes = $this->displayTypeFactory->query();
 
         // Get a list of timezones
         $timeZones = [];
@@ -1165,6 +1181,7 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
+            'displayTypes' => $displayTypes,
             'dayParts' => $dayparts
         ]);
 
@@ -1416,6 +1433,8 @@ class Display extends Base
         $display->load();
 
         $display->description = $sanitizedParams->getString('description');
+        $display->displayTypeId = $sanitizedParams->getInt('displayTypeId');
+        $display->screenSize = $sanitizedParams->getInt('screenSize');
         $display->auditingUntil = $sanitizedParams->getDate('auditingUntil');
         $display->defaultLayoutId = $sanitizedParams->getInt('defaultLayoutId');
         $display->licensed = $sanitizedParams->getInt('licensed');
@@ -1436,6 +1455,15 @@ class Display extends Base
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
         $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
+        $display->isOutdoor = $sanitizedParams->getCheckbox('isOutdoor');
+        $display->costPerPlay = $sanitizedParams->getInt('costPerPlay');
+        $display->impressionsPerPlay = $sanitizedParams->getInt('impressionsPerPlay');
+        $display->customId = $sanitizedParams->getString('customId');
+        $display->ref1 = $sanitizedParams->getString('ref1');
+        $display->ref2 = $sanitizedParams->getString('ref2');
+        $display->ref3 = $sanitizedParams->getString('ref3');
+        $display->ref4 = $sanitizedParams->getString('ref4');
+        $display->ref5 = $sanitizedParams->getString('ref5');
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config

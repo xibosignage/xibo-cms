@@ -665,6 +665,11 @@ class DisplayGroup extends Base
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
         $displayGroup->dynamicCriteriaLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
         $displayGroup->folderId = $sanitizedParams->getInt('folderId');
+        $displayGroup->ref1 = $sanitizedParams->getString('ref1');
+        $displayGroup->ref2 = $sanitizedParams->getString('ref2');
+        $displayGroup->ref3 = $sanitizedParams->getString('ref3');
+        $displayGroup->ref4 = $sanitizedParams->getString('ref4');
+        $displayGroup->ref5 = $sanitizedParams->getString('ref5');
 
         if ($displayGroup->folderId === 1) {
             $this->checkRootFolderAllowSave();
@@ -823,6 +828,12 @@ class DisplayGroup extends Base
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
         $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperatorName') : 'OR';
         $displayGroup->folderId = $parsedRequestParams->getInt('folderId', ['default' => $displayGroup->folderId]);
+
+        $displayGroup->ref1 = $parsedRequestParams->getString('ref1');
+        $displayGroup->ref2 = $parsedRequestParams->getString('ref2');
+        $displayGroup->ref3 = $parsedRequestParams->getString('ref3');
+        $displayGroup->ref4 = $parsedRequestParams->getString('ref4');
+        $displayGroup->ref5 = $parsedRequestParams->getString('ref5');
 
         if ($displayGroup->hasPropertyChanged('folderId')) {
             if ($displayGroup->folderId === 1) {

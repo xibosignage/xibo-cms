@@ -153,6 +153,7 @@ class Controllers
                     $c->get('playerActionService'),
                     $c->get('displayFactory'),
                     $c->get('displayGroupFactory'),
+                    $c->get('displayTypeFactory'),
                     $c->get('layoutFactory'),
                     $c->get('displayProfileFactory'),
                     $c->get('displayEventFactory'),

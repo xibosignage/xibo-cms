@@ -205,6 +205,12 @@ class DisplayFactory extends BaseFactory
               SELECT display.displayId,
                   display.display,
                   display.defaultLayoutId,
+                  display.displayTypeId,
+                  display.screenSize,
+                  display.isOutdoor,
+                  display.customId,
+                  display.costPerPlay,
+                  display.impressionsPerPlay,
                   layout.layout AS defaultLayout,
                   display.license,
                   display.licensed,
@@ -243,6 +249,11 @@ class DisplayFactory extends BaseFactory
                   displaygroup.modifiedDt,
                   displaygroup.folderId,
                   displaygroup.permissionsFolderId,
+                  displaygroup.ref1,
+                  displaygroup.ref2,
+                  displaygroup.ref3,
+                  displaygroup.ref4,
+                  displaygroup.ref5,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
@@ -411,6 +422,11 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getString('clientCode') != '') {
             $body .= ' AND display.client_code LIKE :clientCode ';
             $params['clientCode'] = '%' . $parsedBody->getString('clientCode') . '%';
+        }
+
+        if ($parsedBody->getString('customId') != '') {
+            $body .= ' AND display.customId LIKE :customId ';
+            $params['customId'] = '%' . $parsedBody->getString('customId') . '%';
         }
 
         if ($parsedBody->getString('orientation', $filterBy) != '') {

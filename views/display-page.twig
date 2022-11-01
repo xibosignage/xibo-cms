@@ -130,6 +130,9 @@
                                     {% set title %}{% trans "Player Code" %}{% endset %}
                                     {{ inline.input("clientCode", title) }}
 
+                                    {% set title %}{% trans "Custom ID" %}{% endset %}
+                                    {{ inline.input("customId", title) }}
+
                                     {% set title %}{% trans "Mac Address" %}{% endset %}
                                     {{ inline.input("macAddress", title) }}
 
@@ -190,6 +193,7 @@
                                     <tr>
                                         <th>{% trans "ID" %}</th>
                                         <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Display Type" %}</th>
                                         <th>{% trans "Status" %}</th>
                                         <th>{% trans "Authorised?" %}</th>
                                         <th>{% trans "Current Layout" %}</th>
@@ -222,6 +226,16 @@
                                         <th>{% trans "Commercial Licence" %}</th>
                                         <th>{% trans "Remote" %}</th>
                                         <th>{% trans "Sharing" %}</th>
+                                        <th>{% trans "Screen Size" %}</th>
+                                        <th>{% trans "Outdoor?" %}</th>
+                                        <th>{% trans "Reference 1" %}</th>
+                                        <th>{% trans "Reference 2" %}</th>
+                                        <th>{% trans "Reference 3" %}</th>
+                                        <th>{% trans "Reference 4" %}</th>
+                                        <th>{% trans "Reference 5" %}</th>
+                                        <th>{% trans "Custom ID" %}</th>
+                                        <th>{% trans "Cost Per Play" %}</th>
+                                        <th>{% trans "Impressions Per Play" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th>{% trans "Faults?" %}</th>
@@ -319,6 +333,7 @@
                 "columns": [
                     {"data": "displayId", responsivePriority: 2},
                     {"data": "display", responsivePriority: 2},
+                    {"data": "displayTypeId", responsivePriority: 2},
                     {
                         "data": "mediaInventoryStatus",
                         responsivePriority: 2,
@@ -551,6 +566,21 @@
                         responsivePriority: 10,
                         "render": dataTableCreatePermissions
                     },
+                    {"data": "screenSize", "visible": false, responsivePriority: 6},
+                    {
+                        "data": "isOutdoor",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isOutdoor"
+                    },
+                    {"data": "ref1", "visible": false, responsivePriority: 6},
+                    {"data": "ref2", "visible": false, responsivePriority: 6},
+                    {"data": "ref3", "visible": false, responsivePriority: 6},
+                    {"data": "ref4", "visible": false, responsivePriority: 6},
+                    {"data": "ref5", "visible": false, responsivePriority: 6},
+                    {"data": "customId", "visible": false, responsivePriority: 6},
+                    {"data": "costPerPlay", "visible": false, responsivePriority: 6},
+                    {"data": "impressionsPerPlay", "visible": false, responsivePriority: 6},
                     {"data": "createdDt", "visible": false, responsivePriority: 6},
                     {"data": "modifiedDt", "visible": false, responsivePriority: 6},
                     {
