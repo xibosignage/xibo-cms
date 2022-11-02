@@ -177,7 +177,7 @@
                         { id: "ref4", value: "Reference 4"|trans },
                         { id: "ref5", value: "Reference 5"|trans },
                     ] %}
-                    {{ forms.dropdown(partnerKey ~ "_sspIdField", "single", title, interface.getPartnerSetting(partnerKey, "sspIdField"), options, "id", "value", helpText) }}
+                    {{ forms.dropdown(partnerKey ~ "_sspIdField", "single", title, interface.getSetting(partnerKey ~ "_sspIdField"), options, "id", "value", helpText) }}
 
                 </div>
             {% endfor %}
