@@ -945,7 +945,7 @@ class Display implements \JsonSerializable
         ', [
             'display' => $this->display,
             'defaultLayoutId' => $this->defaultLayoutId,
-            'displayTypeId' => $this->displayTypeId,
+            'displayTypeId' => $this->displayTypeId === 0 ? null : $this->displayTypeId,
             'screenSize' => $this->screenSize,
             'isOutdoor' => $this->isOutdoor,
             'customId' => $this->customId,
