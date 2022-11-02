@@ -90,6 +90,11 @@ class AdCampaignMigration extends AbstractMigration
                 'default' => null,
                 'null' => true,
             ])
+            ->addColumn('listPlayOrder', 'string', [
+                'length' => 6,
+                'default' => 'round',
+                'null' => false,
+            ])
             ->addColumn('ref1', 'string', [
                 'default' => null,
                 'null' => true,

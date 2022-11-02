@@ -206,6 +206,7 @@ class CampaignFactory extends BaseFactory
            `campaign`.permissionsFolderId,
            `campaign`.cyclePlaybackEnabled,
            `campaign`.playCount,
+           `campaign`.listPlayOrder,
            `campaign`.targetType,
            `campaign`.target,
            `campaign`.startDt,
