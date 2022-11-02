@@ -223,6 +223,11 @@ class Campaign implements \JsonSerializable
 
     private $displayGroupAssignmentsChanged = false;
 
+    // Internal tracking variables for when we're incrementing plays/spend and impressions.
+    private $additionalPlays = 0;
+    private $additionalSpend = 0.0;
+    private $additionalImpressions = 0.0;
+
     /** @var \Xibo\Factory\CampaignFactory */
     private $campaignFactory;
 
@@ -1006,5 +1011,44 @@ class Campaign implements \JsonSerializable
                 $notify->notifyByLayoutCode($options['layoutCode']);
             }
         }
+    }
+
+    /**
+     * Add to the number of plays
+     * @param int $plays
+     * @param float $spend
+     * @param float $impressions
+     * @return $this
+     */
+    public function incrementPlays(int $plays, float $spend, float $impressions): Campaign
+    {
+        $this->plays += $plays;
+        $this->additionalPlays += $plays;
+        $this->spend += $spend;
+        $this->additionalSpend += $spend;
+        $this->impressions += $impressions;
+        $this->additionalImpressions += $impressions;
+        return $this;
+    }
+
+    /**
+     * Save increments to the number of plays
+     * @return $this
+     */
+    public function saveIncrementPlays(): Campaign
+    {
+        $this->getStore()->update('
+            UPDATE `campaign`
+                SET `plays` = `plays` + :plays,
+                    `spend` = `spend` + :spend,
+                    `impressions` = `impressions` + :impressions
+             WHERE campaignId = :campaignId
+        ', [
+            'plays' => $this->additionalPlays,
+            'spend' => $this->additionalSpend,
+            'impressions' => $this->additionalImpressions,
+            'campaignId' => $this->campaignId,
+        ]);
+        return $this;
     }
 }

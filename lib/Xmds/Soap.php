@@ -151,10 +151,14 @@ class Soap
 
     /** @var  PlayerVersionFactory */
     protected $playerVersionFactory;
+
     /**
      * @var EventDispatcher
      */
     private $dispatcher;
+
+    /** @var \Xibo\Factory\CampaignFactory */
+    private $campaignFactory;
 
     /**
      * Soap constructor.
@@ -180,8 +184,9 @@ class Soap
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     * @param \Xibo\Factory\CampaignFactory $campaignFactory
      */
-
     public function __construct(
         $logProcessor,
         $pool,
@@ -205,7 +210,8 @@ class Soap
         $scheduleFactory,
         $dayPartFactory,
         $playerVersionFactory,
-        $dispatcher
+        $dispatcher,
+        $campaignFactory
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -230,6 +236,7 @@ class Soap
         $this->dayPartFactory = $dayPartFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->dispatcher = $dispatcher;
+        $this->campaignFactory = $campaignFactory;
     }
 
     /**
@@ -1552,6 +1559,10 @@ class Soap
         $widgetIdsNotFound = [];
         $memoryCache = [];
 
+        // Cache of scheduleIds and counts
+        $schedules = [];
+        $campaigns = [];
+
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
             // Make sure we don't consider any text nodes
@@ -1564,6 +1575,7 @@ class Soap
             $type = strtolower($node->getAttribute('type'));
             $duration = $node->getAttribute('duration');
             $count = $node->getAttribute('count');
+            $count = ($count != '') ? (int) $count : 1;
             $engagements = [];
 
             foreach ($node->childNodes as $nodeElements) {
@@ -1599,6 +1611,7 @@ class Soap
                 continue;
             }
 
+            // ScheduleId is supplied to all layout stats, but not event stats.
             $scheduleId = $node->getAttribute('scheduleid');
             if (empty($scheduleId)) {
                 $scheduleId = 0;
@@ -1712,6 +1725,33 @@ class Soap
                 continue;
             }
 
+            // Cache a count for this scheduleId
+            $parentCampaignId = 0;
+            $parentCampaign = null;
+            if ($scheduleId > 0) {
+                // Lookup this schedule
+                if (!array_key_exists($scheduleId, $schedules)) {
+                    // Look up the campaign.
+                    $schedules[$scheduleId] = $this->scheduleFactory->getById($scheduleId);
+                }
+
+                // Does this event have a parent campaign?
+                if (!empty($schedules[$scheduleId]->parentCampaignId)) {
+                    $parentCampaignId = $schedules[$scheduleId]->parentCampaignId;
+
+                    // Look it up
+                    if (!array_key_exists($parentCampaignId, $campaigns)) {
+                        $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
+                    }
+
+                    if ($campaigns[$parentCampaignId]->type === 'ad') {
+                        // TODO: spend/impressions multiplier for this display
+                        $parentCampaign = $campaigns[$parentCampaignId];
+                        $parentCampaign->incrementPlays($count, 0, 1);
+                    }
+                }
+            }
+
             // Important - stats will now send display entity instead of displayId
             $stats = [
                 'type' => $type,
@@ -1725,8 +1765,10 @@ class Soap
                 'tag' => $tag,
                 'widgetId' => (int) $widgetId,
                 'duration' => (int) $duration,
-                'count' => ($count != '') ? (int) $count : 1,
+                'count' => $count,
                 'engagements' => (count($engagements) > 0) ? $engagements : [],
+                'parentCampaignId' => $parentCampaignId,
+                'parentCampaign' => $parentCampaign,
             ];
 
             $this->getTimeSeriesStore()->addStat($stats);
@@ -1739,6 +1781,13 @@ class Soap
             $this->getTimeSeriesStore()->addStatFinalize();
         } else {
             $this->getLog()->info('0 stats resolved from data package');
+        }
+
+        // Save ad campaign changes.
+        foreach ($campaigns as $campaign) {
+            if ($campaign->type === 'ad') {
+                $campaign->saveIncrementPlays();
+            }
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));

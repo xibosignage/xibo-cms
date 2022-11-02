@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -120,11 +120,28 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addStatFinalize()
     {
-
         if (count($this->stats) > 0) {
+            $sql = '
+                INSERT INTO `stat` (
+                    `type`,
+                    `statDate`,
+                    `start`,
+                    `end`,
+                    `scheduleID`,
+                    `displayID`,
+                    `campaignID`,
+                    `layoutID`,
+                    `mediaID`,
+                    `tag`,
+                    `widgetId`,
+                    `duration`,
+                    `count`,
+                    `engagements`,
+                    `parentCampaignId`
+                ) 
+                VALUES ';
 
-            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, `engagements`) VALUES ';
-            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
             $sql = $sql . implode(', ', array_fill(1, count($this->stats), $placeHolders));
 
@@ -146,7 +163,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     'widgetId' => $stat['widgetId'],
                     'duration' => $stat['duration'],
                     'count' => $stat['count'],
-                    'engagements' => $stat['engagements']
+                    'engagements' => $stat['engagements'],
+                    'parentCampaignId' => $stat['parentCampaignId'],
                 ];
 
                 // Add each value to another array in order
