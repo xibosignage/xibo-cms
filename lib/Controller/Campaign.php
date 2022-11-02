@@ -534,9 +534,16 @@ class Campaign extends Base
 
         $folder = $this->folderFactory->getById($folderId, 0);
 
+        // Campaign type
+        if ($this->getUser()->featureEnabled('ad.campaign')) {
+            $type = $sanitizedParams->getString('type');
+        } else {
+            $type = 'list';
+        }
+
         // Create Campaign
         $campaign = $this->campaignFactory->create(
-            $sanitizedParams->getString('type'),
+            $type,
             $sanitizedParams->getString('name'),
             $this->getUser()->userId,
             $sanitizedParams->getString('tags'),
