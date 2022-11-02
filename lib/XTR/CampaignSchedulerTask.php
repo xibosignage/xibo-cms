@@ -148,9 +148,19 @@ class CampaignSchedulerTask implements TaskInterface
                 // We work out how much we should have played vs how much we have played
                 $progress = $campaign->getProgress($nextHour->copy());
 
-                // TODO: need to think about this.
-                //  can we calculate a fudge factor for whether we over or under schedule?
+                // A simple assessment of how many plays we need to check in this hour period (we assume the campaign
+                // will play for 24 hours a day and that adjustments to later scheduling will solve any underplay)
                 $playsNeeded = $progress->targetPerDay / 24;
+
+                if ($progress->progressTime > 0 && $progress->progressTarget > 0) {
+                    // If we're behind, then increase our play rate accordingly
+                    // again, this is a simple calculation
+                    $ratio = $progress->progressTime / $progress->progressTarget;
+                    $playsNeeded = $playsNeeded * $ratio;
+
+                    $this->log->debug('campaignSchedulerTask: playsNeeded is ' . $playsNeeded
+                        . ', adjusted by ' . $ratio);
+                }
 
                 // Spread across the layouts
                 $playsNeededPerLayout = intval(ceil($playsNeeded / $countActiveLayouts));
