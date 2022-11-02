@@ -2356,6 +2356,7 @@ class Layout implements \JsonSerializable
             );
             $campaign->isLayoutSpecific = 1;
             $campaign->cyclePlaybackEnabled = 0;
+            $campaign->listPlayOrder = 'round';
 
             // check that the user has access to the folder we're adding them to
             $folder = $this->folderFactory->getById($campaign->folderId, 0);
