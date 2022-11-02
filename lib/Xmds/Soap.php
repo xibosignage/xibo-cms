@@ -1521,25 +1521,28 @@ class Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.");
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         if ($this->display->isAuditing()) {
             $this->getLog()->debug('Received XML. ' . $statXml);
         }
 
-        if ($statXml == "") {
-            throw new \SoapFault('Receiver', "Stat XML is empty.");
+        if ($statXml == '') {
+            throw new \SoapFault('Receiver', 'Stat XML is empty.');
         }
 
         // Store an array of parsed stat data for insert
@@ -1552,10 +1555,11 @@ class Soap
         $statCount = 0;
 
         // Load the XML into a DOMDocument
-        $document = new \DOMDocument("1.0");
+        $document = new \DOMDocument('1.0');
         $document->loadXML($statXml);
 
-        $layoutIdsNotFound = [];
+        $splashScreenErrorLogged = false;
+        $backgroundWidgetErrorLogged = false;
         $widgetIdsNotFound = [];
         $memoryCache = [];
 
@@ -1566,24 +1570,25 @@ class Soap
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
             // Make sure we don't consider any text nodes
-            if ($node->nodeType == XML_TEXT_NODE)
+            if ($node->nodeType == XML_TEXT_NODE) {
                 continue;
+            }
 
             // Each element should have these attributes
-            $fromdt = $node->getAttribute('fromdt');
-            $todt = $node->getAttribute('todt');
+            $fromDt = $node->getAttribute('fromdt');
+            $toDt = $node->getAttribute('todt');
             $type = strtolower($node->getAttribute('type'));
             $duration = $node->getAttribute('duration');
             $count = $node->getAttribute('count');
             $count = ($count != '') ? (int) $count : 1;
-            $engagements = [];
 
+            // Pull out engagements
+            $engagements = [];
             foreach ($node->childNodes as $nodeElements) {
                 /* @var \DOMElement $nodeElements */
                 if ($nodeElements->nodeName == 'engagements') {
                     $i = 0;
                     foreach ($nodeElements->childNodes as $child) {
-
                         /* @var \DOMElement $child */
                         if ($child->nodeName == 'engagement') {
                             $engagements[$i]['tag'] = $child->getAttribute('tag');
@@ -1595,21 +1600,75 @@ class Soap
                 }
             }
 
-            if ($fromdt == '' || $todt == '' || $type == '') {
+            // Validate
+            // --------
+            // Check we have the minimum required data
+            if ($fromDt == '' || $toDt == '' || $type == '') {
                 $this->getLog()->info('Stat submitted without the fromdt, todt or type attributes.');
                 continue;
             }
 
-            // if fromdt and to dt are same then ignore them
-            if ($fromdt == $todt) {
-                $this->getLog()->debug('Ignoring a Stat record because the fromDt (' . $fromdt. ') and toDt (' . $todt. ') are the same');
+            // Exactly the same dates are not supported
+            if ($fromDt == $toDt) {
+                $this->getLog()->debug('Ignoring a Stat record because the fromDt ('
+                    . $fromDt. ') and toDt (' . $toDt. ') are the same');
                 continue;
             }
 
-            if ($fromdt > $todt) {
-                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
+            // From date cannot be ahead of to date
+            if ($fromDt > $toDt) {
+                $this->getLog()->debug('Ignoring a Stat record because the fromDt ('
+                    . $fromDt . ') is greater than toDt (' . $toDt . ')');
                 continue;
             }
+
+            // Adjust the date according to the display timezone
+            // stats are returned in player local date/time
+            // the CMS will have been configured with that Player's timezone, so we can convert accordingly.
+            try {
+                // From date
+                $fromDt = ($this->display->timeZone != null)
+                    ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromDt, $this->display->timeZone)
+                        ->tz($defaultTimeZone)
+                    : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromDt);
+
+                // To date
+                $toDt = ($this->display->timeZone != null)
+                    ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $toDt, $this->display->timeZone)
+                        ->tz($defaultTimeZone)
+                    : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $toDt);
+
+                // Do we need to set the duration of this record (we will do for older individually collected stats)
+                if ($duration == '') {
+                    $duration = $toDt->diffInSeconds($fromDt);
+                }
+            } catch (\Exception $e) {
+                // Protect against the date format being unreadable
+                $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: '
+                    . $fromDt . ', toDt: ' . $toDt . '. E = ' . $e->getMessage());
+                continue;
+            }
+
+            // check maximum retention period against stat date, do not record if it's older than max stat age
+            $maxAge = intval($this->getConfig()->getSetting('MAINTENANCE_STAT_MAXAGE'));
+            if ($maxAge != 0) {
+                $maxAgeDate = Carbon::now()->subDays($maxAge);
+
+                if ($toDt->isBefore($maxAgeDate)) {
+                    $this->getLog()->debug('Stat older than max retention period, skipping.');
+                    continue;
+                }
+            }
+
+            // If the duration is enormous, then we have an erroneous message from the player
+            if ($duration > (86400 * 365)) {
+                $this->getLog()->debug('Dates are too far apart');
+                continue;
+            }
+
+            // Simple validation end
+            // ---------------------
+            // from here on we need to look things up
 
             // ScheduleId is supplied to all layout stats, but not event stats.
             $scheduleId = $node->getAttribute('scheduleid');
@@ -1619,29 +1678,28 @@ class Soap
 
             $layoutId = $node->getAttribute('layoutid');
 
-            if ($type != 'event') {
-
-                // Handle the splash screen
-                if ($layoutId == 'splash') {
-                    // only logging this message one time
-                    if (!in_array($layoutId, $layoutIdsNotFound)) {
-                        $layoutIdsNotFound[] = $layoutId;
-                        $this->getLog()->info('Splash Screen Statistic Ignored');
-                    }
-
-                    continue;
+            // Ignore the splash screen
+            if ($layoutId == 'splash') {
+                // only logging this message one time
+                if (!$splashScreenErrorLogged) {
+                    $splashScreenErrorLogged = true;
+                    $this->getLog()->info('Splash Screen Statistic Ignored');
                 }
+                continue;
             }
 
-            // Slightly confusing behaviour here to support old players without introducting a different call in
-            // xmds v=5.
+            // Slightly confusing behaviour here to support old players without introduction a different call in
+            // XMDS v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
             $mediaId = null;
 
             // Ignore old "background" stat records.
             if ($widgetId === 'background') {
-                $this->getLog()->info('Ignoring old "background" stat record.');
+                if (!$backgroundWidgetErrorLogged) {
+                    $backgroundWidgetErrorLogged = true;
+                    $this->getLog()->info('Ignoring old "background" stat record.');
+                }
                 continue;
             }
 
@@ -1651,7 +1709,6 @@ class Soap
             } else {
                 // Try to get details for this widget
                 try {
-
                     if (in_array($widgetId, $widgetIdsNotFound)) {
                         continue;
                     }
@@ -1666,7 +1723,6 @@ class Soap
                     if ($mediaId === null) {
                         $type = 'widget';
                     }
-
                 } catch (NotFoundException $notFoundException) {
                     // Widget isn't found
                     // we can only log this and move on
@@ -1682,47 +1738,6 @@ class Soap
             $tag = $node->getAttribute('tag');
             if ($tag == 'null') {
                 $tag = null;
-            }
-
-            // Adjust the date according to the display timezone
-            // stats are returned in the local date/time of the Player
-            // the CMS will have been configured with that Player's timezone, so we can convert accordingly.
-            try {
-                // From date
-                $fromdt = ($this->display->timeZone != null)
-                    ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromdt, $this->display->timeZone)->tz($defaultTimeZone)
-                    : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromdt);
-
-                // To date
-                $todt = ($this->display->timeZone != null)
-                    ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $todt, $this->display->timeZone)->tz($defaultTimeZone)
-                    : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $todt);
-
-                // Do we need to set the duration of this record (we will do for older individually collected stats)
-                if ($duration == '') {
-                    $duration = $todt->diffInSeconds($fromdt);
-                }
-            } catch (\Exception $e) {
-                // Protect against the date format being unreadable
-                $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: ' . $fromdt . ', toDt: ' . $todt . '. E = ' . $e->getMessage());
-                continue;
-            }
-
-            // check maximum retention period against stat date, do not record if it's older than max stat age
-            $maxAge = intval($this->getConfig()->getSetting('MAINTENANCE_STAT_MAXAGE'));
-            if ($maxAge != 0) {
-                $maxAgeDate = Carbon::now()->subDays($maxAge);
-
-                if ($todt->isBefore($maxAgeDate)) {
-                    $this->getLog()->debug('Stat older than max retention period, skipping.');
-                    continue;
-                }
-            }
-
-            // If the duration is enormous, then we have an eroneous message from the player
-            if ($duration > (86400 * 365)) {
-                $this->getLog()->debug('Dates are too far apart');
-                continue;
             }
 
             // Cache a count for this scheduleId
@@ -1756,8 +1771,8 @@ class Soap
             $stats = [
                 'type' => $type,
                 'statDate' => $now,
-                'fromDt' => $fromdt,
-                'toDt' => $todt,
+                'fromDt' => $fromDt,
+                'toDt' => $toDt,
                 'scheduleId' => $scheduleId,
                 'display' => $this->display,
                 'layoutId' => (int) $layoutId,
@@ -1776,7 +1791,7 @@ class Soap
             $statCount++;
         }
 
-        /*Insert stats*/
+        // Insert stats
         if ($statCount > 0) {
             $this->getTimeSeriesStore()->addStatFinalize();
         } else {
