@@ -146,3 +146,15 @@ echo __('Show header?');
 echo __('Product border colour');
 echo __('Title');
 echo __('Description');
+
+// Display Types
+echo __('Billboard');
+echo __('Kiosk');
+echo __('LED Matrix / LED Video Wall');
+echo __('Monitor / Other');
+echo __('Projector');
+echo __('Shelf-edge Display');
+echo __('Smart Mirror');
+echo __('TV / Panel');
+echo __('Tablet');
+echo __('Totem');

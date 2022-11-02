@@ -135,6 +135,45 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     }
 
     /**
+     * Edit Display Type and reference, expecting success
+     */
+    public function testEditDisplayType()
+    {
+        # Create a Display in the system
+        $hardwareId = Random::generateString(12, 'phpunit');
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display Type');
+        # Now find the Id of that Display
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
+
+        if (count($displays) != 1) {
+            $this->fail('Display was not added correctly');
+        }
+
+        /** @var XiboDisplay $display */
+        $display = $displays[0];
+        $auditingTime = time()+3600;
+        # Edit display and change its name
+        $response = $this->sendRequest('PUT', '/display/' . $display->displayId, [
+            'display' => 'PHPUnit Test Display Type - EDITED',
+            'defaultLayoutId' => $display->defaultLayoutId,
+            'auditingUntil' => Carbon::createFromTimestamp($auditingTime)->format(DateFormatHelper::getSystemFormat()),
+            'licensed' => $display->licensed,
+            'license' => $display->license,
+            'incSchedule' => $display->incSchedule,
+            'emailAlert' => $display->emailAlert,
+            'wakeOnLanEnabled' => $display->wakeOnLanEnabled,
+            'displayTypeId' => 1,
+            'ref1' => 'Lorem ipsum',
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        # Check if call was successful
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
+        # Check if display has new edited name
+        $this->assertSame(1, $object->data->displayTypeId);
+        $this->assertSame('Lorem ipsum', $object->data->ref1);
+    }
+
+    /**
      * Edit Display test, expecting failure
      */
     public function testEditFailure()

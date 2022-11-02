@@ -205,6 +205,13 @@ class DisplayFactory extends BaseFactory
               SELECT display.displayId,
                   display.display,
                   display.defaultLayoutId,
+                  display.displayTypeId,
+                  `display_types`.displayType,
+                  display.screenSize,
+                  display.isOutdoor,
+                  display.customId,
+                  display.costPerPlay,
+                  display.impressionsPerPlay,
                   layout.layout AS defaultLayout,
                   display.license,
                   display.licensed,
@@ -243,6 +250,11 @@ class DisplayFactory extends BaseFactory
                   displaygroup.modifiedDt,
                   displaygroup.folderId,
                   displaygroup.permissionsFolderId,
+                  displaygroup.ref1,
+                  displaygroup.ref2,
+                  displaygroup.ref3,
+                  displaygroup.ref4,
+                  displaygroup.ref5,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
@@ -294,6 +306,8 @@ class DisplayFactory extends BaseFactory
                         AND `displaygroup`.isDisplaySpecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
+                    LEFT OUTER JOIN `display_types`
+                    ON `display_types`.displayTypeId = `display`.displayTypeId
             ';
 
         // Restrict to members of a specific display group
@@ -411,6 +425,11 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getString('clientCode') != '') {
             $body .= ' AND display.client_code LIKE :clientCode ';
             $params['clientCode'] = '%' . $parsedBody->getString('clientCode') . '%';
+        }
+
+        if ($parsedBody->getString('customId') != '') {
+            $body .= ' AND display.customId LIKE :customId ';
+            $params['customId'] = '%' . $parsedBody->getString('customId') . '%';
         }
 
         if ($parsedBody->getString('orientation', $filterBy) != '') {
@@ -607,7 +626,8 @@ class DisplayFactory extends BaseFactory
                     'lastCommandSuccess',
                     'bandwidthLimit',
                     'countFaults'
-                ]
+                ],
+                'stringProperties' => ['customId']
             ]);
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
             $entries[] = $display;

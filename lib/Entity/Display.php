@@ -21,7 +21,6 @@
  */
 namespace Xibo\Entity;
 
-
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
@@ -60,6 +59,78 @@ class Display implements \JsonSerializable
      * @var int
      */
     public $displayId;
+
+    /**
+     * @SWG\Property(description="The Display Type ID of this Display")
+     * @var int
+     */
+    public $displayTypeId;
+
+    /**
+     * @SWG\Property(description="The type of this Display")
+     * @var string
+     */
+    public $displayType;
+
+    /**
+     * @SWG\Property(description="The screen size of this Display")
+     * @var int
+     */
+    public $screenSize;
+
+    /**
+     * @SWG\Property(description="Is this Display Outdoor?")
+     * @var int
+     */
+    public $isOutdoor;
+
+    /**
+     * @SWG\Property(description="The custom ID (an Id of any external system) of this Display")
+     * @var string
+     */
+    public $customId;
+
+    /**
+     * @SWG\Property(description="The Cost Per Play of this Display")
+     * @var int
+     */
+    public $costPerPlay;
+
+    /**
+     * @SWG\Property(description="The Impressions Per Play of this Display")
+     * @var int
+     */
+    public $impressionsPerPlay;
+
+    /**
+     * @SWG\Property(description="Optional Reference 1")
+     * @var string
+     */
+    public $ref1;
+
+    /**
+     * @SWG\Property(description="Optional Reference 2")
+     * @var string
+     */
+    public $ref2;
+
+    /**
+     * @SWG\Property(description="Optional Reference 3")
+     * @var string
+     */
+    public $ref3;
+
+    /**
+     * @SWG\Property(description="Optional Reference 4")
+     * @var string
+     */
+    public $ref4;
+
+    /**
+     * @SWG\Property(description="Optional Reference 5")
+     * @var string
+     */
+    public $ref5;
 
     /**
      * @SWG\Property(description="Flag indicating whether this Display is recording Auditing Information from XMDS")
@@ -823,6 +894,12 @@ class Display implements \JsonSerializable
             UPDATE display
                 SET display = :display,
                     defaultlayoutid = :defaultLayoutId,
+                    displayTypeId = :displayTypeId,
+                    screenSize = :screenSize,
+                    isOutdoor = :isOutdoor,
+                    `customId` = :customId,
+                    costPerPlay = :costPerPlay,
+                    impressionsPerPlay = :impressionsPerPlay,
                     inc_schedule = :incSchedule,
                     license = :license,
                     licensed = :licensed,
@@ -868,6 +945,12 @@ class Display implements \JsonSerializable
         ', [
             'display' => $this->display,
             'defaultLayoutId' => $this->defaultLayoutId,
+            'displayTypeId' => $this->displayTypeId === 0 ? null : $this->displayTypeId,
+            'screenSize' => $this->screenSize,
+            'isOutdoor' => $this->isOutdoor,
+            'customId' => $this->customId,
+            'costPerPlay' => $this->costPerPlay,
+            'impressionsPerPlay' => $this->impressionsPerPlay,
             'incSchedule' => ($this->incSchedule == null) ? 0 : $this->incSchedule,
             'license' => $this->license,
             'licensed' => $this->licensed,
@@ -919,6 +1002,11 @@ class Display implements \JsonSerializable
             || $this->hasPropertyChanged('tags')
             || $this->hasPropertyChanged('bandwidthLimit')
             || $this->hasPropertyChanged('folderId')
+            || $this->hasPropertyChanged('ref1')
+            || $this->hasPropertyChanged('ref2')
+            || $this->hasPropertyChanged('ref3')
+            || $this->hasPropertyChanged('ref4')
+            || $this->hasPropertyChanged('ref5')
         ) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
@@ -927,6 +1015,11 @@ class Display implements \JsonSerializable
             $displayGroup->displayGroup = $this->display;
             $displayGroup->description = $this->description;
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
+            $displayGroup->ref1 = $this->ref1;
+            $displayGroup->ref2 = $this->ref2;
+            $displayGroup->ref3 = $this->ref3;
+            $displayGroup->ref4 = $this->ref4;
+            $displayGroup->ref5 = $this->ref5;
 
             // Tags
             $saveTags = false;
