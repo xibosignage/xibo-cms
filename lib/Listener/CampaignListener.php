@@ -29,6 +29,7 @@ use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Campaign events
@@ -136,9 +137,11 @@ class CampaignListener
      * Days parts might be assigned to lkcampaignlayout records.
      * @param \Xibo\Event\DayPartDeleteEvent $event
      * @return void
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function onDayPartDelete(DayPartDeleteEvent $event)
     {
         // TODO: what do we do here?!
+        throw new InvalidArgumentException(__('This is inuse and cannot be deleted.'), 'dayPartId');
     }
 }

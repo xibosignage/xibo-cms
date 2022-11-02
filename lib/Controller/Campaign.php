@@ -740,6 +740,41 @@ class Campaign extends Base
      *      @SWG\Items(type="integer"),
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="ref1",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref2",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref3",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref4",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref5",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",

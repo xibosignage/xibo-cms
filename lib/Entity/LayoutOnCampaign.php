@@ -39,18 +39,33 @@ class LayoutOnCampaign implements \JsonSerializable
     public $daysOfWeek;
     public $geoFence;
 
-    /** @var string The Layout name (readonly) */
+    /**
+     * @SWG\Property(description="The Layout name (readonly)")
+     * @var string
+     */
     public $layout;
 
-    /** @var string The Layout campaignId (readonly) */
+    /**
+     * @SWG\Property(description="The Layout campaignId (readonly)")
+     * @var string
+     */
     public $layoutCampaignId;
 
-    /** @var int The owner id (readonly) */
+    /**
+     * @SWG\Property(description="The owner id (readonly))")
+     * @var integer
+     */
     public $ownerId;
 
-    /** @var int The duration (readonly) */
+    /**
+     * @SWG\Property(description="The duration (readonly))")
+     * @var integer
+     */
     public $duration;
 
-    /** @var string The dayPart (readonly) */
+    /**
+     * @SWG\Property(description="The dayPart (readonly)")
+     * @var string
+     */
     public $dayPart;
 }
