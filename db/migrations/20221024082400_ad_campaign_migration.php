@@ -170,7 +170,7 @@ class AdCampaignMigration extends AbstractMigration
                 'name' => 'Campaign Scheduler',
                 'class' => '\Xibo\XTR\CampaignSchedulerTask',
                 'options' => '[]',
-                'schedule' => '*/45 * * * *',
+                'schedule' => '45 * * * *',
                 'isActive' => '1',
                 'configFile' => '/tasks/campaign-scheduler.task'
             ])
