@@ -175,5 +175,14 @@ class AdCampaignMigration extends AbstractMigration
                 'configFile' => '/tasks/campaign-scheduler.task'
             ])
             ->save();
+
+        // Add parentCampaignId to the stats table.
+        $this->table('stat')
+            ->addColumn('parentCampaignId', 'integer', [
+                'default' => 0,
+                'null' => false,
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+            ])
+            ->save();
     }
 }
