@@ -54,6 +54,7 @@
                 {{ forms.hidden('folderId') }}
                 {% endif %}
 
+                {% if currentUser.featureEnabled('ad.campaign') %}
                 {% set title %}{% trans "Type" %}{% endset %}
                 {% set helpText %}{% trans "What type of Campaign would you like to create?" %}{% endset %}
                 {% set options = [
@@ -61,6 +62,7 @@
                     { id: "ad", name: "Ad Campaign"|trans }
                 ] %}
                 {{ forms.dropdown("type", "single", title, "both", options, "id", "name", helpText) }}
+                {% endif %}
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}

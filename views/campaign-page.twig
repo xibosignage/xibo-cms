@@ -93,19 +93,23 @@
                                 <thead>
                                     <tr>
                                         <th>{% trans "Name" %}</th>
+                                        {% if currentUser.featureEnabled('ad.campaign') %}
                                         <th>{% trans "Type" %}</th>
                                         <th>{% trans "Start Date" %}</th>
                                         <th>{% trans "End Date" %}</th>
+                                        {% endif %}
                                         <th>{% trans "# Layouts" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Duration" %}</th>
                                         <th>{% trans "Cycle based Playback" %}</th>
                                         <th>{% trans "Play Count" %}</th>
+                                        {% if currentUser.featureEnabled('ad.campaign') %}
                                         <th>{% trans "Target Type" %}</th>
                                         <th>{% trans "Target" %}</th>
                                         <th>{% trans "Plays" %}</th>
                                         <th>{% trans "Spend" %}</th>
                                         <th>{% trans "Impressions" %}</th>
+                                        {% endif %}
                                         <th>{% trans "Ref 1" %}</th>
                                         <th>{% trans "Ref 2" %}</th>
                                         <th>{% trans "Ref 3" %}</th>
@@ -161,6 +165,7 @@
                         responsivePriority: 2,
                         "render": dataTableSpacingPreformatted
                     },
+                  {% if currentUser.featureEnabled('ad.campaign') %}
                   {
                     data: 'type',
                     responsivePriority: 2,
@@ -185,6 +190,7 @@
                     responsivePriority: 2,
                     render: dataTableDateFromUnix,
                   },
+                  {% endif %}
                     { "data": "numberLayouts", responsivePriority: 2 },
                     {% if currentUser.featureEnabled("tag.tagging") %} {
                         "sortable": false,
@@ -229,6 +235,7 @@
                             }
                         }
                     },
+                    {% if currentUser.featureEnabled('ad.campaign') %}
                     {
                       data: 'targetType',
                       responsivePriority: 3,
@@ -257,6 +264,7 @@
                       data: 'impressions',
                       responsivePriority: 6,
                     },
+                    {% endif %}
                     {
                       data: 'ref1',
                       responsivePriority: 10,
@@ -508,10 +516,10 @@
           $(dialog).find('.campaign-type-ad').toggle($type.val() === 'ad');
 
           $type.on('change', function () {
-            $(dialog).find('.campaign-type-list').toggle($type.val() === 'list');
+            $(dialog).find('.campaign-type-list').toggle($type.val() !== 'ad');
             $(dialog).find('.campaign-type-ad').toggle($type.val() === 'ad');
 
-            $(dialog).find('.cycle-based-playback').toggle($cycleBased.is(':checked') && $type.val() === 'list');
+            $(dialog).find('.cycle-based-playback').toggle($cycleBased.is(':checked') && $type.val() !== 'ad');
           });
         }
 
