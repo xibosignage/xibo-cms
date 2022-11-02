@@ -307,7 +307,27 @@ class XiboSspConnector implements ConnectorInterface
 
                 switch ($sspIdField) {
                     case 'customId':
-                        // TODO: new fields (ref1 to 5)
+                        $sspId = $display->customId;
+                        break;
+
+                    case 'ref1':
+                        $sspId = $display->ref1;
+                        break;
+
+                    case 'ref2':
+                        $sspId = $display->ref2;
+                        break;
+
+                    case 'ref3':
+                        $sspId = $display->ref3;
+                        break;
+
+                    case 'ref4':
+                        $sspId = $display->ref4;
+                        break;
+
+                    case 'ref5':
+                        $sspId = $display->ref5;
                         break;
 
                     case 'displayId':
