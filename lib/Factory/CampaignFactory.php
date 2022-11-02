@@ -265,7 +265,7 @@ class CampaignFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('type') !== null) {
-            $body .= " AND campaign.type = :type ";
+            $body .= ' AND campaign.type = :type ';
             $params['type'] = $sanitizedFilter->getString('type');
         }
 
