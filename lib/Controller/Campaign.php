@@ -543,7 +543,8 @@ class Campaign extends Base
 
         // Campaign type
         if ($this->getUser()->featureEnabled('ad.campaign')) {
-            $type = $sanitizedParams->getString('type');
+            // We use a default to avoid a breaking change in a minor release.
+            $type = $sanitizedParams->getString('type', ['default' => 'list']);
         } else {
             $type = 'list';
         }
@@ -562,7 +563,9 @@ class Campaign extends Base
         if ($campaign->type === 'list') {
             $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
             $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
-            $campaign->listPlayOrder = $sanitizedParams->getString('listPlayOrder');
+
+            // For compatibility with existing API implementations we set a default here.
+            $campaign->listPlayOrder = $sanitizedParams->getString('listPlayOrder', ['default' => 'round']);
         } else if ($campaign->type === 'ad') {
             $campaign->targetType = $sanitizedParams->getString('targetType');
             $campaign->target = $sanitizedParams->getInt('target');
@@ -855,7 +858,11 @@ class Campaign extends Base
             // Cycle based playback
             $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
             $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
-            $campaign->listPlayOrder = $parsedRequestParams->getString('listPlayOrder');
+
+            // For compatibility with existing API implementations we keep the current value as default if not provided
+            $campaign->listPlayOrder = $parsedRequestParams->getString('listPlayOrder', [
+                'default' => $campaign->listPlayOrder,
+            ]);
 
             // Assign layouts?
             if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {

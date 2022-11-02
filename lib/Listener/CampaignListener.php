@@ -141,7 +141,16 @@ class CampaignListener
      */
     public function onDayPartDelete(DayPartDeleteEvent $event)
     {
-        // TODO: what do we do here?!
-        throw new InvalidArgumentException(__('This is inuse and cannot be deleted.'), 'dayPartId');
+        // We can't delete dayparts that are in-use on advertising campaigns.
+        if ($this->storageService->exists('
+            SELECT lkCampaignLayoutId
+              FROM `lkcampaignlayout`
+             WHERE dayPartId = :dayPartId
+            LIMIT 1
+        ', [
+            'dayPartId' => $event->getDayPart()->dayPartId,
+        ])) {
+            throw new InvalidArgumentException(__('This is inuse and cannot be deleted.'), 'dayPartId');
+        }
     }
 }
