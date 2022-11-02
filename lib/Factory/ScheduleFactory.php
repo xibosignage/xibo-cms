@@ -271,7 +271,12 @@ class ScheduleFactory extends BaseFactory
                   )
             )
             
-            ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT, schedule.eventId
+            ORDER BY `schedule`.DisplayOrder,
+                CASE WHEN `campaign`.listPlayOrder = \'block\' THEN `schedule`.FromDT ELSE 0 END,
+                CASE WHEN `campaign`.listPlayOrder = \'block\' THEN `campaign`.campaignId ELSE 0 END,
+                IFNULL(`lkcampaignlayout`.DisplayOrder, 0),
+                `schedule`.FromDT,
+                `schedule`.eventId
         ';
 
         return $this->getStore()->select($SQL, $params);

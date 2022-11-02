@@ -97,6 +97,14 @@
                 {% set helpText %}{% trans "In cycle based playback, how many plays should each Layout have before moving on?" %}{% endset %}
                 {{ forms.number("playCount", title, "", helpText, "cycle-based-playback campaign-type-list") }}
 
+                {% set title %}{% trans "List play order" %}{% endset %}
+                {% set helpText %}{% trans "When this campaign is scheduled alongside another campaign with the same display order, how should the layouts in both campaigns be ordered?" %}{% endset %}
+                {% set options = [
+                    { id: "round", name: "Round-robin"|trans },
+                    { id: "block", name: "Block"|trans },
+                ] %}
+                {{ forms.dropdown("listPlayOrder", "single", title, "round", options, "id", "name", helpText, "campaign-type-list") }}
+
                 {% set title %}{% trans "Target Type" %}{% endset %}
                 {% set helpText %}{% trans "How would you like to set the target for this campaign?" %}{% endset %}
                 {% set options = [

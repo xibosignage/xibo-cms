@@ -485,6 +485,13 @@ class Campaign extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="listPlayOrder",
+     *      in="formData",
+     *      description="In layout list, how should campaigns in the schedule with the same play order be played?",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="targetType",
      *      in="formData",
      *      description="For ad campaigns, how do we measure the target? plays|budget",
@@ -555,6 +562,7 @@ class Campaign extends Base
         if ($campaign->type === 'list') {
             $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
             $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
+            $campaign->listPlayOrder = $sanitizedParams->getString('listPlayOrder');
         } else if ($campaign->type === 'ad') {
             $campaign->targetType = $sanitizedParams->getString('targetType');
             $campaign->target = $sanitizedParams->getInt('target');
@@ -710,6 +718,13 @@ class Campaign extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="listPlayOrder",
+     *      in="formData",
+     *      description="In layout list, how should campaigns in the schedule with the same play order be played?",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="targetType",
      *      in="formData",
      *      description="For ad campaigns, how do we measure the target? plays|budget",
@@ -840,6 +855,7 @@ class Campaign extends Base
             // Cycle based playback
             $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
             $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
+            $campaign->listPlayOrder = $parsedRequestParams->getString('listPlayOrder');
 
             // Assign layouts?
             if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {

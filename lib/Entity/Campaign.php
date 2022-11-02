@@ -114,6 +114,12 @@ class Campaign implements \JsonSerializable
     public $playCount;
 
     /**
+     * @SWG\Property(description="In list campaign types, how should the layouts play out?")
+     * @var string
+     */
+    public $listPlayOrder;
+
+    /**
      * @SWG\Property(description="For an ad campaign, what's the target type, plays|budget")
      * @var string
      */
@@ -478,6 +484,13 @@ class Campaign implements \JsonSerializable
             if ($this->campaignId !== null && count($this->displayGroupIds) <= 0) {
                 throw new InvalidArgumentException(__('Please select one or more displays'), 'displayGroupId[]');
             }
+        } else {
+            if ($this->listPlayOrder !== 'round' && $this->listPlayOrder !== 'block') {
+                throw new InvalidArgumentException(
+                    __('Please choose either round-robin or block play order for this list'),
+                    'listPlayOrder'
+                );
+            }
         }
     }
 
@@ -820,6 +833,7 @@ class Campaign implements \JsonSerializable
                 userId,
                 cyclePlaybackEnabled,
                 playCount,
+                listPlayOrder,
                 targetType,
                 target,
                 folderId,
@@ -832,6 +846,7 @@ class Campaign implements \JsonSerializable
                 :userId,
                 :cyclePlaybackEnabled,
                 :playCount,
+                :listPlayOrder,
                 :targetType,
                 :target,    
                 :folderId,
@@ -843,6 +858,7 @@ class Campaign implements \JsonSerializable
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
+            'listPlayOrder' => $this->listPlayOrder,
             'playCount' => $this->playCount,
             'targetType' => empty($this->targetType) ? null : $this->targetType,
             'target' => empty($this->target) ? null : $this->target,
@@ -862,6 +878,7 @@ class Campaign implements \JsonSerializable
                     userId = :userId,
                     cyclePlaybackEnabled = :cyclePlaybackEnabled,
                     playCount = :playCount,
+                    listPlayOrder = :listPlayOrder,
                     ref1 = :ref1,
                     ref2 = :ref2,
                     ref3 = :ref3,
@@ -880,6 +897,7 @@ class Campaign implements \JsonSerializable
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
+            'listPlayOrder' => $this->listPlayOrder,
             'targetType' => empty($this->targetType) ? null : $this->targetType,
             'target' => empty($this->target) ? null : $this->target,
             'startDt' => empty($this->startDt) ? null : $this->startDt,
@@ -890,7 +908,7 @@ class Campaign implements \JsonSerializable
             'ref4' => empty($this->ref4) ? null : $this->ref4,
             'ref5' => empty($this->ref5) ? null : $this->ref5,
             'folderId' => $this->folderId,
-            'permissionsFolderId' => $this->permissionsFolderId
+            'permissionsFolderId' => $this->permissionsFolderId,
         ]);
     }
 
