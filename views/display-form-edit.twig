@@ -134,7 +134,7 @@
 
                         {% set title %}{% trans "Display Type" %}{% endset %}
                         {% set helpText %}{% trans "The type of display" %}{% endset %}
-                        {{ forms.dropdown("displayTypeId", "single", title, "", [{displayTypeId:null, displayType:""}]|merge(displayTypes), "displayTypeId", "displayType", helpText) }}
+                        {{ forms.dropdown("displayTypeId", "single", title, display.displayTypeId, [{displayTypeId:null, displayType:""}]|merge(displayTypes), "displayTypeId", "displayType", helpText) }}
                     </div>
                     <div class="tab-pane" id="location">
                         {% set title %}{% trans "Latitude" %}{% endset %}

@@ -153,7 +153,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $display = $displays[0];
         $auditingTime = time()+3600;
         # Edit display and change its name
-        $response = $this->sendRequest('PUT','/display/' . $display->displayId, [
+        $response = $this->sendRequest('PUT', '/display/' . $display->displayId, [
             'display' => 'PHPUnit Test Display Type - EDITED',
             'defaultLayoutId' => $display->defaultLayoutId,
             'auditingUntil' => Carbon::createFromTimestamp($auditingTime)->format(DateFormatHelper::getSystemFormat()),

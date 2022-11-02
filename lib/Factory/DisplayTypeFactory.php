@@ -50,8 +50,9 @@ class DisplayTypeFactory extends BaseFactory
     {
         $results = $this->query(null, ['displayTypeId' => $id]);
 
-        if (count($results) <= 0)
+        if (count($results) <= 0) {
             throw new NotFoundException();
+        }
 
         return $results[0];
     }
