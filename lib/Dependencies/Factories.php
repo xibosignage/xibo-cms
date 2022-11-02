@@ -175,7 +175,7 @@ class Factories
                 return $repository;
             },
             'displayTypeFactory' => function (ContainerInterface $c) {
-                $repository = new \Xibo\Factory\DisplayTypeFactory( );
+                $repository = new \Xibo\Factory\DisplayTypeFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },

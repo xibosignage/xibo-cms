@@ -574,17 +574,10 @@ class Display extends Base
         // Get a list of displays
         $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
-
         // Get all Display Profiles
         $displayProfiles = [];
         foreach ($this->displayProfileFactory->query() as $displayProfile) {
             $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
-        }
-
-        // Get all Display Types
-        $displayTypes = [];
-        foreach ($this->displayTypeFactory->query() as $displayType) {
-            $displayTypes[$displayType->displayTypeId] = $displayType->displayType;
         }
 
         // validate displays so we get a realistic view of the table
@@ -626,7 +619,6 @@ class Display extends Base
 
             // Add in the display profile information
             $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
-            $display->displayTypeId = $displayTypes[$display->displayTypeId];
 
             $display->includeProperty('buttons');
 
@@ -1043,7 +1035,6 @@ class Display extends Base
         }
 
         foreach ($displays as $display) {
-
             // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
             $displayProfileName = '';
             try {

@@ -21,7 +21,6 @@
  */
 namespace Xibo\Entity;
 
-
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
@@ -62,10 +61,16 @@ class Display implements \JsonSerializable
     public $displayId;
 
     /**
-     * @SWG\Property(description="The type of this Display")
+     * @SWG\Property(description="The Display Type ID of this Display")
      * @var int
      */
     public $displayTypeId;
+
+    /**
+     * @SWG\Property(description="The type of this Display")
+     * @var string
+     */
+    public $displayType;
 
     /**
      * @SWG\Property(description="The screen size of this Display")

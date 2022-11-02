@@ -206,6 +206,7 @@ class DisplayFactory extends BaseFactory
                   display.display,
                   display.defaultLayoutId,
                   display.displayTypeId,
+                  `display_types`.displayType,
                   display.screenSize,
                   display.isOutdoor,
                   display.customId,
@@ -305,6 +306,8 @@ class DisplayFactory extends BaseFactory
                         AND `displaygroup`.isDisplaySpecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
+                    LEFT OUTER JOIN `display_types`
+                    ON `display_types`.displayTypeId = `display`.displayTypeId
             ';
 
         // Restrict to members of a specific display group
@@ -623,7 +626,8 @@ class DisplayFactory extends BaseFactory
                     'lastCommandSuccess',
                     'bandwidthLimit',
                     'countFaults'
-                ]
+                ],
+                'stringProperties' => ['customId']
             ]);
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
             $entries[] = $display;

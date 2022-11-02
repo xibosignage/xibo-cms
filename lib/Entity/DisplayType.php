@@ -22,9 +22,9 @@
 
 
 namespace Xibo\Entity;
+
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-
 
 /**
  * Class DisplayType
