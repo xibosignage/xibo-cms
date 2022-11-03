@@ -146,3 +146,13 @@ echo __('Show header?');
 echo __('Product border colour');
 echo __('Title');
 echo __('Description');
+
+// Weather templates
+echo __('Wind');
+echo __('Humidity');
+echo __('Feels Like');
+echo __('Right now');
+echo __('Pressure');
+echo __('Visibility');
+echo __('TODAY');
+echo __('RIGHT NOW');
