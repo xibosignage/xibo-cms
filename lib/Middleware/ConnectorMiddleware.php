@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -76,7 +76,6 @@ class ConnectorMiddleware implements MiddlewareInterface
             } catch (\Exception $exception) {
                 // Log and ignore.
                 $container->get('logger')->error('Incorrectly configured connector. e=' . $exception->getMessage());
-                $container->get('logger')->debug($exception->getTraceAsString());
             }
         }
     }

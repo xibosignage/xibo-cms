@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1906,7 +1906,7 @@ class Layout extends Base
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
-            
+
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         if ($layout->schemaVersion < 2) {
             $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
@@ -2588,7 +2588,6 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-assign-to-campaign';
         $this->getState()->setData([
             'layout' => $layout,
-            'campaigns' => $this->campaignFactory->query()
         ]);
 
         return $this->render($request, $response);

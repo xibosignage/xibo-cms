@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,28 +20,37 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Listener\OnParsePermissions;
+namespace Xibo\Entity;
 
-use Xibo\Event\ParsePermissionEntityEvent;
-use Xibo\Factory\CampaignFactory;
-
-class PermissionsCampaignListener
+/**
+ * Campaign Progress
+ */
+class CampaignProgress implements \JsonSerializable
 {
-    /**
-     * @var CampaignFactory
-     */
-    private $campaignFactory;
+    /** @var int */
+    public $daysIn = 0;
 
-    public function __construct(CampaignFactory $campaignFactory)
-    {
-        $this->campaignFactory = $campaignFactory;
-    }
+    /** @var int */
+    public $daysTotal = 0;
 
-    /**
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function __invoke(ParsePermissionEntityEvent $event)
+    /** @var float */
+    public $targetPerDay = 0.0;
+
+    /** @var float */
+    public $progressTime = 0.0;
+
+    /** @var float */
+    public $progressTarget = 0.0;
+
+    /** @inheritDoc */
+    public function jsonSerialize()
     {
-        $event->setObject($this->campaignFactory->getById($event->getObjectId()));
+        return [
+            'daysIn' => $this->daysIn,
+            'daysTotal' => $this->daysTotal,
+            'targetPerDay' => $this->targetPerDay,
+            'progressTime' => $this->progressTime,
+            'progressTarget' => $this->progressTarget,
+        ];
     }
 }

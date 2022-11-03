@@ -117,5 +117,8 @@
     "psr-4": {
       "Xibo\\Tests\\": "tests/"
     }
+  },
+  "scripts": {
+    "phpcs": "phpcs --standard=vendor/xibosignage/support/src/Standards/xibo_ruleset.xml"
   }
 }

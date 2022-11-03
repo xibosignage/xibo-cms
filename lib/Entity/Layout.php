@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1029,7 +1029,9 @@ class Layout implements \JsonSerializable
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
                 $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
-                $campaign->unassignLayout($this, true);
+                // Passing this layoutId without a display order will remove all occurrences.
+                // https://github.com/xibosignage/xibo/issues/1960
+                $campaign->unassignLayout($this->layoutId);
                 $campaign->save(['validate' => false]);
             }
 
@@ -2345,21 +2347,23 @@ class Layout implements \JsonSerializable
         // Add a Campaign
         // we do not add a campaign record for draft layouts.
         if ($this->parentId === null) {
-            $campaign = $this->campaignFactory->createEmpty();
-            $campaign->campaign = $this->layout;
+            $campaign = $this->campaignFactory->create(
+                'list',
+                $this->layout,
+                $this->getOwnerId(),
+                '',
+                ($this->folderId == null) ? 1 : $this->folderId
+            );
             $campaign->isLayoutSpecific = 1;
-            $campaign->ownerId = $this->getOwnerId();
             $campaign->cyclePlaybackEnabled = 0;
-
-            // We shouldn't ever have a null folderId by now, but just in case.
-            $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+            $campaign->listPlayOrder = 'round';
 
             // check that the user has access to the folder we're adding them to
             $folder = $this->folderFactory->getById($campaign->folderId, 0);
             $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
             // Assign the layout
-            $campaign->assignLayout($this);
+            $campaign->assignLayout($this->layoutId);
 
             // Ready to save the Campaign
             // adding a Layout Specific Campaign shouldn't ever notify (it can't hit anything because we've only
@@ -2379,7 +2383,7 @@ class Layout implements \JsonSerializable
             // Add this draft layout as a link to the campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
-            $campaign->assignLayout($this);
+            $campaign->assignLayout($this->layoutId);
             $campaign->save([
                 'notify' => false
             ]);

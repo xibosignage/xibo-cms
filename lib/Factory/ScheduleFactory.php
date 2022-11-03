@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -205,6 +205,7 @@ class ScheduleFactory extends BaseFactory
                 schedule.syncTimezone,
                 schedule.syncEvent,
                 schedule.shareOfVoice,
+                schedule.maxPlaysPerHour,
                 schedule.isGeoAware,
                 schedule.geoLocation,
                 schedule.actionTriggerCode,
@@ -270,7 +271,12 @@ class ScheduleFactory extends BaseFactory
                   )
             )
             
-            ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT, schedule.eventId
+            ORDER BY `schedule`.DisplayOrder,
+                CASE WHEN `campaign`.listPlayOrder = \'block\' THEN `schedule`.FromDT ELSE 0 END,
+                CASE WHEN `campaign`.listPlayOrder = \'block\' THEN `campaign`.campaignId ELSE 0 END,
+                IFNULL(`lkcampaignlayout`.DisplayOrder, 0),
+                `schedule`.FromDT,
+                `schedule`.eventId
         ';
 
         return $this->getStore()->select($SQL, $params);
@@ -309,11 +315,13 @@ class ScheduleFactory extends BaseFactory
             `schedule`.syncTimezone,
             `schedule`.syncEvent,
             `schedule`.shareOfVoice,
+            `schedule`.maxPlaysPerHour,
             `schedule`.isGeoAware,
             `schedule`.geoLocation,
             `schedule`.actionTriggerCode,
             `schedule`.actionType,
             `schedule`.actionLayoutCode,
+            `schedule`.parentCampaignId,
             `daypart`.isAlways,
             `daypart`.isCustom
           FROM `schedule`
@@ -454,7 +462,18 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone', 'isAlways', 'isCustom', 'syncEvent', 'recurrenceMonthlyRepeatsOn', 'isGeoAware']]);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'isPriority',
+                    'syncTimezone',
+                    'isAlways',
+                    'isCustom',
+                    'syncEvent',
+                    'recurrenceMonthlyRepeatsOn',
+                    'isGeoAware',
+                    'maxPlaysPerHour',
+                ]
+            ]);
         }
 
         return $entries;
