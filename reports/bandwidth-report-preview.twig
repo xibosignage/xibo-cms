@@ -47,6 +47,22 @@
                 <div class="XiboData card pt-3">
                     <canvas id="canvas" style="clear:both; margin-top:25px;"></canvas>
                 </div>
+
+                <br/>
+                <div class="XiboData card pt-3">
+                    <table id="bandwidthTbl" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>{% trans "Bandwidth" %}</th>
+                            <th>{% trans "Unit" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -56,7 +72,24 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        var reportChart = new Chart($("#canvas"), {{ chart|json_encode|raw }});
+        let reportChart = new Chart($("#canvas"), {{ chart|json_encode|raw }});
+        let outputData = {{ table|json_encode|raw }};
+
+        // Grid
+        let table = $("#bandwidthTbl").DataTable({
+            "searching": false,
+            "paging": true,
+            "ordering": false,
+            "data": outputData,
+            "columns": [
+                { "data": 'label' },
+                { "data": 'bandwidth' },
+                { "data": 'unit' },
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
 
     </script>
 {% endblock %}
