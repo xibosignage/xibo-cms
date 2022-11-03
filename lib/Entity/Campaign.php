@@ -375,7 +375,11 @@ class Campaign implements \JsonSerializable
             $progress->progressTarget = 0;
         } else {
             $progress->daysIn = $testDate->diffInDays($startDt);
-            $progress->progressTime = $progress->daysIn / $progress->daysTotal * 100;
+
+            // Use hours to calculate more accurate progress
+            $hoursTotal = $progress->daysTotal * 24;
+            $hoursIn = $testDate->diffInHours($startDt);
+            $progress->progressTime = $hoursIn / $hoursTotal * 100;
 
             if ($this->targetType === 'budget') {
                 $progress->progressTarget = ($this->spend / $this->target) * 100;

@@ -196,9 +196,7 @@ class CampaignSchedulerTask implements TaskInterface
                     $schedule->campaignId = $layout->layoutCampaignId;
                     $schedule->displayOrder = 0;
                     $schedule->isPriority = 0;
-                    $schedule->dayPartId = $layout->dayPartId == 0
-                        ? $this->getCustomDayPart()->dayPartId
-                        : $layout->dayPartId;
+                    $schedule->dayPartId = $this->getCustomDayPart()->dayPartId;
                     $schedule->isGeoAware = 0;
                     $schedule->syncTimezone = 0;
                     $schedule->syncEvent = 0;
