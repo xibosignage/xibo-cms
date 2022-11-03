@@ -149,14 +149,14 @@ class XiboSspConnector implements ConnectorInterface
         // If the API key has changed during this request, clear out displays on the old API key
         if ($existingApiKey !== $settings['apiKey']) {
             // Clear all displays for this CMS on the existing key
-            $this->setDisplays($existingApiKey, $existingCmsUrl, []);
+            $this->setDisplays($existingApiKey, $existingCmsUrl, [], $settings);
         } else if (!empty($existingCmsUrl) && $existingCmsUrl !== $settings['cmsUrl']) {
             // Clear all displays for this CMS on the existing key
-            $this->setDisplays($settings['apiKey'], $existingCmsUrl, []);
+            $this->setDisplays($settings['apiKey'], $existingCmsUrl, [], $settings);
         }
 
         // Add displays on the new API key (maintenance also does this, but do it now).
-        $this->setDisplays($settings['apiKey'], $settings['cmsUrl'], $partners);
+        $this->setDisplays($settings['apiKey'], $settings['cmsUrl'], $partners, $settings);
 
         return $settings;
     }
@@ -277,7 +277,11 @@ class XiboSspConnector implements ConnectorInterface
         }
     }
 
-    private function setDisplays(string $apiKey, string $cmsUrl, array $partners)
+    /**
+     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function setDisplays(string $apiKey, string $cmsUrl, array $partners, array $settings)
     {
         $displays = [];
         foreach ($partners as $partner) {
@@ -288,10 +292,11 @@ class XiboSspConnector implements ConnectorInterface
 
             // Get displays for this partner
             $partnerKey = $partner['name'];
-            $sspIdField = $this->getSetting($partnerKey . '_sspIdField');
+            $sspIdField = $settings[$partnerKey . '_sspIdField'] ?? 'displayId';
+
             foreach ($this->displayFactory->query(null, [
                 'disableUserCheck' => 1,
-                'displayGroupId' => $this->getSetting($partnerKey . '_displayGroupId'),
+                'displayGroupId' => $settings[$partnerKey . '_displayGroupId'] ?? null,
                 'authorised' => 1,
             ]) as $display) {
                 if (!array_key_exists($display->displayId, $displays)) {
@@ -399,6 +404,7 @@ class XiboSspConnector implements ConnectorInterface
                     'cmsUrl' => $this->getSetting('cmsUrl'),
                     'fromDt' => $fromDt->toAtomString(),
                     'toDt' => $toDt->toAtomString(),
+                    'displayId' => $params->getInt('displayId'),
                 ],
             ]);
 
@@ -435,7 +441,8 @@ class XiboSspConnector implements ConnectorInterface
                 $this->setDisplays(
                     $this->getSetting('apiKey'),
                     $this->getSetting('cmsUrl'),
-                    $partners
+                    $partners,
+                    $this->settings
                 );
             }
 

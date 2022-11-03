@@ -569,6 +569,7 @@ class Campaign extends Base
         } else if ($campaign->type === 'ad') {
             $campaign->targetType = $sanitizedParams->getString('targetType');
             $campaign->target = $sanitizedParams->getInt('target');
+            $campaign->listPlayOrder = 'round';
         }
 
         // Assign layouts?
