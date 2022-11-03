@@ -597,15 +597,11 @@ function permissionsMultiFormOpen(dialog) {
                     }
                 }
 
-                // initialise the permission and start permissions arrays
-                if ($grid.data().permissions == undefined) {
-                    $grid.data().permissions = newData;
-                }
+                // merge the permission and start permissions arrays
+                $grid.data().permissions = Object.assign({}, $grid.data().permissions, newData);
+                $grid.data().startPermissions = Object.assign({}, $grid.data().startPermissions, JSON.parse(JSON.stringify(newData)));
 
-                if ($grid.data().startPermissions == undefined) {
-                    $grid.data().startPermissions = JSON.parse(JSON.stringify(newData));
-                }
-
+                // init save permissions if undefined
                 if ($grid.data().savePermissions == undefined) {
                     $grid.data().savePermissions = {};
                 }
