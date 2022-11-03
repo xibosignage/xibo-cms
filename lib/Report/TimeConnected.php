@@ -212,8 +212,7 @@ class TimeConnected implements ReportInterface
     public function getResults(SanitizerInterface $sanitizedParams)
     {
         // Get an array of display id this user has access to.
-            $displayIds = $this->getDisplayIdFilter($sanitizedParams);
-
+        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
         // From and To Date Selection
         // --------------------------

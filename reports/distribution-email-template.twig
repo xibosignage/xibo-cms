@@ -29,4 +29,20 @@
 <p></p>
 <span>{{ placeholder }}</span>
 <img src="{{ src|raw }}" >
+    <p></p>
+
+    <table class="saved-report-table">
+        <tr>
+            <th>{% trans "Period" %}</th>
+            <th>{% trans "Duration" %}</th>
+            <th>{% trans "Count" %}</th>
+        </tr>
+        {% for item in tableData %}
+            <tr>
+                <td>{{ item.label }}</td>
+                <td>{{ item.duration }}</td>
+                <td>{{ item.count }}</td>
+            </tr>
+        {% endfor %}
+    </table>
 {% endblock %}

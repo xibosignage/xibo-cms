@@ -46,7 +46,7 @@
                 <li class="nav-item"><a class="nav-link" href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#settings" role="tab" data-toggle="tab"><span>{% trans "Settings" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#remote" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
@@ -131,10 +131,6 @@
                             { name: "data-filter-options", value: '{"retired":"0"}' }
                         ] %}
                         {{ forms.dropdown("defaultLayoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText, "pagedSelect", "", "", "", attributes) }}
-
-                        {% set title %}{% trans "Display Type" %}{% endset %}
-                        {% set helpText %}{% trans "The type of display" %}{% endset %}
-                        {{ forms.dropdown("displayTypeId", "single", title, display.displayTypeId, [{displayTypeId:null, displayType:""}]|merge(displayTypes), "displayTypeId", "displayType", helpText) }}
                     </div>
                     <div class="tab-pane" id="location">
                         {% set title %}{% trans "Latitude" %}{% endset %}
@@ -151,6 +147,10 @@
                         {% set title %}{% trans "Timezone" %}{% endset %}
                         {% set helpText %}{% trans "The timezone for this display, or empty to use the CMS timezone" %}{% endset %}
                         {{ forms.dropdown("timeZone", "single", title, display.timeZone, [{id:"", value:""}]|merge(timeZones), "id", "value", helpText, "selectPicker", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Display Type" %}{% endset %}
+                        {% set helpText %}{% trans "The Type of this Display" %}{% endset %}
+                        {{ forms.dropdown("displayTypeId", "single", title, display.displayTypeId, [{displayTypeId:null, displayType:""}]|merge(displayTypes), "displayTypeId", "displayType", helpText) }}
 
                         {% set title %}{% trans "Screen size" %}{% endset %}
                         {% set helpText %}{% trans "The Screen size of this Display" %}{% endset %}
@@ -169,6 +169,8 @@
                         {{ forms.number("impressionsPerPlay", title, display.impressionsPerPlay, helpText) }}
                     </div>
                     <div class="tab-pane" id="reference">
+                        {{ forms.message("Add reference fields if needed"|trans) }}
+
                         {% set title %}{% trans "Reference 1" %}{% endset %}
                         {{ forms.input("ref1", title, display.ref1) }}
 

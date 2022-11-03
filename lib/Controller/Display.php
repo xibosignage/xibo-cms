@@ -391,6 +391,7 @@ class Display extends Base
             'clientVersion' => $parsedQueryParams->getString('clientVersion'),
             'clientType' => $parsedQueryParams->getString('clientType'),
             'clientCode' => $parsedQueryParams->getString('clientCode'),
+            'customId' => $parsedQueryParams->getString('customId'),
             'authorised' => $parsedQueryParams->getInt('authorised'),
             'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
             'tags' => $parsedQueryParams->getString('tags'),
