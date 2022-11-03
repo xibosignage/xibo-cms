@@ -837,6 +837,8 @@ $inline-editing-z-index: 1040;
         height: 100%;
         border: none;
         background: $viewer-player-bg-colour;
+        position: relative;
+        z-index: 1;
 
         .layout-viewer-border {
             @include set-transparent-color(background, $xibo-color-black, 0.9);
@@ -1406,6 +1408,8 @@ $inline-editing-z-index: 1040;
     #layout-navigator-content {
         background: $xibo-color-black;
         min-height: 100%;
+        position: relative;
+        z-index: 1;
     }
 
     /* Navigator fullscreen */

@@ -414,7 +414,11 @@ class CampaignFactory extends BaseFactory
                 ],
                 'stringProperties' => [
                     'lastPopId'
-                ]
+                ],
+                'doubleProperties' => [
+                    'spend',
+                    'impressions',
+                ],
             ]);
         }
 
@@ -440,7 +444,13 @@ class CampaignFactory extends BaseFactory
     {
         $layouts = [];
         foreach ($this->getStore()->select('
-            SELECT lkcampaignlayout.*,
+            SELECT lkcampaignlayout.lkCampaignLayoutId,
+                   lkcampaignlayout.displayOrder,
+                   lkcampaignlayout.layoutId,
+                   lkcampaignlayout.campaignId,
+                   lkcampaignlayout.dayPartId,
+                   lkcampaignlayout.daysOfWeek,
+                   lkcampaignlayout.geoFence,
                    layout.layout,
                    layout.userId AS ownerId,
                    layout.duration,

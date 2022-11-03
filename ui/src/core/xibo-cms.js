@@ -3757,6 +3757,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                 } else {
                     $("#breadcrumbs").text('');
                     $('#folder-tree-clear-selection-button').prop('checked', true)
+                    $('.XiboFilter').find('#folderId').val(null).trigger('change');
                 }
             }
 

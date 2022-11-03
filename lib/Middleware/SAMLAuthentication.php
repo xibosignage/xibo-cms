@@ -176,6 +176,7 @@ class SAMLAuthentication extends AuthenticationBase
                     } else {
                         // Provision the user
                         $user = $this->getEmptyUser();
+                        $user->homeFolderId = 1;
 
                         if (isset($userData["UserName"])) {
                             $user->userName = $userData["UserName"][0];
