@@ -123,7 +123,8 @@ class WidgetSyncTask implements TaskInterface
                             $widget->type == 'datasetview' ||
                             $widget->type == 'webpage' ||
                             $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
+                            $modules[$widget->type]->renderAs == 'html' &&
+                            $widget->type != 'dashboard'
                         ) {
                             $countWidgets++;
 
