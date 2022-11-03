@@ -7860,7 +7860,8 @@
                     {
                         "name": "displayGroupIds",
                         "in": "query",
-                        "description": "The DisplayGroupIds to return the schedule for. Empty for All.",
+                        "description": "The DisplayGroupIds to return the schedule for. [-1] for All.",
+                        "required": true,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -7869,16 +7870,16 @@
                     {
                         "name": "from",
                         "in": "query",
-                        "description": "From Date Timestamp in Microseconds",
-                        "required": true,
-                        "type": "integer"
+                        "description": "From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "to",
                         "in": "query",
-                        "description": "To Date Timestamp in Microseconds",
-                        "required": true,
-                        "type": "integer"
+                        "description": "To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-10 17:40+0100\n"
+"POT-Creation-Date: 2022-11-03 15:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -544,6 +544,38 @@ msgstr ""
 #: cache/c9/c93a5e87acd5620fbeeeaf459be7afcc2fe8b696340253db19e9c136eed52624.php:165
 #: cache/c9/c93a5e87acd5620fbeeeaf459be7afcc2fe8b696340253db19e9c136eed52624.php:199
 msgid "Description"
+msgstr ""
+
+#: locale/dbtranslate.php:151
+msgid "Wind"
+msgstr ""
+
+#: locale/dbtranslate.php:152
+msgid "Humidity"
+msgstr ""
+
+#: locale/dbtranslate.php:153
+msgid "Feels Like"
+msgstr ""
+
+#: locale/dbtranslate.php:154
+msgid "Right now"
+msgstr ""
+
+#: locale/dbtranslate.php:155
+msgid "Pressure"
+msgstr ""
+
+#: locale/dbtranslate.php:156
+msgid "Visibility"
+msgstr ""
+
+#: locale/dbtranslate.php:157
+msgid "TODAY"
+msgstr ""
+
+#: locale/dbtranslate.php:158
+msgid "RIGHT NOW"
 msgstr ""
 
 #: cache/58/58fda0d5b6bd7ea43d978c2b4a246341af987b95ed0081e926d41ce03dc14d82.php:56
@@ -17916,210 +17948,210 @@ msgid ""
 "on upload, otherwise adjust it here"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:365
+#: lib/Weather/OpenWeatherMapProvider.php:364
 msgid "Afrikaans"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:366
+#: lib/Weather/OpenWeatherMapProvider.php:365
 #: lib/Weather/DarkSkyProvider.php:220
 msgid "Arabic"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:367
+#: lib/Weather/OpenWeatherMapProvider.php:366
 #: lib/Weather/DarkSkyProvider.php:221
 msgid "Azerbaijani"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:368
+#: lib/Weather/OpenWeatherMapProvider.php:367
 #: lib/Weather/DarkSkyProvider.php:224
 msgid "Bulgarian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:369
+#: lib/Weather/OpenWeatherMapProvider.php:368
 #: lib/Weather/DarkSkyProvider.php:225
 msgid "Catalan"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:370
+#: lib/Weather/OpenWeatherMapProvider.php:369
 msgid "Chinese Simplified"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:371
+#: lib/Weather/OpenWeatherMapProvider.php:370
 msgid "Chinese Traditional"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:372
+#: lib/Weather/OpenWeatherMapProvider.php:371
 #: lib/Weather/DarkSkyProvider.php:230
 msgid "Czech"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:373
+#: lib/Weather/OpenWeatherMapProvider.php:372
 #: lib/Weather/DarkSkyProvider.php:231
 msgid "Danish"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:374
+#: lib/Weather/OpenWeatherMapProvider.php:373
 #: lib/Weather/DarkSkyProvider.php:234
 msgid "German"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:375
+#: lib/Weather/OpenWeatherMapProvider.php:374
 #: lib/Weather/DarkSkyProvider.php:235
 msgid "Greek"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:376
+#: lib/Weather/OpenWeatherMapProvider.php:375
 #: lib/Weather/DarkSkyProvider.php:236
 msgid "English"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:377
+#: lib/Weather/OpenWeatherMapProvider.php:376
 msgid "Basque"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:378
+#: lib/Weather/OpenWeatherMapProvider.php:377
 msgid "Persian (Farsi)"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:379
+#: lib/Weather/OpenWeatherMapProvider.php:378
 #: lib/Weather/DarkSkyProvider.php:238
 msgid "Finnish"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:380
+#: lib/Weather/OpenWeatherMapProvider.php:379
 #: lib/Weather/DarkSkyProvider.php:239
 msgid "French"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:381
+#: lib/Weather/OpenWeatherMapProvider.php:380
 msgid "Galician"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:382
+#: lib/Weather/OpenWeatherMapProvider.php:381
 msgid "Hebrew"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:383
+#: lib/Weather/OpenWeatherMapProvider.php:382
 msgid "Hindi"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:384
+#: lib/Weather/OpenWeatherMapProvider.php:383
 #: lib/Weather/DarkSkyProvider.php:229
 msgid "Croatian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:385
+#: lib/Weather/OpenWeatherMapProvider.php:384
 #: lib/Weather/DarkSkyProvider.php:240
 msgid "Hungarian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:386
+#: lib/Weather/OpenWeatherMapProvider.php:385
 #: lib/Weather/DarkSkyProvider.php:242
 msgid "Indonesian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:387
+#: lib/Weather/OpenWeatherMapProvider.php:386
 #: lib/Weather/DarkSkyProvider.php:243
 msgid "Italian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:388
+#: lib/Weather/OpenWeatherMapProvider.php:387
 #: lib/Weather/DarkSkyProvider.php:244
 msgid "Japanese"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:389
+#: lib/Weather/OpenWeatherMapProvider.php:388
 msgid "Korean"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:390
+#: lib/Weather/OpenWeatherMapProvider.php:389
 msgid "Latvian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:391
+#: lib/Weather/OpenWeatherMapProvider.php:390
 msgid "Lithuanian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:392
+#: lib/Weather/OpenWeatherMapProvider.php:391
 msgid "Macedonian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:393
+#: lib/Weather/OpenWeatherMapProvider.php:392
 msgid "Norwegian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:394
+#: lib/Weather/OpenWeatherMapProvider.php:393
 #: lib/Weather/DarkSkyProvider.php:232
 msgid "Dutch"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:395
+#: lib/Weather/OpenWeatherMapProvider.php:394
 #: lib/Weather/DarkSkyProvider.php:246
 msgid "Polish"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:396
+#: lib/Weather/OpenWeatherMapProvider.php:395
 #: lib/Weather/DarkSkyProvider.php:247
 msgid "Portuguese"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:397
+#: lib/Weather/OpenWeatherMapProvider.php:396
 msgid "Português Brasil"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:398
+#: lib/Weather/OpenWeatherMapProvider.php:397
 msgid "Romanian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:399
+#: lib/Weather/OpenWeatherMapProvider.php:398
 #: lib/Weather/DarkSkyProvider.php:248
 msgid "Russian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:400
+#: lib/Weather/OpenWeatherMapProvider.php:399
 #: lib/Weather/DarkSkyProvider.php:253
 msgid "Swedish"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:401
+#: lib/Weather/OpenWeatherMapProvider.php:400
 #: lib/Weather/DarkSkyProvider.php:250
 msgid "Slovak"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:402
+#: lib/Weather/OpenWeatherMapProvider.php:401
 #: lib/Weather/DarkSkyProvider.php:251
 msgid "Slovenian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:403
+#: lib/Weather/OpenWeatherMapProvider.php:402
 #: lib/Weather/DarkSkyProvider.php:252
 msgid "Spanish"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:404
+#: lib/Weather/OpenWeatherMapProvider.php:403
 #: lib/Weather/DarkSkyProvider.php:249
 msgid "Serbian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:405
+#: lib/Weather/OpenWeatherMapProvider.php:404
 msgid "Thai"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:406
+#: lib/Weather/OpenWeatherMapProvider.php:405
 #: lib/Weather/DarkSkyProvider.php:255
 msgid "Turkish"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:407
+#: lib/Weather/OpenWeatherMapProvider.php:406
 #: lib/Weather/DarkSkyProvider.php:256
 msgid "Ukrainian"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:408
+#: lib/Weather/OpenWeatherMapProvider.php:407
 msgid "Vietnamese"
 msgstr ""
 
-#: lib/Weather/OpenWeatherMapProvider.php:409
+#: lib/Weather/OpenWeatherMapProvider.php:408
 msgid "Zulu"
 msgstr ""
 
@@ -19986,49 +20018,49 @@ msgstr ""
 msgid "File available only for SSSP displays"
 msgstr ""
 
-#: lib/Controller/Schedule.php:323 lib/Controller/Schedule.php:334
+#: lib/Controller/Schedule.php:324 lib/Controller/Schedule.php:336
 #: lib/Entity/Schedule.php:1543 lib/Entity/Schedule.php:1554
 #, php-format
 msgid "%s scheduled on %s"
 msgstr ""
 
-#: lib/Controller/Schedule.php:332 lib/Controller/Schedule.php:556
+#: lib/Controller/Schedule.php:333 lib/Controller/Schedule.php:558
 #: lib/Entity/Schedule.php:1552
 msgid "Private Item"
 msgstr ""
 
-#: lib/Controller/Schedule.php:337
+#: lib/Controller/Schedule.php:339
 #, php-format
 msgid " with Share of Voice %d seconds per hour"
 msgstr ""
 
-#: lib/Controller/Schedule.php:346
+#: lib/Controller/Schedule.php:348
 #, php-format
 msgid ", Repeats every %s %s"
 msgstr ""
 
-#: lib/Controller/Schedule.php:981 lib/Controller/Schedule.php:1523
+#: lib/Controller/Schedule.php:983 lib/Controller/Schedule.php:1525
 #: lib/Entity/Schedule.php:553
 msgid "Share of Voice must be a whole number between 0 and 3600"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1027 lib/Controller/Schedule.php:1563
+#: lib/Controller/Schedule.php:1029 lib/Controller/Schedule.php:1565
 msgid "Please enter a from date"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1138
+#: lib/Controller/Schedule.php:1140
 msgid "Added Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1300 lib/Controller/Schedule.php:1802
+#: lib/Controller/Schedule.php:1302 lib/Controller/Schedule.php:1804
 msgid "Deleted Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1720
+#: lib/Controller/Schedule.php:1722
 msgid "Edited Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1902 web/xmds.php:154
+#: lib/Controller/Schedule.php:1904 web/xmds.php:154
 msgid "Unknown type"
 msgstr ""
 
@@ -21119,27 +21151,27 @@ msgid ""
 "empty"
 msgstr ""
 
-#: lib/Controller/Stats.php:394 lib/Report/ProofOfPlay.php:497
+#: lib/Controller/Stats.php:389 lib/Report/ProofOfPlay.php:497
 msgid "Deleted from Layout"
 msgstr ""
 
-#: lib/Controller/Stats.php:396 lib/Controller/Stats.php:397
-#: lib/Controller/Stats.php:757 lib/Controller/Stats.php:758
+#: lib/Controller/Stats.php:391 lib/Controller/Stats.php:392
+#: lib/Controller/Stats.php:752 lib/Controller/Stats.php:753
 #: lib/Report/ProofOfPlay.php:503 lib/Report/ProofOfPlay.php:505
 msgid "Not Found"
 msgstr ""
 
-#: lib/Controller/Stats.php:464 lib/Controller/Stats.php:640
-#: lib/Controller/Stats.php:705 lib/Controller/Stats.php:1009
+#: lib/Controller/Stats.php:459 lib/Controller/Stats.php:635
+#: lib/Controller/Stats.php:700 lib/Controller/Stats.php:1006
 #: lib/Report/ReportDefaultTrait.php:307 lib/Report/TimeConnected.php:235
 msgid "No displays with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:534 lib/Report/Bandwidth.php:263
+#: lib/Controller/Stats.php:529 lib/Report/Bandwidth.php:263
 msgid "Deleted Displays"
 msgstr ""
 
-#: lib/Controller/Stats.php:723
+#: lib/Controller/Stats.php:718
 msgid "Both fromDt/toDt should be provided"
 msgstr ""
 
@@ -21650,29 +21682,29 @@ msgid ""
 "Time provisioning is disabled"
 msgstr ""
 
-#: lib/Connector/XiboDashboardConnector.php:189
-#: lib/Connector/XiboDashboardConnector.php:262
+#: lib/Connector/XiboDashboardConnector.php:199
+#: lib/Connector/XiboDashboardConnector.php:272
 msgid "Empty response from the dashboard service"
 msgstr ""
 
-#: lib/Connector/XiboDashboardConnector.php:200
+#: lib/Connector/XiboDashboardConnector.php:210
 msgid "Cannot register those credentials."
 msgstr ""
 
-#: lib/Connector/XiboDashboardConnector.php:272
-#: lib/Connector/XiboDashboardConnector.php:281
+#: lib/Connector/XiboDashboardConnector.php:282
+#: lib/Connector/XiboDashboardConnector.php:291
 msgid "Cannot contact dashboard service, please try again shortly."
 msgstr ""
 
-#: lib/Connector/XiboDashboardConnector.php:355
+#: lib/Connector/XiboDashboardConnector.php:365
 msgid "Error calling Dashboard service"
 msgstr ""
 
-#: lib/Connector/XiboDashboardConnector.php:381
+#: lib/Connector/XiboDashboardConnector.php:391
 msgid "Cannot decode token"
 msgstr ""
 
-#: lib/Connector/XiboDashboardConnector.php:421
+#: lib/Connector/XiboDashboardConnector.php:431
 #, php-format
 msgid "No credentials logged for %s"
 msgstr ""

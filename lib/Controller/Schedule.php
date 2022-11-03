@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -177,7 +177,7 @@ class Schedule extends Base
         // Render the Theme and output
         $this->getState()->template = 'schedule-page';
         $this->getState()->setData($data);
-        
+
         return $this->render($request, $response);
     }
 
@@ -193,7 +193,7 @@ class Schedule extends Base
      *      description="The DisplayGroupIds to return the schedule for. [-1] for All.",
      *      in="query",
      *      type="array",
-     *      required="true"
+     *      required=true,
      *      @SWG\Items(
      *          type="integer"
      *      )
