@@ -169,6 +169,8 @@
                         {{ forms.number("impressionsPerPlay", title, display.impressionsPerPlay, helpText) }}
                     </div>
                     <div class="tab-pane" id="reference">
+                        {{ forms.message("Add reference fields if needed"|trans) }}
+
                         {% set title %}{% trans "Reference 1" %}{% endset %}
                         {{ forms.input("ref1", title, display.ref1) }}
 
