@@ -56,7 +56,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
     public function getSettingsFormTwig(): string
     {
-        return 'xibo-audience-reporting-connector-form-settings';
+        return 'xibo-audience-connector-form-settings';
     }
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
