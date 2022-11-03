@@ -62,19 +62,17 @@ describe('Campaigns', function () {
 
         cy.get('.modal .save-button').click();
 
-        /*
-        TODO: fix this
-        // Filter for the created campaign
-        cy.get('#Filter input[name="name"]')
-            .type('Cypress Test Campaign ' + testRun);
+        // Wait for the edit form to pop open
+        cy.contains('.modal .modal-title', testRun);
+
+        // Switch to the layouts tab.
+        cy.contains('.modal .nav-tabs .nav-link', 'Layouts').click();
 
         // Should have no layouts assigned
-        cy.get('#campaigns tbody tr').should('have.length', 1);
-        cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(2)').contains('0'); */
+        cy.get('.modal #LayoutAssignSortable').children()
+          .should('have.length', 0);
     });
 
-    /*
-    TODO: fix this
     it('should assign layouts to an existing campaign', function() {
 
         // Create some layouts
@@ -94,11 +92,14 @@ describe('Campaigns', function () {
 
             // Should have no layouts assigned
             cy.get('#campaigns tbody tr').should('have.length', 1);
-            cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(2)').contains('0');
+            cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(5)').contains('0');
 
             // Click on the first row element to open the edit modal
             cy.get('#campaigns tr:first-child .dropdown-toggle').click();
             cy.get('#campaigns tr:first-child .campaign_button_edit').click();
+
+            // Switch to the layouts tab.
+            cy.contains('.modal .nav-tabs .nav-link', 'Layouts').click();
 
             // Assign 2 layouts
             cy.get('#layoutAssignments tr:nth-child(1) a.assignItem').click();
@@ -112,12 +113,12 @@ describe('Campaigns', function () {
 
             // Should have 2 layouts assigned
             cy.get('#campaigns tbody tr').should('have.length', 1);
-            cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(2)').contains('2');
+            cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(5)').contains('2');
 
             // Delete temp layouts
             //deleteTempLayouts(2);
         });
-    }); */
+    });
 
     it('searches and delete existing campaign', function() {
 
