@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,11 +25,6 @@ use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
@@ -876,13 +871,15 @@ class Stats extends Base
         // CMS timezone
         $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
 
-        $params = $this->getSanitizer($request->getParams());
-        $fromDt = $params->getDate('fromDt');
-        $toDt = $params->getDate('toDt');
-        $displayId = $params->getInt('displayId');
-        $displays = $params->getIntArray('displayIds');
-        $returnDisplayLocalTime = $params->getCheckbox('returnDisplayLocalTime');
-        $returnDateFormat = $params->getString('returnDateFormat', 'Y-m-d H:i:s');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
+        $displayId = $sanitizedParams->getInt('displayId');
+        $displays = $sanitizedParams->getIntArray('displayIds', ['default' => []]);
+        $returnDisplayLocalTime = $sanitizedParams->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $sanitizedParams->getString('returnDateFormat', [
+            'default' => 'Y-m-d H:i:s'
+        ]);
 
         // Merge displayId and displayIds
         if ($displayId != 0) {
@@ -922,8 +919,8 @@ class Stats extends Base
         }
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter([], $params);
-        $sortOrder = $this->gridRenderSort($params);
+        $filterBy = $this->gridRenderFilter([], $sanitizedParams);
+        $sortOrder = $this->gridRenderSort($sanitizedParams);
 
         $order = '';
         if (is_array($sortOrder))
@@ -934,7 +931,7 @@ class Stats extends Base
         // Paging
         $filterBy = $this->getSanitizer($filterBy);
         if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
-            $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
+            $limit = ' LIMIT ' . $filterBy->getInt('start', ['default' => 0]) . ', '
                 . $filterBy->getInt('length', ['default' => 10]);
         }
 
