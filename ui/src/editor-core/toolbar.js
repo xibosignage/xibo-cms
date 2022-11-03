@@ -715,6 +715,9 @@ Toolbar.prototype.selectCard = function(card) {
             this.deselectCardsAndDropZones();
         });
 
+        // Toggle drop areas
+        $('.toggle-drop').css('z-index', 'initial');
+
         // Set droppable areas as active
         if (dropTo === 'all' && subType === 'permissions') {
             $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
@@ -761,6 +764,9 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
     if (this.parent.editorContainer.hasClass('multi-select')) {
         this.toggleMultiselectMode(false);
     }
+
+    // Toggle drop areas
+    $('.toggle-drop').css('z-index', '1');
 
     // Hide designer overlay
     $('.custom-overlay').hide().unbind();
@@ -1090,6 +1096,9 @@ Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
             self.deselectCardsAndDropZones();
         });
 
+        // Toggle drop areas
+        $('.toggle-drop').css('z-index', 'initial');
+
         // Set droppable areas as active
         $('[data-type="region"].ui-droppable.editable, [data-parent="region"].widget-preview.ui-droppable.parent-editable').addClass('ui-droppable-active');
     } else {
@@ -1179,6 +1188,9 @@ Toolbar.prototype.handleCardsBehaviour = function() {
                     // Show overlay
                     $('.custom-overlay').show();
 
+                    // Toggle drop areas
+                    $('.toggle-drop').css('z-index', 'initial');
+
                     // Mark card as being dragged
                     $(this).addClass('card-dragged');
 
@@ -1191,6 +1203,9 @@ Toolbar.prototype.handleCardsBehaviour = function() {
                 stop: function() {
                     // Hide overlay
                     $('.custom-overlay').hide();
+
+                    // Toggle drop areas
+                    $('.toggle-drop').css('z-index', '1');
 
                     // Remove card class as being dragged
                     $(this).removeClass('card-dragged');

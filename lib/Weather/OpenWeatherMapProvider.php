@@ -312,6 +312,7 @@ class OpenWeatherMapProvider implements WeatherProvider
         }
 
         // Wind direction
+        $day->windDirection = '--';
         if ($day->windBearing !== null && $day->windBearing !== 0) {
             foreach (self::cardinalDirections() as $dir => $angles) {
                 if ($day->windBearing >= $angles[0] && $day->windBearing < $angles[1]) {
@@ -319,8 +320,6 @@ class OpenWeatherMapProvider implements WeatherProvider
                     break;
                 }
             }
-        } else {
-            $day->windDirection = '--';
         }
 
         // Clouds

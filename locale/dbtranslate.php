@@ -158,3 +158,13 @@ echo __('Smart Mirror');
 echo __('TV / Panel');
 echo __('Tablet');
 echo __('Totem');
+
+// Weather templates
+echo __('Wind');
+echo __('Humidity');
+echo __('Feels Like');
+echo __('Right now');
+echo __('Pressure');
+echo __('Visibility');
+echo __('TODAY');
+echo __('RIGHT NOW');
