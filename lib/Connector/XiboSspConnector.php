@@ -404,6 +404,7 @@ class XiboSspConnector implements ConnectorInterface
                     'cmsUrl' => $this->getSetting('cmsUrl'),
                     'fromDt' => $fromDt->toAtomString(),
                     'toDt' => $toDt->toAtomString(),
+                    'displayId' => $params->getInt('displayId'),
                 ],
             ]);
 

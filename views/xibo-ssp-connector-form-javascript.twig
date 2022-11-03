@@ -159,6 +159,9 @@
 
                   {% set title %}{% trans "To Date" %}{% endset %}
                   {{ inline.date("activityToDt", title, "", "", "activity-to-dt", "", "") }}
+
+                  {% set title %}{% trans "Display ID" %}{% endset %}
+                  {{ inline.number("displayId", title) }}
                   <div class="w-100">
                       <a data-apply-button="true" class="btn btn-success">
                           <span>{% trans "Apply" %}</span>
