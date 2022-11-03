@@ -190,9 +190,10 @@ class Schedule extends Base
      *  tags={"schedule"},
      *  @SWG\Parameter(
      *      name="displayGroupIds",
-     *      description="The DisplayGroupIds to return the schedule for. Empty for All.",
+     *      description="The DisplayGroupIds to return the schedule for. [-1] for All.",
      *      in="query",
      *      type="array",
+     *      required="true"
      *      @SWG\Items(
      *          type="integer"
      *      )
@@ -200,16 +201,16 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="from",
      *      in="query",
-     *      required=true,
-     *      type="integer",
-     *      description="From Date Timestamp in Microseconds"
+     *      required=false,
+     *      type="string",
+     *      description="From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month"
      *  ),
      *  @SWG\Parameter(
      *      name="to",
      *      in="query",
-     *      required=true,
-     *      type="integer",
-     *      description="To Date Timestamp in Microseconds"
+     *      required=false,
+     *      type="string",
+     *      description="To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month"
      *  ),
      *  @SWG\Response(
      *      response=200,
@@ -226,7 +227,7 @@ class Schedule extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    function eventData(Request $request, Response $response)
+    public function eventData(Request $request, Response $response)
     {
         $response = $response->withHeader('Content-Type', 'application/json');
         $this->setNoOutput();
@@ -236,9 +237,9 @@ class Schedule extends Base
         $campaignId = $sanitizedParams->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
 
-        $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()]);
-        $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()]);
-        
+        $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()->startOfMonth()]);
+        $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()->addMonth()->startOfMonth()]);
+
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
@@ -246,14 +247,14 @@ class Schedule extends Base
             return $response->withJson(['success' => 1, 'result' => []]);
         }
 
-        // Setting for whether we show Layouts with out permissions
+        // Setting for whether we show Layouts without permissions
         $showLayoutName = ($this->getConfig()->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
 
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
 
         if (!$this->getUser()->isSuperAdmin()) {
-            $userDisplayGroupIds = array_map(function($element) {
+            $userDisplayGroupIds = array_map(function ($element) {
                 /** @var \Xibo\Entity\DisplayGroup $element */
                 return $element->displayGroupId;
             }, $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]));
@@ -328,8 +329,9 @@ class Schedule extends Base
                     // Campaign
                     $campaign = $this->campaignFactory->getById($row->campaignId);
 
-                    if (!$this->getUser()->checkViewable($campaign))
+                    if (!$this->getUser()->checkViewable($campaign)) {
                         $row->campaign = __('Private Item');
+                    }
                 }
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
 
@@ -348,7 +350,7 @@ class Schedule extends Base
 
             // Event URL
             $editUrl = ($this->isApi($request)) ? 'schedule.edit' : 'schedule.edit.form';
-            $url = ($editable) ? $this->urlFor($request,$editUrl, ['id' => $row->eventId]) : '#';
+            $url = ($editable) ? $this->urlFor($request, $editUrl, ['id' => $row->eventId]) : '#';
 
             $days = [];
 
@@ -370,7 +372,7 @@ class Schedule extends Base
 
                 // Set the row from/to date to be an ISO date for display
                 $scheduleEvent->fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                $scheduleEvent->toDt =Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                $scheduleEvent->toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
 
                 $this->getLog()->debug(sprintf('Start date is ' . $fromDt->toRssString() . ' ' . $scheduleEvent->fromDt));
                 $this->getLog()->debug(sprintf('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt));
