@@ -166,6 +166,8 @@
 
                     </div>
                     <div class="tab-pane" id="reference">
+                        {{ forms.message("Add reference fields if needed"|trans) }}
+
                         {% set title %}{% trans "Reference 1" %}{% endset %}
                         {{ forms.input("ref1", title, displayGroup.ref1) }}
 
@@ -180,9 +182,6 @@
 
                         {% set title %}{% trans "Reference 5" %}{% endset %}
                         {{ forms.input("ref5", title, displayGroup.ref5) }}
-
-                        {% set title %}{% trans "Custom ID" %}{% endset %}
-                        {{ forms.input("customId", title, displayGroup.customId) }}
                     </div>
                 </div>
             </form>
