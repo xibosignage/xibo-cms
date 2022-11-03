@@ -324,10 +324,10 @@
                 createdRow: function (row, data, index) {
                     if (data.mediaInventoryStatus === 1) {
                         $(row).addClass('table-success');
-                    } else if (data.mediaInventoryStatus === 3) {
-                        $(row).addClass('table-warning');
-                    } else {
+                    } else if (data.mediaInventoryStatus === 2) {
                         $(row).addClass('table-danger');
+                    } else {
+                        $(row).addClass('table-warning');
                     }
                 },
                 "columns": [
