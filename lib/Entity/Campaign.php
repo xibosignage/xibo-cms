@@ -357,7 +357,7 @@ class Campaign implements \JsonSerializable
     {
         $progress = new CampaignProgress();
 
-        if ($this->type !== 'ad') {
+        if ($this->type !== 'ad' || $this->startDt == null || $this->endDt == null) {
             $progress->progressTime = 0;
             $progress->progressTarget = 0;
             return $progress;
