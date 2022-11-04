@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -148,6 +148,20 @@ class Action  extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="query",
+     *      description="Return all actions pertaining to a particular Layout",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="sourceOrTargetId",
+     *      in="query",
+     *      description="Return all actions related to a source or target with the provided ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -177,7 +191,9 @@ class Action  extends Base
             'target' => $parsedParams->getString('target'),
             'targetId' => $parsedParams->getInt('targetId'),
             'widgetId' => $parsedParams->getInt('widgetId'),
-            'layoutCode' => $parsedParams->getString('layoutCode')
+            'layoutCode' => $parsedParams->getString('layoutCode'),
+            'layoutId' => $parsedParams->getInt('layoutId'),
+            'sourceOrTargetId' => $parsedParams->getInt('sourceOrTargetId'),
         ];
 
         $actions = $this->actionFactory->query(
@@ -388,7 +404,8 @@ class Action  extends Base
         $widgetId = $sanitizedParams->getInt('widgetId');
         $layoutCode = $sanitizedParams->getString('layoutCode');
 
-        // this will return Layout|Region|Widget object or throw an exception if provided source and sourceId does not exist.
+        // this will return Layout|Region|Widget object or throw an exception if provided source and sourceId does
+        // not exist.
         $sourceObject = $this->checkIfSourceExists($source, $id);
 
         if ($source == 'layout') {
@@ -415,7 +432,17 @@ class Action  extends Base
             throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
         }
 
-        $action = $this->actionFactory->create($triggerType, $triggerCode, $actionType, $source, $id, $target, $targetId, $widgetId, $layoutCode);
+        $action = $this->actionFactory->create(
+            $triggerType,
+            $triggerCode,
+            $actionType,
+            $source,
+            $id,
+            $target,
+            $targetId,
+            $widgetId,
+            $layoutCode
+        );
         $action->save(['notifyLayout' => true, 'layoutId' => $layout->layoutId]);
 
         // Return
