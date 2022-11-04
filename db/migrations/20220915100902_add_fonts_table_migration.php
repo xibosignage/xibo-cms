@@ -55,6 +55,9 @@ class AddFontsTableMigration extends AbstractMigration
             mkdir($libraryLocation . 'fonts', 0777, true);
         }
 
+        // Fix any potential incorrect dates in modifiedDt
+        $this->execute('UPDATE `media` SET `media`.modifiedDt = `media`.createdDt WHERE `media`.modifiedDt < \'2000-01-01\'');
+
         // get all existing font records in media table and convert them
         foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'font\'') as $fontMedia) {
             $table
@@ -71,6 +74,10 @@ class AddFontsTableMigration extends AbstractMigration
 
             // move the stored files with new id to fonts folder
             rename($libraryLocation . $fontMedia['storedAs'], $libraryLocation . 'fonts/' . $fontMedia['originalFileName']);
+
+            // remove any potential tagLinks from font media files
+            // otherwise we risk failing the migration on the next step when we remove records from media table.
+            $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $fontMedia['mediaId']);
         }
 
         // delete font records from media table
@@ -94,7 +101,11 @@ class AddFontsTableMigration extends AbstractMigration
                 'options' => '[]',
                 'schedule' => '*/5 * * * * *',
                 'isActive' => '1',
-                'configFile' => '/tasks/player-css.task'
+                'configFile' => '/tasks/player-css.task',
+                'pid' => 0,
+                'lastRunDt' => 0,
+                'lastRunDuration' => 0,
+                'lastRunExitCode' => 0
             ],
         ])->save();
     }
