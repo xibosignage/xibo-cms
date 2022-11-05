@@ -379,8 +379,10 @@ class SubPlaylist extends ModuleWidget
         }
 
         // Tidy up any old options
-        $this->setOption('subPlaylistIds', null);
-        $this->setOption('subPlaylistOptions', null);
+        if ($this->getOption('subPlaylistIds') !== null) {
+            $this->setOption('subPlaylistIds', null);
+            $this->setOption('subPlaylistOptions', null);
+        }
 
         // Save the widget
         $this->saveWidget();
