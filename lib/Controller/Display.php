@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -193,6 +193,10 @@ class Display extends Base
      */
     public function displayVenue(Request $request, Response $response)
     {
+        if (!file_exists(PROJECT_ROOT . '/openooh/specification.json')) {
+            throw new GeneralException(__('OpenOOH specification missing'));
+        }
+
         $content = file_get_contents(PROJECT_ROOT . '/openooh/specification.json');
         $data = json_decode($content, true);
 
@@ -1112,7 +1116,7 @@ class Display extends Base
                 'resolution' => $display->resolution,
                 'lastAccessed' => $display->lastAccessed,
             ];
-            
+
             if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
                 $properties['thumbnail'] = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
