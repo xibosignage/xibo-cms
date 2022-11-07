@@ -38,6 +38,5 @@ class CreateDisplayLocationTypeTableMigration extends AbstractMigration
             ->addColumn('address', 'text', ['after' => 'screenSize', 'default' => null, 'null' => true])
             ->addColumn('languages', 'text', ['after' => 'screenSize', 'default' => null, 'null' => true])
             ->save();
-
     }
 }
