@@ -193,7 +193,7 @@ class Display extends Base
      */
     public function displayVenue(Request $request, Response $response)
     {
-        $content = file_get_contents(PROJECT_ROOT . '/web/specification.json');
+        $content = file_get_contents(PROJECT_ROOT . '/openooh/specification.json');
         $data = json_decode($content, true);
 
         $taxonomy = [];

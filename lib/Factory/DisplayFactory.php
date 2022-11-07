@@ -629,7 +629,9 @@ class DisplayFactory extends BaseFactory
                     'screenShotRequested',
                     'lastCommandSuccess',
                     'bandwidthLimit',
-                    'countFaults'
+                    'countFaults',
+                    'isMobile',
+                    'isOutdoor'
                 ],
                 'stringProperties' => ['customId']
             ]);
