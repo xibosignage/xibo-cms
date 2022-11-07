@@ -148,13 +148,41 @@
                         {% set helpText %}{% trans "The timezone for this display, or empty to use the CMS timezone" %}{% endset %}
                         {{ forms.dropdown("timeZone", "single", title, display.timeZone, [{id:"", value:""}]|merge(timeZones), "id", "value", helpText, "selectPicker", "", "", "", attributes) }}
 
+                        {% set title %}{% trans "Languages" %}{% endset %}
+                        {% set helpText %}{% trans "The Languages supported in this display location" %}{% endset %}
+                        {{ forms.dropdown("languages[]", "dropdownmulti", title, display.getLanguages(), languages, "id", "value", helpText, "selectPicker") }}
+
                         {% set title %}{% trans "Display Type" %}{% endset %}
                         {% set helpText %}{% trans "The Type of this Display" %}{% endset %}
                         {{ forms.dropdown("displayTypeId", "single", title, display.displayTypeId, [{displayTypeId:null, displayType:""}]|merge(displayTypes), "displayTypeId", "displayType", helpText) }}
 
+                        {% set title %}{% trans "Venue" %}{% endset %}
+                        {% set helpText %}{% trans "The Location/Venue of this display" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-allow-clear", value: "true" },
+                            { name: "data-placeholder--id", value: null },
+                            { name: "data-placeholder--value", value: "" },
+                            { name: "data-search-url", value: url_for("display.venue.search") },
+                            { name: "data-search-term", value: "venueName" },
+                            { name: "data-id-property", value: "venueId" },
+                            { name: "data-text-property", value: "venueName" },
+                            { name: "data-initial-key", value: "venueId" },
+                            { name: "data-initial-value", value: display.venueId }
+                        ] %}
+                        {{ forms.dropdown("venueId", "single", title, "", null, "venueId", "venueName", helpText, "venue-select", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Address" %}{% endset %}
+                        {% set helpText %}{% trans "The Address of this Display" %}{% endset %}
+                        {{ forms.input("address", title, display.address, helpText) }}
+
                         {% set title %}{% trans "Screen size" %}{% endset %}
                         {% set helpText %}{% trans "The Screen size of this Display" %}{% endset %}
                         {{ forms.number("screenSize", title, display.screenSize, helpText) }}
+
+                        {% set title %}{% trans "Is Mobile?" %}{% endset %}
+                        {% set helpText %}{% trans "Is this Display mobile?" %}{% endset %}
+                        {{ forms.checkbox("isMobile", title, display.isMobile, helpText) }}
 
                         {% set title %}{% trans "Is outdoor?" %}{% endset %}
                         {% set helpText %}{% trans "Is your display located outdoors?" %}{% endset %}

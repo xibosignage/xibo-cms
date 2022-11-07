@@ -194,6 +194,7 @@
                                         <th>{% trans "ID" %}</th>
                                         <th>{% trans "Display" %}</th>
                                         <th>{% trans "Display Type" %}</th>
+                                        <th>{% trans "Address" %}</th>
                                         <th>{% trans "Status" %}</th>
                                         <th>{% trans "Authorised?" %}</th>
                                         <th>{% trans "Current Layout" %}</th>
@@ -215,6 +216,7 @@
                                         <th>{% trans "IP Address" %}</th>
                                         <th>{% trans "Mac Address" %}</th>
                                         <th>{% trans "Timezone" %}</th>
+                                        <th>{% trans "Languages" %}</th>
                                         <th>{% trans "Latitude" %}</th>
                                         <th>{% trans "Longitude" %}</th>
                                         <th>{% trans "Screen shot?" %}</th>
@@ -227,6 +229,7 @@
                                         <th>{% trans "Remote" %}</th>
                                         <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Screen Size" %}</th>
+                                        <th>{% trans "Is Mobile?" %}</th>
                                         <th>{% trans "Outdoor?" %}</th>
                                         <th>{% trans "Reference 1" %}</th>
                                         <th>{% trans "Reference 2" %}</th>
@@ -334,6 +337,7 @@
                     {"data": "displayId", responsivePriority: 2},
                     {"data": "display", responsivePriority: 2},
                     {"data": "displayType", responsivePriority: 2},
+                    {"data": "Address", "visible": false, responsivePriority: 5},
                     {
                         "data": "mediaInventoryStatus",
                         responsivePriority: 2,
@@ -420,6 +424,30 @@
                     {"data": "clientAddress", "visible": false, responsivePriority: 6},
                     {"data": "macAddress", responsivePriority: 5},
                     {"data": "timeZone", "visible": false, responsivePriority: 5},
+                    {
+                        "data": "languages",
+                        "visible": false,
+                        "responsivePriority": 5,
+                        "render": function(data, type) {
+                            if (type !== "display")
+                                return data;
+
+                            let returnData = '';
+                            if (typeof data !== undefined && data != null) {
+                                let arrayOfTags = data.split(',');
+                                returnData += '<div class="permissionsDiv">';
+                                for (let i = 0; i < arrayOfTags.length; i++) {
+                                    let name = arrayOfTags[i];
+                                    if (name !== '') {
+                                        returnData += '<li class="badge">'
+                                            + name + '</span></li>'
+                                    }
+                                }
+                                returnData += '</div>';
+                            }
+                            return returnData;
+                        }
+                    },
                     {"data": "latitude", "visible": false, responsivePriority: 6},
                     {"data": "longitude", "visible": false, responsivePriority: 6},
                     {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested", responsivePriority: 7},
@@ -567,6 +595,12 @@
                         "render": dataTableCreatePermissions
                     },
                     {"data": "screenSize", "visible": false, responsivePriority: 6},
+                    {
+                        "data": "isMobile",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isMobile"
+                    },
                     {
                         "data": "isOutdoor",
                         "render": dataTableTickCrossColumn,
@@ -956,6 +990,73 @@
             });
         }
 
+        function makeVenueSelect(element) {
+            element.select2({
+                ajax: {
+                    url: element.data("searchUrl"),
+                    dataType: "json",
+                    data: {},
+                    processResults: function(data, params) {
+                        let results = [];
+                        let $element = element;
+
+                        $.each(data.data, function(index, el) {
+                            let result = {
+                                "id": el[$element.data("idProperty")],
+                                "text": el[$element.data("textProperty")]
+                            };
+                            results.push(result);
+                        });
+
+                        return {
+                            results: results
+                        };
+                    }
+                },
+                templateResult: function(state) {
+                    var stateText = '';
+
+                    // Add thumbnail if available
+                    if (state.thumbnail) {
+                        stateText += "<span class='option-thumbnail mr-3'><img style='width: 100px; height: 60px; object-fit: cover;' src='" + state.thumbnail + "' /></span>";
+                    }
+
+                    // Add option text
+                    stateText += "<span class='option-text'>" + state.text + "</span></span>";
+                    return $(stateText);
+                }
+            });
+
+            // Set initial value if exists
+            if(element.data("initialValue") !== undefined) {
+                let initialValue = element.data("initialValue");
+                let index;
+                $.ajax({
+                    url: element.data("searchUrl"),
+                    type: 'GET',
+                    data: {}
+                }).then(function(data) {
+                    $.each(data.data, function(key, el) {
+                        if (el.venueId === initialValue){
+                            index = key;
+                        }
+                    });
+
+                    // create the option and append to Select2
+                    var option = new Option(data.data[index][element.data("textProperty")], data.data[index][element.data("idProperty")], true, true);
+                    element.append(option).trigger('change');
+
+                    // manually trigger the `select2:select` event
+                    element.trigger({
+                        type: 'select2:select',
+                        params: {
+                            data: data
+                        }
+                    });
+                });
+            }
+        }
+
         function displayEditFormOpen(dialog) {
 
             // Setup display profile form
@@ -965,6 +1066,8 @@
             var $settings = $(dialog).find('#settings-from-display-profile').find('.form-group');
             var $table = $(dialog).find('#settings-from-profile tbody').empty();
             var override = $(dialog).data('extra');
+            var $venueIdSelect2 = $(dialog).find(".venue-select select.form-control");
+            makeVenueSelect($venueIdSelect2);
 
             // Parse special fields
             override.forEach(function(field, index) {

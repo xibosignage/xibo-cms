@@ -373,6 +373,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  *  description="Display Groups"
  * )
  */
+$app->get('/displayvenue', ['\Xibo\Controller\Display','displayVenue'])->setName('display.venue.search');
 $app->get('/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('displayGroup.search');
 
 $app->post('/displaygroup', ['\Xibo\Controller\DisplayGroup','add'])
