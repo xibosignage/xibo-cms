@@ -160,15 +160,11 @@
                         {% set helpText %}{% trans "The Location/Venue of this display" %}{% endset %}
                         {% set attributes = [
                             { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("display.venue.search") },
                             { name: "data-allow-clear", value: "true" },
                             { name: "data-placeholder--id", value: null },
                             { name: "data-placeholder--value", value: "" },
-                            { name: "data-search-url", value: url_for("display.venue.search") },
-                            { name: "data-search-term", value: "venueName" },
-                            { name: "data-id-property", value: "venueId" },
-                            { name: "data-text-property", value: "venueName" },
-                            { name: "data-initial-key", value: "venueId" },
-                            { name: "data-initial-value", value: display.venueId }
+                            { name: "data-venue-id", value: display.venueId },
                         ] %}
                         {{ forms.dropdown("venueId", "single", title, "", null, "venueId", "venueName", helpText, "venue-select", "", "", "", attributes) }}
 
