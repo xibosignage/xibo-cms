@@ -1,0 +1,650 @@
+{
+    "openooh_venue_taxonomy": {
+      "version": "1.1",
+      "repository": "https://github.com/openooh/venue-taxonomy",
+      "organization": "OpenOOH Working Group",
+      "status": "draft",
+      "specification": {
+        "categories": [
+          {
+            "name": "Transit",
+            "description": "Transit",
+            "enumeration_id": 1,
+            "string_value": "transit",
+            "children": [
+              {
+                "name": "Airports",
+                "description": "Signage located throughout terminals in arrival and departure areas, ticketing areas, baggage claim, gate-hold rooms, concourses, retail shops, and VIP lounges.",
+                "enumeration_id": 101,
+                "string_value": "transit.airports",
+                "children": [
+                  {
+                    "name": "Arrival Hall",
+                    "description": "Locations for meeting passengers arriving on flights",
+                    "enumeration_id": 10101,
+                    "string_value": "transit.airports.arrivals_hall" 
+                  },
+                  {
+                    "name": "Baggage Claim",
+                    "description": "Locations to retrieve baggage not carried during a flight",
+                    "enumeration_id": 10102,
+                    "string_value": "transit.airports.baggage_claim" 
+                  },
+                  {
+                    "name": "Departures Hall",
+                    "description": "Location for dropping off passengers leaving on flights",
+                    "enumeration_id": 10103,
+                    "string_value": "transit.airports.departures_hall" 
+                  },
+                  {
+                    "name": "Food Court",
+                    "description": "Location within an airport for food, typically casual",
+                    "enumeration_id": 10104,
+                    "string_value": "transit.airports.food_court" 
+                  },
+                  {
+                    "name": "Gates",
+                    "description": "Location to wait for or embark or disembark from a specific plane",
+                    "enumeration_id": 10105,
+                    "string_value": "transit.airports.gates" 
+                  },
+                  {
+                    "name": "Lounges",
+                    "description": "(typically private) places to wait for flights, separate from public spaces",
+                    "enumeration_id": 10106,
+                    "string_value": "transit.airports.lounges" 
+                  },
+                  {
+                    "name": "Shopping Area",
+                    "description": "Retail areas contained within facilities primarily used for servicing flights",
+                    "enumeration_id": 10107,
+                    "string_value": "transit.airports.shopping_area" 
+                  }
+                ]
+              },
+              {
+                "name": "Buses",
+                "description": "Displays located on or in city or intercity buses.",
+                "enumeration_id": 102,
+                "string_value": "transit.buses",
+                "children": [
+                  {
+                    "name": "Bus (Inside)",
+                    "description": "Advertising inside a bus, primarily visible to bus passengers",
+                    "enumeration_id": 10201,
+                    "string_value": "transit.buses.bus" 
+                  },
+                  {
+                    "name": "Terminal",
+                    "description": "Advertising at facilities for embarking or disembarking from a bus",
+                    "enumeration_id": 10202,
+                    "string_value": "transit.buses.terminal" 
+                  },
+                  {
+                    "name": "Bus (Outside)",
+                    "description": "Advertising outside a bus, primarily visible to people not riding the bus",
+                    "enumeration_id": 10203,
+                    "string_value": "transit.buses.bus_outside" 
+                  }
+                ]
+              },
+              {
+                "name": "Taxi & Rideshare TV",
+                "description": "Advertising displays placed inside taxis and rideshare vehicles visible to passengers in the back seat.",
+                "enumeration_id": 103,
+                "string_value": "transit.taxi_rideshare_tv" 
+              },
+              {
+                "name": "Taxi & Rideshare Top",
+                "description": "Advertising displays placed on top of taxi and rideshare vehicles visible to nearby pedestrian and drivers.",
+                "enumeration_id": 104,
+                "string_value": "transit.taxi_rideshare_top" 
+              },
+              {
+                "name": "Subway",
+                "description": "Advertising displays placed inside subway trains or inside stations or on subway platforms.",
+                "enumeration_id": 105,
+                "string_value": "transit.subway",
+                "children": [
+                  {
+                    "name": "Subway Train",
+                    "description": "A (typical municipal area) train that travels primarily underground",
+                    "enumeration_id": 10501,
+                    "string_value": "transit.subway.train" 
+                  },
+                  {
+                    "name": "Platform",
+                    "description": "Areas to wait for, board, or unboard a subway",
+                    "enumeration_id": 10502,
+                    "string_value": "transit.subway.platform" 
+                  }
+                ]
+              },
+              {
+                "name": "Train Stations",
+                "description": "Advertising displays placed inside train stations or on platforms.",
+                "enumeration_id": 106,
+                "string_value": "transit.train_stations",
+                "children": [
+                  {
+                    "name": "Train",
+                    "description": "A train that travels primarily above ground, on rails",
+                    "enumeration_id": 10601,
+                    "string_value": "transit.train_stations.train" 
+                  },
+                  {
+                    "name": "Platform",
+                    "description": "Areas to wait for, board, or unboard a train",
+                    "enumeration_id": 10602,
+                    "string_value": "transit.train_stations.platform" 
+                  }
+                ]
+              },
+              {
+                "name": "Ferry",
+                "description": "Advertising displays placed inside a passenger water transport.",
+                "enumeration_id": 107,
+                "string_value": "transit.ferry" 
+              }
+            ]
+          },
+          {
+            "name": "Retail",
+            "description": "Retail",
+            "enumeration_id": 2,
+            "string_value": "retail",
+            "children": [
+              {
+                "name": "Fueling Stations",
+                "description": "An establishment beside a road selling fuel for motor vehicles.",
+                "enumeration_id": 201,
+                "string_value": "retail.gas_stations",
+                "children": [
+                  {
+                    "name": "Fuel Dispenser",
+                    "description": "A (typically self-service) device for dispensing fuel to vehicles.",
+                    "enumeration_id": 20101,
+                    "string_value": "retail.gas_stations.pump" 
+                  },
+                  {
+                    "name": "Shop",
+                    "description": "A store attached to a location who's primary audience is people fueling vehicles",
+                    "enumeration_id": 20102,
+                    "string_value": "retail.gas_stations.shop" 
+                  }
+                ]
+              },
+              {
+                "name": "Convenience Stores",
+                "description": "A store with extended opening hours and in a convenient location, stocking a limited range of household goods and groceries.",
+                "enumeration_id": 202,
+                "string_value": "retail.convenience_store" 
+              },
+              {
+                "name": "Grocery",
+                "description": "A retail shop that primarily sells food, either fresh or preserved.",
+                "enumeration_id": 203,
+                "string_value": "retail.grocery",
+                "children": [
+                  {
+                    "name": "Shop Entrance",
+                    "description": "Areas near the entrance to a store, often (but not always) visible from outside",
+                    "enumeration_id": 20301,
+                    "string_value": "retail.grocery.shop_entrance" 
+                  },
+                  {
+                    "name": "Check Out",
+                    "description": "Areas primarily dedicated to paying for purchased goods",
+                    "enumeration_id": 20302,
+                    "string_value": "retail.grocery.check_out" 
+                  },
+                  {
+                    "name": "Aisles",
+                    "description": "Areas primarily dedicated to the display or retrieval of goods",
+                    "enumeration_id": 20303,
+                    "string_value": "retail.grocery.aisles" 
+                  }
+                ]
+              },
+              {
+                "name": "Liquor Stores",
+                "description": "A retail shop that predominantly sells prepackaged alcoholic beverages, typically in bottles, intended to be consumed off the store’s premises.",
+                "enumeration_id": 204,
+                "string_value": "retail.liquor_stores" 
+              },
+              {
+                "name": "Mall",
+                "description": "A large building or series of connected buildings containing a variety of retail stores and typically also restaurants.",
+                "enumeration_id": 205,
+                "string_value": "retail.malls",
+                "children": [
+                  {
+                    "name": "Concourse",
+                    "description": "A large open area (including hallways and escalators)",
+                    "enumeration_id": 20501,
+                    "string_value": "retail.malls.concourse" 
+                  },
+                  {
+                    "name": "Food Court",
+                    "description": "A Common area with multiple food vendors and common tables.",
+                    "enumeration_id": 20502,
+                    "string_value": "retail.malls.food_court" 
+                  },
+                  {
+                    "name": "Spectacular",
+                    "description": "Large and impactful screen(s) at a prime location. It often utilizes special embellishments.",
+                    "enumeration_id": 20503,
+                    "string_value": "retail.malls.spectacular" 
+                  }
+                ]
+              },
+              {
+                "name": "Cannabis Dispensaries",
+                "description": "A store that sells and dispenses cannabis and CBD products.",
+                "enumeration_id": 206,
+                "string_value": "retail.dispensaries" 
+              },
+              {
+                "name": "Pharmacies",
+                "description": "A store where medicinal drugs are dispensed and sold.",
+                "enumeration_id": 207,
+                "string_value": "retail.pharmacies" 
+              },
+              {
+                "name": "Parking Garages",
+                "description": "A building in which people usually pay to park their cars, trucks and other vehicles.",
+                "enumeration_id": 208,
+                "string_value": "retail.parking_garages" 
+              }
+            ]
+          },
+          {
+            "name": "Outdoor",
+            "description": "Outdoor",
+            "enumeration_id": 3,
+            "string_value": "outdoor",
+            "children": [
+              {
+                "name": "Billboards",
+                "description": "Located primarily on major roads, they attract high-density consumer exposure (mostly to vehicular traffic, but often to pedestrians).",
+                "enumeration_id": 301,
+                "string_value": "outdoor.billboards",
+                "children": [
+                  {
+                    "name": "Spectacular",
+                    "description": "A bulletin that is usually larger than 14’ x 48’ and is positioned at a prime location in a market. A spectacular often utilizes special embellishments.",
+                    "enumeration_id": 30103,
+                    "string_value": "outdoor.billboards.spectacular" 
+                  }
+                ]
+              },
+              {
+                "name": "Urban Panels",
+                "description": "Digital screens in urban environments, typically providing a public amenity. Typically visible to pedestrians and in some cases, vehicular traffic as well.",
+                "enumeration_id": 302,
+                "string_value": "outdoor.urban_panels" 
+              },
+              {
+                "name": "Bus Shelters",
+                "description": "Enclosures where individuals may wait for buses in an urban environment. Signage may be attached to the interior or exterior of the enclosure.",
+                "enumeration_id": 303,
+                "string_value": "outdoor.bus_shelters" 
+              }
+            ]
+          },
+          {
+            "name": "Health &amp; Beauty",
+            "description": "Health &amp; Beauty",
+            "enumeration_id": 4,
+            "string_value": "health_beauty",
+            "children": [
+              {
+                "name": "Gyms",
+                "description": "A club, building, or large room, usually containing special equipment, where people go to do physical exercise and get fit.",
+                "enumeration_id": 401,
+                "string_value": "health_beauty.gyms",
+                "children": [
+                  {
+                    "name": "Lobby",
+                    "description": "Area for waiting or meeting guests",
+                    "enumeration_id": 40101,
+                    "string_value": "health_beauty.gyms.lobby." 
+                  },
+                  {
+                    "name": "Fitness Equipment",
+                    "description": "Area primarily for exercise or the usage of fitness equipment",
+                    "enumeration_id": 40102,
+                    "string_value": "health_beauty.gyms.equipment" 
+                  }
+                ]
+              },
+              {
+                "name": "Salons",
+                "description": "An establishment where a hairdresser, beautician, or couturier conducts business.",
+                "enumeration_id": 402,
+                "string_value": "health_beauty.salons",
+                "children": [
+                  {
+                    "name": "Unisex Salon",
+                    "description": "Salon catering to clients of any sex",
+                    "enumeration_id": 40201,
+                    "string_value": "health_beauty.salons.unisex" 
+                  },
+                  {
+                    "name": "Men's Salon",
+                    "description": "Salon primarily catering towards men",
+                    "enumeration_id": 40202,
+                    "string_value": "health_beauty.salons.mens" 
+                  },
+                  {
+                    "name": "Women's Salon",
+                    "description": "Salon primarily catering towards women",
+                    "enumeration_id": 40203,
+                    "string_value": "health_beauty.salons.womens" 
+                  }
+                ]
+              },
+              {
+                "name": "Spas",
+                "description": "A commercial establishment offering health and beauty treatment through such means as steam baths, exercise equipment, and massage.",
+                "enumeration_id": 403,
+                "string_value": "health_beauty.spas" 
+              }
+            ]
+          },
+          {
+            "name": "Point of Care",
+            "description": "Point of Care",
+            "enumeration_id": 5,
+            "string_value": "point_care",
+            "children": [
+              {
+                "name": "Doctor’s Offices",
+                "description": "Non-hospital facility run by a physician - for treatment of people.",
+                "enumeration_id": 501,
+                "string_value": "point_care.doctor_offices" 
+              },
+              {
+                "name": "Veterinary Offices",
+                "description": "Non-hopsital facility run by a veterinarian - for treatment of animals.",
+                "enumeration_id": 502,
+                "string_value": "point_care.veterinary_offices" 
+              }
+            ]
+          },
+          {
+            "name": "Education",
+            "description": "Education",
+            "enumeration_id": 6,
+            "string_value": "education",
+            "children": [
+              {
+                "name": "Schools",
+                "description": "An educational institution designed to provide learning spaces and learning environments for the teaching of students between K - 12 under the direction of teachers.",
+                "enumeration_id": 601,
+                "string_value": "education.schools" 
+              },
+              {
+                "name": "Colleges and Universities",
+                "description": "An education institution designed for instruction, examination, or both, of students in many branches of advanced learning, conferring degrees in various faculties, and often embodying colleges and similar institutions.",
+                "enumeration_id": 602,
+                "string_value": "education.colleges",
+                "children": [
+                  {
+                    "name": "Residences",
+                    "description": "Places where faculty or students live",
+                    "enumeration_id": 60201,
+                    "string_value": "education.colleges.residences" 
+                  },
+                  {
+                    "name": "Common Areas",
+                    "description": "Shared spaces for study, dining, or leisure activities",
+                    "enumeration_id": 60202,
+                    "string_value": "education.colleges.common" 
+                  },
+                  {
+                    "name": "Athletic Facilities",
+                    "description": "Facillities or stadiums for sporting competition",
+                    "enumeration_id": 60203,
+                    "string_value": "education.colleges.athletics" 
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Office Buildings",
+            "description": "Office Buildings",
+            "enumeration_id": 7,
+            "string_value": "office_buildings",
+            "children": [
+              {
+                "name": "Office Buildings",
+                "description": "An office building, also known as an office block or business center is a form of commercial building which contains spaces mainly designed to be used for offices. Advertising displays may be in building lobbies, common areas, or in elevators.",
+                "enumeration_id": 701,
+                "string_value": "office_buildings.office_buildings",
+                "children": [
+                  {
+                    "name": "Elevator",
+                    "description": "Enclosed, Vertical conveyance for people and goods",
+                    "enumeration_id": 70101,
+                    "string_value": "office_buildings.office_buildings.elevator" 
+                  },
+                  {
+                    "name": "Lobby",
+                    "description": "Common space for tenants to meet and greet visitors and guests, typically near entrances",
+                    "enumeration_id": 70102,
+                    "string_value": "office_buildings.office_buildings.lobby" 
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Leisure",
+            "description": "Leisure",
+            "enumeration_id": 8,
+            "string_value": "entertainment",
+            "children": [
+              {
+                "name": "Recreational Locations",
+                "description": "Location where recreational and/or leisure activities take place.",
+                "enumeration_id": 801,
+                "string_value": "entertainment.recreational",
+                "children": [
+                  {
+                    "name": "Theme Parks",
+                    "description": "An amusement park with a unifying setting or idea.",
+                    "enumeration_id": 80101,
+                    "string_value": "entertainment.recreational.theme_parks" 
+                  },
+                  {
+                    "name": "Museums and Galleries",
+                    "description": "A building in which objects of historical, scientific, artistic, or cultural interest are stored and exhibited. e.g. \"the Museum of Modern Art\"",
+                    "enumeration_id": 80102,
+                    "string_value": "entertainment.recreational.museums_galleries" 
+                  },
+                  {
+                    "name": "Concert Venues",
+                    "description": "Any location used for a concert or musical performance",
+                    "enumeration_id": 80103,
+                    "string_value": "entertainment.recreational.concert_venues" 
+                  }
+                ]
+              },
+              {
+                "name": "Movie Theaters",
+                "description": "Location for displaying long-format content on large screens.",
+                "enumeration_id": 802,
+                "string_value": "entertainment.movie_theaters",
+                "children": [
+                  {
+                    "name": "Lobby",
+                    "description": "A corridor or hall connected with a larger room or series of rooms and used as a passageway or waiting room: such as a large hall serving as a foyer (as of a hotel or theater)",
+                    "enumeration_id": 80201,
+                    "string_value": "entertainment.movie_theaters.lobby" 
+                  },
+                  {
+                    "name": "Food Court",
+                    "description": "An area within a building (such as a shopping mall) set apart for food concessions.",
+                    "enumeration_id": 80202,
+                    "string_value": "entertainment.movie_theaters.food_court" 
+                  }
+                ]
+              },
+              {
+                "name": "Sports Entertainment",
+                "description": "A venue that individuals or groups can play an active sport or activity.",
+                "enumeration_id": 803,
+                "string_value": "entertainment.sports",
+                "children": [
+                  {
+                    "name": "Sport Arena",
+                    "description": "A central area used for sports or other forms of entertainment and surrounded by seats for spectators.",
+                    "enumeration_id": 80301,
+                    "string_value": "entertainment.sports.arena" 
+                  },
+                  {
+                    "name": "Club House",
+                    "description": "Locker rooms used by an athletic team",
+                    "enumeration_id": 80302,
+                    "string_value": "entertainment.sports.club_house" 
+                  }
+                ]
+              },
+              {
+                "name": "Bars",
+                "description": "A retail business that serves alcoholic beverages.",
+                "enumeration_id": 804,
+                "string_value": "entertainment.bars" 
+              },
+              {
+                "name": "Casual Dining",
+                "description": "A restaurant that serves moderately priced food in a casual atmosphere.",
+                "enumeration_id": 805,
+                "string_value": "entertainment.casual_dining" 
+              },
+              {
+                "name": "QSR",
+                "description": "A fast food restaurant, also known as a quick service restaurant within the industry, is a specific type of restaurant that serves fast-food cuisine and has minimal table service.",
+                "enumeration_id": 806,
+                "string_value": "entertainment.qsr" 
+              },
+              {
+                "name": "Hotels",
+                "description": "An establishment providing accommodations, means, and other services for travelers and tourists.",
+                "enumeration_id": 807,
+                "string_value": "entertainment.hotels",
+                "children": [
+                  {
+                    "name": "Lobby",
+                    "description": "Commonly accessible shared spaces for guests at a hotel",
+                    "enumeration_id": 80701,
+                    "string_value": "entertainment.hotels.lobby" 
+                  },
+                  {
+                    "name": "Elevator",
+                    "description": "Commonly accessible, enclosed spaces used to move between floors.",
+                    "enumeration_id": 80702,
+                    "string_value": "entertainment.hotels.elevator" 
+                  },
+                  {
+                    "name": "Room",
+                    "description": "Locations occupied and restricted to a single guest",
+                    "enumeration_id": 80703,
+                    "string_value": "entertainment.hotels.room" 
+                  }
+                ]
+              },
+              {
+                "name": "Golf Carts",
+                "description": "A small motorized vehicle for golfers and their equipment.",
+                "enumeration_id": 808,
+                "string_value": "entertainment.golf_cart" 
+              },
+              {
+                "name": "Night Clubs",
+                "description": "An establishment for nighttime entertainment, typically serving drinks and offering music, dancing, etc.",
+                "enumeration_id": 809,
+                "string_value": "entertainment.night_club" 
+              },
+              {
+                "name": "High-End Dining",
+                "description": "A restaurant that serves expensive food. Often in a more formal atmosphere, and accepting or requiring reservations",
+                "enumeration_id": 810,
+                "string_value": "entertainment.high_end_dining" 
+              }
+            ]
+          },
+          {
+            "name": "Government",
+            "description": "Government",
+            "enumeration_id": 9,
+            "string_value": "government",
+            "children": [
+              {
+                "name": "DMVs",
+                "description": "An office building, also known as an office block or business center is a form of commercial building which contains spaces mainly designed to be used for offices. Advertising displays may be in building lobbies, common areas, or in elevators.",
+                "enumeration_id": 901,
+                "string_value": "government.dmv" 
+              },
+              {
+                "name": "Military Bases",
+                "description": "A facility that houses and facilitates training for military personnel and operations.",
+                "enumeration_id": 902,
+                "string_value": "government.military_bases" 
+              },
+              {
+                "name": "Post Offices",
+                "description": "A facility that handles the receipt, delivery, and processing of mail, packages, or other postal services.",
+                "enumeration_id": 903,
+                "string_value": "government.postal" 
+              }
+            ]
+          },
+          {
+            "name": "Financial",
+            "description": "Financial",
+            "enumeration_id": 10,
+            "string_value": "financial",
+            "children": [
+              {
+                "name": "Banks",
+                "description": "A bank is a financial institution licensed to store or invest accountholders money",
+                "enumeration_id": 1001,
+                "string_value": "financial.banks" 
+              }
+            ]
+          },
+          {
+            "name": "Residential",
+            "description": "Residential",
+            "enumeration_id": 11,
+            "string_value": "residential",
+            "children": [
+              {
+                "name": "Apartment Buildings and Condominiums",
+                "description": "A building that contains different residential units",
+                "enumeration_id": 1101,
+                "string_value": "residential.apartment",
+                "children": [
+                  {
+                    "name": "Lobby",
+                    "description": "A corridor or hall connected with a larger room or series of rooms and used as a passageway or waiting room: such as a large hall serving as a foyer (as of a hotel or theater)",
+                    "enumeration_id": 110101,
+                    "string_value": "residential.apartment_buildings.lobby" 
+                  },
+                  {
+                    "name": "Elevator",
+                    "description": "Enclosed, Vertical conveyance for people and goods",
+                    "enumeration_id": 110102,
+                    "string_value": "residential.apartment_buildings.elevator" 
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }

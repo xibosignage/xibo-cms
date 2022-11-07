@@ -67,6 +67,30 @@ class Display implements \JsonSerializable
     public $displayTypeId;
 
     /**
+     * @SWG\Property(description="The Venue ID of this Display")
+     * @var int
+     */
+    public $venueId;
+
+    /**
+     * @SWG\Property(description="The Location Address of this Display")
+     * @var string
+     */
+    public $address;
+
+    /**
+     * @SWG\Property(description="Is this Display mobile?")
+     * @var int
+     */
+    public $isMobile;
+
+    /**
+     * @SWG\Property(description="The Languages supported in this display location")
+     * @var string
+     */
+    public $languages;
+
+    /**
      * @SWG\Property(description="The type of this Display")
      * @var string
      */
@@ -626,6 +650,14 @@ class Display implements \JsonSerializable
     }
 
     /**
+     * @return array
+     */
+    public function getLanguages()
+    {
+        return empty($this->languages) ? [] : explode(',', $this->languages);
+    }
+
+    /**
      * Is this display auditing?
      * return bool
      */
@@ -895,6 +927,10 @@ class Display implements \JsonSerializable
                 SET display = :display,
                     defaultlayoutid = :defaultLayoutId,
                     displayTypeId = :displayTypeId,
+                    venueId = :venueId,
+                    address = :address,
+                    isMobile = :isMobile,
+                    languages = :languages,
                     screenSize = :screenSize,
                     isOutdoor = :isOutdoor,
                     `customId` = :customId,
@@ -946,6 +982,10 @@ class Display implements \JsonSerializable
             'display' => $this->display,
             'defaultLayoutId' => $this->defaultLayoutId,
             'displayTypeId' => $this->displayTypeId === 0 ? null : $this->displayTypeId,
+            'venueId' => $this->venueId === 0 ? null : $this->venueId,
+            'address' => $this->address,
+            'isMobile' => $this->isMobile,
+            'languages' => $this->languages,
             'screenSize' => $this->screenSize,
             'isOutdoor' => $this->isOutdoor,
             'customId' => $this->customId,

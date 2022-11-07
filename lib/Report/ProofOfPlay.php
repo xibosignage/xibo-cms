@@ -324,6 +324,7 @@ class ProofOfPlay implements ReportInterface
         $tagsType = $sanitizedParams->getString('tagsType');
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
+        $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
 
         // Display filter.
         try {
@@ -437,6 +438,7 @@ class ProofOfPlay implements ReportInterface
                 $fromDt,
                 $toDt,
                 $displayIds,
+                $parentCampaignId,
                 $layoutIds,
                 $mediaIds,
                 $type,
@@ -451,6 +453,7 @@ class ProofOfPlay implements ReportInterface
                 $fromDt,
                 $toDt,
                 $displayIds,
+                $parentCampaignId,
                 $layoutIds,
                 $mediaIds,
                 $type,
@@ -516,6 +519,7 @@ class ProofOfPlay implements ReportInterface
      * @param Carbon $fromDt The filter range from date
      * @param Carbon $toDt The filter range to date
      * @param $displayIds array
+     * @param $parentCampaignId int
      * @param $layoutIds array
      * @param $mediaIds array
      * @param $type string
@@ -529,6 +533,7 @@ class ProofOfPlay implements ReportInterface
         $fromDt,
         $toDt,
         $displayIds,
+        $parentCampaignId,
         $layoutIds,
         $mediaIds,
         $type,
@@ -545,6 +550,7 @@ class ProofOfPlay implements ReportInterface
         $select = '
           SELECT stat.type,
               display.Display,
+              campaign.campaign,
               IFNULL(layout.Layout, 
                   (SELECT MAX(`layout`) AS layout 
                      FROM `layout` 
@@ -580,6 +586,8 @@ class ProofOfPlay implements ReportInterface
                 AND `widgetoption`.option = \'name\'
               LEFT OUTER JOIN `media`
               ON `media`.mediaId = `stat`.mediaId
+              LEFT OUTER JOIN `campaign`
+              ON `campaign`.campaignId = `stat`.parentCampaignId
               ';
 
         if ($tags != '') {
@@ -725,6 +733,11 @@ class ProofOfPlay implements ReportInterface
             $body .= ' AND `stat`.type = \'event\' ';
         }
 
+        // Campaign Filter
+        if ($parentCampaignId != null) {
+            $body .= ' AND `stat`.parentCampaignId = ' . $parentCampaignId;
+        }
+
         // Layout Filter
         if (count($layoutIds) != 0) {
             $layoutSql = '';
@@ -756,6 +769,7 @@ class ProofOfPlay implements ReportInterface
             GROUP BY stat.type, 
                 stat.tag, 
                 display.Display, 
+                campaign.campaign, 
                 stat.displayId, 
                 stat.campaignId,
                 layout.layout, 
@@ -810,6 +824,7 @@ class ProofOfPlay implements ReportInterface
      * @param Carbon $filterFromDt The filter range from date
      * @param Carbon $filterToDt The filter range to date
      * @param $displayIds array
+     * @param $parentCampaignId int
      * @param $layoutIds array
      * @param $mediaIds array
      * @param $type string
@@ -825,6 +840,7 @@ class ProofOfPlay implements ReportInterface
         $filterFromDt,
         $filterToDt,
         $displayIds,
+        $parentCampaignId,
         $layoutIds,
         $mediaIds,
         $type,
@@ -894,6 +910,11 @@ class ProofOfPlay implements ReportInterface
                     ];
                 }
             }
+        }
+
+        // Campaign Filter
+        if ($parentCampaignId != null) {
+            $match['$match']['parentCampaignId'] = $parentCampaignId;
         }
 
         // Layout Filter

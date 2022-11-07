@@ -216,6 +216,10 @@ class DisplayFactory extends BaseFactory
                   display.display,
                   display.defaultLayoutId,
                   display.displayTypeId,
+                  display.venueId,
+                  display.address,
+                  display.isMobile,
+                  display.languages,
                   `display_types`.displayType,
                   display.screenSize,
                   display.isOutdoor,
@@ -635,7 +639,9 @@ class DisplayFactory extends BaseFactory
                     'screenShotRequested',
                     'lastCommandSuccess',
                     'bandwidthLimit',
-                    'countFaults'
+                    'countFaults',
+                    'isMobile',
+                    'isOutdoor'
                 ],
                 'stringProperties' => ['customId']
             ]);

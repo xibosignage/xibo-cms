@@ -122,6 +122,15 @@
                             {% set title %}{% trans "Layout" %}{% endset %}
                             {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
 
+                            {# Campaign list only. #}
+                            {% set attributes = [
+                                { name: "data-search-url", value:  url_for("campaign.search") },
+                            ] %}
+
+                            {% set title %}{% trans "Campaign" %}{% endset %}
+                            {% set helpText %}{% trans "Please select a Campaign" %}{% endset %}
+                            {{ inline.dropdown("parentCampaignId", "single", title, "", null, "campaignId", "campaign", "", "", "", "", "", attributes) }}
+
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
@@ -205,6 +214,7 @@
                                         <th>{% trans "Type" %}</th>
                                         <th>{% trans "Display ID" %}</th>
                                         <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Campaign" %}</th>
                                         <th>{% trans "Layout ID" %}</th>
                                         <th>{% trans "Layout" %}</th>
                                         <th>{% trans "Widget ID" %}</th>
@@ -222,6 +232,7 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
+                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -282,6 +293,7 @@
                     {"data": "type"},
                     {"data": "displayId"},
                     {"data": "display"},
+                    {"data": "campaign"},
                     {"data": "layoutId"},
                     {"data": "layout"},
                     {"data": "widgetId"},
@@ -507,6 +519,81 @@
 
             checkReportFilter(reportFilter);
             checkFilterAndApply();
+
+
+            var $campaignSelect = $('#parentCampaignId');
+            $campaignSelect.select2({
+                ajax: {
+                    url: $campaignSelect.data("searchUrl"),
+                    dataType: "json",
+                    placeholder: 'Campaign',
+                    allowClear: true,
+                    data: function(params) {
+
+                        var query = {
+                            isLayoutSpecific: 0,
+                            retired: 0,
+                            totalDuration: 0,
+                            name: params.term,
+                            start: 0,
+                            length: 10,
+                            columns: [
+                                {
+                                    "data": "isLayoutSpecific"
+                                },
+                                {
+                                    "data": "campaign"
+                                }
+                            ],
+                            order: [
+                                {
+                                    "column": 0,
+                                    "dir": "asc"
+                                },
+                                {
+                                    "column": 1,
+                                    "dir": "asc"
+                                }
+                            ]
+                        };
+
+                        // Set the start parameter based on the page number
+                        if (params.page != null) {
+                            query.start = (params.page - 1) * 10;
+                        }
+
+                        return query;
+                    },
+                    processResults: function(data, params) {
+
+                        var results = [];
+                        var campaigns = [];
+
+                        $.each(data.data, function(index, element) {
+                            campaigns.push({
+                                "id": element.campaignId,
+                                "text": element.campaign
+                            });
+                        });
+
+                        results.push({
+                            "text": $campaignSelect.data('transCampaigns'),
+                            "children": campaigns
+                        })
+
+
+                        var page = params.page || 1;
+                        page = (page > 1) ? page - 1 : page;
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    }
+                }
+            })
         });
 
         function proofOfPlayScheduleCallback() {
