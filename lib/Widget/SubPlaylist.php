@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,7 +27,6 @@ use Xibo\Entity\Widget;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\ValueTooLargeException;
 
 /**
  * Class Playlist
@@ -45,14 +44,15 @@ class SubPlaylist extends ModuleWidget
     public function isValid()
     {
         $valid = self::$STATUS_VALID;
-        if (count($this->getAssignedPlaylistIds()) <= 0) {
-           $valid = self::$STATUS_INVALID;
+        if (count($this->getAssignedPlaylists()) <= 0) {
+            $valid = self::$STATUS_INVALID;
         } else {
-            foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+            foreach ($this->getAssignedPlaylists() as $playlistItem) {
                 try {
-                    $this->playlistFactory->getById($playlistId);
+                    $this->playlistFactory->getById($playlistItem->playlistId);
                 } catch (NotFoundException $e) {
-                    $this->getLog()->error('Misconfigured subplaylist, playlist ID ' . $playlistId . ' Not found');
+                    $this->getLog()->error('Misconfigured sub playlist, playlist ID '
+                        . $playlistItem->playlistId . ' Not found');
                     $valid =  self::$STATUS_INVALID;
                 }
             }
@@ -76,44 +76,58 @@ class SubPlaylist extends ModuleWidget
     public function getExtra()
     {
         return [
-            'subPlaylistId' => $this->getAssignedPlaylistIds(),
-            'subPlaylistOptions'=> $this->getSubPlaylistOptions()
+            'subPlaylists' => $this->getAssignedPlaylists(),
         ];
     }
 
     /**
-     * @return int[]
+     * @return \Xibo\Widget\SubPlaylistItem[]
      */
-    public function getAssignedPlaylistIds()
+    public function getAssignedPlaylists(): array
     {
-        return json_decode($this->getOption('subPlaylistIds', '[]'), true);
-    }
-
-    /**
-     * @param int[] $playlistIds
-     * @return $this
-     * @throws ValueTooLargeException
-     */
-    protected function setAssignedPlaylistIds($playlistIds)
-    {
-        $this->setOption('subPlaylistIds', json_encode($playlistIds));
-        return $this;
-    }
-
-    /**
-     * Get Sub-Playlist Options
-     * @param null $playlistId
-     * @return array|mixed
-     */
-    public function getSubPlaylistOptions($playlistId = null)
-    {
-        $subPlaylistOptions = json_decode($this->getOption('subPlaylistOptions', '[]'), true);
-
-        if ($playlistId == null) {
-            return $subPlaylistOptions;
-        } else {
-            return isset($subPlaylistOptions[$playlistId]) ? $subPlaylistOptions[$playlistId] : [];
+        $playlists = json_decode($this->getOption('subPlaylists', '[]'), true);
+        if (count($playlists) <= 0) {
+            // Try and load them the old way.
+            $playlistIds = json_decode($this->getOption('subPlaylistIds', '[]'), true);
+            $subPlaylistOptions = json_decode($this->getOption('subPlaylistOptions', '[]'), true);
+            $i = 0;
+            foreach ($playlistIds as $playlistId) {
+                $i++;
+                $playlists[] = [
+                    'rowNo' => $i,
+                    'playlistId' => $playlistId,
+                    'spotFill' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpotFill'] ?? null,
+                    'spotLength' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpotLength'] ?? null,
+                    'spots' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpots'] ?? null,
+                ];
+            }
         }
+
+        $playlistItems = [];
+        foreach ($playlists as $playlist) {
+            $item = new SubPlaylistItem();
+            $item->rowNo = intval($playlist['rowNo']);
+            $item->playlistId = $playlist['playlistId'];
+            $item->spotFill = $playlist['spotFill'] ?? null;
+            $item->spotLength = $playlist['spotLength'] ?? null;
+            $item->spots = $playlist['spots'] ?: null;
+            $playlistItems[] = $item;
+        }
+        return $playlistItems;
+    }
+
+    /**
+     * @param int $playlistId
+     * @return \Xibo\Widget\SubPlaylistItem|null
+     */
+    public function getAssignedPlaylistById(int $playlistId): ?SubPlaylistItem
+    {
+        foreach ($this->getAssignedPlaylists() as $playlist) {
+            if ($playlistId === $playlist->playlistId) {
+                return $playlist;
+            }
+        }
+        return null;
     }
 
     /**
@@ -240,21 +254,25 @@ class SubPlaylist extends ModuleWidget
             throw new InvalidArgumentException(__('Please enter Play Count.'), 'playCount');
         }
 
-        // Get the list of playlists
-        $subPlaylistId = $sanitizedParams->getIntArray('subPlaylistId', ['default' => []]);
+        // Playlist setting arrays
         $spots = $sanitizedParams->getArray('subPlaylistIdSpots');
         $spotLength = $sanitizedParams->getArray('subPlaylistIdSpotLength');
         $spotFill = $sanitizedParams->getArray('subPlaylistIdSpotFill');
 
-        // Check to make sure we do not have any duplicates in the playlistId array at this level
-        if (count($subPlaylistId) !== count(array_unique($subPlaylistId, SORT_NUMERIC))) {
-            throw new InvalidArgumentException(__('Please do not use the same Playlist twice'), 'playlistId');
+        // Get our existing IDs
+        $existingSubPlaylistIds = [];
+        foreach ($this->getAssignedPlaylists() as $assignedPlaylist) {
+            if (!in_array($assignedPlaylist->playlistId, $existingSubPlaylistIds)) {
+                $existingSubPlaylistIds[] = $assignedPlaylist->playlistId;
+            }
         }
 
         // Make up a companion setting which maps the playlistIds to the options
-        $subPlaylistOptions = [];
+        $subPlaylists = [];
+        $subPlaylistIds = [];
         $i = -1;
-        foreach ($subPlaylistId as $playlistId) {
+
+        foreach ($sanitizedParams->getIntArray('subPlaylistId', ['default' => []]) as $playlistId) {
             $i++;
 
             if ($playlistId == '') {
@@ -262,37 +280,43 @@ class SubPlaylist extends ModuleWidget
             }
 
             if ($spots[$i] < 0) {
-                throw new InvalidArgumentException(__('Number of spots must be empty, 0 or a positive number'), 'subPlaylistIdSpots');
+                throw new InvalidArgumentException(
+                    __('Number of spots must be empty, 0 or a positive number'),
+                    'subPlaylistIdSpots'
+                );
             }
 
             if ($spotLength[$i] < 0) {
-                throw new InvalidArgumentException(__('Spot length must be empty, 0 or a positive number'), 'subPlaylistIdSpotLength');
+                throw new InvalidArgumentException(
+                    __('Spot length must be empty, 0 or a positive number'),
+                    'subPlaylistIdSpotLength'
+                );
             }
 
-            // Map the stop code received to the stop ref (if there is one)
-            $subPlaylistOptions[$playlistId] = [
-                'subPlaylistIdSpots' => isset($spots[$i]) ? $spots[$i] : '',
-                'subPlaylistIdSpotLength' => isset($spotLength[$i]) ? $spotLength[$i] : '',
-                'subPlaylistIdSpotFill' => isset($spotFill[$i]) ? $spotFill[$i] : '',
-            ];
+            $item = new SubPlaylistItem();
+            $item->playlistId = $playlistId;
+            $item->rowNo = $i + 1;
+            $item->spots = $spots[$i] ?? null;
+            $item->spotLength = $spotLength[$i] ?? null;
+            $item->spotFill = $spotFill[$i] ?? null;
+            $subPlaylists[] = $item;
+
+            if (!in_array($playlistId, $subPlaylistIds)) {
+                $subPlaylistIds[] = $playlistId;
+            }
         }
 
-        $this->setOption('subPlaylistOptions', json_encode($subPlaylistOptions));
-
-        // Existing Playlists (if any)
-        $existingSubPlaylistId = $this->getAssignedPlaylistIds();
-
         // Validation
-        if (count($subPlaylistId) < 1) {
+        if (count($subPlaylists) < 1) {
             throw new InvalidArgumentException(__('Please select at least 1 Playlist to embed'), 'subPlaylistId');
         }
 
-        // Set the new list
-        $this->setAssignedPlaylistIds($subPlaylistId);
+        // Set this new option
+        $this->setOption('subPlaylists', json_encode($subPlaylists));
 
         // Work out whether we've added/removed
-        $addedEntries = array_diff($subPlaylistId, $existingSubPlaylistId);
-        $removedEntries = array_diff($existingSubPlaylistId, $subPlaylistId);
+        $addedEntries = array_diff($subPlaylistIds, $existingSubPlaylistIds);
+        $removedEntries = array_diff($existingSubPlaylistIds, $subPlaylistIds);
 
         $this->getLog()->debug('Added ' . var_export($addedEntries, true));
         $this->getLog()->debug('Removed ' . var_export($removedEntries, true));
@@ -313,9 +337,14 @@ class SubPlaylist extends ModuleWidget
         }
 
         foreach ($addedEntries as $addedEntry) {
-            $this->getLog()->debug('Manage closure table for parent ' . $this->getPlaylistId() . ' and child ' . $addedEntry);
+            $this->getLog()->debug('Manage closure table for parent ' . $this->getPlaylistId()
+                . ' and child ' . $addedEntry);
 
-            if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [
+            if ($this->getStore()->exists('
+                SELECT parentId, childId, depth 
+                  FROM lkplaylistplaylist 
+                 WHERE childId = :childId AND parentId = :parentId 
+            ', [
                 'parentId' => $this->getPlaylistId(),
                 'childId' => $addedEntry
             ])) {
@@ -343,7 +372,16 @@ class SubPlaylist extends ModuleWidget
                AND childId = parentId 
                AND depth > 0
         ', ['parentId' => $this->getPlaylistId()])) {
-            throw new InvalidArgumentException(__('This assignment creates a loop because the Playlist being assigned contains the Playlist being worked on.'), 'subPlaylistId');
+            throw new InvalidArgumentException(
+                __('This assignment creates a loop because the Playlist being assigned contains the Playlist being worked on.'),
+                'subPlaylistId'
+            );
+        }
+
+        // Tidy up any old options
+        if ($this->getOption('subPlaylistIds') !== null) {
+            $this->setOption('subPlaylistIds', null);
+            $this->setOption('subPlaylistOptions', null);
         }
 
         // Save the widget
@@ -357,10 +395,10 @@ class SubPlaylist extends ModuleWidget
     {
         $response = parent::delete($request, $response);
 
-        $subPlaylistIds = $this->getAssignedPlaylistIds();
+        $subPlaylists = $this->getAssignedPlaylists();
 
         // tidy up the closure table records.
-        foreach ($subPlaylistIds as $subPlaylistId) {
+        foreach ($subPlaylists as $subPlaylist) {
             $this->getStore()->update('
             DELETE link
               FROM `lkplaylistplaylist` p, `lkplaylistplaylist` link, `lkplaylistplaylist` c
@@ -368,7 +406,7 @@ class SubPlaylist extends ModuleWidget
                AND p.childId = :parentId AND c.parentId = :childId
         ', [
                 'parentId' => $this->getPlaylistId(),
-                'childId' => $subPlaylistId
+                'childId' => $subPlaylist->playlistId
             ]);
         }
 
@@ -398,11 +436,12 @@ class SubPlaylist extends ModuleWidget
     {
         $names = [];
 
-        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+        foreach ($this->getAssignedPlaylists() as $playlist) {
             try {
-                $names[] = $this->playlistFactory->getById($playlistId)->name;
+                $names[] = $this->playlistFactory->getById($playlist->playlistId)->name;
             } catch (NotFoundException $e) {
-                $this->getLog()->error('Misconfigured subplaylist, playlist ID ' . $playlistId . ' Not found');
+                $this->getLog()->error('Misconfigured sub playlist, playlist ID '
+                    . $playlist->playlistId . ' Not found');
                 $names[] = '';
             }
         }
@@ -416,7 +455,7 @@ class SubPlaylist extends ModuleWidget
      * @throws NotFoundException
      * @throws GeneralException
      */
-    public function getSubPlaylistResolvedWidgets($parentWidgetId = 0)
+    public function getSubPlaylistResolvedWidgets($parentWidgetId = 0): array
     {
         // This is expensive, so cache it if we can.
         if ($this->_resolvedWidgets != null) {
@@ -438,15 +477,16 @@ class SubPlaylist extends ModuleWidget
         $widgets = [];
         $firstList = null;
         $firstListCount = 0;
-        $largestListId = 0;
+        $largestListKey = null;
         $largestListCount = 0;
         $smallestListCount = 0;
 
         // Expand or Shrink each of our assigned lists according to the Spot options (if any)
         // Expand all widgets from sub-playlists
-        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+        foreach ($this->getAssignedPlaylists() as $playlistItem) {
             // Get the Playlist and expand its widgets
-            $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
+            $playlist = $this->playlistFactory->getById($playlistItem->playlistId)
+                ->setModuleFactory($this->moduleFactory);
             $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
 
@@ -462,7 +502,8 @@ class SubPlaylist extends ModuleWidget
                 // Handle proof of play
                 // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit alter that option
                 // in memory for this widget.
-                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat',
+                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue(
+                    'enableStat',
                     $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT')
                 );
 
@@ -482,23 +523,16 @@ class SubPlaylist extends ModuleWidget
             }
 
             // Do we have a number of spots set?
-            $options = $this->getSubPlaylistOptions($playlistId);
-            $spots = isset($options['subPlaylistIdSpots']) ? $options['subPlaylistIdSpots'] : null;
-            $spotLength = isset($options['subPlaylistIdSpotLength']) ? intval($options['subPlaylistIdSpotLength']) : null;
-            $spotFill = isset($options['subPlaylistIdSpotFill']) ? $options['subPlaylistIdSpotFill'] : null;
-
-            $this->getLog()->debug($spots . ' spots for playlistId ' . $playlistId);
+            $this->getLog()->debug($playlistItem->spots . ' spots for playlistId ' . $playlistItem->playlistId);
 
             // Do we need to expand or shrink our list to make our Spot length
-            if ($spots !== null && $spots !== '' && intval($spots) != $countExpanded) {
+            if ($playlistItem->spots !== null && $playlistItem->spots != $countExpanded) {
                 // We do need to do something!
-                $spots = intval($spots);
-
                 $this->getLog()->debug('There are ' . count($expanded) . ' Widgets in the list and we want '
-                    . $spots . ' fill is ' . $spotFill);
+                    . $playlistItem->spots . ' fill is ' . $playlistItem->spotFill);
 
                 // If our spot size is 0, then we deliberately do not add to the final widgets array
-                if ($spots == 0) {
+                if ($playlistItem->spots == 0) {
                     if ($firstList === null && count($expanded) > 0) {
                         // If this is the first list, and it contains some values, then set it.
                         $firstList = $expanded;
@@ -521,18 +555,18 @@ class SubPlaylist extends ModuleWidget
 
                 // Expand the list out, using the fill options.
                 $spotFillIndex = 0;
-                while (count($expanded) < $spots) {
-                    $spotsToFill = $spots - count($expanded);
+                while (count($expanded) < $playlistItem->spots) {
+                    $spotsToFill = $playlistItem->spots - count($expanded);
 
-                    if ($spotFill == 'repeat' || $firstList === null) {
+                    if ($playlistItem->spotFill == 'repeat' || $firstList === null) {
                         // Repeat the list to fill the spots
                         $expanded = array_merge($expanded, $expanded);
-                    } else if ($spotFill == 'fill') {
+                    } else if ($playlistItem->spotFill == 'fill') {
                         // Get Playlist 1 and use it to fill
                         // Filling means taking playlist 1 and putting in on the end of the current list
                         // until we're full
                         $expanded = array_merge($expanded, $firstList);
-                    } else if ($spotFill == 'pad') {
+                    } else if ($playlistItem->spotFill == 'pad') {
                         // Get Playlist 1 and use it to pad
                         // padding means taking playlist 1 and interleaving it with the current list, until we're
                         // full
@@ -558,14 +592,13 @@ class SubPlaylist extends ModuleWidget
                     }
                 }
 
-                if (count($expanded) > $spots) {
+                if (count($expanded) > $playlistItem->spots) {
                     // Chop the list down to size.
-                    $expanded = array_slice($expanded, 0, $spots);
+                    $expanded = array_slice($expanded, 0, $playlistItem->spots);
                 }
 
                 // Update our count of expanded widgets to be the spots
-                $countExpanded = $spots;
-
+                $countExpanded = $playlistItem->spots;
             } else if ($countExpanded <= 0) {
                 // No spots required and no content in this list.
                 continue;
@@ -583,7 +616,7 @@ class SubPlaylist extends ModuleWidget
             // high watermark
             if ($countExpanded > $largestListCount) {
                 $largestListCount = $countExpanded;
-                $largestListId = $playlistId;
+                $largestListKey = $playlistItem->playlistId . '_' . $playlistItem->rowNo;
             }
 
             // low watermark
@@ -592,15 +625,15 @@ class SubPlaylist extends ModuleWidget
             }
 
             // Adjust the widget duration if necessary
-            if ($spotLength !== null && $spotLength > 0) {
+            if ($playlistItem->spotLength !== null && $playlistItem->spotLength > 0) {
                 foreach ($expanded as $widget) {
                     $widget->useDuration = 1;
-                    $widget->duration = $spotLength;
-                    $widget->calculatedDuration = $spotLength;
+                    $widget->duration = $playlistItem->spotLength;
+                    $widget->calculatedDuration = $playlistItem->spotLength;
                 }
             }
 
-            $widgets[$playlistId] = $expanded;
+            $widgets[$playlistItem->playlistId . '_' . $playlistItem->rowNo] = $expanded;
         }
 
         $this->getLog()->debug('Finished parsing all sub-playlists, smallest list is ' . $smallestListCount
@@ -618,20 +651,20 @@ class SubPlaylist extends ModuleWidget
 
         // Arrangement first
         if ($arrangement === 'even' && $smallestListCount > 0) {
-            // Evenly distributed by round robin
+            // Evenly distributed by round-robin
             $arrangement = 'roundrobin';
 
             // We need to decide how frequently we take from the respective lists.
             // this is different for each list.
-            foreach (array_keys($widgets) as $playlistId) {
-                $takeIndices[$playlistId] = intval(floor(count($widgets[$playlistId]) / $smallestListCount));
-                $lastTakeIndices[$playlistId] = -1;
+            foreach (array_keys($widgets) as $listKey) {
+                $takeIndices[$listKey] = intval(floor(count($widgets[$listKey]) / $smallestListCount));
+                $lastTakeIndices[$listKey] = -1;
             }
         } else {
             // On a standard round-robin, we take every 1 item (i.e. one from each).
-            foreach (array_keys($widgets) as $playlistId) {
-                $takeIndices[$playlistId] = 1;
-                $lastTakeIndices[$playlistId] = -1;
+            foreach (array_keys($widgets) as $listKey) {
+                $takeIndices[$listKey] = 1;
+                $lastTakeIndices[$listKey] = -1;
             }
         }
 
@@ -641,24 +674,24 @@ class SubPlaylist extends ModuleWidget
         if ($arrangement === 'roundrobin') {
             // Round Robin
             // Take 1 from each until we have run out, use the smallest list as the "key"
-            $loopCount = $largestListCount / $takeIndices[$largestListId];
+            $loopCount = $largestListCount / $takeIndices[$largestListKey];
 
             $this->getLog()->debug('Round-Robin: We will loop a maximum of ' . $loopCount . ' times');
 
             for ($i = 0; $i < $loopCount; $i++) {
                 $this->getLog()->debug('Loop number ' . $i);
 
-                foreach (array_keys($widgets) as $playlistId) {
+                foreach (array_keys($widgets) as $listKey) {
                     // How many items should we take from this list each time we go around?
-                    $takeEvery = $takeIndices[$playlistId];
-                    $countInList = count($widgets[$playlistId]);
+                    $takeEvery = $takeIndices[$listKey];
+                    $countInList = count($widgets[$listKey]);
 
-                    $this->getLog()->debug('Assessing playlistId ' . $playlistId . ' which has '
+                    $this->getLog()->debug('Assessing playlistId ' . $listKey . ' which has '
                         . $countInList . ' widgets.');
 
                     for ($count = 1; $count <= $takeEvery; $count++) {
                         // Increment the last index we consumed from this list each time
-                        $index = $lastTakeIndices[$playlistId] + 1;
+                        $index = $lastTakeIndices[$listKey] + 1;
 
                         // Does this key actually have this many items?
                         if ($index >= $countInList) {
@@ -680,15 +713,13 @@ class SubPlaylist extends ModuleWidget
                         }
 
                         $this->getLog()->debug('Selecting widget at position ' . $index
-                            . ' from playlistId ' . $playlistId);
+                            . ' from playlistId ' . $listKey);
 
                         // Append the key at the position
-                        $resolvedWidgets[] = $widgets[$playlistId][$index];
+                        $resolvedWidgets[] = $widgets[$listKey][$index];
 
                         // Update our last take index for this list.
-                        $lastTakeIndices[$playlistId] = $index;
-
-                        //$this->getLog()->debug('There are ' . count($resolvedWidgets) . ' resolved Widgets');
+                        $lastTakeIndices[$listKey] = $index;
                     }
                 }
             }
@@ -696,7 +727,7 @@ class SubPlaylist extends ModuleWidget
             // None
             // If the arrangement is none we just add all the widgets together
             // Merge the arrays together for returning
-            foreach ($widgets as $playlistId => $items) {
+            foreach ($widgets as $items) {
                 if ($remainder === 'drop') {
                     $this->getLog()->debug('Dropping list of ' . count($items)
                         . ' widgets down to ' . $smallestListCount);

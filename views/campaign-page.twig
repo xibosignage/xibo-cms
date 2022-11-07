@@ -382,8 +382,11 @@
                 "filter": false,
                 ajax: {
                     url: "{{ url_for("layout.search") }}?retired=0",
-                    "data": function(d) {
-                        $.extend(d, $layoutAssignments.closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
+                    data: function(d) {
+                        $.extend(d, $layoutAssignments.closest('.XiboGrid')
+                          .find('.layoutAssignFilterOptions')
+                          .find('input, select')
+                          .serializeObject());
                     }
                 },
                 "columns": [

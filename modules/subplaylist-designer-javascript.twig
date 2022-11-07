@@ -54,7 +54,7 @@
             return;
         }
 
-        if($dialog.data().extra.subPlaylistId.length === 0) {
+        if($dialog.data().extra.subPlaylists.length === 0) {
             // Add a template row
             subPlaylistFields.append(subPlaylistFormTemplate({
                 title: "1",
@@ -72,16 +72,14 @@
             }));
         } else {
             // For each of the existing codes, create form components
-            var i = 0;
-            $.each($dialog.data().extra.subPlaylistId, function(index, field) {
-                i++;
+            $.each($dialog.data().extra.subPlaylists, function(index, field) {
                 subPlaylistFields.append(subPlaylistFormTemplate({
-                    title: i,
-                    subPlaylistId: field,
-                    subPlaylistIdSpots: ($dialog.data().extra.subPlaylistOptions[field] === undefined) ? "" : $dialog.data().extra.subPlaylistOptions[field].subPlaylistIdSpots,
-                    subPlaylistIdSpotLength: ($dialog.data().extra.subPlaylistOptions[field] === undefined) ? "" : $dialog.data().extra.subPlaylistOptions[field].subPlaylistIdSpotLength,
-                    subPlaylistIdSpotFill: ($dialog.data().extra.subPlaylistOptions[field] === undefined) ? "" : $dialog.data().extra.subPlaylistOptions[field].subPlaylistIdSpotFill,
-                    buttonGlyph: ((i === 1) ? "fa-plus" : "fa-minus"),
+                    title: field.rowNo,
+                    subPlaylistId: field.playlistId,
+                    subPlaylistIdSpots: field.spots,
+                    subPlaylistIdSpotLength: field.spotLength,
+                    subPlaylistIdSpotFill: field.spotFill,
+                    buttonGlyph: ((field.rowNo === 1) ? 'fa-plus' : 'fa-minus'),
                     fillTitle: fillTitle,
                     padTitle: padTitle,
                     repeatTitle: repeatTitle,

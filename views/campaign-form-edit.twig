@@ -142,7 +142,7 @@
 
                                 <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutAssignView">
                                     <div class="layoutAssignFilterOptions XiboFilter">
-                                        <form class="form-inline" onsubmit="false">
+                                        <div class="form-inline">
                                             {% set title %}{% trans "Name" %}{% endset %}
                                             {{ inline.input("layout", title) }}
 
@@ -153,7 +153,7 @@
                                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
                                                 {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                             {% endif %}
-                                        </form>
+                                        </div>
                                     </div>
 
                                     <div class="XiboData card pt-3">
