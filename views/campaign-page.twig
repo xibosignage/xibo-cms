@@ -62,6 +62,15 @@
                             {% set title %}{% trans "Layout ID" %}{% endset %}
                             {{ inline.number("layoutId", title, layoutId) }}
 
+                            {% if currentUser.featureEnabled('ad.campaign') %}
+                                {% set title %}{% trans "Type" %}{% endset %}
+                                {% set options = [
+                                    { id: "list", name: "Layout list"|trans },
+                                    { id: "ad", name: "Ad Campaign"|trans }
+                                ] %}
+                                {{ inline.dropdown("type", "single", title, "both", options, "id", "name", helpText) }}
+                            {% endif %}
+
                             {% set title %}{% trans "Cycle Based Playback" %}{% endset %}
                             {% set enabled %}{% trans "Enabled" %}{% endset %}
                             {% set disabled %}{% trans "Disabled" %}{% endset %}
