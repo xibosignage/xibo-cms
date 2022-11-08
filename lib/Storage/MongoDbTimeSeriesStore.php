@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -197,20 +197,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             }
 
             $mediaName = $media->name; //dont remove used later
-            $mediaTags = $media->tags;
             $statData['mediaName'] = $mediaName;
 
-            if (isset($mediaTags)) {
-                $arrayOfTags = explode(',', $mediaTags);
-                for ($i=0; $i<count($arrayOfTags); $i++) {
-                    if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
-                        $tag = explode('|', $arrayOfTags[$i]);
-                        $tagFilter['media'][$i]['tag'] = $tag[0];
-                        if (isset($tag[1])) {
-                            $tagFilter['media'][$i]['val'] = $tag[1];
-                        }
-                    }
+            $i = 0;
+            foreach ($media->tags as $tagLink) {
+                $tagFilter['media'][$i]['tag'] = $tagLink->tag;
+                if (isset($tagLink->value)) {
+                    $tagFilter['media'][$i]['val'] = $tagLink->value;
                 }
+                $i++;
             }
         }
 
@@ -246,7 +241,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Layout data
         $layoutName = null;
-        $layoutTags = null;
 
         // For a type "event" we have layoutid 0 so is campaignId
         // otherwise we should try and resolve the campaignId
@@ -293,27 +287,21 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $campaignId = (int) $layout->campaignId;
             $layoutName = $layout->layout;
-            $layoutTags = $layout->tags;
+
+            $i = 0;
+            foreach ($layout->tags as $tagLink) {
+                $tagFilter['layout'][$i]['tag'] = $tagLink->tag;
+                if (isset($tagLink->value)) {
+                    $tagFilter['layout'][$i]['val'] = $tagLink->value;
+                }
+                $i++;
+            }
         }
 
         // Get layout Campaign ID
         $statData['campaignId'] = $campaignId;
 
         $statData['layoutName'] = $layoutName;
-
-        // Layout tags
-        if (isset($layoutTags)) {
-            $arrayOfTags = explode(',', $layoutTags);
-            for ($i=0; $i<count($arrayOfTags); $i++) {
-                if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
-                    $tag = explode('|', $arrayOfTags[$i]);
-                    $tagFilter['layout'][$i]['tag'] = $tag[0];
-                    if (isset($tag[1])) {
-                        $tagFilter['layout'][$i]['val'] = $tag[1];
-                    }
-                }
-            }
-        }
 
 
         // Display
@@ -326,16 +314,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // Display name
         $statData['displayName'] = $display->display;
 
-        $arrayOfTags = array_filter(explode(',', $display->tags));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
-                $tag = explode('|', $arrayOfTags[$i]);
-                $tagFilter['dg'][$i]['tag'] = $tag[0];
-                if (isset($tag[1])) {
-                    $tagFilter['dg'][$i]['val'] = $tag[1];
-                }
+        $i = 0;
+        foreach ($display->tags as $tagLink) {
+            $tagFilter['dg'][$i]['tag'] = $tagLink->tag;
+            if (isset($tagLink->value)) {
+                $tagFilter['dg'][$i]['val'] = $tagLink->value;
             }
+            $i++;
         }
 
         // Display tags
@@ -353,16 +338,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             }
         }
 
-        $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
-                $tag = explode('|', $arrayOfTags[$i]);
-                $tagFilter['dg'][$i]['tag'] = $tag[0];
-                if (isset($tag[1])) {
-                    $tagFilter['dg'][$i]['val'] = $tag[1];
-                }
+        $i = 0;
+        foreach ($displayGroup->tags as $tagLink) {
+            $tagFilter['dg'][$i]['tag'] = $tagLink->tag;
+            if (isset($tagLink->value)) {
+                $tagFilter['dg'][$i]['val'] = $tagLink->value;
             }
+            $i++;
         }
 
         // TagFilter array
