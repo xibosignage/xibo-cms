@@ -56,13 +56,13 @@
 
                                     {% set title %}{% trans "Status" %}{% endset %}
                                     {% set check %}{% trans "Up to date" %}{% endset %}
-                                    {% set cloud %}{% trans "Out of date" %}{% endset %}
                                     {% set cross %}{% trans "Downloading" %}{% endset %}
+                                    {% set cloud %}{% trans "Out of date" %}{% endset %}
                                     {% set options = [
                                         { optionid: "", option: "" },
                                         { optionid: "1", option: check},
-                                        { optionid: "3", option: cloud},
-                                        { optionid: "2", option: cross}
+                                        { optionid: "2", option: cross},
+                                        { optionid: "3", option: cloud}
                                     ] %}
                                     {{ inline.dropdown("mediaInventoryStatus", "single", title, "", options, "optionid", "option") }}
 
@@ -130,6 +130,9 @@
                                     {% set title %}{% trans "Player Code" %}{% endset %}
                                     {{ inline.input("clientCode", title) }}
 
+                                    {% set title %}{% trans "Custom ID" %}{% endset %}
+                                    {{ inline.input("customId", title) }}
+
                                     {% set title %}{% trans "Mac Address" %}{% endset %}
                                     {{ inline.input("macAddress", title) }}
 
@@ -176,6 +179,13 @@
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{{ "Open / Close Folder Search options"|trans }}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
+                    <div class="map-controller d-none pl-1">
+                        <button type="button" id="map_button" class="btn btn-primary" title="{{ "Map"|trans }}"><i class="fa fa-map"></i></button>
+                    </div>
+                    <div class="list-controller d-none pl-1">
+                        <button type="button" id="list_button" class="btn btn-primary" title="{{ "List"|trans }}"><i class="fa fa-list"></i></button>
+                    </div>
+
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid" style="width: 100%;">
@@ -183,6 +193,8 @@
                                     <tr>
                                         <th>{% trans "ID" %}</th>
                                         <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Display Type" %}</th>
+                                        <th>{% trans "Address" %}</th>
                                         <th>{% trans "Status" %}</th>
                                         <th>{% trans "Authorised?" %}</th>
                                         <th>{% trans "Current Layout" %}</th>
@@ -204,6 +216,7 @@
                                         <th>{% trans "IP Address" %}</th>
                                         <th>{% trans "Mac Address" %}</th>
                                         <th>{% trans "Timezone" %}</th>
+                                        <th>{% trans "Languages" %}</th>
                                         <th>{% trans "Latitude" %}</th>
                                         <th>{% trans "Longitude" %}</th>
                                         <th>{% trans "Screen shot?" %}</th>
@@ -215,6 +228,17 @@
                                         <th>{% trans "Commercial Licence" %}</th>
                                         <th>{% trans "Remote" %}</th>
                                         <th>{% trans "Sharing" %}</th>
+                                        <th>{% trans "Screen Size" %}</th>
+                                        <th>{% trans "Is Mobile?" %}</th>
+                                        <th>{% trans "Outdoor?" %}</th>
+                                        <th>{% trans "Reference 1" %}</th>
+                                        <th>{% trans "Reference 2" %}</th>
+                                        <th>{% trans "Reference 3" %}</th>
+                                        <th>{% trans "Reference 4" %}</th>
+                                        <th>{% trans "Reference 5" %}</th>
+                                        <th>{% trans "Custom ID" %}</th>
+                                        <th>{% trans "Cost Per Play" %}</th>
+                                        <th>{% trans "Impressions Per Play" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th>{% trans "Faults?" %}</th>
@@ -225,6 +249,27 @@
 
                                 </tbody>
                             </table>
+
+                            <!-- Map -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="map-legend" style="display:none; position: absolute; z-index: 500; right: 20px; top: 10px;">
+                                        <div class="display-map-legend" style="font-size: 12px;">
+                                            <div>Logged in</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-green-check.png'/> - Up to date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-yellow-check.png'/> - Out of date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-red-check.png'/> - Downloading/Unknown</div>
+                                            </br>
+                                            <div>Logged out</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-green-cross.png'/> - Up to date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross.png'/> - Out of date</div>
+                                            <div><img style="width: 15%" src='{{ theme.rootUri() }}dist/assets/map-marker-red-cross.png'/> - Downloading/Unknown</div>
+                                        </div>
+                                    </div>
+                                    <div id="display-map" data-displays-url="{{ url_for("display.map") }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -235,11 +280,14 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        var mapConfig = {{ mapConfig|json_encode|raw }};
+
         {% if not currentUser.featureEnabled("folder.view") %}
         disableFolders();
         {% endif %}
 
         $(document).ready(function() {
+
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
                 dom: dataTablesTemplate,
@@ -279,7 +327,7 @@
                 createdRow: function (row, data, index) {
                     if (data.mediaInventoryStatus === 1) {
                         $(row).addClass('table-success');
-                    } else if (data.mediaInventoryStatus === 1) {
+                    } else if (data.mediaInventoryStatus === 2) {
                         $(row).addClass('table-danger');
                     } else {
                         $(row).addClass('table-warning');
@@ -288,6 +336,8 @@
                 "columns": [
                     {"data": "displayId", responsivePriority: 2},
                     {"data": "display", responsivePriority: 2},
+                    {"data": "displayType", responsivePriority: 2},
+                    {"data": "address", "visible": false, responsivePriority: 5},
                     {
                         "data": "mediaInventoryStatus",
                         responsivePriority: 2,
@@ -374,6 +424,30 @@
                     {"data": "clientAddress", "visible": false, responsivePriority: 6},
                     {"data": "macAddress", responsivePriority: 5},
                     {"data": "timeZone", "visible": false, responsivePriority: 5},
+                    {
+                        "data": "languages",
+                        "visible": false,
+                        "responsivePriority": 5,
+                        "render": function(data, type) {
+                            if (type !== "display")
+                                return data;
+
+                            let returnData = '';
+                            if (typeof data !== undefined && data != null) {
+                                let arrayOfTags = data.split(',');
+                                returnData += '<div class="permissionsDiv">';
+                                for (let i = 0; i < arrayOfTags.length; i++) {
+                                    let name = arrayOfTags[i];
+                                    if (name !== '') {
+                                        returnData += '<li class="badge">'
+                                            + name + '</span></li>'
+                                    }
+                                }
+                                returnData += '</div>';
+                            }
+                            return returnData;
+                        }
+                    },
                     {"data": "latitude", "visible": false, responsivePriority: 6},
                     {"data": "longitude", "visible": false, responsivePriority: 6},
                     {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested", responsivePriority: 7},
@@ -520,6 +594,27 @@
                         responsivePriority: 10,
                         "render": dataTableCreatePermissions
                     },
+                    {"data": "screenSize", "visible": false, responsivePriority: 6},
+                    {
+                        "data": "isMobile",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isMobile"
+                    },
+                    {
+                        "data": "isOutdoor",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isOutdoor"
+                    },
+                    {"data": "ref1", "visible": false, responsivePriority: 6},
+                    {"data": "ref2", "visible": false, responsivePriority: 6},
+                    {"data": "ref3", "visible": false, responsivePriority: 6},
+                    {"data": "ref4", "visible": false, responsivePriority: 6},
+                    {"data": "ref5", "visible": false, responsivePriority: 6},
+                    {"data": "customId", "visible": false, responsivePriority: 6},
+                    {"data": "costPerPlay", "visible": false, responsivePriority: 6},
+                    {"data": "impressionsPerPlay", "visible": false, responsivePriority: 6},
                     {"data": "createdDt", "visible": false, responsivePriority: 6},
                     {"data": "modifiedDt", "visible": false, responsivePriority: 6},
                     {
@@ -534,7 +629,7 @@
                             if (type !== "display") {
                                 return data;
                             }
-                            
+
                             if (data > 0) {
                                 return '<span class="badge" style="background-color: red; color: white">'+(row.countFaults)+'</span>';
                             } else {
@@ -550,13 +645,256 @@
                 ]
             });
 
-            table.on('draw', dataTableDraw);
+            table.on('draw', function(e, settings) {
+
+                dataTableDraw(e, settings, function() {
+
+                    var target = $("#" + e.target.id);
+                    var $mapController = target.closest(".XiboGrid").find('.map-controller');
+                    var $listController = target.closest(".XiboGrid").find('.list-controller');
+
+                    // Move and show map button inside of the table container
+                    if ($mapController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .map-controller').length == 0) {
+                        $mapController.appendTo('.dataTables_folder');
+                        $mapController.removeClass('d-none').addClass('d-inline-flex');
+                    }
+                    // Move and show list button inside of the table container
+                    if ($listController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .list-controller').length == 0) {
+                        $listController.appendTo('.dataTables_folder');
+                        $listController.removeClass('d-none').addClass('d-inline-flex');
+                    }
+                })
+            });
             table.on('draw', { form: $("#displays").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#displays_wrapper').find('.dataTables_buttons'));
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();
+            });
+
+
+            // Detect the dimensions of our container and set to match.
+            const $displayMap = $('#display-map');
+            const $mapBtn = $('#map_button');
+            const $listBtn =  $('#list_button');
+            const $mapParent = $displayMap.parent();
+            const $dataTablesFolder = $('.dataTables_folder');
+
+            $listBtn.hide();
+
+            let map;
+
+            // Wait until we have a width and height.
+            setTimeout(initializeMap, 1000);
+
+            // Map resizing when folder is toggled
+            window.refreshDisplayMap = function () {
+                if (map) {
+                    map.invalidateSize();
+                }
+            }
+
+            // Initialise and build map
+            function initializeMap() {
+
+                $displayMap.width($mapParent.width() - 10);
+                $displayMap.height($(window).height() - 100);
+
+                // Calling map
+                map = L.map('display-map', {
+                    center: [mapConfig.setArea.lat, mapConfig.setArea.long],
+                    zoom: mapConfig.setArea.zoom
+                });
+
+                let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map);
+
+                // Print button
+                L.easyPrint({
+                    tileLayer: tiles,
+                    sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+                    filename: 'Displays on Map',
+                    hideControlContainer: true
+                }).addTo(map);
+
+                var markers = L.markerClusterGroup();
+
+                let bounds;
+                bounds = map.getBounds().toBBoxString();
+
+                map.on("moveend", _.debounce(function() {
+                    bounds = map.getBounds().toBBoxString();
+                    getPoints(false);
+                }, 500));
+
+                map.on("resize", function() {
+                    map.invalidateSize();
+                });
+
+                // Get points
+                getPoints(false);
+
+                // Bind the filter form
+                $('.XiboGrid').find(".XiboFilter form input").on("keyup",  getPoints);
+                $('.XiboGrid').find(".XiboFilter form input, .XiboFilter form select").on("change", getPoints);
+
+                var added = [];
+
+                /**
+                 * Gets Displays.
+                 */
+                function getPoints(clear = true) {
+
+                    if (clear) {
+                        markers.clearLayers();
+                        added = [];
+                        // console.log('Clear Layer');
+                    }
+
+
+                    // Make an ajax request for the displays
+                    $.ajax($displayMap.data('displaysUrl'), {
+                        method: 'GET',
+                        data: $('.XiboGrid').find(".XiboFilter form").serialize() + '&bounds=' + bounds,
+                        success: function(response) {
+                            // displays
+                            if (response.features.length > 0) {
+
+                                let uptoDateLoggedInIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let uptoDateLoggedOutIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let outOfDateLoggedInIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let outOfDateLoggedOutIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let downloadingLoggedInIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+                                let downloadingLoggedOutIcon = L.icon({
+                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross.png',
+                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross-2x.png',
+                                    iconSize: [24, 40],
+                                    iconAnchor: [12, 40]
+                                });
+
+                                let feature = L.geoJSON(response, {
+                                    pointToLayer: function (feature, latlng) {
+                                        let icon;
+
+                                        if (feature.properties.mediaInventoryStatus === 1) {
+                                            if (feature.properties.loggedIn) {
+                                                icon = uptoDateLoggedInIcon;
+                                            } else {
+                                                icon = uptoDateLoggedOutIcon;
+                                            }
+                                        } else if (feature.properties.mediaInventoryStatus === 3) {
+                                            if (feature.properties.loggedIn) {
+                                                icon = outOfDateLoggedInIcon;
+                                            } else {
+                                                icon = outOfDateLoggedOutIcon;
+                                            }
+                                        } else {
+                                            if (feature.properties.loggedIn) {
+                                                icon = downloadingLoggedInIcon;
+                                            } else {
+                                                icon = downloadingLoggedOutIcon;
+                                            }
+                                        }
+
+                                        let options = {
+                                            icon: icon
+                                        };
+
+                                        let popup = '<strong>' + feature.properties.display + '</strong>';
+                                        if (feature.properties.orientation) {
+                                            popup += '<br/><div style="width: 180px;"><span>Orientation: ' + feature.properties.orientation + '</span></div>';
+                                        }
+                                        if (feature.properties.status) {
+                                            popup += '<div style="width: 180px;"><span>Status: ' + feature.properties.status + '</span>';
+                                            if (feature.properties.loggedIn) {
+                                                popup += '<span> (Logged in) </span></div>';
+                                            } else {
+                                                popup += '<span> (Not logged in) </span></div>';
+                                            }
+                                        }
+                                        if (feature.properties.displayProfile) {
+                                            popup += '<div style="width: 180px;"><span>Display profile: ' + feature.properties.displayProfile + '</span></div>';
+                                        }
+                                        if (feature.properties.resolution) {
+                                            popup += '<div style="width: 180px;"><span>Resolution: ' + feature.properties.resolution + '</span></div>';
+                                        }
+                                        if (feature.properties.lastAccessed) {
+                                            let lastAccessed = moment(feature.properties.lastAccessed, "X").tz ?
+                                                moment(feature.properties.lastAccessed, "X").tz(timezone).format(jsDateFormat) :
+                                                moment(feature.properties.lastAccessed, "X").format(jsDateFormat);
+
+                                            popup += '<div style="width: 180px;"><span>Last accessed: ' + lastAccessed + '</span></div>';
+                                        }
+                                        if (feature.properties.thumbnail) {
+                                            popup += '<div style="width: 180px;"><img class="display-screenshot" src="' + feature.properties.thumbnail + '" /></div>';
+                                        }
+
+                                        if (!added.includes(feature.properties.displayId)) {
+
+                                            // Cache displayId
+                                            added.push(feature.properties.displayId);
+
+                                            return L.marker(latlng, options)
+                                                .bindPopup(popup)
+                                                .openPopup()
+                                                .addTo(markers);
+                                        }
+                                    },
+                                });
+                            }
+                        }
+                    });
+
+                    markers.addTo(map);
+                }
+
+                // Hide map/ Show Display List
+                $displayMap.hide();
+            }
+
+            $mapBtn.click(function () {
+                $('.map-legend').show()
+                $displayMap.show();
+                $mapBtn.hide();
+                $listBtn.show();
+                $dataTablesFolder.siblings().hide();
+                $dataTablesFolder.parent().siblings().hide();
+            });
+
+            $listBtn.click(function () {
+                $('.map-legend').hide();
+                $displayMap.hide();
+                $listBtn.hide();
+                $mapBtn.show();
+                $dataTablesFolder.siblings().show();
+                $dataTablesFolder.parent().siblings().show();
             });
         });
 
@@ -592,7 +930,7 @@
         }
 
         function displayFormLicenceCheckSubmit(form) {
-            // Display commercial licence table column 
+            // Display commercial licence table column
             $('table#displays').DataTable().column('commercialLicence:name').visible(true);
 
             // Submit form
@@ -652,6 +990,27 @@
             });
         }
 
+        function makeVenueSelect($element) {
+          // Get the openOOH venue types
+          $element.append(new Option('', '0', false, false));
+          $.ajax({
+            method: 'GET',
+            url: $element.data('searchUrl'),
+            dataType: 'json',
+            success: function(response) {
+              $.each(response.data, function(key, el) {
+                const selected = el.venueId === $element.data('venueId');
+                $element.append(new Option(el.venueName, el.venueId, selected, selected));
+              });
+
+              $element.select2();
+            },
+            error: function(xhr) {
+              SystemMessage(xhr.message || '{{"Unknown error"|trans}}', false);
+            }
+          });
+        }
+
         function displayEditFormOpen(dialog) {
 
             // Setup display profile form
@@ -661,12 +1020,25 @@
             var $settings = $(dialog).find('#settings-from-display-profile').find('.form-group');
             var $table = $(dialog).find('#settings-from-profile tbody').empty();
             var override = $(dialog).data('extra');
+            var $venueIdSelect2 = $(dialog).find(".venue-select select.form-control");
+            if ($venueIdSelect2.data('initialValue')) {
+              $venueIdSelect2.data('initialised', true);
+              makeVenueSelect($venueIdSelect2);
+            } else {
+              dialog.find('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                const activeTab = $(e.target).attr('href')
+                if (activeTab === '#location' && !$venueIdSelect2.data('initialised')) {
+                  $venueIdSelect2.data('initialised', true);
+                  makeVenueSelect($venueIdSelect2);
+                }
+              });
+            }
 
             // Parse special fields
             override.forEach(function(field, index) {
                 if(['lockOptions','pictureOptions', 'timers'].includes(field.name)) {
                     var parsedValues = JSON.parse(field.value);
-                    
+
                     // Add values to the override array
                     $.each(parsedValues, function(name, value){
 
@@ -777,11 +1149,11 @@
                             $(target).find('.multiSelectInputs .slider-tick-label').each(function(idx, el) {
                                 if($(el).html() == newValue) {
                                     newValue = idx;
-                                    return false; 
+                                    return false;
                                 }
                             });
                         }
-                        
+
                         // Set value
                         $(target).find('.pictureControlsSlider').bootstrapSlider('setValue', newValue);
                     } else if($inputFields.attr('type') == 'checkbox') {
@@ -823,7 +1195,7 @@
                 if($(target).find('.multiSelectInputs').length > 0) {
                     // Calculate column size for bootstrap
                     var colSize = Math.round(12/$(target).find('.multiSelectInputs').length);
-                    
+
                     //Remove all style classes and add the new size class
                     $(target).find('.multiSelectInputs').attr('class', 'multiSelectInputs col-sm-' + colSize)
                 }
@@ -887,9 +1259,9 @@
                     // Get text and override name
                     over = $(element).find('.multiSelect').val();
                     text = $(element).find('.multiSelect option:selected').text();
-                    
+
                     // Get value
-                    value = $(element).find('.timersOn').val() + ' - ' + $(element).find('.timersOff').val(); 
+                    value = $(element).find('.timersOn').val() + ' - ' + $(element).find('.timersOff').val();
                 } else if($(element).hasClass('form-group-picture-options')) {
                     // Get text and override name
                     over = $(element).find('.multiSelect').val();
@@ -1048,7 +1420,7 @@
     </script>
 
     <style>
-        #settings-from-profile tr.row-fluid { 
+        #settings-from-profile tr.row-fluid {
             height: 50px;
         }
     </style>

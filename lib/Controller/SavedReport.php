@@ -312,12 +312,7 @@ class SavedReport extends Base
         // Set Template
         $this->getState()->template = $this->reportService->getSavedReportTemplate($name);
 
-        $this->getState()->setData([
-            'metadata' => $results->metadata,
-            'table' => $results->table,
-            'chart' => $results->chart,
-            'hasChartData' => $results->hasChartData,
-        ]);
+        $this->getState()->setData($results->jsonSerialize());
 
         return $this->render($request, $response);
     }

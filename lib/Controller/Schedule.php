@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -177,7 +177,7 @@ class Schedule extends Base
         // Render the Theme and output
         $this->getState()->template = 'schedule-page';
         $this->getState()->setData($data);
-        
+
         return $this->render($request, $response);
     }
 
@@ -190,9 +190,10 @@ class Schedule extends Base
      *  tags={"schedule"},
      *  @SWG\Parameter(
      *      name="displayGroupIds",
-     *      description="The DisplayGroupIds to return the schedule for. Empty for All.",
+     *      description="The DisplayGroupIds to return the schedule for. [-1] for All.",
      *      in="query",
      *      type="array",
+     *      required=true,
      *      @SWG\Items(
      *          type="integer"
      *      )
@@ -200,16 +201,16 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="from",
      *      in="query",
-     *      required=true,
-     *      type="integer",
-     *      description="From Date Timestamp in Microseconds"
+     *      required=false,
+     *      type="string",
+     *      description="From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month"
      *  ),
      *  @SWG\Parameter(
      *      name="to",
      *      in="query",
-     *      required=true,
-     *      type="integer",
-     *      description="To Date Timestamp in Microseconds"
+     *      required=false,
+     *      type="string",
+     *      description="To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month"
      *  ),
      *  @SWG\Response(
      *      response=200,
@@ -226,7 +227,7 @@ class Schedule extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    function eventData(Request $request, Response $response)
+    public function eventData(Request $request, Response $response)
     {
         $response = $response->withHeader('Content-Type', 'application/json');
         $this->setNoOutput();
@@ -236,9 +237,9 @@ class Schedule extends Base
         $campaignId = $sanitizedParams->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
 
-        $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()]);
-        $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()]);
-        
+        $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()->startOfMonth()]);
+        $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()->addMonth()->startOfMonth()]);
+
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
@@ -246,14 +247,14 @@ class Schedule extends Base
             return $response->withJson(['success' => 1, 'result' => []]);
         }
 
-        // Setting for whether we show Layouts with out permissions
+        // Setting for whether we show Layouts without permissions
         $showLayoutName = ($this->getConfig()->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
 
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
 
         if (!$this->getUser()->isSuperAdmin()) {
-            $userDisplayGroupIds = array_map(function($element) {
+            $userDisplayGroupIds = array_map(function ($element) {
                 /** @var \Xibo\Entity\DisplayGroup $element */
                 return $element->displayGroupId;
             }, $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]));
@@ -315,7 +316,7 @@ class Schedule extends Base
 
             // Event Permissions
             $editable = $this->getUser()->featureEnabled('schedule.modify')
-                && $this->isEventEditable($row->displayGroups);
+                && $this->isEventEditable($row);
 
             // Event Title
             if ($row->campaignId == 0) {
@@ -328,8 +329,9 @@ class Schedule extends Base
                     // Campaign
                     $campaign = $this->campaignFactory->getById($row->campaignId);
 
-                    if (!$this->getUser()->checkViewable($campaign))
+                    if (!$this->getUser()->checkViewable($campaign)) {
                         $row->campaign = __('Private Item');
+                    }
                 }
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
 
@@ -348,7 +350,7 @@ class Schedule extends Base
 
             // Event URL
             $editUrl = ($this->isApi($request)) ? 'schedule.edit' : 'schedule.edit.form';
-            $url = ($editable) ? $this->urlFor($request,$editUrl, ['id' => $row->eventId]) : '#';
+            $url = ($editable) ? $this->urlFor($request, $editUrl, ['id' => $row->eventId]) : '#';
 
             $days = [];
 
@@ -370,7 +372,7 @@ class Schedule extends Base
 
                 // Set the row from/to date to be an ISO date for display
                 $scheduleEvent->fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                $scheduleEvent->toDt =Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                $scheduleEvent->toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
 
                 $this->getLog()->debug(sprintf('Start date is ' . $fromDt->toRssString() . ' ' . $scheduleEvent->fromDt));
                 $this->getLog()->debug(sprintf('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt));
@@ -978,11 +980,30 @@ class Schedule extends Base
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
         $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $customDayPart->dayPartId]);
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->actionType = $sanitizedParams->getString('actionType');
         $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
         $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
+        $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
+
+        // Set the parentCampaignId for campaign events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
+            $schedule->parentCampaignId = $schedule->campaignId;
+        }
+
+        // Fields only collected for interrupt events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+            $schedule->shareOfVoice = $sanitizedParams->getInt('shareOfVoice', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Share of Voice must be a whole number between 0 and 3600'),
+                        'shareOfVoice'
+                    );
+                }
+            ]);
+        } else {
+            $schedule->shareOfVoice = null;
+        }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {
@@ -1164,7 +1185,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1232,7 +1253,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1281,7 +1302,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1502,7 +1523,7 @@ class Schedule extends Base
         ]);
 
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1520,11 +1541,30 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
         $schedule->displayGroups = [];
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->actionType = $sanitizedParams->getString('actionType');
         $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
         $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
+        $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
+
+        // Set the parentCampaignId for campaign events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
+            $schedule->parentCampaignId = $schedule->campaignId;
+        }
+
+        // Fields only collected for interrupt events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+            $schedule->shareOfVoice = $sanitizedParams->getInt('shareOfVoice', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Share of Voice must be a whole number between 0 and 3600'),
+                        'shareOfVoice'
+                    );
+                }
+            ]);
+        } else {
+            $schedule->shareOfVoice = null;
+        }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {
@@ -1741,7 +1781,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1788,7 +1828,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
 
@@ -1807,13 +1847,18 @@ class Schedule extends Base
 
     /**
      * Is this event editable?
-     * @param array[\Xibo\Entity\DisplayGroup] $displayGroups
+     * @param \Xibo\Entity\Schedule $event
      * @return bool
-     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    private function isEventEditable($displayGroups)
+    private function isEventEditable(\Xibo\Entity\Schedule $event): bool
     {
         if (!$this->getUser()->featureEnabled('schedule.modify')) {
+            return false;
+        }
+
+        // Is this an event coming from an ad campaign?
+        if ($event->parentCampaignId !== null && $event->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
             return false;
         }
 
@@ -1821,16 +1866,16 @@ class Schedule extends Base
 
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
-        foreach ($displayGroups as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
-
+        foreach ($event->displayGroups as $displayGroup) {
             // Can schedule with view, but no view permissions
-            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup))
+            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup)) {
                 return false;
+            }
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup)) {
                 return false;
+            }
         }
 
         return true;
@@ -2001,3 +2046,4 @@ class Schedule extends Base
         return json_encode($geoJson);
     }
 }
+

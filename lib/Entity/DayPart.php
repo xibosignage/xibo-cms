@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
+use Xibo\Event\DayPartDeleteEvent;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -36,6 +37,9 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ *
+ * @property Carbon $adjustedStart Adjusted start datetime
+ * @property Carbon $adjustedEnd Adjusted end datetime
  */
 class DayPart implements \JsonSerializable
 {
@@ -174,6 +178,34 @@ class DayPart implements \JsonSerializable
     }
 
     /**
+     * @param \Carbon\Carbon $date
+     * @return void
+     */
+    public function adjustForDate(Carbon $date)
+    {
+        // Matching exceptions?
+        // we use a lookup because the form control uses the below date abbreviations
+        $dayOfWeekLookup = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        foreach ($this->exceptions as $exception) {
+            if ($exception['day'] === $dayOfWeekLookup[$date->dayOfWeekIso]) {
+                $this->adjustedStart = $date->copy()->setTimeFromTimeString($exception['start']);
+                $this->adjustedEnd = $date->copy()->setTimeFromTimeString($exception['end']);
+                if ($this->adjustedStart >= $this->adjustedEnd) {
+                    $this->adjustedEnd->addDay();
+                }
+                return;
+            }
+        }
+
+        // No matching exceptions.
+        $this->adjustedStart = $date->copy()->setTimeFromTimeString($this->startTime);
+        $this->adjustedEnd = $date->copy()->setTimeFromTimeString($this->endTime);
+        if ($this->adjustedStart >= $this->adjustedEnd) {
+            $this->adjustedEnd->addDay();
+        }
+    }
+
+    /**
      * Save
      * @param array $options
      * @throws InvalidArgumentException
@@ -219,6 +251,8 @@ class DayPart implements \JsonSerializable
         if ($this->isSystemDayPart()) {
             throw new InvalidArgumentException('Cannot delete system dayParts');
         }
+
+        $this->getDispatcher()->dispatch(new DayPartDeleteEvent($this), DayPartDeleteEvent::$NAME);
 
         // Delete all events using this daypart
         $schedules = $this->scheduleFactory->getByDayPartId($this->dayPartId);

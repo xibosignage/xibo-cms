@@ -1,0 +1,73 @@
+/*!
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+/* Page content wrapper */
+#content-wrapper .page-content > .row {
+  > div {
+    margin: 0;
+  }
+
+  &.header.header-side {
+    height: 50px;
+    margin-bottom: 0;
+
+    .navbar-toggler-side {
+      margin-top: 8px;
+      margin-right: 8px;
+    }
+
+    .user {
+      & > .item {
+        width: auto;
+        height: 50px;
+        padding-right: 16px;
+
+        & > a {
+          padding: 7px 0;
+        }
+
+        img.nav-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 2px;
+        }
+      }
+    }
+
+    .xibo-logo-container {
+      margin-left: 50%;
+      transform: translateX(-50%);
+
+      .page {
+        width: auto;
+        padding: 0;
+
+        .xibo-logo {
+          height: 30px;
+          margin: 10px 0;
+        }
+      }
+    }
+
+    .user-notif > .item > a {
+      padding: 5px 0;
+    }
+  }
+}

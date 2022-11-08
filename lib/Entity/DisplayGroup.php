@@ -172,6 +172,36 @@ class DisplayGroup implements \JsonSerializable
      */
     public $permissionsFolderId;
 
+    /**
+     * @SWG\Property(description="Optional Reference 1")
+     * @var string
+     */
+    public $ref1;
+
+    /**
+     * @SWG\Property(description="Optional Reference 2")
+     * @var string
+     */
+    public $ref2;
+
+    /**
+     * @SWG\Property(description="Optional Reference 3")
+     * @var string
+     */
+    public $ref3;
+
+    /**
+     * @SWG\Property(description="Optional Reference 4")
+     * @var string
+     */
+    public $ref4;
+
+    /**
+     * @SWG\Property(description="Optional Reference 5")
+     * @var string
+     */
+    public $ref5;
+
     // Child Items the Display Group is linked to
     public $displays = [];
     public $media = [];
@@ -822,8 +852,8 @@ class DisplayGroup implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaLogicalOperator`, `dynamicCriteriaTags`, `dynamicCriteriaExactTags`, `dynamicCriteriaTagsLogicalOperator`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaLogicalOperator, :dynamicCriteriaTags, :dynamicCriteriaExactTags, :dynamicCriteriaTagsLogicalOperator, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaLogicalOperator`, `dynamicCriteriaTags`, `dynamicCriteriaExactTags`, `dynamicCriteriaTagsLogicalOperator`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`, `ref1`, `ref2`, `ref3`, `ref4`, `ref5`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaLogicalOperator, :dynamicCriteriaTags, :dynamicCriteriaExactTags, :dynamicCriteriaTagsLogicalOperator, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId, :ref1, :ref2, :ref3, :ref4, :ref5)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
@@ -838,7 +868,12 @@ class DisplayGroup implements \JsonSerializable
             'createdDt' => $time,
             'modifiedDt' => $time,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
-            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId,
+            'ref1' => $this->ref1,
+            'ref2' => $this->ref2,
+            'ref3' => $this->ref3,
+            'ref4' => $this->ref4,
+            'ref5' => $this->ref5
         ]);
 
         // Insert my self link
@@ -866,7 +901,12 @@ class DisplayGroup implements \JsonSerializable
               `userId` = :userId,
               `modifiedDt` = :modifiedDt,
               `folderId` = :folderId,
-              `permissionsFolderId` = :permissionsFolderId
+              `permissionsFolderId` = :permissionsFolderId,
+              `ref1` = :ref1,
+              `ref2` = :ref2,
+              `ref3` = :ref3,
+              `ref4` = :ref4,
+              `ref5` = :ref5
            WHERE DisplayGroupID = :displayGroupId
           ', [
             'displayGroup' => $this->displayGroup,
@@ -882,7 +922,12 @@ class DisplayGroup implements \JsonSerializable
             'userId' => $this->userId,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'folderId' => $this->folderId,
-            'permissionsFolderId' => $this->permissionsFolderId
+            'permissionsFolderId' => $this->permissionsFolderId,
+            'ref1' => $this->ref1,
+            'ref2' => $this->ref2,
+            'ref3' => $this->ref3,
+            'ref4' => $this->ref4,
+            'ref5' => $this->ref5
         ]);
     }
 

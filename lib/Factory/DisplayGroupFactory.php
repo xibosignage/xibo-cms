@@ -314,6 +314,11 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.userId,
                 `displaygroup`.folderId,
                 `displaygroup`.permissionsFolderId,
+                `displaygroup`.ref1,
+                `displaygroup`.ref2,
+                `displaygroup`.ref3,
+                `displaygroup`.ref4,
+                `displaygroup`.ref5,
                 (
                     SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
                         FROM tag

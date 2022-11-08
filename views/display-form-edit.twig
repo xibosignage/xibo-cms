@@ -42,10 +42,11 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="#location" role="tab" data-toggle="tab"><span>{% trans "Location" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#location" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#settings" role="tab" data-toggle="tab"><span>{% trans "Settings" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#remote" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
@@ -79,7 +80,7 @@
                             {% set helpText %}{% trans "The Name of the Display - (1 - 50 characters)." %}{% endset %}
                             {{ forms.input("display", title, display.display, helpText, "", "required") }}
                         {% endif %}
-                
+
                         {% set title %}{% trans "Display's Hardware Key" %}{% endset %}
                         {% set helpText %}{% trans "A unique identifier for this display." %}{% endset %}
                         {{ forms.input("license", title, display.license, helpText, "", "required", "", false) }}
@@ -135,7 +136,7 @@
                         {% set title %}{% trans "Latitude" %}{% endset %}
                         {% set helpText %}{% trans "The Latitude of this display" %}{% endset %}
                         {{ forms.number("latitude", title, display.latitude, helpText) }}
-                        
+
                         {% set title %}{% trans "Longitude" %}{% endset %}
                         {% set helpText %}{% trans "The Longitude of this Display" %}{% endset %}
                         {{ forms.number("longitude", title, display.longitude, helpText) }}
@@ -146,6 +147,71 @@
                         {% set title %}{% trans "Timezone" %}{% endset %}
                         {% set helpText %}{% trans "The timezone for this display, or empty to use the CMS timezone" %}{% endset %}
                         {{ forms.dropdown("timeZone", "single", title, display.timeZone, [{id:"", value:""}]|merge(timeZones), "id", "value", helpText, "selectPicker", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Languages" %}{% endset %}
+                        {% set helpText %}{% trans "The Languages supported in this display location" %}{% endset %}
+                        {{ forms.dropdown("languages[]", "dropdownmulti", title, display.getLanguages(), languages, "id", "value", helpText, "selectPicker") }}
+
+                        {% set title %}{% trans "Display Type" %}{% endset %}
+                        {% set helpText %}{% trans "The Type of this Display" %}{% endset %}
+                        {{ forms.dropdown("displayTypeId", "single", title, display.displayTypeId, [{displayTypeId:null, displayType:""}]|merge(displayTypes), "displayTypeId", "displayType", helpText) }}
+
+                        {% set title %}{% trans "Venue" %}{% endset %}
+                        {% set helpText %}{% trans "The Location/Venue of this display" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("display.venue.search") },
+                            { name: "data-allow-clear", value: "true" },
+                            { name: "data-placeholder--id", value: null },
+                            { name: "data-placeholder--value", value: "" },
+                            { name: "data-venue-id", value: display.venueId },
+                        ] %}
+                        {{ forms.dropdown("venueId", "single", title, "", null, "venueId", "venueName", helpText, "venue-select", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Address" %}{% endset %}
+                        {% set helpText %}{% trans "The Address of this Display" %}{% endset %}
+                        {{ forms.input("address", title, display.address, helpText) }}
+
+                        {% set title %}{% trans "Screen size" %}{% endset %}
+                        {% set helpText %}{% trans "The Screen size of this Display" %}{% endset %}
+                        {{ forms.number("screenSize", title, display.screenSize, helpText) }}
+
+                        {% set title %}{% trans "Is mobile?" %}{% endset %}
+                        {% set helpText %}{% trans "Is this display mobile?" %}{% endset %}
+                        {{ forms.checkbox("isMobile", title, display.isMobile, helpText) }}
+
+                        {% set title %}{% trans "Is outdoor?" %}{% endset %}
+                        {% set helpText %}{% trans "Is your display located outdoors?" %}{% endset %}
+                        {{ forms.checkbox("isOutdoor", title, display.isOutdoor, helpText) }}
+
+                        {% set title %}{% trans "Cost per play" %}{% endset %}
+                        {% set helpText %}{% trans "The cost per play" %}{% endset %}
+                        {{ forms.number("costPerPlay", title, display.costPerPlay, helpText) }}
+
+                        {% set title %}{% trans "Impressions per play" %}{% endset %}
+                        {% set helpText %}{% trans "The impressions per play" %}{% endset %}
+                        {{ forms.number("impressionsPerPlay", title, display.impressionsPerPlay, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="reference">
+                        {{ forms.message("Add reference fields if needed"|trans) }}
+
+                        {% set title %}{% trans "Reference 1" %}{% endset %}
+                        {{ forms.input("ref1", title, display.ref1) }}
+
+                        {% set title %}{% trans "Reference 2" %}{% endset %}
+                        {{ forms.input("ref2", title, display.ref2) }}
+
+                        {% set title %}{% trans "Reference 3" %}{% endset %}
+                        {{ forms.input("ref3", title, display.ref3) }}
+
+                        {% set title %}{% trans "Reference 4" %}{% endset %}
+                        {{ forms.input("ref4", title, display.ref4) }}
+
+                        {% set title %}{% trans "Reference 5" %}{% endset %}
+                        {{ forms.input("ref5", title, display.ref5) }}
+
+                        {% set title %}{% trans "Custom ID" %}{% endset %}
+                        {{ forms.input("customId", title, display.customId) }}
                     </div>
                     <div class="tab-pane" id="maintenance">
 
@@ -158,7 +224,6 @@
                         { id: 1, value: yes }
                         ] %}
                         {{ forms.dropdown("emailAlert", "single", title, display.emailAlert, options, "id", "value", helpText) }}
-
 
                         {% set title %}{% trans "Use the Global Timeout?" %}{% endset %}
                         {% set helpText %}{% trans "Should this display be tested against the global time out or the Player collection interval?" %}{% endset %}
@@ -260,7 +325,7 @@
                         {% set helpText %}{% trans "If Webkey is installed on the device, enter the serial number here." %}{% endset %}
                         {{ forms.input("webkeySerial", title, display.webkeySerial, helpText) }}
                     </div>
-                </div>    
+                </div>
             </form>
 
 

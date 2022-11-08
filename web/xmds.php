@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -318,7 +318,8 @@ try {
     } else {
         $soap = new SoapServer($wsdl, ['cache_wsdl' => WSDL_CACHE_MEMORY]);
     }
-    $soap->setClass('\Xibo\Xmds\Soap' . $version,
+    $soap->setClass(
+        '\Xibo\Xmds\Soap' . $version,
         $logProcessor,
         $container->get('pool'),
         $container->get('store'),
@@ -341,7 +342,8 @@ try {
         $container->get('scheduleFactory'),
         $container->get('dayPartFactory'),
         $container->get('playerVersionFactory'),
-        $container->get('dispatcher')
+        $container->get('dispatcher'),
+        $container->get('campaignFactory')
     );
     // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.
     $soap->handle(file_get_contents('php://input'));

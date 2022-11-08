@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,7 +27,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
-use Xibo\Event\CampaignLoadEvent;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\FolderMovingEvent;
@@ -38,6 +37,7 @@ use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Listener\CampaignListener;
 
 /**
  * This middleware is used to register listeners against the dispatcher
@@ -79,6 +79,15 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher = $c->get('dispatcher');
 
         // Register listeners
+        // ------------------
+        // Listen for events that affect campaigns
+        (new CampaignListener(
+            $c->get('campaignFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
         // Media Delete Events
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\MenuBoardListener(
             $c->get('menuBoardCategoryFactory')
@@ -106,11 +115,6 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\ActionListener(
             $c->get('store'),
             $c->get('actionFactory')
-        ))->useLogger($c->get('logger')));
-
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\CampaignListener(
-            $c->get('store'),
-            $c->get('campaignFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\CommandListener(
@@ -229,10 +233,6 @@ class ListenersMiddleware implements MiddlewareInterface
         ));
 
         // Parse Permissions Event Listeners
-        $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'campaign', (new \Xibo\Listener\OnParsePermissions\PermissionsCampaignListener(
-            $c->get('campaignFactory')
-        )));
-
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'command', (new \Xibo\Listener\OnParsePermissions\PermissionsCommandListener(
             $c->get('commandFactory')
         )));
@@ -282,11 +282,6 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('displayProfileFactory')
         )));
 
-        // On CampaignLoad event listener
-        $dispatcher->addListener(CampaignLoadEvent::$NAME, (new \Xibo\Listener\OnCampaignLoad(
-            $c->get('layoutFactory')
-        )));
-
         // On System User change event listener
         $dispatcher->addListener(SystemUserChangedEvent::$NAME, (new \Xibo\Listener\OnSystemUserChange(
             $c->get('store')
@@ -298,10 +293,6 @@ class ListenersMiddleware implements MiddlewareInterface
         )));
 
         // On Folder moving listeners
-        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\CampaignListener(
-            $c->get('campaignFactory')
-        )));
-
         $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DataSetListener(
             $c->get('dataSetFactory')
         )));

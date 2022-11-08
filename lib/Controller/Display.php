@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,6 +22,9 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use GeoJson\Feature\Feature;
+use GeoJson\Feature\FeatureCollection;
+use GeoJson\Geometry\Point;
 use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
@@ -36,6 +39,7 @@ use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\DisplayTypeFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -55,6 +59,7 @@ use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\XMR\LicenceCheckAction;
 use Xibo\XMR\PurgeAllAction;
 use Xibo\XMR\RekeyAction;
@@ -108,6 +113,11 @@ class Display extends Base
      */
     private $displayProfileFactory;
 
+    /**
+     * @var DisplayTypeFactory
+     */
+    private $displayTypeFactory;
+
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
 
@@ -133,6 +143,7 @@ class Display extends Base
      * @param PlayerActionServiceInterface $playerAction
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayTypeFactory $displayTypeFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param DisplayEventFactory $displayEventFactory
@@ -143,13 +154,14 @@ class Display extends Base
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
+    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $displayTypeFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayTypeFactory = $displayTypeFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->displayEventFactory = $displayEventFactory;
@@ -159,6 +171,62 @@ class Display extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->dayPartFactory = $dayPartFactory;
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/displayvenue",
+     *  summary="Get Display Venues",
+     *  tags={"displayVenue"},
+     *  operationId="displayVenueSearch",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="a successful response",
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function displayVenue(Request $request, Response $response)
+    {
+        if (!file_exists(PROJECT_ROOT . '/openooh/specification.json')) {
+            throw new GeneralException(__('OpenOOH specification missing'));
+        }
+
+        $content = file_get_contents(PROJECT_ROOT . '/openooh/specification.json');
+        $data = json_decode($content, true);
+
+        $taxonomy = [];
+        $i = 0;
+        foreach ($data['openooh_venue_taxonomy']['specification']['categories'] as $categories) {
+            $taxonomy[$i]['venueId'] = $categories['enumeration_id'];
+            $taxonomy[$i]['venueName'] = $categories['name'];
+
+            $i++;
+            foreach ($categories['children'] as $children) {
+                $taxonomy[$i]['venueId'] = $children['enumeration_id'];
+                $taxonomy[$i]['venueName'] = $categories['name'] . ' -> ' . $children['name'];
+                $i++;
+
+                if (isset($children['children'])) {
+                    foreach ($children['children'] as $grandchildren) {
+                        $taxonomy[$i]['venueId'] = $grandchildren['enumeration_id'] ;
+                        $taxonomy[$i]['venueName'] = $categories['name'] . ' -> ' . $children['name'] .  ' -> ' . $grandchildren['name'] ;
+                        $i++;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($taxonomy);
+        $this->getState()->setData($taxonomy);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -178,7 +246,17 @@ class Display extends Base
 
         // Call to render the template
         $this->getState()->template = 'display-page';
+
+        $mapConfig = [
+            'setArea' => [
+                'lat' => $this->getConfig()->getSetting('DEFAULT_LAT'),
+                'long' => $this->getConfig()->getSetting('DEFAULT_LONG'),
+                'zoom' => 7
+            ]
+        ];
+
         $this->getState()->setData([
+            'mapConfig' => $mapConfig,
             'displayGroups' => $this->displayGroupFactory->query(),
             'displayProfiles' => $displayProfiles
         ]);
@@ -310,8 +388,9 @@ class Display extends Base
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
         $base = (int)floor(log($totalSize) / log(1024));
 
-        if ($base < 0)
+        if ($base < 0) {
             $base = 0;
+        }
 
         $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
         $this->getLog()->debug(sprintf('Base for size is %d and suffix is %s', $base, $units));
@@ -349,6 +428,43 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get display filters
+     * @param SanitizerInterface $parsedQueryParams
+     * @return array
+     */
+    public function getFilters(SanitizerInterface $parsedQueryParams): array
+    {
+        return [
+            'displayId' => $parsedQueryParams->getInt('displayId'),
+            'display' => $parsedQueryParams->getString('display'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+            'macAddress' => $parsedQueryParams->getString('macAddress'),
+            'license' => $parsedQueryParams->getString('hardwareKey'),
+            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+            'clientVersion' => $parsedQueryParams->getString('clientVersion'),
+            'clientType' => $parsedQueryParams->getString('clientType'),
+            'clientCode' => $parsedQueryParams->getString('clientCode'),
+            'customId' => $parsedQueryParams->getString('customId'),
+            'authorised' => $parsedQueryParams->getInt('authorised'),
+            'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+            'showTags' => true,
+            'clientAddress' => $parsedQueryParams->getString('clientAddress'),
+            'mediaInventoryStatus' => $parsedQueryParams->getInt('mediaInventoryStatus'),
+            'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
+            'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
+            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
+            'orientation' => $parsedQueryParams->getString('orientation'),
+            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
+            'bounds' => $parsedQueryParams->getString('bounds'),
+        ];
     }
 
     /**
@@ -510,36 +626,10 @@ class Display extends Base
         // Embed?
         $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
 
-        $filter = [
-            'displayId' => $parsedQueryParams->getInt('displayId'),
-            'display' => $parsedQueryParams->getString('display'),
-            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
-            'macAddress' => $parsedQueryParams->getString('macAddress'),
-            'license' => $parsedQueryParams->getString('hardwareKey'),
-            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
-            'clientVersion' => $parsedQueryParams->getString('clientVersion'),
-            'clientType' => $parsedQueryParams->getString('clientType'),
-            'clientCode' => $parsedQueryParams->getString('clientCode'),
-            'authorised' => $parsedQueryParams->getInt('authorised'),
-            'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
-            'tags' => $parsedQueryParams->getString('tags'),
-            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
-            'showTags' => true,
-            'clientAddress' => $parsedQueryParams->getString('clientAddress'),
-            'mediaInventoryStatus' => $parsedQueryParams->getInt('mediaInventoryStatus'),
-            'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
-            'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
-            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
-            'orientation' => $parsedQueryParams->getString('orientation'),
-            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
-            'folderId' => $parsedQueryParams->getInt('folderId'),
-            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
-            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
-        ];
+        $filter = $this->getFilters($parsedQueryParams);
 
         // Get a list of displays
         $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
-
 
         // Get all Display Profiles
         $displayProfiles = [];
@@ -630,7 +720,7 @@ class Display extends Base
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $display->thumbnail = $this->urlFor($request,'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
+                $display->thumbnail = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
             $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
@@ -646,7 +736,7 @@ class Display extends Base
                 // Manage
                 $display->buttons[] = array(
                     'id' => 'display_button_manage',
-                    'url' => $this->urlFor($request,'display.manage', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.manage', ['id' => $display->displayId]),
                     'text' => __('Manage'),
                     'external' => true
                 );
@@ -656,7 +746,7 @@ class Display extends Base
                 // Edit
                 $display->buttons[] = array(
                     'id' => 'display_button_edit',
-                    'url' => $this->urlFor($request,'display.edit.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.edit.form', ['id' => $display->displayId]),
                     'text' => __('Edit')
                 );
             }
@@ -667,7 +757,7 @@ class Display extends Base
             ) {
                 $deleteButton = [
                     'id' => 'display_button_delete',
-                    'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.delete.form', ['id' => $display->displayId]),
                     'text' => __('Delete')
                 ];
 
@@ -700,12 +790,12 @@ class Display extends Base
                 // Authorise
                 $display->buttons[] = array(
                     'id' => 'display_button_authorise',
-                    'url' => $this->urlFor($request,'display.authorise.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.authorise.form', ['id' => $display->displayId]),
                     'text' => __('Authorise'),
                     'multi-select' => true,
                     'dataAttributes' => array(
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.authorise', ['id' => $display->displayId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.authorise', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_authorise'),
                         array('name' => 'sort-group', 'value' => 2),
@@ -717,11 +807,11 @@ class Display extends Base
                 // Default Layout
                 $display->buttons[] = array(
                     'id' => 'display_button_defaultlayout',
-                    'url' => $this->urlFor($request,'display.defaultlayout.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.defaultlayout.form', ['id' => $display->displayId]),
                     'text' => __('Default Layout'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.defaultlayout', ['id' => $display->displayId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.defaultlayout', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_defaultlayout'),
                         array('name' => 'sort-group', 'value' => 2),
@@ -735,11 +825,11 @@ class Display extends Base
                     // Select Folder
                     $display->buttons[] = [
                         'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
+                        'url' => $this->urlFor($request, 'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
                             ['name' => 'sort-group', 'value' => 2],
@@ -753,12 +843,12 @@ class Display extends Base
                 if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
                     $display->buttons[] = array(
                         'id' => 'display_button_checkLicence',
-                        'url' => $this->urlFor($request,'display.licencecheck.form', ['id' => $display->displayId]),
+                        'url' => $this->urlFor($request, 'display.licencecheck.form', ['id' => $display->displayId]),
                         'text' => __('Check Licence'),
                         'multi-select' => true,
                         'dataAttributes' => array(
                             ['name' => 'auto-submit', 'value' => true],
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.licencecheck', ['id' => $display->displayId])),
+                            array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.licencecheck', ['id' => $display->displayId])),
                             array('name' => 'commit-method', 'value' => 'put'),
                             array('name' => 'id', 'value' => 'display_button_checkLicence'),
                             array('name' => 'sort-group', 'value' => 2),
@@ -778,7 +868,7 @@ class Display extends Base
             ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor($request, 'schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
                     'text' => __('Schedule Now')
                 );
             }
@@ -799,26 +889,26 @@ class Display extends Base
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => $this->urlFor($request,'displayGroup.media.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $display->displayGroupId]),
                     'text' => __('Assign Files')
                 );
 
                 // Layout Assignments
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_layout_associations',
-                    'url' => $this->urlFor($request,'displayGroup.layout.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $display->displayGroupId]),
                     'text' => __('Assign Layouts')
                 );
 
                 // Screen Shot
                 $display->buttons[] = array(
                     'id' => 'display_button_requestScreenShot',
-                    'url' => $this->urlFor($request,'display.screenshot.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.screenshot.form', ['id' => $display->displayId]),
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.requestscreenshot', ['id' => $display->displayId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.requestscreenshot', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'sort-group', 'value' => 3),
                         array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
@@ -830,12 +920,12 @@ class Display extends Base
                 // Collect Now
                 $display->buttons[] = array(
                     'id' => 'display_button_collectNow',
-                    'url' => $this->urlFor($request,'displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
                     'text' => __('Collect Now'),
                     'multi-select' => true,
                     'dataAttributes' => array(
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
                         array('name' => 'commit-method', 'value' => 'post'),
                         array('name' => 'sort-group', 'value' => 3),
                         array('name' => 'id', 'value' => 'display_button_collectNow'),
@@ -847,11 +937,11 @@ class Display extends Base
                 // Trigger webhook
                 $display->buttons[] = [
                     'id' => 'display_button_trigger_webhook',
-                    'url' => $this->urlFor($request,'displayGroup.trigger.webhook.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.trigger.webhook.form', ['id' => $display->displayGroupId]),
                     'text' => __('Trigger a web hook'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
                         ['name' => 'sort-group', 'value' => 3],
@@ -878,25 +968,25 @@ class Display extends Base
                 // Display Groups
                 $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
-                    'url' => $this->urlFor($request,'display.membership.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.membership.form', ['id' => $display->displayId]),
                     'text' => __('Display Groups')
                 );
 
                 // Permissions
                 $display->buttons[] = [
                     'id' => 'display_button_group_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_group_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'sort-group', 'value' => 4],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
                     ]
                 ];
@@ -912,13 +1002,13 @@ class Display extends Base
                 // Wake On LAN
                 $display->buttons[] = array(
                     'id' => 'display_button_wol',
-                    'url' => $this->urlFor($request,'display.wol.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.wol.form', ['id' => $display->displayId]),
                     'text' => __('Wake on LAN')
                 );
 
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_command',
-                    'url' => $this->urlFor($request,'displayGroup.command.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $display->displayGroupId]),
                     'text' => __('Send Command')
                 );
 
@@ -926,11 +1016,11 @@ class Display extends Base
 
                 $display->buttons[] = [
                     'id' => 'display_button_move_cms',
-                    'url' => $this->urlFor($request,'display.moveCms.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request, 'display.moveCms.form', ['id' => $display->displayId]),
                     'text' => __('Transfer to another CMS'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'display.moveCms', ['id' => $display->displayId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.moveCms', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
                         ['name' => 'text', 'value' => __('Transfer to another CMS')],
@@ -945,13 +1035,13 @@ class Display extends Base
                     'multiSelectOnly' => true, // Show button only on multi-select menu
                     'id' => 'display_button_set_bandwidth',
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple')],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple')],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
                         ['name' => 'text', 'value' => __('Set Bandwidth')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple.form')],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')],
                         ['name' => 'content-id-name', 'value' => 'displayId']
                     ]
                 ];
@@ -959,7 +1049,7 @@ class Display extends Base
                 if ($display->isCmsTransferInProgress) {
                     $display->buttons[] = [
                         'id' => 'display_button_move_cancel',
-                        'url' => $this->urlFor($request,'display.moveCmsCancel.form', ['id' => $display->displayId]),
+                        'url' => $this->urlFor($request, 'display.moveCmsCancel.form', ['id' => $display->displayId]),
                         'text' => __('Cancel CMS Transfer'),
                     ];
                 }
@@ -971,6 +1061,75 @@ class Display extends Base
         $this->getState()->setData($displays);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Displays on map
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     */
+    public function displayMap(Request $request, Response $response)
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $filter = $this->getFilters($parsedQueryParams);
+
+        // Get a list of displays
+        $displays = $this->displayFactory->query(null, $this->gridRenderFilter($filter, $parsedQueryParams));
+        $results = [];
+        $status = [
+            '1' => __('Up to date'),
+            '2' => __('Downloading'),
+            '3' => __('Out of date')
+        ];
+
+        // Get all Display Profiles
+        $displayProfiles = [];
+        foreach ($this->displayProfileFactory->query() as $displayProfile) {
+            $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
+        }
+
+        foreach ($displays as $display) {
+            // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
+            $displayProfileName = '';
+            try {
+                $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
+                $displayProfileName = $defaultDisplayProfile->name;
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
+            }
+
+            // Add in the display profile information
+            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
+
+            $properties = [
+                'display' => $display->display,
+                'status' => $display->mediaInventoryStatus ? $status[$display->mediaInventoryStatus] : __('Unknown'),
+                'mediaInventoryStatus' => $display->mediaInventoryStatus,
+                'orientation' => ucwords($display->orientation),
+                'displayId' => $display->getId(),
+                'licensed' => $display->licensed,
+                'loggedIn' => $display->loggedIn,
+                'displayProfile' => $display->displayProfile,
+                'resolution' => $display->resolution,
+                'lastAccessed' => $display->lastAccessed,
+            ];
+
+            if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
+                $properties['thumbnail'] = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
+            }
+
+            $longitude = ($display->longitude) ? $display->longitude : $this->getConfig()->getSetting('DEFAULT_LONG');
+            $latitude =  ($display->latitude) ? $display->latitude : $this->getConfig()->getSetting('DEFAULT_LAT');
+
+            $geo = new Point([(double)$longitude, (double)$latitude]);
+
+            $results[] = new Feature($geo, $properties);
+        }
+
+        return $response->withJson(new FeatureCollection($results));
     }
 
     /**
@@ -1000,10 +1159,11 @@ class Display extends Base
 
         // Get the settings from the profile
         $profile = $display->getSettings();
+        $displayTypes = $this->displayTypeFactory->query();
 
         // Get a list of timezones
         $timeZones = [];
-        foreach (DateFormatHelper::timezoneList()as $key => $value) {
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -1020,7 +1180,7 @@ class Display extends Base
         $playerVersions = [];
 
         // Daypart - Operating Hours
-        $dayPartId = $display->getSetting('dayPartId', null,['displayOnly' => true]);
+        $dayPartId = $display->getSetting('dayPartId', null, ['displayOnly' => true]);
         $profileDayPartId = $display->getDisplayProfile()->getSetting('dayPartId');
         $dayparts = [];
 
@@ -1057,19 +1217,31 @@ class Display extends Base
             }
         }
 
+        // A list of languages
+        // Build an array of supported languages
+        $languages = [];
+        $localeDir = PROJECT_ROOT . '/locale';
+        foreach (array_map('basename', glob($localeDir . '/*.mo')) as $lang) {
+            // Trim the .mo off the end
+            $lang = str_replace('.mo', '', $lang);
+            $languages[] = ['id' => $lang, 'value' => $lang];
+        }
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
             'displayProfile' => $display->getDisplayProfile(),
             'lockOptions' => json_decode($display->getDisplayProfile()->getSetting('lockOptions', '[]'), true),
             'layouts' => $layouts,
-            'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
+            'profiles' => $this->displayProfileFactory->query(null, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'dayParts' => $dayparts
+            'displayTypes' => $displayTypes,
+            'dayParts' => $dayparts,
+            'languages' => $languages,
         ]);
 
         return $this->render($request, $response);
@@ -1090,8 +1262,9 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($display))
+        if (!$this->getUser()->checkDeleteable($display)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'display-form-delete';
         $this->getState()->setData([
@@ -1254,10 +1427,115 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="languages",
+     *      in="formData",
+     *      description="An array of languages supported in this display location",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="displayProfileId",
      *      in="formData",
      *      description="The Display Settings Profile ID",
      *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayTypeId",
+     *      in="formData",
+     *      description="The Display Type ID of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="screenSize",
+     *      in="formData",
+     *      description="The screen size of this Display",
+     *      type="number",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="venueId",
+     *      in="formData",
+     *      description="The Venue ID of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="address",
+     *      in="formData",
+     *      description="The Location Address of this Display",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isMobile",
+     *      in="formData",
+     *      description="Is this Display mobile?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isOutdoor",
+     *      in="formData",
+     *      description="Is this Display Outdoor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="costPerPlay",
+     *      in="formData",
+     *      description="The Cost Per Play of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="impressionsPerPlay",
+     *      in="formData",
+     *      description="The Impressions Per Play of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="customId",
+     *      in="formData",
+     *      description="The custom ID (an Id of any external system) of this Display",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref1",
+     *      in="formData",
+     *      description="Reference 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref2",
+     *      in="formData",
+     *      description="Reference 2",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref3",
+     *      in="formData",
+     *      description="Reference 3",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref4",
+     *      in="formData",
+     *      description="Reference 4",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref5",
+     *      in="formData",
+     *      description="Reference 5",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -1319,6 +1597,17 @@ class Display extends Base
         $display->load();
 
         $display->description = $sanitizedParams->getString('description');
+        $display->displayTypeId = $sanitizedParams->getInt('displayTypeId');
+        $display->venueId = $sanitizedParams->getInt('venueId');
+        $display->address = $sanitizedParams->getString('address');
+        $display->isMobile = $sanitizedParams->getCheckbox('isMobile');
+        $languages = $sanitizedParams->getArray('languages');
+        if (empty($languages)) {
+            $display->languages = null;
+        } else {
+            $display->languages = implode(',', $languages);
+        }
+        $display->screenSize = $sanitizedParams->getInt('screenSize');
         $display->auditingUntil = $sanitizedParams->getDate('auditingUntil');
         $display->defaultLayoutId = $sanitizedParams->getInt('defaultLayoutId');
         $display->licensed = $sanitizedParams->getInt('licensed');
@@ -1339,6 +1628,15 @@ class Display extends Base
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
         $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
+        $display->isOutdoor = $sanitizedParams->getCheckbox('isOutdoor');
+        $display->costPerPlay = $sanitizedParams->getInt('costPerPlay');
+        $display->impressionsPerPlay = $sanitizedParams->getInt('impressionsPerPlay');
+        $display->customId = $sanitizedParams->getString('customId');
+        $display->ref1 = $sanitizedParams->getString('ref1');
+        $display->ref2 = $sanitizedParams->getString('ref2');
+        $display->ref3 = $sanitizedParams->getString('ref3');
+        $display->ref4 = $sanitizedParams->getString('ref4');
+        $display->ref5 = $sanitizedParams->getString('ref5');
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
@@ -1358,7 +1656,7 @@ class Display extends Base
         // Should we invalidate this display?
         if ($display->hasPropertyChanged('defaultLayoutId')) {
             $display->notify();
-        } else if ($sanitizedParams->getCheckbox('clearCachedData',['default' => 1]) == 1) {
+        } elseif ($sanitizedParams->getCheckbox('clearCachedData', ['default' => 1]) == 1) {
             // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
         }
@@ -1516,7 +1814,7 @@ class Display extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check if the array of ids is passed
-        if($sanitizedParams->getString('ids') == '') {
+        if ($sanitizedParams->getString('ids') == '') {
             throw new InvalidArgumentException(__('The array of ids is empty!'));
         }
 
@@ -1564,7 +1862,7 @@ class Display extends Base
         // convert bandwidth to kb based on form units
         if ($bandwidthLimitUnits == 'mb') {
             $bandwidthLimit = $bandwidthLimit * 1024;
-        } else if ($bandwidthLimitUnits == 'gb') {
+        } elseif ($bandwidthLimitUnits == 'gb') {
             $bandwidthLimit = $bandwidthLimit * 1024 * 1024;
         }
 
@@ -1700,7 +1998,7 @@ class Display extends Base
 
         if ($date != '') {
             $img
-                ->rectangle(0, 0, 110, 15, function($draw) {
+                ->rectangle(0, 0, 110, 15, function ($draw) {
                     $draw->background('#ffffff');
                 })
                 ->text($date, 10, 10);
@@ -1900,7 +2198,7 @@ class Display extends Base
             'id' => $display->displayId
         ]);
 
-        return $this->render($request,$response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -1922,8 +2220,7 @@ class Display extends Base
             // Should we test against the collection interval or the preset alert timeout?
             if ($display->alertTimeout == 0 && $display->clientType != '') {
                 $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
-            }
-            else {
+            } else {
                 $timeoutToTestAgainst = $globalTimeout;
             }
 
@@ -1950,7 +2247,7 @@ class Display extends Base
                     $event->save();
                 }
 
-                $dayPartId = $display->getSetting('dayPartId', null,['displayOverride' => true]);
+                $dayPartId = $display->getSetting('dayPartId', null, ['displayOverride' => true]);
                 $operatingHours = true;
 
                 if ($dayPartId !== null) {
@@ -1967,10 +2264,8 @@ class Display extends Base
 
                         // exceptions
                         foreach ($dayPart->exceptions as $exception) {
-
                             // check if we are on exception day and if so override the start and endtime accordingly
                             if ($exception['day'] == Carbon::now()->format('D')) {
-
                                 $exceptionsStartTime = explode(':', $exception['start']);
                                 $startTime = Carbon::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
 
@@ -1985,7 +2280,6 @@ class Display extends Base
                         } else {
                             $operatingHours = false;
                         }
-
                     } catch (NotFoundException $e) {
                         $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
                     }
@@ -1999,9 +2293,12 @@ class Display extends Base
 
                     // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
                     if ($operatingHours) {
-                        $subject = sprintf(__("Alert for Display %s"), $display->display);
-                        $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId,
-                            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat()));
+                        $subject = sprintf(__('Alert for Display %s'), $display->display);
+                        $body = sprintf(
+                            __('Display ID %d is offline since %s.'),
+                            $display->displayId,
+                            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat())
+                        );
 
                         // Add to system
                         $notification = $this->notificationFactory->createSystemNotification($subject, $body, Carbon::now());
@@ -2015,8 +2312,7 @@ class Display extends Base
                     } else {
                         $this->getLog()->info('Not sending email down alert for Display - ' . $display->display . ' we are outside of its operating hours');
                     }
-
-                } else if ($displayOffline) {
+                } elseif ($displayOffline) {
                     $this->getLog()->info('Not sending an email for offline display - emailAlert = ' . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
                 }
             }
@@ -2174,20 +2470,23 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         $layoutId = $this->getSanitizer($request->getParams())->getInt('layoutId');
 
         $layout = $this->layoutFactory->getById($layoutId);
 
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
         $display->defaultLayoutId = $layoutId;
         $display->save(['validate' => false]);
-        if ($display->hasPropertyChanged('defaultLayoutId'))
+        if ($display->hasPropertyChanged('defaultLayoutId')) {
             $display->notify();
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -2228,7 +2527,6 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
-
     }
 
     /**
@@ -2272,7 +2570,6 @@ class Display extends Base
         $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode, 3);
 
         if ($result) {
-
             // get the new CMS Address and Key from the form.
             $newCmsAddress = $sanitizedParams->getString('newCmsAddress');
             $newCmsKey = $sanitizedParams->getString('newCmsKey');
@@ -2294,7 +2591,6 @@ class Display extends Base
             $display->newCmsAddress = $newCmsAddress;
             $display->newCmsKey = $newCmsKey;
             $display->save();
-
         } else {
             throw new InvalidArgumentException(__('Invalid Two Factor Authentication Code'), 'twoFactorCode');
         }
@@ -2360,10 +2656,11 @@ class Display extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addViaCodeForm(Request $request, Response $response) {
+    public function addViaCodeForm(Request $request, Response $response)
+    {
         $this->getState()->template = 'display-form-addViaCode';
 
-        return $this->render($request,$response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -2392,14 +2689,17 @@ class Display extends Base
             // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.
             // The Player will then call the service with the same code to retrieve the CMS details.
             // On success, the details will be removed from the Authentication Service.
-            $guzzleRequest = $guzzle->request('POST', 'https://auth.signlicence.co.uk/addDetails',
+            $guzzleRequest = $guzzle->request(
+                'POST',
+                'https://auth.signlicence.co.uk/addDetails',
                 $this->getConfig()->getGuzzleProxy([
                     'form_params' => [
                         'user_code' => $user_code,
                         'cmsAddress' => $cmsAddress,
                         'cmsKey' => $cmsKey,
                     ]
-                ]));
+                ])
+            );
 
             $data = json_decode($guzzleRequest->getBody(), true);
 

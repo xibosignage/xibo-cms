@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,26 +19,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Event;
 
-use Xibo\Entity\Campaign;
+use Xibo\Entity\DayPart;
 
-class CampaignLoadEvent extends Event
+class DayPartDeleteEvent extends Event
 {
-    public static $NAME = 'campaign.load.event';
-    /**
-     * @var Campaign
-     */
-    private $campaign;
+    public static $NAME = 'dayPart.delete.event';
 
-    public function __construct(Campaign $campaign)
+    private $dayPart;
+
+    public function __construct(DayPart $dayPart)
     {
-        $this->campaign = $campaign;
+        $this->dayPart = $dayPart;
     }
 
-    public function getCampaign(): Campaign
+    public function getDayPart(): DayPart
     {
-        return $this->campaign;
+        return $this->dayPart;
     }
 }

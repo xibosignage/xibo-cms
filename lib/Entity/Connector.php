@@ -72,6 +72,9 @@ class Connector implements \JsonSerializable
         $this->title = $connector->getTitle();
         $this->description = $connector->getDescription();
         $this->thumbnail = $connector->getThumbnail();
+        if (empty($this->thumbnail)) {
+            $this->thumbnail = 'theme/default/img/connectors/placeholder.png';
+        }
         return $this;
     }
 

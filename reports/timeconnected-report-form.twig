@@ -62,7 +62,7 @@
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
                 <div class="pull-right p-3">
                     <div>
                         <div class="note-box" style="background-color: #03a9f4;"></div>
@@ -125,7 +125,7 @@
                                 {id: "group", label: transGroups},
                                 {id: "display", label: transDisplays}
                             ] %}
-                            {{ inline.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: defaults.displayGroups, display: defaults.displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
+                            {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, displayGroupIds, {group: defaults.displayGroups, display: defaults.displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
@@ -179,10 +179,10 @@
                         return;
                     }
 
-                    $.each(response.extra.table.timeConnected, function(index, displayStat) {
+                    $.each(response.table.timeConnected, function(index, displayStat) {
 
                         var $displayHeader = $('<tr>');
-                        $.each(response.extra.table.displays[index], function(i, displayName) {
+                        $.each(response.table.displays[index], function(i, displayName) {
                             $displayHeader.append($('<th colspan="2">').text(displayName));
                             $displayHeader.appendTo('#records_table').html();
                         });

@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -33,6 +33,7 @@ use Xibo\Entity\ApplicationScope;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
+use Xibo\Factory\ConnectorFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Session;
@@ -71,6 +72,9 @@ class Applications extends Base
     /** @var PoolInterface */
     private $pool;
 
+    /** @var \Xibo\Factory\ConnectorFactory */
+    private $connectorFactory;
+
     /**
      * Set common dependencies.
      * @param Session $session
@@ -78,15 +82,25 @@ class Applications extends Base
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      * @param $applicationScopeFactory
      * @param UserFactory $userFactory
+     * @param $pool
+     * @param \Xibo\Factory\ConnectorFactory $connectorFactory
      */
-    public function __construct($session, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, $pool)
-    {
+    public function __construct(
+        $session,
+        $applicationFactory,
+        $applicationRedirectUriFactory,
+        $applicationScopeFactory,
+        $userFactory,
+        $pool,
+        ConnectorFactory $connectorFactory
+    ) {
         $this->session = $session;
         $this->applicationFactory = $applicationFactory;
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->userFactory = $userFactory;
         $this->pool = $pool;
+        $this->connectorFactory = $connectorFactory;
     }
 
     /**
@@ -99,7 +113,27 @@ class Applications extends Base
      */
     public function displayPage(Request $request, Response $response)
     {
+        // Load all connectors and output any javascript.
+        $connectorJavaScript = [];
+        foreach ($this->connectorFactory->query(['isVisible' => 1]) as $connector) {
+            try {
+                // Create a connector, add in platform settings and register it with the dispatcher.
+                $connectorObject = $this->connectorFactory->create($connector);
+
+                $settingsFormJavaScript = $connectorObject->getSettingsFormJavaScript();
+                if (!empty($settingsFormJavaScript)) {
+                    $connectorJavaScript[] = $settingsFormJavaScript;
+                }
+            } catch (\Exception $exception) {
+                // Log and ignore.
+                $this->getLog()->error('Incorrectly configured connector. e=' . $exception->getMessage());
+            }
+        }
+
         $this->getState()->template = 'applications-page';
+        $this->getState()->setData([
+            'connectorJavaScript' => $connectorJavaScript,
+        ]);
 
         return $this->render($request, $response);
     }
@@ -404,73 +438,6 @@ class Applications extends Base
         }
 
         $application->userId = $this->getUser()->userId;
-        $application->save();
-
-        // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Added %s'), $application->name),
-            'data' => $application,
-            'id' => $application->key
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Form to register a new application for Advertisement.
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function addDoohForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'applications-form-add-dooh';
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('Services', 'Register')
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Register a new application with OAuth
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function addDooh(Request $request, Response $response)
-    {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $application = $this->applicationFactory->create();
-        $application->name = $sanitizedParams->getString('name');
-        $application->userId = $sanitizedParams->getInt('userId');
-
-        if ($application->name == '') {
-            throw new InvalidArgumentException(__('Please enter Application name'), 'name');
-        }
-
-        if ($application->userId == null) {
-            throw new InvalidArgumentException(__('Please select user'), 'userId');
-        }
-
-        if ($this->userFactory->getById($application->userId)->userTypeId != 4) {
-            throw new InvalidArgumentException(__('Invalid user type'), 'userTypeId');
-        }
-
-        // The dooh application is always confidential, and always client credentials
-        $application->clientCredentials = 1;
-        $application->isConfidential = 1;
-
-        // Add the all scope
-        $application->assignScope($this->applicationScopeFactory->getById('all'));
-
-        // Save
         $application->save();
 
         // Return

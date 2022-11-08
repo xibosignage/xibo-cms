@@ -1,0 +1,26 @@
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set layout = layout.layout %}
+    {% trans %}Remove {{ layout }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#campaignRemoveLayout").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="campaignRemoveLayout" class="XiboForm form-horizontal" method="delete"
+                  data-submit-call-back="refreshLayoutAssignmentsTable"
+                  action="{{ url_for("campaign.remove.layout", {id: campaign.campaignId}) }}?layoutId={{ layout.layoutId }}&displayOrder={{ layout.displayOrder }}">
+                {% set message %}{% trans "Are you sure you want remove this layout from the campaign?" %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

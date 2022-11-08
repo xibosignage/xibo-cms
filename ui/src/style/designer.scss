@@ -1,3 +1,24 @@
+/*!
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 // Imports
 @import "variables";
 @import "mixins";
@@ -6,7 +27,7 @@
 $designer-color-background: $xibo-color-blue-lightest;
 $designer-colour-layout: $xibo-color-blue-lighter;
 $designer-colour-region: $xibo-color-orange;
-$designer-colour-widget: $xibo-color-green; 
+$designer-colour-widget: $xibo-color-green;
 
 $designer-module-bg-color: $xibo-color-white;
 $designer-module-border-color: $xibo-color-black;
@@ -112,7 +133,7 @@ $inline-editing-z-index: 1040;
         flex-flow: row;
         justify-content: space-between;
     }
-    
+
     .flex-v {
         display: flex;
         flex: 1;
@@ -181,7 +202,7 @@ $inline-editing-z-index: 1040;
         .hide-closed {
             display: none;
         }
-    
+
         .hide-opened {
             display: inline;
         }
@@ -241,60 +262,7 @@ $inline-editing-z-index: 1040;
     }
 }
 
-/* Page content wrapper */
-#content-wrapper .page-content > .row {
-    > div {
-        margin: 0;
-    }
-
-    &.header.header-side {
-        height: 50px;
-        margin-bottom: 0;
-
-        .navbar-toggler-side {
-            margin-top: 8px;
-            margin-right: 8px;
-        }
-
-        .user {
-            & > .item {
-                width: auto;
-                height: 50px;
-                padding-right: 16px;
-
-                & > a {
-                    padding: 7px 0;
-                }
-
-                img.nav-avatar {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 2px;
-                }
-            }
-        }
-
-        .xibo-logo-container {
-            margin-left: 50%;
-            transform: translateX(-50%);
-
-            .page {
-                width: auto;
-                padding: 0;
-
-                .xibo-logo {
-                    height: 30px;
-                    margin: 10px 0;
-                }
-            }
-        }
-
-        .user-notif > .item > a {
-            padding: 5px 0;
-        }
-    }
-}
-
+@import "header-center-logo";
 
 /* Main Editor */
 #layout-editor {
@@ -337,7 +305,7 @@ $inline-editing-z-index: 1040;
         background: $xibo-color-white;
         @include border-radius(6px);
     }
-    
+
     /* Handle */
     ::-webkit-scrollbar-thumb {
         background: $xibo-color-blue-darker;
@@ -403,7 +371,7 @@ $inline-editing-z-index: 1040;
 @media (max-width: 768px) {
     #layout-editor {
         margin-top: 50px;
-    } 
+    }
 }
 
 /* Layout timeline */
@@ -584,7 +552,7 @@ $inline-editing-z-index: 1040;
             line-height: 1.2rem;
         }
     }
-    
+
     /* Designer Region */
     .designer-region {
         background: $region-main-bg-color;
@@ -778,7 +746,7 @@ $inline-editing-z-index: 1040;
         .widgetName, .widgetSubType {
             color: $timeline-ghost-fg-color;
             margin-left: 4px;
-        }    
+        }
     }
 
     .designer-widget-sortable-highlight {
@@ -989,10 +957,10 @@ $inline-editing-z-index: 1040;
                 cursor: pointer;
                 padding: 2px 3px;
             }
-            
+
             &:not(.empty):hover {
                 @include set-transparent-color(background, $xibo-color-white, 0.5);
-                
+
                 &::after {
                     @include box-shadow(inset 0 0 2px 1px $xibo-color-black);
                 }
@@ -1018,7 +986,7 @@ $inline-editing-z-index: 1040;
         #inline-editor-templates, #fullscreenBtn, #goBackBtn {
             z-index: calc(#{$designer-overlay-z-index} + 10);
         }
-    
+
         #layout-viewer {
             position: fixed; /* Stay in place */
             z-index: calc(#{$designer-overlay-z-index} + 10);
@@ -1032,7 +1000,7 @@ $inline-editing-z-index: 1040;
         .hide-on-fs {
             display: none;
         }
-    
+
         .show-on-fs {
             display: inline-block;
         }
@@ -1051,7 +1019,7 @@ $inline-editing-z-index: 1040;
         text-align: center;
         cursor: pointer;
         width: 100%;
-        height: 100%; 
+        height: 100%;
         @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 0.2);
         @include box-shadow(inset $viewer-inline-editor-overlay-bg-colour 0px 0px 10px 0px);
 
@@ -1062,7 +1030,7 @@ $inline-editing-z-index: 1040;
         .edit-btn-container {
             display: table;
             width: 100%;
-            height: 100%; 
+            height: 100%;
 
             #edit-btn {
                 font-size: 4.3rem;
@@ -1070,7 +1038,7 @@ $inline-editing-z-index: 1040;
                 @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.8);
                 vertical-align: middle;
                 display: table-cell;
-                
+
                 &:hover {
                     @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.9);
                 }
@@ -1238,7 +1206,7 @@ $inline-editing-z-index: 1040;
                 .row-special {
                     margin-right: -5px;
                     margin-left: -5px;
-                    
+
                     .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
                         padding-left: 3px;
                         padding-right: 3px;
@@ -1270,7 +1238,7 @@ $inline-editing-z-index: 1040;
                         max-width: 120px;
                     }
                 }
-                
+
                 #worldClocksContainer {
                     .form-group {
                         padding: 2px 0;
@@ -1353,7 +1321,7 @@ $inline-editing-z-index: 1040;
                             min-height: 90px;
                             margin: 0;
                             background-color: initial;
-                            
+
                             ul {
                                 height: 100%;
                             }
@@ -1409,7 +1377,7 @@ $inline-editing-z-index: 1040;
                     width: 810px;
                     z-index: 3;
                 }
-            } 
+            }
         }
     }
 }
@@ -1471,7 +1439,7 @@ $inline-editing-z-index: 1040;
         .hide-on-fs {
             display: none;
         }
-    
+
         .show-on-fs {
             display: inline-block;
         }
@@ -1599,25 +1567,25 @@ $inline-editing-z-index: 1040;
             background: $widget-hover-color;
             visibility: visible;
         }
-        
+
         #layout-timeline .designer-widget.ui-droppable-active.ui-droppable-hover,
         #layout-timeline .designer-widget.ui-droppable-active:hover {
             background: darken($widget-hover-color, 10%);
         }
-        
+
         #layout-timeline .designer-region.to-sort .designer-widget {
             background: $timeline-widget-to-sort-bg-color !important;
         }
-        
+
         #layout-timeline .designer-region.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-        
+
             .designer-region-overlay {
                 background: $region-hover-color;
                 display: block;
                 opacity: 0.75;
             }
-        
+
             &.ui-droppable-hover, &:hover {
                 .designer-region-overlay {
                     background: darken($region-hover-color, 20%);
@@ -1663,7 +1631,7 @@ $inline-editing-z-index: 1040;
     height: calc(100vh - 130px);
     width: 100%;
     position: absolute;
-    
+
     .loading-icon {
         position: relative;
         text-align: center;
@@ -1784,7 +1752,7 @@ $inline-editing-z-index: 1040;
             ::-webkit-scrollbar-track {
                 @include border-radius(0);
             }
-            
+
             /* Handle */
             ::-webkit-scrollbar-thumb {
                 @include border-radius(0);
@@ -1905,7 +1873,7 @@ $inline-editing-z-index: 1040;
             }
         }
     }
-    
+
     #actions-drawer-toggle {
         transition: background-color 1s ease 0s;
         background-color: $drawer-toggle-bg-color;

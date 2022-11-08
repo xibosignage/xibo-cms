@@ -28,7 +28,9 @@
     <h3>Pixabay <small> - Stunning free images & royalty free stock</small></h3>
     <p>Images and Videos are available under the <a href="https://pixabay.com/service/license/" target="_blank">Pixabay license</a>.</p>
 
-    {% if not platformProvidesSettings %}
+    {% if interface.isProviderSetting("apiKey") %}
+        <p>Your platform provider has configured Pixabay for you.</p>
+    {% else %}
         <p>An API key is needed to enable this connector. Sign up for a Pixabay account and then use the API key shown
         on the <a href="https://pixabay.com/api/docs/" target="_blank">documentation</a> page.</p>
 

@@ -81,9 +81,11 @@
     "jquery-ui": "~1.13.2",
     "jquery-validation": "~1.19.5",
     "jstree": "^3.3.10",
-    "leaflet": "^1.6.0",
+    "leaflet": "^1.7.1",
     "leaflet-draw": "^1.0.4",
-    "leaflet-search": "^2.9.8",
+    "leaflet-search": "^3.0.3",
+    "leaflet-easyprint": "^2.1.9",
+    "leaflet.markercluster": "^1.4.1",
     "less": "^3.11.1",
     "less-loader": "^4.1.0",
     "masonry-layout": "^4.2.2",
@@ -108,7 +110,7 @@
     "underscore": "^1.12.1",
     "url-loader": "^1.1.2",
     "webpack": "^5.26.1",
-    "webpack-bundle-analyzer": "^3.6.1",
+    "webpack-bundle-analyzer": "^4.6.1",
     "webpack-cli": "^4.5.0",
     "webpack-merge": "^4.2.2"
   }

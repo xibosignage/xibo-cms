@@ -109,6 +109,11 @@
                                             <th>{% trans "Tags" %}</th>
                                         {% endif %}
                                         <th>{% trans "Sharing" %}</th>
+                                        <th>{% trans "Reference 1" %}</th>
+                                        <th>{% trans "Reference 2" %}</th>
+                                        <th>{% trans "Reference 3" %}</th>
+                                        <th>{% trans "Reference 4" %}</th>
+                                        <th>{% trans "Reference 5" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th class="rowMenu"></th>
@@ -181,6 +186,11 @@
                     responsivePriority: 10,
                     "render": dataTableCreatePermissions
                 },
+                { "data": "ref1", "visible": false, responsivePriority: 5},
+                { "data": "ref2", "visible": false, responsivePriority: 5},
+                { "data": "ref3", "visible": false, responsivePriority: 5},
+                { "data": "ref4", "visible": false, responsivePriority: 5},
+                { "data": "ref5", "visible": false, responsivePriority: 5},
                 { "data": "createdDt", "visible": false, responsivePriority: 5 },
                 { "data": "modifiedDt", "visible": false, responsivePriority: 5 },
                 {

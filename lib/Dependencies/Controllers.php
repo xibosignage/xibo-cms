@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -50,7 +50,8 @@ class Controllers
                     $c->get('applicationRedirectUriFactory'),
                     $c->get('applicationScopeFactory'),
                     $c->get('userFactory'),
-                    $c->get('pool')
+                    $c->get('pool'),
+                    $c->get('connectorFactory')
                 );
 
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -68,7 +69,8 @@ class Controllers
                     $c->get('campaignFactory'),
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('displayGroupFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -152,6 +154,7 @@ class Controllers
                     $c->get('playerActionService'),
                     $c->get('displayFactory'),
                     $c->get('displayGroupFactory'),
+                    $c->get('displayTypeFactory'),
                     $c->get('layoutFactory'),
                     $c->get('displayProfileFactory'),
                     $c->get('displayEventFactory'),
