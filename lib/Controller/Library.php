@@ -928,14 +928,17 @@ class Library extends Base
         }
 
         // Check
-        $this->getDispatcher()->dispatch(MediaFullLoadEvent::$NAME, new MediaFullLoadEvent($media));
+        $this->getDispatcher()->dispatch(new MediaFullLoadEvent($media), MediaFullLoadEvent::$NAME);
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $params->getCheckbox('forceDelete') == 0) {
             throw new InvalidArgumentException(__('This library item is in use.'));
         }
 
-        $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media, null, $params->getCheckbox('purge')));
+        $this->getDispatcher()->dispatch(
+            new MediaDeleteEvent($media, null, $params->getCheckbox('purge')),
+            MediaDeleteEvent::$NAME
+        );
 
         // Delete
         $media->delete();
@@ -1168,6 +1171,7 @@ class Library extends Base
         }
 
         $media->enableStat = ($media->enableStat == null) ? $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT') : $media->enableStat;
+        $media->tagsString = $media->getTagString();
 
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
@@ -1282,7 +1286,13 @@ class Library extends Base
         $media->retired = $sanitizedParams->getCheckbox('retired');
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+
+            $media->updateTagLinks($tags);
         }
 
         $media->enableStat = $sanitizedParams->getString('enableStat');
@@ -2060,6 +2070,8 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
+        $media->tagsString = $media->getTagString();
+
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
@@ -2135,14 +2147,18 @@ class Library extends Base
         }
 
         // Load the media for Copy
-        $media->load();
         $media = clone $media;
 
         // Set new Name and tags
         $media->name = $sanitizedParams->getString('name');
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+            $media->updateTagLinks($tags);
         }
 
         // Set the Owner to user making the Copy
@@ -2201,7 +2217,7 @@ class Library extends Base
     {
         // Get the Media
         $media = $this->mediaFactory->getById($id);
-        $this->getDispatcher()->dispatch(MediaFullLoadEvent::$NAME, new MediaFullLoadEvent($media));
+        $this->getDispatcher()->dispatch(new MediaFullLoadEvent($media), MediaFullLoadEvent::$NAME);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($media)) {

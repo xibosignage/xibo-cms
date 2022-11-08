@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -370,7 +370,7 @@ class Layout extends Base
 
             $this->getLog()->debug('Dispatching event. ' . $event->getName());
             try {
-                $this->getDispatcher()->dispatch($event->getName(), $event);
+                $this->getDispatcher()->dispatch($event, $event->getName());
             } catch (\Exception $exception) {
                 $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
                 $this->getLog()->debug($exception->getTraceAsString());
@@ -396,7 +396,7 @@ class Layout extends Base
 
             $layout->description = $description;
             $layout->code = $code;
-            $layout->tags = $tags;
+            $layout->updateTagLinks($tags);
 
             @unlink($event->getFilePath());
         } else {
@@ -416,7 +416,7 @@ class Layout extends Base
                 $layout->layout = $name;
                 $layout->description = $description;
                 $layout->code = $code;
-                $layout->tags = $tags;
+                $layout->updateTagLinks($tags);
 
                 $this->getLog()->debug('add: loaded and cloned, about to setOwner. templateId: ' . $templateId);
 
@@ -674,18 +674,12 @@ class Layout extends Base
     function edit(Request $request, Response $response, $id)
     {
         $layout = $this->layoutFactory->getById($id);
-        $isTemplate = false;
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $folderChanged = false;
         $nameChanged = false;
 
         // check if we're dealing with the template
-        $currentTags = explode(',', $layout->tags);
-        foreach ($currentTags as $tag) {
-            if ($tag === 'template') {
-                $isTemplate = true;
-            }
-        }
+        $isTemplate = $layout->hasTag('template');
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -700,24 +694,18 @@ class Layout extends Base
         $layout->description = $sanitizedParams->getString('description');
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+            $layout->updateTagLinks($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
+        // if it was not a template, and user added template tag, throw an error.
+        if (!$isTemplate && $layout->hasTag('template')) {
+            throw new InvalidArgumentException(__('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.'), 'tags');
         }
 
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
         $layout->code = $sanitizedParams->getString('code');
         $layout->folderId = $sanitizedParams->getInt('folderId', ['default' => $layout->folderId]);
-
-        $tags = $sanitizedParams->getString('tags');
-        $tagsArray = explode(',', $tags);
-
-        if (!$isTemplate) {
-            foreach ($tagsArray as $tag) {
-                if ($tag === 'template') {
-                    throw new InvalidArgumentException(__('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.'), 'tags');
-                }
-            }
-        }
 
         if ($layout->hasPropertyChanged('folderId')) {
             if ($layout->folderId === 1) {
@@ -1932,6 +1920,7 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
+            'tagString' => $layout->getTagString(),
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
 
@@ -2088,16 +2077,16 @@ class Layout extends Base
         }
 
         // Load the layout for Copy
-        $originalLayout->load(['loadTags' => false]);
+        $originalLayout->load();
 
         // Clone
         $layout = clone $originalLayout;
 
-        $this->getLog()->debug('Tag values from original layout: ' . $originalLayout->tags);
+        $this->getLog()->debug('Tag values from original layout: ' . $originalLayout->getTagString());
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
-        $layout->replaceTags($this->tagFactory->tagsFromString($originalLayout->tags));
+        $layout->updateTagLinks($originalLayout->tags);
         $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.
@@ -2154,7 +2143,7 @@ class Layout extends Base
 
         $allRegions = array_merge($layout->regions, $layout->drawers);
 
-        // this will adjusted source/target Ids in the copied layout
+        // this will adjust source/target Ids in the copied layout
         $layout->copyActions($layout, $originalLayout);
 
         // Sub-Playlist

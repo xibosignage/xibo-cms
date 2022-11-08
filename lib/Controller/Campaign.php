@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -457,10 +457,19 @@ class Campaign extends Base
         $campaign = $this->campaignFactory->create(
             $sanitizedParams->getString('name'),
             $this->getUser()->userId,
-            $sanitizedParams->getString('tags'),
             $folder->getId()
         );
         $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+
+            $campaign->updateTagLinks($tags);
+        }
 
         // Cycle based playback
         $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
@@ -507,6 +516,7 @@ class Campaign extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
+        $campaign->tagsString = $campaign->getTagString();
 
         if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
@@ -640,7 +650,7 @@ class Campaign extends Base
         // Assign layouts?
         if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
             // Fully decorate our Campaign
-            $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+            $this->getDispatcher()->dispatch(new CampaignLoadEvent($campaign), CampaignLoadEvent::$NAME);
 
             // Remove all we've currently got assigned, keeping track of them for sharing check
             $originalLayoutAssignments = array_map(function ($element) {
@@ -663,15 +673,16 @@ class Campaign extends Base
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
-            $campaign->save([
-                'saveTags' => true
-            ]);
-        } else {
-            $campaign->save([
-                'saveTags' => false
-            ]);
+            if (is_array($parsedRequestParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($parsedRequestParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($parsedRequestParams->getString('tags'));
+            }
+
+            $campaign->updateTagLinks($tags);
         }
+
+        $campaign->save();
 
         // Return
         $this->getState()->hydrate([
@@ -698,8 +709,9 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($campaign))
+        if (!$this->getUser()->checkDeleteable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'campaign-form-delete';
         $this->getState()->setData([
@@ -989,6 +1001,8 @@ class Campaign extends Base
         foreach ($layouts as $layout) {
             $newCampaign->assignLayout($layout);
         }
+
+        $newCampaign->updateTagLinks($this->tagFactory->tagsFromString($campaign->getTagString()));
 
         $newCampaign->save();
 

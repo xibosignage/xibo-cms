@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1090,6 +1090,7 @@ class Display extends Base
 
         // We have permission - load
         $display->load();
+        $display->tagsString = $display->getTagString();
 
         // Dates
         $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
@@ -1443,9 +1444,14 @@ class Display extends Base
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            // Set the original tags
-            $display->setOriginalValue('tags', $this->tagFactory->tagsFromString($display->tags));
-            $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            $display->setOriginalValue('tags', $display->tags);
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+
+            $display->tags = $tags;
         }
 
         if ($display->auditingUntil !== null) {

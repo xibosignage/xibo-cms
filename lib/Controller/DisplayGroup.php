@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -484,6 +484,8 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
+        $displayGroup->tagsString = $displayGroup->getTagString();
+
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
@@ -682,7 +684,13 @@ class DisplayGroup extends Base
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+
+            $displayGroup->updateTagLinks($tags);
             $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
             $displayGroup->dynamicCriteriaExactTags = $sanitizedParams->getCheckbox('exactTags');
             $displayGroup->dynamicCriteriaTagsLogicalOperator = $sanitizedParams->getString('logicalOperator');
@@ -815,8 +823,9 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
+
         $displayGroup->load();
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch( new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
         $displayGroup->description = $parsedRequestParams->getString('description');
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
@@ -833,7 +842,13 @@ class DisplayGroup extends Base
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
+            if (is_array($parsedRequestParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($parsedRequestParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($parsedRequestParams->getString('tags'));
+            }
+
+            $displayGroup->updateTagLinks($tags);
             $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
             $displayGroup->dynamicCriteriaExactTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getCheckbox('exactTags') : 0;
             $displayGroup->dynamicCriteriaTagsLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperator') : 'OR';
@@ -1113,7 +1128,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->load();
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch( new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
@@ -1309,7 +1324,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->load();
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
         if ($displayGroup->isDynamic == 1) {
             throw new InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
@@ -1353,7 +1368,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->load();
 
         $this->getState()->template = 'displaygroup-form-media';
@@ -1426,7 +1441,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->load();
 
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
@@ -1519,14 +1534,13 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->load();
 
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
-
             $displayGroup->unassignMedia($this->mediaFactory->getById($mediaId));
         }
 
@@ -1563,7 +1577,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->load();
 
         $this->getState()->template = 'displaygroup-form-layouts';
@@ -1635,7 +1649,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->load();
 
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
@@ -1726,7 +1740,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->load();
 
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
@@ -1986,7 +2000,7 @@ class DisplayGroup extends Base
         // Check to see if this layout is assigned to this display group.
         if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
             // Assign
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
             $displayGroup->load();
             $displayGroup->assignLayout($layout);
 
@@ -2184,7 +2198,7 @@ class DisplayGroup extends Base
         // Check to see if this layout is assigned to this display group.
         if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
             // Assign
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
             $displayGroup->load();
             $displayGroup->assignLayout($layout);
             // Don't notify, this player action will cause a download.
@@ -2458,6 +2472,7 @@ class DisplayGroup extends Base
         $new->displayGroup = $sanitizedParams->getString('displayGroup');
         $new->description = $sanitizedParams->getString('description');
         $new->setOwner($this->getUser()->userId);
+        $new->clearTags();
 
         // handle display group members
         if (!$copyMembers) {
@@ -2471,8 +2486,8 @@ class DisplayGroup extends Base
         }
 
         // handle tags
-        if (!$copyTags) {
-            $new->clearTags();
+        if ($copyTags) {
+            $new->updateTagLinks($displayGroup->tags);
         }
 
         $new->save();

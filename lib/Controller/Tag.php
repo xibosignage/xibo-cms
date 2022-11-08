@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -212,11 +212,6 @@ class Tag extends Base
             /* @var \Xibo\Entity\Tag $tag */
 
             if ($this->isApi($request)) {
-                $tag->excludeProperty('layouts');
-                $tag->excludeProperty('playlists');
-                $tag->excludeProperty('campaigns');
-                $tag->excludeProperty('medias');
-                $tag->excludeProperty('displayGroups');
                 continue;
             }
 
@@ -249,6 +244,12 @@ class Tag extends Base
                     ]
                 ];
             }
+
+            $tag->buttons[] = [
+                'id' => 'tag_button_usage',
+                'url' => $this->urlFor($request,'tag.usage.form', ['id' => $tag->tagId]),
+                'text' => __('Usage')
+            ];
         }
 
         $this->getState()->template = 'grid';
@@ -429,6 +430,36 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+    public function usageForm(Request $request, Response $response, $id)
+    {
+        $tag = $this->tagFactory->getById($id);
+
+        $this->getState()->template = 'tag.usage.form';
+        $this->getState()->setData([
+            'tag' => $tag
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function usage(Request $request, Response $response, $id)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $filter = [
+            'tagId' => $id,
+        ];
+
+        $entries = $this->tagFactory->getAllLinks($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->tagFactory->countLast();
+        $this->getState()->setData($entries);
+
+        return $this->render($request, $response);
+    }
+
     /**
      * Edit a Tag
      *
@@ -451,7 +482,6 @@ class Tag extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $tag = $this->tagFactory->getById($id);
-        $tag->load();
 
         if ($tag->isSystem === 1) {
             throw new AccessDeniedException(__('Access denied System tags cannot be edited'));
@@ -575,54 +605,11 @@ class Tag extends Base
         }
 
         $tag = $this->tagFactory->getById($id);
-        $tag->load();
 
         if ($tag->isSystem === 1) {
             throw new AccessDeniedException(__('Access denied System tags cannot be deleted'));
         }
-
-        // get all the linked items to the tag we want to delete
-        $linkedLayoutsIds = $tag->layouts;
-        $linkedDisplayGroupsIds = $tag->displayGroups;
-        $linkedCampaignsIds = $tag->campaigns;
-        $linkedPlaylistsIds = $tag->playlists;
-        $linkedMediaIds = $tag->medias;
-
-        // go through each linked layout and unassign the tag
-        foreach($linkedLayoutsIds as $layoutId => $value) {
-            $layout = $this->layoutFactory->getById($layoutId);
-            $tag->unassignLayout($layoutId);
-            $layout->save();
-        }
-
-        // go through each linked displayGroup and unassign the tag
-        foreach ($linkedDisplayGroupsIds as $displayGroupId => $value) {
-            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $tag->unassignDisplayGroup($displayGroupId);
-            $displayGroup->save();
-        }
-
-        // go through each linked campaign and unassign the tag
-        foreach ($linkedCampaignsIds as $campaignId => $value) {
-            $campaign = $this->campaignFactory->getById($campaignId);
-            $tag->unassignCampaign($campaignId);
-            $campaign->save();
-        }
-
-        // go through each linked playlist and unassign the tag
-        foreach ($linkedPlaylistsIds as $playlistId => $value) {
-            $playlist = $this->playlistFactory->getById($playlistId);
-            $tag->unassignPlaylist($playlistId);
-            $playlist->save();
-        }
-
-        // go through each linked media and unassign the tag
-        foreach($linkedMediaIds as $mediaId => $value) {
-            $media = $this->mediaFactory->getById($mediaId);
-            $tag->unassignMedia($mediaId);
-            $media->save();
-        }
-
+// TODO event
         // finally call delete tag, which also removes the links from lktag tables
         $tag->delete();
 
