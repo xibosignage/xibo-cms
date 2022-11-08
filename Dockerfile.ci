@@ -175,7 +175,7 @@ COPY --from=webpack /app/modules /var/www/cms/modules
 COPY . /var/www/cms
 
 # OpenOOH specification
-ADD https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json /var/www/cms/openooh
+ADD https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json /var/www/cms/openooh/specification.json
 
 # Run entry
 CMD ["/entrypoint.sh"]
