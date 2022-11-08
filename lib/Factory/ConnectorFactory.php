@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 use Illuminate\Support\Str;
+use Psr\Container\ContainerInterface;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Connector\ConnectorInterface;
 use Xibo\Entity\Connector;
@@ -45,16 +46,25 @@ class ConnectorFactory extends BaseFactory
     /** @var \Xibo\Service\JwtServiceInterface */
     private $jwtService;
 
+    /** @var \Psr\Container\ContainerInterface */
+    private $container;
+
     /**
      * @param \Stash\Interfaces\PoolInterface $pool
      * @param \Xibo\Service\ConfigServiceInterface $config
      * @param \Xibo\Service\JwtServiceInterface $jwtService
+     * @param \Psr\Container\ContainerInterface $container
      */
-    public function __construct(PoolInterface $pool, ConfigServiceInterface $config, JwtServiceInterface $jwtService)
-    {
+    public function __construct(
+        PoolInterface $pool,
+        ConfigServiceInterface $config,
+        JwtServiceInterface $jwtService,
+        ContainerInterface $container
+    ) {
         $this->pool = $pool;
         $this->config = $config;
         $this->jwtService = $jwtService;
+        $this->container = $container;
     }
 
     /**
@@ -77,7 +87,9 @@ class ConnectorFactory extends BaseFactory
         }
 
         return $out
+            ->setFactories($this->container)
             ->useLogger($this->getLog()->getLoggerInterface())
+            ->useSettings($this->config->getConnectorSettings($out->getSourceName()), true)
             ->useSettings($connector->settings)
             ->useHttpOptions($this->config->getGuzzleProxy())
             ->useJwtService($this->jwtService)

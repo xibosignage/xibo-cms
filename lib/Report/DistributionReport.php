@@ -33,6 +33,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -79,6 +80,11 @@ class DistributionReport implements ReportInterface
      */
     private $reportService;
 
+    /**
+     * @var SanitizerService
+     */
+    private $sanitizer;
+
     private $table = 'stat';
 
     private $periodTable = 'period';
@@ -92,6 +98,7 @@ class DistributionReport implements ReportInterface
         $this->savedReportFactory = $container->get('savedReportFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
         $this->reportService = $container->get('reportService');
+        $this->sanitizer = $container->get('sanitizerService');
 
         return $this;
     }
@@ -157,13 +164,19 @@ class DistributionReport implements ReportInterface
         $filter = $sanitizedParams->getString('filter');
         $groupByFilter = $sanitizedParams->getString('groupByFilter');
         $displayId = $sanitizedParams->getInt('displayId');
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
         $hiddenFields = json_decode($sanitizedParams->getString('hiddenFields'), true);
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
         $eventTag = $hiddenFields['eventTag'];
 
+        // If a display is selected we ignore the display group selection
         $filterCriteria['displayId'] = $displayId;
+        if (empty($displayId) && count($displayGroupIds) > 0) {
+            $filterCriteria['displayGroupId'] = $displayGroupIds;
+        }
+
         $filterCriteria['type'] = $type;
         if ($type == 'layout') {
             $filterCriteria['layoutId'] = $selectedId;
@@ -232,6 +245,7 @@ class DistributionReport implements ReportInterface
             $saveAs = sprintf(__('%s report for Event %s', ucfirst($filter), $sanitizedParams->getString('eventTag')));
         }
 
+        // todo: ???
         if (!empty($filterCriteria['displayId'])) {
             // Get display
             try {
@@ -248,19 +262,19 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        $metadata = [ 'periodStart' => $json['metadata']['periodStart'],
+            'periodEnd' => $json['metadata']['periodEnd'],
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                ->format(DateFormatHelper::getSystemFormat()),
+            'title' => $savedReport->saveAs,
+        ];
+
         // Report result object
         return new ReportResult(
-            [
-                'periodStart' => $json['metadata']['periodStart'],
-                'periodEnd' => $json['metadata']['periodEnd'],
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
-                    ->format(DateFormatHelper::getSystemFormat()),
-                'title' => $savedReport->saveAs,
-            ],
+            $metadata,
             $json['table'],
             $json['recordsTotal'],
-            $json['chart'],
-            $json['hasChartData']
+            $json['chart']
         );
     }
 
@@ -399,23 +413,37 @@ class DistributionReport implements ReportInterface
         $backgroundColor = [];
         $borderColor = [];
 
-        // Format the results for output on a chart
+        // Sanitize results for chart and table
+        $rows = [];
         if (count($result) > 0) {
             foreach ($result['result'] as $row) {
+                $sanitizedRow = $this->sanitizer->getSanitizer($row);
+
+                // ----
+                // Build Chart data
                 // Chart labels in xaxis
                 $labels[] = $row['label'];
 
                 $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
                 $borderColor[] = 'rgb(240,93,41, 0.8)';
 
-                $count = $row['NumberPlays'];
-                $countData[] = ($count == '') ? 0 : $count;
+                $count = ($row['NumberPlays'] == '') ? 0 : $row['NumberPlays'];
+                $countData[] = $count;
 
-                $duration = $row['Duration'];
-                $durationData[] = ($duration == '') ? 0 : $duration;
+                $duration = ($row['Duration'] == '') ? 0 : $row['Duration'];
+                $durationData[] = $duration;
+
+                // ----
+                // Build Tabular data
+                $entry = [];
+                $entry['label'] = $sanitizedRow->getString('label');
+                $entry['duration'] = $duration;
+                $entry['count'] = $count;
+                $rows[] = $entry;
             }
         }
 
+        // Build Chart to pass in twig file chart.js
         $chart = [
             'type' => 'bar',
             'data' => [
@@ -470,19 +498,22 @@ class DistributionReport implements ReportInterface
             ]
         ];
 
+        $metadata =   [
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+        ];
+
+        // Total records
+        $recordsTotal = count($rows);
+
         // ----
-        // Chart Only
         // Return data to build chart/table
         // This will get saved to a json file when schedule runs
         return new ReportResult(
-            [
-                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
-                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
-            ],
-            [],
-            0,
-            $chart,
-            count($durationData) > 0 && count($countData) > 0
+            $metadata,
+            $rows,
+            $recordsTotal,
+            $chart
         );
     }
 
@@ -851,11 +882,14 @@ class DistributionReport implements ReportInterface
                         '$gt' => $filterRangeStart
                     ],
                     'type' => $type,
-                    'displayId' => [
-                        '$in' => $displayIds
-                    ]
                 ]
             ];
+
+            if (count($displayIds) > 0) {
+                $match['$match']['displayId'] = [
+                    '$in' => $displayIds
+                ];
+            }
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {

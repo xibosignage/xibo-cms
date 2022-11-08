@@ -58,7 +58,7 @@
             </ul>
         </div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
                 <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
@@ -136,13 +136,21 @@
             "language": dataTablesLanguage,
             dom: dataTablesTemplate,
             serverSide: true,
-            stateSave: true, stateDuration: 0,
+            stateSave: true,
+            stateDuration: 0,
             filter: false,
             searchDelay: 3000,
             ajax: {
                 url: "{{ url_for("report.data", {name: reportName}) }}",
                 data: function (d) {
                     $.extend(d, $("#libraryUsage").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                },
+                dataFilter: function(data){
+                    let json = $.parseJSON(data);
+                    json.recordsFiltered = json.recordsTotal;
+                    json.data = json.table;
+
+                    return JSON.stringify( json ); // return JSON string
                 }
             },
             "columns": [
@@ -164,8 +172,8 @@
                 }
                 // Organise our rows into datasets for the chart
                 var totalSize = 0;
-                var userData = new Array();
-                var userLabels = new Array();
+                var userData = [];
+                var userLabels = [];
 
                 $.each(table.data(), function(index, el) {
                     totalSize += el.bytesUsed;
@@ -176,7 +184,7 @@
                     userLabels.push(el.userName);
                 });
 
-                var colours = new Array();
+                var colours = [];
                 for(var i = 0; i < userData.length; i++) {
                     colours.push($c.rand());
                 }
@@ -202,7 +210,7 @@
 
         // Create a lovely library pie chart
         var libraryData = {{ defaults.libraryWidgetData|raw }};
-        var colours = new Array();
+        var colours = [];
         for(var i = 0; i < libraryData.length; i++) {
             colours.push($c.rand());
         }

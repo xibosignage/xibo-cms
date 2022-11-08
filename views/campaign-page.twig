@@ -62,6 +62,15 @@
                             {% set title %}{% trans "Layout ID" %}{% endset %}
                             {{ inline.number("layoutId", title, layoutId) }}
 
+                            {% if currentUser.featureEnabled('ad.campaign') %}
+                                {% set title %}{% trans "Type" %}{% endset %}
+                                {% set options = [
+                                    { id: "list", name: "Layout list"|trans },
+                                    { id: "ad", name: "Ad Campaign"|trans }
+                                ] %}
+                                {{ inline.dropdown("type", "single", title, "both", options, "id", "name", helpText) }}
+                            {% endif %}
+
                             {% set title %}{% trans "Cycle Based Playback" %}{% endset %}
                             {% set enabled %}{% trans "Enabled" %}{% endset %}
                             {% set disabled %}{% trans "Disabled" %}{% endset %}
@@ -93,11 +102,31 @@
                                 <thead>
                                     <tr>
                                         <th>{% trans "Name" %}</th>
+                                        {% if currentUser.featureEnabled('ad.campaign') %}
+                                        <th>{% trans "Type" %}</th>
+                                        <th>{% trans "Start Date" %}</th>
+                                        <th>{% trans "End Date" %}</th>
+                                        {% endif %}
                                         <th>{% trans "# Layouts" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Duration" %}</th>
                                         <th>{% trans "Cycle based Playback" %}</th>
                                         <th>{% trans "Play Count" %}</th>
+                                        {% if currentUser.featureEnabled('ad.campaign') %}
+                                        <th>{% trans "Target Type" %}</th>
+                                        <th>{% trans "Target" %}</th>
+                                        <th>{% trans "Plays" %}</th>
+                                        <th>{% trans "Spend" %}</th>
+                                        <th>{% trans "Impressions" %}</th>
+                                        {% endif %}
+                                        <th>{% trans "Ref 1" %}</th>
+                                        <th>{% trans "Ref 2" %}</th>
+                                        <th>{% trans "Ref 3" %}</th>
+                                        <th>{% trans "Ref 4" %}</th>
+                                        <th>{% trans "Ref 5" %}</th>
+                                        <th>{% trans "Created At" %}</th>
+                                        <th>{% trans "Modified At" %}</th>
+                                        <th>{% trans "Modified By" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -145,6 +174,32 @@
                         responsivePriority: 2,
                         "render": dataTableSpacingPreformatted
                     },
+                  {% if currentUser.featureEnabled('ad.campaign') %}
+                  {
+                    data: 'type',
+                    responsivePriority: 2,
+                    render: function(data, type) {
+                      if (type !== 'display') {
+                        return data;
+                      } else if (data === 'list') {
+                        return '{{ "List"|trans }}';
+                      } else if (data === 'ad') {
+                        return '{{ "Ad"|trans }}';
+                      }
+                      return data;
+                    }
+                  },
+                  {
+                    data: 'startDt',
+                    responsivePriority: 2,
+                    render: dataTableDateFromUnix,
+                  },
+                  {
+                    data: 'endDt',
+                    responsivePriority: 2,
+                    render: dataTableDateFromUnix,
+                  },
+                  {% endif %}
                     { "data": "numberLayouts", responsivePriority: 2 },
                     {% if currentUser.featureEnabled("tag.tagging") %} {
                         "sortable": false,
@@ -178,7 +233,7 @@
                         "name": "playCount",
                         responsivePriority: 3,
                         "data": function (data, type) {
-                            if (type != 'display') {
+                            if (type !== 'display') {
                                 return data.playCount;
                             }
 
@@ -188,6 +243,78 @@
                                return data.playCount;
                             }
                         }
+                    },
+                    {% if currentUser.featureEnabled('ad.campaign') %}
+                    {
+                      data: 'targetType',
+                      responsivePriority: 3,
+                      render: function(data, type) {
+                        if (data === 'plays') {
+                          return '{{ "Plays"|trans }}';
+                        } else if (data === 'budget') {
+                          return '{{ "Budget"|trans }}';
+                        }
+                        return data;
+                      },
+                    },
+                    {
+                      data: 'target',
+                      responsivePriority: 3,
+                    },
+                    {
+                      data: 'plays',
+                      responsivePriority: 6,
+                    },
+                    {
+                      data: 'spend',
+                      responsivePriority: 6,
+                    },
+                    {
+                      data: 'impressions',
+                      responsivePriority: 6,
+                    },
+                    {% endif %}
+                    {
+                      data: 'ref1',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref2',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref3',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref4',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'ref5',
+                      responsivePriority: 10,
+                      visible: false,
+                    },
+                    {
+                      data: 'createdAt',
+                      responsivePriority: 5,
+                      render: dataTableDateFromIso,
+                      visible: false,
+                    },
+                    {
+                      data: 'modifiedAt',
+                      responsivePriority: 5,
+                      render: dataTableDateFromIso,
+                      visible: false,
+                    },
+                    {
+                      data: 'modifiedByName',
+                      responsivePriority: 5,
+                      visible: false,
                     },
                     {
                         "orderable": false,
@@ -208,7 +335,7 @@
         // Fired when the media form opens
         function campaignAssignLayoutsFormOpen(dialog) {
             // setup checkbox behaviour for cycle based playback
-            formHelpers.setupCheckboxInputFields($(dialog).find('form:not(.form-inline)'), '#cyclePlaybackEnabled', '.cycle-based-playback');
+            formHelpers.setupCheckboxInputFields($(dialog).find('form:not(.form-inline)'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback');
 
             // Layout element template
             var layoutElementTemplate = Handlebars.compile($("#campaign-assign-layout").html());
@@ -226,11 +353,11 @@
 
             // Update all the layout element positions
             var updateSortablePositions = function() {
-                var layoutElements = $layoutAssignSortable.find('li');
+              dialog.find('input[name="manageLayouts"]').val(1);
 
-                layoutElements.each(function(idx, el) {
-                    $(el).find('.layout-order').html(idx+1);
-                })
+              $layoutAssignSortable.find('li').each(function(idx, el) {
+                $(el).find('.layout-order').html(idx+1);
+              });
             };
 
             // Populate layouts
@@ -264,8 +391,11 @@
                 "filter": false,
                 ajax: {
                     url: "{{ url_for("layout.search") }}?retired=0",
-                    "data": function(d) {
-                        $.extend(d, $layoutAssignments.closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
+                    data: function(d) {
+                        $.extend(d, $layoutAssignments.closest('.XiboGrid')
+                          .find('.layoutAssignFilterOptions')
+                          .find('input, select')
+                          .serializeObject());
                     }
                 },
                 "columns": [
@@ -321,9 +451,11 @@
                         layoutId: data.layoutId,
                         layoutName: data.layout,
                         locked: false
-                    }); 
+                    });
 
                     $(newItem).appendTo("#LayoutAssignSortable");
+
+                  dialog.find('input[name="manageLayouts"]').val(1);
                 });
             });
             layoutTable.on('processing.dt', dataTableProcessing);
@@ -346,6 +478,13 @@
             $(".layoutAssignFilterOptions").find("input, select").change(function() {
                 layoutTable.ajax.reload();
             });
+
+          // Adjust the datatable width once we've activated the tab
+          $(dialog).find('.nav-tabs a').on('shown.bs.tab', function(event) {
+            if ($(event.target).attr('href') === '#tab-layouts') {
+              layoutTable.columns.adjust().draw();
+            }
+          });
         }
 
         function campaignFormSubmit($form) {
@@ -356,28 +495,60 @@
             // Submit form
             $form.submit();
         }
-        
+
         function layoutAssignSubmit($form) {
+          if (parseInt($form.find('input[name="manageLayouts"]').val()) === 1) {
             // Get the final sortable positions
-            var finalLayoutPositions = [];
-            $("#LayoutAssignSortable").find("li").each(function(){
-                finalLayoutPositions.push($(this).data("layoutId"));
+            const finalLayoutPositions = [];
+            $('#LayoutAssignSortable').find('li').each(function() {
+              finalLayoutPositions.push($(this).data('layoutId'));
             });
 
-            // Send flag to manage layouts
-            $('<input>').attr({
+            // Build the array of layouts
+            for (let i = 0; i < finalLayoutPositions.length; i++) {
+              $('<input>').attr({
                 type: 'hidden',
-                name: 'manageLayouts'
-            }).val(1).appendTo($form);
-
-            //Build the array of layouts
-            var layoutOrderArray = [];
-            for (i = 0; i < finalLayoutPositions.length; i++) {
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: 'layoutIds[' + i + ']'
-                }).val(finalLayoutPositions[i]).appendTo($form.find('#assignLayouts'));
+                name: 'layoutIds[' + i + ']'
+              }).val(finalLayoutPositions[i]).appendTo($form.find('#assignLayouts'));
             }
+          }
+        }
+
+        /**
+         * Called when the campaign add form is opened
+         * @param dialog
+         */
+        function campaignAddFormOpen(dialog) {
+          // setup checkbox behaviour for cycle based playback
+          formHelpers.setupCheckboxInputFields($(dialog).find('form'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback');
+
+          const $type = $(dialog).find('select[name=type]');
+          const $cycleBased = $('input[name="cyclePlaybackEnabled"]');
+
+          $(dialog).find('.campaign-type-ad').toggle($type.val() === 'ad');
+
+          $type.on('change', function () {
+            $(dialog).find('.campaign-type-list').toggle($type.val() !== 'ad');
+            $(dialog).find('.campaign-type-ad').toggle($type.val() === 'ad');
+
+            $(dialog).find('.cycle-based-playback').toggle($cycleBased.is(':checked') && $type.val() !== 'ad');
+          });
+        }
+
+        /**
+         * Called when the campaign add form is submitted.
+         * @param xhr
+         * @param form
+         */
+        function campaignAddFormSubmitCallback(xhr, form) {
+          if (xhr.success) {
+            if (xhr.data.type === 'ad') {
+              // Navigate to the campaign builder
+            } else {
+              // Open the edit form.
+              XiboFormRender($(form).data("editFormUrl").replace(':id', xhr.data.campaignId));
+            }
+          }
         }
     </script>
 

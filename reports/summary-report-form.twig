@@ -40,9 +40,10 @@
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
                 <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="summaryReport">
+                        <!-- Form Filter -->
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
@@ -143,6 +144,19 @@
                             ] %}
                             {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
+                            {% set title %}{% trans "Display Group" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("displayGroup.search") },
+                                { name: "data-search-term", value: "displayGroup" },
+                                { name: "data-id-property", value: "displayGroupId" },
+                                { name: "data-text-property", value: "displayGroup" }
+                            ] %}
+                            {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
+
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
@@ -152,9 +166,61 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData card pt-3 d-block">
-                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
-                    <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
+                <!-- Card Header -->
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="chart-tab" data-toggle="tab" href="#chartTab" role="tab"
+                               aria-controls="chartTab" aria-selected="true">Chart</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="tabular-tab" data-toggle="tab" href="#tabularTab" role="tab"
+                               aria-controls="tabularTab" aria-selected="false">Tabular</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- CHART TAB-->
+                        <div class="tab-pane active" id="chartTab" role="tabpanel" aria-labelledby="chart-tab">
+                            <div class="chart-container" style="height:550px;">
+                                <canvas id="canvas" style="clear:both; margin-top:25px;" height="70%"></canvas>
+                                <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
+                            </div>
+                        </div>
+
+                        <!-- TABULAR TAB-->
+                        <div class="tab-pane show" id="tabularTab" role="tabpanel" aria-labelledby="tabular-tab">
+                            <!-- DATATABLE -->
+                            <div class="table-container" id="table_wrapper">
+                                <table id="summaryTbl"
+                                       class="table xibo-table table-striped table-full-width"
+                                       style="width: 100%"
+                                       data-url="/report/data/summaryReport"
+                                >
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Period" %}</th>
+                                        <th>{% trans "Duration" %}</th>
+                                        <th>{% trans "Count" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                    <tfoot>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -165,67 +231,172 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        $(function () {
-            $('[data-toggle="popover"]').popover();
-        });
-
-        var reportChart = null;
-        var imageLoader = $("#imageLoader");
-
-        function setReport() {
-
-            imageLoader.show();
-            $.ajax({
-                type: "get",
-                url: "{{ url_for("report.data", {name: reportName}) }}",
-                cache: false,
-                dataType: "json",
-                data: $("#summaryReport").find("form").serialize(),
-                success: function(response) {
-
-                    setTimeout(function() {
-                        $("#applyBtn").removeClass('disabled');
-                    }, 300);
-
-                    imageLoader.hide();
-                    if (reportChart !== undefined && reportChart !== null) {
-                        reportChart.destroy();
-                    }
-
-                    if (!response.extra.hasChartData) {
-                        return;
-                    }
-
-                    // Create our chart
-                    reportChart = new Chart($("#reportChart"), response.extra.chart);
-                }
-            });
-        }
-
         $(document).ready(function() {
 
-            // Init
-            var warning = $("#applyWarning");
-            var applyBtn = $("#applyBtn");
-            var type = $("#type");
-            var groupByFilter = $("#groupByFilter");
-            var groupByFilterCls = $(".group-by-filter");
-            var mediaSelect =$(".media-select");
-            var layoutSelect =$(".layout-select");
-            var eventTagCls =$(".tag-text");
+            $('[data-toggle="popover"]').popover();
 
+            let $report = $("#summaryReport");
+            let $dataTable = $('#summaryTbl'); // Datatable
+            let chart = null; // Chart
+            let result; // XHR get data result
+
+            let imageLoader = $("#imageLoader");
+            let $warning = $("#applyWarning");
+            let $applyBtn = $("#applyBtn");
+            let type = $("#type");
+            let groupByFilter = $("#groupByFilter");
+            let groupByFilterCls = $(".group-by-filter");
+            let mediaSelect =$(".media-select");
+            let layoutSelect =$(".layout-select");
+            let eventTagCls =$(".tag-text");
+            let reportFilter = $("#reportFilter"); // Report Filter
+
+            // Initialize table with empty data
+            let table = $dataTable.DataTable({
+                searching: false,
+                paging: true,
+                bInfo: false,
+                stateSave: true,
+                bDestroy: true,
+                processing: true,
+                ordering: false,
+                data: {},
+                columns: [
+                    {
+                        data: 'label',
+                        'sortable': false,
+                    },
+                    {
+                        data: 'duration',
+                        'sortable': false,
+                    },
+                    {
+                        data: 'count',
+                        'sortable': false,
+                    }
+                ],
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+
+                    // Total over all pages
+                    let totalDuration = api.column(1).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalNumberPlays = api.column(2).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalDurationPage = api.column(1, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalNumberPlaysPage = api.column(2, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    // Update footer
+                    $(api.column(1).footer()).html(totalDurationPage + ' (' + totalDuration + ' total)');
+                    $(api.column(2).footer()).html(Math.floor(totalNumberPlaysPage) + ' (' + Math.floor(totalNumberPlays) + ' total)');
+                },
+            });
+
+            // Get Data
+            function getData(url) {
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    dataType: 'json',
+                    data: $report.find("form").serialize(),
+                    success: function success(data) {
+                        result = data;
+                        $applyBtn.removeClass('disabled');
+
+                        // Based on tab load data
+                        if ($('.nav-tabs .nav-item a.active').attr("href") === '#tabularTab') {
+                            setTabularData(table, result.table);
+                        } else {
+                            setChartData(result.chart);
+                        }
+                    },
+                    error: function error(xhr, textStatus, _error) {
+                        $applyBtn.removeClass('disabled');
+                        toastr.error(xhr.responseJSON.message);
+                    }
+                });
+            }
+
+            function setTabularData(table, data) {
+                table.clear().draw();
+
+                if (Object.keys(data).length > 0) {
+                    table.rows.add( data ).draw()
+                }
+            }
+
+            function setChartData(data) {
+                imageLoader.show();
+
+                setTimeout(function() {
+                    $applyBtn.removeClass('disabled');
+                }, 300);
+
+                imageLoader.hide();
+                if (chart !== undefined && chart !== null) {
+                    chart.destroy();
+                }
+
+                // Create our chart
+                chart = new Chart($("#canvas"), data);
+            }
+
+            // Tab shown/click load relevant table/chart
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                let activeTab = $(e.target).attr("href")
+                if (result) {
+                    if (activeTab === '#tabularTab') {
+                        setTabularData(table, result.table);
+                    } else {
+                        setChartData(result.chart);
+                    }
+                }
+            });
+
+            // Apply
+            $applyBtn.click(function () {
+                $(this).addClass('disabled');
+                checkFilterAndApply();
+
+                if ($('.nav-tabs .nav-item a.active').attr("href") === '#tabularTab') {
+                    // table.processing( true );
+                } else {
+                    imageLoader.show();
+                }
+
+                getData($dataTable.data().url);
+            });
+
+            // If we select a displayId we hide the display group filter
+            $('#displayId').off('change').change( function() {
+
+                let displayId = $('#displayId').val();
+                if (displayId) {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                } else {
+                    $('#displayId option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                }
+            });
 
             // Calculate the difference of number of days of a selected range
-            var calculateDaysShowHideWarn = function() {
+            let calculateDaysShowHideWarn = function() {
 
-                var fromDt = moment($("#statsFromDt").val());
-                var toDt = moment($("#statsToDt").val());
+                let fromDt = moment($("#statsFromDt").val());
+                let toDt = moment($("#statsToDt").val());
 
-                var days = toDt.diff(fromDt, 'days');
+                let days = toDt.diff(fromDt, 'days');
 
-                warning.hide();
+                $warning.hide();
                 if ( days >= 30) {
-                    warning.show();
+                    $warning.show();
                 }
 
                 return true;
@@ -239,18 +410,14 @@
                 calculateDaysShowHideWarn();
             });
 
-
-            // Report Filter
-            var reportFilter = $("#reportFilter");
-
             // Hide / Show FromDt and ToDt
             function checkReportFilter(reportFilter) {
-                var value = reportFilter.val();
-                var collectionMonth = [
+                let value = reportFilter.val();
+                let collectionMonth = [
                     {id: 'byday', description: "{% trans "Day" %}"},
                     {id: 'byweek', description: "{% trans "Week" %}"},
                 ];
-                var collectionYear = [
+                let collectionYear = [
                     {id: 'byday', description: "{% trans "Day" %}"},
                     {id: 'byweek', description: "{% trans "Week" %}"},
                     {id: 'bymonth', description: "{% trans "Month" %}"}
@@ -306,28 +473,28 @@
                 }
             }
 
-            var checkFilterAndApply = function() {
+            let checkFilterAndApply = function() {
 
                 reportFilter.off('change').change( function() {
 
-                    var value = reportFilter.val();
+                    let value = reportFilter.val();
 
                     // Hide / Show FromDt and ToDt
                     checkReportFilter(reportFilter);
 
                     // Hide / Show Warning
-                    warning.hide();
+                    $warning.hide();
                     if ( value === '') {
                         calculateDaysShowHideWarn();
                     } else if ( value === 'thismonth' || value === 'lastmonth' || value === 'thisyear' || value === 'lastyear') {
-                        warning.show();
+                        $warning.show();
                     }
 
                 });
 
                 type.off('change').change( function() {
 
-                    var value = type.val();
+                    let value = type.val();
                     if (value === 'media') {
                         // show media and clear/hide the layout
                         $("#layoutId").val("");
@@ -369,14 +536,14 @@
             };
 
             // Enable/Disable Schedule Btn
-            var checkEnableSchedule = function() {
+            let checkEnableSchedule = function() {
 
-                var mediaVal = $("#mediaId").val();
-                var layoutVal = $("#layoutId").val();
-                var eventTagVal = $("#eventTag").val();
-                var reportAddBtn = $("button#reportAddBtn");
+                let mediaVal = $("#mediaId").val();
+                let layoutVal = $("#layoutId").val();
+                let eventTagVal = $("#eventTag").val();
+                let reportAddBtn = $("button#reportAddBtn");
 
-                var typeVal = $("#type").val();
+                let typeVal = $("#type").val();
 
                 if ( typeVal === 'layout') {
                     if (layoutVal == null) {
@@ -422,33 +589,26 @@
             checkReportFilter(reportFilter);
             checkFilterAndApply();
 
-            applyBtn.addClass('disabled');
+            $applyBtn.addClass('disabled');
             checkEnableSchedule();
 
             // Bind to form change
-            $("#summaryReport").on('change', function() {
+            $report.on('change', function() {
                 checkEnableSchedule();
 
-                var layoutVal =  $("#layoutId").val();
-                var mediaVal =  $("#mediaId").val();
-                var eventVal =  $("#eventTag").val();
+                let layoutVal =  $("#layoutId").val();
+                let mediaVal =  $("#mediaId").val();
+                let eventVal =  $("#eventTag").val();
 
                 if ((layoutVal === null || layoutVal === '' || layoutVal === undefined) &&
                     (mediaVal === null || mediaVal === '' || mediaVal === undefined) &&
                     (eventVal === null || eventVal === '' || eventVal === undefined) ) {
 
-                    applyBtn.addClass('disabled');
+                    $applyBtn.addClass('disabled');
 
                 } else {
-                    applyBtn.removeClass('disabled');
+                    $applyBtn.removeClass('disabled');
                 }
-            });
-
-            // Apply
-            applyBtn.click(function () {
-                $(this).addClass('disabled');
-                checkFilterAndApply();
-                setReport();
             });
         });
 

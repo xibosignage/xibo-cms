@@ -40,7 +40,7 @@
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
                 <div class="XiboFilter">
                     <div class="FilterDiv card-body" id="availabilityFilter">
                         <form class="form-inline">
@@ -128,14 +128,12 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        $(function () {
-            $('[data-toggle="popover"]').popover();
-        });
-
-        var availabilityChart = null;
-
         $(document).ready(function() {
-            var table = $("#stats").DataTable({
+
+            $('[data-toggle="popover"]').popover();
+
+            let availabilityChart = null;
+            let table = $("#stats").DataTable({
                 "language": dataTablesLanguage,
                 dom: dataTablesTemplate,
                 serverSide: true,
@@ -147,6 +145,13 @@
                     "url": "{{ url_for("report.data", {name: reportName}) }}",
                     "data": function (d) {
                         $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    },
+                    dataFilter: function(data){
+                        let json = $.parseJSON(data);
+                        json.recordsFiltered = json.recordsTotal;
+                        json.data = json.table;
+
+                        return JSON.stringify( json ); // return JSON string
                     }
                 },
                 "columns": [
@@ -169,11 +174,11 @@
                     }
 
                     // Organise our rows into datasets for the chart
-                    var availabilityData = [];
-                    var availabilityDataConnected = [];
-                    var availabilityLabels = [];
-                    var postUnits = "";
-                    var dataSets = [];
+                    let availabilityData = [];
+                    let availabilityDataConnected = [];
+                    let availabilityLabels = [];
+                    let postUnits = "";
+                    let dataSets = [];
 
                     $.each(table.data(), function(index, el) {
                         availabilityData.push(el.timeDisconnected);

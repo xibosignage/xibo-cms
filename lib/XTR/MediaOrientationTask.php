@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -56,9 +56,11 @@ class MediaOrientationTask implements TaskInterface
         $this->appendRunMessage('# Setting Media Orientation on Library Media files.');
 
         // onlyMenuBoardAllowed filter means images and videos
-        $filesToCheck = $this->mediaFactory->query(null, ['noOrientation' => 1, 'onlyMenuBoardAllowed' => 1]);
+        $filesToCheck = $this->mediaFactory->query(null, ['requiresMetaUpdate' => 1, 'onlyMenuBoardAllowed' => 1]);
+        $count = 0;
 
         foreach ($filesToCheck as $media) {
+            $count++;
             $filePath = '';
             $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
 
@@ -76,7 +78,7 @@ class MediaOrientationTask implements TaskInterface
                 $media->save(['saveTags' => false, 'validate' => false]);
             }
         }
-
+        $this->appendRunMessage('Updated ' . $count . ' items');
         $this->disableTask();
     }
 

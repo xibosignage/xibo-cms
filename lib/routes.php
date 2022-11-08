@@ -259,7 +259,10 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
     $group->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->setName('campaign.copy');
     $group->put('/campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
-    $group->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');
+    $group->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])
+        ->setName('campaign.assign.layout');
+    $group->delete('/campaign/layout/remove/{id}', ['\Xibo\Controller\Campaign','removeLayout'])
+        ->setName('campaign.remove.layout');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
 
 /**
@@ -377,6 +380,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  *  description="Display Groups"
  * )
  */
+$app->get('/displayvenue', ['\Xibo\Controller\Display','displayVenue'])->setName('display.venue.search');
 $app->get('/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('displayGroup.search');
 
 $app->post('/displaygroup', ['\Xibo\Controller\DisplayGroup','add'])
@@ -594,7 +598,6 @@ $app->get('/application', ['\Xibo\Controller\Applications','grid'])->setName('ap
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
-    $group->post('/application/dooh', ['\Xibo\Controller\Applications','addDooh'])->setName('application.addDooh');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));
 
 /**

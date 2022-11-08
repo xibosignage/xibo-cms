@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -35,11 +35,12 @@ class OpenWeatherMapProvider implements WeatherProvider
 {
     use WeatherProviderTrait;
 
-    private $apiUrl = 'https://api.openweathermap.org/data/2.5/';
-    private $forecastCurrent = 'weather';
-    private $forecast3Hourly = 'forecast';
-    private $forecastDaily = 'forecast/daily';
-    private $forecastCombined = 'onecall';
+    private $apiUrl = 'https://api.openweathermap.org/data/';
+    private $forecastCurrent = '2.5/weather';
+    private $forecast3Hourly = '2.5/forecast';
+    private $forecastDaily = '2.5/forecast/daily';
+    private $forecastCombined = '2.5/onecall';
+    private $forecastCombinedV3 = '3.0/onecall';
     private $forecastUv = 'uvi';
 
     /**
@@ -123,8 +124,13 @@ class OpenWeatherMapProvider implements WeatherProvider
             // Then the 16 day forecast API, which we will cache a day
             $data['daily'] = $this->queryApi($this->apiUrl . $this->forecastDaily . $url, $cacheExpire->copy()->addDay()->startOfDay())['list'];
         } else {
-            // We use onecall
-            $data = $this->queryApi($this->apiUrl . $this->forecastCombined . $url, $cacheExpire);
+            // We use one call
+            if (($this->options['owmApiVersion'] ?? '2.5') === '2.5') {
+                $forecastCombined = $this->forecastCombined;
+            } else {
+                $forecastCombined = $this->forecastCombinedV3;
+            }
+            $data = $this->queryApi($this->apiUrl . $forecastCombined . $url, $cacheExpire);
 
             $this->timezone = $data['timezone'];
 
@@ -306,6 +312,7 @@ class OpenWeatherMapProvider implements WeatherProvider
         }
 
         // Wind direction
+        $day->windDirection = '--';
         if ($day->windBearing !== null && $day->windBearing !== 0) {
             foreach (self::cardinalDirections() as $dir => $angles) {
                 if ($day->windBearing >= $angles[0] && $day->windBearing < $angles[1]) {
@@ -313,8 +320,6 @@ class OpenWeatherMapProvider implements WeatherProvider
                     break;
                 }
             }
-        } else {
-            $day->windDirection = '--';
         }
 
         // Clouds
@@ -486,7 +491,8 @@ class OpenWeatherMapProvider implements WeatherProvider
                 $this->pool->saveDeferred($cache);
 
             } catch (RequestException $e) {
-                $this->logger->error('Unable to reach Open Weather Map API: ' . $e->getMessage());
+                $this->logger->error('Unable to reach Open Weather Map API: '
+                    . str_replace($this->apiKey, '[API_KEY]', $e->getMessage()));
                 throw new GeneralException('API responded with an error.');
             }
         } else {

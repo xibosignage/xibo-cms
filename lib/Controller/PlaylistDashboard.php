@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -190,17 +190,14 @@ class PlaylistDashboard extends Base
             foreach ($parent->widgets as $parentWidget) {
                 if ($parentWidget->type === 'subplaylist') {
                     // Create a SubPlaylist widget, so we can easily get the items we want.
-                    $subPlaylist = $this->moduleFactory->getByType($parentWidget->type);
-                    
-                    // TODO: sub-playlist: what do we do here?
-                    //  are we going instantiate sub-playlists using a provider, or are they an exception?
-                    $subPlaylistOptions = $subPlaylist->getSubPlaylistOptions($playlist->playlistId);
+                    $subPlaylist = $this->moduleFactory->createWithWidget($parentWidget);
+                    $subPlaylistOptions = $subPlaylist->getAssignedPlaylistById($playlist->playlistId);
 
                     // This will be included?
-                    $spotCount = isset($subPlaylistOptions['subPlaylistIdSpots']) ? intval($subPlaylistOptions['subPlaylistIdSpots']) : 0;
+                    $spotCount = $subPlaylistOptions !== null ? $subPlaylistOptions->spots : 0;
 
                     // Take the highest number of Spots we can find out of all the assignments.
-                    $spotsFound = ($spotCount > $spotsFound) ? $spotCount : $spotsFound;
+                    $spotsFound = max($spotCount, $spotsFound);
 
                     // Assume this one isn't in the list more than one time.
                     break;

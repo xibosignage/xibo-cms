@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -77,9 +77,9 @@ $(document).ready(function() {
           }
         }());
     }
-    
+
     setInterval("XiboPing('" + clockUrl + "')", 1000 * 60); // Every minute
-    
+
     setInterval("XiboPing('" + pingUrl + "')", 1000 * 60 * 3); // Every 3 minutes
 
     XiboInitialise("");
@@ -144,7 +144,7 @@ function XiboInitialise(scope) {
 
             $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
         }, 500);
-        
+
         // Prevent enter key to submit form
         $(this).find(".XiboFilter form").on('keydown', function(event) {
             if(event.keyCode == 13) {
@@ -153,8 +153,12 @@ function XiboInitialise(scope) {
             }
         });
         // Bind the filter form
-        $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
-        $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
+        $(this).find('.XiboFilter form input').on('keyup', filterRefresh);
+        $(this).find('.XiboFilter form input[type="checkbox"]').on('change', filterRefresh);
+        $(this).find('.XiboFilter form select').on('change', filterRefresh);
+
+        // Folder navigation relies on triggering the change event on this hidden field.
+        $(this).find('.XiboFilter form #folderId').on('change', filterRefresh);
 
         // check to see if we need to share folder tree state globally or per page
         var gridFolderState = rememberFolderTreeStateGlobally ? 'grid-folder-tree-state' : 'grid_'+gridName ;
@@ -235,7 +239,7 @@ function XiboInitialise(scope) {
 
     // Links that just need to be submitted as forms
     $(scope + ' .XiboAjaxSubmit').click(function(){
-        
+
         $.ajax({
             type: "post",
             url: $(this).attr("href"),
@@ -331,7 +335,7 @@ function XiboInitialise(scope) {
     $(scope + " .colorpicker-input").each(function() {
         $(this).colorpicker();
     });
-    
+
     // Initialize tags input form
     $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").each(function() {
         var self = this;
@@ -367,7 +371,7 @@ function XiboInitialise(scope) {
                         return 1;
                     }
 
-                    // Names must be the same 
+                    // Names must be the same
                     return 0;
                 }
             });
@@ -386,7 +390,7 @@ function XiboInitialise(scope) {
                     }
                 });
             })
-            .fail(function() { 
+            .fail(function() {
                 console.info('Auto-complete for tag failed! Using default...');
                 $(self).tagsinput();
             });
@@ -552,7 +556,7 @@ function XiboInitialise(scope) {
                         return JSON.stringify(elementsObject);
                     };
 
-                    // 
+                    //
                     var decodeQueryString = function (valueToParse) {
                         var parsedValue;
 
@@ -836,7 +840,7 @@ function XiboInitialise(scope) {
                                             requestOptions.body = newParsedElements;
                                         }
                                     }
-                                    
+
                                 } catch (error) {
                                     console.warn('Skip body parse!');
                                 }
@@ -1216,7 +1220,7 @@ function dataTableDraw(e, settings, callBack) {
 
     // Check to see if we have any buttons that are multi-select
     var enabledButtons = target.find("div.dropdown-menu a.multi-select-button");
-    
+
     // Check to see if we have tag filter for the current table
     var $tagsElement = target.closest(".XiboGrid").find('.FilterDiv #tags');
 
@@ -1274,7 +1278,7 @@ function dataTableDraw(e, settings, callBack) {
             sortGroup: 0
           });
         }
-        
+
         // Sort buttons by groups/importance
         buttons = buttons.sort(function(a, b) {
             return ((a.sortGroup > b.sortGroup) ? 1 : -1);
@@ -1309,12 +1313,12 @@ function dataTableDraw(e, settings, callBack) {
         target.closest(".dataTables_wrapper").find(".dataTables_info a.XiboMultiSelectFormCustomButton").click(function(){
             window[$(this).data('customHandler')](this);
         });
-        
+
         // Bind click to select all button
         target.closest(".dataTables_wrapper").find(".dataTables_info button.select-all").click(function(){
             var allRows = target.find("tbody tr");
             var numberSelectedRows = target.find("tbody tr.selected").length;
-            
+
             // If there are more rows selected than unselected, unselect all, otherwise, selected them all
             if (numberSelectedRows > allRows.length/2){
               allRows.removeClass('selected');
@@ -1411,7 +1415,7 @@ function dataTableTimeFromSeconds(data, type, row) {
     if(data == null || data == 0)
         return "";
 
-    // Get duration 
+    // Get duration
     var duration = moment.duration(data * 1000);
 
     // Get the number of hours
@@ -1488,13 +1492,13 @@ function dataTableCreatePermissions(data, type) {
  * @param settings
  */
 function dataTableCreateTagEvents(e, settings) {
-    
+
     var table = $("#" + e.target.id);
     var tableId = e.target.id;
     var form = e.data.form;
-    // Unbind all 
+    // Unbind all
     table.off('click');
-    
+
     table.on("click", ".btn-tag", function(e) {
         // See if its the first element, if not add comma
         var tagText = $(this).text();
@@ -1664,17 +1668,17 @@ function dataTableStateSaveCallback(settings, data) {
  * @param {Object} sourceObj
  * @param {Object} data
  */
-function XiboFormRender(sourceObj, data) {
-    
+function XiboFormRender(sourceObj, data = null) {
+
     var formUrl = "";
     if (typeof sourceObj === "string" || sourceObj instanceof String) {
         formUrl = sourceObj;
     } else {
         formUrl = sourceObj.attr("href");
-        // Remove the link from the source object if exists 
+        // Remove the link from the source object if exists
         sourceObj.removeAttr('href');
-    }  
-    
+    }
+
     // To fix the error generated by the double click on button
     if( formUrl == undefined ){
         return false;
@@ -1705,7 +1709,7 @@ function XiboFormRender(sourceObj, data) {
             // Restore the link to the source object if exists
             if (typeof sourceObj === "object" || sourceObj instanceof Object)
                 sourceObj.attr("href", lastForm);
-                
+
             // Was the Call successful
             if (response.success) {
                 if(!(typeof sourceObj === "string" || sourceObj instanceof String)) {
@@ -1751,7 +1755,7 @@ function XiboFormRender(sourceObj, data) {
                 }
 
                 var id = new Date().getTime();
-                
+
                 // Create the dialog with our parameters
                 var size = 'large';
                 if (sourceObj && typeof sourceObj === 'object') {
@@ -1846,7 +1850,7 @@ function XiboFormRender(sourceObj, data) {
                 // Set up dependencies between controls
                 if (response.fieldActions != '') {
                     $.each(response.fieldActions, function(index, fieldAction) {
-                        
+
                         //console.log("Processing field action for " + fieldAction.field);
 
                         if (fieldAction.trigger == "init") {
@@ -1911,7 +1915,7 @@ function XiboFormRender(sourceObj, data) {
 
                 // Check to see if there are any tab actions
                 $('a[data-toggle="tab"]', dialog).on('shown.bs.tab', function (e) {
-        
+
                     if ($(e.target).data().enlarge === 1) {
                         $(e.target).closest(".modal").addClass("modal-big");
                     }
@@ -1983,14 +1987,14 @@ function XiboFormRender(sourceObj, data) {
  * @param {Object} sourceObj
  */
 function XiboCustomFormRender(sourceObj) {
-    
+
     var formUrl = "";
-    
+
     formUrl = sourceObj.attr("href");
 
-    // Remove the link from the source object if exists 
+    // Remove the link from the source object if exists
     sourceObj.removeAttr('href');
-   
+
     // To fix the error generated by the double click on button
     if(formUrl == undefined) {
         return false;
@@ -2286,7 +2290,7 @@ function XiboMultiSelectPermissionsFormOpen(button) {
             buttons: {
                 cancel: {
                     label: translations.close,
-                    className: 'btn-white btn-bb-cancel'  
+                    className: 'btn-white btn-bb-cancel'
                 }
             }
         });
@@ -2333,7 +2337,7 @@ function XiboMultiSelectTagFormRender(button) {
                 });
             }
         });
-        
+
         dialogContent = Handlebars.compile($('#multiselect-tag-edit-form-template').html());
     }
 
@@ -2465,7 +2469,7 @@ function XiboMultiSelectTagFormRender(button) {
         // Keep the modal window open!
         return false;
     });
-    
+
     // Append button
     footer.prepend(extrabutton);
 
@@ -2506,9 +2510,9 @@ function XiboPing(url, updateDiv) {
             else {
                 // Login Form needed?
                 if (response.login) {
-                    
+
                     LoginBox(response.message);
-                    
+
                     return false;
                 }
             }
@@ -2568,11 +2572,17 @@ function XiboFormSubmit(form, e, callBack) {
         dataType:"json",
         data:$form.serialize(),
         success: function(xhr, textStatus, error) {
-            
+
             XiboSubmitResponse(xhr, form);
 
-            if (callBack != null && callBack != undefined)
+            if (callBack != null && callBack != undefined) {
                 callBack(xhr, form);
+            } else {
+                var callBackFromForm = $form.data('submitCallBack');
+                if (callBackFromForm && typeof window[callBackFromForm] === 'function') {
+                    window[callBackFromForm](xhr, form);
+                }
+            }
         },
         error: function(xhr, textStatus, errorThrown) {
             SystemMessage(xhr.responseText, false);
@@ -2597,7 +2607,7 @@ function XiboFormSubmit(form, e, callBack) {
  * @param
  */
 function XiboSubmitResponse(response, form) {
-    
+
     // Remove the spinner
     $(form).closest(".modal-dialog").find(".saving").remove();
 
@@ -2775,8 +2785,11 @@ function XiboSwapDialog(formUrl, data) {
 function XiboRefreshAllGrids() {
     // We should refresh the grids (this is a global refresh)
     $(" .XiboGrid table.dataTable").each(function() {
-        // Render
-        $(this).DataTable().ajax.reload(null, false);
+        const refresh = $(this).closest('.XiboGrid').data('refreshOnFormSubmit');
+        if (refresh === undefined || refresh === null || refresh) {
+            // Render
+            $(this).DataTable().ajax.reload(null, false);
+        }
     });
 }
 
@@ -2834,7 +2847,7 @@ function updateUserPref(prefs, success) {
  */
 function SystemMessage(messageText, success) {
 
-    if (messageText == '' || messageText == null) 
+    if (messageText == '' || messageText == null)
         return;
 
     if (success) {
@@ -2870,7 +2883,7 @@ function SystemMessage(messageText, success) {
  */
 function SystemMessageInline(messageText, modal) {
 
-    if (messageText == '' || messageText == null) 
+    if (messageText == '' || messageText == null)
         return;
 
     // if modal is null (or not a form), then pick the nearest .text error instead.
@@ -2929,7 +2942,7 @@ function makePagedSelect(element, parent) {
 
                 // If we search by tags
                 if(searchTerm != undefined && element.data("searchTermTags") != undefined) {
-                    // Get string 
+                    // Get string
                     var tags = searchTerm.match(/\[([^}]+)\]/);
                     var searchTags = '';
 
@@ -3096,7 +3109,7 @@ function makeLocalSelect(element, parent) {
                     return data;
                 }
             }
-            
+
             // Find by tag ( data-tag )
             for(var index = 0;index < queryTags.length;index++) {
                 var tag = queryTags[index];
@@ -3175,7 +3188,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             $inputElement = $('<input type="text" class="form-control" id="' + $element.attr('id') + 'Link">');
             $element.after($inputElement).hide();
         }
-        
+
         $inputElement.persianDatepicker(Object.assign({
             initialValue: ((initialValue != undefined) ? initialValue : false),
             altField: '#' + $element.attr('id'),
@@ -3254,7 +3267,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
 function updateDatePicker($element, date, format, triggerChange) {
     // Default values
     triggerChange = (typeof triggerChange == 'undefined') ? false : triggerChange;
-    
+
     if(calendarType == 'Gregorian') {
         // Update gregorian calendar
         if($element[0]._flatpickr != undefined) {
@@ -3305,7 +3318,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
     isForm = (typeof isForm == 'undefined') ? false : isForm;
     ttl = (typeof ttl == 'undefined') ? false : ttl;
     var homeNodeId;
-    
+
 
     // if there is no modal appended to body and we are on a form that needs this modal, then append it
     if ($('#folder-tree-form-modal').length === 0 && $('#' + id + ' #folderId').length && $('#select-folder-button').length) {
@@ -3605,6 +3618,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                 } else {
                     $("#breadcrumbs").text('');
                     $('#folder-tree-clear-selection-button').prop('checked', true)
+                    $('.XiboFilter').find('#folderId').val(null).trigger('change');
                 }
             }
 
@@ -3718,7 +3732,7 @@ function createMiniLayoutPreview(previewUrl) {
 
     // Create base template for preview content
     var previewTemplate = Handlebars.compile('<iframe scrolling="no" src="{{url}}" width="{{width}}px" height="{{height}}px" style="border:0;"></iframe>');
-    
+
     // Clean all selected elements
     $layoutPreviewContent.html('');
 
@@ -3790,7 +3804,7 @@ function createColorPicker(element, options) {
 
     // Disable autocomplete
     $self.attr('autocomplete', 'off');
-    
+
     $self.colorpicker(Object.assign({
         format: "hex"
     }, options));

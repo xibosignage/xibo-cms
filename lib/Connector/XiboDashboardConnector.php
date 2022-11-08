@@ -24,8 +24,6 @@ namespace Xibo\Connector;
 use GuzzleHttp\Exception\RequestException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Connector\ConnectorInterface;
-use Xibo\Connector\ConnectorTrait;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Event\XmdsConnectorFileEvent;
@@ -105,7 +103,10 @@ class XiboDashboardConnector implements ConnectorInterface
     {
         // Remember the old service URL
         $existingApiKey = $this->getSetting('apiKey');
-        $settings['apiKey'] = $params->getString('apiKey');
+
+        if (!$this->isProviderSetting('apiKey')) {
+            $settings['apiKey'] = $params->getString('apiKey');
+        }
 
         // What if the user changes their API key?
         // Handle existing credentials
@@ -118,15 +119,20 @@ class XiboDashboardConnector implements ConnectorInterface
 
             // The new key is valid, clear out the old key's credentials.
             if (!empty($existingApiKey)) {
-                foreach ($this->getCredentials() as $credential) {
-                    $this->getClient()->delete(
-                        $this->getServiceUrl() . '/services/' . $credential['type'] . '/' . $credential['id'],
-                        [
-                            'headers' => [
-                                'X-API-KEY' => $existingApiKey
+                foreach ($this->getCredentials() as $type => $credential) {
+                    try {
+                        $this->getClient()->delete(
+                            $this->getServiceUrl() . '/services/' . $type . '/' . $credential['id'],
+                            [
+                                'headers' => [
+                                    'X-API-KEY' => $existingApiKey
+                                ]
                             ]
-                        ]
-                    );
+                        );
+                    } catch (RequestException $requestException) {
+                        $this->getLogger()->error('getAvailableServices: delete failed. e = '
+                            . $requestException->getMessage());
+                    }
                 }
             }
             $credentials = [];
@@ -151,18 +157,23 @@ class XiboDashboardConnector implements ConnectorInterface
                     $isMarkedForRemoval = true;
                 }
             }
-            $password = $params->getString($service['type'] . '_password');
+            $password = $params->getParam($service['type'] . '_password');
             $twoFactorSecret = $params->getString($service['type'] . '_twoFactorSecret');
             $isUrl = isset($service['isUrl']);
             $url = ($isUrl) ? $params->getString($service['type' ]. '_url') : '';
 
             if (!empty($id) && $isMarkedForRemoval) {
                 // Existing credential marked for removal
-                $this->getClient()->delete($this->getServiceUrl() . '/services/' . $service['type'] . '/' . $id, [
-                    'headers' => [
-                        'X-API-KEY' => $this->getSetting('apiKey')
-                    ]
-                ]);
+                try {
+                    $this->getClient()->delete($this->getServiceUrl() . '/services/' . $service['type'] . '/' . $id, [
+                        'headers' => [
+                            'X-API-KEY' => $this->getSetting('apiKey')
+                        ]
+                    ]);
+                } catch (RequestException $requestException) {
+                    $this->getLogger()->error('getAvailableServices: delete failed. e = '
+                        . $requestException->getMessage());
+                }
                 unset($credentials[$service['type']]);
             } else if (!empty($userName) && !empty($password)) {
                 // A new service or an existing service with a changed password.

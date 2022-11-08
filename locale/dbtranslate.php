@@ -146,3 +146,25 @@ echo __('Show header?');
 echo __('Product border colour');
 echo __('Title');
 echo __('Description');
+
+// Display Types
+echo __('Billboard');
+echo __('Kiosk');
+echo __('LED Matrix / LED Video Wall');
+echo __('Monitor / Other');
+echo __('Projector');
+echo __('Shelf-edge Display');
+echo __('Smart Mirror');
+echo __('TV / Panel');
+echo __('Tablet');
+echo __('Totem');
+
+// Weather templates
+echo __('Wind');
+echo __('Humidity');
+echo __('Feels Like');
+echo __('Right now');
+echo __('Pressure');
+echo __('Visibility');
+echo __('TODAY');
+echo __('RIGHT NOW');

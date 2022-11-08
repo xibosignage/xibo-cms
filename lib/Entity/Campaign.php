@@ -23,7 +23,9 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DisplayNotifyServiceInterface;
@@ -55,6 +57,12 @@ class Campaign implements \JsonSerializable
      * @var int
      */
     public $ownerId;
+
+    /**
+     * @SWG\Property(description="The type of campaign, either list or ad")
+     * @var string
+     */
+    public $type;
 
     /**
      * @SWG\Property(description="The name of the Campaign")
@@ -104,7 +112,6 @@ class Campaign implements \JsonSerializable
      */
     public $cyclePlaybackEnabled;
 
-
     /**
      * @SWG\Property(description="In cycle based playback, how many plays should each Layout have before moving on?")
      * @var int
@@ -112,9 +119,99 @@ class Campaign implements \JsonSerializable
     public $playCount;
 
     /**
-     * @var Layout[]
+     * @SWG\Property(description="In list campaign types, how should the layouts play out?")
+     * @var string
      */
+    public $listPlayOrder;
+
+    /**
+     * @SWG\Property(description="For an ad campaign, what's the target type, plays|budget")
+     * @var string
+     */
+    public $targetType;
+
+    /**
+     * @SWG\Property(description="For an ad campaign, what's the target (expressed in targetType)")
+     * @var int
+     */
+    public $target;
+
+    /**
+     * @SWG\Property(description="For an ad campaign, what's the start date")
+     * @var int
+     */
+    public $startDt;
+
+    /**
+     * @SWG\Property(description="For an ad campaign, what's the end date")
+     * @var int
+     */
+    public $endDt;
+
+    /**
+     * @SWG\Property(description="The number of plays achived by this campaign")
+     * @var int
+     */
+    public $plays;
+
+    /**
+     * @SWG\Property(description="The amount of spend in cents/pence/etc")
+     * @var int
+     */
+    public $spend;
+
+    /**
+     * @SWG\Property(description="The number of impressions achived by this campaign")
+     * @var int
+     */
+    public $impressions;
+
+    /**
+     * @SWG\Property(description="The latest proof of play ID aggregated into the stats")
+     * @var int
+     */
+    public $lastPopId;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref1;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref2;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref3;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref4;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref5;
+
+    public $createdAt;
+    public $modifiedAt;
+    public $modifiedBy;
+    public $modifiedByName;
+
+    /** @var \Xibo\Entity\LayoutOnCampaign[] */
     public $layouts = [];
+
+    /** @var int[] */
+    public $displayGroupIds = [];
 
     /**
      * @var Permission[]
@@ -125,15 +222,28 @@ class Campaign implements \JsonSerializable
      * @var Schedule[]
      */
     private $events = [];
-    
+
     // Private
     /** @var TagLink[] */
     private $unlinkTags = [];
     /** @var TagLink[] */
     private $linkTags = [];
 
+    /** @var bool Have the Layout assignments been loaded? */
+    private $layoutAssignmentsLoaded = false;
+
     /** @var bool Have the Layout assignments changed? */
     private $layoutAssignmentsChanged = false;
+
+    private $displayGroupAssignmentsChanged = false;
+
+    // Internal tracking variables for when we're incrementing plays/spend and impressions.
+    private $additionalPlays = 0;
+    private $additionalSpend = 0.0;
+    private $additionalImpressions = 0.0;
+
+    /** @var \Xibo\Factory\CampaignFactory */
+    private $campaignFactory;
 
     /**
      * @var PermissionFactory
@@ -157,9 +267,17 @@ class Campaign implements \JsonSerializable
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
      */
-    public function __construct($store, $log, $dispatcher, $permissionFactory, $scheduleFactory, $displayNotifyService)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        CampaignFactory $campaignFactory,
+        $permissionFactory,
+        $scheduleFactory,
+        $displayNotifyService
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
+        $this->campaignFactory = $campaignFactory;
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayNotifyService = $displayNotifyService;
@@ -177,7 +295,12 @@ class Campaign implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('CampaignId %d, Campaign %s, LayoutSpecific %d', $this->campaignId, $this->campaign, $this->isLayoutSpecific);
+        return sprintf(
+            'CampaignId %d, Campaign %s, LayoutSpecific %d',
+            $this->campaignId,
+            $this->campaign,
+            $this->isLayoutSpecific
+        );
     }
 
     /**
@@ -213,6 +336,65 @@ class Campaign implements \JsonSerializable
     }
 
     /**
+     * @return \Carbon\Carbon|false|null
+     */
+    public function getStartDt()
+    {
+        return $this->startDt == 0 ? null : Carbon::createFromFormat('U', $this->startDt);
+    }
+
+    /**
+     * @return \Carbon\Carbon|false|null
+     */
+    public function getEndDt()
+    {
+        return $this->endDt == 0 ? null : Carbon::createFromFormat('U', $this->endDt);
+    }
+
+    /**
+     * @param \Carbon\Carbon|null $testDate
+     * @return \Xibo\Entity\CampaignProgress
+     */
+    public function getProgress(?Carbon $testDate = null): CampaignProgress
+    {
+        $progress = new CampaignProgress();
+
+        if ($this->type !== 'ad' || $this->startDt == null || $this->endDt == null) {
+            $progress->progressTime = 0;
+            $progress->progressTarget = 0;
+            return $progress;
+        }
+
+        if ($testDate === null) {
+            $testDate = Carbon::now();
+        }
+        $startDt = $this->getStartDt();
+        $progress->daysTotal = $this->getEndDt()->diffInDays($startDt);
+        $progress->targetPerDay = $this->target / $progress->daysTotal;
+
+        if ($startDt->isAfter($testDate)) {
+            $progress->progressTime = 0;
+            $progress->progressTarget = 0;
+        } else {
+            $progress->daysIn = $testDate->diffInDays($startDt);
+
+            // Use hours to calculate more accurate progress
+            $hoursTotal = $progress->daysTotal * 24;
+            $hoursIn = $testDate->diffInHours($startDt);
+            $progress->progressTime = $hoursIn / $hoursTotal * 100;
+
+            if ($this->targetType === 'budget') {
+                $progress->progressTarget = ($this->spend / $this->target) * 100;
+            } else if ($this->targetType === 'impressions') {
+                $progress->progressTarget = ($this->impressions / $this->target) * 100;
+            } else {
+                $progress->progressTarget = ($this->plays / $this->target) * 100;
+            }
+        }
+        return $progress;
+    }
+
+    /**
      * @param array $options
      * @throws NotFoundException
      */
@@ -220,10 +402,10 @@ class Campaign implements \JsonSerializable
     {
         $options = array_merge([
             'loadPermissions' => true,
-            'loadTags' => true,
-            'loadEvents' => true
+            'loadEvents' => true,
+            'loadDisplayGroupIds' => true,
         ], $options);
-        
+
         // If we are already loaded, then don't do it again
         if ($this->campaignId == null || $this->loaded) {
             return;
@@ -239,7 +421,38 @@ class Campaign implements \JsonSerializable
             $this->events = $this->scheduleFactory->getByCampaignId($this->campaignId);
         }
 
+        if ($options['loadDisplayGroupIds']) {
+            $this->displayGroupIds = $this->loadDisplayGroupIds();
+        }
+
         $this->loaded = true;
+    }
+
+    /**
+     * @return \Xibo\Entity\LayoutOnCampaign[]
+     */
+    public function loadLayouts(): array
+    {
+        if (!$this->layoutAssignmentsLoaded && $this->campaignId !== null) {
+            $this->layouts = $this->campaignFactory->getLinkedLayouts($this->campaignId);
+            $this->layoutAssignmentsLoaded = true;
+        }
+        return $this->layouts;
+    }
+
+    /**
+     * @param int $displayOrder
+     * @return \Xibo\Entity\LayoutOnCampaign
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getLayoutAt(int $displayOrder): LayoutOnCampaign
+    {
+        foreach ($this->layouts as $layout) {
+            if ($layout->displayOrder === $displayOrder) {
+                return $layout;
+            }
+        }
+        throw new NotFoundException();
     }
 
     /**
@@ -247,12 +460,37 @@ class Campaign implements \JsonSerializable
      */
     public function validate()
     {
+        if ($this->type !== 'list' && $this->type !== 'ad') {
+            throw new InvalidArgumentException(__('Invalid type'), 'type');
+        }
+
         if (!v::stringType()->notEmpty()->validate($this->campaign)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
         }
 
         if ($this->cyclePlaybackEnabled === 1 && empty($this->playCount)) {
             throw new InvalidArgumentException(__('Please enter play count'), 'playCount');
+        }
+
+        if ($this->type === 'ad') {
+            if (!in_array($this->targetType, ['plays', 'budget', 'impressions'])) {
+                throw new InvalidArgumentException(__('Invalid target type'), 'targetType');
+            }
+
+            if ($this->target <= 0) {
+                throw new InvalidArgumentException(__('Please enter a target'), 'target');
+            }
+
+            if ($this->campaignId !== null && count($this->displayGroupIds) <= 0) {
+                throw new InvalidArgumentException(__('Please select one or more displays'), 'displayGroupId[]');
+            }
+        } else {
+            if ($this->listPlayOrder !== 'round' && $this->listPlayOrder !== 'block') {
+                throw new InvalidArgumentException(
+                    __('Please choose either round-robin or block play order for this list'),
+                    'listPlayOrder'
+                );
+            }
         }
     }
 
@@ -299,6 +537,7 @@ class Campaign implements \JsonSerializable
                 }
             }
         }
+
         // Manage assignments
         $this->manageAssignments();
 
@@ -316,6 +555,11 @@ class Campaign implements \JsonSerializable
     {
         $this->load();
 
+        // Unassign display groups
+        $this->getStore()->update('DELETE FROM `lkcampaigndisplaygroup` WHERE campaignId = :campaignId', [
+            'campaignId' => $this->campaignId,
+        ]);
+
         // Unassign all Layouts
         $this->layouts = [];
         $this->unlinkLayouts();
@@ -325,7 +569,7 @@ class Campaign implements \JsonSerializable
             /* @var Permission $permission */
             $permission->delete();
         }
-        
+
         // Unassign all Tags
         $this->unlinkAllTagsFromEntity('lktagcampaign', 'campaignId', $this->campaignId);
 
@@ -345,124 +589,108 @@ class Campaign implements \JsonSerializable
     }
 
     /**
-     * @return \Xibo\Entity\Layout[]
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function getLayouts(): array
-    {
-        return $this->layouts;
-    }
-
-    /**
      * Assign Layout
-     * @param Layout $layout
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @param int $layoutId
+     * @param int|null $displayOrder
+     * @param int|null $dayPartId
+     * @param string|null $daysOfWeek
+     * @param string|null $geoFence
+     * @return \Xibo\Entity\LayoutOnCampaign
      */
-    public function assignLayout($layout)
-    {
-        // Validate if we're a full campaign
-        if ($this->isLayoutSpecific === 0) {
-            // Make sure we're not a draft
-            if ($layout->isChild()) {
-                throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
-            }
+    public function assignLayout(
+        int $layoutId,
+        ?int $displayOrder = null,
+        ?int $dayPartId = null,
+        ?string $daysOfWeek = null,
+        ?string $geoFence = null
+    ): LayoutOnCampaign {
+        $this->getLog()->debug('assignLayout: starting with layoutId: ' . $layoutId);
 
-            // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
-            if ($layout->isTemplate()) {
-                throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
-            }
-        }
+        // Load the layouts we do have already
+        $this->loadLayouts();
 
-        $this->load();
+        // Make a new assignment
+        $assignment = $this->campaignFactory->createEmptyLayoutAssignment();
+        $assignment->layoutId = $layoutId;
 
-        $layout->displayOrder = ($layout->displayOrder == null || $layout->displayOrder == 0)
-            ? count($this->layouts) + 1
-            : $layout->displayOrder;
+        // Props
+        $assignment->displayOrder = empty($displayOrder) ? count($this->layouts) + 1 : $displayOrder;
+        $assignment->dayPartId = $dayPartId;
+        $assignment->daysOfWeek = $daysOfWeek;
+        $assignment->geoFence = $geoFence;
 
-        $found = false;
-        foreach ($this->layouts as $existingLayout) {
-            if ($existingLayout->getId() === $layout->getId()
-                    && $existingLayout->displayOrder === $layout->displayOrder
-                    && $this->isLayoutSpecific !== 1) {
-                $found = true;
-                break;
-            }
-        }
+        // We've changed assignments.
+        $this->layoutAssignmentsChanged = true;
+        $this->layouts[] = $assignment;
+        $this->numberLayouts++;
 
-        if (!$found) {
-            $this->getLog()->debug('Layout assignment doesnt exist, adding it. ' . $layout . ', display order ' . $layout->displayOrder);
-            $this->layoutAssignmentsChanged = true;
-            $this->layouts[] = $layout;
-            $this->numberLayouts++;
-        }
+        return $assignment;
     }
 
     /**
      * Unassign Layout
-     * @param Layout $layout
-     * @param bool $unassignCompletely
-     * @throws NotFoundException
+     * @param int $layoutId
+     * @param int|null $displayOrder
+     * @return \Xibo\Entity\Campaign
      */
-    public function unassignLayout($layout, $unassignCompletely = false)
-    {
-        $this->load();
+    public function unassignLayout(
+        int $layoutId,
+        ?int $displayOrder = null
+    ): Campaign {
+        // Load the layouts we do have already
+        $this->loadLayouts();
 
         $countBefore = count($this->layouts);
-        $this->getLog()->debug('Unassigning Layout, count before assign = ' . $countBefore);
+        $this->getLog()->debug('unassignLayout: Count before assign = ' . $countBefore);
 
-        $found = false;
+        // Keep track of keys to remove
         $existingKeys = [];
 
         foreach ($this->layouts as $key => $existing) {
+            $this->getLog()->debug('unassignLayout: Comparing existing ['
+                . $existing->layoutId . ', ' . $existing->displayOrder
+                . '] with unassign [' . $layoutId . ', ' . $displayOrder . '].');
 
-            /** @var Layout $existing */
-            $this->getLog()->debug('Comparing existing [' . $existing->layoutId . ', ' . $existing->displayOrder . '] with unassign [' . $layout->layoutId . ', ' . $layout->displayOrder . '].');
-
-            if (!$unassignCompletely) {
-                if ($layout->displayOrder == null) {
-                    if ($existing->getId() == $layout->getId()) {
-                        $found = true;
-                        $existingKeys[] = $key;
-                        break;
-                    }
-                } else {
-                    if ($existing->getId() == $layout->getId() && $existing->displayOrder == $layout->displayOrder) {
-                        $found = true;
-                        $existingKeys[] = $key;
-                        break;
-                    }
-                }
-            } else {
-                // we came here from Layout delete, make sure to unassign all occurrences of that Layout from the campaign
-                // https://github.com/xibosignage/xibo/issues/1960
-                if ($existing->getId() == $layout->getId()) {
-                    $found = true;
+            // Does this layoutId match?
+            if ($layoutId === $existing->layoutId) {
+                // Are we looking to remove a specific one?
+                if ($displayOrder === null || $displayOrder === $existing->displayOrder) {
                     $existingKeys[] = $key;
+                    $this->layoutAssignmentsChanged = true;
                 }
             }
         }
 
-        if ($found) {
-            foreach ($existingKeys as $existingKey) {
-                $this->getLog()->debug('Removing item at key ' . $existingKey);
-                unset($this->layouts[$existingKey]);
+        // Remove the keys necessary
+        foreach ($existingKeys as $existingKey) {
+            $this->getLog()->debug('Removing item at key ' . $existingKey);
+            unset($this->layouts[$existingKey]);
+        }
+
+        return $this;
+    }
+
+    private function orderLayoutAssignments(): void
+    {
+        // Sort the layouts by their display order
+        usort($this->layouts, function ($a, $b) {
+            if ($a->displayOrder === null) {
+                return 1;
             }
-        }
 
-        $countAfter = count($this->layouts);
-        $this->getLog()->debug('Count after unassign ' . $countAfter);
+            if ($a->displayOrder === $b->displayOrder) {
+                return 0;
+            }
 
-        if ($countBefore !== $countAfter) {
-            $this->layoutAssignmentsChanged = true;
-            $this->numberLayouts = $countAfter;
-        }
+            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
+        });
     }
 
     /**
+     * Unassign all layouts
      * @return $this
      */
-    public function unassignAllLayouts()
+    public function unassignAllLayouts(): Campaign
     {
         $this->layoutAssignmentsChanged = true;
         $this->numberLayouts = 0;
@@ -471,19 +699,76 @@ class Campaign implements \JsonSerializable
     }
 
     /**
+     * Load displayGroupIds
+     * @return int[]
+     */
+    public function loadDisplayGroupIds(): array
+    {
+        $displayGroupIds = [];
+        foreach ($this->getStore()->select('SELECT * FROM lkcampaigndisplaygroup WHERE campaignId = :campaignId', [
+            'campaignId' => $this->campaignId,
+        ]) as $link) {
+            $displayGroupIds[] = intval($link['displayGroupId']);
+        }
+        return $displayGroupIds;
+    }
+
+    /**
+     * @param $displayGroupIds
+     * @return $this
+     */
+    public function replaceDisplayGroupIds($displayGroupIds): Campaign
+    {
+        $this->displayGroupAssignmentsChanged = true;
+        $this->displayGroupIds = $displayGroupIds;
+        return $this;
+    }
+
+    /**
      * Add
      */
     private function add()
     {
-        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, cyclePlaybackEnabled, playCount, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :cyclePlaybackEnabled, :playCount, :folderId, :permissionsFolderId)', array(
+        $this->campaignId = $this->getStore()->insert('
+            INSERT INTO `campaign` (
+                campaign,
+                type,
+                isLayoutSpecific,
+                userId,
+                cyclePlaybackEnabled,
+                playCount,
+                listPlayOrder,
+                targetType,
+                target,
+                folderId,
+                permissionsFolderId
+            ) 
+            VALUES (
+                :campaign,
+                :type,
+                :isLayoutSpecific,
+                :userId,
+                :cyclePlaybackEnabled,
+                :playCount,
+                :listPlayOrder,
+                :targetType,
+                :target,    
+                :folderId,
+                :permissionsFolderId
+            )
+        ', [
             'campaign' => $this->campaign,
+            'type' => $this->type,
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
+            'listPlayOrder' => $this->listPlayOrder,
             'playCount' => $this->playCount,
+            'targetType' => empty($this->targetType) ? null : $this->targetType,
+            'target' => empty($this->target) ? null : $this->target,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
-        ));
+        ]);
     }
 
     /**
@@ -491,14 +776,43 @@ class Campaign implements \JsonSerializable
      */
     private function update()
     {
-        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, cyclePlaybackEnabled = :cyclePlaybackEnabled, playCount = :playCount, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('
+            UPDATE `campaign`
+                SET campaign = :campaign,
+                    userId = :userId,
+                    cyclePlaybackEnabled = :cyclePlaybackEnabled,
+                    playCount = :playCount,
+                    listPlayOrder = :listPlayOrder,
+                    ref1 = :ref1,
+                    ref2 = :ref2,
+                    ref3 = :ref3,
+                    ref4 = :ref4,
+                    ref5 = :ref5,
+                    targetType = :targetType,
+                    target = :target,
+                    startDt = :startDt,
+                    endDt = :endDt,
+                    folderId = :folderId,
+                    permissionsFolderId = :permissionsFolderId
+             WHERE campaignID = :campaignId
+        ', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
             'userId' => $this->ownerId,
             'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
+            'listPlayOrder' => $this->listPlayOrder,
+            'targetType' => empty($this->targetType) ? null : $this->targetType,
+            'target' => empty($this->target) ? null : $this->target,
+            'startDt' => empty($this->startDt) ? null : $this->startDt,
+            'endDt' => empty($this->endDt) ? null : $this->endDt,
+            'ref1' => empty($this->ref1) ? null : $this->ref1,
+            'ref2' => empty($this->ref2) ? null : $this->ref2,
+            'ref3' => empty($this->ref3) ? null : $this->ref3,
+            'ref4' => empty($this->ref4) ? null : $this->ref4,
+            'ref5' => empty($this->ref5) ? null : $this->ref5,
             'folderId' => $this->folderId,
-            'permissionsFolderId' => $this->permissionsFolderId
+            'permissionsFolderId' => $this->permissionsFolderId,
         ]);
     }
 
@@ -514,6 +828,23 @@ class Campaign implements \JsonSerializable
         } else {
             $this->getLog()->debug('Assignments have not changed on ' . $this);
         }
+
+        if ($this->displayGroupAssignmentsChanged) {
+            $this->getStore()->update('DELETE FROM `lkcampaigndisplaygroup` WHERE campaignId = :campaignId', [
+                'campaignId' => $this->campaignId,
+            ]);
+
+            foreach ($this->displayGroupIds as $displayGroupId) {
+                $this->getStore()->update('
+                INSERT INTO `lkcampaigndisplaygroup` (campaignId, displayGroupId) 
+                    VALUES (:campaignId, :displayGroupId)
+                ON DUPLICATE KEY UPDATE campaignId = :campaignId
+            ', [
+                    'campaignId' => $this->campaignId,
+                    'displayGroupId' => $displayGroupId,
+                ]);
+            }
+        }
     }
 
     /**
@@ -526,31 +857,34 @@ class Campaign implements \JsonSerializable
             return;
         }
 
-        // Sort the layouts by their display order
-        usort($this->layouts, function($a, $b) {
-            /** @var Layout $a */
-            /** @var Layout $b */
-            if ($a->displayOrder === null)
-                return 1;
-
-            if ($a->displayOrder === $b->displayOrder)
-                return 0;
-
-            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
-        });
+        $this->orderLayoutAssignments();
 
         // Update the layouts, in order to have display order 1 to n
         $i = 0;
-        $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES ';
+        $sql = '
+            INSERT INTO `lkcampaignlayout` (campaignID, layoutID, displayOrder, dayPartId, daysOfWeek, geoFence)
+             VALUES 
+        ';
         $params = ['campaignId' => $this->campaignId];
 
         foreach ($this->layouts as $layout) {
             $i++;
             $layout->displayOrder = $i;
 
-            $sql .= '(:campaignId, :layoutId_' . $i . ', :displayOrder_' . $i . '),';
+            $sql .= '(
+                :campaignId,
+                :layoutId_' . $i . ',
+                :displayOrder_' . $i . ',
+                :dayPartId_' . $i . ',
+                :daysOfWeek_' . $i . ',
+                :geoFence_' . $i . '
+            ),';
+
             $params['layoutId_' . $i] = $layout->layoutId;
             $params['displayOrder_' . $i] = $layout->displayOrder;
+            $params['dayPartId_' . $i] = $layout->dayPartId == null ? null : $layout->dayPartId;
+            $params['daysOfWeek_' . $i] = $layout->daysOfWeek == null ? null : $layout->daysOfWeek;
+            $params['geoFence_' . $i] = $layout->geoFence == null ? null : json_encode($layout->geoFence);
         }
 
         $sql = rtrim($sql, ',');
@@ -564,7 +898,9 @@ class Campaign implements \JsonSerializable
     private function unlinkLayouts()
     {
         // Delete all the links
-        $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId', ['campaignId' => $this->campaignId]);
+        $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId', [
+            'campaignId' => $this->campaignId
+        ]);
     }
 
     /**
@@ -597,5 +933,44 @@ class Campaign implements \JsonSerializable
                 $notify->notifyByLayoutCode($options['layoutCode']);
             }
         }
+    }
+
+    /**
+     * Add to the number of plays
+     * @param int $plays
+     * @param float $spend
+     * @param float $impressions
+     * @return $this
+     */
+    public function incrementPlays(int $plays, float $spend, float $impressions): Campaign
+    {
+        $this->plays += $plays;
+        $this->additionalPlays += $plays;
+        $this->spend += $spend;
+        $this->additionalSpend += $spend;
+        $this->impressions += $impressions;
+        $this->additionalImpressions += $impressions;
+        return $this;
+    }
+
+    /**
+     * Save increments to the number of plays
+     * @return $this
+     */
+    public function saveIncrementPlays(): Campaign
+    {
+        $this->getStore()->update('
+            UPDATE `campaign`
+                SET `plays` = `plays` + :plays,
+                    `spend` = `spend` + :spend,
+                    `impressions` = `impressions` + :impressions
+             WHERE campaignId = :campaignId
+        ', [
+            'plays' => $this->additionalPlays,
+            'spend' => $this->additionalSpend,
+            'impressions' => $this->additionalImpressions,
+            'campaignId' => $this->campaignId,
+        ]);
+        return $this;
     }
 }

@@ -39,6 +39,7 @@ use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\DisplayTypeFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -112,6 +113,11 @@ class Display extends Base
      */
     private $displayProfileFactory;
 
+    /**
+     * @var DisplayTypeFactory
+     */
+    private $displayTypeFactory;
+
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
 
@@ -137,6 +143,7 @@ class Display extends Base
      * @param PlayerActionServiceInterface $playerAction
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayTypeFactory $displayTypeFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param DisplayEventFactory $displayEventFactory
@@ -147,13 +154,14 @@ class Display extends Base
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
+    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $displayTypeFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayTypeFactory = $displayTypeFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->displayEventFactory = $displayEventFactory;
@@ -163,6 +171,62 @@ class Display extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->dayPartFactory = $dayPartFactory;
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/displayvenue",
+     *  summary="Get Display Venues",
+     *  tags={"displayVenue"},
+     *  operationId="displayVenueSearch",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="a successful response",
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function displayVenue(Request $request, Response $response)
+    {
+        if (!file_exists(PROJECT_ROOT . '/openooh/specification.json')) {
+            throw new GeneralException(__('OpenOOH specification missing'));
+        }
+
+        $content = file_get_contents(PROJECT_ROOT . '/openooh/specification.json');
+        $data = json_decode($content, true);
+
+        $taxonomy = [];
+        $i = 0;
+        foreach ($data['openooh_venue_taxonomy']['specification']['categories'] as $categories) {
+            $taxonomy[$i]['venueId'] = $categories['enumeration_id'];
+            $taxonomy[$i]['venueName'] = $categories['name'];
+
+            $i++;
+            foreach ($categories['children'] as $children) {
+                $taxonomy[$i]['venueId'] = $children['enumeration_id'];
+                $taxonomy[$i]['venueName'] = $categories['name'] . ' -> ' . $children['name'];
+                $i++;
+
+                if (isset($children['children'])) {
+                    foreach ($children['children'] as $grandchildren) {
+                        $taxonomy[$i]['venueId'] = $grandchildren['enumeration_id'] ;
+                        $taxonomy[$i]['venueName'] = $categories['name'] . ' -> ' . $children['name'] .  ' -> ' . $grandchildren['name'] ;
+                        $i++;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($taxonomy);
+        $this->getState()->setData($taxonomy);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -383,6 +447,7 @@ class Display extends Base
             'clientVersion' => $parsedQueryParams->getString('clientVersion'),
             'clientType' => $parsedQueryParams->getString('clientType'),
             'clientCode' => $parsedQueryParams->getString('clientCode'),
+            'customId' => $parsedQueryParams->getString('customId'),
             'authorised' => $parsedQueryParams->getInt('authorised'),
             'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
             'tags' => $parsedQueryParams->getString('tags'),
@@ -565,7 +630,6 @@ class Display extends Base
 
         // Get a list of displays
         $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
-
 
         // Get all Display Profiles
         $displayProfiles = [];
@@ -1028,7 +1092,6 @@ class Display extends Base
         }
 
         foreach ($displays as $display) {
-
             // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
             $displayProfileName = '';
             try {
@@ -1053,7 +1116,7 @@ class Display extends Base
                 'resolution' => $display->resolution,
                 'lastAccessed' => $display->lastAccessed,
             ];
-            
+
             if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
                 $properties['thumbnail'] = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
@@ -1097,6 +1160,7 @@ class Display extends Base
 
         // Get the settings from the profile
         $profile = $display->getSettings();
+        $displayTypes = $this->displayTypeFactory->query();
 
         // Get a list of timezones
         $timeZones = [];
@@ -1154,6 +1218,16 @@ class Display extends Base
             }
         }
 
+        // A list of languages
+        // Build an array of supported languages
+        $languages = [];
+        $localeDir = PROJECT_ROOT . '/locale';
+        foreach (array_map('basename', glob($localeDir . '/*.mo')) as $lang) {
+            // Trim the .mo off the end
+            $lang = str_replace('.mo', '', $lang);
+            $languages[] = ['id' => $lang, 'value' => $lang];
+        }
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
@@ -1166,7 +1240,9 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'dayParts' => $dayparts
+            'displayTypes' => $displayTypes,
+            'dayParts' => $dayparts,
+            'languages' => $languages,
         ]);
 
         return $this->render($request, $response);
@@ -1352,10 +1428,115 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="languages",
+     *      in="formData",
+     *      description="An array of languages supported in this display location",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="displayProfileId",
      *      in="formData",
      *      description="The Display Settings Profile ID",
      *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayTypeId",
+     *      in="formData",
+     *      description="The Display Type ID of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="screenSize",
+     *      in="formData",
+     *      description="The screen size of this Display",
+     *      type="number",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="venueId",
+     *      in="formData",
+     *      description="The Venue ID of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="address",
+     *      in="formData",
+     *      description="The Location Address of this Display",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isMobile",
+     *      in="formData",
+     *      description="Is this Display mobile?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isOutdoor",
+     *      in="formData",
+     *      description="Is this Display Outdoor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="costPerPlay",
+     *      in="formData",
+     *      description="The Cost Per Play of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="impressionsPerPlay",
+     *      in="formData",
+     *      description="The Impressions Per Play of this Display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="customId",
+     *      in="formData",
+     *      description="The custom ID (an Id of any external system) of this Display",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref1",
+     *      in="formData",
+     *      description="Reference 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref2",
+     *      in="formData",
+     *      description="Reference 2",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref3",
+     *      in="formData",
+     *      description="Reference 3",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref4",
+     *      in="formData",
+     *      description="Reference 4",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref5",
+     *      in="formData",
+     *      description="Reference 5",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -1417,6 +1598,17 @@ class Display extends Base
         $display->load();
 
         $display->description = $sanitizedParams->getString('description');
+        $display->displayTypeId = $sanitizedParams->getInt('displayTypeId');
+        $display->venueId = $sanitizedParams->getInt('venueId');
+        $display->address = $sanitizedParams->getString('address');
+        $display->isMobile = $sanitizedParams->getCheckbox('isMobile');
+        $languages = $sanitizedParams->getArray('languages');
+        if (empty($languages)) {
+            $display->languages = null;
+        } else {
+            $display->languages = implode(',', $languages);
+        }
+        $display->screenSize = $sanitizedParams->getInt('screenSize');
         $display->auditingUntil = $sanitizedParams->getDate('auditingUntil');
         $display->defaultLayoutId = $sanitizedParams->getInt('defaultLayoutId');
         $display->licensed = $sanitizedParams->getInt('licensed');
@@ -1437,6 +1629,15 @@ class Display extends Base
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
         $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
+        $display->isOutdoor = $sanitizedParams->getCheckbox('isOutdoor');
+        $display->costPerPlay = $sanitizedParams->getInt('costPerPlay');
+        $display->impressionsPerPlay = $sanitizedParams->getInt('impressionsPerPlay');
+        $display->customId = $sanitizedParams->getString('customId');
+        $display->ref1 = $sanitizedParams->getString('ref1');
+        $display->ref2 = $sanitizedParams->getString('ref2');
+        $display->ref3 = $sanitizedParams->getString('ref3');
+        $display->ref4 = $sanitizedParams->getString('ref4');
+        $display->ref5 = $sanitizedParams->getString('ref5');
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
@@ -1726,7 +1927,7 @@ class Display extends Base
         }
 
         // Go through each ID to assign
-        foreach ($sanitizedParams->getIntArray('displayGroupId') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupId', ['default' => []]) as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->load();
             $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
@@ -1740,7 +1941,7 @@ class Display extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId', ['default' => []]) as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->load();
             $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));

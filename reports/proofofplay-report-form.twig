@@ -40,9 +40,10 @@
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView" data-refresh-on-form-submit="false">
                 <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="proofofplayReport">
+                        <!-- Form Filter -->
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
@@ -93,6 +94,19 @@
                             ] %}
                             {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
+                            {% set title %}{% trans "Display Group" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("displayGroup.search") },
+                                { name: "data-search-term", value: "displayGroup" },
+                                { name: "data-id-property", value: "displayGroupId" },
+                                { name: "data-text-property", value: "displayGroup" }
+                            ] %}
+                            {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
+
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
@@ -107,6 +121,19 @@
 
                             {% set title %}{% trans "Layout" %}{% endset %}
                             {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
+
+                            {# Campaign list only. #}
+                            {% set attributes = [
+                                { name: "data-search-url", value:  url_for("campaign.search") },
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                            ] %}
+
+                            {% set title %}{% trans "Campaign" %}{% endset %}
+                            {% set helpText %}{% trans "Please select a Campaign" %}{% endset %}
+                            {{ inline.dropdown("parentCampaignId", "single", title, "", null, "campaignId", "campaign", "", "", "", "", "", attributes) }}
 
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
@@ -164,29 +191,71 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData card pt-3">
-                    <table id="stats" class="table table-striped" data-state-preference-name="proofOfPlayGrid">
-                        <thead>
-                        <tr>
-                            <th>{% trans "Type" %}</th>
-                            <th>{% trans "Display ID" %}</th>
-                            <th>{% trans "Display" %}</th>
-                            <th>{% trans "Layout ID" %}</th>
-                            <th>{% trans "Layout" %}</th>
-                            <th>{% trans "Widget ID" %}</th>
-                            <th>{% trans "Media" %}</th>
-                            <th>{% trans "Tag" %}</th>
-                            <th>{% trans "Number of Plays" %}</th>
-                            <th>{% trans "Total Duration" %}</th>
-                            <th>{% trans "Total Duration (s)" %}</th>
-                            <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "First Period Shown" %}</th>
-                            <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "Last Period Shown" %}</th>
-                        </tr>
-                        </thead>
-                        <tbody>
+                <!-- Card Header -->
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="tabular-tab" data-toggle="tab" href="#tabularTab" role="tab"
+                               aria-controls="tabularTab" aria-selected="true">Tabular</a>
+                        </li>
+                    </ul>
+                </div>
 
-                        </tbody>
-                    </table>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- TABULAR TAB-->
+                        <div class="tab-pane active" id="tabularTab" role="tabpanel" aria-labelledby="tabular-tab">
+                            <!-- DATATABLE -->
+                            <div class="table-container" id="table_wrapper">
+                                <table id="stats"
+                                       class="table xibo-table table-striped table-full-width"
+                                       style="width: 100%"
+                                       data-state-preference-name="proofOfPlayGrid"
+                                       data-url="/report/data/proofofplayReport">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Type" %}</th>
+                                        <th>{% trans "Display ID" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Campaign" %}</th>
+                                        <th>{% trans "Layout ID" %}</th>
+                                        <th>{% trans "Layout" %}</th>
+                                        <th>{% trans "Widget ID" %}</th>
+                                        <th>{% trans "Media" %}</th>
+                                        <th>{% trans "Tag" %}</th>
+                                        <th>{% trans "Number of Plays" %}</th>
+                                        <th>{% trans "Total Duration" %}</th>
+                                        <th>{% trans "Total Duration (s)" %}</th>
+                                        <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "First Period Shown" %}</th>
+                                        <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "Last Period Shown" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                    <tfoot>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -196,15 +265,23 @@
 {% block javaScript %}
     <script type="text/javascript">
         $(document).ready(function() {
-            var warning = $("#applyWarning");
+            let $report = $("#proofofplayReport");
+            let $dataTable = $('#stats'); // Datatable
+            let chart = null; // Chart
+            let result; // XHR get data result
+
+            let imageLoader = $("#imageLoader");
+            let $warning = $("#applyWarning");
+            let $applyBtn = $("#applyBtn");
+
+            // Report Filter
+            let reportFilter = $("#reportFilter"); // Report Filter
 
             // Grid
-            var table = $("#stats").DataTable({
+            let table = $dataTable.DataTable({
                 "language": dataTablesLanguage,
                 dom: dataTablesTemplate,
-                serverSide: true,
                 stateSave: true,
-                deferLoading: 0,
                 stateDuration: 0,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
@@ -214,18 +291,13 @@
                     }, 300);
                 },
                 filter: false,
-                searchDelay: 3000,
                 "order": [[1, "asc"]],
-                ajax: {
-                    "url": "{{ url_for("report.data", {name: reportName}) }}",
-                    "data": function (d) {
-                        $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                    }
-                },
+                data:{},
                 "columns": [
                     {"data": "type"},
                     {"data": "displayId"},
                     {"data": "display"},
+                    {"data": "campaign"},
                     {"data": "layoutId"},
                     {"data": "layout"},
                     {"data": "widgetId"},
@@ -268,7 +340,95 @@
                     {"data": "duration"},
                     {"data": "minStart"},
                     {"data": "maxEnd"}
-                ]
+
+                ],
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+
+                    // Total over all pages
+                    let totalNumberPlays = api.column(9).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalDuration = api.column(11).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalNumberPlaysPage = api.column(9, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalDurationPage = api.column(11, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    // Update footer
+                    $(api.column(9).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
+                    $(api.column(11).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
+                },
+            });
+
+            // table.on('draw', dataTableDraw);
+            // table.on('processing.dt', dataTableProcessing);
+            // dataTableAddButtons(table, $('#stats_wrapper').find('.dataTables_buttons'));
+
+            // Get Data
+            function getData(url) {
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    dataType: 'json',
+                    data: $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject(),
+                    success: function success(data) {
+                        result = data;
+                        $applyBtn.removeClass('disabled');
+
+                        // Based on tab load data
+                        if ($('.nav-tabs .nav-item a.active').attr("href") === '#tabularTab') {
+                            setTabularData(table, result.table);
+                        } else {
+                            setChartData(result.chart);
+                        }
+                    },
+                    error: function error(xhr, textStatus, _error) {
+                        $applyBtn.removeClass('disabled');
+                        toastr.error(xhr.responseJSON.message);
+                    }
+                });
+            }
+
+            function setTabularData(table, data) {
+                table.clear().draw();
+
+                if (Object.keys(data).length > 0) {
+                    table.rows.add( data ).draw()
+                }
+            }
+
+            function setChartData(data) {
+                imageLoader.show();
+
+                setTimeout(function() {
+                    $applyBtn.removeClass('disabled');
+                }, 300);
+
+                imageLoader.hide();
+                if (chart !== undefined && chart !== null) {
+                    chart.destroy();
+                }
+
+                // Create our chart
+                chart = new Chart($("#canvas"), data);
+            }
+
+            // Tab shown/click load relevant table/chart
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                let activeTab = $(e.target).attr("href")
+                if (result) {
+                    if (activeTab === '#tabularTab') {
+                        setTabularData(table, result.table);
+                    } else {
+                        setChartData(result.chart);
+                    }
+                }
             });
 
             table.on('draw', dataTableDraw);
@@ -276,13 +436,23 @@
             dataTableAddButtons(table, $('#stats_wrapper').find('.dataTables_buttons'));
 
             // Apply
-            $("#applyBtn").click(function () {
+            $applyBtn.click(function () {
                 $(this).addClass('disabled');
-                table.search($("#stats").closest(".XiboGrid").find(".FilterDiv form")).draw();
+                getData($dataTable.data().url);
             });
 
-            // Report Filter
-            var reportFilter = $("#reportFilter");
+            // If we select a displayId we hide the display group filter
+            $('#displayId').off('change').change( function() {
+
+                let displayId = $('#displayId').val();
+                if (displayId) {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                } else {
+                    $('#displayId option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                }
+            });
 
             // Hide / Show FromDt and ToDt
             function checkReportFilter(reportFilter) {
@@ -300,18 +470,18 @@
             }
 
             // Calculate the difference of number of days of a selected range
-            var calculateDaysShowHideWarn = function() {
+            let calculateDaysShowHideWarn = function() {
 
-                var fromDt = moment($("#statsFromDt").val());
-                var toDt = moment($("#statsToDt").val());
-                
-                var days = toDt.diff(fromDt, 'days');
+                let fromDt = moment($("#statsFromDt").val());
+                let toDt = moment($("#statsToDt").val());
 
-                warning.hide();
+                let days = toDt.diff(fromDt, 'days');
+
+                $warning.hide();
                 if ( days >= 30) {
-                    warning.show();
+                    $warning.show();
                 }
-                
+
                 return true;
             };
 
@@ -323,28 +493,28 @@
                 calculateDaysShowHideWarn();
             });
 
-            var checkFilterAndApply = function() {
+            let checkFilterAndApply = function() {
 
                 reportFilter.off('change').change( function() {
-                    var value = reportFilter.val();
+                    let value = reportFilter.val();
 
                     // Hide / Show FromDt and ToDt
                     checkReportFilter(reportFilter);
 
                     // Hide / Show Warning
-                    warning.hide();
+                    $warning.hide();
                     if ( value === '') {
                         calculateDaysShowHideWarn();
                     } else if ( value === 'thismonth' || value === 'lastmonth' || value === 'thisyear' || value === 'lastyear') {
-                        warning.show();
+                        $warning.show();
                     }
                 });
 
-                var anchorReportAddBtn = $("button#reportAddBtn");
-                var type = $("#type").val();
-                var tagsType = $("#tagsType").val();
-                var tags = $("#tags").val();
-                var exactTags = $('#exactTags').is(":checked");
+                let anchorReportAddBtn = $("button#reportAddBtn");
+                let type = $("#type").val();
+                let tagsType = $("#tagsType").val();
+                let tags = $("#tags").val();
+                let exactTags = $('#exactTags').is(":checked");
 
                 anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
                     + "&reportName=proofofplayReport" );
@@ -353,16 +523,91 @@
 
             checkReportFilter(reportFilter);
             checkFilterAndApply();
+
+
+            var $campaignSelect = $('#parentCampaignId');
+            $campaignSelect.select2({
+                ajax: {
+                    url: $campaignSelect.data("searchUrl"),
+                    dataType: "json",
+                    placeholder: 'Campaign',
+                    allowClear: true,
+                    data: function(params) {
+
+                        var query = {
+                            isLayoutSpecific: 0,
+                            retired: 0,
+                            totalDuration: 0,
+                            name: params.term,
+                            start: 0,
+                            length: 10,
+                            columns: [
+                                {
+                                    "data": "isLayoutSpecific"
+                                },
+                                {
+                                    "data": "campaign"
+                                }
+                            ],
+                            order: [
+                                {
+                                    "column": 0,
+                                    "dir": "asc"
+                                },
+                                {
+                                    "column": 1,
+                                    "dir": "asc"
+                                }
+                            ]
+                        };
+
+                        // Set the start parameter based on the page number
+                        if (params.page != null) {
+                            query.start = (params.page - 1) * 10;
+                        }
+
+                        return query;
+                    },
+                    processResults: function(data, params) {
+
+                        var results = [];
+                        var campaigns = [];
+
+                        $.each(data.data, function(index, element) {
+                            campaigns.push({
+                                "id": element.campaignId,
+                                "text": element.campaign
+                            });
+                        });
+
+                        results.push({
+                            "text": $campaignSelect.data('transCampaigns'),
+                            "children": campaigns
+                        })
+
+
+                        var page = params.page || 1;
+                        page = (page > 1) ? page - 1 : page;
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    }
+                }
+            })
         });
 
         function proofOfPlayScheduleCallback() {
 
-            var $displayId = $('#proofofplayReport #displayId');
-            var $layoutId = $('#proofofplayReport [id="layoutId[]"]');
-            var $mediaId = $('#proofofplayReport [id="mediaId[]"]');
-            var $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
-            var $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
-            var $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
+            let $displayId = $('#proofofplayReport #displayId');
+            let $layoutId = $('#proofofplayReport [id="layoutId[]"]');
+            let $mediaId = $('#proofofplayReport [id="mediaId[]"]');
+            let $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
+            let $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
+            let $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
 
             appendOptions($newDisplayId, $displayId.find('option:selected').clone());
             appendOptions($newLayoutId, $layoutId.find('option:selected').clone());
@@ -371,9 +616,9 @@
 
         function appendOptions(element, options) {
 
-            for (var i = 0; i < options.length; i++) {
+            for (let i = 0; i < options.length; i++) {
 
-                var option = options[i];
+                let option = options[i];
                 element.append(option).trigger('change');
                 $(option).prop('selected', true);
                 element.trigger({

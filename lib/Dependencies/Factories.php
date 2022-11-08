@@ -92,7 +92,8 @@ class Factories
                 $repository = new \Xibo\Factory\ConnectorFactory(
                     $c->get('pool'),
                     $c->get('configService'),
-                    $c->get('jwtService')
+                    $c->get('jwtService'),
+                    $c
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -168,6 +169,11 @@ class Factories
                     $c->get('userFactory'),
                     $c->get('permissionFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'displayTypeFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\DisplayTypeFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },

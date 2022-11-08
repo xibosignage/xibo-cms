@@ -191,49 +191,28 @@ class TimeConnected implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        $metadata = [
+            'periodStart' => $json['metadata']['periodStart'],
+            'periodEnd' => $json['metadata']['periodEnd'],
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                ->format(DateFormatHelper::getSystemFormat()),
+            'title' => $savedReport->saveAs,
+        ];
+
         // Report result object
         return new ReportResult(
-            [
-                'periodStart' => $json['metadata']['periodStart'],
-                'periodEnd' => $json['metadata']['periodEnd'],
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
-                    ->format(DateFormatHelper::getSystemFormat()),
-                'title' => $savedReport->saveAs,
-            ],
+            $metadata,
             $json['table'],
             $json['recordsTotal'],
-            $json['chart'],
-            $json['hasChartData']
+            $json['chart']
         );
     }
 
     /** @inheritdoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
-        $displayIds = [];
-
         // Get an array of display id this user has access to.
-        $accessibleDisplayIds = $this->getDisplayIdFilter($sanitizedParams);
-
-        if (count($displayGroupIds) > 0) {
-            foreach ($displayGroupIds as $displayGroupId) {
-                // Get all displays by Display Group
-                $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
-                foreach ($displays as $display) {
-                    if (in_array($display->displayId, $accessibleDisplayIds)) {
-                        // User has access to the display
-                        $displayIds[] = $display->displayId;
-                    }
-                }
-            }
-        } else {
-            $displayIds = $accessibleDisplayIds;
-        }
-
-        if (count($displayIds) <= 0) {
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-        }
+        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
         // From and To Date Selection
         // --------------------------
@@ -320,37 +299,49 @@ class TimeConnected implements ReportInterface
         //
         // Output Results
         // --------------
-        $displayIdsArrayChunk = array_chunk($displayIds, 4);
-
-        // Fill  Period Data  with Displays
-        $timeConnected = [];
-        foreach ($result['periods'] as $resPeriods) {
-            foreach ($displayIdsArrayChunk as $key => $display) {
-                foreach ($display as $displayId) {
-                    $temp = $resPeriods['customLabel'];
-                    if (empty($timeConnected[$temp][$displayId]['percent'])) {
-                        $timeConnected[$key][$temp][$displayId]['percent'] = 100;
-                    }
-                    if (empty($timeConnected[$temp][$displayId]['label'])) {
-                        $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
-                    }
-
-                    foreach ($result['result'] as $res) {
-                        if ($res['displayId'] == $displayId && $res['customLabel'] == $resPeriods['customLabel']) {
-                            $timeConnected[$key][$temp][$displayId]['percent'] =  100 - round($res['percent'], 2);
-                            $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
-                        } else {
-                            continue;
-                        }
-                    }
-                }
+        if ($this->getUser()->isSuperAdmin()) {
+            $sql = 'SELECT displayId, display FROM display WHERE 1 = 1';
+            if (count($displayIds) > 0) {
+                $sql .= ' AND displayId IN (' . implode(',', $displayIds) . ')';
             }
         }
 
+        $timeConnected = [];
         $displays = [];
-        foreach ($displayIdsArrayChunk as $key => $display) {
-            foreach ($display as $displayId) {
-                $displays[$key][$displayId] = $this->displayFactory->getById($displayId)->display;
+        $i = 0;
+        $key = 0;
+        foreach ($this->store->select($sql, []) as $row) {
+            $displayId = intval($row['displayId']);
+            $displayName = $row['display'];
+
+            // Set the display name for the displays in this row.
+            $displays[$key][$displayId] = $displayName;
+
+            // Go through each period
+            foreach ($result['periods'] as $resPeriods) {
+                //
+                $temp = $resPeriods['customLabel'];
+                if (empty($timeConnected[$temp][$displayId]['percent'])) {
+                    $timeConnected[$key][$temp][$displayId]['percent'] = 100;
+                }
+                if (empty($timeConnected[$temp][$displayId]['label'])) {
+                    $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
+                }
+
+                foreach ($result['result'] as $res) {
+                    if ($res['displayId'] == $displayId && $res['customLabel'] == $resPeriods['customLabel']) {
+                        $timeConnected[$key][$temp][$displayId]['percent'] =  100 - round($res['percent'], 2);
+                        $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
+                    } else {
+                        continue;
+                    }
+                }
+            }
+
+            $i++;
+            if ($i >= 3) {
+                $i = 0;
+                $key++;
             }
         }
 
@@ -366,10 +357,7 @@ class TimeConnected implements ReportInterface
             [
                 'timeConnected' => $timeConnected,
                 'displays' => $displays
-            ],
-            0,
-            [],
-            true // to set state->extra
+            ]
         );
     }
 
@@ -436,8 +424,15 @@ class TimeConnected implements ReportInterface
                             display.display
                           FROM displayevent
                             INNER JOIN display
-                            ON display.displayId = displayevent.displayId
-                          WHERE display.displayID IN (' . implode(',', $displayIds) . ')
+                            ON display.displayId = displayevent.displayId 
+            ';
+
+        // Displays
+        if (count($displayIds) > 0) {
+            $query .= ' WHERE display.displayID IN (' . implode(',', $displayIds) . ') ';
+        }
+
+        $query .= '
                     ) down
                     ON down.start < periods.`end`
                         AND down.end > periods.`start`
