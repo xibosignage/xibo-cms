@@ -8,7 +8,8 @@ Copyright (C) 2006-2022 Xibo Signage Ltd and Contributors.
 
 - develop: Work in progress toward 4.0
 - master: Currently 3.2
-- release32: Release preparation for 3.2.x
+- release33: Release preparation for 3.3.x
+- release32: Bug fixes for 3.2
 - release31: Bug fixes for 3.1
 - release30: Bug fixes 3.0
 - release23: Bug fixes for 2.3

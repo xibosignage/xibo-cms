@@ -373,6 +373,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "listPlayOrder",
+                        "in": "formData",
+                        "description": "In layout list, how should campaigns in the schedule with the same play order be played?",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "targetType",
                         "in": "formData",
                         "description": "For ad campaigns, how do we measure the target? plays|budget",
@@ -463,6 +470,13 @@
                         "description": "In cycle based playback, how many plays should each Layout have before moving on?",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "listPlayOrder",
+                        "in": "formData",
+                        "description": "In layout list, how should campaigns in the schedule with the same play order be played?",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "targetType",
@@ -2429,6 +2443,20 @@
                 }
             }
         },
+        "/displayvenue": {
+            "get": {
+                "tags": [
+                    "displayVenue"
+                ],
+                "summary": "Get Display Venues",
+                "operationId": "displayVenueSearch",
+                "responses": {
+                    "200": {
+                        "description": "a successful response"
+                    }
+                }
+            }
+        },
         "/display": {
             "get": {
                 "tags": [
@@ -2722,11 +2750,116 @@
                         "type": "string"
                     },
                     {
+                        "name": "languages",
+                        "in": "formData",
+                        "description": "An array of languages supported in this display location",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "displayProfileId",
                         "in": "formData",
                         "description": "The Display Settings Profile ID",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "displayTypeId",
+                        "in": "formData",
+                        "description": "The Display Type ID of this Display",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "screenSize",
+                        "in": "formData",
+                        "description": "The screen size of this Display",
+                        "required": false,
+                        "type": "number"
+                    },
+                    {
+                        "name": "venueId",
+                        "in": "formData",
+                        "description": "The Venue ID of this Display",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "address",
+                        "in": "formData",
+                        "description": "The Location Address of this Display",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isMobile",
+                        "in": "formData",
+                        "description": "Is this Display mobile?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isOutdoor",
+                        "in": "formData",
+                        "description": "Is this Display Outdoor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "costPerPlay",
+                        "in": "formData",
+                        "description": "The Cost Per Play of this Display",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "impressionsPerPlay",
+                        "in": "formData",
+                        "description": "The Impressions Per Play of this Display",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "customId",
+                        "in": "formData",
+                        "description": "The custom ID (an Id of any external system) of this Display",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref1",
+                        "in": "formData",
+                        "description": "Reference 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref2",
+                        "in": "formData",
+                        "description": "Reference 2",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref3",
+                        "in": "formData",
+                        "description": "Reference 3",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref4",
+                        "in": "formData",
+                        "description": "Reference 4",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref5",
+                        "in": "formData",
+                        "description": "Reference 5",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "clearCachedData",
@@ -3264,6 +3397,41 @@
                         "description": "Folder ID to which this object should be assigned to",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "ref1",
+                        "in": "formData",
+                        "description": "Reference 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref2",
+                        "in": "formData",
+                        "description": "Reference 2",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref3",
+                        "in": "formData",
+                        "description": "Reference 3",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref4",
+                        "in": "formData",
+                        "description": "Reference 4",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref5",
+                        "in": "formData",
+                        "description": "Reference 5",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8018,7 +8186,8 @@
                     {
                         "name": "displayGroupIds",
                         "in": "query",
-                        "description": "The DisplayGroupIds to return the schedule for. Empty for All.",
+                        "description": "The DisplayGroupIds to return the schedule for. [-1] for All.",
+                        "required": true,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -8027,16 +8196,16 @@
                     {
                         "name": "from",
                         "in": "query",
-                        "description": "From Date Timestamp in Microseconds",
-                        "required": true,
-                        "type": "integer"
+                        "description": "From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "to",
                         "in": "query",
-                        "description": "To Date Timestamp in Microseconds",
-                        "required": true,
-                        "type": "integer"
+                        "description": "To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -14546,6 +14715,10 @@
                     "description": "In cycle based playback, how many plays should each Layout have before moving on?",
                     "type": "integer"
                 },
+                "listPlayOrder": {
+                    "description": "In list campaign types, how should the layouts play out?",
+                    "type": "string"
+                },
                 "targetType": {
                     "description": "For an ad campaign, what's the target type, plays|budget",
                     "type": "string"
@@ -14908,6 +15081,70 @@
                     "description": "The ID of this Display",
                     "type": "integer"
                 },
+                "displayTypeId": {
+                    "description": "The Display Type ID of this Display",
+                    "type": "integer"
+                },
+                "venueId": {
+                    "description": "The Venue ID of this Display",
+                    "type": "integer"
+                },
+                "address": {
+                    "description": "The Location Address of this Display",
+                    "type": "string"
+                },
+                "isMobile": {
+                    "description": "Is this Display mobile?",
+                    "type": "integer"
+                },
+                "languages": {
+                    "description": "The Languages supported in this display location",
+                    "type": "string"
+                },
+                "displayType": {
+                    "description": "The type of this Display",
+                    "type": "string"
+                },
+                "screenSize": {
+                    "description": "The screen size of this Display",
+                    "type": "integer"
+                },
+                "isOutdoor": {
+                    "description": "Is this Display Outdoor?",
+                    "type": "integer"
+                },
+                "customId": {
+                    "description": "The custom ID (an Id of any external system) of this Display",
+                    "type": "string"
+                },
+                "costPerPlay": {
+                    "description": "The Cost Per Play of this Display",
+                    "type": "integer"
+                },
+                "impressionsPerPlay": {
+                    "description": "The Impressions Per Play of this Display",
+                    "type": "integer"
+                },
+                "ref1": {
+                    "description": "Optional Reference 1",
+                    "type": "string"
+                },
+                "ref2": {
+                    "description": "Optional Reference 2",
+                    "type": "string"
+                },
+                "ref3": {
+                    "description": "Optional Reference 3",
+                    "type": "string"
+                },
+                "ref4": {
+                    "description": "Optional Reference 4",
+                    "type": "string"
+                },
+                "ref5": {
+                    "description": "Optional Reference 5",
+                    "type": "string"
+                },
                 "auditingUntil": {
                     "description": "Flag indicating whether this Display is recording Auditing Information from XMDS",
                     "type": "integer"
@@ -15225,6 +15462,26 @@
                 "permissionsFolderId": {
                     "description": "The id of the Folder responsible for providing permissions for this Display Group",
                     "type": "integer"
+                },
+                "ref1": {
+                    "description": "Optional Reference 1",
+                    "type": "string"
+                },
+                "ref2": {
+                    "description": "Optional Reference 2",
+                    "type": "string"
+                },
+                "ref3": {
+                    "description": "Optional Reference 3",
+                    "type": "string"
+                },
+                "ref4": {
+                    "description": "Optional Reference 4",
+                    "type": "string"
+                },
+                "ref5": {
+                    "description": "Optional Reference 5",
+                    "type": "string"
                 }
             }
         },
@@ -15263,6 +15520,18 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "DisplayType": {
+            "properties": {
+                "displayTypeId": {
+                    "description": "The ID for this DisplayType",
+                    "type": "integer"
+                },
+                "displayType": {
+                    "description": "The Name for this DisplayType",
+                    "type": "string"
                 }
             }
         },
