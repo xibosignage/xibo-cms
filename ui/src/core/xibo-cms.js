@@ -1447,8 +1447,7 @@ function dataTableCreateTags(data, type) {
 
     if (typeof data.tags !== undefined && data.tags != null ) {
         returnData += '<div id="tagDiv">';
-        var tagsArray = data.tags.split(',');
-        tagsArray.forEach((element) => returnData += '<li class="btn btn-sm btn-white btn-tag">' + element + '</span></li>')
+        data.tags.forEach((element) => returnData += '<li class="btn btn-sm btn-white btn-tag">' + element.tag + ((element.value) ? '|' + element.value : '') + '</li>')
         returnData += '</div>';
     }
 
@@ -2327,11 +2326,9 @@ function XiboMultiSelectTagFormRender(button) {
 
             // Add existing tags to the array
             if(['', null].indexOf(rowData.tags) === -1) {
-                var arrayOfTags = rowData.tags.split(',');
-
-                arrayOfTags.forEach(function(tag) {
+                rowData.tags.forEach(function(tag) {
                     if (existingTags.indexOf(tag) === -1) {
-                        existingTags.push(tag);
+                        existingTags.push(tag.tag + ((tag.value) ? '|' + tag.value : ''));
                     }
                 });
             }
@@ -2470,7 +2467,7 @@ function XiboMultiSelectTagFormRender(button) {
     });
     
     // Append button
-    footer.append(extrabutton);
+    footer.prepend(extrabutton);
 
     // Initialise controls
     XiboInitialise('#' + dialogId);
