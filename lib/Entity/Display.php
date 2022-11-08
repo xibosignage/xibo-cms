@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -46,6 +46,7 @@ use Xibo\Support\Exception\NotFoundException;
  * @property $isCmsTransferInProgress Is a transfer to another CMS in progress?
  *
  * @SWG\Definition()
+ * @property $tagsString
  */
 class Display implements \JsonSerializable
 {
@@ -54,6 +55,7 @@ class Display implements \JsonSerializable
     public static $STATUS_PENDING = 3;
 
     use EntityTrait;
+    use TagLinkTrait;
 
     /**
      * @SWG\Property(description="The ID of this Display")
@@ -309,10 +311,10 @@ class Display implements \JsonSerializable
     public $timeZone;
 
     /**
-     * @SWG\Property(description="Tags associated with this Display")
-     * @var Tag[]
+     * @SWG\Property(description="Tags associated with this Display, array of TagLink objects")
+     * @var TagLink[]
      */
-    public $tags;
+    public $tags = [];
 
     /**
      * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
@@ -742,7 +744,7 @@ class Display implements \JsonSerializable
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
             $displayGroup->load();
             $displayGroup->unassignDisplay($this);
             $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
@@ -750,7 +752,7 @@ class Display implements \JsonSerializable
 
         // Delete our display specific group
         $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->delete();
 
         // Delete the display
@@ -932,7 +934,7 @@ class Display implements \JsonSerializable
             $saveTags = false;
             if ($this->hasPropertyChanged('tags')) {
                 $saveTags = true;
-                $displayGroup->replaceTags($this->tags);
+                $displayGroup->updateTagLinks($this->tags);
             }
 
             // If the folderId has changed, we should check this user has permissions to the new folderId

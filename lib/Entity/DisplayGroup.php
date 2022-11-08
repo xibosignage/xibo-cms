@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -43,10 +43,12 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property $tagsString
  */
 class DisplayGroup implements \JsonSerializable
 {
     use EntityTrait;
+    use TagLinkTrait;
 
     /**
      * @SWG\Property(
@@ -131,8 +133,8 @@ class DisplayGroup implements \JsonSerializable
     public $userId = 0;
 
     /**
-     * @SWG\Property(description="Tags associated with this DisplayGroup")
-     * @var Tag[]
+     * @SWG\Property(description="Tags associated with this Display Group, array of TagLink objects")
+     * @var TagLink[]
      */
     public $tags = [];
 
@@ -179,7 +181,10 @@ class DisplayGroup implements \JsonSerializable
     public $events = [];
     private $displayGroups = [];
     private $permissions = [];
-    private $unassignTags = [];
+    /** @var TagLink[] */
+    private $unlinkTags = [];
+    /** @var TagLink[] */
+    private $linkTags = [];
     private $jsonInclude = ['displayGroupId', 'displayGroup'];
 
     // Track original assignments
@@ -218,26 +223,19 @@ class DisplayGroup implements \JsonSerializable
     private $permissionFactory;
 
     /**
-     * @var TagFactory
-     */
-    private $tagFactory;
-
-    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param DisplayGroupFactory $displayGroupFactory
      * @param PermissionFactory $permissionFactory
-     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $dispatcher, $displayGroupFactory, $permissionFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $displayGroupFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->displayGroupFactory = $displayGroupFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->tagFactory = $tagFactory;
     }
 
     public function setDisplayFactory(DisplayFactory $displayFactory)
@@ -523,92 +521,6 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
-     * Does the campaign have the provided tag?
-     * @param $searchTag
-     * @return bool
-     * @throws NotFoundException
-     */
-    public function hasTag($searchTag)
-    {
-        $this->load();
-
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            if ($tag->tag == $searchTag)
-                return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Assign Tag
-     * @param Tag $tag
-     * @return $this
-     * @throws NotFoundException
-     */
-    public function assignTag($tag): DisplayGroup
-    {
-        $this->getLog()->debug('Assigning tag: ' . $tag->tag);
-
-        $this->load();
-        $this->handleTagAssign($tag);
-        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
-
-        return $this;
-    }
-
-    /**
-     * Unassign tag
-     * @param Tag $tag
-     * @return $this
-     * @throws NotFoundException
-     */
-    public function unassignTag($tag)
-    {
-        $this->getLog()->debug('Unassigning tag: ' . $tag->tag);
-
-        $this->load();
-
-        foreach ($this->tags as $key => $currentTag) {
-            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
-                $this->unassignTags[] = $tag;
-                array_splice($this->tags, $key, 1);
-            }
-        }
-
-        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
-
-        return $this;
-    }
-
-    /**
-     * @param array[Tag] $tags
-     */
-    public function replaceTags($tags = [])
-    {
-        if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
-
-        if ($this->tags != $tags) {
-            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
-                /* @var Tag $a */
-                /* @var Tag $b */
-                return $a->tagId - $b->tagId;
-            });
-
-            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
-
-            // Replace the arrays
-            $this->tags = $tags;
-
-            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
-        } else {
-            $this->getLog()->debug('Tags were not changed');
-        }
-    }
-
-    /**
      * Load the contents for this display group
      * @param array $options
      * @throws NotFoundException
@@ -627,11 +539,6 @@ class DisplayGroup implements \JsonSerializable
 
         $this->displayGroups = $this->displayGroupFactory->getByParentId($this->displayGroupId);
 
-        // Load all tags
-        if ($options['loadTags']) {
-            $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
-        }
-
         // Set the originals
         $this->originalDisplayGroups = $this->displayGroups;
 
@@ -646,11 +553,13 @@ class DisplayGroup implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->displayGroup))
+        if (!v::stringType()->notEmpty()->validate($this->displayGroup)) {
             throw new InvalidArgumentException(__('Please enter a display group name'), 'displayGroup');
+        }
 
-        if (!empty($this->description) && !v::stringType()->length(null, 254)->validate($this->description))
+        if (!empty($this->description) && !v::stringType()->length(null, 254)->validate($this->description)) {
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
+        }
 
         if ($this->isDisplaySpecific == 0) {
             // Check the name
@@ -659,12 +568,15 @@ class DisplayGroup implements \JsonSerializable
                 'displayGroupId' => (($this->displayGroupId == null) ? 0 : $this->displayGroupId)
             ]);
 
-            if (count($result) > 0)
-                throw new DuplicateEntityException(sprintf(__('You already own a display group called "%s". Please choose another name.'), $this->displayGroup));
-
+            if (count($result) > 0) {
+                throw new DuplicateEntityException(sprintf(__('You already own a display group called "%s". Please choose another name.'),
+                    $this->displayGroup));
+            }
             // If we are dynamic, then make sure we have some criteria
-            if ($this->isDynamic == 1 && ($this->dynamicCriteria == '' && $this->dynamicCriteriaTags == ''))
-                throw new InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'), 'dynamicCriteria');
+            if ($this->isDynamic == 1 && ($this->dynamicCriteria == '' && $this->dynamicCriteriaTags == '')) {
+                throw new InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'),
+                    'dynamicCriteria');
+            }
         }
     }
 
@@ -701,25 +613,16 @@ class DisplayGroup implements \JsonSerializable
 
         if ($options['saveTags']) {
             // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignDisplayGroup($this->displayGroupId);
-                    $tag->save();
+            if (is_array($this->unlinkTags)) {
+                foreach ($this->unlinkTags as $tag) {
+                    $this->unlinkTagFromEntity('lktagdisplaygroup', 'displayGroupId', $this->displayGroupId, $tag->tagId);
                 }
             }
 
-            // Save Tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-
-                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
-
-                    $tag->assignDisplayGroup($this->displayGroupId);
-                    $tag->save();
+            // Save the tags
+            if (is_array($this->linkTags)) {
+                foreach ($this->linkTags as $tag) {
+                    $this->linkTagToEntity('lktagdisplaygroup', 'displayGroupId', $this->displayGroupId, $tag->tagId, $tag->value);
                 }
             }
         }
@@ -782,11 +685,7 @@ class DisplayGroup implements \JsonSerializable
             ]);
         }
 
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            $tag->unassignDisplayGroup($this->displayGroupId);
-            $tag->save();
-        }
+        $this->unlinkAllTagsFromEntity('lktagdisplaygroup', 'displayGroupId', $this->displayGroupId);
 
         // Delete assignments
         $this->removeAssignments();
