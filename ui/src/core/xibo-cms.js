@@ -153,8 +153,9 @@ function XiboInitialise(scope) {
             }
         });
         // Bind the filter form
-        $(this).find(".XiboFilter form input").on("keyup", filterRefresh);
-        $(this).find(".XiboFilter form select").on("change", filterRefresh);
+        $(this).find('.XiboFilter form input').on('keyup', filterRefresh);
+        $(this).find('.XiboFilter form input[type="checkbox"]').on('change', filterRefresh);
+        $(this).find('.XiboFilter form select').on('change', filterRefresh);
 
         // Folder navigation relies on triggering the change event on this hidden field.
         $(this).find('.XiboFilter form #folderId').on('change', filterRefresh);

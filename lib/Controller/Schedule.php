@@ -193,7 +193,7 @@ class Schedule extends Base
      *      description="The DisplayGroupIds to return the schedule for. [-1] for All.",
      *      in="query",
      *      type="array",
-     *      required="true"
+     *      required=true,
      *      @SWG\Items(
      *          type="integer"
      *      )

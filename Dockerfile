@@ -186,7 +186,7 @@ COPY --from=webpack /app/modules /var/www/cms/modules
 COPY --chown=apache:apache . /var/www/cms
 
 # OpenOOH specification
-ADD https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json /var/www/cms/openooh
+ADD https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json /var/www/cms/openooh/specification.json
 
 # Tidy up
 RUN rm /var/www/cms/composer.* && \
