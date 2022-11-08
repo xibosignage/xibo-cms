@@ -434,7 +434,7 @@ class Tag extends Base
     {
         $tag = $this->tagFactory->getById($id);
 
-        $this->getState()->template = 'tag.usage.form';
+        $this->getState()->template = 'tag-usage-form';
         $this->getState()->setData([
             'tag' => $tag
         ]);
