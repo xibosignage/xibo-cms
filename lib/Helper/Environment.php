@@ -51,7 +51,7 @@ class Environment
         if (self::isDevMode()) {
             return self::getMigrationStatus() > 2;
         } else {
-            self::getMigrationStatus() != 0;
+            return self::getMigrationStatus() != 0;
         }
     }
 
