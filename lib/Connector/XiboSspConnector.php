@@ -174,7 +174,7 @@ class XiboSspConnector implements ConnectorInterface
             } else {
                 $apiKey = $this->getSetting('apiKey');
                 if (empty($apiKey)) {
-                    return null;
+                    return [];
                 }
             }
 
