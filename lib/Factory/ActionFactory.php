@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -259,6 +259,39 @@ class ActionFactory  extends BaseFactory
         if ($sanitizedFilter->getInt('notActionId') !== null) {
             $body .= ' AND `action`.actionId <> :notActionId ';
             $params['notActionId'] = $sanitizedFilter->getInt('notActionId');
+        }
+
+        if ($sanitizedFilter->getInt('layoutId') !== null) {
+            // All actions which are attached to this layout in any way.
+            $body .= ' AND (
+                (`action`.`source` = \'layout\' AND `action`.sourceId = :layoutId)
+                OR (`action`.`source` = \'region\' AND `action`.sourceId IN (
+                    SELECT regionId 
+                      FROM `region`
+                     WHERE `region`.layoutId = :layoutId
+                   )
+                )
+                OR (`action`.`source` = \'widget\' AND `action`.sourceId IN (
+                    SELECT `widget`.widgetId 
+                      FROM `region`
+                        INNER JOIN `playlist`
+                        ON `playlist`.regionId = `region`.regionId
+                        INNER JOIN `widget`
+                        ON `widget`.playlistId = `playlist`.playlistId
+                     WHERE layoutId = :layoutId
+                    )
+                )
+            ) ';
+            $params['layoutId'] = $sanitizedFilter->getInt('layoutId');
+        }
+
+        if ($sanitizedFilter->getInt('sourceOrTargetId') !== null) {
+            // All actions which are attached to this layout in any way.
+            $body .= ' AND (
+                `action`.sourceId = :sourceOrTargetId
+                OR `action`.targetId = :sourceOrTargetId
+            ) ';
+            $params['sourceOrTargetId'] = $sanitizedFilter->getInt('sourceOrTargetId');
         }
 
         // Sorting?

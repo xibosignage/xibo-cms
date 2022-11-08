@@ -797,6 +797,9 @@ Toolbar.prototype.handleDroppables = function(type, subType) {
       selectorAppend += ':not(#actions-drawer-content)';
     }
 
+    // Drop to layout wrapper
+    $('.layout-wrapper.droppable').addClass('ui-droppable-active');
+
     // Drop to layout only, for now
     $('.layout.droppable' +
       selectorAppend).addClass('ui-droppable-active');
@@ -1351,7 +1354,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       // Stop propagation
       e.stopPropagation();
 
-      self.createMediaPreview($(e.currentTarget).parent());
+      self.createMediaPreview($(e.currentTarget).parents('.toolbar-card'));
     });
 
     // Play video on hover
@@ -1468,7 +1471,7 @@ Toolbar.prototype.createMediaPreview = function(media) {
       '"]');
 
     if (!$card.hasClass('card-selected')) {
-      self.addToQueue(self.openedMenu, $card);
+      self.selectCard($card);
     }
   });
 

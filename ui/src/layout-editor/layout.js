@@ -443,7 +443,7 @@ Layout.prototype.addElement = function(
     elementSubtype = null,
   } = {},
 ) {
-  let newValues = null;
+  let newValues = {};
 
   // / Get position values if they exist
   if (positionToAdd !== null) {

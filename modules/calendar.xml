@@ -124,5 +124,9 @@ if(typeof ongoingEvent != 'undefined' && ongoingEvent && properties.currentEvent
     xiboIC.trigger(properties.noEventTrigger);
 }
     ]]></onRender>
+    <onVisible><![CDATA[
+// Start effects for this widget
+$(target).xiboLayoutAnimate(properties);
+    ]]></onVisible>
     <preview></preview>
 </module>
