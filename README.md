@@ -119,6 +119,15 @@ $apiKeyPaths = [
 ];
 ```
 
+### OpenOOH specification
+Xibo can present the OpenOOH venue classifications in the display edit form. For this functionality to work in 
+development, it is necessary 
+to [download the latest file](https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json) and 
+place it in here: `openooh/specification.json`
+
+The production/CI containers add this file during the build process so that it is already available in the Docker
+image.
+
 
 ## Bring up the Containers
 

@@ -80,7 +80,7 @@
                             {% set helpText %}{% trans "The Name of the Display - (1 - 50 characters)." %}{% endset %}
                             {{ forms.input("display", title, display.display, helpText, "", "required") }}
                         {% endif %}
-                
+
                         {% set title %}{% trans "Display's Hardware Key" %}{% endset %}
                         {% set helpText %}{% trans "A unique identifier for this display." %}{% endset %}
                         {{ forms.input("license", title, display.license, helpText, "", "required", "", false) }}
@@ -136,7 +136,7 @@
                         {% set title %}{% trans "Latitude" %}{% endset %}
                         {% set helpText %}{% trans "The Latitude of this display" %}{% endset %}
                         {{ forms.number("latitude", title, display.latitude, helpText) }}
-                        
+
                         {% set title %}{% trans "Longitude" %}{% endset %}
                         {% set helpText %}{% trans "The Longitude of this Display" %}{% endset %}
                         {{ forms.number("longitude", title, display.longitude, helpText) }}
@@ -160,15 +160,11 @@
                         {% set helpText %}{% trans "The Location/Venue of this display" %}{% endset %}
                         {% set attributes = [
                             { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("display.venue.search") },
                             { name: "data-allow-clear", value: "true" },
                             { name: "data-placeholder--id", value: null },
                             { name: "data-placeholder--value", value: "" },
-                            { name: "data-search-url", value: url_for("display.venue.search") },
-                            { name: "data-search-term", value: "venueName" },
-                            { name: "data-id-property", value: "venueId" },
-                            { name: "data-text-property", value: "venueName" },
-                            { name: "data-initial-key", value: "venueId" },
-                            { name: "data-initial-value", value: display.venueId }
+                            { name: "data-venue-id", value: display.venueId },
                         ] %}
                         {{ forms.dropdown("venueId", "single", title, "", null, "venueId", "venueName", helpText, "venue-select", "", "", "", attributes) }}
 
@@ -180,8 +176,8 @@
                         {% set helpText %}{% trans "The Screen size of this Display" %}{% endset %}
                         {{ forms.number("screenSize", title, display.screenSize, helpText) }}
 
-                        {% set title %}{% trans "Is Mobile?" %}{% endset %}
-                        {% set helpText %}{% trans "Is this Display mobile?" %}{% endset %}
+                        {% set title %}{% trans "Is mobile?" %}{% endset %}
+                        {% set helpText %}{% trans "Is this display mobile?" %}{% endset %}
                         {{ forms.checkbox("isMobile", title, display.isMobile, helpText) }}
 
                         {% set title %}{% trans "Is outdoor?" %}{% endset %}
@@ -329,7 +325,7 @@
                         {% set helpText %}{% trans "If Webkey is installed on the device, enter the serial number here." %}{% endset %}
                         {{ forms.input("webkeySerial", title, display.webkeySerial, helpText) }}
                     </div>
-                </div>    
+                </div>
             </form>
 
 

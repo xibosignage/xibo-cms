@@ -122,8 +122,14 @@ class CampaignSchedulerTask implements TaskInterface
                         $this->log->debug('campaignSchedulerTask: dayPartId set, testing');
 
                         // Check the day part
-                        $dayPart = $this->dayPartFactory->getById($layout->dayPartId);
-                        $dayPart->adjustForDate($nextHour);
+                        try {
+                            $dayPart = $this->dayPartFactory->getById($layout->dayPartId);
+                            $dayPart->adjustForDate($nextHour);
+                        } catch (\Exception $exception) {
+                            $this->log->debug('campaignSchedulerTask: invalid dayPart, e = '
+                                . $exception->getMessage());
+                            continue;
+                        }
 
                         // Is this day part active
                         if (!$nextHour->betweenIncluded($dayPart->adjustedStart, $dayPart->adjustedEnd)) {

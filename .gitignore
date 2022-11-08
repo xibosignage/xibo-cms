@@ -14,3 +14,7 @@ results.xml
 containers/
 web/dist
 cypress/videos/
+
+# The OpenOOH specification
+openooh/
+openooh/specification.json

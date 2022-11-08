@@ -629,7 +629,7 @@
                             if (type !== "display") {
                                 return data;
                             }
-                            
+
                             if (data > 0) {
                                 return '<span class="badge" style="background-color: red; color: white">'+(row.countFaults)+'</span>';
                             } else {
@@ -930,7 +930,7 @@
         }
 
         function displayFormLicenceCheckSubmit(form) {
-            // Display commercial licence table column 
+            // Display commercial licence table column
             $('table#displays').DataTable().column('commercialLicence:name').visible(true);
 
             // Submit form
@@ -990,71 +990,25 @@
             });
         }
 
-        function makeVenueSelect(element) {
-            element.select2({
-                ajax: {
-                    url: element.data("searchUrl"),
-                    dataType: "json",
-                    data: {},
-                    processResults: function(data, params) {
-                        let results = [];
-                        let $element = element;
+        function makeVenueSelect($element) {
+          // Get the openOOH venue types
+          $element.append(new Option('', '0', false, false));
+          $.ajax({
+            method: 'GET',
+            url: $element.data('searchUrl'),
+            dataType: 'json',
+            success: function(response) {
+              $.each(response.data, function(key, el) {
+                const selected = el.venueId === $element.data('venueId');
+                $element.append(new Option(el.venueName, el.venueId, selected, selected));
+              });
 
-                        $.each(data.data, function(index, el) {
-                            let result = {
-                                "id": el[$element.data("idProperty")],
-                                "text": el[$element.data("textProperty")]
-                            };
-                            results.push(result);
-                        });
-
-                        return {
-                            results: results
-                        };
-                    }
-                },
-                templateResult: function(state) {
-                    var stateText = '';
-
-                    // Add thumbnail if available
-                    if (state.thumbnail) {
-                        stateText += "<span class='option-thumbnail mr-3'><img style='width: 100px; height: 60px; object-fit: cover;' src='" + state.thumbnail + "' /></span>";
-                    }
-
-                    // Add option text
-                    stateText += "<span class='option-text'>" + state.text + "</span></span>";
-                    return $(stateText);
-                }
-            });
-
-            // Set initial value if exists
-            if(element.data("initialValue") !== undefined) {
-                let initialValue = element.data("initialValue");
-                let index;
-                $.ajax({
-                    url: element.data("searchUrl"),
-                    type: 'GET',
-                    data: {}
-                }).then(function(data) {
-                    $.each(data.data, function(key, el) {
-                        if (el.venueId === initialValue){
-                            index = key;
-                        }
-                    });
-
-                    // create the option and append to Select2
-                    var option = new Option(data.data[index][element.data("textProperty")], data.data[index][element.data("idProperty")], true, true);
-                    element.append(option).trigger('change');
-
-                    // manually trigger the `select2:select` event
-                    element.trigger({
-                        type: 'select2:select',
-                        params: {
-                            data: data
-                        }
-                    });
-                });
+              $element.select2();
+            },
+            error: function(xhr) {
+              SystemMessage(xhr.message || '{{"Unknown error"|trans}}', false);
             }
+          });
         }
 
         function displayEditFormOpen(dialog) {
@@ -1067,13 +1021,24 @@
             var $table = $(dialog).find('#settings-from-profile tbody').empty();
             var override = $(dialog).data('extra');
             var $venueIdSelect2 = $(dialog).find(".venue-select select.form-control");
-            makeVenueSelect($venueIdSelect2);
+            if ($venueIdSelect2.data('initialValue')) {
+              $venueIdSelect2.data('initialised', true);
+              makeVenueSelect($venueIdSelect2);
+            } else {
+              dialog.find('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                const activeTab = $(e.target).attr('href')
+                if (activeTab === '#location' && !$venueIdSelect2.data('initialised')) {
+                  $venueIdSelect2.data('initialised', true);
+                  makeVenueSelect($venueIdSelect2);
+                }
+              });
+            }
 
             // Parse special fields
             override.forEach(function(field, index) {
                 if(['lockOptions','pictureOptions', 'timers'].includes(field.name)) {
                     var parsedValues = JSON.parse(field.value);
-                    
+
                     // Add values to the override array
                     $.each(parsedValues, function(name, value){
 
@@ -1184,11 +1149,11 @@
                             $(target).find('.multiSelectInputs .slider-tick-label').each(function(idx, el) {
                                 if($(el).html() == newValue) {
                                     newValue = idx;
-                                    return false; 
+                                    return false;
                                 }
                             });
                         }
-                        
+
                         // Set value
                         $(target).find('.pictureControlsSlider').bootstrapSlider('setValue', newValue);
                     } else if($inputFields.attr('type') == 'checkbox') {
@@ -1230,7 +1195,7 @@
                 if($(target).find('.multiSelectInputs').length > 0) {
                     // Calculate column size for bootstrap
                     var colSize = Math.round(12/$(target).find('.multiSelectInputs').length);
-                    
+
                     //Remove all style classes and add the new size class
                     $(target).find('.multiSelectInputs').attr('class', 'multiSelectInputs col-sm-' + colSize)
                 }
@@ -1294,9 +1259,9 @@
                     // Get text and override name
                     over = $(element).find('.multiSelect').val();
                     text = $(element).find('.multiSelect option:selected').text();
-                    
+
                     // Get value
-                    value = $(element).find('.timersOn').val() + ' - ' + $(element).find('.timersOff').val(); 
+                    value = $(element).find('.timersOn').val() + ' - ' + $(element).find('.timersOff').val();
                 } else if($(element).hasClass('form-group-picture-options')) {
                     // Get text and override name
                     over = $(element).find('.multiSelect').val();
@@ -1455,7 +1420,7 @@
     </script>
 
     <style>
-        #settings-from-profile tr.row-fluid { 
+        #settings-from-profile tr.row-fluid {
             height: 50px;
         }
     </style>
