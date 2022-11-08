@@ -65,6 +65,7 @@
                             {% if currentUser.featureEnabled('ad.campaign') %}
                                 {% set title %}{% trans "Type" %}{% endset %}
                                 {% set options = [
+                                    { id: null, name: "" },
                                     { id: "list", name: "Layout list"|trans },
                                     { id: "ad", name: "Ad Campaign"|trans }
                                 ] %}
