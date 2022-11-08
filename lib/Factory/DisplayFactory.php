@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -35,6 +35,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class DisplayFactory extends BaseFactory
 {
+    use TagTrait;
+
     /** @var  DisplayNotifyServiceInterface */
     private $displayNotifyService;
 
@@ -268,19 +270,6 @@ class DisplayFactory extends BaseFactory
               ';
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
-
-        if ($parsedBody->getCheckbox('showTags') === 1) {
-            $select .= ',
-                   (
-                     SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
-                       FROM tag
-                       INNER JOIN lktagdisplaygroup
-                       ON lktagdisplaygroup.tagId = tag.tagId
-                       WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
-                       GROUP BY lktagdisplaygroup.displayGroupId
-                   ) as tags
-            ';
-        }
 
         $body = '
                 FROM `display`
@@ -569,6 +558,7 @@ class DisplayFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
+        $displayGroupIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $display = $this->createEmpty()->hydrate($row, [
@@ -591,7 +581,13 @@ class DisplayFactory extends BaseFactory
                 ]
             ]);
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
+            $displayGroupIds[] = $display->displayGroupId;
             $entries[] = $display;
+        }
+
+        // decorate with TagLinks
+        if (count($entries) > 0) {
+            $this->decorateWithTagLinks('lktagdisplaygroup', 'displayGroupId', $displayGroupIds, $entries);
         }
 
         // Paging

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -34,6 +34,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class CampaignFactory extends BaseFactory
 {
+    use TagTrait;
+
     /**
      * @var PermissionFactory
      */
@@ -46,11 +48,6 @@ class CampaignFactory extends BaseFactory
 
     /** @var DisplayNotifyServiceInterface */
     private $displayNotifyService;
-    
-    /**
-     * @var TagFactory
-     */
-    private $tagFactory;
 
     /**
      * Construct a factory
@@ -59,15 +56,13 @@ class CampaignFactory extends BaseFactory
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
-     * @param $tagFactory
      */
-    public function __construct($user, $userFactory, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
+    public function __construct($user, $userFactory, $permissionFactory, $scheduleFactory, $displayNotifyService)
     {
         $this->setAclDependencies($user, $userFactory);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayNotifyService = $displayNotifyService;
-        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -81,8 +76,7 @@ class CampaignFactory extends BaseFactory
             $this->getDispatcher(),
             $this->permissionFactory,
             $this->scheduleFactory,
-            $this->displayNotifyService,
-            $this->tagFactory
+            $this->displayNotifyService
         );
     }
 
@@ -90,20 +84,16 @@ class CampaignFactory extends BaseFactory
      * Create Campaign
      * @param string $name
      * @param int $userId
-     * @param string $tags
      * @param int $folderId
      * @return Campaign
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function create($name, $userId, $tags, $folderId)
+    public function create($name, $userId, $folderId)
     {
         $campaign = $this->createEmpty();
         $campaign->ownerId = $userId;
         $campaign->campaign = $name;
         $campaign->folderId = $folderId;
-        
-        // Create some tags
-        $campaign->tags = $this->tagFactory->tagsFromString($tags);
 
         return $campaign;
     }
@@ -191,14 +181,7 @@ class CampaignFactory extends BaseFactory
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
             ) AS numberLayouts,
-            MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired,
-            ( SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
-                            FROM tag
-                            INNER JOIN lktagcampaign
-                            ON lktagcampaign.tagId = tag.tagId
-                            WHERE lktagcampaign.campaignId = campaign.campaignId
-                            GROUP BY lktagcampaign.campaignId
-            ) as tags
+            MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired
         ';
 
         $body  = '
@@ -339,9 +322,10 @@ class CampaignFactory extends BaseFactory
         }
 
         $sql = $select . $body . $group . $order . $limit;
+        $campaignIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $campaigns[] = $this->createEmpty()->hydrate($row, [
+            $campaign = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'numberLayouts',
                     'isLayoutSpecific',
@@ -351,6 +335,13 @@ class CampaignFactory extends BaseFactory
                     'playCount'
                 ]
             ]);
+            $campaignIds[] = $campaign->getId();
+            $campaigns[] = $campaign;
+        }
+
+        // decorate with TagLinks
+        if (count($campaigns) > 0) {
+            $this->decorateWithTagLinks('lktagcampaign', 'campaignId', $campaignIds, $campaigns);
         }
 
         // Paging

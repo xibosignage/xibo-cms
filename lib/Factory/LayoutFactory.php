@@ -47,6 +47,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class LayoutFactory extends BaseFactory
 {
+    use TagTrait;
+
     /**
      * @var ConfigServiceInterface
      */
@@ -235,9 +237,9 @@ class LayoutFactory extends BaseFactory
 
         // Create some tags
         if (is_array($tags)) {
-            $layout->tags = $tags;
+            $layout->updateTagLinks($tags);
         } else {
-            $layout->tags = $this->tagFactory->tagsFromString($tags);
+            $layout->updateTagLinks($this->tagFactory->tagsFromString($tags));
         }
 
         // Add a blank, full screen region
@@ -1099,9 +1101,9 @@ class LayoutFactory extends BaseFactory
                     continue;
                 }
 
-                $layout->tags[] = $this->tagFactory->tagFromString(
+                $layout->assignTag($this->tagFactory->tagFromString(
                     $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
-                );
+                ));
             }
         }
 
@@ -1279,16 +1281,16 @@ class LayoutFactory extends BaseFactory
 
         // Add the template tag if we are importing a template
         if ($template) {
-            $layout->tags[] = $this->tagFactory->getByTag('template');
+            $layout->assignTag($this->tagFactory->tagFromString('template'));
         }
 
         // Tag as imported
-        $layout->tags[] = $this->tagFactory->tagFromString('imported');
+        $layout->assignTag($this->tagFactory->tagFromString('imported'));
 
         // Tag from the upload form
         $tagsFromForm = (($tags != '') ? $this->tagFactory->tagsFromString($tags) : []);
         foreach ($tagsFromForm as $tagFromForm) {
-            $layout->tags[] = $tagFromForm;
+            $layout->assignTag($tagFromForm);
         }
 
         // Set the owner
@@ -1403,13 +1405,13 @@ class LayoutFactory extends BaseFactory
                                 continue;
                             }
 
-                            $media->tags[] = $this->tagFactory->tagFromString(
+                            $media->assignTag($this->tagFactory->tagFromString(
                                 $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
-                            );
+                            ));
                         }
                     }
 
-                    $media->tags[] = $this->tagFactory->tagFromString('imported');
+                    $media->assignTag($this->tagFactory->tagFromString('imported'));
                     $media->folderId = $folder->id;
                     $media->permissionsFolderId =
                         ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
@@ -2003,13 +2005,6 @@ class LayoutFactory extends BaseFactory
                         `layout`.retired,
                         `layout`.createdDt,
                         `layout`.modifiedDt,
-                        ( SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
-                                    FROM tag
-                                    INNER JOIN lktaglayout
-                                        ON lktaglayout.tagId = tag.tagId
-                                        WHERE lktaglayout.layoutId = layout.layoutId
-                                    GROUP BY lktaglayout.layoutId
-                        ) as tags,
                         `layout`.backgroundImageId,
                         `layout`.backgroundColor,
                         `layout`.backgroundzIndex,
@@ -2394,6 +2389,7 @@ class LayoutFactory extends BaseFactory
 
         // The final statements
         $sql = $select . $body . $order . $limit;
+        $layoutIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $layout = $this->createEmpty();
@@ -2407,7 +2403,6 @@ class LayoutFactory extends BaseFactory
             $layout->layout = $parsedRow->getString('layout');
             $layout->description = $parsedRow->getString('description');
             $layout->duration = $parsedRow->getInt('duration');
-            $layout->tags = $parsedRow->getString('tags');
             $layout->backgroundColor = $parsedRow->getString('backgroundColor');
             $layout->owner = $parsedRow->getString('owner');
             $layout->ownerId = $parsedRow->getInt('userID');
@@ -2436,6 +2431,12 @@ class LayoutFactory extends BaseFactory
             $layout->setOriginals();
 
             $entries[] = $layout;
+            $layoutIds[] = $layout->layoutId;
+        }
+
+        // decorate with TagLinks
+        if (count($entries) > 0) {
+            $this->decorateWithTagLinks('lktaglayout', 'layoutId', $layoutIds, $entries);
         }
 
         // Paging
@@ -2532,9 +2533,6 @@ class LayoutFactory extends BaseFactory
         $draft->autoApplyTransitions = $layout->autoApplyTransitions;
         $draft->code = $layout->code;
         $draft->folderId = $layout->folderId;
-
-        // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
-        $draft->tags = [];
 
         // Save without validation or notification.
         $draft->save([

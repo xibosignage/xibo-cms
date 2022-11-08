@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Tag;
+use Xibo\Entity\TagLink;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -34,12 +35,21 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class TagFactory extends BaseFactory
 {
+    use TagTrait;
     /**
      * @return Tag
      */
     public function createEmpty()
     {
         return new Tag($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
+    }
+
+    /**
+     * @return TagLink
+     */
+    public function createEmptyLink()
+    {
+        return new TagLink($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
@@ -52,6 +62,16 @@ class TagFactory extends BaseFactory
         $tag->tag = trim($name);
 
         return $tag;
+    }
+
+    public function createTagLink($tagId, $tag, $value)
+    {
+        $tagLink = $this->createEmptyLink();
+        $tagLink->tag = trim($tag);
+        $tagLink->tagId = $tagId;
+        $tagLink->value = trim($value);
+
+        return $tagLink;
     }
 
     /**
@@ -81,7 +101,7 @@ class TagFactory extends BaseFactory
     /**
      * Get Tag from String
      * @param string $tagString
-     * @return Tag
+     * @return TagLink
      * @throws InvalidArgumentException
      */
     public function tagFromString($tagString)
@@ -98,24 +118,45 @@ class TagFactory extends BaseFactory
                 throw new InvalidArgumentException(sprintf('Selected Tag %s requires a value, please enter the Tag in %s|Value format or provide Tag value in the dedicated field.', $explode[0], $explode[0]), 'options');
             }
 
-            if( isset($explode[1])) {
-                $tag->value = $explode[1];
-            } else {
-                $tag->value = null;
-            }
+            $tagLink = $this->createTagLink($tag->tagId, $tag->tag, $explode[1] ?? null);
         }
         catch (NotFoundException $e) {
             // New tag
             $tag = $this->createEmpty();
             $tag->tag = $explode[0];
-            if( isset($explode[1])) {
-                $tag->value = $explode[1];
-            } else {
-                $tag->value = null;
-            }
+            $tag->save();
+            $tagLink = $this->createTagLink($tag->tagId, $tag->tag, $explode[1] ?? null);
         }
 
-        return $tag;
+        return $tagLink;
+    }
+
+    public function tagsFromJson($tagArray)
+    {
+        $tagLinks = [];
+        foreach ($tagArray as $tag) {
+            $this->getLog()->debug('debug: tag ' . json_encode($tag));
+            if (!is_array($tag)) {
+                $tag = json_decode($tag);
+            }
+            try {
+                $tagCheck = $this->getByTag($tag->tag);
+
+                if ($tagCheck->isRequired == 1 && !isset($tag->value)) {
+                    throw new InvalidArgumentException(sprintf('Selected Tag %s requires a value, please enter the Tag in %s|Value format or provide Tag value in the dedicated field.', $tag->tag, $tag->value), 'options');
+                }
+
+                $tagLink = $this->createTagLink($tagCheck->tagId, $tag->tag, $tag->value ?? null);
+            } catch(NotFoundException $exception) {
+                $newTag = $this->createEmpty();
+                $newTag->tag = $tag->tag;
+                $newTag->save();
+                $tagLink = $this->createTagLink($newTag->tagId, $tag->tag, $tag->value ?? null);
+            }
+            $tagLinks[] = $tagLink;
+        }
+
+        return $tagLinks;
     }
 
     /**
@@ -145,146 +186,6 @@ class TagFactory extends BaseFactory
         $tag->options = $sanitizedRow->getString('options');
 
         return $tag;
-    }
-
-    /**
-     * Gets tags for a layout
-     * @param $layoutId
-     * @return Tag[]
-     */
-    public function loadByLayoutId($layoutId)
-    {
-        $tags = [];
-
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktaglayout.value FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
-
-        foreach ($this->getStore()->select($sql, ['layoutId' => $layoutId]) as $row) {
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $tag = $this->createEmpty();
-            $tag->tagId = $sanitizedRow->getInt('tagId');
-            $tag->tag = $sanitizedRow->getString('tag');
-            $tag->isSystem = $sanitizedRow->getInt('isSystem');
-            $tag->isRequired = $sanitizedRow->getInt('isRequired');
-            $tag->options = $sanitizedRow->getString('options');
-            $tag->value = $sanitizedRow->getString('value');
-
-            $tags[] = $tag;
-        }
-
-        return $tags;
-    }
-
-    /**
-     * Gets tags for a playlist
-     * @param $playlistId
-     * @return Tag[]
-     */
-    public function loadByPlaylistId($playlistId)
-    {
-        $tags = [];
-
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagplaylist.value FROM `tag` INNER JOIN `lktagplaylist` ON lktagplaylist.tagId = tag.tagId WHERE lktagplaylist.playlistId = :playlistId';
-
-        foreach ($this->getStore()->select($sql, array('playlistId' => $playlistId)) as $row) {
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $tag = $this->createEmpty();
-            $tag->tagId = $sanitizedRow->getInt('tagId');
-            $tag->tag = $sanitizedRow->getString('tag');
-            $tag->isSystem = $sanitizedRow->getInt('isSystem');
-            $tag->isRequired = $sanitizedRow->getInt('isRequired');
-            $tag->options = $sanitizedRow->getString('options');
-            $tag->value = $sanitizedRow->getString('value');
-
-            $tags[] = $tag;
-        }
-
-        return $tags;
-    }
-
-    /**
-     * Gets tags for a campaign
-     * @param $campaignId
-     * @return Tag[]
-     */
-    public function loadByCampaignId($campaignId)
-    {
-        $tags = [];
-
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagcampaign.value FROM `tag` INNER JOIN `lktagcampaign` ON lktagcampaign.tagId = tag.tagId WHERE lktagcampaign.campaignId = :campaignId';
-
-        foreach ($this->getStore()->select($sql, array('campaignId' => $campaignId)) as $row) {
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $tag = $this->createEmpty();
-            $tag->tagId = $sanitizedRow->getInt('tagId');
-            $tag->tag = $sanitizedRow->getString('tag');
-            $tag->isSystem = $sanitizedRow->getInt('isSystem');
-            $tag->isRequired = $sanitizedRow->getInt('isRequired');
-            $tag->options = $sanitizedRow->getString('options');
-            $tag->value = $sanitizedRow->getString('value');
-
-            $tags[] = $tag;
-        }
-
-        return $tags;
-    }
-    
-    /**
-     * Gets tags for media
-     * @param $mediaId
-     * @return Tag[]
-     */
-    public function loadByMediaId($mediaId)
-    {
-        $tags = [];
-
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagmedia.value FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
-
-        foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $tag = $this->createEmpty();
-            $tag->tagId = $sanitizedRow->getInt('tagId');
-            $tag->tag = $sanitizedRow->getString('tag');
-            $tag->isSystem = $sanitizedRow->getInt('isSystem');
-            $tag->isRequired = $sanitizedRow->getInt('isRequired');
-            $tag->options = $sanitizedRow->getString('options');
-            $tag->value = $sanitizedRow->getString('value');
-
-            $tags[] = $tag;
-        }
-
-        return $tags;
-    }
-
-    /**
-     * Gets tags for displayGroupId
-     * @param $displayGroupId
-     * @return Tag[]
-     */
-    public function loadByDisplayGroupId($displayGroupId)
-    {
-        $tags = [];
-
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagdisplaygroup.value FROM `tag` INNER JOIN `lktagdisplaygroup` ON lktagdisplaygroup.tagId = tag.tagId WHERE lktagdisplaygroup.displayGroupId = :displayGroupId';
-
-        foreach ($this->getStore()->select($sql, array('displayGroupId' => $displayGroupId)) as $row) {
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $tag = $this->createEmpty();
-            $tag->tagId = $sanitizedRow->getInt('tagId');
-            $tag->tag = $sanitizedRow->getString('tag');
-            $tag->isSystem = $sanitizedRow->getInt('isSystem');
-            $tag->isRequired = $sanitizedRow->getInt('isRequired');
-            $tag->options = $sanitizedRow->getString('options');
-            $tag->value = $sanitizedRow->getString('value');
-
-            $tags[] = $tag;
-        }
-
-        return $tags;
     }
 
     /**
@@ -417,6 +318,96 @@ class TagFactory extends BaseFactory
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
+        return $entries;
+    }
+
+
+    public function getAllLinks($sortOrder, $filterBy)
+    {
+        $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+
+        if ($sortOrder == null) {
+            $sortOrder = ['type ASC'];
+        }
+
+        $params['tagId'] = $sanitizedFilter->getInt('tagId');
+
+        $body = 'SELECT
+         `lktagmedia`.mediaId AS entityId,
+         `media`.name AS name,
+         `lktagmedia`.value,
+         \'Media\' AS type
+         FROM `lktagmedia` INNER JOIN `media` ON `lktagmedia`.mediaId = `media`.mediaId
+         WHERE `lktagmedia`.tagId = :tagId
+         UNION ALL
+         SELECT
+         `lktaglayout`.layoutId AS entityId,
+         `layout`.layout AS name,
+         `lktaglayout`.value,
+         \'Layout\' AS type
+         FROM `lktaglayout` INNER JOIN `layout` ON `lktaglayout`.layoutId = `layout`.layoutId
+         WHERE `lktaglayout`.tagId = :tagId
+         UNION ALL
+         SELECT
+         `lktagcampaign`.campaignId AS entityId,
+         `campaign`.campaign AS name,
+         `lktagcampaign`.value,
+         \'Campaign\' AS type
+         FROM `lktagcampaign` INNER JOIN `campaign` ON `lktagcampaign`.campaignId = `campaign`.campaignId
+         WHERE `lktagcampaign`.tagId = :tagId
+         UNION ALL
+         SELECT
+         `lktagdisplaygroup`.displayGroupId AS entityId,
+         `displaygroup`.displayGroup AS name,
+         `lktagdisplaygroup`.value,
+         \'Display Group\' AS type
+         FROM `lktagdisplaygroup` INNER JOIN `displaygroup` ON `lktagdisplaygroup`.displayGroupId = `displaygroup`.displayGroupId AND `displaygroup`.isDisplaySpecific = 0
+         WHERE `lktagdisplaygroup`.tagId = :tagId
+         UNION ALL
+         SELECT
+         `lktagdisplaygroup`.displayGroupId AS entityId,
+         `display`.display AS name,
+         `lktagdisplaygroup`.value,
+         \'Display\' AS type
+         FROM `display` INNER JOIN `lkdisplaydg` ON `lkdisplaydg`.displayId = `display`.displayId
+         INNER JOIN `displaygroup` ON `displayGroup`.displayGroupId = `lkdisplaydg`.displayGroupId AND `displaygroup`.isDisplaySpecific = 1
+         INNER JOIN lktagdisplaygroup ON `lktagdisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
+         WHERE `lktagdisplaygroup`.tagId = :tagId
+         UNION ALL
+         SELECT
+         `lktagplaylist`.playListId AS entityId,
+         `playlist`.name AS name,
+         `lktagplaylist`.value,
+         \'Playlist\' AS type
+         FROM `lktagplaylist` INNER JOIN `playlist` ON `lktagplaylist`.playlistId = `playlist`.playlistId
+         WHERE `lktagplaylist`.tagId = :tagId
+         ';
+
+        // Sorting?
+        $sort = '';
+        if (is_array($sortOrder)) {
+            $sort .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
+
+        // Paging
+        $limit = '';
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $body . $sort . $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $row;
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total FROM (' . $body .') x', $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
         return $entries;
     }
 }
