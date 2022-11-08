@@ -705,6 +705,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/tag/form/add', ['\Xibo\Controller\Tag','addForm'])->setName('tag.add.form');
     $group->get('/tag/form/edit/{id}', ['\Xibo\Controller\Tag','editForm'])->setName('tag.edit.form');
     $group->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setName('tag.delete.form');
+    $group->get('/tag/form/usage/{id}', ['\Xibo\Controller\Tag', 'usageForm'])->setName('tag.usage.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['tag.view']));
 
 // Actions

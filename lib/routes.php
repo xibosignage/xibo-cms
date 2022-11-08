@@ -784,6 +784,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/tag/{id}', ['\Xibo\Controller\Tag','delete'])->setName('tag.delete');
     $group->get('/tag/name', ['\Xibo\Controller\Tag','loadTagOptions'])->setName('tag.getByName');
     $group->put('/tag/{type}/multi', ['\Xibo\Controller\Tag','editMultiple'])->setName('tag.editMultiple');
+    $group->get('/tag/usage/{id}', ['\Xibo\Controller\Tag', 'usage'])->setName('tag.usage');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['tag.view']));
 
 /**
