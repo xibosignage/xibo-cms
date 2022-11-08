@@ -125,6 +125,10 @@
                             {# Campaign list only. #}
                             {% set attributes = [
                                 { name: "data-search-url", value:  url_for("campaign.search") },
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
                             ] %}
 
                             {% set title %}{% trans "Campaign" %}{% endset %}
@@ -342,22 +346,22 @@
                     let api = this.api();
 
                     // Total over all pages
-                    let totalNumberPlays = api.column(8).data().reduce(function (a, b) {
+                    let totalNumberPlays = api.column(9).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalDuration = api.column(10).data().reduce(function (a, b) {
+                    let totalDuration = api.column(11).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalNumberPlaysPage = api.column(8, { page: 'current'}).data().reduce(function (a, b) {
+                    let totalNumberPlaysPage = api.column(9, { page: 'current'}).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalDurationPage = api.column(10, { page: 'current'}).data().reduce(function (a, b) {
+                    let totalDurationPage = api.column(11, { page: 'current'}).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
 
                     // Update footer
-                    $(api.column(8).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
-                    $(api.column(10).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
+                    $(api.column(9).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
+                    $(api.column(11).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
                 },
             });
 
