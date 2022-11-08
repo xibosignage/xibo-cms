@@ -38,7 +38,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="libraryCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("library.copy", {id: media.mediaId}) }}")>
+            <form id="libraryCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("library.copy", {id: media.mediaId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of the Media - (1 - 50 characters)" %}{% endset %}
                 {% set mediaName %}{{ media.name }} 2{% endset %}
@@ -47,7 +47,7 @@
                 {% if currentUser.featureEnabled("tag.tagging") %}
                     {% set title %}{% trans "Tags" %}{% endset %}
                     {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
-                    {{ forms.inputWithTags("tags", title, media.tags, helpText) }}
+                    {{ forms.inputWithTags("tags", title, media.tagsString, helpText) }}
                 {% endif %}
             </form>
         </div>

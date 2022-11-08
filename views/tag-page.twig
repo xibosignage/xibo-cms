@@ -137,5 +137,37 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#tags_wrapper').find('.dataTables_buttons'), false);
+
+        ///
+        /// Tag Usage Form
+        ///
+        function usageFormOpen(dialog) {
+          const $tagUsageTable = $("#tagUsageTable");
+          var usageTable = $tagUsageTable.DataTable({
+            "language": dataTablesLanguage,
+            dom: dataTablesTemplate,
+            serverSide: true,
+            stateSave: true, stateDuration: 0,
+            filter: false,
+            searchDelay: 3000,
+            responsive: true,
+            "order": [[1, "asc"]],
+            ajax: {
+              "url": "{{ url_for("tag.usage", {id: ':id'}) }}".replace(":id", $tagUsageTable.data().tagId),
+              "data": function(data) {
+                return data;
+              }
+            },
+            "columns": [
+              { "data": "entityId"},
+              { "data": "type"},
+              { "data": "name" },
+              { "data": "value" }
+            ]
+          });
+
+          usageTable.on('draw', dataTableDraw);
+          usageTable.on('processing.dt', dataTableProcessing);
+        }
     </script>
 {% endblock %}
