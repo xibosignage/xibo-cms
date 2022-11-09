@@ -931,22 +931,6 @@ class Layout implements \JsonSerializable
         if ($options['saveTags']) {
             $this->getLog()->debug('Saving tags on ' . $this);
 
-            // TODO check if this works now :)
-            /**
-            // if we are saving new Layout after import, we need to go through all Tags on the Layout
-            // double check if any of them match Tags added from imported Playlists or Media
-            // otherwise we would end up with duplicated Tags
-            if ($options['import']) {
-                $importedTags = $this->tags;
-                $this->tags = [];
-                foreach ($importedTags as $importedTag) {
-                    $this->assignTag($importedTag);
-                    $this->tags[] = $this->tagFactory->tagFromString(
-                        $importedTag->tag . (!empty($importedTag->value) ? '|' . $importedTag->value : '')
-                    );
-                }
-            }
-*/
             // Remove unwanted ones
             if (is_array($this->unlinkTags)) {
                 foreach ($this->unlinkTags as $tag) {
