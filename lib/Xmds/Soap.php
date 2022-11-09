@@ -1901,9 +1901,18 @@ class Soap
                     }
 
                     if ($campaigns[$parentCampaignId]->type === 'ad') {
-                        // TODO: spend/impressions multiplier for this display
                         $parentCampaign = $campaigns[$parentCampaignId];
-                        $parentCampaign->incrementPlays($count, 0, 1);
+
+                        // spend/impressions multiplier for this display
+                        $spend = empty($this->display->costPerPlay)
+                            ? 0
+                            : ($count * $this->display->costPerPlay);
+                        $impressions = empty($this->display->impressionsPerPlay)
+                            ? 0
+                            : ($count * $this->display->impressionsPerPlay);
+
+                        // record
+                        $parentCampaign->incrementPlays($count, $spend, $impressions);
                     }
                 }
             }

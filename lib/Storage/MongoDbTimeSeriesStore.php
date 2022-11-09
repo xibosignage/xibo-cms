@@ -27,6 +27,7 @@ use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\Regex;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
+use Xibo\Entity\Campaign;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -349,6 +350,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         // TagFilter array
         $statData['tagFilter'] = $tagFilter;
+
+        // Parent Campaign
+        if (array_key_exists('parentCampaign', $statData)) {
+            if ($statData['parentCampaign'] instanceof Campaign) {
+                $statData['parentCampaign'] = $statData['parentCampaign']->campaign;
+            } else {
+                $statData['parentCampaign'] = '';
+            }
+        }
 
         $this->stats[] = $statData;
     }
