@@ -865,7 +865,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->load();
-        $this->getDispatcher()->dispatch( new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
         $displayGroup->description = $parsedRequestParams->getString('description');
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
@@ -1174,7 +1174,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->load();
-        $this->getDispatcher()->dispatch( new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();

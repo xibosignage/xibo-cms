@@ -944,7 +944,6 @@ class Layout implements \JsonSerializable
                     $this->linkTagToEntity('lktaglayout', 'layoutId', $this->layoutId, $tag->tagId, $tag->value);
                 }
             }
-
         }
 
         $this->getLog()->debug('Save finished for ' . $this);

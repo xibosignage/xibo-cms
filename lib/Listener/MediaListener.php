@@ -22,7 +22,6 @@
 
 namespace Xibo\Listener;
 
-
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\FolderMovingEvent;

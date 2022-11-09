@@ -599,13 +599,11 @@ class DisplayGroup implements \JsonSerializable
             ]);
 
             if (count($result) > 0) {
-                throw new DuplicateEntityException(sprintf(__('You already own a display group called "%s". Please choose another name.'),
-                    $this->displayGroup));
+                throw new DuplicateEntityException(sprintf(__('You already own a display group called "%s". Please choose another name.'), $this->displayGroup));
             }
             // If we are dynamic, then make sure we have some criteria
             if ($this->isDynamic == 1 && ($this->dynamicCriteria == '' && $this->dynamicCriteriaTags == '')) {
-                throw new InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'),
-                    'dynamicCriteria');
+                throw new InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'), 'dynamicCriteria');
             }
         }
     }

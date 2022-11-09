@@ -39,8 +39,9 @@ trait TagLinkTrait
     public function hasTag($searchTag)
     {
         foreach ($this->tags as $tag) {
-            if ($tag->tag == $searchTag)
+            if ($tag->tag == $searchTag) {
                 return true;
+            }
         }
 
         return false;
@@ -84,12 +85,11 @@ trait TagLinkTrait
     {
         $this->getLog()->debug(sprintf('Linking %s %d, to tagId %d', $column, $entityId, $tagId));
 
-        $this->getStore()->update('INSERT INTO `' . $table .'` (`tagId`, `'.$column.'`, `value`) VALUES (:tagId, :entityId, :value) ON DUPLICATE KEY UPDATE '.$column.' = :entityId, `value` = :value',
-            [
-                'tagId' => $tagId,
-                'entityId' => $entityId,
-                'value' => $value
-            ]);
+        $this->getStore()->update('INSERT INTO `' . $table .'` (`tagId`, `'.$column.'`, `value`) VALUES (:tagId, :entityId, :value) ON DUPLICATE KEY UPDATE '.$column.' = :entityId, `value` = :value', [
+            'tagId' => $tagId,
+            'entityId' => $entityId,
+            'value' => $value
+        ]);
     }
 
     /**

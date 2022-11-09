@@ -249,7 +249,7 @@ class Tag extends Base
 
             $tag->buttons[] = [
                 'id' => 'tag_button_usage',
-                'url' => $this->urlFor($request,'tag.usage.form', ['id' => $tag->tagId]),
+                'url' => $this->urlFor($request, 'tag.usage.form', ['id' => $tag->tagId]),
                 'text' => __('Usage')
             ];
         }

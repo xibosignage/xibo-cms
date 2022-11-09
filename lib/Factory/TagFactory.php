@@ -147,7 +147,7 @@ class TagFactory extends BaseFactory
                 }
 
                 $tagLink = $this->createTagLink($tagCheck->tagId, $tag->tag, $tag->value ?? null);
-            } catch(NotFoundException $exception) {
+            } catch (NotFoundException $exception) {
                 $newTag = $this->createEmpty();
                 $newTag->tag = $tag->tag;
                 $newTag->save();

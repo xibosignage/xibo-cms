@@ -208,9 +208,9 @@ class DisplayGroupListener
             ]);
 
         $this->storageService->update(
-            'DELETE FROM `lktagdisplaygroup` WHERE `lktagdisplaygroup`.tagId = :tagId', [
-                'tagId' => $event->getTagId()
-            ]);
+            'DELETE FROM `lktagdisplaygroup` WHERE `lktagdisplaygroup`.tagId = :tagId',
+            ['tagId' => $event->getTagId()]
+        );
 
         if (count($displays) > 0) {
             $dispatcher->dispatch(
