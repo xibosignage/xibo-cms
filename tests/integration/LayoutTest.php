@@ -690,7 +690,9 @@ class LayoutTest extends LocalWebTestCase
         ]);
         $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
-        $this->assertSame('API', $layout->tags);
+        foreach ($layout->tags as $tag) {
+            $this->assertSame('API', $tag['tag']);
+        }
     }
 
     /**

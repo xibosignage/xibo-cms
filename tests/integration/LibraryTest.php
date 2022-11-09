@@ -129,7 +129,9 @@ class LibraryTest extends LocalWebTestCase
         $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame('API', $media->tags);
+        foreach ($media->tags as $tag) {
+            $this->assertSame('API', $tag['tag']);
+        }
         $media->delete();
     }
 
