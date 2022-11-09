@@ -125,7 +125,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('.editor-main-toolbar #media-content-1 .toolbar-card:nth-of-type(2)').find("img").should('be.visible');
 
             // Get a table row, select it and add to the region
-            cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
+            cy.get('.editor-main-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
                 cy.get('#layout-navigator [data-type="region"]:first-child').click().then(() => {
 
                     // Wait for the layout to reload
