@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,25 +20,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Listener\OnParsePermissions;
+namespace Xibo\Event;
 
-use Xibo\Event\ParsePermissionEntityEvent;
-use Xibo\Factory\MediaFactory;
-
-class PermissionsMediaListener
+class TagDeleteEvent extends Event
 {
+    public static $NAME = 'tag.delete.event';
     /**
-     * @var MediaFactory
+     * @var int
      */
-    private $mediaFactory;
+    private $tagId;
 
-    public function __construct(MediaFactory $mediaFactory)
+    public function __construct(int $tagId)
     {
-        $this->mediaFactory = $mediaFactory;
+        $this->tagId = $tagId;
     }
-    
-    public function __invoke(ParsePermissionEntityEvent $event)
+
+    /**
+     * @return int
+     */
+    public function getTagId(): int
     {
-        $event->setObject($this->mediaFactory->getById($event->getObjectId()));
+        return $this->tagId;
     }
 }

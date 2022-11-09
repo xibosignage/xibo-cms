@@ -25,6 +25,8 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\TagDeleteEvent;
+use Xibo\Event\TagEditEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -351,6 +353,10 @@ class Tag extends Base
 
         $tag->save();
 
+        // dispatch Tag add event
+        $event = new TagEditEvent($tag->tagId);
+        $this->getDispatcher()->dispatch($event, $event::$NAME);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -530,6 +536,10 @@ class Tag extends Base
 
         $tag->save();
 
+        // dispatch Tag edit event
+        $event = new TagEditEvent($tag->tagId);
+        $this->getDispatcher()->dispatch($event, $event::$NAME);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -609,8 +619,11 @@ class Tag extends Base
         if ($tag->isSystem === 1) {
             throw new AccessDeniedException(__('Access denied System tags cannot be deleted'));
         }
-// TODO event
-        // finally call delete tag, which also removes the links from lktag tables
+
+        // Dispatch delete event, remove this tag links in all lktag tables.
+        $event = new TagDeleteEvent($tag->tagId);
+        $this->getDispatcher()->dispatch($event, $event::$NAME);
+        // tag delete, remove the record from tag table
         $tag->delete();
 
         // Return

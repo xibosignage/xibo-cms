@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,29 +20,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Listener\OnDisplayGroupLoad;
+namespace Xibo\Event;
 
-use Xibo\Event\DisplayGroupLoadEvent;
-use Xibo\Factory\LayoutFactory;
-
-class DisplayGroupLayoutListener
+class TagAddEvent extends Event
 {
+    public static $NAME = 'tag.add.event';
     /**
-     * @var LayoutFactory
+     * @var int
      */
-    private $layoutFactory;
+    private $tagId;
 
-    public function __construct(LayoutFactory $layoutFactory)
+    public function __construct(int $tagId)
     {
-        $this->layoutFactory = $layoutFactory;
+        $this->tagId = $tagId;
     }
 
-    public function __invoke(DisplayGroupLoadEvent $event)
+    /**
+     * @return int
+     */
+    public function getTagId(): int
     {
-        $displayGroup = $event->getDisplayGroup();
-
-        $displayGroup->layouts = ($displayGroup->displayGroupId != null)
-            ? $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId)
-            : [];
+        return $this->tagId;
     }
 }

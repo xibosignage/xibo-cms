@@ -26,6 +26,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\DayPartDeleteEvent;
 use Xibo\Event\FolderMovingEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
+use Xibo\Event\TagDeleteEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Storage\StorageServiceInterface;
@@ -58,6 +59,7 @@ class CampaignListener
         $dispatcher->addListener(FolderMovingEvent::$NAME, [$this, 'onFolderMoving']);
         $dispatcher->addListener(UserDeleteEvent::$NAME, [$this, 'onUserDelete']);
         $dispatcher->addListener(DayPartDeleteEvent::$NAME, [$this, 'onDayPartDelete']);
+        $dispatcher->addListener(TagDeleteEvent::$NAME, [$this, 'onTagDelete']);
         return $this;
     }
 
@@ -152,5 +154,18 @@ class CampaignListener
         ])) {
             throw new InvalidArgumentException(__('This is inuse and cannot be deleted.'), 'dayPartId');
         }
+    }
+
+    /**
+     * When Tag gets deleted, remove any campaign links from it.
+     * @param TagDeleteEvent $event
+     * @return void
+     */
+    public function onTagDelete(TagDeleteEvent $event)
+    {
+        $this->storageService->update(
+            'DELETE FROM `lktagcampaign` WHERE `lktagcampaign`.tagId = :tagId',
+            ['tagId' => $event->getTagId()]
+        );
     }
 }

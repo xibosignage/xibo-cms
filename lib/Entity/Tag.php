@@ -174,12 +174,6 @@ class Tag implements \JsonSerializable
      */
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `lktagcampaign` WHERE `lktagcampaign`.tagId = :tagId', ['tagId' => $this->tagId]);
-        $this->getStore()->update('DELETE FROM `lktagdisplaygroup` WHERE `lktagdisplaygroup`.tagId = :tagId', ['tagId' => $this->tagId]);
-        $this->getStore()->update('DELETE FROM `lktaglayout` WHERE `lktaglayout`.tagId = :tagId', ['tagId' => $this->tagId]);
-        $this->getStore()->update('DELETE FROM `lktagmedia` WHERE `lktagmedia`.tagId = :tagId', ['tagId' => $this->tagId]);
-        $this->getStore()->update('DELETE FROM `lktagplaylist` WHERE `lktagplaylist`.tagId = :tagId', ['tagId' => $this->tagId]);
-
         // Delete the Tag record
         $this->getStore()->update('DELETE FROM `tag` WHERE tagId = :tagId', ['tagId' => $this->tagId]);
     }
