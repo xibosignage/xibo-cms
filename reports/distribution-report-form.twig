@@ -272,6 +272,27 @@
                         'sortable': false,
                     }
                 ],
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+
+                    // Total over all pages
+                    let totalDuration = api.column(1).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalNumberPlays = api.column(2).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalDurationPage = api.column(1, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalNumberPlaysPage = api.column(2, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    // Update footer
+                    $(api.column(1).footer()).html(totalDurationPage + ' (' + totalDuration + ' total)');
+                    $(api.column(2).footer()).html(Math.floor(totalNumberPlaysPage) + ' (' + Math.floor(totalNumberPlays) + ' total)');
+                },
             });
 
             // Get Data
@@ -532,6 +553,22 @@
                 }
             });
         });
+
+        function distributionScheduleCallback(dialog) {
+
+            // If we select a displayId we hide the display group filter
+            $('#reportScheduleAddForm #displayId').off('change').change( function() {
+
+                let displayId = $('#reportScheduleAddForm #displayId').val();
+                if (displayId) {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().hide();
+                } else {
+                    $('#reportScheduleAddForm #displayId option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().show();
+                }
+            });
+        }
 
     </script>
 {% endblock %}
