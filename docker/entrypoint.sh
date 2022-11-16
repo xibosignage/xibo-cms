@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2022 Xibo Signage Ltd
+# Copyright (C) 2022 Xibo Signage Ltd
 #
 # Xibo - Digital Signage - http://www.xibo.org.uk
 #
@@ -110,8 +110,8 @@ chown -R apache.apache /var/www/cms/library/certs
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Attempting to import database"
-  
-  echo "Importing Database" 
+
+  echo "Importing Database"
   mysql -D $MYSQL_DATABASE -e "SOURCE /var/www/backup/import.sql"
 
   echo "Configuring Database Settings"
@@ -249,13 +249,13 @@ then
 
     # Configure MSMTP to send emails if required
     # Config lives in /etc/msmtprc
-    
+
     # Split CMS_SMTP_SERVER in to CMS_SMTP_SEVER_HOST : PORT
     host_port=($(echo $CMS_SMTP_SERVER | tr ":" "\n"))
-    
+
     /bin/sed -i "s/host .*$/host ${host_port[0]}/" /etc/msmtprc
-    /bin/sed -i "s/port .*$/port ${host_port[1]}/" /etc/msmtprc    
-    
+    /bin/sed -i "s/port .*$/port ${host_port[1]}/" /etc/msmtprc
+
     if [ -z "$CMS_SMTP_USERNAME" ] || [ "$CMS_SMTP_USERNAME" == "none" ]
     then
       # Use no authentication
@@ -281,7 +281,7 @@ then
     else
       /bin/sed -i "s/tls .*$/tls off/" /etc/msmtprc
     fi
-    
+
     if [ "$CMS_SMTP_USE_STARTTLS" == "YES" ]
     then
       /bin/sed -i "s/tls_starttls .*$/tls_starttls on/" /etc/msmtprc
@@ -293,7 +293,7 @@ then
     /bin/sed -i "s/domain .*$/domain $CMS_SMTP_HOSTNAME/" /etc/msmtprc
 
     if [ "$CMS_SMTP_FROM" == "none" ]
-    then    
+    then
       /bin/sed -i "s/from .*$/from cms@$CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
     else
       /bin/sed -i "s/from .*$/from $CMS_SMTP_FROM/" /etc/msmtprc
@@ -367,6 +367,14 @@ fi
 if [ "$CMS_APACHE_SERVER_TOKENS" == "Prod" ]
 then
   sed -i "s/ServerTokens.*$/ServerTokens Prod/" /etc/apache2/conf.d/cms.conf
+fi
+
+# Configure Apache logging
+if [ "$CMS_APACHE_LOG_REQUEST_TIME" == "true" ]
+then
+  sed -i '/combined/s/^/#/' /etc/apache2/conf.d/cms.conf
+else
+  sed -i '/requesttime/s/^/#/' /etc/apache2/conf.d/cms.conf
 fi
 
 # Run CRON in Production mode
