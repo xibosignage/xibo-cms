@@ -75,8 +75,7 @@ class Factories
                     $c->get('userFactory'),
                     $c->get('permissionFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('displayNotifyService'),
-                    $c->get('tagFactory')
+                    $c->get('displayNotifyService')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -93,7 +92,8 @@ class Factories
                 $repository = new \Xibo\Factory\ConnectorFactory(
                     $c->get('pool'),
                     $c->get('configService'),
-                    $c->get('jwtService')
+                    $c->get('jwtService'),
+                    $c
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -167,9 +167,13 @@ class Factories
                 $repository = new \Xibo\Factory\DisplayGroupFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
-                    $c->get('permissionFactory'),
-                    $c->get('tagFactory')
+                    $c->get('permissionFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'displayTypeFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\DisplayTypeFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
@@ -241,7 +245,6 @@ class Factories
                     $c->get('userFactory'),
                     $c->get('configService'),
                     $c->get('permissionFactory'),
-                    $c->get('tagFactory'),
                     $c->get('playlistFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
@@ -330,8 +333,7 @@ class Factories
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('tagFactory')
+                    $c->get('widgetFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;

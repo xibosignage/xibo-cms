@@ -29,7 +29,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Service\JwtServiceInterface;
 
 /**
- * Connector trait to assit with basic scaffolding and utility methods.
+ * Connector trait to assist with basic scaffolding and utility methods.
  *  we recommend all connectors use this trait.
  */
 trait ConnectorTrait
@@ -39,6 +39,9 @@ trait ConnectorTrait
 
     /** @var array */
     private $settings = [];
+
+    /** @var array The keys for all provider settings */
+    private $providerSettings = [];
 
     /** @var PoolInterface|null */
     private $pool;
@@ -75,12 +78,26 @@ trait ConnectorTrait
 
     /**
      * @param array $settings
-     * @return \Xibo\Connector\ConnectorInterface
+     * @param bool $provider
+     * @return ConnectorInterface
      */
-    public function useSettings(array $settings): ConnectorInterface
+    public function useSettings(array $settings, bool $provider = false): ConnectorInterface
     {
+        if ($provider) {
+            $this->providerSettings = array_keys($settings);
+        }
+
         $this->settings = array_merge($this->settings, $settings);
         return $this;
+    }
+
+    /**
+     * @param $setting
+     * @return bool
+     */
+    public function isProviderSetting($setting): bool
+    {
+        return in_array($setting, $this->providerSettings);
     }
 
     /**
@@ -118,20 +135,16 @@ trait ConnectorTrait
     }
 
     /**
-     * @param $options
+     * @param array $options
      * @return \Xibo\Connector\ConnectorInterface
      */
-    public function useHttpOptions($options): ConnectorInterface
+    public function useHttpOptions(array $options): ConnectorInterface
     {
         $this->httpOptions = $options;
         return $this;
     }
 
-    /**
-     * @param $jwtService
-     * @return \Xibo\Connector\ConnectorInterface
-     */
-    public function useJwtService($jwtService): ConnectorInterface
+    public function useJwtService(JwtServiceInterface $jwtService): ConnectorInterface
     {
         $this->jwtService = $jwtService;
         return $this;
@@ -140,6 +153,16 @@ trait ConnectorTrait
     protected function getJwtService(): JwtServiceInterface
     {
         return $this->jwtService;
+    }
+
+    public function setFactories($container): ConnectorInterface
+    {
+        return $this;
+    }
+
+    public function getSettingsFormJavaScript(): string
+    {
+        return '';
     }
 
     /**

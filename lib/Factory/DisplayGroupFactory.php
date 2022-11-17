@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -33,29 +33,24 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class DisplayGroupFactory extends BaseFactory
 {
+    use TagTrait;
+
     /**
      * @var PermissionFactory
      */
     private $permissionFactory;
 
     /**
-     * @var TagFactory
-     */
-    private $tagFactory;
-
-    /**
      * Construct a factory
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
-     * @param TagFactory $tagFactory
      */
-    public function __construct($user, $userFactory, $permissionFactory, $tagFactory)
+    public function __construct($user, $userFactory, $permissionFactory)
     {
         $this->setAclDependencies($user, $userFactory);
 
         $this->permissionFactory = $permissionFactory;
-        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -88,8 +83,7 @@ class DisplayGroupFactory extends BaseFactory
             $this->getLog(),
             $this->getDispatcher(),
             $this,
-            $this->permissionFactory,
-            $this->tagFactory
+            $this->permissionFactory
         );
     }
 
@@ -314,14 +308,11 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.userId,
                 `displaygroup`.folderId,
                 `displaygroup`.permissionsFolderId,
-                (
-                    SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
-                        FROM tag
-                        INNER JOIN lktagdisplaygroup
-                        ON lktagdisplaygroup.tagId = tag.tagId
-                        WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
-                        GROUP BY lktagdisplaygroup.displayGroupId
-                ) as tags,
+                `displaygroup`.ref1,
+                `displaygroup`.ref2,
+                `displaygroup`.ref3,
+                `displaygroup`.ref4,
+                `displaygroup`.ref5,
                 (
                     SELECT GROUP_CONCAT(DISTINCT `group`.group)
                         FROM `permission`
@@ -520,6 +511,7 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
+        $displayGroupIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $displayGroup = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDisplaySpecific', 'isDynamic']]);
@@ -529,6 +521,12 @@ class DisplayGroupFactory extends BaseFactory
             $displayGroup->excludeProperty('layouts');
 
             $entries[] = $displayGroup;
+            $displayGroupIds[] = $displayGroup->displayGroupId;
+        }
+
+        // decorate with TagLinks
+        if (count($entries) > 0) {
+            $this->decorateWithTagLinks('lktagdisplaygroup', 'displayGroupId', $displayGroupIds, $entries);
         }
 
         // Paging

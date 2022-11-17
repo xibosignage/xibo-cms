@@ -27,18 +27,22 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
-use Xibo\Event\CampaignLoadEvent;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DependencyFileSizeEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\FolderMovingEvent;
-use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Listener\CampaignListener;
+use Xibo\Listener\DisplayGroupListener;
+use Xibo\Listener\LayoutListener;
+use Xibo\Listener\MediaListener;
+use Xibo\Listener\PlaylistListener;
+use Xibo\Listener\TaskListener;
 use Xibo\Xmds\Listeners\XmdsFontsListener;
 use Xibo\Xmds\Listeners\XmdsPlayerBundleListener;
 use Xibo\Xmds\Listeners\XmdsPlayerVersionListener;
@@ -83,23 +87,64 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher = $c->get('dispatcher');
 
         // Register listeners
+        // ------------------
+        // Listen for events that affect campaigns
+        (new CampaignListener(
+            $c->get('campaignFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for events that affect Layouts
+        (new LayoutListener(
+            $c->get('layoutFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for event that affect Display Groups
+        (new DisplayGroupListener(
+            $c->get('displayGroupFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for event that affect Media
+        (new MediaListener(
+            $c->get('mediaFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for event that affect Playlist
+        (new PlaylistListener(
+            $c->get('playlistFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for event that affect Task
+        (new TaskListener(
+            $c->get('taskFactory'),
+            $c->get('configService')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
         // Media Delete Events
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\MenuBoardListener(
             $c->get('menuBoardCategoryFactory')
-        )));
-
-        $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\LayoutListener(
-            $c->get('layoutFactory')
         )));
 
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\WidgetListener(
             $c->get('store'),
             $c->get('widgetFactory')
         )));
-
-        $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\DisplayGroupListener(
-            $c->get('displayGroupFactory')
-        ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\PurgeListListener(
             $c->get('store'),
@@ -110,11 +155,6 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\ActionListener(
             $c->get('store'),
             $c->get('actionFactory')
-        ))->useLogger($c->get('logger')));
-
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\CampaignListener(
-            $c->get('store'),
-            $c->get('campaignFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\CommandListener(
@@ -134,23 +174,9 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('displayNotifyService')
         ))->useLogger($c->get('logger')));
 
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\DisplayGroupListener(
-            $c->get('store'),
-            $c->get('displayGroupFactory')
-        ))->useLogger($c->get('logger')));
-
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\DisplayProfileListener(
             $c->get('store'),
             $c->get('displayProfileFactory')
-        ))->useLogger($c->get('logger')));
-
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\LayoutListener(
-            $c->get('layoutFactory')
-        ))->useLogger($c->get('logger')));
-
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\MediaListener(
-            $c->get('store'),
-            $c->get('mediaFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\MenuBoardListener(
@@ -164,10 +190,6 @@ class ListenersMiddleware implements MiddlewareInterface
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\OnUserDelete(
             $c->get('store')
-        ))->useLogger($c->get('logger')));
-
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\PlaylistListener(
-            $c->get('playlistFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\RegionListener(
@@ -199,14 +221,6 @@ class ListenersMiddleware implements MiddlewareInterface
         ))->useLogger($c->get('logger')), -2);
 
         // Display Group Load events
-        $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new \Xibo\Listener\OnDisplayGroupLoad\DisplayGroupMediaListener(
-            $c->get('mediaFactory')
-        )));
-
-        $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new \Xibo\Listener\OnDisplayGroupLoad\DisplayGroupLayoutListener(
-            $c->get('layoutFactory')
-        )));
-
         $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new \Xibo\Listener\OnDisplayGroupLoad\DisplayGroupDisplayListener(
             $c->get('displayFactory')
         )));
@@ -216,27 +230,11 @@ class ListenersMiddleware implements MiddlewareInterface
         )));
 
         // Media full load events
-        $dispatcher->addListener(MediaFullLoadEvent::$NAME, (new \Xibo\Listener\OnMediaLoad\DisplayGroupListener(
-            $c->get('displayGroupFactory')
-        )));
-
-        $dispatcher->addListener(MediaFullLoadEvent::$NAME, (new \Xibo\Listener\OnMediaLoad\LayoutListener(
-            $c->get('layoutFactory')
-        )));
-
         $dispatcher->addListener(MediaFullLoadEvent::$NAME, (new \Xibo\Listener\OnMediaLoad\WidgetListener(
             $c->get('widgetFactory')
         )));
 
-        $dispatcher->addListener(LayoutOwnerChangeEvent::$NAME, new \Xibo\Listener\OnLayoutOwnerChange(
-            $c->get('layoutFactory')
-        ));
-
         // Parse Permissions Event Listeners
-        $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'campaign', (new \Xibo\Listener\OnParsePermissions\PermissionsCampaignListener(
-            $c->get('campaignFactory')
-        )));
-
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'command', (new \Xibo\Listener\OnParsePermissions\PermissionsCommandListener(
             $c->get('commandFactory')
         )));
@@ -249,16 +247,8 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('dayPartFactory')
         )));
 
-        $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'displayGroup', (new \Xibo\Listener\OnParsePermissions\PermissionsDisplayGroupListener(
-            $c->get('displayGroupFactory')
-        )));
-
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'folder', (new \Xibo\Listener\OnParsePermissions\PermissionsFolderListener(
             $c->get('folderFactory')
-        )));
-
-        $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'media', (new \Xibo\Listener\OnParsePermissions\PermissionsMediaListener(
-            $c->get('mediaFactory')
         )));
 
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'menuBoard', (new \Xibo\Listener\OnParsePermissions\PermissionsMenuBoardListener(
@@ -267,10 +257,6 @@ class ListenersMiddleware implements MiddlewareInterface
 
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'notification', (new \Xibo\Listener\OnParsePermissions\PermissionsNotificationListener(
             $c->get('notificationFactory')
-        )));
-
-        $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'playlist', (new \Xibo\Listener\OnParsePermissions\PermissionsPlaylistListener(
-            $c->get('playlistFactory')
         )));
 
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'region', (new \Xibo\Listener\OnParsePermissions\PermissionsRegionListener(
@@ -286,11 +272,6 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('displayProfileFactory')
         )));
 
-        // On CampaignLoad event listener
-        $dispatcher->addListener(CampaignLoadEvent::$NAME, (new \Xibo\Listener\OnCampaignLoad(
-            $c->get('layoutFactory')
-        )));
-
         // On System User change event listener
         $dispatcher->addListener(SystemUserChangedEvent::$NAME, (new \Xibo\Listener\OnSystemUserChange(
             $c->get('store')
@@ -302,32 +283,16 @@ class ListenersMiddleware implements MiddlewareInterface
         )));
 
         // On Folder moving listeners
-        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\CampaignListener(
-            $c->get('campaignFactory')
-        )));
-
         $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DataSetListener(
             $c->get('dataSetFactory')
-        )));
-
-        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DisplayGroupListener(
-            $c->get('displayGroupFactory')
         )));
 
         $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\FolderListener(
             $c->get('folderFactory')
         )), -1);
 
-        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\MediaListener(
-            $c->get('mediaFactory')
-        )));
-
         $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\MenuBoardListener(
             $c->get('menuBoardFactory')
-        )));
-
-        $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\PlaylistListener(
-            $c->get('playlistFactory')
         )));
 
         $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\UserListener(

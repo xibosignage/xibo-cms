@@ -1,6 +1,5 @@
-<?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*!
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,30 +18,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+// Imports
+@import "variables";
+@import "mixins";
+@import "header-center-logo";
 
-namespace Xibo\Listener\OnDisplayGroupLoad;
+#campaign-builder {
+  // Put the back button at the top left.
+  .back-button {
+    position: fixed;
+    left: 16px;
+    top: 8px;
 
-use Xibo\Event\DisplayGroupLoadEvent;
-use Xibo\Factory\LayoutFactory;
-
-class DisplayGroupLayoutListener
-{
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    public function __construct(LayoutFactory $layoutFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
+    span {
+      margin-left: 6px;
+      font-weight: bold;
     }
-
-    public function __invoke(DisplayGroupLoadEvent $event)
-    {
-        $displayGroup = $event->getDisplayGroup();
-
-        $displayGroup->layouts = ($displayGroup->displayGroupId != null)
-            ? $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId)
-            : [];
-    }
+  }
 }

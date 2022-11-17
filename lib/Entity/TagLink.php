@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -19,32 +19,39 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Listener\OnFolderMoving;
 
-use Xibo\Event\FolderMovingEvent;
-use Xibo\Factory\MediaFactory;
+namespace Xibo\Entity;
 
-class MediaListener
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
+
+class TagLink implements \JsonSerializable
 {
+    use EntityTrait;
     /**
-     * @var MediaFactory
+     * @SWG\Property(description="The Tag")
+     * @var string
      */
-    private $mediaFactory;
+    public $tag;
+    /**
+     * @SWG\Property(description="The Tag ID")
+     * @var int
+     */
+    public $tagId;
+    /**
+     * @SWG\Property(description="The Tag Value")
+     * @var string
+     */
+    public $value = null;
 
-    public function __construct(MediaFactory $mediaFactory)
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     */
+    public function __construct($store, $log, $dispatcher)
     {
-        $this->mediaFactory = $mediaFactory;
-    }
-
-    public function __invoke(FolderMovingEvent $event)
-    {
-        $folder = $event->getFolder();
-        $newFolder = $event->getNewFolder();
-
-        foreach ($this->mediaFactory->getByFolderId($folder->getId()) as $media) {
-            $media->folderId = $newFolder->getId();
-            $media->permissionsFolderId = $newFolder->getPermissionFolderIdOrThis();
-            $media->updateFolders('media');
-        }
+        $this->setCommonDependencies($store, $log, $dispatcher);
     }
 }

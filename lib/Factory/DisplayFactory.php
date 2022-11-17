@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -35,6 +35,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class DisplayFactory extends BaseFactory
 {
+    use TagTrait;
+
     /** @var  DisplayNotifyServiceInterface */
     private $displayNotifyService;
 
@@ -114,8 +116,9 @@ class DisplayFactory extends BaseFactory
     {
         $displays = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'showTags' => $showTags]);
 
-        if (count($displays) <= 0)
+        if (count($displays) <= 0) {
             throw new NotFoundException();
+        }
 
         return $displays[0];
     }
@@ -133,8 +136,9 @@ class DisplayFactory extends BaseFactory
 
         $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
 
-        if (count($displays) <= 0)
+        if (count($displays) <= 0) {
             throw new NotFoundException();
+        }
 
         return $displays[0];
     }
@@ -150,6 +154,16 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
+     * @param array $displayGroupIds
+     * @return Display[]
+     * @throws NotFoundException
+     */
+    public function getByDisplayGroupIds(array $displayGroupIds)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => $displayGroupIds]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return Display[]
@@ -159,8 +173,9 @@ class DisplayFactory extends BaseFactory
     {
         $parsedBody = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['display'];
+        }
 
         $newSortOrder = [];
         foreach ($sortOrder as $sort) {
@@ -202,6 +217,17 @@ class DisplayFactory extends BaseFactory
               SELECT display.displayId,
                   display.display,
                   display.defaultLayoutId,
+                  display.displayTypeId,
+                  display.venueId,
+                  display.address,
+                  display.isMobile,
+                  display.languages,
+                  `display_types`.displayType,
+                  display.screenSize,
+                  display.isOutdoor,
+                  display.customId,
+                  display.costPerPlay,
+                  display.impressionsPerPlay,
                   layout.layout AS defaultLayout,
                   display.license,
                   display.licensed,
@@ -240,6 +266,11 @@ class DisplayFactory extends BaseFactory
                   displaygroup.modifiedDt,
                   displaygroup.folderId,
                   displaygroup.permissionsFolderId,
+                  displaygroup.ref1,
+                  displaygroup.ref2,
+                  displaygroup.ref3,
+                  displaygroup.ref4,
+                  displaygroup.ref5,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
@@ -269,19 +300,6 @@ class DisplayFactory extends BaseFactory
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
-        if ($parsedBody->getCheckbox('showTags') === 1) {
-            $select .= ',
-                   (
-                     SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
-                       FROM tag
-                       INNER JOIN lktagdisplaygroup
-                       ON lktagdisplaygroup.tagId = tag.tagId
-                       WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
-                       GROUP BY lktagdisplaygroup.displayGroupId
-                   ) as tags
-            ';
-        }
-
         $body = '
                 FROM `display`
                     INNER JOIN `lkdisplaydg`
@@ -291,6 +309,8 @@ class DisplayFactory extends BaseFactory
                         AND `displaygroup`.isDisplaySpecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
+                    LEFT OUTER JOIN `display_types`
+                    ON `display_types`.displayTypeId = `display`.displayTypeId
             ';
 
         // Restrict to members of a specific display group
@@ -302,6 +322,23 @@ class DisplayFactory extends BaseFactory
             ';
 
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
+        }
+
+        // Restrict to members of display groups
+        if ($parsedBody->getIntArray('displayGroupIds') !== null) {
+            $body .= '
+                INNER JOIN `lkdisplaydg` othergroups
+                ON othergroups.displayId = `display`.displayId
+                    AND othergroups.displayGroupId IN (0 
+            ';
+
+            $i = 0;
+            foreach ($parsedBody->getIntArray('displayGroupIds') as $displayGroupId) {
+                $i++;
+                $body .= ',:displayGroupId' . $i;
+                $params['displayGroupId' . $i] = $displayGroupId;
+            }
+            $body .= ')';
         }
 
         $body .= ' WHERE 1 = 1 ';
@@ -346,7 +383,7 @@ class DisplayFactory extends BaseFactory
             $body .= ' AND display.license = :license ';
             $params['license'] = $parsedBody->getString('license');
         }
-        
+
         // Filter by authorised?
         if ($parsedBody->getInt('authorised', ['default' => -1]) != -1) {
             $body .= ' AND display.licensed = :authorised ';
@@ -393,6 +430,11 @@ class DisplayFactory extends BaseFactory
             $params['clientCode'] = '%' . $parsedBody->getString('clientCode') . '%';
         }
 
+        if ($parsedBody->getString('customId') != '') {
+            $body .= ' AND display.customId LIKE :customId ';
+            $params['customId'] = '%' . $parsedBody->getString('customId') . '%';
+        }
+
         if ($parsedBody->getString('orientation', $filterBy) != '') {
             $body .= ' AND display.orientation = :orientation ';
             $params['orientation'] = $parsedBody->getString('orientation', $filterBy);
@@ -400,7 +442,6 @@ class DisplayFactory extends BaseFactory
 
         if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) != '') {
             if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) === -1) {
-
                 $body .= ' AND display.mediaInventoryStatus <> 1 ';
             } else {
                 $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';
@@ -415,7 +456,7 @@ class DisplayFactory extends BaseFactory
 
         if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {
             $body .= ' AND display.lastAccessed > :lastAccessed ';
-            $params['lastAccessed'] = $parsedBody->getDate('lastAccessed',['dateFormat' => 'U'])->format('U');
+            $params['lastAccessed'] = $parsedBody->getDate('lastAccessed', ['dateFormat' => 'U'])->format('U');
         }
 
         // Exclude a group?
@@ -432,7 +473,6 @@ class DisplayFactory extends BaseFactory
 
         // Media ID - direct assignment
         if ($parsedBody->getInt('mediaId') !== null) {
-
             $body .= '
                 AND display.displayId IN (
                     SELECT `lkdisplaydg`.displayId
@@ -507,7 +547,8 @@ class DisplayFactory extends BaseFactory
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
                 $displayId = $this->getSanitizer($row)->getInt('displayId');
 
-                if ($this->getStore()->exists('SELECT display.display, display.displayId, displaygroup.displayGroupId
+                if ($this->getStore()->exists(
+                    'SELECT display.display, display.displayId, displaygroup.displayGroupId
                                                     FROM display
                                                       INNER JOIN `lkdisplaydg` 
                                                           ON lkdisplaydg.displayId = `display`.displayId 
@@ -542,7 +583,7 @@ class DisplayFactory extends BaseFactory
         // Sorting?
         $order = '';
 
-        if (isset($members) && $members != [] ) {
+        if (isset($members) && $members != []) {
             $sqlOrderMembers = 'ORDER BY FIELD(display.displayId,' . implode(',', $members) . ')';
 
             foreach ($sortOrder as $sort) {
@@ -569,6 +610,7 @@ class DisplayFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
+        $displayGroupIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $display = $this->createEmpty()->hydrate($row, [
@@ -587,11 +629,20 @@ class DisplayFactory extends BaseFactory
                     'screenShotRequested',
                     'lastCommandSuccess',
                     'bandwidthLimit',
-                    'countFaults'
-                ]
+                    'countFaults',
+                    'isMobile',
+                    'isOutdoor'
+                ],
+                'stringProperties' => ['customId']
             ]);
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
+            $displayGroupIds[] = $display->displayGroupId;
             $entries[] = $display;
+        }
+
+        // decorate with TagLinks
+        if (count($entries) > 0) {
+            $this->decorateWithTagLinks('lktagdisplaygroup', 'displayGroupId', $displayGroupIds, $entries);
         }
 
         // Paging

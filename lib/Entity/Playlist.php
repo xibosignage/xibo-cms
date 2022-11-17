@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,7 +25,6 @@ use Carbon\Carbon;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Profiler;
@@ -42,10 +41,12 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property $tagsString
  */
 class Playlist implements \JsonSerializable
 {
     use EntityTrait;
+    use TagLinkTrait;
 
     /**
      * @SWG\Property(description="The ID of this Playlist")
@@ -154,8 +155,8 @@ class Playlist implements \JsonSerializable
     public $enableStat;
 
     /**
-     * @SWG\Property(description="An array of Tags")
-     * @var Tag[]
+     * @SWG\Property(description="Tags associated with this Playlist, array of TagLink objects")
+     * @var TagLink[]
      */
     public $tags = [];
 
@@ -193,7 +194,10 @@ class Playlist implements \JsonSerializable
      */
     public $permissionsFolderId;
 
-    private $unassignTags = [];
+    /** @var TagLink[] */
+    private $unlinkTags = [];
+    /** @var TagLink[] */
+    private $linkTags = [];
 
     //<editor-fold desc="Factories and Dependencies">
 
@@ -206,11 +210,6 @@ class Playlist implements \JsonSerializable
      * @var WidgetFactory
      */
     private $widgetFactory;
-
-    /**
-     * @var TagFactory
-     */
-    private $tagFactory;
 
     /**
      * @var PlaylistFactory
@@ -235,10 +234,9 @@ class Playlist implements \JsonSerializable
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
-     * @param TagFactory $tagFactory
 
      */
-    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $playlistFactory, $widgetFactory)
     {
         $this->setCommonDependencies($store, $log, $dispatcher);
 
@@ -246,7 +244,6 @@ class Playlist implements \JsonSerializable
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -268,6 +265,7 @@ class Playlist implements \JsonSerializable
         $this->playlistId = null;
         $this->regionId = null;
         $this->permissions = [];
+        $this->tags = [];
 
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
     }
@@ -499,69 +497,6 @@ class Playlist implements \JsonSerializable
     }
 
     /**
-     * @param Tag[] $tags
-     */
-    public function replaceTags($tags = [])
-    {
-        if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
-
-        if ($this->tags != $tags) {
-            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
-                /* @var Tag $a */
-                /* @var Tag $b */
-                return $a->tagId - $b->tagId;
-            });
-
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
-
-            // Replace the arrays
-            $this->tags = $tags;
-
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
-        } else {
-            $this->getLog()->debug('Tags were not changed');
-        }
-    }
-
-    /**
-     * Assign Tag
-     * @param Tag $tag
-     * @return $this
-     * @throws NotFoundException
-     */
-    public function assignTag($tag)
-    {
-        $this->load();
-        $this->handleTagAssign($tag);
-        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
-
-        return $this;
-    }
-
-    /**
-     * Unassign tag
-     * @param Tag $tag
-     * @return $this
-     * @throws NotFoundException
-     */
-    public function unassignTag($tag)
-    {
-        $this->load();
-
-        foreach ($this->tags as $key => $currentTag) {
-            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
-                $this->unassignTags[] = $tag;
-                array_splice($this->tags, $key, 1);
-            }
-        }
-
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
-
-        return $this;
-    }
-
-    /**
      * Load
      * @param array $loadOptions
      * @return $this
@@ -586,11 +521,6 @@ class Playlist implements \JsonSerializable
         // Load permissions
         if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->playlistId);
-        }
-
-        // Load all tags
-        if ($options['loadTags']) {
-            $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
         }
 
         // Load the widgets
@@ -681,28 +611,17 @@ class Playlist implements \JsonSerializable
 
         // Save the tags?
         if ($options['saveTags']) {
-            $this->getLog()->debug('Saving tags on ' . $this);
-
             // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignPlaylist($this->playlistId);
-                    $tag->save();
+            if (is_array($this->unlinkTags)) {
+                foreach ($this->unlinkTags as $tag) {
+                    $this->unlinkTagFromEntity('lktagplaylist', 'playlistId', $this->playlistId, $tag->tagId);
                 }
             }
 
             // Save the tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-
-                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
-
-                    $tag->assignPlaylist($this->playlistId);
-                    $tag->save();
+            if (is_array($this->linkTags)) {
+                foreach ($this->linkTags as $tag) {
+                    $this->linkTagToEntity('lktagplaylist', 'playlistId', $this->playlistId, $tag->tagId, $tag->value);
                 }
             }
         }
@@ -782,11 +701,7 @@ class Playlist implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE childId = :playlistId', ['playlistId' => $this->playlistId]);
 
         // Unassign tags
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            $tag->unassignPlaylist($this->playlistId);
-            $tag->save();
-        }
+        $this->unlinkAllTagsFromEntity('lktagplaylist', 'playlistId', $this->playlistId);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {

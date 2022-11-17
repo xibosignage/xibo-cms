@@ -135,8 +135,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 );
 
                 if ($tags != '') {
-                    $concatTags = $oldMedia->tags . ',' . $tags;
-                    $media->replaceTags($controller->getTagFactory()->tagsFromString($concatTags));
+                    $concatTags = $oldMedia->getTagString() . ',' . $tags;
+                    $media->updateTagLinks($controller->getTagFactory()->tagsFromString($concatTags));
                 }
 
                 // Apply the duration from the old media, unless we're a video
@@ -148,8 +148,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Raise an event for this media item
                 $controller->getDispatcher()->dispatch(
-                    LibraryReplaceEvent::$NAME,
-                    new LibraryReplaceEvent($module, $media, $oldMedia)
+                    new LibraryReplaceEvent($module, $media, $oldMedia),
+                    LibraryReplaceEvent::$NAME
                 );
 
                 $media->enableStat = $oldMedia->enableStat;
@@ -162,8 +162,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Upload finished
                 $controller->getDispatcher()->dispatch(
-                    LibraryUploadCompleteEvent::$NAME,
-                    new LibraryUploadCompleteEvent($media)
+                    new LibraryUploadCompleteEvent($media),
+                    LibraryUploadCompleteEvent::$NAME
                 );
 
                 $controller->getLog()->debug('Copying permissions to new media');
@@ -246,8 +246,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                             // Raise an event for this media item
                             $controller->getDispatcher()->dispatch(
-                                LibraryReplaceWidgetEvent::$NAME,
-                                new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia)
+                                new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia),
+                                LibraryReplaceWidgetEvent::$NAME
                             );
 
                             // Save
@@ -328,8 +328,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     }
 
                     $controller->getDispatcher()->dispatch(
-                        MediaDeleteEvent::$NAME,
-                        new MediaDeleteEvent($oldMedia)
+                        new MediaDeleteEvent($oldMedia),
+                        MediaDeleteEvent::$NAME
                     );
                     $oldMedia->delete();
                 } else {
@@ -352,7 +352,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 );
 
                 if ($tags != '') {
-                    $media->replaceTags($controller->getTagFactory()->tagsFromString($tags));
+                    $media->updateTagLinks($controller->getTagFactory()->tagsFromString($tags));
                 }
 
                 // Set the duration
@@ -375,8 +375,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Upload finished
                 $controller->getDispatcher()->dispatch(
-                    LibraryUploadCompleteEvent::$NAME,
-                    new LibraryUploadCompleteEvent($media)
+                    new LibraryUploadCompleteEvent($media),
+                    LibraryUploadCompleteEvent::$NAME
                 );
             }
 

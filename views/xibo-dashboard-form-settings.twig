@@ -35,7 +35,7 @@
         <p class="alert alert-danger">{{ services }}</p>
     {% endif %}
 
-    {% if not platformProvidesSettings %}
+    {% if not interface.isProviderSetting("apiKey") %}
         <h4>Settings</h4>
         <p>Your API key allows for secure communication between the CMS and the Xibo dashboard service. It is used
             to register your credentials and retrieve dashboards. It is never possible to retrieve credentials.</p>

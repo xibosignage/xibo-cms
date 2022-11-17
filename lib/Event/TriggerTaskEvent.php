@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -19,34 +19,50 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Listener\OnFolderMoving;
 
-use Xibo\Event\FolderMovingEvent;
-use Xibo\Factory\CampaignFactory;
-use Xibo\Factory\LayoutFactory;
+namespace Xibo\Event;
 
-class CampaignListener
+class TriggerTaskEvent extends Event
 {
+    public static $NAME = 'trigger.task.event';
     /**
-     * @var CampaignFactory
+     * @var string
      */
-    private $campaignFactory;
+    private $className;
+    /**
+     * @var string
+     */
+    private $setting;
+    /**
+     * @var mixed|null
+     */
+    private $settingValue;
 
-    public function __construct(CampaignFactory $campaignFactory)
+    /**
+     * @param string $className
+     */
+    public function __construct(string $className, string $setting = '', $value = null)
     {
-        $this->campaignFactory = $campaignFactory;
+        $this->className = $className;
+        $this->setting = $setting;
+        $this->settingValue = $value;
     }
 
-    public function __invoke(FolderMovingEvent $event)
+    /**
+     * @return string
+     */
+    public function getClassName(): string
     {
-        $folder = $event->getFolder();
-        $newFolder = $event->getNewFolder();
+        return $this->className;
+    }
 
-        foreach ($this->campaignFactory->getByFolderId($folder->getId()) as $campaign) {
-            // update campaign record
-            $campaign->folderId = $newFolder->id;
-            $campaign->permissionsFolderId = $newFolder->getPermissionFolderIdOrThis();
-            $campaign->updateFolders('campaign');
-        }
+    public function getSetting(): string
+    {
+        return $this->setting;
+    }
+
+    public function getSettingValue()
+    {
+        return $this->settingValue;
     }
 }

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,29 +20,37 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Listener\OnDisplayGroupLoad;
+namespace Xibo\Entity;
 
-use Xibo\Event\DisplayGroupLoadEvent;
-use Xibo\Factory\MediaFactory;
-
-class DisplayGroupMediaListener
+/**
+ * Campaign Progress
+ */
+class CampaignProgress implements \JsonSerializable
 {
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
+    /** @var int */
+    public $daysIn = 0;
 
-    public function __construct(MediaFactory $mediaFactory)
+    /** @var int */
+    public $daysTotal = 0;
+
+    /** @var float */
+    public $targetPerDay = 0.0;
+
+    /** @var float */
+    public $progressTime = 0.0;
+
+    /** @var float */
+    public $progressTarget = 0.0;
+
+    /** @inheritDoc */
+    public function jsonSerialize()
     {
-        $this->mediaFactory = $mediaFactory;
-    }
-
-    public function __invoke(DisplayGroupLoadEvent $event)
-    {
-        $displayGroup = $event->getDisplayGroup();
-
-        $displayGroup->media = ($displayGroup->displayGroupId != null)
-            ? $this->mediaFactory->getByDisplayGroupId($displayGroup->displayGroupId)
-            : [];
+        return [
+            'daysIn' => $this->daysIn,
+            'daysTotal' => $this->daysTotal,
+            'targetPerDay' => $this->targetPerDay,
+            'progressTime' => $this->progressTime,
+            'progressTarget' => $this->progressTarget,
+        ];
     }
 }

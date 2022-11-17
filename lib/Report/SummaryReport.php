@@ -159,12 +159,19 @@ class SummaryReport implements ReportInterface
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
         $filter = $sanitizedParams->getString('filter');
-
+        $displayId = $sanitizedParams->getInt('displayId');
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
         $hiddenFields = json_decode($sanitizedParams->getString('hiddenFields'), true);
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
         $eventTag = $hiddenFields['eventTag'];
+
+        // If a display is selected we ignore the display group selection
+        $filterCriteria['displayId'] = $displayId;
+        if (empty($displayId) && count($displayGroupIds) > 0) {
+            $filterCriteria['displayGroupId'] = $displayGroupIds;
+        }
 
         $filterCriteria['type'] = $type;
         if ($type == 'layout') {
@@ -238,19 +245,20 @@ class SummaryReport implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        $metadata = [
+            'periodStart' => $json['metadata']['periodStart'],
+            'periodEnd' => $json['metadata']['periodEnd'],
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                ->format(DateFormatHelper::getSystemFormat()),
+            'title' => $savedReport->saveAs,
+        ];
+
         // Report result object
         return new ReportResult(
-            [
-                'periodStart' => $json['metadata']['periodStart'],
-                'periodEnd' => $json['metadata']['periodEnd'],
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
-                    ->format(DateFormatHelper::getSystemFormat()),
-                'title' => $savedReport->saveAs,
-            ],
+            $metadata,
             $json['table'],
             $json['recordsTotal'],
-            $json['chart'],
-            $json['hasChartData']
+            $json['chart']
         );
     }
 
@@ -262,6 +270,7 @@ class SummaryReport implements ReportInterface
         $mediaId = $sanitizedParams->getInt('mediaId');
         $eventTag = $sanitizedParams->getString('eventTag');
 
+        // Filter by displayId?
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
         //
@@ -362,7 +371,7 @@ class SummaryReport implements ReportInterface
         ) {
             // We have nothing to return because the filter selections don't make sense.
             $result = [];
-        } else if ($this->getTimeSeriesStore()->getEngine() === 'mongodb') {
+        } elseif ($this->getTimeSeriesStore()->getEngine() === 'mongodb') {
             $result = $this->getSummaryReportMongoDb(
                 $fromDt,
                 $toDt,
@@ -397,23 +406,36 @@ class SummaryReport implements ReportInterface
         $backgroundColor = [];
         $borderColor = [];
 
-        // Summary report result in chart
+        // Sanitize results for chart and table
+        $rows = [];
         if (count($result) > 0) {
             foreach ($result['result'] as $row) {
-                // Label
+                $sanitizedRow = $this->sanitizer->getSanitizer($row);
+
+                // ----
+                // Build Chart data
                 $labels[] = $row['label'];
 
                 $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
                 $borderColor[] = 'rgb(240,93,41, 0.8)';
 
-                $count = $this->sanitizer->getSanitizer($row)->getInt('NumberPlays');
+                $count = $sanitizedRow->getInt('NumberPlays');
                 $countData[] = ($count == '') ? 0 : $count;
 
-                $duration = $this->sanitizer->getSanitizer($row)->getInt('Duration');
+                $duration = $sanitizedRow->getInt('Duration');
                 $durationData[] = ($duration == '') ? 0 : $duration;
+
+                // ----
+                // Build Tabular data
+                $entry = [];
+                $entry['label'] = $sanitizedRow->getString('label');
+                $entry['duration'] = ($duration == '') ? 0 : $duration;
+                $entry['count'] = ($count == '') ? 0 : $count;
+                $rows[] = $entry;
             }
         }
 
+        // Build Chart to pass in twig file chart.js
         $chart = [
             'type' => 'bar',
             'data' => [
@@ -468,19 +490,22 @@ class SummaryReport implements ReportInterface
             ]
         ];
 
+        $metadata =   [
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+        ];
+
+        // Total records
+        $recordsTotal = count($rows);
+
         // ----
-        // Chart Only
         // Return data to build chart/table
         // This will get saved to a json file when schedule runs
         return new ReportResult(
-            [
-                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
-                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
-            ],
-            [],
-            0,
-            $chart,
-            count($durationData) > 0 && count($countData) > 0
+            $metadata,
+            $rows,
+            $recordsTotal,
+            $chart
         );
     }
 
@@ -897,6 +922,32 @@ class SummaryReport implements ReportInterface
             'query' => $cursorPeriodQuery
         ]);
 
+        $matchExpr = [
+
+            // match media id / layout id
+            $matchType,
+            $matchId,
+        ];
+
+        // display ids
+        if (count($displayIds) > 0) {
+            $matchExpr[] = [
+                '$in' => [ '$displayId', $displayIds ]
+            ];
+        }
+
+        // stat.start < period end AND stat.end > period start
+        // for example, when report filter 'today' is selected
+        // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+        // and end is greater than or equal first hour of the day
+        $matchExpr[] = [
+            '$lt' => [ '$start', '$statdata.periods.end' ]
+        ];
+        $matchExpr[] = [
+            '$gt' => [ '$end', '$statdata.periods.start' ]
+        ];
+
+
         // STAT AGGREGATION QUERY
         $statQuery = [
 
@@ -938,28 +989,7 @@ class SummaryReport implements ReportInterface
             [
                 '$match' => [
                     '$expr' => [
-                        '$and' => [
-
-                            // match media id / layout id
-                            $matchType,
-                            $matchId,
-
-                            // display ids
-                            [
-                                '$in' => [ '$displayId', $displayIds ]
-                            ],
-
-                            // stat.start < period end AND stat.end > period start
-                            // for example, when report filter 'today' is selected
-                            // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
-                            // and end is greater than or equal first hour of the day
-                            [
-                                '$lt' => [ '$start', '$statdata.periods.end' ]
-                            ],
-                            [
-                                '$gt' => [ '$end', '$statdata.periods.start' ]
-                            ],
-                        ]
+                        '$and' => $matchExpr
                     ]
                 ]
             ],

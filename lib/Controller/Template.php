@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -417,6 +417,7 @@ class Template extends Base
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
             'layout' => $layout,
+            'tagsString' => $layout->getTagString(),
             'help' => $this->getHelp()->link('Template', 'Add')
         ]);
 
@@ -631,11 +632,11 @@ class Template extends Base
 
         $layout->layout = $sanitizedParams->getString('name');
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            $layout->updateTagLinks($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
         } else {
             $layout->tags = [];
         }
-        $layout->tags[] = $this->tagFactory->getByTag('template');
+        $layout->assignTag($this->tagFactory->tagFromString('template'));
 
         $layout->description = $sanitizedParams->getString('description');
         $layout->folderId = $sanitizedParams->getInt('folderId');
@@ -712,6 +713,7 @@ class Template extends Base
         $this->getState()->template = 'template-form-edit';
         $this->getState()->setData([
             'layout' => $template,
+            'tagsString' => $template->getTagString(),
             'help' => $this->getHelp()->link('Template', 'Edit')
         ]);
 

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,26 +19,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Event;
 
-namespace Xibo\Listener\OnParsePermissions;
+use Xibo\Entity\DayPart;
 
-use Xibo\Event\ParsePermissionEntityEvent;
-use Xibo\Factory\MediaFactory;
-
-class PermissionsMediaListener
+class DayPartDeleteEvent extends Event
 {
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
+    public static $NAME = 'dayPart.delete.event';
 
-    public function __construct(MediaFactory $mediaFactory)
+    private $dayPart;
+
+    public function __construct(DayPart $dayPart)
     {
-        $this->mediaFactory = $mediaFactory;
+        $this->dayPart = $dayPart;
     }
-    
-    public function __invoke(ParsePermissionEntityEvent $event)
+
+    public function getDayPart(): DayPart
     {
-        $event->setObject($this->mediaFactory->getById($event->getObjectId()));
+        return $this->dayPart;
     }
 }

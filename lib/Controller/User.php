@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -2034,9 +2034,12 @@ class User extends Base
         if ($objectId == 0) {
             throw new InvalidArgumentException(__('Sharing form requested without an object'));
         }
-        
+
         /** @var ParsePermissionEntityEvent $event */
-        $event = $this->getDispatcher()->dispatch(ParsePermissionEntityEvent::$NAME . lcfirst($entity), new ParsePermissionEntityEvent($entity, $objectId));
+        $event = $this->getDispatcher()->dispatch(
+            new ParsePermissionEntityEvent($entity, $objectId),
+            ParsePermissionEntityEvent::$NAME . lcfirst($entity)
+        );
 
         return $event->getObject();
     }

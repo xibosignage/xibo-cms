@@ -1,6 +1,6 @@
-<?php
+{#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,27 +19,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+#}
+{% extends "connector-form-edit.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
 
-namespace Xibo\Listener;
+{% block callBack %}audienceFormOpen{% endblock %}
+{% block connectorFormFields %}
 
-use Xibo\Event\CampaignLoadEvent;
-use Xibo\Factory\LayoutFactory;
+    <h4>Coming soon</h4>
+    <p>We're working on bringing you this exciting connector in the next update.</p>
 
-class OnCampaignLoad
-{
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    public function __construct(LayoutFactory $layoutFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
-    }
-    
-    public function __invoke(CampaignLoadEvent $event)
-    {
-        $campaign = $event->getCampaign();
-        $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
-    }
-}
+{% endblock %}

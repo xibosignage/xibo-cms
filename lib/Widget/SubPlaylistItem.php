@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,25 +20,34 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Event;
+namespace Xibo\Widget;
 
-use Xibo\Entity\Campaign;
-
-class CampaignLoadEvent extends Event
+class SubPlaylistItem implements \JsonSerializable
 {
-    public static $NAME = 'campaign.load.event';
-    /**
-     * @var Campaign
-     */
-    private $campaign;
+    /** @var int */
+    public $rowNo;
 
-    public function __construct(Campaign $campaign)
-    {
-        $this->campaign = $campaign;
-    }
+    /** @var int */
+    public $playlistId;
 
-    public function getCampaign(): Campaign
+    /** @var string */
+    public $spotFill;
+
+    /** @var int */
+    public $spotLength;
+
+    /** @var ?int */
+    public $spots;
+
+    /** @inheritDoc */
+    public function jsonSerialize()
     {
-        return $this->campaign;
+        return [
+            'rowNo' => $this->rowNo,
+            'playlistId' => $this->playlistId,
+            'spotFill' => $this->spotFill,
+            'spotLength' => $this->spotLength,
+            'spots' => $this->spots,
+        ];
     }
 }

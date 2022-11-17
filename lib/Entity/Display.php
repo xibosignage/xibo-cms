@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,7 +20,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Entity;
-
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
@@ -46,6 +45,7 @@ use Xibo\Support\Exception\NotFoundException;
  * @property $isCmsTransferInProgress Is a transfer to another CMS in progress?
  *
  * @SWG\Definition()
+ * @property $tagsString
  */
 class Display implements \JsonSerializable
 {
@@ -54,12 +54,109 @@ class Display implements \JsonSerializable
     public static $STATUS_PENDING = 3;
 
     use EntityTrait;
+    use TagLinkTrait;
 
     /**
      * @SWG\Property(description="The ID of this Display")
      * @var int
      */
     public $displayId;
+
+    /**
+     * @SWG\Property(description="The Display Type ID of this Display")
+     * @var int
+     */
+    public $displayTypeId;
+
+    /**
+     * @SWG\Property(description="The Venue ID of this Display")
+     * @var int
+     */
+    public $venueId;
+
+    /**
+     * @SWG\Property(description="The Location Address of this Display")
+     * @var string
+     */
+    public $address;
+
+    /**
+     * @SWG\Property(description="Is this Display mobile?")
+     * @var int
+     */
+    public $isMobile;
+
+    /**
+     * @SWG\Property(description="The Languages supported in this display location")
+     * @var string
+     */
+    public $languages;
+
+    /**
+     * @SWG\Property(description="The type of this Display")
+     * @var string
+     */
+    public $displayType;
+
+    /**
+     * @SWG\Property(description="The screen size of this Display")
+     * @var int
+     */
+    public $screenSize;
+
+    /**
+     * @SWG\Property(description="Is this Display Outdoor?")
+     * @var int
+     */
+    public $isOutdoor;
+
+    /**
+     * @SWG\Property(description="The custom ID (an Id of any external system) of this Display")
+     * @var string
+     */
+    public $customId;
+
+    /**
+     * @SWG\Property(description="The Cost Per Play of this Display")
+     * @var int
+     */
+    public $costPerPlay;
+
+    /**
+     * @SWG\Property(description="The Impressions Per Play of this Display")
+     * @var int
+     */
+    public $impressionsPerPlay;
+
+    /**
+     * @SWG\Property(description="Optional Reference 1")
+     * @var string
+     */
+    public $ref1;
+
+    /**
+     * @SWG\Property(description="Optional Reference 2")
+     * @var string
+     */
+    public $ref2;
+
+    /**
+     * @SWG\Property(description="Optional Reference 3")
+     * @var string
+     */
+    public $ref3;
+
+    /**
+     * @SWG\Property(description="Optional Reference 4")
+     * @var string
+     */
+    public $ref4;
+
+    /**
+     * @SWG\Property(description="Optional Reference 5")
+     * @var string
+     */
+    public $ref5;
 
     /**
      * @SWG\Property(description="Flag indicating whether this Display is recording Auditing Information from XMDS")
@@ -309,10 +406,10 @@ class Display implements \JsonSerializable
     public $timeZone;
 
     /**
-     * @SWG\Property(description="Tags associated with this Display")
-     * @var Tag[]
+     * @SWG\Property(description="Tags associated with this Display, array of TagLink objects")
+     * @var TagLink[]
      */
-    public $tags;
+    public $tags = [];
 
     /**
      * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
@@ -555,6 +652,14 @@ class Display implements \JsonSerializable
     }
 
     /**
+     * @return array
+     */
+    public function getLanguages()
+    {
+        return empty($this->languages) ? [] : explode(',', $this->languages);
+    }
+
+    /**
      * Is this display auditing?
      * return bool
      */
@@ -742,15 +847,15 @@ class Display implements \JsonSerializable
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
             $displayGroup->load();
             $displayGroup->unassignDisplay($this);
-            $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
+            $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false, 'allowNotify' => false]);
         }
 
         // Delete our display specific group
         $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->delete();
 
         // Delete the display
@@ -823,6 +928,16 @@ class Display implements \JsonSerializable
             UPDATE display
                 SET display = :display,
                     defaultlayoutid = :defaultLayoutId,
+                    displayTypeId = :displayTypeId,
+                    venueId = :venueId,
+                    address = :address,
+                    isMobile = :isMobile,
+                    languages = :languages,
+                    screenSize = :screenSize,
+                    isOutdoor = :isOutdoor,
+                    `customId` = :customId,
+                    costPerPlay = :costPerPlay,
+                    impressionsPerPlay = :impressionsPerPlay,
                     inc_schedule = :incSchedule,
                     license = :license,
                     licensed = :licensed,
@@ -868,6 +983,16 @@ class Display implements \JsonSerializable
         ', [
             'display' => $this->display,
             'defaultLayoutId' => $this->defaultLayoutId,
+            'displayTypeId' => $this->displayTypeId === 0 ? null : $this->displayTypeId,
+            'venueId' => $this->venueId === 0 ? null : $this->venueId,
+            'address' => $this->address,
+            'isMobile' => $this->isMobile,
+            'languages' => $this->languages,
+            'screenSize' => $this->screenSize,
+            'isOutdoor' => $this->isOutdoor,
+            'customId' => $this->customId,
+            'costPerPlay' => $this->costPerPlay,
+            'impressionsPerPlay' => $this->impressionsPerPlay,
             'incSchedule' => ($this->incSchedule == null) ? 0 : $this->incSchedule,
             'license' => $this->license,
             'licensed' => $this->licensed,
@@ -919,6 +1044,11 @@ class Display implements \JsonSerializable
             || $this->hasPropertyChanged('tags')
             || $this->hasPropertyChanged('bandwidthLimit')
             || $this->hasPropertyChanged('folderId')
+            || $this->hasPropertyChanged('ref1')
+            || $this->hasPropertyChanged('ref2')
+            || $this->hasPropertyChanged('ref3')
+            || $this->hasPropertyChanged('ref4')
+            || $this->hasPropertyChanged('ref5')
         ) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
@@ -927,12 +1057,17 @@ class Display implements \JsonSerializable
             $displayGroup->displayGroup = $this->display;
             $displayGroup->description = $this->description;
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
+            $displayGroup->ref1 = $this->ref1;
+            $displayGroup->ref2 = $this->ref2;
+            $displayGroup->ref3 = $this->ref3;
+            $displayGroup->ref4 = $this->ref4;
+            $displayGroup->ref5 = $this->ref5;
 
             // Tags
             $saveTags = false;
             if ($this->hasPropertyChanged('tags')) {
                 $saveTags = true;
-                $displayGroup->replaceTags($this->tags);
+                $displayGroup->updateTagLinks($this->tags);
             }
 
             // If the folderId has changed, we should check this user has permissions to the new folderId

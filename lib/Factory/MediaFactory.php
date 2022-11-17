@@ -41,6 +41,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class MediaFactory extends BaseFactory
 {
+    use TagTrait;
+
     /** @var Media[] */
     private $remoteDownloadQueue = [];
 
@@ -58,11 +60,6 @@ class MediaFactory extends BaseFactory
     private $permissionFactory;
 
     /**
-     * @var TagFactory
-     */
-    private $tagFactory;
-
-    /**
      * @var PlaylistFactory
      */
     private $playlistFactory;
@@ -73,16 +70,14 @@ class MediaFactory extends BaseFactory
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
-     * @param TagFactory $tagFactory
      * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($user, $userFactory, $config, $permissionFactory, $tagFactory, $playlistFactory)
+    public function __construct($user, $userFactory, $config, $permissionFactory, $playlistFactory)
     {
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
-        $this->tagFactory = $tagFactory;
         $this->playlistFactory = $playlistFactory;
     }
 
@@ -98,8 +93,7 @@ class MediaFactory extends BaseFactory
             $this->getDispatcher(),
             $this->config,
             $this,
-            $this->permissionFactory,
-            $this->tagFactory
+            $this->permissionFactory
         );
     }
 
@@ -587,14 +581,6 @@ class MediaFactory extends BaseFactory
                `media`.orientation,
                `media`.width,
                `media`.height,
-               ( 
-                   SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
-                        FROM tag
-                        INNER JOIN lktagmedia
-                            ON lktagmedia.tagId = tag.tagId
-                            WHERE lktagmedia.mediaId = media.mediaId
-                        GROUP BY lktagmedia.mediaId
-               ) as tags,
                `user`.UserName AS owner,
             ';
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -894,8 +880,8 @@ class MediaFactory extends BaseFactory
             $params['orientation'] = $sanitizedFilter->getString('orientation');
         }
 
-        if ($sanitizedFilter->getInt('noOrientation') === 1) {
-            $body .= ' AND media.orientation IS NULL ';
+        if ($sanitizedFilter->getInt('requiresMetaUpdate') === 1) {
+            $body .= ' AND (`media`.orientation IS NULL OR IFNULL(`media`.width, 0) = 0)';
         }
 
         // View Permissions
@@ -914,7 +900,8 @@ class MediaFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-        
+        $mediaIds = [];
+
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
@@ -929,11 +916,19 @@ class MediaFactory extends BaseFactory
                     'height'
                 ]
             ]);
+
+            $mediaIds[] = $media->mediaId;
+
             $media->excludeProperty('layoutBackgroundImages');
             $media->excludeProperty('widgets');
             $media->excludeProperty('displayGroups');
 
             $entries[] = $media;
+        }
+
+        // decorate with TagLinks
+        if (count($entries) > 0) {
+            $this->decorateWithTagLinks('lktagmedia', 'mediaId', $mediaIds, $entries);
         }
 
         // Paging

@@ -61,6 +61,7 @@ use Xibo\Widget\ModuleWidget;
 class Layout implements \JsonSerializable
 {
     use EntityTrait;
+    use TagLinkTrait;
 
     /**
      * @SWG\Property(
@@ -274,8 +275,8 @@ class Layout implements \JsonSerializable
     public $regions = [];
 
     /**
-     * @SWG\Property(description="An array of Tags belonging to this Layout")
-     * @var \Xibo\Entity\Tag[]
+     * @SWG\Property(description="Tags associated with this Layout, array of TagLink objects")
+     * @var TagLink[]
      */
     public $tags = [];
 
@@ -304,7 +305,10 @@ class Layout implements \JsonSerializable
     public $permissionsFolderId;
 
     // Private
-    private $unassignTags = [];
+    /** @var TagLink[] */
+    private $unlinkTags = [];
+    /** @var TagLink[] */
+    private $linkTags = [];
 
     // Handle empty regions
     private $hasEmptyRegion = false;
@@ -440,6 +444,8 @@ class Layout implements \JsonSerializable
         $this->code = null;
         $this->hash = null;
         $this->permissions = [];
+        $this->tags = [];
+        $this->linkTags = [];
 
         // A normal clone (for copy) will set this to Published, so that the copy is published.
         $this->publishedStatusId = 1;
@@ -697,30 +703,15 @@ class Layout implements \JsonSerializable
      */
     public function isTemplate(): bool
     {
-        // Tags might be an array (if we've called `load()` or a string if we've returned directly from the DB)
-        $tagsArray = is_array($this->tags)
-            ? $this->tags
-            : explode(',', $this->tags);
-
-        foreach ($tagsArray as $tag) {
-            if ($tag === 'template') {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->hasTag('template');
     }
 
     /**
-     * @return \Xibo\Entity\Tag[]
+     * @return \Xibo\Entity\TagLink[]
      */
     public function getTags(): array
     {
-        if ($this->loaded) {
-            return $this->tags;
-        } else {
-            return $this->tagFactory->loadByLayoutId($this->layoutId);
-        }
+        return $this->tags;
     }
 
     /**
@@ -769,7 +760,6 @@ class Layout implements \JsonSerializable
     {
         $options = array_merge([
             'loadPlaylists' => true,
-            'loadTags' => true,
             'loadPermissions' => true,
             'loadCampaigns' => true,
             'loadActions' => true,
@@ -794,11 +784,6 @@ class Layout implements \JsonSerializable
 
         if ($options['loadPlaylists']) {
             $this->loadPlaylists($options);
-        }
-
-        // Load all tags
-        if ($options['loadTags']) {
-            $this->tags = $this->tagFactory->loadByLayoutId($this->layoutId);
         }
 
         // Load Campaigns
@@ -946,39 +931,17 @@ class Layout implements \JsonSerializable
         if ($options['saveTags']) {
             $this->getLog()->debug('Saving tags on ' . $this);
 
-            // if we are saving new Layout after import, we need to go through all Tags on the Layout
-            // double check if any of them match Tags added from imported Playlists or Media
-            // otherwise we would end up with duplicated Tags
-            if ($options['import']) {
-                $importedTags = $this->tags;
-                $this->tags = [];
-                foreach ($importedTags as $importedTag) {
-                    $this->tags[] = $this->tagFactory->tagFromString(
-                        $importedTag->tag . (!empty($importedTag->value) ? '|' . $importedTag->value : '')
-                    );
-                }
-            }
-
             // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignLayout($this->layoutId);
-                    $tag->save();
+            if (is_array($this->unlinkTags)) {
+                foreach ($this->unlinkTags as $tag) {
+                    $this->unlinkTagFromEntity('lktaglayout', 'layoutId', $this->layoutId, $tag->tagId);
                 }
             }
 
             // Save the tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-
-                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
-
-                    $tag->assignLayout($this->layoutId);
-                    $tag->save();
+            if (is_array($this->linkTags)) {
+                foreach ($this->linkTags as $tag) {
+                    $this->linkTagToEntity('lktaglayout', 'layoutId', $this->layoutId, $tag->tagId, $tag->value);
                 }
             }
         }
@@ -1017,11 +980,7 @@ class Layout implements \JsonSerializable
         }
 
         // Unassign all Tags
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            $tag->unassignLayout($this->layoutId);
-            $tag->save();
-        }
+        $this->unlinkAllTagsFromEntity('lktaglayout', 'layoutId', $this->layoutId);
 
         $allRegions = array_merge($this->regions, $this->drawers);
 
@@ -1050,7 +1009,9 @@ class Layout implements \JsonSerializable
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
                 $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
-                $campaign->unassignLayout($this, true);
+                // Passing this layoutId without a display order will remove all occurrences.
+                // https://github.com/xibosignage/xibo/issues/1960
+                $campaign->unassignLayout($this->layoutId);
                 $campaign->save(['validate' => false]);
             }
 
@@ -1148,40 +1109,6 @@ class Layout implements \JsonSerializable
     }
 
     /**
-     * Does the layout have the provided tag?
-     * @param $searchTag
-     * @return bool
-     * @throws NotFoundException
-     */
-    public function hasTag($searchTag)
-    {
-        $this->load();
-
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            if ($tag->tag == $searchTag)
-                return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Assign Tag
-     * @param Tag $tag
-     * @return $this
-     * @throws NotFoundException
-     */
-    public function assignTag($tag): Layout
-    {
-        $this->load();
-        $this->handleTagAssign($tag);
-        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
-
-        return $this;
-    }
-
-    /**
      * Add layout history
      *  this is called when a new Layout is added, and when a Draft Layout is published
      *  we can therefore expect to always have a Layout History record for a Layout
@@ -1248,55 +1175,6 @@ class Layout implements \JsonSerializable
                 'type' => $widget->type,
                 'name' => $widget->getOptionValue('name', null),
             ]);
-        }
-    }
-
-    /**
-     * Unassign tag
-     * @param Tag $tag
-     * @return $this
-     * @throws NotFoundException
-     * @throws GeneralException
-     */
-    public function unassignTag($tag)
-    {
-        $this->load();
-
-        foreach ($this->tags as $key => $currentTag) {
-            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
-                $this->unassignTags[] = $tag;
-                array_splice($this->tags, $key, 1);
-            }
-        }
-
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
-
-        return $this;
-    }
-
-    /**
-     * @param array[Tag] $tags
-     */
-    public function replaceTags($tags = [])
-    {
-        if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = $this->tagFactory->loadByLayoutId($this->layoutId);
-
-        if ($this->tags != $tags) {
-            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
-                /* @var Tag $a */
-                /* @var Tag $b */
-                return $a->tagId - $b->tagId;
-            });
-
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
-
-            // Replace the arrays
-            $this->tags = $tags;
-
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
-        } else {
-            $this->getLog()->debug('Tags were not changed');
         }
     }
 
@@ -1811,7 +1689,7 @@ class Layout implements \JsonSerializable
             }
 
             $event = new LayoutBuildRegionEvent($region->regionId, $regionNode);
-            $this->getDispatcher()->dispatch($event::NAME, $event);
+            $this->getDispatcher()->dispatch($event, $event::NAME);
             // End of region loop.
         }
 
@@ -1833,7 +1711,7 @@ class Layout implements \JsonSerializable
 
         // Fire a layout.build event, passing the layout and the generated document.
         $event = new LayoutBuildEvent($this, $document);
-        $this->getDispatcher()->dispatch($event::NAME, $event);
+        $this->getDispatcher()->dispatch($event, $event::NAME);
 
         Profiler::end('Layout::toXlf', $this->getLog());
         return $document->saveXML();
@@ -2408,21 +2286,23 @@ class Layout implements \JsonSerializable
         // Add a Campaign
         // we do not add a campaign record for draft layouts.
         if ($this->parentId === null) {
-            $campaign = $this->campaignFactory->createEmpty();
-            $campaign->campaign = $this->layout;
+            $campaign = $this->campaignFactory->create(
+                'list',
+                $this->layout,
+                $this->getOwnerId(),
+                '',
+                ($this->folderId == null) ? 1 : $this->folderId
+            );
             $campaign->isLayoutSpecific = 1;
-            $campaign->ownerId = $this->getOwnerId();
             $campaign->cyclePlaybackEnabled = 0;
-
-            // We shouldn't ever have a null folderId by now, but just in case.
-            $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+            $campaign->listPlayOrder = 'round';
 
             // check that the user has access to the folder we're adding them to
             $folder = $this->folderFactory->getById($campaign->folderId, 0);
             $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
             // Assign the layout
-            $campaign->assignLayout($this);
+            $campaign->assignLayout($this->layoutId);
 
             // Ready to save the Campaign
             // adding a Layout Specific Campaign shouldn't ever notify (it can't hit anything because we've only
@@ -2442,7 +2322,7 @@ class Layout implements \JsonSerializable
             // Add this draft layout as a link to the campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
-            $campaign->assignLayout($this);
+            $campaign->assignLayout($this->layoutId);
             $campaign->save([
                 'notify' => false
             ]);

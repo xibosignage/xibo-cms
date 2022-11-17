@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,25 +20,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Listener\OnParsePermissions;
+namespace Xibo\Event;
 
-use Xibo\Event\ParsePermissionEntityEvent;
-use Xibo\Factory\PlaylistFactory;
-
-class PermissionsPlaylistListener
+class TagAddEvent extends Event
 {
+    public static $NAME = 'tag.add.event';
     /**
-     * @var PlaylistFactory
+     * @var int
      */
-    private $playlistFactory;
+    private $tagId;
 
-    public function __construct(PlaylistFactory $playlistFactory)
+    public function __construct(int $tagId)
     {
-        $this->playlistFactory = $playlistFactory;
+        $this->tagId = $tagId;
     }
 
-    public function __invoke(ParsePermissionEntityEvent $event)
+    /**
+     * @return int
+     */
+    public function getTagId(): int
     {
-        $event->setObject($this->playlistFactory->getById($event->getObjectId()));
+        return $this->tagId;
     }
 }

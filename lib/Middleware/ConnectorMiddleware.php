@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -71,17 +71,11 @@ class ConnectorMiddleware implements MiddlewareInterface
         $connectorFactory = $container->get('connectorFactory');
         foreach ($connectorFactory->query(['isEnabled' => 1, 'isVisible' => 1]) as $connector) {
             try {
-                // Create a connector and register it with the dispatcher.
-                $connector = $connectorFactory->create($connector);
-                $connector
-                    ->useSettings($container->get('configService')->getConnectorSettings($connector->getSourceName()))
-                    ->useHttpOptions($container->get('configService')->getGuzzleProxy())
-                    ->useJwtService($container->get('jwtService'))
-                    ->registerWithDispatcher($container->get('dispatcher'));
+                // Create a connector, add in platform settings and register it with the dispatcher.
+                $connectorFactory->create($connector)->registerWithDispatcher($container->get('dispatcher'));
             } catch (\Exception $exception) {
                 // Log and ignore.
                 $container->get('logger')->error('Incorrectly configured connector. e=' . $exception->getMessage());
-                $container->get('logger')->debug($exception->getTraceAsString());
             }
         }
     }

@@ -26,7 +26,6 @@ use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\TagFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -43,10 +42,12 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * @SWG\Definition()
  * @property $extension
  * @property $thumbnail
+ * @property $tagsString
  */
 class Media implements \JsonSerializable
 {
     use EntityTrait;
+    use TagLinkTrait;
 
     /**
      * @SWG\Property(description="The Media ID")
@@ -92,8 +93,8 @@ class Media implements \JsonSerializable
 
     // Thing that might be referred to
     /**
-     * @SWG\Property(description="Tags associated with this Media")
-     * @var Tag[]
+     * @SWG\Property(description="Tags associated with this Media, array of TagLink objects")
+     * @var TagLink[]
      */
     public $tags = [];
 
@@ -214,7 +215,10 @@ class Media implements \JsonSerializable
     public $height;
 
     // Private
-    private $unassignTags = [];
+    /** @var TagLink[] */
+    private $unlinkTags = [];
+    /** @var TagLink[] */
+    private $linkTags = [];
     private $requestOptions = [];
     private $datesToFormat = ['expires'];
     // New file revision
@@ -253,11 +257,6 @@ class Media implements \JsonSerializable
     private $mediaFactory;
 
     /**
-     * @var TagFactory
-     */
-    private $tagFactory;
-
-    /**
      * @var PermissionFactory
      */
     private $permissionFactory;
@@ -270,16 +269,14 @@ class Media implements \JsonSerializable
      * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      * @param PermissionFactory $permissionFactory
-     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $permissionFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->mediaFactory = $mediaFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->tagFactory = $tagFactory;
     }
 
     public function __clone()
@@ -290,6 +287,7 @@ class Media implements \JsonSerializable
         $this->displayGroups = [];
         $this->layoutBackgroundImages = [];
         $this->permissions = [];
+        $this->tags = [];
 
         // We need to do something with the name
         $this->name = sprintf(
@@ -373,83 +371,22 @@ class Media implements \JsonSerializable
     }
 
     /**
-     * Assign Tag
-     * @param Tag $tag
-     * @return $this
-     * @throws GeneralException
-     */
-    public function assignTag($tag): Media
-    {
-        $this->load();
-        $this->handleTagAssign($tag);
-        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
-
-        return $this;
-    }
-
-    /**
-     * Unassign tag
-     * @param Tag $tag
-     * @return $this
-     * @throws GeneralException
-     */
-    public function unassignTag($tag)
-    {
-        $this->load();
-
-        foreach ($this->tags as $key => $currentTag) {
-            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
-                $this->unassignTags[] = $tag;
-                array_splice($this->tags, $key, 1);
-            }
-        }
-
-        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
-
-        return $this;
-    }
-
-    /**
-     * @param array[Tag] $tags
-     */
-    public function replaceTags($tags = [])
-    {
-        if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
-
-        if ($this->tags != $tags) {
-            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
-                /* @var Tag $a */
-                /* @var Tag $b */
-                return $a->tagId - $b->tagId;
-            });
-
-            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
-
-            // Replace the arrays
-            $this->tags = $tags;
-
-            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
-        } else {
-            $this->getLog()->debug('Tags were not changed');
-        }
-    }
-
-    /**
      * Validate
      * @param array $options
      * @throws GeneralException
      */
     public function validate($options)
     {
-        if (!v::stringType()->notEmpty()->validate($this->mediaType))
-            throw new InvalidArgumentException(__('Unknown Module Type'), 'type');
+        if (!v::stringType()->notEmpty()->validate($this->mediaType)) {
+            throw new InvalidArgumentException(__('Unknown Media Type'), 'type');
+        }
 
-        if (!v::stringType()->notEmpty()->length(1, 100)->validate($this->name))
+        if (!v::stringType()->notEmpty()->length(1, 100)->validate($this->name)) {
             throw new InvalidArgumentException(__('The name must be between 1 and 100 characters'), 'name');
+        }
 
         // Check the naming of this item to ensure it doesn't conflict
-        $params = array();
+        $params = [];
         $checkSQL = 'SELECT `name` FROM `media` WHERE `name` = :name AND userid = :userId';
 
         if ($this->mediaId != 0) {
@@ -486,9 +423,6 @@ class Media implements \JsonSerializable
         ], $options);
 
         $this->getLog()->debug(sprintf('Loading Media. Options = %s', json_encode($options)));
-
-        // Tags
-        $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models, unless we're a module file in which case
         // we've no need.
@@ -563,20 +497,16 @@ class Media implements \JsonSerializable
 
         if ($options['saveTags']) {
             // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $tag->unassignMedia($this->mediaId);
-                    $tag->save();
+            if (is_array($this->unlinkTags)) {
+                foreach ($this->unlinkTags as $tag) {
+                    $this->unlinkTagFromEntity('lktagmedia', 'mediaId', $this->mediaId, $tag->tagId);
                 }
             }
 
             // Save the tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-                    $tag->assignMedia($this->mediaId);
-                    $tag->save();
+            if (is_array($this->linkTags)) {
+                foreach ($this->linkTags as $tag) {
+                    $this->linkTagToEntity('lktagmedia', 'mediaId', $this->mediaId, $tag->tagId, $tag->value);
                 }
             }
         }
@@ -627,11 +557,7 @@ class Media implements \JsonSerializable
             $permission->delete();
         }
 
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            $tag->unassignMedia($this->mediaId);
-            $tag->save();
-        }
+        $this->unlinkAllTagsFromEntity('lktagmedia', 'mediaId', $this->mediaId);
 
         $this->deleteRecord();
         $this->deleteFile();

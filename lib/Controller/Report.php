@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\ReportResult;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 
@@ -114,15 +115,7 @@ class Report extends Base
         //
         // Output Results
         // --------------
-        if ($result->hasChartData) {
-            $this->getState()->extra = $result;
-        } else {
-            $this->getState()->template = 'grid';
-            $this->getState()->setData($result->getRows());
-            $this->getState()->recordsTotal = $result->countLast();
-        }
-
-        return $this->render($request, $response);
+        return $response->withJson($result);
     }
 
     //</editor-fold>

@@ -149,15 +149,17 @@ class TimeDisconnectedSummary implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        $metadata = [
+            'periodStart' => $json['metadata']['periodStart'],
+            'periodEnd' => $json['metadata']['periodEnd'],
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                ->format(DateFormatHelper::getSystemFormat()),
+            'title' => $savedReport->saveAs,
+        ];
+
         // Report result object
         return new ReportResult(
-            [
-                'periodStart' => $json['metadata']['periodStart'],
-                'periodEnd' => $json['metadata']['periodEnd'],
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
-                    ->format(DateFormatHelper::getSystemFormat()),
-                'title' => $savedReport->saveAs,
-            ],
+            $metadata,
             $json['table'],
             $json['recordsTotal'],
             $json['chart']
@@ -287,8 +289,11 @@ class TimeDisconnectedSummary implements ReportInterface
 
         $body .= 'WHERE `start` <= :end
                   AND IFNULL(`end`, :end) >= :start
-                  AND :end <= UNIX_TIMESTAMP(NOW())
-                  AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+                  AND :end <= UNIX_TIMESTAMP(NOW()) ';
+
+        if (count($displayIds) > 0) {
+            $body .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
 
         if ($displayGroupId != 0) {
             $body .= '
@@ -414,7 +419,6 @@ class TimeDisconnectedSummary implements ReportInterface
         $availabilityDataConnected = [];
         $availabilityLabels = [];
         $postUnits = "";
-        $dataSets = [];
 
         foreach ($rows as $row) {
             $availabilityData[] = $row['timeDisconnected'];
@@ -423,6 +427,7 @@ class TimeDisconnectedSummary implements ReportInterface
             $postUnits = $row['postUnits'];
         }
 
+        // Build Chart to pass in twig file chart.js
         $chart = [
             'type' => 'bar',
             'data' => [
@@ -465,15 +470,16 @@ class TimeDisconnectedSummary implements ReportInterface
             ]
         ];
 
+        $metadata = [
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+        ];
+
         // ----
-        // Both Chart and Table
         // Return data to build chart/table
         // This will get saved to a json file when schedule runs
         return new ReportResult(
-            [
-                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            ],
+            $metadata,
             $rows,
             $recordsTotal,
             $chart

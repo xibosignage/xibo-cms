@@ -22,8 +22,11 @@
 
 namespace Xibo\Controller;
 
+use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\ConnectorDeletingEvent;
+use Xibo\Event\ConnectorEnabledChangeEvent;
 use Xibo\Factory\ConnectorFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -38,9 +41,8 @@ class Connector extends Base
 {
     /** @var \Xibo\Factory\ConnectorFactory */
     private $connectorFactory;
-    /**
-     * @var WidgetFactory
-     */
+
+    /** @var WidgetFactory */
     private $widgetFactory;
 
     public function __construct(ConnectorFactory $connectorFactory, WidgetFactory $widgetFactory)
@@ -105,17 +107,37 @@ class Connector extends Base
         }
         $interface = $this->connectorFactory->create($connector);
 
-        // Are some settings provided?
-        $platformProvidesSettings = count($this->getConfig()->getConnectorSettings($interface->getSourceName())) > 0;
-
         $this->getState()->template = $interface->getSettingsFormTwig() ?: 'connector-form-edit';
         $this->getState()->setData([
             'connector' => $connector,
-            'interface' => $interface,
-            'platformProvidesSettings' => $platformProvidesSettings
+            'interface' => $interface
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Edit Connector Form Proxy
+     *  this is a magic method used to call a connector method which returns some JSON data
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $method
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Slim\Exception\HttpMethodNotAllowedException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function editFormProxy(Request $request, Response $response, $id, $method)
+    {
+        $connector = $this->connectorFactory->getById($id);
+        $interface = $this->connectorFactory->create($connector);
+
+        if (method_exists($interface, $method)) {
+            return $response->withJson($interface->{$method}($this->getSanitizer($request->getParams())));
+        } else {
+            throw new HttpMethodNotAllowedException($request);
+        }
     }
 
     /**
@@ -144,6 +166,8 @@ class Connector extends Base
 
         // Is this an uninstallation request
         if ($params->getCheckbox('shouldUninstall')) {
+            $this->getDispatcher()->dispatch(new ConnectorDeletingEvent($connector, $this->getConfig()));
+
             $connector->delete();
 
             // Successful
@@ -153,6 +177,11 @@ class Connector extends Base
         } else {
             // Core properties
             $connector->isEnabled = $params->getCheckbox('isEnabled');
+
+            if ($connector->hasPropertyChanged('isEnabled')) {
+                $this->getDispatcher()->dispatch(new ConnectorEnabledChangeEvent($connector, $this->getConfig()));
+            }
+
             $connector->settings = $interface->processSettingsForm($params, $connector->settings);
             $connector->save();
 

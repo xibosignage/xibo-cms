@@ -356,7 +356,12 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/campaign/form/copy/{id}', ['\Xibo\Controller\Campaign', 'copyForm'])->setName('campaign.copy.form');
     $group->get('/campaign/form/delete/{id}', ['\Xibo\Controller\Campaign', 'deleteForm'])->setName('campaign.delete.form');
     $group->get('/campaign/form/retire/{id}', ['\Xibo\Controller\Campaign', 'retireForm'])->setName('campaign.retire.form');
-    $group->get('/campaign/form/layouts/{id}', ['\Xibo\Controller\Campaign', 'layoutsForm'])->setName('campaign.layouts.form');
+    $group->get('/campaign/form/layout/remove/{id}', ['\Xibo\Controller\Campaign', 'removeLayoutForm'])
+        ->setName('campaign.layout.remove.form');
+
+    $group->get('/campaign-builder/{id}', ['\Xibo\Controller\Campaign', 'displayCampaignBuilder'])
+        ->addMiddleware(new FeatureAuth($group->getContainer(), ['ad.campaign']))
+        ->setName('campaign.builder');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
 
 $app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolderForm'])
@@ -529,7 +534,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/application/view', ['\Xibo\Controller\Applications','displayPage'])->setName('application.view');
     $group->get('/application/data/activity', ['\Xibo\Controller\Applications','viewActivity'])->setName('application.view.activity');
     $group->get('/application/form/add', ['\Xibo\Controller\Applications','addForm'])->setName('application.add.form');
-    $group->get('/application/form/addDooh', ['\Xibo\Controller\Applications','addDoohForm'])->setName('application.addDooh.form');
     $group->get('/application/form/edit/{id}', ['\Xibo\Controller\Applications','editForm'])->setName('application.edit.form');
     $group->get('/application/form/delete/{id}', ['\Xibo\Controller\Applications','deleteForm'])->setName('application.delete.form');
     $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
@@ -539,6 +543,8 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
     $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
         ->setName('connector.edit.form');
+    $group->get('/connectors/form/{id}/proxy/{method}', ['\Xibo\Controller\Connector', 'editFormProxy'])
+        ->setName('connector.edit.form.proxy');
     $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
@@ -705,6 +711,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/tag/form/add', ['\Xibo\Controller\Tag','addForm'])->setName('tag.add.form');
     $group->get('/tag/form/edit/{id}', ['\Xibo\Controller\Tag','editForm'])->setName('tag.edit.form');
     $group->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setName('tag.delete.form');
+    $group->get('/tag/form/usage/{id}', ['\Xibo\Controller\Tag', 'usageForm'])->setName('tag.usage.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['tag.view']));
 
 // Actions
@@ -738,7 +745,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
 $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])->setName('library.font.css');
-$app->get('/fonts/fontlist', ['\Xibo\Controller\Font','fontList'])->setName('library.font.list');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');

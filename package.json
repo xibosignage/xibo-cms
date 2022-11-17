@@ -99,7 +99,7 @@
     "jstree": "^3.3.10",
     "leaflet": "^1.7.1",
     "leaflet-draw": "^1.0.4",
-    "leaflet-search": "^2.9.8",
+    "leaflet-search": "^3.0.3",
     "leaflet-easyprint": "^2.1.9",
     "leaflet.markercluster": "^1.4.1",
     "masonry-layout": "^4.2.2",

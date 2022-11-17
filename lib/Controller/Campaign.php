@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Event\CampaignLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -58,6 +57,9 @@ class Campaign extends Base
     /** @var FolderFactory */
     private $folderFactory;
 
+    /** @var \Xibo\Factory\DisplayGroupFactory */
+    private $displayGroupFactory;
+
     /**
      * Set common dependencies.
      * @param CampaignFactory $campaignFactory
@@ -65,12 +67,13 @@ class Campaign extends Base
      * @param TagFactory $tagFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($campaignFactory, $layoutFactory, $tagFactory, $folderFactory)
+    public function __construct($campaignFactory, $layoutFactory, $tagFactory, $folderFactory, $displayGroupFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
         $this->folderFactory = $folderFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -84,6 +87,48 @@ class Campaign extends Base
     {
         $this->getState()->template = 'campaign-page';
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Display the Campaign Builder
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     */
+    public function displayCampaignBuilder(Request $request, Response $response, $id)
+    {
+        $campaign = $this->campaignFactory->getById($id);
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+
+        if ($campaign->type !== 'ad') {
+            throw new InvalidArgumentException(__('This campaign is not compatible with the Campaign builder'));
+        }
+
+        // Load in our current display groups for the form.
+        $displayGroups = [];
+        $displayGroupIds = $campaign->loadDisplayGroupIds();
+        foreach ($displayGroupIds as $displayGroupId) {
+            $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
+        }
+
+        // Work out the percentage complete/target.
+        $progress = $campaign->getProgress();
+
+        $this->getState()->template = 'campaign-builder';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
+            'stats' => [
+                'complete' => round($progress->progressTime, 2),
+                'target' => round($progress->progressTarget, 2),
+            ],
+        ]);
         return $this->render($request, $response);
     }
 
@@ -194,6 +239,7 @@ class Campaign extends Base
         $parsedParams = $this->getSanitizer($request->getQueryParams());
         $filter = [
             'campaignId' => $parsedParams->getInt('campaignId'),
+            'type' => $parsedParams->getString('type'),
             'name' => $parsedParams->getString('name'),
             'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
             'tags' => $parsedParams->getString('tags'),
@@ -217,7 +263,7 @@ class Campaign extends Base
             /* @var \Xibo\Entity\Campaign $campaign */
             if (count($embed) > 0) {
                 if (in_array('layouts', $embed)) {
-                    $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+                    $campaign->loadLayouts();
                 }
 
                 $campaign->load([
@@ -237,7 +283,7 @@ class Campaign extends Base
             $campaign->buttons = [];
 
             // Schedule Now
-            if ($this->getUser()->featureEnabled('schedule.now')) {
+            if ($this->getUser()->featureEnabled('schedule.now') && $campaign->type === 'list') {
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_schedulenow',
                     'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
@@ -246,7 +292,9 @@ class Campaign extends Base
             }
 
             // Preview
-            if ($this->getUser()->featureEnabled(['layout.view', 'campaign.view'], true)) {
+            if ($this->getUser()->featureEnabled(['layout.view', 'campaign.view'], true)
+                && $campaign->type === 'list'
+            ) {
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_preview',
                     'linkType' => '_blank',
@@ -260,14 +308,26 @@ class Campaign extends Base
             if ($this->getUser()->featureEnabled('campaign.modify')
                 && $this->getUser()->checkEditable($campaign)
             ) {
-                $campaign->buttons[] = ['divider' => true];
+                if (count($campaign->buttons) > 0) {
+                    $campaign->buttons[] = ['divider' => true];
+                }
 
                 // Edit the Campaign
-                $campaign->buttons[] = array(
-                    'id' => 'campaign_button_edit',
-                    'url' => $this->urlFor($request,'campaign.edit.form', ['id' => $campaign->campaignId]),
-                    'text' => __('Edit')
-                );
+                if ($campaign->type === 'list') {
+                    $campaign->buttons[] = array(
+                        'id' => 'campaign_button_edit',
+                        'url' => $this->urlFor($request, 'campaign.edit.form', ['id' => $campaign->campaignId]),
+                        'text' => __('Edit'),
+                    );
+                } else if ($campaign->type === 'ad' && $this->getUser()->featureEnabled('ad.campaigns')) {
+                    $campaign->buttons[] = [
+                        'id' => 'campaign_button_edit',
+                        'linkType' => '_self',
+                        'external' => true,
+                        'url' => $this->urlFor($request, 'campaign.builder', ['id' => $campaign->campaignId]),
+                        'text' => __('Edit'),
+                    ];
+                }
 
                 if ($this->getUser()->featureEnabled('folder.view')) {
                     // Select Folder
@@ -382,6 +442,13 @@ class Campaign extends Base
      *  summary="Add Campaign",
      *  description="Add a Campaign",
      *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="Type of campaign, either list|ad",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
      *      description="Name for this Campaign",
@@ -414,6 +481,27 @@ class Campaign extends Base
      *      name="playCount",
      *      in="formData",
      *      description="In cycle based playback, how many plays should each Layout have before moving on?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="listPlayOrder",
+     *      in="formData",
+     *      description="In layout list, how should campaigns in the schedule with the same play order be played?",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="targetType",
+     *      in="formData",
+     *      description="For ad campaigns, how do we measure the target? plays|budget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="target",
+     *      in="formData",
+     *      description="For ad campaigns, what is the target count for playback over the entire campaign",
      *      type="integer",
      *      required=false
      *   ),
@@ -453,21 +541,56 @@ class Campaign extends Base
 
         $folder = $this->folderFactory->getById($folderId, 0);
 
+        // Campaign type
+        if ($this->getUser()->featureEnabled('ad.campaign')) {
+            // We use a default to avoid a breaking change in a minor release.
+            $type = $sanitizedParams->getString('type', ['default' => 'list']);
+        } else {
+            $type = 'list';
+        }
+
         // Create Campaign
         $campaign = $this->campaignFactory->create(
+            $type,
             $sanitizedParams->getString('name'),
             $this->getUser()->userId,
-            $sanitizedParams->getString('tags'),
             $folder->getId()
         );
         $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+
+            $campaign->updateTagLinks($tags);
+        }
+
         // Cycle based playback
-        $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
-        $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
+        if ($campaign->type === 'list') {
+            $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
+            $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
+
+            // For compatibility with existing API implementations we set a default here.
+            $campaign->listPlayOrder = $sanitizedParams->getString('listPlayOrder', ['default' => 'round']);
+        } else if ($campaign->type === 'ad') {
+            $campaign->targetType = $sanitizedParams->getString('targetType');
+            $campaign->target = $sanitizedParams->getInt('target');
+            $campaign->listPlayOrder = 'round';
+        }
 
         // Assign layouts?
         foreach ($sanitizedParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+            // Can't assign layouts to an ad campaign during creation
+            if ($campaign->type === 'ad') {
+                throw new InvalidArgumentException(
+                    __('Cannot assign layouts to an ad campaign during its creation'),
+                    'layoutIds'
+                );
+            }
+
             // Check permissions.
             $layout = $this->layoutFactory->getById($layoutId);
 
@@ -475,8 +598,11 @@ class Campaign extends Base
                 throw new AccessDeniedException(__('You do not have permission to assign this Layout'));
             }
 
+            // Make sure we can assign this layout
+            $this->checkLayoutAssignable($layout);
+
             // Assign.
-            $campaign->assignLayout($layout);
+            $campaign->assignLayout($layout->layoutId);
         }
 
         // All done, save.
@@ -507,6 +633,7 @@ class Campaign extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
+        $campaign->tagsString = $campaign->getTagString();
 
         if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
@@ -514,18 +641,16 @@ class Campaign extends Base
 
         // Load layouts
         $layouts = [];
-        foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
-            if (!$this->getUser()->checkViewable($layout)) {
+        foreach ($campaign->loadLayouts() as $layout) {
+            // TODO: more efficient way than loading an entire layout just to check permissions?
+            if (!$this->getUser()->checkViewable($this->layoutFactory->getById($layout->layoutId))) {
                 // Hide all layout details from the user
-                $emptyLayout = $this->layoutFactory->createEmpty();
-                $emptyLayout->layoutId = $layout->layoutId;
-                $emptyLayout->layout = __('Layout');
-                $emptyLayout->locked = true;
-
-                $layouts[] = $emptyLayout;
+                $layout->layout = __('Layout');
+                $layout->locked = true;
             } else {
-                $layouts[] = $layout;
+                $layout->locked = false;
             }
+            $layouts[] = $layout;
         }
 
         $this->getState()->template = 'campaign-form-edit';
@@ -606,6 +731,86 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="listPlayOrder",
+     *      in="formData",
+     *      description="In layout list, how should campaigns in the schedule with the same play order be played?",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="targetType",
+     *      in="formData",
+     *      description="For ad campaigns, how do we measure the target? plays|budget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="target",
+     *      in="formData",
+     *      description="For ad campaigns, what is the target count for playback over the entire campaign",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startDt",
+     *      in="formData",
+     *      description="For ad campaigns, what is the start date",
+     *      type="string",
+     *      format="date-time",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="endDt",
+     *      in="formData",
+     *      description="For ad campaigns, what is the start date",
+     *      type="string",
+     *      format="date-time",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroupIds[]",
+     *      in="formData",
+     *      description="For ad campaigns, which display groups should the campaign be run on?",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref1",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref2",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref3",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref4",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref5",
+     *      in="formData",
+     *      description="An optional reference field",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -633,45 +838,88 @@ class Campaign extends Base
             $campaign->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         }
 
-        // Cycle based playback
-        $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
-        $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
+        // Reference fields
+        $campaign->ref1 = $parsedRequestParams->getString('ref1');
+        $campaign->ref2 = $parsedRequestParams->getString('ref2');
+        $campaign->ref3 = $parsedRequestParams->getString('ref3');
+        $campaign->ref4 = $parsedRequestParams->getString('ref4');
+        $campaign->ref5 = $parsedRequestParams->getString('ref5');
 
-        // Assign layouts?
-        if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
-            // Fully decorate our Campaign
-            $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+        // What type of campaign are we editing?
+        if ($campaign->type === 'ad') {
+            // Ad campaign
+            // -----------
+            $campaign->startDt = $parsedRequestParams->getDate('startDt')->format('U');
+            $campaign->endDt = $parsedRequestParams->getDate('endDt')->format('U');
+            $campaign->targetType = $parsedRequestParams->getString('targetType');
+            $campaign->target = $parsedRequestParams->getInt('target');
 
-            // Remove all we've currently got assigned, keeping track of them for sharing check
-            $originalLayoutAssignments = array_map(function ($element) {
-                return $element->layoutId;
-            }, $campaign->getLayouts());
-
-            $campaign->unassignAllLayouts();
-
-            foreach ($parsedRequestParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
-                // Check permissions.
-                $layout = $this->layoutFactory->getById($layoutId);
-
-                if (!$this->getUser()->checkViewable($layout) && !in_array($layoutId, $originalLayoutAssignments)) {
-                    throw new AccessDeniedException(__('You are trying to assign a Layout that is not shared with you.'));
+            // Display groups
+            $displayGroupIds = [];
+            foreach ($parsedRequestParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+                if (!$this->getUser()->checkViewable($displayGroup)) {
+                    throw new AccessDeniedException();
                 }
+                $displayGroupIds[] = $displayGroup->displayGroupId;
+            }
 
-                // Assign.
-                $campaign->assignLayout($layout);
+            $campaign->replaceDisplayGroupIds($displayGroupIds);
+        } else {
+            // Cycle based playback
+            $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
+            $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
+
+            // For compatibility with existing API implementations we keep the current value as default if not provided
+            $campaign->listPlayOrder = $parsedRequestParams->getString('listPlayOrder', [
+                'default' => $campaign->listPlayOrder,
+            ]);
+
+            // Assign layouts?
+            if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
+                // Fully decorate our Campaign
+                $campaign->loadLayouts();
+
+                // Remove all we've currently got assigned, keeping track of them for sharing check
+                $originalLayoutAssignments = array_map(function ($element) {
+                    return $element->layoutId;
+                }, $campaign->loadLayouts());
+
+                $campaign->unassignAllLayouts();
+
+                foreach ($parsedRequestParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+                    // Check permissions.
+                    $layout = $this->layoutFactory->getById($layoutId);
+
+                    if (!$this->getUser()->checkViewable($layout) && !in_array($layoutId, $originalLayoutAssignments)) {
+                        throw new AccessDeniedException(
+                            __('You are trying to assign a Layout that is not shared with you.')
+                        );
+                    }
+
+                    // Make sure we can assign this layout
+                    $this->checkLayoutAssignable($layout);
+
+                    // Assign.
+                    $campaign->assignLayout($layout->layoutId);
+                }
             }
         }
 
+        // Tags
+        // ----
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
-            $campaign->save([
-                'saveTags' => true
-            ]);
-        } else {
-            $campaign->save([
-                'saveTags' => false
-            ]);
+            if (is_array($parsedRequestParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($parsedRequestParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($parsedRequestParams->getString('tags'));
+            }
+
+            $campaign->updateTagLinks($tags);
         }
+
+        // Save the campaign.
+        $campaign->save();
 
         // Return
         $this->getState()->hydrate([
@@ -698,8 +946,9 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($campaign))
+        if (!$this->getUser()->checkDeleteable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'campaign-form-delete';
         $this->getState()->setData([
@@ -761,50 +1010,6 @@ class Campaign extends Base
     }
 
     /**
-     * Layouts form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function layoutsForm(Request $request, Response $response, $id)
-    {
-        $campaign = $this->campaignFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($campaign)) {
-            throw new AccessDeniedException();
-        }
-
-        $layouts = [];
-        foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
-            if (!$this->getUser()->checkViewable($layout)) {
-                // Hide all layout details from the user
-                $emptyLayout = $this->layoutFactory->createEmpty();
-                $emptyLayout->layoutId = $layout->layoutId;
-                $emptyLayout->layout = __('Layout');
-                $emptyLayout->locked = true;
-
-                $layouts[] = $emptyLayout;
-            } else {
-                $layouts[] = $layout;
-            }
-        }
-
-        $this->getState()->template = 'campaign-form-layouts';
-        $this->getState()->setData([
-            'campaign' => $campaign,
-            'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Layouts')
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Assigns a layout to a Campaign
      * @param Request $request
      * @param Response $response
@@ -836,28 +1041,53 @@ class Campaign extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="daysOfWeek[]",
+     *      in="formData",
+     *      description="Ad campaigns: restrict this to certain days of the week (iso week)",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="formData",
+     *      description="Ad campaigns: restrict this to a day part",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="geoFence",
+     *      in="formData",
+     *      description="Ad campaigns: restrict this to a geofence",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
      *  )
      * )
      */
-    public function assignLayout( Request $request, Response $response, $id)
+    public function assignLayout(Request $request, Response $response, $id)
     {
         $this->getLog()->debug('assignLayout with campaignId ' . $id);
 
         $campaign = $this->campaignFactory->getById($id);
-
         if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
         }
 
         // Make sure this is a non-layout specific campaign
         if ($campaign->isLayoutSpecific == 1) {
-            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'), 'campaignId');
+            throw new InvalidArgumentException(
+                __('You cannot change the assignment of a Layout Specific Campaign'),
+                'campaignId'
+            );
         }
 
-        $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+        // Load our existing layouts
+        $campaign->loadLayouts();
 
         // Get the layout we want to add
         $params = $this->getSanitizer($request->getParams());
@@ -873,8 +1103,21 @@ class Campaign extends Base
             throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
         }
 
+        // Make sure we can assign this layout
+        $this->checkLayoutAssignable($layout);
+
+        // If we are an ad campaign, then expect some other parameters.
+        $daysOfWeek = $params->getIntArray('daysOfWeek');
+        $daysOfWeek = (empty($daysOfWeek)) ? null : implode(',', $daysOfWeek);
+
         // Assign to the campaign
-        $campaign->assignLayout($layout);
+        $campaign->assignLayout(
+            $layout->layoutId,
+            null,
+            $params->getInt('dayPartId'),
+            $daysOfWeek,
+            $params->getString('geoFence')
+        );
         $campaign->save(['validate' => false, 'saveTags' => false]);
 
         // Return
@@ -882,6 +1125,108 @@ class Campaign extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Remove Layout Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function removeLayoutForm(Request $request, Response $response, $id)
+    {
+        $this->getLog()->debug('removeLayoutForm: ' . $id);
+
+        $campaign = $this->campaignFactory->getById($id);
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+        $campaign->loadLayouts();
+
+        $this->getState()->template = 'campaign-form-layout-delete';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'layout' => $campaign->getLayoutAt($this->getSanitizer($request->getParams())->getInt('displayOrder')),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Remove a layout from a Campaign
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @SWG\Delete(
+     *  path="/campaign/layout/remove/{campaignId}",
+     *  operationId="campaignAssignLayout",
+     *  tags={"campaign"},
+     *  summary="Remove Layout",
+     *  description="Remove a Layout from a Campaign.",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="Layout ID to remove",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="The display order. Omit to remove all occurences of the layout",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function removeLayout(Request $request, Response $response, $id)
+    {
+        $this->getLog()->debug('removeLayout with campaignId ' . $id);
+
+        $campaign = $this->campaignFactory->getById($id);
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+
+        // Make sure this is a non-layout specific campaign
+        if ($campaign->isLayoutSpecific == 1) {
+            throw new InvalidArgumentException(
+                __('You cannot change the assignment of a Layout Specific Campaign'),
+                'campaignId'
+            );
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+        $layoutId = $params->getInt('layoutId', [
+            'throw' => function () {
+                throw new InvalidArgumentException(__('Please provide a layout'), 'layoutId');
+            },
+            ['rules' => ['notEmpty']],
+        ]);
+        $displayOrder = $params->getInt('displayOrder');
+
+        // Load our existing layouts
+        $campaign->loadLayouts();
+
+        $campaign->unassignLayout($layoutId, $displayOrder);
+        $campaign->save(['validate' => false]);
 
         return $this->render($request, $response);
     }
@@ -975,9 +1320,6 @@ class Campaign extends Base
         $campaign = $this->campaignFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        // get the Layouts assigned to the original Campaign
-        $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
-
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
             throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
         }
@@ -986,9 +1328,17 @@ class Campaign extends Base
         $newCampaign->campaign = $sanitizedParams->getString('name');
 
         // assign the same layouts to the new Campaign
-        foreach ($layouts as $layout) {
-            $newCampaign->assignLayout($layout);
+        foreach ($campaign->layouts as $layout) {
+            $newCampaign->assignLayout(
+                $layout->layoutId,
+                $layout->displayOrder,
+                $layout->dayPartId,
+                $layout->daysOfWeek,
+                $layout->geoFence
+            );
         }
+
+        $newCampaign->updateTagLinks($this->tagFactory->tagsFromString($campaign->getTagString()));
 
         $newCampaign->save();
 
@@ -1122,5 +1472,21 @@ class Campaign extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    private function checkLayoutAssignable(\Xibo\Entity\Layout $layout)
+    {
+        // Make sure we're not a draft
+        if ($layout->isChild()) {
+            throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
+        }
+
+        // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
+        if ($layout->isTemplate()) {
+            throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
+        }
     }
 }

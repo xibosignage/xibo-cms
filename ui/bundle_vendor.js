@@ -42,7 +42,7 @@ try {
     require('persian-datepicker/dist/js/persian-datepicker.min.js');
   } else {
     // Time/Date picker
-    window.flatpickr = require('flatpickr');
+    require('flatpickr');
     window.flatpickrMonthSelectPlugin =
       require('flatpickr/dist/plugins/monthSelect/index.js');
 
@@ -132,9 +132,9 @@ window.leafletPip = require('@mapbox/leaflet-pip');
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: './src/assets/marker-icon-2x.png',
-    iconUrl: './src/assets/marker-icon.png',
-    shadowUrl: './src/assets/marker-shadow.png',
+  iconRetinaUrl: './src/assets/marker-icon-2x.png',
+  iconUrl: './src/assets/marker-icon.png',
+  shadowUrl: './src/assets/marker-shadow.png',
 });
 
 require('leaflet.markercluster');

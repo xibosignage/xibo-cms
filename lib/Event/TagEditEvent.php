@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -19,32 +19,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Listener\OnFolderMoving;
 
-use Xibo\Event\FolderMovingEvent;
-use Xibo\Factory\PlaylistFactory;
+namespace Xibo\Event;
 
-class PlaylistListener
+class TagEditEvent extends Event
 {
+    public static $NAME = 'tag.edit.event';
     /**
-     * @var PlaylistFactory
+     * @var int
      */
-    private $playlistFactory;
+    private $tagId;
 
-    public function __construct(PlaylistFactory $playlistFactory)
+    public function __construct(int $tagId)
     {
-        $this->playlistFactory = $playlistFactory;
+        $this->tagId = $tagId;
     }
 
-    public function __invoke(FolderMovingEvent $event)
+    /**
+     * @return int
+     */
+    public function getTagId(): int
     {
-        $folder = $event->getFolder();
-        $newFolder = $event->getNewFolder();
-
-        foreach ($this->playlistFactory->getbyFolderId($folder->getId()) as $playlist) {
-            $playlist->folderId = $newFolder->getId();
-            $playlist->permissionsFolderId = $newFolder->getPermissionFolderIdOrThis();
-            $playlist->updateFolders('playlist');
-        }
+        return $this->tagId;
     }
 }

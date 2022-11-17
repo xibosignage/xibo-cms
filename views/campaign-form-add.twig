@@ -23,7 +23,6 @@
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
-{% import "inline.twig" as inline %}
 
 {% block formTitle %}
     {% trans "Add Campaign" %}
@@ -35,12 +34,15 @@
     {% trans "Save" %}, campaignFormSubmit($('#campaignAddForm'))
 {% endblock %}
 
-{% block callBack %}campaignAssignLayoutsFormOpen{% endblock %}
+{% block callBack %}campaignAddFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="campaignAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("campaign.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
+            <form id="campaignAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("campaign.add") }}"
+                  data-submit-call-back="campaignAddFormSubmitCallback"
+                  data-edit-form-url="{{ url_for("campaign.edit.form", {id: ":id"}) }}"
+                  data-gettag="{{ url_for("tag.getByName") }}">
                 {% if currentUser.featureEnabled('folder.view') %}
                 <div class="form-group row">
                     <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
@@ -50,6 +52,16 @@
                     </div>
                 </div>
                 {{ forms.hidden('folderId') }}
+                {% endif %}
+
+                {% if currentUser.featureEnabled('ad.campaign') %}
+                {% set title %}{% trans "Type" %}{% endset %}
+                {% set helpText %}{% trans "What type of Campaign would you like to create?" %}{% endset %}
+                {% set options = [
+                    { id: "list", name: "Layout list"|trans },
+                    { id: "ad", name: "Ad Campaign"|trans }
+                ] %}
+                {{ forms.dropdown("type", "single", title, "both", options, "id", "name", helpText) }}
                 {% endif %}
 
                 {% set title %}{% trans "Name" %}{% endset %}
@@ -79,57 +91,33 @@
 
                 {% set title %}{% trans "Enable cycle based playback" %}{% endset %}
                 {% set helpText %}{% trans "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved." %}{% endset %}
-                {{ forms.checkbox("cyclePlaybackEnabled", title, 0, helpText) }}
+                {{ forms.checkbox("cyclePlaybackEnabled", title, 0, helpText, "campaign-type-list", null, false, "input-cycle-playback-enabled") }}
 
                 {% set title %}{% trans "Play count" %}{% endset %}
                 {% set helpText %}{% trans "In cycle based playback, how many plays should each Layout have before moving on?" %}{% endset %}
-                {{ forms.number("playCount", title, "", helpText, 'cycle-based-playback') }}
+                {{ forms.number("playCount", title, "", helpText, "cycle-based-playback campaign-type-list") }}
 
-                <div id="assignLayouts"></div>
+                {% set title %}{% trans "List play order" %}{% endset %}
+                {% set helpText %}{% trans "When this campaign is scheduled alongside another campaign with the same display order, how should the layouts in both campaigns be ordered?" %}{% endset %}
+                {% set options = [
+                    { id: "round", name: "Round-robin"|trans },
+                    { id: "block", name: "Block"|trans },
+                ] %}
+                {{ forms.dropdown("listPlayOrder", "single", title, "round", options, "id", "name", helpText, "campaign-type-list") }}
+
+                {% set title %}{% trans "Target Type" %}{% endset %}
+                {% set helpText %}{% trans "How would you like to set the target for this campaign?" %}{% endset %}
+                {% set options = [
+                    { id: "plays", name: "Plays"|trans },
+                    { id: "budget", name: "Budget"|trans },
+                    { id: "impressions", name: "Impressions"|trans },
+                ] %}
+                {{ forms.dropdown("targetType", "single", title, "both", options, "id", "name", helpText, "campaign-type-ad") }}
+
+                {% set title %}{% trans "Target" %}{% endset %}
+                {% set helpText %}{% trans "What is the target number for this Campaign over its entire playtime" %}{% endset %}
+                {{ forms.number("target", title, null, helpText, "campaign-type-ad") }}
             </form>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 card p-3 mb-3 bg-light">
-            <h4>{% trans %}Layouts on new campaign{% endtrans %}</h4>
-            <div id="LayoutAssign" class="card p-3 mb-3 bg-light" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
-                <div>
-                    <ul id="LayoutAssignSortable" data-layouts="[]"></ul>
-                </div>
-            </div>
-
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutAssignView">
-                <div class="layoutAssignFilterOptions XiboFilter">
-                    <form class="form-inline" onsubmit="false">
-                    {% set title %}{% trans "Name" %}{% endset %}
-                    {{ inline.input("layout", title) }}
-
-                    {% if currentUser.featureEnabled("tag.tagging") %}
-                        {% set title %}{% trans "Tags" %}{% endset %}
-                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                        {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
-                        {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
-                    {% endif %}
-                    </form>
-                </div>
-
-                <div class="XiboData card pt-3">
-                    <table id="layoutAssignments" class="table table-striped" data-state-preference-name="campaignLayoutAssignGrid">
-                        <thead>
-                        <tr>
-                            <th>{% trans "ID" %}</th>
-                            <th>{% trans "Name" %}</th>
-                            <th>{% trans "Status" %}</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     </div>
 {% endblock %}

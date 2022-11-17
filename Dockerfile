@@ -183,6 +183,9 @@ COPY --from=webpack /app/modules /var/www/cms/modules
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY --chown=apache:apache . /var/www/cms
 
+# OpenOOH specification
+ADD https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json /var/www/cms/openooh/specification.json
+
 # Tidy up
 RUN rm /var/www/cms/composer.* && \
     rm -r /var/www/cms/docker && \

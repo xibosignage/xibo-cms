@@ -39,6 +39,7 @@ const mainConfig = Object.assign({}, config, {
     xibo: './ui/bundle_xibo.js',
     layoutEditor: './ui/src/layout-editor/main.js',
     playlistEditor: './ui/src/playlist-editor/main.js',
+    campaignBuilder: './ui/src/campaign-builder/main.js',
   },
   output: {
     path: path.resolve(__dirname, 'web/dist'),

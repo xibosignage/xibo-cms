@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -47,7 +47,12 @@ class Environment
      */
     public static function migrationPending()
     {
-        return (self::getMigrationStatus() != 0);
+        // Allow missing migrations in dev mode.
+        if (self::isDevMode()) {
+            return self::getMigrationStatus() > 2;
+        } else {
+            return self::getMigrationStatus() != 0;
+        }
     }
 
     /**

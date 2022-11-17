@@ -45,7 +45,23 @@
             <div class="XiboGrid" id="{{ random() }}">
 
                 <div class="XiboData card pt-3">
-                    <canvas id="reportChart" style="clear:both; margin-top:25px;"></canvas>
+                    <canvas id="canvas" style="clear:both; margin-top:25px;"></canvas>
+                </div>
+
+                <br/>
+                <div class="XiboData card pt-3">
+                    <table id="stats" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Period" %}</th>
+                            <th>{% trans "Duration" %}</th>
+                            <th>{% trans "Count" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -55,8 +71,27 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        $(document).ready(function() {
 
-        var reportChart = new Chart($("#reportChart"), {{ chart|json_encode|raw }});
+            let reportChart = new Chart($("#canvas"), {{ chart|json_encode|raw }});
 
+            let outputData = {{ table|json_encode|raw }};
+
+            // Grid
+            let table = $("#stats").DataTable({
+                "searching": false,
+                "paging": true,
+                "ordering": false,
+                "data": outputData,
+                "columns": [
+                    { "data": 'label' },
+                    { "data": 'duration' },
+                    { "data": 'count' },
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
     </script>
 {% endblock %}

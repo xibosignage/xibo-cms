@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -35,6 +35,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class PlaylistFactory extends BaseFactory
 {
+    use TagTrait;
+
     /**
      * @var PermissionFactory
      */
@@ -44,9 +46,6 @@ class PlaylistFactory extends BaseFactory
      * @var WidgetFactory
      */
     private $widgetFactory;
-
-    /** @var TagFactory */
-    private $tagFactory;
 
     /**
      * @var ConfigServiceInterface
@@ -60,16 +59,14 @@ class PlaylistFactory extends BaseFactory
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
-     * @param TagFactory $tagFactory
      */
-    public function __construct($config, $user, $userFactory, $permissionFactory, $widgetFactory, $tagFactory)
+    public function __construct($config, $user, $userFactory, $permissionFactory, $widgetFactory)
     {
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -84,8 +81,7 @@ class PlaylistFactory extends BaseFactory
             $this->config,
             $this->permissionFactory,
             $this,
-            $this->widgetFactory,
-            $this->tagFactory
+            $this->widgetFactory
         );
     }
 
@@ -195,14 +191,6 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.enableStat,
                 `playlist`.folderId,
                 `playlist`.permissionsFolderId,
-                ( 
-                   SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
-                        FROM tag
-                        INNER JOIN lktagplaylist
-                            ON lktagplaylist.tagId = tag.tagId
-                            WHERE lktagplaylist.playlistId = playlist.playlistId
-                        GROUP BY lktagplaylist.playlistId
-                ) as tags,
                 (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -419,10 +407,17 @@ class PlaylistFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
+        $playlistIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems', 'duration']]);
+            $playlistIds[] = $playlist->playlistId;
             $entries[] = $playlist;
+        }
+
+        // decorate with TagLinks
+        if (count($entries) > 0) {
+            $this->decorateWithTagLinks('lktagplaylist', 'playlistId', $playlistIds, $entries);
         }
 
         // Paging

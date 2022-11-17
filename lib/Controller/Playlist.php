@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -248,6 +248,7 @@ class Playlist extends Base
             'tags' => $sanitizedParams->getString('tags'),
             'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
             'playlistId' => $sanitizedParams->getInt('playlistId'),
+            'notPlaylistId' => $sanitizedParams->getInt('notPlaylistId'),
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
@@ -636,7 +637,13 @@ class Playlist extends Base
 
         // Tags
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+
+            $playlist->updateTagLinks($tags);
         }
 
         // Do we have a tag or name filter?
@@ -748,6 +755,8 @@ class Playlist extends Base
         if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
+
+        $playlist->tagsString = $playlist->getTagString();
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
@@ -883,7 +892,13 @@ class Playlist extends Base
         }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+            if (is_array($sanitizedParams->getParam('tags'))) {
+                $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
+            } else {
+                $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
+
+            $playlist->updateTagLinks($tags);
         }
 
         // Do we have a tag or name filter?
@@ -1112,13 +1127,13 @@ class Playlist extends Base
             }
         }
 
-        // Handle tags
-        $playlist->replaceTags($this->tagFactory->tagsFromString($playlist->tags));
-
         // Set from global setting
         if ($playlist->enableStat == null) {
             $playlist->enableStat = $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
         }
+
+        // tags
+        $playlist->updateTagLinks($originalPlaylist->tags);
 
         // Save the new playlist
         $playlist->save();

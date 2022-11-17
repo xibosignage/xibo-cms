@@ -78,10 +78,10 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            var outputData = {{ table|json_encode|raw }};
+            let outputData = {{ table|json_encode|raw }};
 
             // Grid
-            var table = $("#stats").DataTable({
+            let table = $("#stats").DataTable({
                 "language": dataTablesLanguage,
                 "dom": dataTablesTemplate,
                 "paging":   false,
@@ -89,8 +89,8 @@
                 "info":     false,
                 "order": [[1, "asc"]],
                 "searching": false,
-                data: outputData,
-                columns: [
+                "data": outputData,
+                "columns": [
                     { "data": 'type' },
                     { "data": 'displayId' },
                     { "data": 'display' },
@@ -103,31 +103,31 @@
                     {
                         "data": "duration",
                         "render": function (data, type, row, meta) {
-                            if (type != "display")
+                            if (type !== "display")
                                 return "";
 
-                            var durationData = moment.duration(data, "seconds");
-                            var dataM = '';
+                            let durationData = moment.duration(data, "seconds");
+                            let dataM = '';
 
-                            var months = durationData.months();
+                            let months = durationData.months();
                             if (months > 0) {
                                 durationData.subtract(moment.duration(months,'months'));
                                 dataM += months + '{% trans "month" %} ';
                             }
 
-                            var days = durationData.days();
+                            let days = durationData.days();
                             durationData.subtract(moment.duration(days,'days'));
                             dataM += days + '{% trans "day" %} ';
 
-                            var hours = durationData.hours();
+                            let hours = durationData.hours();
                             durationData.subtract(moment.duration(hours,'hours'));
                             dataM += hours + '{% trans "hr" %} ';
 
-                            var minutes = durationData.minutes();
+                            let minutes = durationData.minutes();
                             durationData.subtract(moment.duration(minutes,'minutes'));
                             dataM += minutes + '{% trans "min" %} ';
 
-                            var seconds = durationData.seconds();
+                            let seconds = durationData.seconds();
                             dataM += seconds + '{% trans "sec" %} ';
 
                             return  dataM;
