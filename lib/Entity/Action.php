@@ -171,7 +171,7 @@ class Action implements \JsonSerializable
     {
         // on add we expect only layoutId, actionType, target and targetId
         if ($this->layoutId == null) {
-            throw new InvalidArgumentException(__('No layoutId specified' , 'layoutId'));
+            throw new InvalidArgumentException(__('No layoutId specified'), 'layoutId');
         }
 
         if (!in_array($this->actionType, ['next', 'previous', 'navLayout', 'navWidget'])) {

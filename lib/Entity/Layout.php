@@ -2680,7 +2680,6 @@ class Layout implements \JsonSerializable
 
             // switch Action widgetId
             if ($action->widgetId != null) {
-
                 foreach ($combinedWidgetIds as $old => $new) {
                     if ($old == $action->widgetId && $action->actionType == 'navWidget') {
                         $action->widgetId = $new;

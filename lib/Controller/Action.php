@@ -413,7 +413,7 @@ class Action  extends Base
         $sourceId = $sanitizedParams->getInt('sourceId');
 
         if ($layoutId === null) {
-            throw new InvalidArgumentException(__('Please provide LayoutId') , 'layoutId');
+            throw new InvalidArgumentException(__('Please provide LayoutId'), 'layoutId');
         }
 
         $layout = $this->layoutFactory->getById($layoutId);
@@ -424,8 +424,7 @@ class Action  extends Base
         }
 
         // restrict to one touch Action per source
-        if (
-            $this->isApi($request)
+        if ($this->isApi($request)
             && (!empty($source) && $sourceId !== null && !empty($triggerType))
             && $this->actionFactory->checkIfActionExist($source, $sourceId, $triggerType)
         ) {
