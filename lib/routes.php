@@ -799,7 +799,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  */
 $app->get('/action', ['\Xibo\Controller\Action', 'grid'])->setName('action.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/action/{source}/{id}', ['\Xibo\Controller\Action', 'add'])->setName('action.add');
+    $group->post('/action', ['\Xibo\Controller\Action', 'add'])->setName('action.add');
     $group->put('/action/{id}', ['\Xibo\Controller\Action', 'edit'])->setName('action.edit');
     $group->delete('/action/{id}', ['\Xibo\Controller\Action', 'delete'])->setName('action.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));

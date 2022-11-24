@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -51,7 +51,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         // Get Draft
         $layout = $this->getDraft($this->layout);
 
-        $this->addSimpleWidget($layout);
+        $this->addSimpleTextWidget($layout);
 
         $this->layout = $this->publish($this->layout);
 
@@ -140,7 +140,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
      * @param string $target
      * @param string|null $layoutCode
      */
-    public function testAddActionSuccess(string $source, string $triggerType, $triggerCode, string $actionType, string $target, $layoutCode)
+    public function testAddActionSuccess(?string $source, ?string $triggerType, ?string $triggerCode, string $actionType, string $target, ?string $layoutCode)
     {
         $layout = $this->checkout($this->layout);
         $sourceId = null;
@@ -184,14 +184,17 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             $widgetId = $widget2->widgetId;
         }
 
-        $response = $this->sendRequest('POST', '/action/' . $source . '/' . $sourceId, [
+        $response = $this->sendRequest('POST', '/action', [
             'triggerType' => $triggerType,
             'triggerCode' => $triggerCode,
             'actionType' => $actionType,
             'target' => $target,
             'targetId' => $targetId,
             'widgetId' => $widgetId,
-            'layoutCode' => $layoutCode
+            'layoutCode' => $layoutCode,
+            'source' => $source,
+            'sourceId' => $sourceId,
+            'layoutId' => $layout->layoutId
         ]);
 
         $this->assertSame(200, $response->getStatusCode());
@@ -203,6 +206,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertSame(false, $body->grid);
 
         $this->assertNotEmpty($body->data, 'Empty Data');
+        $this->assertSame($layout->layoutId, $body->data->layoutId);
         $this->assertSame($sourceId, $body->data->sourceId);
         $this->assertSame($triggerType, $body->data->triggerType);
         $this->assertSame($triggerCode, $body->data->triggerCode);
@@ -213,7 +217,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
      * Each array is a test run
-     * Format (string $source, string $triggerType, string|null $triggerCode, string $actionType, string $target)
+     * Format (string $source, string $triggerType, string|null $triggerCode, string $actionType, string $target, string LayoutCode)
      * @return array
      */
     public function AddActionSuccessCases()
@@ -226,20 +230,23 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             'Widget' => ['widget', 'touch', null, 'next', 'screen', null],
             'Widget with region target' => ['widget', 'touch', null, 'next', 'region', null],
             'Navigate to Widget' => ['layout', 'touch', null, 'navWidget', 'screen', null],
-            'Navigate to Layout with code' => ['layout', 'touch', null, 'navLayout', 'screen', 'CodeIdentifier']
+            'Navigate to Layout with code' => ['layout', 'touch', null, 'navLayout', 'screen', 'CodeIdentifier'],
+            'Web UI' => [null, null, null, 'next', 'screen', null]
         ];
     }
 
     public function testEditAction()
     {
         $layout = $this->checkout($this->layout);
-        $action = $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
-            'triggerType' => 'touch',
+        $action = $this->getEntityProvider()->post('/action', [
             'actionType' => 'previous',
-            'target' => 'screen'
+            'target' => 'screen',
+            'layoutId' => $layout->layoutId
         ]);
 
         $response = $this->sendRequest('PUT', '/action/' . $action['actionId'], [
+            'source' => 'layout',
+            'sourceId' => $layout->layoutId,
             'triggerType' => 'webhook',
             'triggerCode' => 'new code',
             'actionType' => 'next',
@@ -257,6 +264,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
 
         $this->assertNotEmpty($body->data, 'Empty Data');
         $this->assertSame($layout->layoutId, $body->data->sourceId);
+        $this->assertSame($layout->layoutId, $body->data->layoutId);
         $this->assertSame('webhook', $body->data->triggerType);
         $this->assertSame('new code', $body->data->triggerCode);
         $this->assertSame('next', $body->data->actionType);
@@ -268,11 +276,12 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
     {
         $layout = $this->checkout($this->layout);
 
-        $action = $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
+        $action = $this->getEntityProvider()->post('/action', [
             'triggerType' => 'webhook',
             'triggerCode' => 'test',
             'actionType' => 'previous',
-            'target' => 'screen'
+            'target' => 'screen',
+            'layoutId' => $layout->layoutId
         ]);
 
         $response = $this->sendRequest('DELETE', '/action/' . $action['actionId']);
@@ -292,17 +301,22 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
      * Add Action
-     * @dataProvider AddActionFailureCases
+     * @dataProvider editActionFailureCases
      * @param string $source
      * @param string $triggerType
      * @param string|null $triggerCode
      * @param string $actionType
      * @param string $target
      */
-    public function testAddActionFailure(string $source, string $triggerType, $triggerCode, string $actionType, string $target)
+    public function testEditActionFailure(string $source, string $triggerType, ?string $triggerCode, string $actionType, string $target)
     {
         $layout = $this->checkout($this->layout);
-        $sourceId = null;
+        $action = $this->getEntityProvider()->post('/action', [
+            'actionType' => 'previous',
+            'target' => 'screen',
+            'layoutId' => $layout->layoutId
+        ]);
+
         $targetId = null;
         $widgetId = null;
         $layoutCode = null;
@@ -311,61 +325,63 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             $sourceId = $layout->layoutId;
         } elseif ($source === 'region') {
             $sourceId = $layout->regions[0]->regionId;
+        } else {
+            $sourceId = null;
         }
 
-        $response = $this->sendRequest('POST', '/action/' . $source . '/' . $sourceId, [
+        $response = $this->sendRequest('PUT', '/action/' . $action['actionId'], [
             'triggerType' => $triggerType,
             'triggerCode' => $triggerCode,
             'actionType' => $actionType,
             'target' => $target,
-            'targetId' => $targetId
+            'targetId' => $targetId,
+            'source' => $source,
+            'sourceId' => $sourceId
         ]);
 
         $body = json_decode($response->getBody());
-        // failure cases cover couple of possible issues, we need to catch notFound and invalidArgument exceptions here.
-        // if the provided source was incorrect we don't have sourceId, therefore with incorrect source and missing sourceId we expect notFound exception
-        if ($sourceId === null) {
-            $this->assertSame(404, $response->getStatusCode());
-        } else {
-            // in other failure cases, we expect to get invalidArgument exception.
-            $this->assertSame(422, $response->getStatusCode());
 
-            // get the error message for cases and make sure we return correct one.
+        // in other failure cases, we expect to get invalidArgument exception.
+        $this->assertSame(422, $response->getStatusCode());
 
-            // wrong trigger type case
-            if ($triggerType === 'notExistingType') {
-                $this->assertSame('Invalid trigger type', $body->error);
-            }
+        // get the error message for cases and make sure we return correct one.
+        if ($source === 'playlist') {
+            $this->assertSame('Invalid source', $body->error);
+        }
 
-            // wrong trigger type case
-            if ($actionType === 'wrongAction') {
-                $this->assertSame('Invalid action type', $body->error);
-            }
+        // wrong trigger type case
+        if ($triggerType === 'notExistingType') {
+            $this->assertSame('Invalid trigger type', $body->error);
+        }
 
-            // wrong target case
-            if ($target === 'world') {
-                $this->assertSame('Invalid target', $body->error);
-            }
+        // wrong trigger type case
+        if ($actionType === 'wrongAction') {
+            $this->assertSame('Invalid action type', $body->error);
+        }
 
-            // test case when we have target set to region, but we don't set targetId to any regionId
-            if ($target === 'region') {
-                $this->assertSame('Please select a Region', $body->error);
-            }
+        // wrong target case
+        if ($target === 'world') {
+            $this->assertSame('Invalid target', $body->error);
+        }
 
-            // trigger code in non layout
-            if ($triggerType === 'webhook' && $triggerCode === null) {
-                $this->assertSame('Please provide trigger code', $body->error);
-            }
+        // test case when we have target set to region, but we don't set targetId to any regionId
+        if ($target === 'region') {
+            $this->assertSame('Please select a Region', $body->error);
+        }
 
-            // navWidget without widgetId
-            if ($actionType === 'navWidget' && $widgetId == null) {
-                $this->assertSame('Please select a Widget', $body->error);
-            }
+        // trigger code in non layout
+        if ($triggerType === 'webhook' && $triggerCode === null) {
+            $this->assertSame('Please provide trigger code', $body->error);
+        }
 
-            // navLayout without layoutCode
-            if ($actionType === 'navLayout' && $layoutCode == null) {
-                $this->assertSame('Please enter Layout code', $body->error);
-            }
+        // navWidget without widgetId
+        if ($actionType === 'navWidget' && $widgetId == null) {
+            $this->assertSame('Please select a Widget', $body->error);
+        }
+
+        // navLayout without layoutCode
+        if ($actionType === 'navLayout' && $layoutCode == null) {
+            $this->assertSame('Please enter Layout code', $body->error);
         }
     }
 
@@ -374,11 +390,11 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
      * Format (string $source, string $triggerType, string|null $triggerCode, string $actionType, string $target)
      * @return array
      */
-    public function AddActionFailureCases()
+    public function editActionFailureCases()
     {
         return [
             'Wrong source' => ['playlist', 'touch', null, 'next', 'screen'],
-            'Wrong trigger type' => ['layout', 'notExistingType', null, 'navRegion', 'screen'],
+            'Wrong trigger type' => ['layout', 'notExistingType', null, 'previous', 'screen'],
             'Wrong action type' => ['layout', 'touch', null, 'wrongAction', 'screen'],
             'Wrong target' => ['layout', 'touch', null, 'next', 'world'],
             'Target region without targetId' => ['layout', 'touch', 'trigger code', 'next', 'region'],
@@ -392,10 +408,11 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
     {
         $layout = $this->checkout($this->layout);
 
-        $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
+        $this->getEntityProvider()->post('/action', [
             'triggerType' => 'touch',
             'actionType' => 'previous',
-            'target' => 'screen'
+            'target' => 'screen',
+            'layout' => $layout->layoutId
         ]);
 
         $this->layout = $this->publish($this->layout);

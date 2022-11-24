@@ -306,37 +306,16 @@ class Action  extends Base
      * Add a new Action
      *
      * @SWG\Post(
-     *  path="/action/{source}/{sourceId}",
+     *  path="/action",
      *  operationId="actionAdd",
      *  tags={"action"},
      *  summary="Add Action",
      *  description="Add a new Action",
      *  @SWG\Parameter(
-     *      name="source",
-     *      in="path",
-     *      description="Source for this action layout, region or widget",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="path",
-     *      description="The id of the source object, layoutId, regionId or widgetId",
+     *      name="layoutId",
+     *      in="formData",
+     *      description="LayoutId associted with this Action",
      *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerType",
-     *      in="formData",
-     *      description="Action trigger type, touch or webhook",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerCode",
-     *      in="formData",
-     *      description="Action trigger code",
-     *      type="string",
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -357,6 +336,34 @@ class Action  extends Base
      *      name="targetId",
      *      in="formData",
      *      description="The id of the target for this action - regionId if the target is set to region",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="source",
+     *      in="formData",
+     *      description="Source for this action layout, region or widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="The id of the source object, layoutId, regionId or widgetId",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="triggerType",
+     *      in="formData",
+     *      description="Action trigger type, touch or webhook",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="triggerCode",
+     *      in="formData",
+     *      description="Action trigger code",
      *      type="string",
      *      required=false
      *   ),
@@ -387,12 +394,10 @@ class Action  extends Base
      * )
      * @param Request $request
      * @param Response $response
-     * @param string $source
-     * @param int $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws GeneralException
      */
-    public function add(Request $request, Response $response, string $source, int $id) : Response
+    public function add(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -403,24 +408,15 @@ class Action  extends Base
         $targetId = $sanitizedParams->getInt('targetId');
         $widgetId = $sanitizedParams->getInt('widgetId');
         $layoutCode = $sanitizedParams->getString('layoutCode');
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $source = $sanitizedParams->getString('source');
+        $sourceId = $sanitizedParams->getInt('sourceId');
 
-        // this will return Layout|Region|Widget object or throw an exception if provided source and sourceId does
-        // not exist.
-        $sourceObject = $this->checkIfSourceExists($source, $id);
-
-        if ($source == 'layout') {
-            /** @var \Xibo\Entity\Layout $layout */
-            $layout = $sourceObject;
-        } elseif ($source == 'region') {
-            /** @var \Xibo\Entity\Region $region */
-            $region = $sourceObject;
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        } else {
-            /** @var Widget $widget */
-            $widget = $sourceObject;
-            $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-            $layout = $this->layoutFactory->getById($region->layoutId);
+        if ($layoutId === null) {
+            throw new InvalidArgumentException(__('Please provide LayoutId'), 'layoutId');
         }
+
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
@@ -428,7 +424,10 @@ class Action  extends Base
         }
 
         // restrict to one touch Action per source
-        if ($this->actionFactory->checkIfActionExist($source, $id, $triggerType)) {
+        if ($this->isApi($request)
+            && (!empty($source) && $sourceId !== null && !empty($triggerType))
+            && $this->actionFactory->checkIfActionExist($source, $sourceId, $triggerType)
+        ) {
             throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
         }
 
@@ -437,13 +436,15 @@ class Action  extends Base
             $triggerCode,
             $actionType,
             $source,
-            $id,
+            $sourceId,
             $target,
             $targetId,
             $widgetId,
-            $layoutCode
+            $layoutCode,
+            $layoutId
         );
-        $action->save(['notifyLayout' => true, 'layoutId' => $layout->layoutId]);
+
+        $action->save(['notifyLayout' => true]);
 
         // Return
         $this->getState()->hydrate([
@@ -457,7 +458,7 @@ class Action  extends Base
     }
 
     /**
-     * Campaign Edit Form
+     * Action Edit Form
      * @param Request $request
      * @param Response $response
      * @param int $id
@@ -467,21 +468,7 @@ class Action  extends Base
     public function editForm(Request $request, Response $response, int $id) : Response
     {
         $action = $this->actionFactory->getById($id);
-        $sourceObject = $this->checkIfSourceExists($action->source, $action->sourceId);
-
-        if ($action->source == 'layout') {
-            /** @var \Xibo\Entity\Layout $layout */
-            $layout = $sourceObject;
-        } elseif ($action->source == 'region') {
-            /** @var \Xibo\Entity\Region $region */
-            $region = $sourceObject;
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        } else {
-            /** @var Widget $widget */
-            $widget = $sourceObject;
-            $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        }
+        $layout = $this->layoutFactory->getById($action->layoutId);
 
         $layout->load();
 
@@ -534,18 +521,11 @@ class Action  extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
-     *      name="triggerType",
+     *      name="layoutId",
      *      in="formData",
-     *      description="Action trigger type, touch, webhook",
-     *      type="string",
+     *      description="LayoutId associted with this Action",
+     *      type="integer",
      *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerCode",
-     *      in="formData",
-     *      description="Action trigger code",
-     *      type="string",
-     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="actionType",
@@ -564,8 +544,36 @@ class Action  extends Base
      *  @SWG\Parameter(
      *      name="targetId",
      *      in="formData",
-     *      description="The id of the target for this action, regionId if target set to region",
+     *      description="The id of the target for this action - regionId if the target is set to region",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="source",
+     *      in="formData",
+     *      description="Source for this action layout, region or widget",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="The id of the source object, layoutId, regionId or widgetId",
      *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="triggerType",
+     *      in="formData",
+     *      description="Action trigger type, touch or webhook",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="triggerCode",
+     *      in="formData",
+     *      description="Action trigger code",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -605,33 +613,15 @@ class Action  extends Base
         $action = $this->actionFactory->getById($id);
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $sourceObject = $this->checkIfSourceExists($action->source, $action->sourceId);
-
-        if ($action->source == 'layout') {
-            /** @var \Xibo\Entity\Layout $layout */
-            $layout = $sourceObject;
-        } elseif ($action->source == 'region') {
-            /** @var \Xibo\Entity\Region $region */
-            $region = $sourceObject;
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        } else {
-            /** @var Widget $widget */
-            $widget = $sourceObject;
-            $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        }
+        $layout = $this->layoutFactory->getById($action->layoutId);
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
         }
 
-        // restrict to one touch Action per source
-        if ($this->actionFactory->checkIfActionExist($action->source, $action->sourceId, $action->triggerType, $action->actionId)) {
-            throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
-        }
-
+        $action->source = $sanitizedParams->getString('source');
+        $action->sourceId = $sanitizedParams->getInt('sourceId');
         $action->triggerType = $sanitizedParams->getString('triggerType');
         $action->triggerCode = $sanitizedParams->getString('triggerCode', ['defaultOnEmptyString' => true]);
         $action->actionType = $sanitizedParams->getString('actionType');
@@ -639,8 +629,13 @@ class Action  extends Base
         $action->targetId = $sanitizedParams->getInt('targetId');
         $action->widgetId = $sanitizedParams->getInt('widgetId');
         $action->layoutCode = $sanitizedParams->getString('layoutCode');
+        $action->validate();
+        // restrict to one touch Action per source
+        if ($this->actionFactory->checkIfActionExist($action->source, $action->sourceId, $action->triggerType, $action->actionId)) {
+            throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
+        }
 
-        $action->save(['notifyLayout' => true, 'layoutId' => $layout->layoutId]);
+        $action->save(['notifyLayout' => true, 'validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -663,22 +658,7 @@ class Action  extends Base
     function deleteForm(Request $request, Response $response, int $id) : Response
     {
         $action = $this->actionFactory->getById($id);
-
-        $sourceObject = $this->checkIfSourceExists($action->source, $action->sourceId);
-
-        if ($action->source == 'layout') {
-            /** @var \Xibo\Entity\Layout $layout */
-            $layout = $sourceObject;
-        } elseif ($action->source == 'region') {
-            /** @var \Xibo\Entity\Region $region */
-            $region = $sourceObject;
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        } else {
-            /** @var Widget $widget */
-            $widget = $sourceObject;
-            $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        }
+        $layout = $this->layoutFactory->getById($action->layoutId);
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
@@ -724,21 +704,7 @@ class Action  extends Base
     public function delete(Request $request, Response $response, int $id) : Response
     {
         $action = $this->actionFactory->getById($id);
-        $sourceObject = $this->checkIfSourceExists($action->source, $action->sourceId);
-
-        if ($action->source == 'layout') {
-            /** @var \Xibo\Entity\Layout $layout */
-            $layout = $sourceObject;
-        } elseif ($action->source == 'region') {
-            /** @var \Xibo\Entity\Region $region */
-            $region = $sourceObject;
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        } else {
-            /** @var Widget $widget */
-            $widget = $sourceObject;
-            $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        }
+        $layout = $this->layoutFactory->getById($action->layoutId);
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {

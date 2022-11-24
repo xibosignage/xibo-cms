@@ -2501,6 +2501,7 @@ class Layout implements \JsonSerializable
         foreach ($layoutActions as $action) {
             $action->source = 'layout';
             $action->sourceId = $this->layoutId;
+            $action->layoutId = $this->layoutId;
 
             if ($action->targetId != null) {
                 foreach ($combined as $old => $new) {
@@ -2531,6 +2532,7 @@ class Layout implements \JsonSerializable
         // go through all imported actions on a Region and replace the source/target Ids with the new ones
         foreach ($regionActions as $action) {
             $action->source = 'region';
+            $action->layoutId = $this->layoutId;
 
             foreach ($combined as $old => $new) {
                 if ($old == $action->targetId) {
@@ -2564,6 +2566,7 @@ class Layout implements \JsonSerializable
         // go through all imported actions on a Widget and replace the source/target Ids with the new ones
         foreach ($widgetActions as $action) {
             $action->source = 'widget';
+            $action->layoutId = $this->layoutId;
 
             // switch Action source Id and Action widget Id
             foreach ($combinedWidgets as $old => $new) {
@@ -2661,6 +2664,11 @@ class Layout implements \JsonSerializable
                 $action->sourceId = $newLayout->layoutId;
             }
 
+            // switch layoutId
+            if ($action->layoutId === $originalLayout->layoutId) {
+                $action->layoutId = $newLayout->layoutId;
+            }
+
             // if we had targetId (regionId) then switch it
             if ($action->targetId != null) {
                 foreach ($combinedRegionIds as $old => $new) {
@@ -2671,8 +2679,7 @@ class Layout implements \JsonSerializable
             }
 
             // switch Action widgetId
-            if ($action->widgetId != null) {#
-
+            if ($action->widgetId != null) {
                 foreach ($combinedWidgetIds as $old => $new) {
                     if ($old == $action->widgetId && $action->actionType == 'navWidget') {
                         $action->widgetId = $new;
@@ -2693,6 +2700,11 @@ class Layout implements \JsonSerializable
                 // switch source Id
                 if ($action->sourceId === $original->regionId) {
                     $action->sourceId = $region->regionId;
+                }
+
+                // switch layoutId
+                if ($action->layoutId === $originalLayout->layoutId) {
+                    $action->layoutId = $newLayout->layoutId;
                 }
 
                 // if we had targetId (regionId) then switch it
@@ -2735,6 +2747,11 @@ class Layout implements \JsonSerializable
                     // switch source Id
                     if ($action->sourceId === $originalWidget->widgetId) {
                         $action->sourceId = $widget->widgetId;
+                    }
+
+                    // switch layoutId
+                    if ($action->layoutId === $originalLayout->layoutId) {
+                        $action->layoutId = $newLayout->layoutId;
                     }
 
                     // if we had targetId (regionId) then switch it

@@ -57,19 +57,30 @@ class ActionFactory  extends BaseFactory
 
     /**
      * Create a new action
-     * @param string $triggerType
+     * @param string|null $triggerType
      * @param string|null $triggerCode
      * @param string $actionType
-     * @param string $source
-     * @param integer $sourceId
+     * @param string|null $source
+     * @param integer|null $sourceId
      * @param string $target
      * @param integer|null $targetId
      * @param integer|null $widgetId
      * @param string|null $layoutCode
+     * @param int|null $layoutId
      * @return Action
      */
-    public function create(string $triggerType, $triggerCode, string $actionType, string $source, int $sourceId, string $target, $targetId, $widgetId, $layoutCode)
-    {
+    public function create(
+        ?string $triggerType,
+        ?string $triggerCode,
+        string $actionType,
+        ?string $source,
+        ?int $sourceId,
+        string $target,
+        ?int $targetId,
+        ?int $widgetId,
+        ?string $layoutCode,
+        ?int $layoutId
+    ) {
 
         $action = $this->createEmpty();
         $action->ownerId = $this->getUser()->userId;
@@ -82,6 +93,7 @@ class ActionFactory  extends BaseFactory
         $action->targetId = $targetId;
         $action->widgetId = $widgetId;
         $action->layoutCode = $layoutCode;
+        $action->layoutId = $layoutId;
 
         return $action;
     }
@@ -194,7 +206,8 @@ class ActionFactory  extends BaseFactory
                action.target,
                action.targetId,
                action.widgetId,
-               action.layoutCode
+               action.layoutCode,
+               action.layoutId
             ';
 
         $body = ' FROM action
@@ -263,25 +276,7 @@ class ActionFactory  extends BaseFactory
 
         if ($sanitizedFilter->getInt('layoutId') !== null) {
             // All actions which are attached to this layout in any way.
-            $body .= ' AND (
-                (`action`.`source` = \'layout\' AND `action`.sourceId = :layoutId)
-                OR (`action`.`source` = \'region\' AND `action`.sourceId IN (
-                    SELECT regionId 
-                      FROM `region`
-                     WHERE `region`.layoutId = :layoutId
-                   )
-                )
-                OR (`action`.`source` = \'widget\' AND `action`.sourceId IN (
-                    SELECT `widget`.widgetId 
-                      FROM `region`
-                        INNER JOIN `playlist`
-                        ON `playlist`.regionId = `region`.regionId
-                        INNER JOIN `widget`
-                        ON `widget`.playlistId = `playlist`.playlistId
-                     WHERE layoutId = :layoutId
-                    )
-                )
-            ) ';
+            $body .= ' AND `action`.layoutId  = :layoutId ';
             $params['layoutId'] = $sanitizedFilter->getInt('layoutId');
         }
 
