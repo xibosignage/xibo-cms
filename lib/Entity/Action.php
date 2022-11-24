@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -104,6 +104,12 @@ class Action implements \JsonSerializable
      */
     public $layoutCode;
 
+    /**
+     * @SWG\Property(description="Layout Id associated with this Action")
+     * @var int
+     */
+    public $layoutId;
+
     /** @var \Xibo\Factory\PermissionFactory  */
     private $permissionFactory;
 
@@ -163,36 +169,44 @@ class Action implements \JsonSerializable
      */
     public function validate()
     {
-        if ($this->target == 'region' && $this->targetId == null) {
-            throw new InvalidArgumentException(__('Please select a Region'), 'targetId');
-        }
-
-        if ($this->triggerType === 'webhook' && $this->triggerCode === null) {
-            throw new InvalidArgumentException(__('Please provide trigger code'), 'triggerCode');
-        }
-
-        if (!in_array($this->triggerType, ['touch', 'webhook'])) {
-            throw new InvalidArgumentException(__('Invalid trigger type'), 'triggerType');
+        // on add we expect only layoutId, actionType, target and targetId
+        if ($this->layoutId == null) {
+            throw new InvalidArgumentException(__('No layoutId specified' , 'layoutId'));
         }
 
         if (!in_array($this->actionType, ['next', 'previous', 'navLayout', 'navWidget'])) {
             throw new InvalidArgumentException(__('Invalid action type'), 'actionType');
         }
 
-        if (!in_array(strtolower($this->source), ['layout', 'region', 'widget'])) {
-            throw new InvalidArgumentException(__('Invalid source'), 'source');
-        }
-
         if (!in_array(strtolower($this->target), ['region', 'screen'])) {
             throw new InvalidArgumentException(__('Invalid target'), 'target');
         }
 
-        if ($this->actionType === 'navLayout' && $this->layoutCode == '') {
-            throw new InvalidArgumentException(__('Please enter Layout code'), 'layoutCode');
+        if ($this->target == 'region' && $this->targetId == null) {
+            throw new InvalidArgumentException(__('Please select a Region'), 'targetId');
         }
 
-        if ($this->actionType === 'navWidget' && $this->widgetId == null) {
-            throw new InvalidArgumentException(__('Please select a Widget'), 'widgetId');
+        // on edit, we should validate other parameters.
+        if ($this->actionId != null) {
+            if ($this->triggerType === 'webhook' && $this->triggerCode === null) {
+                throw new InvalidArgumentException(__('Please provide trigger code'), 'triggerCode');
+            }
+
+            if (!in_array($this->triggerType, ['touch', 'webhook'])) {
+                throw new InvalidArgumentException(__('Invalid trigger type'), 'triggerType');
+            }
+
+            if (!in_array(strtolower($this->source), ['layout', 'region', 'widget'])) {
+                throw new InvalidArgumentException(__('Invalid source'), 'source');
+            }
+
+            if ($this->actionType === 'navLayout' && $this->layoutCode == '') {
+                throw new InvalidArgumentException(__('Please enter Layout code'), 'layoutCode');
+            }
+
+            if ($this->actionType === 'navWidget' && $this->widgetId == null) {
+                throw new InvalidArgumentException(__('Please select a Widget'), 'widgetId');
+            }
         }
     }
 
@@ -204,8 +218,7 @@ class Action implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
-            'notifyLayout' => false,
-            'layoutId' => null
+            'notifyLayout' => false
         ], $options);
 
         $this->getLog()->debug('Saving ' . $this);
@@ -221,14 +234,14 @@ class Action implements \JsonSerializable
             $this->update();
         }
 
-        if ($options['notifyLayout'] && $options['layoutId'] != null) {
-            $this->notifyLayout($options['layoutId']);
+        if ($options['notifyLayout'] && $this->layoutId != null) {
+            $this->notifyLayout($this->layoutId);
         }
     }
 
     public function add()
     {
-        $this->actionId = $this->getStore()->insert('INSERT INTO `action` (ownerId, triggerType, triggerCode, actionType, source, sourceId, target, targetId, widgetId, layoutCode) VALUES (:ownerId, :triggerType, :triggerCode, :actionType, :source, :sourceId, :target, :targetId, :widgetId, :layoutCode)', [
+        $this->actionId = $this->getStore()->insert('INSERT INTO `action` (ownerId, triggerType, triggerCode, actionType, source, sourceId, target, targetId, widgetId, layoutCode, layoutId) VALUES (:ownerId, :triggerType, :triggerCode, :actionType, :source, :sourceId, :target, :targetId, :widgetId, :layoutCode, :layoutId)', [
             'ownerId' => $this->ownerId,
             'triggerType' => $this->triggerType,
             'triggerCode' => $this->triggerCode,
@@ -238,7 +251,8 @@ class Action implements \JsonSerializable
             'target' => $this->target,
             'targetId' => $this->targetId,
             'widgetId' => $this->widgetId,
-            'layoutCode' => $this->layoutCode
+            'layoutCode' => $this->layoutCode,
+            'layoutId' => $this->layoutId
         ]);
 
     }

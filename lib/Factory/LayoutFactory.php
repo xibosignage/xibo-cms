@@ -815,7 +815,18 @@ class LayoutFactory extends BaseFactory
         $actions = $layoutJson['layoutDefinitions']['actions'] ?? [];
 
         foreach ($actions as $action) {
-            $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importLayout', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
+            $newAction = $this->actionFactory->create(
+                $action['triggerType'],
+                $action['triggerCode'],
+                $action['actionType'],
+                'importLayout',
+                $action['sourceId'],
+                $action['target'],
+                $action['targetId'],
+                $action['widgetId'],
+                $action['layoutCode'],
+                $action['layoutId'] ?? null
+            );
             $newAction->save(['validate' => false]);
         }
 
@@ -907,7 +918,18 @@ class LayoutFactory extends BaseFactory
             // interactive Actions
             $actions = $regionJson['actions'] ?? [];
             foreach ($actions as $action) {
-                $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
+                $newAction = $this->actionFactory->create(
+                    $action['triggerType'],
+                    $action['triggerCode'],
+                    $action['actionType'],
+                    'importRegion',
+                    $action['sourceId'],
+                    $action['target'],
+                    $action['targetId'],
+                    $action['widgetId'],
+                    $action['layoutCode'],
+                    $action['layoutId'] ?? null
+                );
                 $newAction->save(['validate' => false]);
             }
 
@@ -1075,7 +1097,18 @@ class LayoutFactory extends BaseFactory
                 // interactive Actions
                 $actions = $mediaNode['actions'] ?? [];
                 foreach ($actions as $action) {
-                    $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importWidget', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
+                    $newAction = $this->actionFactory->create(
+                        $action['triggerType'],
+                        $action['triggerCode'],
+                        $action['actionType'],
+                        'importWidget',
+                        $action['sourceId'],
+                        $action['target'],
+                        $action['targetId'],
+                        $action['widgetId'],
+                        $action['layoutCode'],
+                        $action['layoutId'] ?? null
+                    );
                     $newAction->save(['validate' => false]);
                 }
             }
