@@ -245,6 +245,8 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         ]);
 
         $response = $this->sendRequest('PUT', '/action/' . $action['actionId'], [
+            'source' => 'layout',
+            'sourceId' => $layout->layoutId,
             'triggerType' => 'webhook',
             'triggerCode' => 'new code',
             'actionType' => 'next',
@@ -299,7 +301,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
      * Add Action
-     * @dataProvider EditActionFailureCases
+     * @dataProvider editActionFailureCases
      * @param string $source
      * @param string $triggerType
      * @param string|null $triggerCode
@@ -315,7 +317,6 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             'layoutId' => $layout->layoutId
         ]);
 
-        $sourceId = null;
         $targetId = null;
         $widgetId = null;
         $layoutCode = null;
@@ -324,61 +325,63 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             $sourceId = $layout->layoutId;
         } elseif ($source === 'region') {
             $sourceId = $layout->regions[0]->regionId;
+        } else {
+            $sourceId = null;
         }
 
-        $response = $this->sendRequest('PUT', '/action/'.$action['actionId'], [
+        $response = $this->sendRequest('PUT', '/action/' . $action['actionId'], [
             'triggerType' => $triggerType,
             'triggerCode' => $triggerCode,
             'actionType' => $actionType,
             'target' => $target,
-            'targetId' => $targetId
+            'targetId' => $targetId,
+            'source' => $source,
+            'sourceId' => $sourceId
         ]);
 
         $body = json_decode($response->getBody());
-        // failure cases cover couple of possible issues, we need to catch notFound and invalidArgument exceptions here.
-        // if the provided source was incorrect we don't have sourceId, therefore with incorrect source and missing sourceId we expect notFound exception
-        if ($sourceId === null) {
-            $this->assertSame(404, $response->getStatusCode());
-        } else {
-            // in other failure cases, we expect to get invalidArgument exception.
-            $this->assertSame(422, $response->getStatusCode());
 
-            // get the error message for cases and make sure we return correct one.
+        // in other failure cases, we expect to get invalidArgument exception.
+        $this->assertSame(422, $response->getStatusCode());
 
-            // wrong trigger type case
-            if ($triggerType === 'notExistingType') {
-                $this->assertSame('Invalid trigger type', $body->error);
-            }
+        // get the error message for cases and make sure we return correct one.
+        if ($source === 'playlist') {
+            $this->assertSame('Invalid source', $body->error);
+        }
 
-            // wrong trigger type case
-            if ($actionType === 'wrongAction') {
-                $this->assertSame('Invalid action type', $body->error);
-            }
+        // wrong trigger type case
+        if ($triggerType === 'notExistingType') {
+            $this->assertSame('Invalid trigger type', $body->error);
+        }
 
-            // wrong target case
-            if ($target === 'world') {
-                $this->assertSame('Invalid target', $body->error);
-            }
+        // wrong trigger type case
+        if ($actionType === 'wrongAction') {
+            $this->assertSame('Invalid action type', $body->error);
+        }
 
-            // test case when we have target set to region, but we don't set targetId to any regionId
-            if ($target === 'region') {
-                $this->assertSame('Please select a Region', $body->error);
-            }
+        // wrong target case
+        if ($target === 'world') {
+            $this->assertSame('Invalid target', $body->error);
+        }
 
-            // trigger code in non layout
-            if ($triggerType === 'webhook' && $triggerCode === null) {
-                $this->assertSame('Please provide trigger code', $body->error);
-            }
+        // test case when we have target set to region, but we don't set targetId to any regionId
+        if ($target === 'region') {
+            $this->assertSame('Please select a Region', $body->error);
+        }
 
-            // navWidget without widgetId
-            if ($actionType === 'navWidget' && $widgetId == null) {
-                $this->assertSame('Please select a Widget', $body->error);
-            }
+        // trigger code in non layout
+        if ($triggerType === 'webhook' && $triggerCode === null) {
+            $this->assertSame('Please provide trigger code', $body->error);
+        }
 
-            // navLayout without layoutCode
-            if ($actionType === 'navLayout' && $layoutCode == null) {
-                $this->assertSame('Please enter Layout code', $body->error);
-            }
+        // navWidget without widgetId
+        if ($actionType === 'navWidget' && $widgetId == null) {
+            $this->assertSame('Please select a Widget', $body->error);
+        }
+
+        // navLayout without layoutCode
+        if ($actionType === 'navLayout' && $layoutCode == null) {
+            $this->assertSame('Please enter Layout code', $body->error);
         }
     }
 
@@ -387,11 +390,11 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
      * Format (string $source, string $triggerType, string|null $triggerCode, string $actionType, string $target)
      * @return array
      */
-    public function EditActionFailureCases()
+    public function editActionFailureCases()
     {
         return [
             'Wrong source' => ['playlist', 'touch', null, 'next', 'screen'],
-            'Wrong trigger type' => ['layout', 'notExistingType', null, 'navRegion', 'screen'],
+            'Wrong trigger type' => ['layout', 'notExistingType', null, 'previous', 'screen'],
             'Wrong action type' => ['layout', 'touch', null, 'wrongAction', 'screen'],
             'Wrong target' => ['layout', 'touch', null, 'next', 'world'],
             'Target region without targetId' => ['layout', 'touch', 'trigger code', 'next', 'region'],

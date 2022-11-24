@@ -704,7 +704,6 @@ class Action  extends Base
     public function delete(Request $request, Response $response, int $id) : Response
     {
         $action = $this->actionFactory->getById($id);
-        $this->checkIfSourceExists($action->source, $action->sourceId);
         $layout = $this->layoutFactory->getById($action->layoutId);
 
         // Make sure the Layout is checked out to begin with
