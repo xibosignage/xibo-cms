@@ -259,7 +259,7 @@ class Action implements \JsonSerializable
 
     public function update()
     {
-        $this->getStore()->update('UPDATE `action` SET ownerId = :ownerId, triggerType = :triggerType, triggerCode = :triggerCode, actionType = :actionType, source = :source, sourceId = :sourceId, target = :target, targetId = :targetId, widgetId = :widgetId, layoutCode = :layoutCode WHERE actionId = :actionId', [
+        $this->getStore()->update('UPDATE `action` SET ownerId = :ownerId, triggerType = :triggerType, triggerCode = :triggerCode, actionType = :actionType, source = :source, sourceId = :sourceId, target = :target, targetId = :targetId, widgetId = :widgetId, layoutCode = :layoutCode, layoutId = :layoutId WHERE actionId = :actionId', [
             'ownerId' => $this->ownerId,
             'triggerType' => $this->triggerType,
             'triggerCode' => $this->triggerCode,
@@ -270,7 +270,8 @@ class Action implements \JsonSerializable
             'targetId' => $this->targetId,
             'actionId' => $this->actionId,
             'widgetId' => $this->widgetId,
-            'layoutCode' => $this->layoutCode
+            'layoutCode' => $this->layoutCode,
+            'layoutId' => $this->layoutId
         ]);
     }
 
