@@ -762,7 +762,7 @@ class Region extends Base
         // Add a new region
         // we default to layout width/height/0/0
         $drawer = $this->regionFactory->create(
-            'playlist',
+            'drawer',
             $this->getUser()->userId,
             $layout->layout . '-' . (count($layout->regions) + 1 . ' - drawer'),
             $layout->width,

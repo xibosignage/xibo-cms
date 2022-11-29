@@ -76,7 +76,8 @@
                 var viewerTrans = {
                     inlineEditor: "{% trans "Inline Editor" %}",
                     nextWidget: "{% trans "Next widget" %}",
-                    previousWidget: "{% trans "Previous widget" %}"
+                    previousWidget: "{% trans "Previous widget" %}",
+                    addWidget: "{% trans "Add Widget" %}",
                 };
 
                 var timelineTrans = {
@@ -147,17 +148,6 @@
                             description: "{{ "Set View, Edit and Delete Sharing for Widgets and Regions"|trans }}"
                         }
                     }
-                };
-
-                var drawerTrans = {
-                    title: "{% trans "Drawer" %}",
-                    search: "{% trans "Search" %}",
-                    emptyDrawer: "{% trans "Add widgets to be used as targets in actions" %}",
-                    notInitEmptyDrawer: "{% trans "Drawer is empty!" %}",
-                    toggleDrawer: "{% trans "Toggle drawer" %}",
-                    widgetActions: "{% trans "Widget Actions:" %}",
-                    noTargetRegion: "{% trans "No Target" %}",
-                    noTargetRegionHelp: "{% trans "Please select a target region" %}"
                 };
             {% endautoescape %}
         </script>
@@ -363,5 +353,4 @@
         {% endfor %}
 
         {% include "region-designer-javascript.twig" %}
-        {% include "action-designer-javascript.twig" %}
     {% endblock %}

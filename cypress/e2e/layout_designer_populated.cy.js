@@ -89,7 +89,7 @@ describe('Layout Designer (Populated)', function() {
 
         // Get a table row, select it and add to the region
         cy.get('.editor-main-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
-            cy.get('#properties-panel-container .background-image-drop').click().then(() => {
+            cy.get('#properties-panel-form-container .background-image-drop').click().then(() => {
 
                 // Save form
                 cy.get('#properties-panel button[data-action="save"]').click();

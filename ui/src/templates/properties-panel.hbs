@@ -1,14 +1,7 @@
-<div id="properties-panel-container" class="properties-{{style}}">
-
+<div id="properties-panel-form-container" class="properties-{{style}}">
     <div class="form-title form-title-{{style}}">
         {{header}}
     </div>
-
-    {{#if isDrawerWidget}}
-        {{>properties-panel-editor-controls-target-region trans=trans}}
-    {{/if}}
-
-    {{>properties-panel-editor-controls-dimensions trans=trans}}
 
     <div class="form-container">
         {{{form}}}

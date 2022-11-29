@@ -1,7 +1,7 @@
-<div class="form-group colorpicker-element colorpicker-input xibo-form-input" {{#if visibility}}data-visibility="{{visibility}}"{{/if}} {{#if default}}data-default="{{default}}"{{/if}}>
+<div class="form-group colorpicker-element colorpicker-input xibo-form-input {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}"{{/if}} {{#if default}}data-default="{{default}}"{{/if}}>
     <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
     {{#if helpText}}
-        <i class="fa fa-question-circle form-help-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
+        <i class="fa fa-question-circle form-help-popup tooltip-always-on" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
     {{/if}}
     <div class="input-group">
         <div class="input-group-prepend">

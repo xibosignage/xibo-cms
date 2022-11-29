@@ -36,11 +36,20 @@ $xibo-color-selected: $xibo-color-accent;
 $xibo-color-shadow: rgba(0, 0, 0, 0.1);
 $xibo-color-shadow-2: rgba(0, 0, 0, 0.25);
 
+$xibo-color-layout-hover: $xibo-color-primary-l60;
+$xibo-color-layout-selected: $xibo-color-primary-l30;
+
 $xibo-color-region-hover: $xibo-color-accent;
-$xibo-color-region-selected: $xibo-color-accent;
+$xibo-color-region-selected: lighten($xibo-color-accent, 15%);
 
 $xibo-color-widget-hover: $xibo-color-primary;
 $xibo-color-widget-selected: lighten($xibo-color-primary, 15%);
+
+$xibo-color-action-target: #D07CEE;
+$xibo-color-action-target-light: #EFDDF5;
+$xibo-color-action-trigger: #86F4DA;
+$xibo-color-action-trigger-light: #E3FDF6;
+
 
 // ZINDEX
 $loading-overlay-z-index: 4000;

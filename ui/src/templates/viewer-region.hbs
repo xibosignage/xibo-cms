@@ -1,8 +1,8 @@
 <div id="{{id}}"
     data-type="{{type}}"
     data-sub-type="{{subType}}"
-    class="designer-region designer-region-{{subType}} {{#neq subType 'canvas'}}viewer-element-select{{/neq}} {{#if isEditable}}editable{{/if}}"
-    data-region-id="{{id}}"
+    class="designer-region designer-region-{{subType}} droppable {{#neq subType 'canvas'}}viewer-element-select{{/neq}} {{#if isEditable}}editable{{/if}}"
+    data-region-id="{{regionId}}"
     style="position:absolute;
         width: {{ scaledDimensions.width }}px; 
         height: {{ scaledDimensions.height }}px; 

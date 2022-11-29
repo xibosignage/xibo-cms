@@ -1,0 +1,50 @@
+<div class="action-element" data-action-id="{{actionId}}">
+    <div class="action-element-trigger {{#if isTrigger}}highlight{{/if}}">
+        <div class="element-header">
+            {{trans.trigger}}
+        </div>
+
+        {{#if triggerType}}
+            <div class="trigger-type type">
+                {{triggerType}}
+            </div>
+        {{else}}
+            <div class="not-defined text-muted">{{trans.notDefined}}</div>
+        {{/if}}
+
+        {{#neq triggerType 'webhook'}}
+            {{#if source}}
+                <div class="trigger-target target">
+                    {{source}}{{#if sourceId}} - {{sourceId}}{{/if}}
+                </div>
+            {{else}}
+                <div class="not-defined text-muted">{{trans.notDefined}}</div>
+            {{/if}}
+        {{else}}
+            <div class="trigger-code code">
+                {{triggerCode}}
+            </div>
+        {{/neq}}
+    </div>
+    <div class="action-element-target {{#if isTarget}}highlight{{/if}}">
+        <div class="element-header">
+            {{trans.target}}
+        </div>
+
+        <div class="action-type type">
+            {{actionType}}
+        </div>
+        
+        <div class="action-target target">
+            {{target}}{{#if targetId}} - {{targetId}}{{/if}}
+        </div>
+    </div>
+    <div class="edit-hover-menu">
+        <button class="btn btn-default action-btn" type="button" data-action="edit">
+            <i class="fa fa-pencil"></i>
+        </button>
+        <button class="btn btn-default action-btn" type="button" data-action="delete">
+            <i class="fa fa-trash"></i>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,50 @@
+<form class="action-element-form">
+    <div class="form-group">
+        {{> forms/inputs/header title=actionTitle}}
+
+        {{!-- Hidden/Fixed fields --}}
+        {{> forms/inputs/hidden value=actionType id='actionType' }}
+
+        {{> forms/inputs/dropdown id="triggerType" value=triggerType title="Trigger Type" customClass='action-element-form-trigger' options=(arr (obj name='touch' title='Touch/Click') (obj name='webhook' title='Web hook')) optionsTitle="title" optionsValue="name" helpText="How should the Player listen for this Action to be triggered?" }}
+        {{> forms/inputs/text id='triggerCode' value=triggerCode title="Trigger Code" helpText='If this Action is triggered by a Web Hook then this Trigger Code must be present in the URL `trigger=` parameter.' visibility='{ "field": "#triggerType", "type": "eq", "value": "webhook" }' }}
+
+        {{> forms/inputs/hidden id="source" value=source }}
+        {{> forms/inputs/dropdown id="sourceId" value=sourceId title="Trigger Target" customClass='action-element-form-trigger' options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name" helpText="Select the target for the Trigger" visibility='{ "field": "#triggerType", "type": "neq", "value": "webhook" }' }}
+
+        {{!-- Set layout name as screen --}}
+        {{#eq target "layout"}}
+            {{set "targetValue" "screen"}}
+        {{else}}
+            {{set "targetValue" target}}
+        {{/eq}}
+
+        {{> forms/inputs/hidden id="target" value=targetValue }}
+        {{> forms/inputs/dropdown id="targetId" value=targetId title="Target" customClass='action-element-form-target' options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name" helpText="If your Widget is a Shell Command you can select to target 'Screen' to run the command without affecting any Regions. For all other Widgets select 'Region' as target." }}
+
+        {{!-- For nav widget only --}}
+        {{#eq actionType 'navWidget'}}
+            {{> forms/inputs/dropdown id="widgetId" value=widgetId title="Widget to Load" customClass='action-element-form-target' options=(arr (obj name='' title='') (obj name='create' title='-- Create New --')) optionsTitle="title" optionsValue="name" helpText="Select of create a Widget to be loaded" visibility='{ "field": "#targetId", "type": "neq", "value": "" }' }}
+        {{/eq}}
+
+        {{!-- For nav layout only --}}
+        {{#eq actionType 'navLayout'}}
+            {{> forms/inputs/dropdown id='layoutCode' value=layoutCode title="Layout Code" customClass="pagedSelect"
+                options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name"
+                customData=(arr 
+                    (obj name='width' value='100%')
+                    (obj name='search-url' value=layoutCodeSearchURL)
+                    (obj name='search-term' value='code')
+                    (obj name='id-property' value='code')
+                    (obj name='text-property' value='code')
+                )
+                helpText='Please enter the Code identifier for the Layout as assigned in the Add / Edit Layout form.'
+            }}
+        {{/eq}}
+    </div>
+
+    <div class="alert alert-danger error-message w-100"></div>
+    <div>
+        <button class="btn btn-primary w-100" title="{{trans.save}}" type="button" data-action="save">Save</button>
+        <button class="btn btn-outline-primary w-100 mt-2" title="{{trans.cancel}}" type="button" data-action="cancel">Cancel</button>
+    </div>
+</form>

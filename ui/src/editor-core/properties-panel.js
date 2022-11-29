@@ -3,10 +3,15 @@
 
 const loadingTemplate = require('../templates/loading.hbs');
 const messageTemplate = require('../templates/properties-panel-message.hbs');
-const propertiesPanel = require('../templates/properties-panel.hbs');
-const actionsTemplate = require('../templates/actions-form-template.hbs');
-const actionsButtonTemplate =
-  require('../templates/actions-button-template.hbs');
+const propertiesPanelTemplate = require('../templates/properties-panel.hbs');
+const actionsFormTabTemplate =
+  require('../templates/actions-form-tab-template.hbs');
+const actionsFormContentTemplate =
+  require('../templates/actions-form-content-template.hbs');
+const actionFormElementTemplate =
+  require('../templates/actions-form-element-template.hbs');
+const actionFormElementEditTemplate =
+    require('../templates/actions-form-element-edit-template.hbs');
 const formTemplates = {
   widget: require('../templates/forms/widget.hbs'),
   region: require('../templates/forms/region.hbs'),
@@ -28,6 +33,8 @@ const PropertiesPanel = function(parent, container) {
   this.inlineEditor = false;
 
   this.openTabOnRender = '';
+
+  this.actionForm = {};
 };
 
 /**
@@ -102,9 +109,16 @@ PropertiesPanel.prototype.save = function(element) {
         if (element.type === 'widget' && app.viewer) {
           // Reload data, but only render the region that the widget is in
           app.reloadData(mainObject).done(() => {
-            app.viewer.renderRegion(
-              app.getElementByTypeAndId('region', element.regionId),
-            );
+            if (!element.drawerWidget) {
+              app.viewer.renderRegion(
+                app.getElementByTypeAndId('region', element.regionId),
+              );
+            } else {
+              app.viewer.renderRegion(
+                app.layout.drawer,
+                element,
+              );
+            }
           });
         } else {
           // Reload data, and refresh viewer if layout
@@ -112,52 +126,7 @@ PropertiesPanel.prototype.save = function(element) {
         }
       };
 
-      // Check if its a drawer widget and
-      // if we need to save the target region id
-      const $drawerWidgetTargetRegion =
-        this.DOMObject.find('#drawerWidgetTargetRegion');
-      if (
-        $drawerWidgetTargetRegion.length > 0 &&
-        $drawerWidgetTargetRegion.val() != ''
-      ) {
-        const valueToSave = $drawerWidgetTargetRegion.val();
-
-        let requestPath = urlsForApi[element.type].setRegion.url;
-        requestPath = requestPath.replace(':id', element[element.type + 'Id']);
-
-        $.ajax({
-          url: requestPath,
-          type: urlsForApi[element.type].setRegion.type,
-          data: {
-            targetRegionId: valueToSave,
-          },
-        }).done(function(res) {
-          if (res.success) {
-            toastr.success(res.message);
-            reloadData();
-          } else {
-            // Login Form needed?
-            if (res.login) {
-              window.location.href = window.location.href;
-              location.reload();
-            } else {
-              toastr.error(errorMessagesTrans.formLoadFailed);
-
-              // Just an error we dont know about
-              if (res.message == undefined) {
-                console.error(res);
-              } else {
-                console.error(res.message);
-              }
-            }
-          }
-        }).catch(function(jqXHR, textStatus, errorThrown) {
-          console.error(jqXHR, textStatus, errorThrown);
-          toastr.error(errorMessagesTrans.formLoadFailed);
-        });
-      } else {
-        reloadData();
-      }
+      reloadData();
     }).catch((error) => { // Fail/error
       app.common.hideLoadingScreen();
 
@@ -221,9 +190,14 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
  * Render panel
  * @param {Object} element - the element object to be rendered
  * @param {number} step - the step to render
+ * @param {boolean} actionEditMode - render while editing an action
  * @return {boolean} - result status
  */
-PropertiesPanel.prototype.render = function(element, step) {
+PropertiesPanel.prototype.render = function(
+  element,
+  step,
+  actionEditMode = false,
+) {
   const self = this;
 
   // Hide panel if no element is passed
@@ -306,58 +280,19 @@ PropertiesPanel.prototype.render = function(element, step) {
       buttons = formHelpers.widgetFormRenderButtons(formTemplates.buttons);
     }
 
-    const html = propertiesPanel({
+    const html = propertiesPanelTemplate({
       header: res.dialogTitle,
       style: element.type,
       form: htmlTemplate(res.data),
       buttons: buttons,
       trans: propertiesPanelTrans,
-      isDrawerWidget: element.drawerWidget || false,
     });
 
     // Append layout html to the main div
     self.DOMObject.html(html);
 
-    // Add the action tab (to layout editor only)
-    if (app.mainObjectType === 'layout') {
-      // the url to Action Add Form
-      let actionFormAddRequest = urlsForApi[element.type].addActionForm.url;
-      actionFormAddRequest =
-        actionFormAddRequest.replace(':id', element[element.type + 'Id']);
-
-      // append new tab
-      const tabName = actionsTranslations.tableHeaders.name;
-      const tabList = self.DOMObject.find('.nav-tabs');
-      // TODO use template for the tab element
-      const tabHtml =
-      `<li class="nav-item">
-        <a class="nav-link action-tab"
-          href="#actionTab" role="tab" data-toggle="tab">
-          <span id="actionTabName"></span>
-        </a>
-      </li>`;
-
-      $(tabHtml).appendTo(tabList);
-      $('#actionTabName').text(tabName);
-
-      // render the html from actions template
-      const actionsHtml = actionsTemplate({
-        trans: actionsTranslations,
-      });
-
-      // append Action tab html to tab content in edit form
-      const tabContent = self.DOMObject.find('.tab-content');
-      $(actionsHtml).appendTo(tabContent);
-
-      // call the javascript to render the datatable when on Actions tab
-      showActionsGrid(element.type, element[element.type + 'Id']);
-
-      // add a button to the button panel for adding an action.
-      self.DOMObject.find('.button-container').append($(actionsButtonTemplate({
-        addUrl: actionFormAddRequest,
-        trans: actionsTranslations,
-      })));
-    }
+    // Mark container as action edit mode
+    self.DOMObject.toggleClass('action-edit-mode', actionEditMode);
 
     // Store the extra data
     self.DOMObject.data('extra', res.extra);
@@ -430,8 +365,9 @@ PropertiesPanel.prototype.render = function(element, step) {
     // Save form data
     self.formSerializedLoadData = self.DOMObject.find('form').serialize();
 
-    // Handle buttons click
+    // If we're not in read only mode
     if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
+      // Handle buttons
       self.DOMObject.find('.properties-panel-btn').click(function(e) {
         if ($(e.target).data('action')) {
           self[$(e.target).data('action')](
@@ -457,6 +393,13 @@ PropertiesPanel.prototype.render = function(element, step) {
           self.save(element, $(handler.target).data('subAction'));
         }
       });
+
+      // Render action tab
+      if (app.mainObjectType === 'layout') {
+        self.renderActionTab(element, {
+          reattach: actionEditMode,
+        });
+      }
     }
 
     // Call Xibo Init for this form
@@ -482,34 +425,13 @@ PropertiesPanel.prototype.render = function(element, step) {
       self.openTabOnRender = '';
     }
 
-    // Populate the drawer select if exists
-    if (self.DOMObject.find('.form-editor-controls-target-region').length > 0) {
-      const $selectOptionContainer =
-        self.DOMObject.find(
-          '.form-editor-controls-target-region #drawerWidgetTargetRegion',
-        );
-
-      // Clear container
-      $selectOptionContainer.find('option:not(.default-option)').remove();
-      const elementTargetRegion = element.targetRegionId || '';
-      for (regionID in lD.layout.regions) {
-        if (lD.layout.regions.hasOwnProperty(regionID)) {
-          const region = lD.layout.regions[regionID];
-          const $newOption =
-          $(
-            '<option value="' +
-            region.regionId +
-            '">' +
-            region.name +
-            '</option>',
-          );
-          if (elementTargetRegion == region.regionId) {
-            $newOption.attr('selected', 'selected');
-          }
-          $newOption.appendTo($selectOptionContainer);
-        }
-      }
-    }
+    // Initialise tooltips
+    app.common.reloadTooltips(
+      self.DOMObject,
+      {
+        position: 'left',
+      },
+    );
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -577,6 +499,395 @@ PropertiesPanel.prototype.saveRegion = function() {
       toastr.error(errorMessage);
     });
   }
+};
+
+/**
+ * Create action tab
+ * @param {object} element
+ * @param {object/boolean=} [options.reattach = false] - reattach the tab
+ * @param {object/boolean=} [options.clearPrevious = false]
+ *  - clear previous tab content
+ * @param {object/boolean=} [options.selectAfterRender = false]
+ *   - select the tab when rendered
+ * @param {object/string=} [options.openEditActionAfterRender = null]
+ */
+PropertiesPanel.prototype.renderActionTab = function(
+  element,
+  {
+    reattach = false,
+    clearPrevious = false,
+    selectAfterRender = false,
+    openEditActionAfterRender = null,
+  } = {},
+) {
+  const self = this;
+  const app = this.parent;
+
+  // Remove action tab and content
+  if (clearPrevious) {
+    self.DOMObject.find('.nav-tabs .actions-tab').remove();
+    self.DOMObject.find('#actionsTab').remove();
+  }
+
+  // Create tab
+  self.DOMObject.find('.nav-tabs').append(
+    actionsFormTabTemplate(element),
+  );
+
+  // Create tab content
+  if (!reattach) {
+    this.actionForm =
+      $(actionsFormContentTemplate({
+        elementType: element.type,
+        trans: propertiesPanelTrans.actions,
+      }));
+  }
+
+  // Attach to DOM
+  this.actionForm.appendTo(this.DOMObject.find('.tab-content'));
+
+  if (!reattach) {
+    // Remove edit area from the viewer
+    lD.viewer.removeActionEditArea();
+
+    // Get actions and populate form containers
+    $.ajax({
+      url: urlsForApi.actions.get.url,
+      type: urlsForApi.actions.get.type,
+      dataType: 'json',
+      data: {
+        layoutId: app.mainObjectId,
+      },
+    }).done(function(res) {
+      // Filter actions by groups
+      const $elementActionsContainer =
+        self.DOMObject.find('.element-actions');
+      const $otherActionsContainer =
+        self.DOMObject.find('.other-actions');
+
+      const showEmptyMessage = ($container) => {
+        $container.append(
+          $('<div />').addClass('text-center no-actions').text(
+            propertiesPanelTrans.actions.noActionsToShow,
+          ),
+        );
+      };
+
+      if (res.data && res.data.length > 0) {
+        res.data.forEach((action) => {
+          self.addActionToContainer(
+            action,
+            element,
+            $elementActionsContainer,
+            $otherActionsContainer,
+          );
+        });
+      }
+
+      // If container is empty, show message
+      ($elementActionsContainer.find('.action-element').length == 0) &&
+        showEmptyMessage($elementActionsContainer);
+      ($otherActionsContainer.find('.action-element').length == 0) &&
+        showEmptyMessage($otherActionsContainer);
+
+      // Select tab after render
+      if (selectAfterRender) {
+        self.DOMObject.find('.nav-link, .tab-pane').removeClass('active');
+        self.DOMObject.find('.actions-tab .nav-link, #actionsTab')
+          .addClass('active');
+
+
+        // Open edit action form
+        if (openEditActionAfterRender != null) {
+          self.openEditAction(
+            self.DOMObject.find(
+              '.action-element[data-action-id="' +
+              openEditActionAfterRender +
+              '"]',
+            ),
+          );
+        }
+      }
+    }).fail(function(_data) {
+      toastr.error(
+        errorMessagesTrans.getFormFailed,
+        errorMessagesTrans.error,
+      );
+    });
+  }
+};
+
+/**
+ * Add or update action
+ * @param {object} action
+ * @param {object} selectedObject
+ * @param {object} $containerSelected
+ * @param {object} $containerOther
+ * @param {object} $elementToBeReplaced
+ */
+PropertiesPanel.prototype.addActionToContainer = function(
+  action,
+  selectedObject = lD.selectedObject,
+  $containerSelected = null,
+  $containerOther = null,
+  $elementToBeReplaced = null,
+) {
+  const self = this;
+  const app = this.parent;
+  const selectedType = selectedObject.type;
+  const selectedId = selectedObject[selectedType + 'Id'];
+
+  // Check if current element is trigger or target for this action
+  action.isTrigger =
+    action.source == selectedType &&
+    action.sourceId == selectedId;
+
+  // For layout, compare with "screen"
+  const elementType =
+    (selectedType == 'layout') ? 'screen' : selectedType;
+  action.isTarget =
+    action.target == elementType &&
+    action.targetId == selectedId;
+
+  // If action target is layout/screen, add the id to the targetId
+  if (action.target == 'screen') {
+    action.targetId = app.mainObjectId;
+  }
+
+  // Create action title
+  action.actionTitle = action.actionType;
+
+  // Group actions into element actions and other actions
+  let $targetContainer;
+  if (action.isTrigger || action.isTarget) {
+    $targetContainer = $containerSelected;
+  } else {
+    $targetContainer = $containerOther;
+  }
+
+  // Create action and add to container
+  const newAction = actionFormElementTemplate($.extend({}, action, {
+    trans: propertiesPanelTrans.actions,
+  }));
+
+  // Save data and add to container
+  const $newAction = $(newAction).data(action).on('mouseenter',
+    function() {
+      // Highlight action on viewer
+      // if there's no action being edited
+      if (
+        self.DOMObject.find('.action-element-form').length == 0
+      ) {
+        app.viewer.createActionHighlights(action, 0);
+      }
+    },
+  ).on('mouseleave',
+    function() {
+      // Remove highlight
+      // if there's no action being edited
+      if (
+        self.DOMObject.find('.action-element-form').length == 0
+      ) {
+        app.viewer.clearActionHighlights();
+      }
+    },
+  );
+
+  // Handle buttons
+  $newAction.find('.action-btn').click(function(e) {
+    const btnAction = $(e.currentTarget).data('action');
+
+    if (btnAction == 'delete') {
+      app.deleteAction(
+        $(e.currentTarget).parents('.action-element'),
+      );
+    }
+
+    if (btnAction == 'edit') {
+      self.openEditAction($(e.currentTarget).parents('.action-element'));
+    }
+  });
+
+  // Replace or add element
+  if ($elementToBeReplaced) {
+    $elementToBeReplaced.replaceWith($newAction);
+  } else {
+    $targetContainer.append($newAction);
+  }
+};
+
+/**
+ * Open edit action
+ * @param {object} action
+ * @return {boolean} false if unsuccessful
+ */
+PropertiesPanel.prototype.openEditAction = function(action) {
+  const app = this.parent;
+  const self = this;
+
+  // Remove any opened forms
+  this.DOMObject.find('.action-element-form').remove();
+
+  // Show all hidden actions
+  this.DOMObject.find('.action-element').removeClass('hidden');
+
+  // Get data from action
+  const actionData = action.data();
+
+  // Send the layout code search URL with the action
+  actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
+
+  // Create action and add to container
+  const newAction = actionFormElementEditTemplate($.extend({}, actionData, {
+    trans: propertiesPanelTrans.actions,
+  }));
+
+  // Hide original action
+  action.addClass('hidden');
+
+  // Handle actions on the viewer
+  app.viewer.createActionHighlights(actionData, 1);
+
+  // Add edit form to container after original action
+  const $newActionContainer = $(newAction).insertAfter(action);
+
+  // Populate dropdowns with layout elements
+  app.populateDropdownWithLayoutElements(
+    $newActionContainer.find('#sourceId'),
+    {
+      $typeInput: $newActionContainer.find('#source'),
+      value: actionData.sourceId,
+    },
+    actionData,
+  );
+
+  app.populateDropdownWithLayoutElements(
+    $newActionContainer.find('#targetId'),
+    {
+      $typeInput: $newActionContainer.find('#target'),
+      value: actionData.targetId,
+      filters: ['layout', 'regions'],
+    },
+    actionData,
+  );
+
+  if (actionData.actionType == 'navWidget') {
+    // Populate dropdowns with drawer elements
+    app.populateDropdownWithLayoutElements(
+      $newActionContainer.find('#widgetId'),
+      {
+        value: actionData.widgetId,
+        filters: ['drawerWidgets'],
+      },
+      actionData,
+    );
+  }
+
+  // If trigger type is webhook
+  // set source as "screen"
+  const updateSource = function(triggerType) {
+    if (triggerType == 'webhook') {
+      $newActionContainer.find('#source').val('layout');
+      $newActionContainer.find('#sourceId').val(app.mainObjectId);
+    }
+  };
+
+  updateSource(actionData.triggerType);
+
+  // Handle trigger type change
+  $newActionContainer.find('#triggerType').on('change', function(e) {
+    const triggerType = $(e.currentTarget).val();
+
+    updateSource(triggerType);
+  });
+
+  // Handle buttons
+  $newActionContainer.find('[type="button"]').on('click', function(e) {
+    const btnAction = $(e.currentTarget).data('action');
+
+    if (btnAction == 'save') {
+      app.saveAction(action, $newActionContainer);
+    }
+
+    if (btnAction == 'cancel') {
+      // Destroy new action
+      $newActionContainer.remove();
+
+      // Remove edit area
+      lD.viewer.removeActionEditArea();
+
+      // Remove highlight
+      app.viewer.clearActionHighlights();
+
+      // Show original action
+      $(action).removeClass('hidden');
+
+      self.closeEditAction(
+        $newActionContainer,
+        $(action),
+      );
+    }
+  });
+
+  // Set actionData to container
+  $newActionContainer.data(actionData);
+
+  // Form conditions
+  forms.setConditions($newActionContainer);
+
+  // Initialise tooltips
+  app.common.reloadTooltips(
+    $newActionContainer,
+    {
+      position: 'left',
+    },
+  );
+
+  // Run XiboInitialise on form
+  XiboInitialise('.action-element-form');
+
+  return true;
+};
+
+/**
+ * Close edit action
+ * @param {object} $actionEditContainer
+ * @param {object} $originalAction
+ */
+PropertiesPanel.prototype.closeEditAction = function(
+  $actionEditContainer,
+  $originalAction,
+) {
+  // Destroy new action
+  $actionEditContainer.remove();
+
+  // Remove edit area
+  lD.viewer.removeActionEditArea();
+
+  // Remove highlight
+  lD.viewer.clearActionHighlights();
+
+  // Show original action
+  $originalAction.removeClass('hidden');
+};
+
+/**
+ * Detach action form
+ */
+PropertiesPanel.prototype.detachActionsForm = function() {
+  // Remove active class from tab
+  this.actionForm.removeClass('active');
+
+  // Detach form
+  this.actionForm.detach();
+};
+
+/**
+ * Attach action form
+ */
+PropertiesPanel.prototype.attachActionsForm = function() {
+  // Re-attach form to the tab content
+  this.DOMObject.find('.tab-content').append(this.actionForm);
 };
 
 module.exports = PropertiesPanel;

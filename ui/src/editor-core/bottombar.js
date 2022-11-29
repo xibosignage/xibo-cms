@@ -43,10 +43,7 @@ Bottombar.prototype.render = function(element) {
       '';
 
   if (element.type == 'widget') {
-    const parentRegion =
-      (element.drawerWidget) ?
-        lD.getElementByTypeAndId('drawer') :
-        lD.getElementByTypeAndId('region', element.regionId);
+    const parentRegion = lD.getElementByTypeAndId('region', element.regionId);
 
     // Render widget toolbar
     this.DOMObject.html(bottomBarViewerTemplate(

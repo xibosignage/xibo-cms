@@ -45,10 +45,10 @@ describe('Layout Designer (Empty)', function() {
         it('should prevent a layout edit action, and show a toast message', function() {
 
             // Should contain widget options form
-            cy.get('#properties-panel-container').contains('Edit Layout');
+            cy.get('#properties-panel-form-container').contains('Edit Layout');
 
             // The save button should not be visible
-            cy.get('#properties-panel-container [data-action="save"]').should('not.exist');
+            cy.get('#properties-panel-form-container [data-action="save"]').should('not.exist');
         });
     });
 
@@ -153,54 +153,6 @@ describe('Layout Designer (Empty)', function() {
                 cy.get('.editor-main-toolbar #content-2 .toolbar-pane-content .toolbar-card.upload-card .select-upload').click({force: true});
                 cy.get('#layout-navigator [data-type="region"]:first-child').click({force: true});
                 cy.get('[data-test="uploadFormModal"]').contains('Upload media');
-            });
-        });
-
-        it('should open the drawer and add a widget to it, change some properties and save widget', () => {
-            // Create and alias for reload Layout
-            cy.server();
-            cy.route('/layout?layoutId=*').as('reloadLayout');
-
-            // Open the drawer
-            cy.get('#actions-drawer-toggle').should('be.visible').click();
-
-            // Empty message is visible
-            cy.get('#actions-drawer-empty-message').should('be.visible');
-
-            // Open modules tab
-            cy.get('.editor-main-toolbar #btn-menu-1').should('be.visible').click({force: true});
-            cy.get('.editor-main-toolbar #btn-menu-0').should('be.visible').click({force: true});
-
-             // Get a table row, select it and add to the region
-             cy.get('.editor-main-toolbar #content-0 .toolbar-card[data-sub-type="clock"] .add-area').click({force: true}).then(() => {
-                cy.get('#actions-drawer-content.ui-droppable-active').click({force: true}).then(() => {
-
-                    // Wait for the layout to reload
-                    cy.wait('@reloadLayout');
-
-                    // Check if there is one widget in the drawer
-                    cy.get('#actions-drawer-widgets [data-type="widget"]').then(($widgets) => {
-                        expect($widgets.length).to.eq(1);
-                    });
-
-                    // Select widget
-                    cy.get('#actions-drawer-widgets [data-type="widget"]:first-child').click({force: true});
-
-                    // Select a target region
-                    cy.get('#properties-panel-container #drawerWidgetTargetRegion').should('be.visible').select(1);
-
-                    // Type the new name in the input
-                    cy.get('#properties-panel input[name="name"]').clear().type('newName');
-
-                    // Save the widget
-                    cy.get('#properties-panel-container [data-action="save"]').click();
-
-                    // Wait for the layout to reload
-                    cy.wait('@reloadLayout');
-
-                    // Should show a notification for the successful save
-                    cy.get('.toast-success').contains('Edited newName');
-                });
             });
         });
     });
