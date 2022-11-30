@@ -32,6 +32,7 @@ function openUploadForm(options) {
     className: '',
     animateDialog: true,
     formOpenedEvent: null,
+    onHideCallback: null,
     templateOptions: {
       layoutImport: false,
       multi: true,
@@ -55,6 +56,11 @@ function openUploadForm(options) {
   }).on('hidden.bs.modal', function() {
     // Reset video image covers.
     videoImageCovers = {};
+
+    // Call the onHideCallback if it exists
+    if (options.onHideCallback !== null) {
+      options.onHideCallback(dialog);
+    }
   }).attr('id', Date.now());
 
   setTimeout(function() {

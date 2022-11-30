@@ -1256,9 +1256,24 @@ lD.addModuleToPlaylist = function(
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     const validExt = moduleData.validExt.replace(/,/g, '|');
+    let numUploads = 0;
 
     // Close the current dialog
     bootbox.hideAll();
+
+    // On hide callback
+    const onHide = function(dialog) {
+      // If there are no uploads, delete the region
+      if (numUploads === 0) {
+        lD.layout.deleteElement(
+          'region',
+          regionId,
+        ).then(() => {
+          // Reload data ( and viewer )
+          lD.reloadData(lD.layout, true);
+        });
+      }
+    };
 
     openUploadForm({
       url: libraryAddUrl,
@@ -1276,11 +1291,10 @@ lD.addModuleToPlaylist = function(
         main: {
           label: translations.done,
           className: 'btn-primary btn-bb-main',
-          callback: function() {
-            lD.reloadData(lD.layout);
-          },
+          callback: onHide,
         },
       },
+      onHideCallback: onHide,
       templateOptions: {
         trans: uploadTrans,
         upload: {
@@ -1295,6 +1309,10 @@ lD.addModuleToPlaylist = function(
         currentWorkingFolderId: lD.folderId,
         showWidgetDates: true,
         folderSelector: true,
+      },
+      uploadDoneEvent: function(data) {
+        // If the upload is successful, increase the number of uploads
+        numUploads += 1;
       },
     }).attr('data-test', 'uploadFormModal');
   } else { // Add widget to a region
