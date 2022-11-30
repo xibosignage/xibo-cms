@@ -29,12 +29,13 @@ const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
 const deleteElementModalContentTemplate =
   require('../templates/delete-element-modal-content.hbs');
+const confirmationModalTemplate =
+  require('../templates/confirmation-modal.hbs');
 
 // Include modules
 const Layout = require('../layout-editor/layout.js');
 const Viewer = require('../layout-editor/viewer.js');
 const PropertiesPanel = require('../editor-core/properties-panel.js');
-const Drawer = require('../layout-editor/drawer.js');
 const Manager = require('../editor-core/manager.js');
 const Toolbar = require('../editor-core/toolbar.js');
 const Topbar = require('../editor-core/topbar.js');
@@ -85,9 +86,6 @@ window.lD = {
 
   // Properties Panel
   propertiesPanel: {},
-
-  // Drawer
-  drawer: {},
 
   folderId: '',
 };
@@ -141,13 +139,6 @@ $(() => {
       lD.viewer = new Viewer(
         lD,
         lD.editorContainer.find('#layout-viewer'),
-      );
-
-      // Initialise drawer
-      lD.drawer = new Drawer(
-        lD,
-        lD.editorContainer.find('#actions-drawer'),
-        res.data[0].drawers,
       );
 
       // Initialize bottom toolbar ( with custom buttons )
@@ -357,54 +348,44 @@ lD.selectObject =
     // If there is a selected card
     // use the drag&drop simulate to add that item to a object
     if (!$.isEmptyObject(this.toolbar.selectedCard)) {
-      // If selected card has the droppable type or "all"
-      // TODO add to other than layout to be done
+      // Get card object
+      const card = this.toolbar.selectedCard[0];
+
+      // Deselect cards and drop zones
+      this.toolbar.deselectCardsAndDropZones();
+      // No target - add to layout
       if (target == null) {
-        // Get card object
-        const card = this.toolbar.selectedCard[0];
-
-        // Deselect cards and drop zones
-        this.toolbar.deselectCardsAndDropZones();
-
         // Simulate drop item add
         this.dropItemAdd(target, card, clickPosition);
+      } else if (target.data('subType') == 'drawer') {
+        // Simulate drop item add
+        this.dropItemAdd(target, card);
       }
     } else if (
       !$.isEmptyObject(this.toolbar.selectedQueue)
     ) {
       // If there's a selected queue
       // use the drag&drop simulate to add those items to a object
-      const droppableId = $(target).attr('id');
       const selectedQueue = lD.toolbar.selectedQueue;
 
-      if (droppableId == 'actions-drawer-content') {
-        const playlistId = lD.layout.drawer.playlists.playlistId;
-
+      // Add to layout, but create a new region
+      lD.addRegion(clickPosition, 'frame').then((res) => {
+        const playlistId = res.data.regionPlaylist.playlistId;
         // Add media to new region
         lD.importFromProvider(selectedQueue).then((res) => {
-          // Add media queue to playlist
-          lD.addMediaToPlaylist(playlistId, res);
-        });
-      } else {
-        // Add to layout, but create a new region
-        lD.addRegion(clickPosition, 'frame').then((res) => {
-          const playlistId = res.data.regionPlaylist.playlistId;
-          // Add media to new region
-          lD.importFromProvider(selectedQueue).then((res) => {
-            // If res is empty, it means that the import failed
-            if (res.length === 0) {
-              // Delete new region
-              lD.layout.deleteElement(
-                'region',
-                res.data.regionPlaylist.regionId,
-              );
-            } else {
+          // If res is empty, it means that the import failed
+          if (res.length === 0) {
+            // Delete new region
+            lD.layout.deleteElement(
+              'region',
+              res.data.regionPlaylist.regionId,
+            );
+          } else {
             // Add media queue to playlist
-              lD.addMediaToPlaylist(playlistId, res);
-            }
-          });
+            lD.addMediaToPlaylist(playlistId, res);
+          }
         });
-      }
+      });
 
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
@@ -416,8 +397,15 @@ lD.selectObject =
       (target === null || target.data('type') === undefined) ?
         'layout' :
         target.data('type');
-      const newSelectedParentType =
-        (target === null) ? 'layout' : target.data('parentType');
+
+      const isInDrawer = function(target) {
+        if (target !== null) {
+          return (target.data('isInDrawer')) ||
+            (target.parent().data('subType') === 'drawer');
+        } else {
+          return false;
+        }
+      };
 
       const oldSelectedId = this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
@@ -433,7 +421,9 @@ lD.selectObject =
 
         case 'widget':
           if (this.selectedObject.drawerWidget) {
-            if (this.layout.drawer.widgets[this.selectedObject.id]) {
+            if (
+              this.layout.drawer.widgets[this.selectedObject.id]
+            ) {
               this.layout.drawer.widgets[this.selectedObject.id]
                 .selected = false;
             }
@@ -471,16 +461,17 @@ lD.selectObject =
           this.layout.regions[newSelectedId].selected = true;
           this.selectedObject = this.layout.regions[newSelectedId];
         } else if (newSelectedType === 'widget') {
-          if (newSelectedParentType === 'drawer') {
+          if (isInDrawer(target)) {
             this.layout.drawer.widgets[newSelectedId].selected = true;
             this.selectedObject = this.layout.drawer.widgets[newSelectedId];
           } else {
             this.layout.regions[target.data('widgetRegion')]
               .widgets[newSelectedId]
               .selected = true;
+
             this.selectedObject =
-              this.layout.regions[target.data('widgetRegion')]
-                .widgets[newSelectedId];
+                this.layout.regions[target.data('widgetRegion')]
+                  .widgets[newSelectedId];
           }
         }
 
@@ -522,12 +513,14 @@ lD.refreshEditor = function(
  * @param {object=} layout  - previous layout
  * @param {boolean} [refreshEditor=false] - refresh editor
  * @param {boolean} captureThumbnail - capture thumbnail
+ * @param {callBack} callBack - callback function
  * @return {Promise} - Promise
  */
 lD.reloadData = function(
   layout,
   refreshEditor = false,
   captureThumbnail = false,
+  callBack = null,
 ) {
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
@@ -565,6 +558,9 @@ lD.reloadData = function(
 
       // Refresh designer
       refreshEditor && lD.refreshEditor(true, true);
+
+      // Call callback function
+      callBack && callBack();
     } else {
       // Login Form needed?
       if (res.login) {
@@ -926,9 +922,7 @@ lD.deleteSelectedObject = function() {
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject[lD.selectedObject.type + 'Id'],
-      (lD.selectedObject.drawerWidget) ?
-        lD.layout.drawer.regionId :
-        lD.layout.regions[lD.selectedObject.regionId].regionId,
+      lD.layout.regions[lD.selectedObject.regionId].regionId,
     );
   }
 };
@@ -945,14 +939,9 @@ lD.deleteDraggedObject = function(draggable) {
   if (objectType === 'region') {
     objectId = lD.layout.regions[draggable.attr('id')].regionId;
   } else if (objectType === 'widget') {
-    if (draggable.data('parentType') == 'drawer') {
-      objectId = lD.layout.drawer.widgets[draggable.data('widgetId')].widgetId;
-      objectAuxId = lD.layout.drawer.regionId;
-    } else {
-      objectId = lD.layout.regions[draggable.data('widgetRegion')]
-        .widgets[draggable.data('widgetId')].widgetId;
-      objectAuxId = lD.layout.regions[draggable.data('widgetRegion')].regionId;
-    }
+    objectId = lD.layout.regions[draggable.data('widgetRegion')]
+      .widgets[draggable.data('widgetId')].widgetId;
+    objectAuxId = lD.layout.regions[draggable.data('widgetRegion')].regionId;
   }
 
   lD.deleteObject(objectType, objectId, objectAuxId);
@@ -1090,20 +1079,26 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
  * @param {object=} dropPosition - Position of the drop
  */
 lD.dropItemAdd = function(droppable, draggable, dropPosition) {
-  const droppableId = $(droppable).attr('id');
   const draggableType = $(draggable).data('type');
   const draggableSubType = $(draggable).data('subType');
   const draggableData = $(draggable).data();
   const draggableDataType = $(draggable).data('dataType');
+  const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
 
   /**
    * Import from provider or add media from library
    * @param {*} playlistId - Playlist id
    * @param {*} draggable - Dragged object
-   * @param {*} mediaId - Media id
+   * @param {string} mediaId - Media id
+   * @param {boolean} drawerWidget - Is a drawer widget
    * @return {Promise}
    */
-  const importOrAddMedia = function(playlistId, draggable, mediaId) {
+  const importOrAddMedia = function(
+    playlistId,
+    draggable,
+    mediaId,
+    drawerWidget = false,
+  ) {
     return new Promise((resolve, reject) => {
       if ($(draggable).hasClass('from-provider')) {
         lD.importFromProvider(
@@ -1113,73 +1108,109 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           if (res.length === 0) {
             reject(res);
           } else {
-            lD.addMediaToPlaylist(playlistId, res).then((_res) => {
-              resolve(_res);
-            });
+            lD.addMediaToPlaylist(playlistId, res, null, drawerWidget)
+              .then((_res) => {
+                resolve(_res);
+              });
           }
         });
       } else {
-        lD.addMediaToPlaylist(playlistId, mediaId).then((_res) => {
-          resolve(_res);
-        });
+        lD.addMediaToPlaylist(playlistId, mediaId, null, drawerWidget)
+          .then((_res) => {
+            resolve(_res);
+          });
       }
     });
   };
 
-  let playlistId;
-
   if (draggableType == 'media') {
+    // TODO If image, we need to chose if we want to create
+    // a canvas or frame region, for now we create a frame
+
     // Adding media
     const mediaId = $(draggable).data('mediaId');
 
-    if (droppableId == 'actions-drawer-content') {
-      // Add to drawer
-      playlistId = lD.layout.drawer.playlists.playlistId;
+    // Deselect cards and drop zones
+    lD.toolbar.deselectCardsAndDropZones();
 
-      importOrAddMedia(playlistId, draggable, mediaId).catch((_error) => {
-        // Delete new region
-        lD.layout.deleteElement('region', res.data.regionPlaylist.regionId);
-      });
+    // If droppable is a drawer, add the media to the playlist
+    if (droppableIsDrawer) {
+      importOrAddMedia(
+        lD.layout.drawer.playlists.playlistId,
+        draggable,
+        mediaId,
+        true,
+      );
     } else {
-      // TODO If image, we need to chose if we want to create
-      // a canvas or frame region, for now we create a frame
-
       // Add to layout, but create a new region
       lD.addRegion(dropPosition, 'frame').then((res) => {
-        // Deselect cards and drop zones
-        lD.toolbar.deselectCardsAndDropZones();
-
-        playlistId = res.data.regionPlaylist.playlistId;
-
         // Add media to new region
-        importOrAddMedia(playlistId, draggable, mediaId).catch((_error) => {
-          // Delete new region
+        importOrAddMedia(
+          res.data.regionPlaylist.playlistId,
+          draggable,
+          mediaId,
+        ).catch((_error) => {
+          // Delete new region if import failed
           lD.layout.deleteElement('region', res.data.regionPlaylist.regionId);
         });
       });
     }
+  } else if (draggableType == 'actions') {
+    // Get target type
+    const targetType = ($(droppable).hasClass('layout')) ?
+      'screen' :
+      $(droppable).data('type');
+
+    // Get target id
+    const targetId = $(droppable).data(targetType + 'Id');
+
+    let actionType = draggableSubType;
+
+    // If action type is nextWidget or nextLayout
+    // change to next
+    actionType =
+      (['nextWidget', 'nextLayout'].includes(draggableSubType)) ?
+        'next' :
+        actionType;
+
+    // If action type is previousWidget or previousLayout
+    // change to previous
+    actionType =
+      (['previousWidget', 'previousLayout'].includes(draggableSubType)) ?
+        'previous' :
+        actionType;
+
+    // Adding action
+    lD.addAction({
+      actionType: actionType,
+      layoutId: lD.layout.layoutId,
+      target: targetType,
+      targetId: targetId,
+    });
   } else {
     // Adding a module
-    if (droppableId == 'actions-drawer-content') {
-      // Add module to drawer
+    // Check if the module has data type, if not
+    // create a frame region
+    // or playlist
+    const regionType = (draggableSubType === 'playlist') ?
+      'playlist' :
+      ((draggableDataType) ? 'canvas' : 'frame');
+
+    // Deselect cards and drop zones
+    lD.toolbar.deselectCardsAndDropZones();
+
+    if (droppableIsDrawer) {
       lD.addModuleToPlaylist(
+        lD.layout.drawer.regionId,
         lD.layout.drawer.playlists.playlistId,
         draggableSubType,
         draggableData,
+        null,
+        true,
       );
     } else {
-      // Check if the module has data type, if not
-      // create a frame region
-      // or playlist
-      const regionType = (draggableSubType === 'playlist') ?
-        'playlist' :
-        ((draggableDataType) ? 'canvas' : 'frame');
-
       // Add module to layout, but create a region first
       lD.addRegion(dropPosition, regionType).then((res) => {
-        // Deselect cards and drop zones
-        lD.toolbar.deselectCardsAndDropZones();
-
         // Add module to new region if it's not a playlist
         if (regionType !== 'playlist') {
           lD.addModuleToPlaylist(
@@ -1212,10 +1243,16 @@ lD.getUploadDialogClassName = function() {
  * @param {string} moduleType
  * @param {object} moduleData
  * @param {number=} addToPosition
+ * @param {boolean} drawerWidget If the widget is in the drawer
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
-  regionId, playlistId, moduleType, moduleData, addToPosition = null,
+  regionId,
+  playlistId,
+  moduleType,
+  moduleData,
+  addToPosition = null,
+  drawerWidget = false,
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     const validExt = moduleData.validExt.replace(/,/g, '|');
@@ -1313,18 +1350,42 @@ lD.addModuleToPlaylist = function(
       // Append temporary object to the viewer
       $('<div>', {
         id: 'widget_' +
-         regionId +
-         '_' +
-         res.data.widgetId,
+        regionId +
+        '_' +
+        res.data.widgetId,
         data: {
           type: 'widget',
           parentType: 'region',
           widgetRegion: 'region_' + regionId,
+          isInDrawer: drawerWidget,
         },
       }).appendTo(lD.viewer.DOMObject);
 
-      // Reload data ( and viewer )
-      lD.reloadData(lD.layout, true);
+      if (!drawerWidget) {
+        // Reload data ( and viewer )
+        lD.reloadData(lD.layout, true);
+      } else {
+        const newWidgetId = res.data.widgetId;
+        // Reload data ( and viewer )
+        lD.reloadData(
+          lD.layout,
+          false,
+          false,
+          () => {
+            const $actionForm =
+              lD.propertiesPanel.DOMObject.find('.action-element-form');
+
+            lD.populateDropdownWithLayoutElements(
+              $actionForm.find('#widgetId'),
+              {
+                value: newWidgetId,
+                filters: ['drawerWidgets'],
+              },
+              $actionForm.data(),
+            );
+          },
+        );
+      }
 
       lD.common.hideLoadingScreen('addModuleToPlaylist');
     }).catch((error) => { // Fail/error
@@ -1355,9 +1416,15 @@ lD.addModuleToPlaylist = function(
  * @param {number} playlistId
  * @param {Array.<number>} media
  * @param {number=} addToPosition
+ * @param {boolean} drawerWidget If the widget is in the drawer
  * @return {Promise} Promise
  */
-lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
+lD.addMediaToPlaylist = function(
+  playlistId,
+  media,
+  addToPosition = null,
+  drawerWidget = false,
+) {
   // Get media Id
   let mediaToAdd = {};
 
@@ -1410,16 +1477,42 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
 
     // Append temporary object to the viewer
     $('<div>', {
-      id: 'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId,
+      id: 'widget_' +
+        res.data.regionId + '_' +
+        res.data.newWidgets[0].widgetId,
       data: {
         type: 'widget',
         parentType: 'region',
         widgetRegion: 'region_' + res.data.regionId,
+        isInDrawer: drawerWidget,
       },
     }).appendTo(lD.viewer.DOMObject);
 
-    // Reload data ( and viewer )
-    lD.reloadData(lD.layout, true);
+    if (!drawerWidget) {
+      // Reload data ( and viewer )
+      lD.reloadData(lD.layout, true);
+    } else {
+      const newWidgetId = res.data.newWidgets[0].widgetId;
+      // Reload data ( and viewer )
+      lD.reloadData(
+        lD.layout,
+        false,
+        false,
+        () => {
+          const $actionForm =
+            lD.propertiesPanel.DOMObject.find('.action-element-form');
+
+          lD.populateDropdownWithLayoutElements(
+            $actionForm.find('#widgetId'),
+            {
+              value: newWidgetId,
+              filters: ['drawerWidgets'],
+            },
+            $actionForm.data(),
+          );
+        },
+      );
+    }
 
     lD.common.hideLoadingScreen('addMediaToPlaylist');
   }).catch((error) => { // Fail/error
@@ -2139,6 +2232,32 @@ lD.loadPrefs = function() {
 };
 
 /**
+ * Check if element has specific target in data
+ * @param {object} element - Element to check
+ * @param {string[]} targetType - Target to check
+ * @return {boolean}
+ */
+lD.hasTarget = function(element, targetType) {
+  // Get target data
+  let targetData = $(element).data('target');
+
+  // If target type isn't an array, make it one
+  if (!Array.isArray(targetData)) {
+    targetData = targetData.split(' ');
+  }
+
+  // If target is 'all', return true
+  if (targetData.indexOf('all') !== -1) {
+    return true;
+  } else if (
+    targetData.indexOf(targetType) !== -1
+  ) {
+    return true;
+  }
+  return false;
+};
+
+/**
  * Save user preferences
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
@@ -2188,4 +2307,466 @@ lD.savePrefs = function(clearPrefs = false) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userSavePreferencesFailed);
   });
+};
+
+/**
+ * Create the drawer in the layout object
+ * @param {Object} data - the drawer data
+ * @return {Promise} - Promise object
+ */
+lD.initDrawer = function(data) {
+  const readOnlyModeOn =
+    (this.readOnlyMode != undefined && this.readOnlyMode === true);
+
+  // Check if the drawer is already created/added
+  if (!$.isEmptyObject(lD.layout.drawer)) {
+    return Promise.resolve('Drawer already created');
+  }
+
+  // If layout is published and the drawer doesn't exist, cancel request
+  if (readOnlyModeOn) {
+    return Promise.reject('Layout is published');
+  }
+
+  if (data == undefined) {
+    // Create a new drawer
+    const linkToAPI = urlsForApi.layout.addDrawer;
+    let requestPath = linkToAPI.url;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.layoutId);
+
+    $.ajax({
+      url: requestPath,
+      type: linkToAPI.type,
+    }).done(function(res) {
+      if (res.success) {
+        toastr.success(res.message);
+
+        // Create drawer in the layout object
+        lD.layout.createDrawer(res.data);
+      } else {
+        // Login Form needed?
+        if (res.login) {
+          window.location.href = window.location.href;
+          location.reload(false);
+        } else {
+          toastr.error(res.message);
+        }
+
+        lD.common.hideLoadingScreen();
+      }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      lD.common.hideLoadingScreen();
+
+      // Output error to console
+      console.error(jqXHR, textStatus, errorThrown);
+    });
+  }
+};
+
+/**
+ * Add action
+ * @param {object} options - Options for the action
+ * @return {boolean} false if unsuccessful
+  */
+lD.addAction = function(options) {
+  const self = this;
+
+  $.ajax({
+    url: urlsForApi.actions.add.url,
+    type: urlsForApi.actions.add.type,
+    data: {
+      actionType: options.actionType,
+      layoutId: options.layoutId,
+      target: options.target,
+      targetId: options.targetId,
+    },
+  }).done(function(_res) {
+    // Render the action tab
+    self.propertiesPanel.renderActionTab(
+      self.selectedObject,
+      {
+        clearPrevious: true,
+        selectAfterRender: true,
+        openEditActionAfterRender: _res?.data?.actionId,
+      },
+    );
+  }).fail(function(_data) {
+    toastr.error(
+      errorMessagesTrans.deleteFailed,
+      errorMessagesTrans.error,
+    );
+  });
+
+  return true;
+};
+
+/**
+ * Save action
+ * @param {object} action - Action to save
+ * @param {object} form - Form to get data from
+ * @return {boolean} false if unsuccessful
+ */
+lD.saveAction = function(action, form) {
+  const actionData = action.data();
+  const self = this;
+  const requestURL = urlsForApi.actions.edit.url.replace(
+    ':id',
+    actionData.actionId,
+  );
+
+  $.ajax({
+    url: requestURL,
+    type: urlsForApi.actions.edit.type,
+    data: $(form).serialize(),
+  }).done(function(_res) {
+    if (_res.success) {
+      // Hide error message
+      $(form).find('.error-message').hide();
+
+      const $hiddenAction =
+        $(form).parent().find('.action-element.hidden');
+      // Close edit form and open action
+      self.propertiesPanel.closeEditAction(
+        $(form),
+        $hiddenAction,
+      );
+
+      // Add new action ( to replace old one )
+      self.propertiesPanel.addActionToContainer(
+        _res.data,
+        lD.selectObject,
+        self.propertiesPanel.DOMObject.find('.element-actions'),
+        self.propertiesPanel.DOMObject.find('.other-actions'),
+        $hiddenAction,
+      );
+    } else {
+      // Add message to form
+      $(form).find('.error-message').html(_res.message).show();
+    }
+  }).fail(function(_data) {
+    // Show error message on console
+    toastr.error(
+      errorMessagesTrans.deleteFailed,
+      errorMessagesTrans.error,
+    );
+  });
+
+  return false;
+};
+
+/**
+ * Delete action
+ * @param {object} action
+  */
+lD.deleteAction = function(action) {
+  // Show confirmation modal
+  const $modal = $(confirmationModalTemplate(
+    {
+      title: editorsTrans.actions.deleteModal.title,
+      message: editorsTrans.actions.deleteModal.message,
+      buttons: {
+        cancel: {
+          label: editorsTrans.actions.deleteModal.buttons.cancel,
+          class: 'btn-default cancel',
+        },
+        delete: {
+          label: editorsTrans.actions.deleteModal.buttons.delete,
+          class: 'btn-danger confirm',
+        },
+      },
+    },
+  ));
+
+  const removeModal = function() {
+    $modal.modal('hide');
+    // Remove modal
+    $modal.remove();
+
+    // Remove backdrop
+    $('.modal-backdrop.show').remove();
+  };
+
+  // Add modal to the DOM
+  this.editorContainer.append($modal);
+
+  // Show modal
+  $modal.modal('show');
+
+  // Confirm button
+  $modal.find('button.confirm').on('click', function() {
+    const actionData = action.data();
+    const requestURL = urlsForApi.actions.delete.url.replace(
+      ':id',
+      actionData.actionId,
+    );
+
+    $.ajax({
+      url: requestURL,
+      type: urlsForApi.actions.delete.type,
+    }).done(function(_res) {
+      const $actionParent = $(action).parent();
+
+      // Delete action from the form
+      $(action).remove();
+
+      // Check if there are any actions left in the container
+      // and if not, show the "no actions" message
+      if ($actionParent.find('.action-element').length == 0) {
+        $actionParent.append(
+          $('<div />').addClass('text-center no-actions').text(
+            propertiesPanelTrans.actions.noActionsToShow,
+          ),
+        );
+      }
+
+      // Remove modal
+      removeModal();
+    }).fail(function(_data) {
+      toastr.error(
+        errorMessagesTrans.replace('%error%', _data.message),
+        errorMessagesTrans.error,
+      );
+    });
+  });
+
+  // Cancel button
+  $modal.find('button.cancel').on('click', removeModal);
+};
+
+/**
+ * Populate dropdown with layout elements
+ * @param {object} $dropdown - Dropdown to populate
+ * @param {object} Options.$typeInput - Input type to be updated
+ * @param {string} Options.value - Initial value for the input
+ * @param {string[]} Options.filters - Types to be included
+ * @param {object} actionData - Data for the action
+ * @return {boolean} false if unsuccessful
+ */
+lD.populateDropdownWithLayoutElements = function(
+  $dropdown,
+  {
+    $typeInput = null,
+    value = null,
+    filters = ['layout', 'regions', 'widgets'],
+  } = {},
+  actionData = null,
+) {
+  const getRegions = filters.indexOf('regions') !== -1;
+  const getWidgets = filters.indexOf('widgets') !== -1;
+  const getLayouts = filters.indexOf('layout') !== -1;
+  const getDrawerWidgets = filters.indexOf('drawerWidgets') !== -1;
+
+  const addGroupToDropdown = function(groupName) {
+    // Add group to dropdown
+    const $group = $('<optgroup/>', {
+      label: groupName,
+    });
+
+    // Add group to dropdown
+    $dropdown.append($group);
+  };
+
+  const addElementToDropdown = function(element) {
+    // Create option
+    const $option = $('<option/>', {
+      value: element.id,
+      text: element.name + ' (' + element.id + ')',
+      'data-type': element.type,
+    });
+
+    // Add to dropdown
+    $dropdown.append($option);
+  };
+
+  // Update type value
+  const updateTypeValue = function() {
+    // If input is target, and widgetId has value
+    // then update the widget drawer edit element
+    const $widgetIDInput = ($typeInput) ?
+      $typeInput.parents('form').find('#widgetId') : null;
+
+    // If there's no typeInput, stop
+    if (!$typeInput) {
+      return;
+    }
+
+    let typeInputValue = $dropdown.find(':selected').data('type');
+
+    if (
+      $typeInput.attr('id') === 'target' &&
+      $widgetIDInput.length > 0 &&
+      $widgetIDInput.val() != ''
+    ) {
+      // Update targetId and target
+      actionData.targetId = $dropdown.val();
+      actionData.target = typeInputValue;
+
+      // Call update widget drawer edit element
+      handleEditWidget($widgetIDInput.val());
+    }
+
+    // For target, if target is layout, change it to screen
+    if ($typeInput.attr('id') === 'target' && typeInputValue === 'layout') {
+      typeInputValue = 'screen';
+    }
+
+    // Update type value
+    $typeInput.val(typeInputValue);
+  };
+
+  // Update highlight on viewer
+  const updateHighlightOnViewer = function() {
+    $typeInput && (actionData[$typeInput.attr('id')] = $typeInput.val());
+    actionData[$dropdown.attr('id')] = $dropdown.val();
+
+    lD.viewer.createActionHighlights(actionData, 1);
+  };
+
+  // Open or edit drawer widget
+  const handleEditWidget = function(dropdownValue) {
+    if (dropdownValue === 'create') {
+      // Create new
+      lD.viewer.addActionEditArea(actionData, 'create');
+    } else if (dropdownValue != '') {
+      // Update action widget data
+      actionData.widgetId = dropdownValue;
+
+      // Edit existing
+      lD.viewer.addActionEditArea(actionData, 'edit');
+    } else {
+      // Remove edit area
+      lD.viewer.removeActionEditArea();
+    }
+  };
+
+  // Layout
+  if (getLayouts) {
+    // Layout group
+    addGroupToDropdown(
+      editorsTrans.actions.layouts,
+    );
+
+    addElementToDropdown({
+      id: lD.layout.layoutId,
+      name: lD.layout.name,
+      type: 'layout',
+    });
+  }
+
+  // Regions
+  const widgets = [];
+  // Region group
+  if (getRegions) {
+    addGroupToDropdown(
+      editorsTrans.actions.regions,
+    );
+  }
+
+  // Get regions and/or widgets
+  if (getRegions || getWidgets) {
+    for (const region of Object.values(lD.layout.regions)) {
+      if (getRegions && region.isPlaylist === false) {
+        addElementToDropdown({
+          id: region.regionId,
+          name: region.name,
+          type: 'region',
+        });
+      }
+
+      // Save widgets
+      for (const widget of Object.values(region.widgets)) {
+        if (getWidgets && region.isPlaylist === false) {
+          widgets.push({
+            id: widget.widgetId,
+            name: widget.widgetName,
+            type: 'widget',
+          });
+        }
+      }
+    }
+  }
+
+  // Add widgets to dropdown
+  if (getWidgets) {
+    // Widget group
+    addGroupToDropdown(
+      editorsTrans.actions.widgets,
+    );
+
+    // Add widgets to dropdown
+    for (const widget of widgets) {
+      addElementToDropdown(widget);
+    }
+  }
+
+  // Add drawer widgets to dropdown
+  if (getDrawerWidgets) {
+    // Add widgets to dropdown
+    for (const widget of Object.values(lD.layout.drawer.widgets)) {
+      addElementToDropdown({
+        id: widget.widgetId,
+        name: widget.widgetName,
+        type: 'widget',
+      });
+    }
+  }
+
+
+  // Set initial value if provided
+  if (value !== null) {
+    $dropdown.val(value);
+    updateTypeValue();
+
+    if (getDrawerWidgets) {
+      handleEditWidget($dropdown.val());
+    }
+  }
+
+  // Handle dropdown change
+  // and update type
+  $dropdown.on('change', function() {
+    if (getDrawerWidgets) {
+      // Open/edit widget
+      handleEditWidget($dropdown.val());
+    } else {
+      // Update type and highlight
+      updateTypeValue();
+      updateHighlightOnViewer();
+    }
+  });
+
+  return true;
+};
+
+/**
+ * Edit drawer widget
+ * @param {object} actionData - Data for the action
+ */
+lD.editDrawerWidget = function(actionData) {
+  // 1. Detach actions form to a temporary container or body
+  lD.propertiesPanel.detachActionsForm();
+
+  // 2. Open property panel with drawer widget
+  const widget = lD.getElementByTypeAndId(
+    'widget',
+    'widget_' + lD.layout.drawer.regionId + '_' + actionData.widgetId,
+    'drawer',
+  );
+
+  // 3. Select widget
+  const $widgetInViewer = lD.viewer.DOMObject
+    .find('#widget_' + lD.layout.drawer.regionId + '_' + actionData.widgetId);
+
+  lD.selectObject({
+    target: $widgetInViewer,
+    forceSelect: true,
+  });
+
+  // Select element in viewer
+  lD.viewer.selectElement($widgetInViewer);
+
+  // 4. Open property panel with drawer widget
+  lD.propertiesPanel.render(widget, undefined, true);
 };

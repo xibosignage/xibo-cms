@@ -12,9 +12,9 @@
     </span>
 </div>
 
-{{#if widget}}
+{{#ifCond widget.widgetName '||' widget.moduleName}}
     <i class="fas fa-arrow-right align-middle"></i>
     <span class="label-name align-middle d-inline-block">
         "{{widget.widgetName}}" ({{widget.moduleName}})
     </span>
-{{/if}}
+{{/ifCond}}

@@ -367,6 +367,31 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-user-secret;
 }
 
+/* Actions icons */
+.actions-icon-navLayout {
+    @extend .fa-desktop;
+}
+
+.actions-icon-navWidget {
+    @extend .fa-square-o;
+}
+
+.actions-icon-nextWidget {
+    @extend .fa-caret-square-o-right;
+}
+
+.actions-icon-previousWidget {
+    @extend .fa-caret-square-o-left;
+}
+
+.actions-icon-nextLayout {
+    @extend .fa-arrow-circle-right;
+}
+
+.actions-icon-previousLayout {
+    @extend .fa-arrow-circle-left;
+}
+
 /* Form icons */
 .bg_not_found_icon {
     @extend .fa-exclamation-triangle;

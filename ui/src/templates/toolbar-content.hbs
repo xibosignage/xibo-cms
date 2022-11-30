@@ -20,29 +20,29 @@
         <div class="toolbar-pane-container">
             <div class="toolbar-pane-content">
                 {{!-- Show content elements if not marked as hidden --}}
-                {{#if content.modulesFav}}
+                {{#if content.elementsFavs}}
                     <div class="toolbar-header">{{trans.favourites}}</div>
                 {{/if}}
-                {{#each content.modulesFav}}
+                {{#each content.elementsFavs}}
                     {{#unless hideElement}}
                         {{!-- Load cards according to type searchItem/Widget --}}
-                        {{> toolbar-card trans=../trans}}
+                        {{> toolbar-card contentType=../name trans=../trans icon=../iconType}}
                     {{/unless}}
                 {{/each}}
 
-                {{#if content.modules}}
-                    <div class="toolbar-header">{{trans.widgets}}</div>
+                {{#if content.elements}}
+                    <div class="toolbar-header">{{content.contentHeader}}</div>
                 {{/if}}
-                {{#each content.modules}}
+                {{#each content.elements}}
                     {{#unless hideElement}}
                         {{!-- Load cards according to type searchItem/Widget --}}
-                        {{> toolbar-card trans=../trans}}
+                        {{> toolbar-card contentType=../name trans=../trans icon=../iconType}}
                     {{/unless}}
                 {{/each}}
 
-                {{#unless content.modulesFav}}
-                    {{#unless content.modules}}
-                        <div class="no-results-message">{{ trans.noWidgetsToShow }}</div>
+                {{#unless content.elementsFavs}}
+                    {{#unless content.elements}}
+                        <div class="no-results-message">{{ content.noElementsToShow }}</div>
                     {{/unless}}
                 {{/unless}}
             </div>

@@ -38,18 +38,33 @@ module.exports = {
      * Refresh (enable/disable) Tooltips
      * @param {object} container - Container object
      * @param {boolean} forcedOption - Force option
+     * @param {object =} [options] - Options
+     * @param {object/boolean} [options.forcedOption = null] - Force option
+     * @param {object/string=} [options.placement = 'auto']
      */
-  reloadTooltips: function(container, forcedOption = null) {
+  reloadTooltips: function(
+    container,
+    {
+      forcedOption = null,
+      placement = 'auto',
+    } = {},
+  ) {
     // Use global var or option
     const enableTooltips =
       (forcedOption != null) ? forcedOption : this.displayTooltips;
 
-    container.tooltip('dispose').tooltip({
+    const tooltipSelector = (enableTooltips) ?
+      '[data-toggle="tooltip"]:not(:disabled)' :
+      '[data-toggle="tooltip"].tooltip-always-on:not(:disabled)';
+
+    // Disable all tooltips first
+    $(container).find('[data-toggle="tooltip"]').tooltip('dispose');
+
+    // Enable tooltips by selector
+    $(container).find(tooltipSelector).tooltip({
       boundary: 'window',
       trigger: 'hover',
-      selector: (enableTooltips) ?
-        '[data-toggle="tooltip"]:not(:disabled)' :
-        '[data-toggle="tooltip"].tooltip-always-on:not(:disabled)',
+      placement: placement,
     });
 
     // Remove rogue/detached tooltips

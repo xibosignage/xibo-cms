@@ -732,6 +732,9 @@ Layout.prototype.createDrawer = function(drawerData) {
     left: drawerData.left,
   };
 
+  // Set flag as drawer
+  newDrawer.isDrawer = true;
+
   // Push Region to the Layout region array
   this.drawer = newDrawer;
 };

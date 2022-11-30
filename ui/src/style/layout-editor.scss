@@ -400,6 +400,48 @@
                 height: 100%;
             }
         }
+
+        .designer-region-drawer {
+            &::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                outline: 3px dashed $xibo-color-neutral-100;
+            }
+
+            &[data-target="region"] {
+                margin: 12px 0 0 12px;
+            }
+
+            .action-label {
+                @include set-transparent-color(background-color, $xibo-color-action-target, 0.8);
+                color: $xibo-color-neutral-0;
+                font-weight: bold;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            &.ui-droppable-active {
+                @include z-index-set($designer-z-index-select);
+
+                .action-label {
+                    @include set-transparent-color(background-color, $xibo-color-action-target, 0.9);
+                }
+
+                &.ui-droppable-hover,
+                &:hover {
+                    .action-label {
+                        @include set-transparent-color(background-color, $xibo-color-action-target, 1.0);
+                    }
+                }
+            }
+        }
     }
 
     /* Viewer fullscreen */
@@ -524,7 +566,11 @@
         }
     }
 
-    #properties-panel-container {
+    &.action-edit-mode #properties-panel-form-container {
+        background-color: $xibo-color-action-target-light;
+    }
+
+    #properties-panel-form-container {
         background: $xibo-color-neutral-0;
         position: relative;
         height: 100%;
@@ -729,22 +775,6 @@
                     }
                 }
 
-                #actions_wrapper {
-                    .row>div {
-                        padding: 0;
-
-                        .table th,
-                        .table td {
-                            padding: 0.5rem;
-                        }
-                    }
-
-                    .row:nth-of-type(3)>div {
-                        flex: 0 0 100% !important;
-                        max-width: 100% !important;
-                    }
-                }
-
                 #zonesContainer {
 
                     .structure,
@@ -861,6 +891,7 @@
     .designer-widget {
         width: 100%;
         height: 100%;
+        overflow: hidden;
 
         &.selected {
             outline: 1px solid $xibo-color-neutral-100;
@@ -887,7 +918,7 @@
     #layout-viewer {
         .designer-region.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $xibo-color-region-hover  !important;
+            background: $xibo-color-region-hover !important;
 
             &.ui-droppable-hover,
             &:hover {
@@ -901,7 +932,7 @@
 
         .widget-preview.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $xibo-color-widget-hover  !important;
+            background: $xibo-color-widget-hover !important;
             width: 100%;
             height: 100%;
 
@@ -917,11 +948,91 @@
 
         .layout.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
+            background: $xibo-color-layout-hover !important;
+
+            &.ui-droppable-hover,
+            &:hover {
+                background: darken($xibo-color-layout-hover, 20%) !important;
+            }
         }
 
         &.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
             position: relative;
+        }
+
+        /** Actions */
+        .designer-widget, .designer-region, .widget-preview, .layout {
+            /* Droppable */
+            &.ui-droppable-active.ui-droppable-actions-target {
+                background: $xibo-color-action-target !important;
+
+                &.ui-droppable-hover,
+                &:hover {
+                    background: darken($xibo-color-action-target, 20%) !important;
+                }
+            }
+            &.ui-droppable-active.ui-droppable-actions-trigger {
+                background: $xibo-color-action-trigger !important;
+        
+                &.ui-droppable-hover,
+                &:hover {
+                    background: darken($xibo-color-action-trigger, 20%) !important;
+                }
+            }
+            /* Target highlight */
+            &.action-highlight {
+                &::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    outline-style: solid;
+                    outline-offset: 1px;
+                    opacity: 0.6;
+                }
+
+                &.designer-widget::before {
+                    width: calc(100% - 14px);
+                    height: calc(100% - 14px);
+                    top: 7px;
+                    left: 7px;
+                }
+
+                &.action-highlight-target {
+                    &::before {
+                        outline-color: $xibo-color-action-target;
+                        background-color: $xibo-color-action-target;
+                    }
+                }
+
+                &.action-highlight-trigger {
+                    &::before {
+                        outline-color: $xibo-color-action-trigger;
+                        background-color: $xibo-color-action-trigger;
+                    }
+                }
+
+                &.action-highlight-target.action-highlight-trigger {
+                    &::before {
+                        background: linear-gradient(to bottom right, $xibo-color-action-trigger calc(50% - 2px), $xibo-color-action-target calc(50% + 2px));
+                    }
+                }
+
+                &.highlight-0 {
+                    &::before {
+                        opacity: 0.6;
+                    }
+                }
+
+                &.highlight-1 {
+                    &::before {
+                        opacity: 0.8;
+                    }
+                }
+            }
         }
     }
 
@@ -1049,4 +1160,157 @@
 
 div#bg_not_found_icon {
     width: 60%;
+}
+
+#actionsTab {
+    .header {
+        margin-left: 0;
+        font-size: 16px;
+        color: #121A5E;
+    }
+
+    .no-actions {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 16px 2px;
+        border: 2px dashed #CECECE;
+        border-radius: 4px;
+        margin: 8px 0;
+    }
+
+    .action-element {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        padding: 0px;
+        gap: 3px;
+        margin: 8px 0;
+
+        & > div {
+            border-radius: 4px;
+            flex: 1;
+            padding: 6px;
+            font-size: 12px;
+
+            & > div:not(.element-header) {
+                padding: 6px;
+                border-radius: 2px;
+            }
+        }
+
+        .element-header {
+            font-size: 16px;
+        }
+
+        .type {
+            margin-bottom: 3px;
+        }
+
+        .action-element-trigger {
+            background: $xibo-color-action-trigger;
+            order: 0;
+
+            & > div:not(.element-header) {
+                background: $xibo-color-action-trigger-light;
+            }
+        }
+
+        .action-element-target {
+            background: $xibo-color-action-target;
+            order: 1;
+
+            & > div:not(.element-header) {
+                background: $xibo-color-action-target-light;
+            }
+        }
+
+        .not-defined {
+            opacity: 0.8;
+            margin-bottom: 3px;
+        }
+
+        .highlight {
+            .element-header, .target {
+                font-weight: bold;
+            }
+        }
+
+        .edit-hover-menu {
+            display: none;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 1;
+            padding: 6px;
+            margin: 0;
+            @include set-transparent-color(background, $xibo-color-neutral-1000, 0.6);
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+
+            .btn {
+                flex-grow: 1;
+                font-size: 16px;
+                padding: 6px;
+                border-radius: 4px;
+                color: $xibo-color-neutral-0;
+                background-color: $xibo-color-primary;
+                margin: 0;
+                border: 0;
+                box-shadow: none;
+                transition: none;
+                cursor: pointer;
+
+                &:hover {
+                    background-color: darken($xibo-color-primary, 10%);
+                }
+
+                &[data-action="delete"] {
+                    background-color: $xibo-color-semantic-error;
+
+                    &:hover {
+                        background-color: darken($xibo-color-semantic-error, 10%);
+                    }
+                }
+            }
+        }
+
+        &:hover {
+            .edit-hover-menu {
+                display: flex;
+            }
+        }
+    }
+
+    .action-element-form {
+        margin: 8px 0;
+        padding: 8px;
+        background: #FCFCFC;
+        border: 2px solid #E9E9E9;
+        border-radius: 4px;
+
+        .xibo-form-input .header {
+            font-size: 20px;
+            font-weight: bold;
+            color: $xibo-color-secondary;
+        }
+
+        .action-element-form-trigger .form-control {
+            border-color: $xibo-color-action-trigger;
+            background-color: $xibo-color-action-trigger-light;
+        }
+
+        .action-element-form-target .form-control {
+            border-color: $xibo-color-action-target;
+            background-color: $xibo-color-action-target-light;
+        }
+
+        .error-message {
+            display: none;
+        }
+    }
 }

@@ -75,11 +75,15 @@
                     <span class="label-name align-middle d-inline-block">
                         "{{regionName}}"
                     </span>
-                    <i class="fas fa-arrow-right align-middle"></i>
+                    {{#ifCond element.widgetName '||' element.moduleName}}
+                        <i class="fas fa-arrow-right align-middle"></i>
+                    {{/ifCond}}
                 {{/if}}
-                <span class="label-name align-middle d-inline-block">
-                    "{{element.widgetName}}" ({{element.moduleName}})
-                </span>
+                {{#ifCond element.widgetName '||' element.moduleName}}
+                    <span class="label-name align-middle d-inline-block">
+                        {{#if element.widgetName}}"{{element.widgetName}}"{{/if}} {{#if element.moduleName}}({{element.moduleName}}){{/if}}
+                    </span>
+                {{/ifCond}}
             </div>
         {{else}}
             <div class="info d-inline">

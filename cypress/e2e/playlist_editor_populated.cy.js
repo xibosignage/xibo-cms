@@ -36,14 +36,14 @@ describe('Playlist Editor (Populated)', function() {
         cy.wait('@reloadWidget');
 
         // Type the new name in the input
-        cy.get('#properties-panel-container input[name="name"]').clear().type('newName');
+        cy.get('#properties-panel-form-container input[name="name"]').clear().type('newName');
 
         // Set a duration
-        cy.get('#properties-panel-container #useDuration').check();
-        cy.get('#properties-panel-container input[name="duration"]').clear().type(12);
+        cy.get('#properties-panel-form-container #useDuration').check();
+        cy.get('#properties-panel-form-container input[name="duration"]').clear().type(12);
 
         // Save form
-        cy.get('#properties-panel-container button[data-action="save"]').click();
+        cy.get('#properties-panel-form-container button[data-action="save"]').click();
 
         // Should show a notification for the name change
         cy.get('.toast-success');
@@ -52,8 +52,8 @@ describe('Playlist Editor (Populated)', function() {
         cy.wait('@reloadWidget');
 
         // Check if the values are the same entered after reload
-        cy.get('#properties-panel-container input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
-        cy.get('#properties-panel-container input[name="duration"]').should('have.attr', 'value').and('equal', '12');
+        cy.get('#properties-panel-form-container input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
+        cy.get('#properties-panel-form-container input[name="duration"]').should('have.attr', 'value').and('equal', '12');
 
     });
 
@@ -73,16 +73,16 @@ describe('Playlist Editor (Populated)', function() {
         cy.wait('@reloadWidget');
 
         // Get the input field
-        cy.get('#properties-panel-container input[name="name"]').then(($input) => {
+        cy.get('#properties-panel-form-container input[name="name"]').then(($input) => {
 
             // Save old name
             oldName = $input.val();
 
             //Type the new name in the input
-            cy.get('#properties-panel-container input[name="name"]').clear().type('newName');
+            cy.get('#properties-panel-form-container input[name="name"]').clear().type('newName');
 
             // Save form
-            cy.get('#properties-panel-container button[data-action="save"]').click();
+            cy.get('#properties-panel-form-container button[data-action="save"]').click();
 
             // Should show a notification for the name change
             cy.get('.toast-success');
@@ -97,7 +97,7 @@ describe('Playlist Editor (Populated)', function() {
             cy.wait('@saveWidget');
 
             // Test if the revert made the name go back to the old name
-            cy.get('#properties-panel-container input[name="name"]').should('have.attr', 'value').and('equal', oldName);
+            cy.get('#properties-panel-form-container input[name="name"]').should('have.attr', 'value').and('equal', oldName);
         });
     });
 

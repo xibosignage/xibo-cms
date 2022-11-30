@@ -104,12 +104,6 @@ Topbar.prototype.render = function() {
       .toggle(activeDropdown);
   }
 
-  // Jump to actions
-  this.DOMObject.find('.layout-info-actions').off().click(function() {
-    lD.propertiesPanel.openTabOnRender = 'a[href="#actionTab"]';
-    lD.selectObject();
-  });
-
   // Set layout jumpList if exists
   if (!$.isEmptyObject(this.jumpList) && $('#layoutJumpList').length == 0) {
     this.setupJumpList($('#layoutJumpListContainer'));

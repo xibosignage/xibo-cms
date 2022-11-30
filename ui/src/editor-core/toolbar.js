@@ -33,6 +33,7 @@ const Toolbar = function(
 
   this.widgetMenuIndex = 0;
   this.libraryMenuIndex = 4;
+  this.actionMenuIndex = 5;
 
   this.selectedCard = {};
 
@@ -127,6 +128,52 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     });
   });
 
+  // Actions
+  this.interactiveList = [
+    {
+      name: toolbarTrans.interactive.actions.navWidget,
+      icon: 'fa fa-arrows-alt',
+      type: 'navWidget',
+      target: '["frame"]',
+      dataType: '',
+    },
+    {
+      name: toolbarTrans.interactive.actions.navLayout,
+      icon: 'fa fa-arrows-alt',
+      type: 'navLayout',
+      target: '["layout"]',
+      dataType: '',
+    },
+    {
+      name: toolbarTrans.interactive.actions.nextWidget,
+      icon: 'fa-arrow-right-alt',
+      type: 'nextWidget',
+      target: '["playlist"]',
+      dataType: '',
+    },
+    {
+      name: toolbarTrans.interactive.actions.previousWidget,
+      icon: 'fa-arrow-left-alt',
+      type: 'previousWidget',
+      target: '["playlist"]',
+      dataType: '',
+    },
+    {
+      name: toolbarTrans.interactive.actions.nextLayout,
+      icon: 'fa-arrow-right',
+      type: 'nextLayout',
+      target: '["layout"]',
+      dataType: '',
+    },
+    {
+      name: toolbarTrans.interactive.actions.previousLayout,
+      icon: 'fa-arrow-left',
+      type: 'previousLayout',
+      target: '["layout"]',
+      dataType: '',
+    },
+  ];
+
   this.defaultFilters = {
     name: {
       value: '',
@@ -151,6 +198,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   const defaultMenuItems = [
     {
       name: 'widgets',
+      iconType: 'module',
       itemName: toolbarTrans.menuItems.widgetsName,
       itemTitle: toolbarTrans.menuItems.widgetsTitle,
       itemIcon: 'th-large',
@@ -277,6 +325,21 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         provider: {
           value: 'both',
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'actions',
+      iconType: 'actions',
+      itemName: toolbarTrans.menuItems.actionsName,
+      itemIcon: 'paper-plane',
+      itemTitle: toolbarTrans.menuItems.actionsTitle,
+      content: [],
+      filters: {
+        name: {
+          value: '',
         },
       },
       state: '',
@@ -587,8 +650,35 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
 
     // Add elements to menu content
     this.menuItems[menu].content = {
-      modulesFav: favouriteModules,
-      modules: otherModules,
+      elementsFavs: favouriteModules,
+      elements: otherModules,
+      contentHeader: toolbarTrans.widgets,
+      noElementsToShow: toolbarTrans.noWidgetsToShow,
+    };
+  } else if (this.menuItems[menu].name === 'actions') {
+    const actionsFiltered = [];
+
+    for (let index = 0; index < this.interactiveList.length; index++) {
+      const element = this.interactiveList[index];
+
+      // Filter elements
+      if (
+        this.menuItems[menu].filters.name.value &&
+        !element.name.toLowerCase().includes(
+          this.menuItems[menu].filters.name.value.toLowerCase(),
+        )
+      ) {
+        continue;
+      }
+
+      actionsFiltered.push(element);
+    }
+
+    // Add elements to menu content
+    this.menuItems[menu].content = {
+      elements: actionsFiltered,
+      contentHeader: toolbarTrans.actions,
+      noElementsToShow: toolbarTrans.noActionsToShow,
     };
   }
 
@@ -623,7 +713,8 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
   // ( if force reload is true, skip this step)
   if (
     !forceReload &&
-    menu > self.widgetMenuIndex &&
+    menu != self.widgetMenuIndex &&
+    menu != self.actionMenuIndex &&
     self.DOMObject
       .find(
         '#content-' +
@@ -753,10 +844,6 @@ Toolbar.prototype.selectCard = function(card) {
   const previouslySelected = this.selectedCard.mainObjectType;
 
   if (!previouslySelected || previouslySelected[0] != card[0]) {
-    // Get card info
-    const dropTo = $(card).attr('drop-to');
-    const subType = $(card).attr('data-sub-type');
-
     // Select new card
     $(card).addClass('card-selected');
     $(card).parents('.toolbar-pane-content').addClass('selected');
@@ -771,42 +858,62 @@ Toolbar.prototype.selectCard = function(card) {
     });
 
     // Handle droppables
-    this.handleDroppables(dropTo, subType);
+    // For actions, add an extra class
+    this.handleDroppables(
+      $(card),
+      $(card).data('type') == 'actions' ?
+        'ui-droppable-active ui-droppable-actions-target' : '',
+    );
   }
 };
 
 /**
  * Handle droppables
- * @param {object} type - Type of droppable
- * @param {object} subType - subType of droppable
+ * @param {object} draggable - draggable object
+ * @param {string} customClasses - custom classes to add to droppable
  */
-Toolbar.prototype.handleDroppables = function(type, subType) {
+Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
+  // Get draggable info
+  const draggableType = $(draggable).data('subType');
+
   // Set droppable areas as active
-  if (type === 'all' && subType === 'permissions') {
-    $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
+  if (lD.hasTarget(draggable, 'all') && draggableType === 'permissions') {
+    $('.droppable.permissionsModifiable').addClass('ui-droppable-active');
   } else {
     let selectorAppend = '';
+    let selectorBuild = [];
 
     // Prevent adding audio to subplaylist
-    if (subType == 'audio') {
+    if (draggableType == 'audio') {
       selectorAppend += ':not([data-widget-type="subplaylist"])';
     }
 
-    // Prevent adding subplaylist to drawer
-    if (subType == 'subplaylist') {
-      selectorAppend += ':not(#actions-drawer-content)';
+    if (lD.hasTarget(draggable, 'layout')) {
+      // Drop to layout wrapper and layout
+      selectorBuild.push('.layout-wrapper.droppable');
+      selectorBuild.push('.layout.droppable');
+    } else if (lD.hasTarget(draggable, 'widget')) {
+      // Drop to widget
+      selectorBuild.push('.designer-widget.droppable');
+    } else if (lD.hasTarget(draggable, 'frame')) {
+      // Drop to region
+      selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
+    } else if (lD.hasTarget(draggable, 'playlist')) {
+      // Drop to playlist
+      selectorBuild.push('.designer-region-playlist.droppable');
+
+      // Drop to playlist timeline
+      selectorBuild.push('#playlist-timeline.droppable');
     }
 
-    // Drop to layout wrapper
-    $('.layout-wrapper.droppable').addClass('ui-droppable-active');
+    // Add droppable class to all selectors
+    selectorBuild = selectorBuild.map((selector) => {
+      return selector + selectorAppend;
+    });
 
-    // Drop to layout only, for now
-    $('.layout.droppable' +
-      selectorAppend).addClass('ui-droppable-active');
-
-    // Playlist timeline droppable
-    $('#playlist-timeline.ui-droppable' +
-      selectorAppend).addClass('ui-droppable-active');
+    // Add droppable ( or custom ) class to all selectors
+    $(selectorBuild.join(', ')).addClass(
+      (customClasses != '') ? customClasses : 'ui-droppable-active');
   }
 };
 
@@ -832,7 +939,7 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
   this.DOMObject.find('.toolbar-pane-content').removeData('mediaQueue');
 
   // Remove drop class from droppable elements
-  $('.ui-droppable').removeClass('ui-droppable-active');
+  $('.ui-droppable, .droppable').removeClass('ui-droppable-active');
 
   // Disable multi-select mode
   if (app.editorContainer.hasClass('multi-select')) {
@@ -1132,7 +1239,7 @@ Toolbar.prototype.toggleFavourite = function(target) {
     this.menuItems[this.widgetMenuIndex].favouriteModules;
   let markAsFav = false;
 
-  const $card = $(target).parent('.toolbar-card[data-type="module"]');
+  const $card = $(target).parent('.toolbar-card');
   const cardType = $card.data().subType;
   const positionInArray = $.inArray(cardType, favouriteModulesArray);
 

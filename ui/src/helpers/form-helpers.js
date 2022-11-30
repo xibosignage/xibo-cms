@@ -289,7 +289,7 @@ const formHelpers = function() {
           self.setupTextArea(dialog, textAreaID, customNoDataMessage);
 
           // Add to the property panel the form editor class
-          dialog.find('#properties-panel-container')
+          dialog.find('#properties-panel-form-container')
             .removeClass('form-editor-enabled');
         } else {
           // Toggle elements visibility
@@ -305,7 +305,7 @@ const formHelpers = function() {
           );
 
           // Remove class form editor from the property panel
-          dialog.find('#properties-panel-container')
+          dialog.find('#properties-panel-form-container')
             .addClass('form-editor-enabled');
         }
       }
@@ -682,22 +682,7 @@ const formHelpers = function() {
       region = this.namespace.mainRegion;
     } else if (this.namespace.selectedObject.type == 'widget') {
       const widget = this.namespace.selectedObject;
-      if (widget.drawerWidget) {
-        // Use target region to be used as scale
-        if (
-          widget.targetRegionId != undefined &&
-          this.namespace.layout.regions['region_' + widget.targetRegionId] !=
-          undefined
-        ) {
-          region =
-            this.namespace.layout.regions['region_' + widget.targetRegionId];
-        } else {
-          region = this.namespace.getElementByTypeAndId('drawer');
-        }
-      } else {
-        region =
-          this.namespace.getElementByTypeAndId('region', widget.regionId);
-      }
+      region = this.namespace.getElementByTypeAndId('region', widget.regionId);
     } else if (this.namespace.selectedObject.type == 'region') {
       region =
         this.namespace.getElementByTypeAndId(

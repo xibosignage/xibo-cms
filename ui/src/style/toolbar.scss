@@ -440,7 +440,7 @@
                 }
             }
 
-            &.toolbar-widgets-pane {
+            &.toolbar-widgets-pane, &.toolbar-actions-pane {
                 .toolbar-card {
                     cursor: pointer;
                     min-height: $toolbar-widgets-card-height;

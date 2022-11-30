@@ -77,7 +77,12 @@ window.forms = {
     }
 
     // Initialise tooltips
-    Common.reloadTooltips($(targetContainer));
+    Common.reloadTooltips(
+      $(targetContainer),
+      {
+        position: 'left',
+      },
+    );
   },
   /**
    * Initialise the form fields
