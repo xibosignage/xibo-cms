@@ -752,7 +752,7 @@ class Stats extends Base
         ]);
 
         $out = fopen($tempFileName, 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Ad Campaign', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Campaign', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
             $sanitizedRow = $this->getSanitizer($row);
