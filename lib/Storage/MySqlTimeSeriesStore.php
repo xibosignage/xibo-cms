@@ -191,10 +191,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getStats($filterBy = [])
     {
-        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
-        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
-        $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
-        $statDateLessThan = isset($filterBy['statDateLessThan']) ? $filterBy['statDateLessThan'] : null;
+        $fromDt = $filterBy['fromDt'] ?? null;
+        $toDt = $filterBy['toDt'] ?? null;
+        $statDate = $filterBy['statDate'] ?? null;
+        $statDateLessThan = $filterBy['statDateLessThan'] ?? null;
 
         // In the case of user switches from  mongo to mysql - laststatId were saved as Mongo ObjectId string
         if (isset($filterBy['statId'])) {
@@ -207,21 +207,22 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $statId = null;
         }
 
-        $type = isset($filterBy['type']) ? $filterBy['type'] : null;
-        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
-        $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
-        $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
-        $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
-        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
+        $type = $filterBy['type'] ?? null;
+        $displayIds = $filterBy['displayIds'] ?? [];
+        $layoutIds = $filterBy['layoutIds'] ?? [];
+        $mediaIds = $filterBy['mediaIds'] ?? [];
+        $campaignId = $filterBy['campaignId'] ?? null;
+        $parentCampaignId = $filterBy['parentCampaignId'] ?? null;
+        $eventTag = $filterBy['eventTag'] ?? null;
 
         // Tag embedding
-        $embedDisplayTags = isset($filterBy['displayTags']) ? $filterBy['displayTags'] : false;
-        $embedLayoutTags = isset($filterBy['layoutTags']) ? $filterBy['layoutTags'] : false;
-        $embedMediaTags = isset($filterBy['mediaTags']) ? $filterBy['mediaTags'] : false;
+        $embedDisplayTags = $filterBy['displayTags'] ?? false;
+        $embedLayoutTags = $filterBy['layoutTags'] ?? false;
+        $embedMediaTags = $filterBy['mediaTags'] ?? false;
 
         // Limit
-        $start = isset($filterBy['start']) ? $filterBy['start'] : null;
-        $length = isset($filterBy['length']) ? $filterBy['length'] : null;
+        $start = $filterBy['start'] ?? null;
+        $length = $filterBy['length'] ?? null;
 
         $params = [];
         $select = 'SELECT stat.statId, 
@@ -232,6 +233,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             stat.layoutId, 
             stat.mediaId, 
             stat.campaignId, 
+            stat.parentCampaignId, 
             stat.start as start, 
             stat.end as end, 
             stat.tag, 
@@ -240,6 +242,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             stat.engagements, 
             display.Display as display, 
             layout.Layout as layout, 
+            campaign.campaign as parentCampaign, 
             media.Name AS media ';
 
         if ($embedDisplayTags) {
@@ -292,6 +295,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             ON stat.DisplayID = display.DisplayID
             LEFT OUTER JOIN layout
             ON layout.LayoutID = stat.LayoutID
+            LEFT OUTER JOIN campaign
+            ON campaign.campaignID = stat.parentCampaignID
             LEFT OUTER JOIN media
             ON media.mediaID = stat.mediaID
             LEFT OUTER JOIN widget
@@ -366,6 +371,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             }
 
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
+        }
+
+        // Parent Campaign Filter
+        if ($parentCampaignId != null) {
+            $body .= ' AND `stat`.parentCampaignId = :parentCampaignId ';
+            $params['parentCampaignId'] = $parentCampaignId;
         }
 
         // Campaign

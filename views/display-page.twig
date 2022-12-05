@@ -704,7 +704,11 @@
                 // Calling map
                 map = L.map('display-map', {
                     center: [mapConfig.setArea.lat, mapConfig.setArea.long],
-                    zoom: mapConfig.setArea.zoom
+                    zoom: mapConfig.setArea.zoom,
+                    fullscreenControl: true,
+                    fullscreenControlOptions: {
+                        position: 'topleft'
+                    }
                 });
 
                 let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
