@@ -1,8 +1,6 @@
 <div class="form-group code-input-group xibo-code-input xibo-form-input {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
     <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
-    {{#if helpText}}
-        <i class="fa fa-question-circle form-help-popup tooltip-always-on" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
-    {{/if}}
+    <div class="input-info-container"></div>
     <textarea class="form-control code-input d-none" id="{{id}}" name="{{id}}" rows="{{rows}}" data-code-type="{{variant}}">{{value}}</textarea>
     <div class="code-input-editor-container">
         <div class="code-input-editor"></div>

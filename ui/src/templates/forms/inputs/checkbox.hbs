@@ -1,7 +1,5 @@
 <div class="form-check pb-3 xibo-form-input {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
     <input type="checkbox" class="form-check-input" id="{{id}}" name="{{id}}" {{#eq (number value) 1}}checked="checked"{{/eq}} />
     <label for="{{id}}" class="form-check-label"><strong>{{title}}</strong></label>
-    {{#if helpText}}
-        <i class="fa fa-question-circle form-help-popup tooltip-always-on checkbox-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
-    {{/if}}
+    <div class="input-info-container"></div>
 </div>

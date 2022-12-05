@@ -1,12 +1,18 @@
 @import "variables";
 
-.form-help-popup {
+
+.input-info-container {
     float: right;
     padding-top: 6px;
-    color: $xibo-color-primary-l60;
 
-    &.checkbox-popup {
-        padding-top: 3px;
+    .input-info {
+        float: right;
+        margin-left: 4px;
+        color: $xibo-color-primary-l60;
+
+        &.checkbox-popup {
+            padding-top: 3px;
+        }
     }
 }
 
