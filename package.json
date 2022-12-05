@@ -86,6 +86,7 @@
     "leaflet-search": "^3.0.3",
     "leaflet-easyprint": "^2.1.9",
     "leaflet.markercluster": "^1.4.1",
+    "leaflet-fullscreen": "^1.0.2",
     "less": "^3.11.1",
     "less-loader": "^4.1.0",
     "masonry-layout": "^4.2.2",
