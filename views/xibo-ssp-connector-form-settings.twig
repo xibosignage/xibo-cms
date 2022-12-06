@@ -70,7 +70,7 @@
             {% if not interface.isProviderSetting("cmsUrl") %}
                 {% set title %}{% trans "CMS URL" %}{% endset %}
                 {% set helpText %}{% trans "The URL your players use to connect to your CMS." %}{% endset %}
-                {{ forms.input("cmsUrl", title, interface.getSetting("cmsUrl", url_for("home")), helpText) }}
+                {{ forms.input("cmsUrl", title, interface.getSetting("cmsUrl"), helpText) }}
             {% endif %}
         </div>
         {% if partners is iterable and partners|length > 0 %}
@@ -105,6 +105,10 @@
                     {% set helpText %}{% trans "Enter your API Key from this SSP." %}{% endset %}
                     {{ forms.input(partnerKey ~ "_key", title, interface.getPartnerSetting(partnerKey, "key"), helpText) }}
 
+                    {% set title %}{% trans "Test mode?" %}{% endset %}
+                    {% set helpText %}{% trans "Should we connect to this partners test or production system?" %}{% endset %}
+                    {{ forms.checkbox(partnerKey ~ "_isTest", title, interface.getPartnerSetting(partnerKey, "isTest"), helpText) }}
+
                     <div class="form-group" style="display: flex;">
                         <label class="col-sm-2 control-label" for="{{ partnerKey ~ "_sov" }}">{% trans "Share of Voice" %}</label>
                         <div class="col-sm-5">
@@ -135,6 +139,8 @@
                     {% set helpText %}{% trans "The maximum duration of an ad served by the SSP." %}{% endset %}
                     {{ forms.number(partnerKey ~ "_maxDuration", title, interface.getPartnerSetting(partnerKey, "maxDuration"), helpText) }}
 
+                    {% set title %}{% trans "Allowed content types" %}{% endset %}
+                    {% set helpText %}{% trans "Which content types should be allowed on these displays. Most SSPs will be able to further refine this by display." %}{% endset %}
                     {% set all %}{% trans "Images and Video" %}{% endset %}
                     {% set image %}{% trans "Images only" %}{% endset %}
                     {% set video %}{% trans "Videos only" %}{% endset %}
