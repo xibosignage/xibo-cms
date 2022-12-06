@@ -287,9 +287,24 @@ $(document).ready(function() {
 
                     var momentNow = moment().tz ? moment().tz(timezone) : moment();
 
+                    // Create slider ticks
+                    var ticks = [];
+                    var ticksLabels = [];
+                    var ticksPositions = [];
+                    for(var i = 0; i <= 1440; i += 120) {
+                        // Last step get one less minute
+                        var minutes = i === 1440 ? 1439 : i;
+                        ticks.push(minutes);
+                        ticksLabels.push(momentNow.clone().startOf('day').add(minutes, 'minutes').format(jsTimeFormat));
+                        ticksPositions.push(i/1440*100);
+                    }
+
                     $timePicker.slider({
                         value: (momentNow.hour() * 60) + momentNow.minute(),
                         tooltip: 'always',
+                        ticks: ticks,
+                        ticks_labels: ticksLabels,
+                        ticks_positions: ticksPositions,
                         formatter: function(value) {
                             return moment().startOf("day").minute(value).format(jsTimeFormat);
                         }
