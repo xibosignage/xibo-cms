@@ -103,7 +103,7 @@
                     { id: "round", name: "Round-robin"|trans },
                     { id: "block", name: "Block"|trans },
                 ] %}
-                {{ forms.dropdown("listPlayOrder", "single", title, "round", options, "id", "name", helpText, "campaign-type-list") }}
+                {{ forms.dropdown("listPlayOrder", "single", title, "round", options, "id", "name", helpText, "campaign-type-list no-cycle-based-playback") }}
 
                 {% set title %}{% trans "Target Type" %}{% endset %}
                 {% set helpText %}{% trans "How would you like to set the target for this campaign?" %}{% endset %}

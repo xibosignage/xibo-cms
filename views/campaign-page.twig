@@ -521,7 +521,7 @@
          */
         function campaignAddFormOpen(dialog) {
           // setup checkbox behaviour for cycle based playback
-          formHelpers.setupCheckboxInputFields($(dialog).find('form'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback');
+          formHelpers.setupCheckboxInputFields($(dialog).find('form'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback', '.no-cycle-based-playback');
 
           const $type = $(dialog).find('select[name=type]');
           const $cycleBased = $('input[name="cyclePlaybackEnabled"]');
@@ -533,6 +533,7 @@
             $(dialog).find('.campaign-type-ad').toggle($type.val() === 'ad');
 
             $(dialog).find('.cycle-based-playback').toggle($cycleBased.is(':checked') && $type.val() !== 'ad');
+            $(dialog).find('.no-cycle-based-playback').toggle(!$cycleBased.is(':checked') && $type.val() !== 'ad');
           });
         }
 
