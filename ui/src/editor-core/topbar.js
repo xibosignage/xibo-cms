@@ -163,6 +163,7 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
                 var query = {
                     layout: params.term,
                     onlyMyLayouts: $('#onlyMyLayouts').is(":checked"),
+                    retired : 0,
                     start: 0,
                     length: 10
                 };
