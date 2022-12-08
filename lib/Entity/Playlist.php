@@ -756,21 +756,24 @@ class Playlist implements \JsonSerializable
             foreach ($parent->widgets as $widget) {
                 if ($widget->type === 'subplaylist') {
                     // we get an array with all subplaylists assigned to the parent
-                    $subPlaylistIds = json_decode($widget->getOptionValue('subPlaylistIds', '[]'));
-                    foreach ($subPlaylistIds as $subplaylist) {
+                    $subPlaylistItems = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
+                    $i = 0;
+                    foreach ($subPlaylistItems as $subPlaylistItem) {
                         // find the matching playlistId to the playlistId we want to delete
-                        if ($subplaylist == $this->playlistId) {
-                            // if there is only one element in the subPlaylistIds array then remove the widget
-                            if (count($subPlaylistIds) === 1) {
+                        if ($subPlaylistItem['playlistId'] == $this->playlistId) {
+                            // if there is only one playlistItem in subPlaylists option then remove the widget
+                            if (count($subPlaylistItems) === 1) {
                                 $widget->delete(['notify' => false]);
                             } else {
-                                // if the subPlaylistIds has more than one element, we want to just unassign our playlistId from it and save the widget,
+                                // if we have more than one subPlaylist item in subPlaylists option,
+                                // we want to just unassign our playlist from it and save the widget,
                                 // we don't want to remove the whole widget in this case
-                                $updatedSubplaylistIds = array_diff($subPlaylistIds, [$this->playlistId]);
-                                $widget->setOptionValue('subPlaylistIds', 'attrib', json_encode($updatedSubplaylistIds));
+                                unset($subPlaylistItems[$i]);
+                                $widget->setOptionValue('subPlaylists', 'attrib', json_encode(array_values($subPlaylistItems)));
                                 $widget->save();
                             }
                         }
+                        $i++;
                     }
                 }
             }
