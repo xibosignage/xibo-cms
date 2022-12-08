@@ -336,7 +336,7 @@
         // Fired when the media form opens
         function campaignAssignLayoutsFormOpen(dialog) {
             // setup checkbox behaviour for cycle based playback
-            formHelpers.setupCheckboxInputFields($(dialog).find('form:not(.form-inline)'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback');
+            formHelpers.setupCheckboxInputFields($(dialog).find('form:not(.form-inline)'), 'input[name="cyclePlaybackEnabled"]', '.cycle-based-playback', '.no-cycle-based-playback');
 
             // Layout element template
             var layoutElementTemplate = Handlebars.compile($("#campaign-assign-layout").html());
