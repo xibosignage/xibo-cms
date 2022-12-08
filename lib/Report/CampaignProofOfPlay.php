@@ -335,7 +335,7 @@ class CampaignProofOfPlay implements ReportInterface
             $params['fromDt'] = !empty($campaign->getStartDt()) ? $campaign->getStartDt()->format('Y-m-d H:i:s') : null;
             $params['toDt'] = !empty($campaign->getEndDt()) ? $campaign->getEndDt()->format('Y-m-d H:i:s') : null;
 
-            if (empty($campaign->getStartDt()) || empty($campaign->getEndDt()) ) {
+            if (empty($campaign->getStartDt()) || empty($campaign->getEndDt())) {
                 return new ReportResult();
             }
         } else {
@@ -356,8 +356,8 @@ class CampaignProofOfPlay implements ReportInterface
         // Get results from the event
         $result['result'] = $event->getResults();
 
-        $result['periodStart'] = Carbon::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat());
-        $result['periodEnd'] = Carbon::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat());
+        $result['periodStart'] = $params['fromDt'];
+        $result['periodEnd'] = $params['toDt'];
 
         // Sanitize results??
         $rows = [];

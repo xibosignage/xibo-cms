@@ -28,10 +28,15 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\ReportDataEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 class XiboAudienceReportingConnector implements ConnectorInterface
@@ -50,6 +55,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     /** @var CampaignFactory */
     private $campaignFactory;
 
+    /** @var DisplayFactory */
+    private $displayFactory;
+
     /**
      * @param \Psr\Container\ContainerInterface $container
      * @return \Xibo\Connector\ConnectorInterface
@@ -60,6 +68,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $this->timeSeriesStore = $container->get('timeSeriesStore');
         $this->sanitizer = $container->get('sanitizerService');
         $this->campaignFactory = $container->get('campaignFactory');
+        $this->displayFactory = $container->get('displayFactory');
 
         return $this;
     }
@@ -103,6 +112,10 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         return $settings;
     }
 
+    /**
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
     public function onRegularMaintenance(MaintenanceRegularEvent $event)
     {
         $watermark = null;
@@ -112,8 +125,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     'headers' => [
                         'X-API-KEY' => $this->getSetting('apiKey')
                     ],
-                ]
-            );
+                ]);
 
             $body = $response->getBody()->getContents();
             $json = json_decode($body, true);
@@ -138,10 +150,53 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
         // Array of campaigns for which we will update the total spend, impresssions, and plays
         $campaigns = [];
+        $campaignCache = [];
+        $displayCache = [];
 
         $rows = [];
         while ($row = $resultSet->getNextRow()) {
             $sanitizedRow = $this->sanitizer->getSanitizer($row);
+
+            $parentCampaignId = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
+            $displayId = $sanitizedRow->getInt(('displayId'));
+
+            if (empty($parentCampaignId) || empty($displayId)) {
+                continue;
+            }
+
+            $entry['parentCampaignId'] = $parentCampaignId;
+
+            // Campaign list in array
+            $campaigns[] = $parentCampaignId;
+
+            // --------
+            // Get Campaign
+            // Campaign start and end date
+            if (array_key_exists($parentCampaignId, $campaignCache)) {
+                $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
+                $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
+            } else {
+                $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
+                $campaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
+                $campaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
+                $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
+                $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
+            }
+
+            // --------
+            // Get Display
+            // Cost per play and impressions per play
+            $entry['displayId'] = $displayId;
+            if (array_key_exists($displayId, $displayCache)) {
+                $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
+                $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
+            } else {
+                $display = $this->displayFactory->getById($displayId);
+                $displayCache[$displayId]['costPerPlay'] =  $display->costPerPlay;
+                $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
+                $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
+                $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
+            }
 
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
                 $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
@@ -150,21 +205,19 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
                 $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
             }
+
             $entry['id'] = $resultSet->getIdFromRow($row);
-
-            $entry['parentCampaignId'] = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
-            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
             $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
-
-            $entry['numberPlays'] = $sanitizedRow->getInt('count');
-            $entry['duration'] = $sanitizedRow->getInt('duration');
+            $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
+            $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
             $entry['start'] = $start;
             $entry['end'] = $end;
             $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
             $rows[] = $entry;
-            $campaigns[] = $entry['parentCampaignId'];
         }
+
+        $this->getLogger()->debug('onRegularMaintenance: Records sent: ' . count($rows) . ', Watermark: ' . $watermark);
 
         $statusCode = 0;
         if (count($rows) > 0) {
@@ -174,11 +227,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             'X-API-KEY' => $this->getSetting('apiKey')
                         ],
                         'json' => $rows
-                    ]
-                );
+                    ]);
 
                 $statusCode = $response->getStatusCode();
-
             } catch (RequestException $requestException) {
                 $event->addMessage(__('Error calling audience receiveStats'. $requestException->getMessage()));
                 $this->getLogger()->error('Audience receiveStats: failed e = ' . $requestException->getMessage());
@@ -194,26 +245,24 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             'query' => [
                                 'campaigns' => $campaigns
                             ]
-                        ]
-                    );
+                        ]);
 
                     $body = $response->getBody()->getContents();
                     $results = json_decode($body, true);
-                    foreach ($results as $result) {
+
+                    foreach ($results as $item) {
                         // Save the total in the camapign
-                        $campaign = $this->campaignFactory->getById($result['id']);
+                        $campaign = $this->campaignFactory->getById($item['id']);
 
-                        $campaign->spend = $result['spend'];
-                        $campaign->impressions = $result['impressions'];
-                        $campaign->plays = $result['adPlays'];
+                        $campaign->spend = $item['spend'];
+                        $campaign->impressions = $item['impressions'];
 
-                        $campaign->save();
+                        $campaign->save(['validate' => false]);
                     }
                 } catch (RequestException $requestException) {
                     $event->addMessage(__('Error getting campaign total:'. $requestException->getMessage()));
                     $this->getLogger()->error('Campaign total: e = ' . $requestException->getMessage());
                 }
-
             }
         }
     }
@@ -227,11 +276,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         ];
 
         if (array_key_exists($type, $typeUrl)) {
-
             $json = [];
             switch ($type) {
                 case 'proofofplay':
-
                     // Get audience proofofplay result
                     try {
                         $response = $this->getClient()->get($typeUrl[$type], [
@@ -239,12 +286,10 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                                     'X-API-KEY' => $this->getSetting('apiKey')
                                 ],
                                 'query' => $event->getParams()
-                            ]
-                        );
+                            ]);
 
                         $body = $response->getBody()->getContents();
                         $json = json_decode($body, true);
-
                     } catch (RequestException $requestException) {
                         $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
                     }
@@ -255,7 +300,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             }
 
             $event->setResults($json);
-
         }
     }
 }

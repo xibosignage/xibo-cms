@@ -192,7 +192,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         $(document).ready(function() {
-            let $report = $("#proofofplayReport");
+            let $report = $("#campaignProofOfPlayReport");
             let $dataTable = $('#stats'); // Datatable
             let chart = null; // Chart
             let result; // XHR get data result
@@ -379,8 +379,7 @@
                 let tags = $("#tags").val();
                 let exactTags = $('#exactTags').is(":checked");
 
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
-                    + "&reportName=proofofplayReport" );
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=campaignProofOfPlayReport" );
 
             };
 
@@ -465,8 +464,8 @@
 
         function campaignProofOfPlayScheduleCallback() {
 
-            let $displayId = $('#proofofplayReport #displayId');
-            let $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
+            let $displayId = $('#campaignProofOfPlayReport #displayId');
+            let $newDisplayId = $('#campaignProofofplayScheduleAddForm #displayId');
 
             appendOptions($newDisplayId, $displayId.find('option:selected').clone());
         }
