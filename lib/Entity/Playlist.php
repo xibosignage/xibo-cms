@@ -1136,7 +1136,7 @@ class Playlist implements \JsonSerializable
      * playlistMappings, nestedPLaylistDefinitions, dataSets and dataSetIds are passed by reference.
      *
      *
-     * @param $widgets array An array of widgets assigned to the Playlist
+     * @param $widgets Widget[] An array of widgets assigned to the Playlist
      * @param $parentId int Playlist Id of the Playlist that is a parent to our current Playlist
      * @param $playlistMappings array An array of Playlists with ParentId and PlaylistId as keys
      * @param $count
@@ -1150,54 +1150,59 @@ class Playlist implements \JsonSerializable
      */
     public function generatePlaylistMapping($widgets, $parentId, &$playlistMappings, &$count, &$nestedPlaylistDefinitions, &$dataSetIds, &$dataSets, $dataSetFactory, $includeData)
     {
-            foreach ($widgets as $playlistWidget) {
+        foreach ($widgets as $playlistWidget) {
+            if ($playlistWidget->type == 'subplaylist') {
+                $playlistItems = json_decode($playlistWidget->getOptionValue('subPlaylists', '[]'), true);
+                foreach ($playlistItems as $nestedPlaylistItem) {
+                    $nestedPlaylist = $this->playlistFactory->getById($nestedPlaylistItem['playlistId']);
+                    $nestedPlaylist->load();
+                    $this->getLog()->debug('playlist mappings parent id ' . $parentId);
+                    $nestedPlaylistDefinitions[$nestedPlaylist->playlistId] = $nestedPlaylist;
 
-                if ($playlistWidget->type == 'subplaylist') {
+                    $playlistMappings[$parentId][$nestedPlaylist->playlistId] = [
+                        'parentId' => $parentId,
+                        'playlist' => $nestedPlaylist->name,
+                        'playlistId' => $nestedPlaylist->playlistId
+                    ];
 
-                    $nestedPlaylistIds = json_decode($playlistWidget->getOptionValue('subPlaylistIds', []), true);
-                    foreach ($nestedPlaylistIds as $nestedPlaylistId) {
-                        $nestedPlaylist = $this->playlistFactory->getById($nestedPlaylistId);
-                        $nestedPlaylist->load();
-                        $this->getLog()->debug('playlist mappings parent id ' . $parentId);
-                        $nestedPlaylistDefinitions[$nestedPlaylist->playlistId] = $nestedPlaylist;
+                    $count++;
 
-                        $playlistMappings[$parentId][$nestedPlaylist->playlistId] = [
-                            'parentId' => $parentId,
-                            'playlist' => $nestedPlaylist->name,
-                            'playlistId' => $nestedPlaylist->playlistId
-                        ];
-
-                        $count++;
-
-                        // this is a recursive function, we need to go through all levels of nested Playlists.
-                        $this->generatePlaylistMapping($nestedPlaylist->widgets, $nestedPlaylist->playlistId, $playlistMappings, $count, $nestedPlaylistDefinitions,$dataSetIds, $dataSets, $dataSetFactory, $includeData);
-                    }
-                }
-
-                // if we have any widgets that use DataSets we want the dataSetId and data added
-                if ($playlistWidget->type == 'datasetview' || $playlistWidget->type == 'datasetticker' || $playlistWidget->type == 'chart') {
-                    $dataSetId = $playlistWidget->getOptionValue('dataSetId', 0);
-
-                    if ($dataSetId != 0) {
-
-                        if (in_array($dataSetId, $dataSetIds))
-                            continue;
-
-                        // Export the structure for this dataSet
-                        $dataSet = $dataSetFactory->getById($dataSetId);
-                        $dataSet->load();
-
-                        // Are we also looking to export the data?
-                        if ($includeData) {
-                            $dataSet->data = $dataSet->getData([], ['includeFormulaColumns' => false]);
-                        }
-
-                        $dataSetIds[] = $dataSet->dataSetId;
-                        $dataSets[] = $dataSet;
-                    }
+                    // this is a recursive function, we need to go through all levels of nested Playlists.
+                    $this->generatePlaylistMapping(
+                        $nestedPlaylist->widgets,
+                        $nestedPlaylist->playlistId,
+                        $playlistMappings,
+                        $count,
+                        $nestedPlaylistDefinitions,
+                        $dataSetIds,
+                        $dataSets,
+                        $dataSetFactory,
+                        $includeData
+                    );
                 }
             }
+            // if we have any widgets that use DataSets we want the dataSetId and data added
+            if ($playlistWidget->type == 'datasetview' || $playlistWidget->type == 'datasetticker' || $playlistWidget->type == 'chart') {
+                $dataSetId = $playlistWidget->getOptionValue('dataSetId', 0);
+                if ($dataSetId != 0) {
+                    if (in_array($dataSetId, $dataSetIds)) {
+                        continue;
+                    }
+                    // Export the structure for this dataSet
+                    $dataSet = $dataSetFactory->getById($dataSetId);
+                    $dataSet->load();
 
-            return $playlistMappings;
+                    // Are we also looking to export the data?
+                    if ($includeData) {
+                        $dataSet->data = $dataSet->getData([], ['includeFormulaColumns' => false]);
+                    }
+
+                    $dataSetIds[] = $dataSet->dataSetId;
+                    $dataSets[] = $dataSet;
+                }
+            }
+        }
+
+        return $playlistMappings;
     }
 }

@@ -1923,7 +1923,6 @@ class Layout implements \JsonSerializable
                 $dataSetId = $widget->getOptionValue('dataSetId', 0);
 
                 if ($dataSetId != 0) {
-
                     if (in_array($dataSetId, $dataSetIds)) {
                         continue;
                     }
@@ -1940,15 +1939,13 @@ class Layout implements \JsonSerializable
                     $dataSetIds[] = $dataSet->dataSetId;
                     $dataSets[] = $dataSet;
                 }
-            }   elseif ($widget->type == 'subplaylist') {
-                $playlistIds = json_decode($widget->getOptionValue('subPlaylistIds', []), true);
-
-                foreach ($playlistIds as $playlistId) {
+            } elseif ($widget->type == 'subplaylist') {
+                $playlistItems = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
+                foreach ($playlistItems as $playlistItem) {
                     $count = 1;
-                    $playlist = $this->playlistFactory->getById($playlistId);
-
+                    $playlist = $this->playlistFactory->getById($playlistItem['playlistId']);
                     // include Widgets only for non dynamic Playlists #2392
-                    $playlist->load(['loadWidgets' => ($playlist->isDynamic) ? false : true]);
+                    $playlist->load(['loadWidgets' => !$playlist->isDynamic]);
                     if ($playlist->isDynamic === 0) {
                         $playlist->expandWidgets(0, false);
                     }
@@ -1956,7 +1953,17 @@ class Layout implements \JsonSerializable
                     $playlistDefinitions[$playlist->playlistId] = $playlist;
 
                     // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
-                    $playlist->generatePlaylistMapping($playlist->widgets, $playlist->playlistId,$playlistMappings, $count, $nestedPlaylistDefinitions, $dataSetIds, $dataSets, $dataSetFactory, $options['includeData']);
+                    $playlist->generatePlaylistMapping(
+                        $playlist->widgets,
+                        $playlist->playlistId,
+                        $playlistMappings,
+                        $count,
+                        $nestedPlaylistDefinitions,
+                        $dataSetIds,
+                        $dataSets,
+                        $dataSetFactory,
+                        $options['includeData']
+                    );
                 }
             }
         }
