@@ -166,7 +166,12 @@ class Connector extends Base
 
         // Is this an uninstallation request
         if ($params->getCheckbox('shouldUninstall')) {
-            $this->getDispatcher()->dispatch(new ConnectorDeletingEvent($connector, $this->getConfig()));
+            $event = new ConnectorDeletingEvent($connector, $this->getConfig());
+            if ($connector->isEnabled == 1) {
+                $this->getDispatcher()->dispatch($event, ConnectorDeletingEvent::$NAME);
+            } else if (method_exists($interface, 'onDeleting')) {
+                $interface->onDeleting($event);
+            }
 
             $connector->delete();
 
@@ -179,7 +184,13 @@ class Connector extends Base
             $connector->isEnabled = $params->getCheckbox('isEnabled');
 
             if ($connector->hasPropertyChanged('isEnabled')) {
-                $this->getDispatcher()->dispatch(new ConnectorEnabledChangeEvent($connector, $this->getConfig()));
+                $event = new ConnectorEnabledChangeEvent($connector, $this->getConfig());
+
+                if ($connector->getOriginalValue('isEnabled') == 1) {
+                    $this->getDispatcher()->dispatch($event, ConnectorEnabledChangeEvent::$NAME);
+                } else if (method_exists($interface, 'onEnabledChange')) {
+                    $interface->onEnabledChange($event);
+                }
             }
 
             $connector->settings = $interface->processSettingsForm($params, $connector->settings);

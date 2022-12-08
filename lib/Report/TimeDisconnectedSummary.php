@@ -105,8 +105,12 @@ class TimeDisconnectedSummary implements ReportInterface
     {
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
 
         $filterCriteria['displayId'] = $displayId;
+        if (empty($displayId) && count($displayGroupIds) > 0) {
+            $filterCriteria['displayGroupId'] = $displayGroupIds;
+        }
         $filterCriteria['filter'] = $filter;
 
         $schedule = '';
@@ -169,16 +173,9 @@ class TimeDisconnectedSummary implements ReportInterface
     /** @inheritdoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $filter = [
-            'displayId' => $sanitizedParams->getInt('displayId'),
-            'displayGroupId' => $sanitizedParams->getInt('displayGroupId'),
-            'tags' => $sanitizedParams->getString('tags'),
-            'onlyLoggedIn' => $sanitizedParams->getCheckbox('onlyLoggedIn') == 1,
-            'exactTags' => $sanitizedParams->getCheckbox('exactTags')
-        ];
+        // Filter by displayId?
+        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
-        $displayId = $sanitizedParams->getInt('displayId');
-        $displayGroupId = $sanitizedParams->getInt('displayGroupId');
         $tags = $sanitizedParams->getString('tags');
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
 
@@ -234,9 +231,6 @@ class TimeDisconnectedSummary implements ReportInterface
                 break;
         }
 
-        // Get an array of display id this user has access to.
-        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
-
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
 
@@ -274,11 +268,6 @@ class TimeDisconnectedSummary implements ReportInterface
                 INNER JOIN `display`
                 ON display.displayId = `displayevent`.displayId ';
 
-        if ($displayGroupId != 0) {
-            $body .= 'INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayID = display.displayid ';
-        }
-
         if ($tags != '') {
             $body .= 'INNER JOIN `lkdisplaydg`
                         ON lkdisplaydg.DisplayID = display.displayid
@@ -293,12 +282,6 @@ class TimeDisconnectedSummary implements ReportInterface
 
         if (count($displayIds) > 0) {
             $body .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
-        }
-
-        if ($displayGroupId != 0) {
-            $body .= '
-                     AND lkdisplaydg.displaygroupid = :displayGroupId ';
-            $params['displayGroupId'] = $displayGroupId;
         }
 
         if ($tags != '') {
@@ -341,11 +324,6 @@ class TimeDisconnectedSummary implements ReportInterface
             }
         }
 
-        if ($displayId != 0) {
-            $body .= ' AND display.displayId = :displayId ';
-            $params['displayId'] = $displayId;
-        }
-
         if ($onlyLoggedIn) {
             $body .= ' AND `display`.loggedIn = 1 ';
         }
@@ -353,6 +331,12 @@ class TimeDisconnectedSummary implements ReportInterface
         $body .= '
             GROUP BY display.display, display.displayId
         ';
+
+        $filter = [
+            'tags' => $sanitizedParams->getString('tags'),
+            'onlyLoggedIn' => $sanitizedParams->getCheckbox('onlyLoggedIn') == 1,
+            'exactTags' => $sanitizedParams->getCheckbox('exactTags')
+        ];
 
         // Sorting?
         $filterBy = $this->gridRenderFilter($filter);

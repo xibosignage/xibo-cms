@@ -23,6 +23,7 @@ namespace Xibo\Connector;
 
 use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\ConnectorDeletingEvent;
@@ -107,7 +108,14 @@ class XiboSspConnector implements ConnectorInterface
 
         $existingCmsUrl = $this->getSetting('cmsUrl');
         if (!$this->isProviderSetting('cmsUrl')) {
-            $settings['cmsUrl'] = $params->getString('cmsUrl');
+            $settings['cmsUrl'] = trim($params->getString('cmsUrl'), '/');
+
+            if (empty($settings['cmsUrl']) || !Str::startsWith($settings['cmsUrl'], 'http')) {
+                throw new InvalidArgumentException(
+                    __('Please enter a CMS URL, including http(s)://'),
+                    'cmsUrl'
+                );
+            }
         }
 
         // If our API key was empty, then do not set partners.
@@ -117,13 +125,14 @@ class XiboSspConnector implements ConnectorInterface
 
         // Set partners.
         $partners = [];
-        $available = $this->getAvailablePartners(false, $settings['apiKey']);
+        $available = $this->getAvailablePartners(true, $settings['apiKey']);
 
         // Pull in expected fields.
         foreach ($available as $partnerId => $partner) {
             $partners[] = [
                 'name' => $partnerId,
                 'enabled' => $params->getCheckbox($partnerId . '_enabled'),
+                'isTest' => $params->getCheckbox($partnerId . '_isTest'),
                 'currency' => $params->getString($partnerId . '_currency'),
                 'key' => $params->getString($partnerId . '_key'),
                 'sov' => $params->getInt($partnerId . '_sov'),
@@ -192,19 +201,30 @@ class XiboSspConnector implements ConnectorInterface
 
                 $json = json_decode($body, true);
                 if (empty($json)) {
-                    throw new InvalidArgumentException(__('Empty response from the dashboard service'));
+                    $this->formError = __('Empty response from the dashboard service');
+                    throw new InvalidArgumentException($this->formError);
                 }
 
                 $this->partners = $json;
             } catch (RequestException $e) {
                 $this->getLogger()->error('getAvailablePartners: e = ' . $e->getMessage());
+
+                if ($e->getResponse()->getStatusCode() === 401) {
+                    $this->formError = __('API key not valid');
+                    if ($isThrowError) {
+                        throw new InvalidArgumentException($this->formError, 'apiKey');
+                    } else {
+                        return null;
+                    }
+                }
+
                 $message = json_decode($e->getResponse()->getBody()->getContents(), true);
 
-                if ($isThrowError) {
-                    $this->formError = empty($message)
-                        ? __('Cannot contact SSP service, please try again shortly.')
-                        : $message['message'];
+                $this->formError = empty($message)
+                    ? __('Cannot contact SSP service, please try again shortly.')
+                    : $message['message'];
 
+                if ($isThrowError) {
                     throw new GeneralException($this->formError);
                 } else {
                     return null;
@@ -405,6 +425,7 @@ class XiboSspConnector implements ConnectorInterface
                     'fromDt' => $fromDt->toAtomString(),
                     'toDt' => $toDt->toAtomString(),
                     'displayId' => $params->getInt('displayId'),
+                    'campaignId' => $params->getString('campaignId'),
                 ],
             ]);
 

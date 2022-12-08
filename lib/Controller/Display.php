@@ -1077,7 +1077,7 @@ class Display extends Base
         $filter = $this->getFilters($parsedQueryParams);
 
         // Get a list of displays
-        $displays = $this->displayFactory->query(null, $this->gridRenderFilter($filter, $parsedQueryParams));
+        $displays = $this->displayFactory->query(null, $filter);
         $results = [];
         $status = [
             '1' => __('Up to date'),
