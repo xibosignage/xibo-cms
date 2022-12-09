@@ -91,6 +91,15 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         return 'Xibo Audience Reporting Connector';
     }
 
+    /**
+     * Get the service url, either from settings or a default
+     * @return string
+     */
+    private function getServiceUrl(): string
+    {
+        return $this->getSetting('serviceUrl', 'https://exchange.xibo-adspace.com/api/audience');
+    }
+
     public function getDescription(): string
     {
         return 'Enhance your reporting with audience data, impressions and more.';
@@ -112,16 +121,17 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         return $settings;
     }
 
+    // <editor-fold desc="Listeners">
+
     /**
      * @throws NotFoundException
      * @throws GeneralException
      */
     public function onRegularMaintenance(MaintenanceRegularEvent $event)
     {
-        $watermark = null;
         // Get Watermark
         try {
-            $response = $this->getClient()->get('https://test-exchange.xibo-adspace.com/api/audience/watermark', [
+            $response = $this->getClient()->get($this->getServiceUrl() . '/watermark', [
                     'headers' => [
                         'X-API-KEY' => $this->getSetting('apiKey')
                     ],
@@ -130,115 +140,111 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $body = $response->getBody()->getContents();
             $json = json_decode($body, true);
             $watermark = $json['watermark'];
-        } catch (RequestException $requestException) {
-            $event->addMessage(__('Error getting watermark: '. $requestException->getMessage()));
-            $this->getLogger()->error('Get Watermark: failed e = ' . $requestException->getMessage());
-        }
 
-        $params =   [
-            'type' => 'layout',
-            'start' => 1,
-            'length' => 10000,
-        ];
+            $params =   [
+                'type' => 'layout',
+                'start' => 1,
+                'length' => 10000,
+            ];
 
-        if (!empty($watermark)) {
-            $params['statId'] = $watermark;
-        }
-
-        // Call the time series interface getStats
-        $resultSet = $this->timeSeriesStore->getStats($params);
-
-        // Array of campaigns for which we will update the total spend, impresssions, and plays
-        $campaigns = [];
-        $campaignCache = [];
-        $displayCache = [];
-
-        $rows = [];
-        while ($row = $resultSet->getNextRow()) {
-            $sanitizedRow = $this->sanitizer->getSanitizer($row);
-
-            $parentCampaignId = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
-            $displayId = $sanitizedRow->getInt(('displayId'));
-
-            if (empty($parentCampaignId) || empty($displayId)) {
-                continue;
+            if (!empty($watermark)) {
+                $params['statId'] = $watermark;
             }
 
-            $entry['parentCampaignId'] = $parentCampaignId;
+            // Call the time series interface getStats
+            $resultSet = $this->timeSeriesStore->getStats($params);
 
-            // Campaign list in array
-            $campaigns[] = $parentCampaignId;
+            // Array of campaigns for which we will update the total spend, impresssions, and plays
+            $campaigns = [];
+            $campaignCache = [];
+            $displayCache = [];
 
-            // --------
-            // Get Campaign
-            // Campaign start and end date
-            if (array_key_exists($parentCampaignId, $campaignCache)) {
-                $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
-                $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
-            } else {
-                $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
-                $campaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
-                $campaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
-                $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
-                $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
+            $rows = [];
+            while ($row = $resultSet->getNextRow()) {
+                $sanitizedRow = $this->sanitizer->getSanitizer($row);
+
+                $parentCampaignId = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
+                $displayId = $sanitizedRow->getInt(('displayId'));
+
+                if (empty($parentCampaignId) || empty($displayId)) {
+                    continue;
+                }
+
+                $entry['parentCampaignId'] = $parentCampaignId;
+
+                // Campaign list in array
+                $campaigns[] = $parentCampaignId;
+
+                // --------
+                // Get Campaign
+                // Campaign start and end date
+                if (array_key_exists($parentCampaignId, $campaignCache)) {
+                    $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
+                    $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
+                } else {
+                    $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
+                    $campaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
+                    $campaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
+                    $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
+                    $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
+                }
+
+                // --------
+                // Get Display
+                // Cost per play and impressions per play
+                $entry['displayId'] = $displayId;
+                if (array_key_exists($displayId, $displayCache)) {
+                    $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
+                    $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
+                } else {
+                    $display = $this->displayFactory->getById($displayId);
+                    $displayCache[$displayId]['costPerPlay'] =  $display->costPerPlay;
+                    $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
+                    $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
+                    $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
+                }
+
+                if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+                    $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                    $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                } else {
+                    $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                    $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
+                }
+
+                $entry['id'] = $resultSet->getIdFromRow($row);
+                $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
+                $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
+                $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
+                $entry['start'] = $start;
+                $entry['end'] = $end;
+                $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
+
+                $rows[] = $entry;
             }
 
-            // --------
-            // Get Display
-            // Cost per play and impressions per play
-            $entry['displayId'] = $displayId;
-            if (array_key_exists($displayId, $displayCache)) {
-                $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
-                $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
-            } else {
-                $display = $this->displayFactory->getById($displayId);
-                $displayCache[$displayId]['costPerPlay'] =  $display->costPerPlay;
-                $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
-                $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
-                $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
-            }
+            $this->getLogger()->debug('onRegularMaintenance: Records sent: ' . count($rows) . ', Watermark: ' . $watermark);
 
-            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-                $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
-                $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
-            } else {
-                $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
-                $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
-            }
-
-            $entry['id'] = $resultSet->getIdFromRow($row);
-            $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
-            $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
-            $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
-            $entry['start'] = $start;
-            $entry['end'] = $end;
-            $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
-
-            $rows[] = $entry;
-        }
-
-        $this->getLogger()->debug('onRegularMaintenance: Records sent: ' . count($rows) . ', Watermark: ' . $watermark);
-
-        $statusCode = 0;
-        if (count($rows) > 0) {
-            try {
-                $response = $this->getClient()->post('https://test-exchange.xibo-adspace.com/api/audience/receiveStats', [
+            $statusCode = 0;
+            if (count($rows) > 0) {
+                try {
+                    $response = $this->getClient()->post($this->getServiceUrl() . '/receiveStats', [
                         'headers' => [
                             'X-API-KEY' => $this->getSetting('apiKey')
                         ],
                         'json' => $rows
                     ]);
 
-                $statusCode = $response->getStatusCode();
-            } catch (RequestException $requestException) {
-                $event->addMessage(__('Error calling audience receiveStats'. $requestException->getMessage()));
-                $this->getLogger()->error('Audience receiveStats: failed e = ' . $requestException->getMessage());
-            }
+                    $statusCode = $response->getStatusCode();
+                } catch (RequestException $requestException) {
+                    $event->addMessage(__('Error calling audience receiveStats'. $requestException->getMessage()));
+                    $this->getLogger()->error('Audience receiveStats: failed e = ' . $requestException->getMessage());
+                }
 
-            // Get Campaign Total
-            if ($statusCode == 204) {
-                try {
-                    $response = $this->getClient()->get('https://test-exchange.xibo-adspace.com/api/audience/campaignTotal', [
+                // Get Campaign Total
+                if ($statusCode == 204) {
+                    try {
+                        $response = $this->getClient()->get($this->getServiceUrl() . '/campaignTotal', [
                             'headers' => [
                                 'X-API-KEY' => $this->getSetting('apiKey')
                             ],
@@ -247,23 +253,29 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             ]
                         ]);
 
-                    $body = $response->getBody()->getContents();
-                    $results = json_decode($body, true);
+                        $body = $response->getBody()->getContents();
+                        $results = json_decode($body, true);
 
-                    foreach ($results as $item) {
-                        // Save the total in the camapign
-                        $campaign = $this->campaignFactory->getById($item['id']);
+                        foreach ($results as $item) {
+                            // Save the total in the camapign
+                            $campaign = $this->campaignFactory->getById($item['id']);
 
-                        $campaign->spend = $item['spend'];
-                        $campaign->impressions = $item['impressions'];
+                            $campaign->spend = $item['spend'];
+                            $campaign->impressions = $item['impressions'];
 
-                        $campaign->save(['validate' => false]);
+                            $campaign->save(['validate' => false]);
+                        }
+                    } catch (RequestException $requestException) {
+                        $event->addMessage(__('Error getting campaign total:'. $requestException->getMessage()));
+                        $this->getLogger()->error('Campaign total: e = ' . $requestException->getMessage());
                     }
-                } catch (RequestException $requestException) {
-                    $event->addMessage(__('Error getting campaign total:'. $requestException->getMessage()));
-                    $this->getLogger()->error('Campaign total: e = ' . $requestException->getMessage());
                 }
             }
+
+        } catch (RequestException $requestException) {
+            // If we cant get the watermark we stop
+            $event->addMessage(__('Error getting watermark: '. $requestException->getMessage()));
+            $this->getLogger()->error('Get Watermark: failed e = ' . $requestException->getMessage());
         }
     }
 
@@ -272,7 +284,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $type = $event->getReportType();
 
         $typeUrl = [
-          'proofofplay' => 'https://test-exchange.xibo-adspace.com/api/audience/campaign/proofofplay'
+          'proofofplay' => $this->getServiceUrl() . '/campaign/proofofplay'
         ];
 
         if (array_key_exists($type, $typeUrl)) {
@@ -302,4 +314,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $event->setResults($json);
         }
     }
+
+
+    // </editor-fold>
 }
