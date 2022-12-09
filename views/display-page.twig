@@ -723,8 +723,16 @@
                     hideControlContainer: true
                 }).addTo(map);
 
-                var markers = L.markerClusterGroup();
-
+                var markers = L.markerClusterGroup({
+                    maxClusterRadius: function (mapZoom) {
+                        if (mapZoom > 9) {
+                            return 20;
+                        } else {
+                            return 80;
+                        }
+                    }
+                });
+                
                 let bounds;
                 bounds = map.getBounds().toBBoxString();
 
