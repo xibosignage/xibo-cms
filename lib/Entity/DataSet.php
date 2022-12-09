@@ -989,7 +989,7 @@ class DataSet implements \JsonSerializable
             $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
-            $params['truncateOnEmpty'] = $this->truncateOnEmpty;
+            $params['truncateOnEmpty'] = $this->truncateOnEmpty ?? 0;
             $params['runsAfter'] = $this->runsAfter;
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;
@@ -1041,7 +1041,7 @@ class DataSet implements \JsonSerializable
             $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
-            $params['truncateOnEmpty'] = $this->truncateOnEmpty;
+            $params['truncateOnEmpty'] = $this->truncateOnEmpty ?? 0;
             $params['runsAfter'] = $this->runsAfter;
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;

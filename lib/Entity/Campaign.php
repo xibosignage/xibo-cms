@@ -684,6 +684,12 @@ class Campaign implements \JsonSerializable
             $event->delete();
         }
 
+        if ($this->type === 'ad') {
+            foreach ($this->scheduleFactory->getByParentCampaignId($this->campaignId) as $adEvent) {
+                $adEvent->delete();
+            }
+        }
+
         // Delete the Actual Campaign
         $this->getStore()->update('DELETE FROM `campaign` WHERE CampaignID = :campaignId', ['campaignId' => $this->campaignId]);
     }

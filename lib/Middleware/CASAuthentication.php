@@ -66,6 +66,10 @@ class CASAuthentication extends AuthenticationBase
                 throw new AccessDeniedException('Unable to authenticate');
             }
 
+            if ($user->retired === 1) {
+                throw new AccessDeniedException('Sorry this account does not exist or cannot be authenticated.');
+            }
+
             if (isset($user) && $user->userId > 0) {
                 // Load User
                 $this->getUser($user->userId, $request->getAttribute('ip_address'));
