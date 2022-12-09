@@ -1486,7 +1486,7 @@ class Display extends Base
      *      name="costPerPlay",
      *      in="formData",
      *      description="The Cost Per Play of this Display",
-     *      type="integer",
+     *      type="double",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -1629,8 +1629,8 @@ class Display extends Base
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
         $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
         $display->isOutdoor = $sanitizedParams->getCheckbox('isOutdoor');
-        $display->costPerPlay = $sanitizedParams->getInt('costPerPlay');
-        $display->impressionsPerPlay = $sanitizedParams->getInt('impressionsPerPlay');
+        $display->costPerPlay = $sanitizedParams->getDouble('costPerPlay');
+        $display->impressionsPerPlay = $sanitizedParams->getDouble('impressionsPerPlay');
         $display->customId = $sanitizedParams->getString('customId');
         $display->ref1 = $sanitizedParams->getString('ref1');
         $display->ref2 = $sanitizedParams->getString('ref2');

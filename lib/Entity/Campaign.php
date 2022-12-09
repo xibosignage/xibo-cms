@@ -151,13 +151,13 @@ class Campaign implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The amount of spend in cents/pence/etc")
-     * @var int
+     * @var double
      */
     public $spend;
 
     /**
      * @SWG\Property(description="The number of impressions achived by this campaign")
-     * @var int
+     * @var double
      */
     public $impressions;
 
@@ -1038,11 +1038,11 @@ class Campaign implements \JsonSerializable
     /**
      * Add to the number of plays
      * @param int $plays
-     * @param float $spend
-     * @param float $impressions
+     * @param double $spend
+     * @param double $impressions
      * @return $this
      */
-    public function incrementPlays(int $plays, float $spend, float $impressions): Campaign
+    public function incrementPlays(int $plays, $spend, $impressions): Campaign
     {
         $this->plays += $plays;
         $this->additionalPlays += $plays;
