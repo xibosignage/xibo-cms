@@ -2490,15 +2490,18 @@ class Layout implements \JsonSerializable
         // as the SQL we run here is recursive everything will end up with correct parent/child relation and depth level.
         foreach ($this->getAllWidgets() as $widget) {
             if ($widget->type == 'subplaylist') {
-                $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylistIds', '[]'));
-                $assignedPlaylists = implode(',', $assignedPlaylists);
+                $assignedPlaylistIds = [];
+                $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
+                foreach ($assignedPlaylists as $subPlaylistItem) {
+                    $assignedPlaylistIds[] = $subPlaylistItem['playlistId'];
+                }
 
                 foreach ($this->regions as $region) {
                     $regionPlaylist = $region->regionPlaylist;
 
                     if ($widget->playlistId == $regionPlaylist->playlistId) {
                         $parentId = $regionPlaylist->playlistId;
-                        $child[] = $assignedPlaylists;
+                        $child[] = $assignedPlaylistIds;
                     }
                 }
             }
