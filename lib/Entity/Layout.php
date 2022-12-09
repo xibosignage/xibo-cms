@@ -2501,7 +2501,7 @@ class Layout implements \JsonSerializable
 
                     if ($widget->playlistId == $regionPlaylist->playlistId) {
                         $parentId = $regionPlaylist->playlistId;
-                        $child[] = $assignedPlaylistIds;
+                        $child = $assignedPlaylistIds;
                     }
                 }
             }

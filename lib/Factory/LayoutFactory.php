@@ -1711,6 +1711,19 @@ class LayoutFactory extends BaseFactory
                         }
                     }
 
+                    foreach ($updatedSubPlaylists as $updatedSubPlaylistItem) {
+
+                        $this->getStore()->insert('
+                            INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
+                            SELECT p.parentId, c.childId, p.depth + c.depth + 1
+                              FROM lkplaylistplaylist p, lkplaylistplaylist c
+                             WHERE p.childId = :parentId AND c.parentId = :childId
+                        ', [
+                            'parentId' => $playlist->playlistId,
+                            'childId' => $updatedSubPlaylistItem['playlistId']
+                        ]);
+                    }
+
                     $playlistWidget->setOptionValue('subPlaylists', 'attrib', json_encode($updatedSubPlaylists));
                 }
 
