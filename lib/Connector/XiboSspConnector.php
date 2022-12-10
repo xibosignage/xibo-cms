@@ -245,6 +245,15 @@ class XiboSspConnector implements ConnectorInterface
     }
 
     /**
+     * Get the number of displays that are authorised by this API key.
+     * @return int
+     */
+    public function getAuthorisedDisplayCount(): int
+    {
+        return intval($this->partners['displays'] ?? 0);
+    }
+
+    /**
      * Get a setting for a partner
      * @param string $partnerKey
      * @param string $setting

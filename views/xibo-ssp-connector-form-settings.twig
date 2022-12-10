@@ -59,6 +59,9 @@
 
             {% if partners is not iterable %}
                 <p class="alert alert-danger">{{ interface.getFormError() }}</p>
+            {% else %}
+                {% set numberOfAuthedDisplays = interface.getAuthorisedDisplayCount() %}
+                <p class="alert alert-info">{% trans %}Your API key is authorised for {{ numberOfAuthedDisplays }} displays.{% endtrans %}</p>
             {% endif %}
 
             {% if not interface.isProviderSetting("apiKey") %}
