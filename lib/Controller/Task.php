@@ -453,9 +453,9 @@ class Task extends Base
         $task->runNow = 0;
         $task->status = \Xibo\Entity\Task::$STATUS_IDLE;
 
-        // lastRunMessage columns has a limit of 255 characters, if the message is longer, we need to truncate it.
-        if (strlen($task->lastRunMessage) > 255) {
-            $task->lastRunMessage = substr($task->lastRunMessage, 0, 250) . '(...)';
+        // lastRunMessage columns has a limit of 254 characters, if the message is longer, we need to truncate it.
+        if (strlen($task->lastRunMessage) >= 255) {
+            $task->lastRunMessage = substr($task->lastRunMessage, 0, 249) . '(...)';
         }
 
         // Finished
