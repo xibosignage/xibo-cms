@@ -129,13 +129,20 @@ class XiboAudienceReportingConnector implements ConnectorInterface
      */
     public function onRegularMaintenance(MaintenanceRegularEvent $event)
     {
+        // We should only do this if the connector is enabled and if we have an API key
+        $apiKey = $this->getSetting('apiKey');
+        if (empty($apiKey)) {
+            $this->getLogger()->debug('onRegularMaintenance: No api key');
+            return;
+        }
+
         // Get Watermark
         try {
             $response = $this->getClient()->get($this->getServiceUrl() . '/watermark', [
-                    'headers' => [
-                        'X-API-KEY' => $this->getSetting('apiKey')
-                    ],
-                ]);
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey')
+                ],
+            ]);
 
             $body = $response->getBody()->getContents();
             $json = json_decode($body, true);
@@ -271,7 +278,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     }
                 }
             }
-
         } catch (RequestException $requestException) {
             // If we cant get the watermark we stop
             $event->addMessage(__('Error getting watermark: '. $requestException->getMessage()));
@@ -284,7 +290,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $type = $event->getReportType();
 
         $typeUrl = [
-          'proofofplay' => $this->getServiceUrl() . '/campaign/proofofplay'
+            'proofofplay' => $this->getServiceUrl() . '/campaign/proofofplay'
         ];
 
         if (array_key_exists($type, $typeUrl)) {
@@ -294,11 +300,11 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     // Get audience proofofplay result
                     try {
                         $response = $this->getClient()->get($typeUrl[$type], [
-                                'headers' => [
-                                    'X-API-KEY' => $this->getSetting('apiKey')
-                                ],
-                                'query' => $event->getParams()
-                            ]);
+                            'headers' => [
+                                'X-API-KEY' => $this->getSetting('apiKey')
+                            ],
+                            'query' => $event->getParams()
+                        ]);
 
                         $body = $response->getBody()->getContents();
                         $json = json_decode($body, true);
