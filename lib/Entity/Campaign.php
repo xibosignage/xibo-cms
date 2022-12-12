@@ -367,19 +367,26 @@ class Campaign implements \JsonSerializable
             $testDate = Carbon::now();
         }
         $startDt = $this->getStartDt();
-        $progress->daysTotal = $this->getEndDt()->diffInDays($startDt);
+        $endDt = $this->getEndDt();
+        $progress->daysTotal = $endDt->diffInDays($startDt);
         $progress->targetPerDay = $this->target / $progress->daysTotal;
 
         if ($startDt->isAfter($testDate)) {
             $progress->progressTime = 0;
             $progress->progressTarget = 0;
         } else {
-            $progress->daysIn = $testDate->diffInDays($startDt);
+            if ($testDate->isAfter($endDt)) {
+                // We've finished.
+                $progress->daysIn = $progress->daysTotal;
+                $progress->progressTime = 100;
+            } else {
+                $progress->daysIn = $testDate->diffInDays($startDt);
 
-            // Use hours to calculate more accurate progress
-            $hoursTotal = $progress->daysTotal * 24;
-            $hoursIn = $testDate->diffInHours($startDt);
-            $progress->progressTime = $hoursIn / $hoursTotal * 100;
+                // Use hours to calculate more accurate progress
+                $hoursTotal = $progress->daysTotal * 24;
+                $hoursIn = $testDate->diffInHours($startDt);
+                $progress->progressTime = $hoursIn / $hoursTotal * 100;
+            }
 
             if ($this->targetType === 'budget') {
                 $progress->progressTarget = ($this->spend / $this->target) * 100;
