@@ -116,13 +116,13 @@ class Display implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The Cost Per Play of this Display")
-     * @var int
+     * @var double
      */
     public $costPerPlay;
 
     /**
      * @SWG\Property(description="The Impressions Per Play of this Display")
-     * @var int
+     * @var double
      */
     public $impressionsPerPlay;
 

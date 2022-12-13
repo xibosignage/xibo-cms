@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-08 09:41+0000\n"
+"POT-Creation-Date: 2022-12-12 10:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -8154,7 +8154,7 @@ msgstr ""
 
 #: cache/1f/1fd9187e2d4460389b74b86b63e578a124a11de83282c570a4e00a7bb65ba6ca.php:167
 #: cache/b1/b19ea9bbe44b6ed9904afda938cb51ecf849f891c4ab15c756192a46dce379fc.php:143
-#: lib/Report/TimeDisconnectedSummary.php:387
+#: lib/Report/TimeDisconnectedSummary.php:371
 msgid "Hours"
 msgstr ""
 
@@ -8164,7 +8164,7 @@ msgstr ""
 
 #: cache/1f/1fd9187e2d4460389b74b86b63e578a124a11de83282c570a4e00a7bb65ba6ca.php:182
 #: cache/b1/b19ea9bbe44b6ed9904afda938cb51ecf849f891c4ab15c756192a46dce379fc.php:138
-#: lib/Report/TimeDisconnectedSummary.php:390
+#: lib/Report/TimeDisconnectedSummary.php:374
 msgid "Minutes"
 msgstr ""
 
@@ -8868,7 +8868,7 @@ msgstr ""
 #: cache/c5/c570109be978225901b1f707e24d3a7853ffecfbb18f5c1583a597a3c1a1cec5.php:218
 #: cache/e9/e98e723d2d5e526971352df586c052e9948b62812cd4b2b431d9ec5fed7558f5.php:265
 #: lib/Controller/Region.php:657 lib/Controller/Layout.php:3031
-#: lib/Entity/Layout.php:2106
+#: lib/Entity/Layout.php:2113
 msgid "Empty Region"
 msgstr ""
 
@@ -16454,7 +16454,7 @@ msgstr ""
 #: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1583
 #: cache/6e/6ec667b18d17402ebc7262b8df4c17b951119fe9c5275c012ef23758b115ff9b.php:117
 #: cache/6e/6ec667b18d17402ebc7262b8df4c17b951119fe9c5275c012ef23758b115ff9b.php:124
-#: lib/Connector/XiboSspConnector.php:98
+#: lib/Connector/XiboSspConnector.php:99
 msgid "Unknown error"
 msgstr ""
 
@@ -18755,7 +18755,7 @@ msgstr ""
 msgid "Please select at least 1 Playlist to embed"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:351 lib/Entity/Layout.php:2509
+#: lib/Widget/SubPlaylist.php:351 lib/Entity/Layout.php:2519
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -19182,17 +19182,17 @@ msgid ""
 "Layout code."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2166
+#: lib/Xmds/Soap.php:2177
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2167
+#: lib/Xmds/Soap.php:2178
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2238
+#: lib/Xmds/Soap.php:2249
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
@@ -19429,12 +19429,12 @@ msgid "Get report class: No file to return"
 msgstr ""
 
 #: lib/Service/ReportService.php:269 lib/Service/ReportService.php:306
-#: lib/Factory/LayoutFactory.php:1114
+#: lib/Factory/LayoutFactory.php:1090
 msgid "File does not exist"
 msgstr ""
 
 #: lib/Service/ReportService.php:275 lib/Service/ReportService.php:312
-#: lib/Factory/LayoutFactory.php:1120
+#: lib/Factory/LayoutFactory.php:1096
 msgid "Unable to open ZIP"
 msgstr ""
 
@@ -19544,24 +19544,24 @@ msgstr ""
 msgid "Layout import failed, invalid xlf supplied"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1264
+#: lib/Factory/LayoutFactory.php:1240
 msgid "Empty file in ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1269
+#: lib/Factory/LayoutFactory.php:1245
 msgid "Cannot save media file from ZIP file"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1530
+#: lib/Factory/LayoutFactory.php:1506
 #, php-format
 msgid "DataSets have different number of columns imported = %d, existing = %d"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1541
+#: lib/Factory/LayoutFactory.php:1517
 msgid "DataSets have different column names"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:2389 lib/Factory/LayoutFactory.php:2405
+#: lib/Factory/LayoutFactory.php:2341 lib/Factory/LayoutFactory.php:2357
 msgid "Draft"
 msgstr ""
 
@@ -20250,7 +20250,7 @@ msgstr ""
 #: lib/Controller/MenuBoardProduct.php:600 lib/Controller/Region.php:398
 #: lib/Controller/Region.php:567 lib/Controller/PlayerSoftware.php:406
 #: lib/Controller/Command.php:452 lib/Controller/DataSetColumn.php:583
-#: lib/Controller/Connector.php:190 lib/Controller/Layout.php:740
+#: lib/Controller/Connector.php:201 lib/Controller/Layout.php:740
 #: lib/Controller/Layout.php:847 lib/Controller/DataSetRss.php:565
 #: lib/Controller/Applications.php:551 lib/Controller/Module.php:379
 #: lib/Controller/Module.php:848 lib/Controller/Transition.php:159
@@ -20588,7 +20588,7 @@ msgstr ""
 msgid "Unknown type"
 msgstr ""
 
-#: lib/Controller/Connector.php:175 lib/Controller/Module.php:607
+#: lib/Controller/Connector.php:180 lib/Controller/Module.php:607
 #, php-format
 msgid "Uninstalled %s"
 msgstr ""
@@ -21675,27 +21675,27 @@ msgid ""
 "empty"
 msgstr ""
 
-#: lib/Controller/Stats.php:394 lib/Report/ProofOfPlay.php:477
+#: lib/Controller/Stats.php:406 lib/Report/ProofOfPlay.php:477
 msgid "Deleted from Layout"
 msgstr ""
 
-#: lib/Controller/Stats.php:396 lib/Controller/Stats.php:397
-#: lib/Controller/Stats.php:757 lib/Controller/Stats.php:758
-#: lib/Report/ProofOfPlay.php:483 lib/Report/ProofOfPlay.php:485
+#: lib/Controller/Stats.php:408 lib/Controller/Stats.php:409
+#: lib/Controller/Stats.php:769 lib/Controller/Stats.php:771
+#: lib/Report/ProofOfPlay.php:484 lib/Report/ProofOfPlay.php:486
 msgid "Not Found"
 msgstr ""
 
-#: lib/Controller/Stats.php:464 lib/Controller/Stats.php:640
-#: lib/Controller/Stats.php:705 lib/Controller/Stats.php:1009
+#: lib/Controller/Stats.php:476 lib/Controller/Stats.php:652
+#: lib/Controller/Stats.php:717 lib/Controller/Stats.php:1022
 #: lib/Report/ReportDefaultTrait.php:329
 msgid "No displays with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:534 lib/Report/Bandwidth.php:276
+#: lib/Controller/Stats.php:546 lib/Report/Bandwidth.php:276
 msgid "Deleted Displays"
 msgstr ""
 
-#: lib/Controller/Stats.php:723
+#: lib/Controller/Stats.php:735
 msgid "Both fromDt/toDt should be provided"
 msgstr ""
 
@@ -22075,7 +22075,7 @@ msgid "(DisplayId: Not Found)"
 msgstr ""
 
 #: lib/Report/DistributionReport.php:303
-#: lib/Report/TimeDisconnectedSummary.php:251
+#: lib/Report/TimeDisconnectedSummary.php:245
 msgid "No display groups with View permissions"
 msgstr ""
 
@@ -22137,20 +22137,20 @@ msgstr ""
 msgid "%s bandwidth report"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:140
+#: lib/Report/TimeDisconnectedSummary.php:144
 #, php-format
 msgid "%s time disconnected summary report"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:384
+#: lib/Report/TimeDisconnectedSummary.php:368
 msgid "Days"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:439
+#: lib/Report/TimeDisconnectedSummary.php:423
 msgid "Downtime"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:444
+#: lib/Report/TimeDisconnectedSummary.php:428
 msgid "Uptime"
 msgstr ""
 
@@ -22228,7 +22228,7 @@ msgstr ""
 
 #: lib/Connector/XiboDashboardConnector.php:200
 #: lib/Connector/XiboDashboardConnector.php:273
-#: lib/Connector/XiboSspConnector.php:195
+#: lib/Connector/XiboSspConnector.php:204
 msgid "Empty response from the dashboard service"
 msgstr ""
 
@@ -22254,16 +22254,24 @@ msgstr ""
 msgid "No credentials logged for %s"
 msgstr ""
 
-#: lib/Connector/XiboSspConnector.php:205
-#: lib/Connector/XiboSspConnector.php:215
-#: lib/Connector/XiboSspConnector.php:272
-#: lib/Connector/XiboSspConnector.php:276
-#: lib/Connector/XiboSspConnector.php:365
-#: lib/Connector/XiboSspConnector.php:369
+#: lib/Connector/XiboSspConnector.php:115
+msgid "Please enter a CMS URL, including http(s)://"
+msgstr ""
+
+#: lib/Connector/XiboSspConnector.php:213
+msgid "API key not valid"
+msgstr ""
+
+#: lib/Connector/XiboSspConnector.php:224
+#: lib/Connector/XiboSspConnector.php:235
+#: lib/Connector/XiboSspConnector.php:301
+#: lib/Connector/XiboSspConnector.php:305
+#: lib/Connector/XiboSspConnector.php:394
+#: lib/Connector/XiboSspConnector.php:398
 msgid "Cannot contact SSP service, please try again shortly."
 msgstr ""
 
-#: lib/Connector/XiboSspConnector.php:414
+#: lib/Connector/XiboSspConnector.php:444
 msgid "No response"
 msgstr ""
 
@@ -22545,16 +22553,16 @@ msgid ""
 "edge. Please check the allowed Resize Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Entity/Layout.php:2095
+#: lib/Entity/Layout.php:2102
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:2173 lib/Entity/Layout.php:2296
+#: lib/Entity/Layout.php:2180 lib/Entity/Layout.php:2303
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:2381
+#: lib/Entity/Layout.php:2388
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
@@ -23054,7 +23062,7 @@ msgstr ""
 msgid "Notification Tidy"
 msgstr ""
 
-#: lib/XTR/EmailNotificationsTask.php:57 lib/XTR/EmailNotificationsTask.php:68
+#: lib/XTR/EmailNotificationsTask.php:56 lib/XTR/EmailNotificationsTask.php:67
 msgid "Email Notifications"
 msgstr ""
 
@@ -23145,19 +23153,19 @@ msgstr ""
 msgid "Failed to write to database after %d retries. Please try again later."
 msgstr ""
 
-#: lib/Storage/MongoDbTimeSeriesStore.php:449
+#: lib/Storage/MongoDbTimeSeriesStore.php:459
 #: lib/Storage/MySqlTimeSeriesStore.php:202
 msgid "Invalid statId provided"
 msgstr ""
 
-#: lib/Storage/MongoDbTimeSeriesStore.php:592
-#: lib/Storage/MongoDbTimeSeriesStore.php:647
+#: lib/Storage/MongoDbTimeSeriesStore.php:608
+#: lib/Storage/MongoDbTimeSeriesStore.php:665
 msgid ""
 "Sorry we encountered an error getting Proof of Play data, please consult "
 "your administrator"
 msgstr ""
 
-#: lib/Storage/MongoDbTimeSeriesStore.php:697
+#: lib/Storage/MongoDbTimeSeriesStore.php:715
 msgid ""
 "Sorry we encountered an error getting total number of Proof of Play data, "
 "please consult your administrator"

@@ -67,4 +67,6 @@ require('leaflet-draw/dist/leaflet.draw-src.css');
 require('leaflet-search/dist/leaflet-search.src.css');
 require('leaflet.markercluster/dist/MarkerCluster.css');
 require('leaflet.markercluster/dist/MarkerCluster.Default.css');
+require('leaflet-fullscreen/dist/leaflet.fullscreen.css');
+
 

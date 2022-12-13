@@ -108,7 +108,7 @@
                             { id: "round", name: "Round-robin"|trans },
                             { id: "block", name: "Block"|trans },
                         ] %}
-                        {{ forms.dropdown("listPlayOrder", "single", title, campaign.listPlayOrder, options, "id", "name", helpText, "campaign-type-list") }}
+                        {{ forms.dropdown("listPlayOrder", "single", title, campaign.listPlayOrder, options, "id", "name", helpText, "campaign-type-list no-cycle-based-playback") }}
                     </div>
                     <div class="tab-pane" id="tab-refs">
                         {{ forms.message("Add reference fields if needed"|trans) }}

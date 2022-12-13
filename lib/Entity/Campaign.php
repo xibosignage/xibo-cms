@@ -151,13 +151,13 @@ class Campaign implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The amount of spend in cents/pence/etc")
-     * @var int
+     * @var double
      */
     public $spend;
 
     /**
      * @SWG\Property(description="The number of impressions achived by this campaign")
-     * @var int
+     * @var double
      */
     public $impressions;
 
@@ -367,19 +367,26 @@ class Campaign implements \JsonSerializable
             $testDate = Carbon::now();
         }
         $startDt = $this->getStartDt();
-        $progress->daysTotal = $this->getEndDt()->diffInDays($startDt);
+        $endDt = $this->getEndDt();
+        $progress->daysTotal = $endDt->diffInDays($startDt);
         $progress->targetPerDay = $this->target / $progress->daysTotal;
 
         if ($startDt->isAfter($testDate)) {
             $progress->progressTime = 0;
             $progress->progressTarget = 0;
         } else {
-            $progress->daysIn = $testDate->diffInDays($startDt);
+            if ($testDate->isAfter($endDt)) {
+                // We've finished.
+                $progress->daysIn = $progress->daysTotal;
+                $progress->progressTime = 100;
+            } else {
+                $progress->daysIn = $testDate->diffInDays($startDt);
 
-            // Use hours to calculate more accurate progress
-            $hoursTotal = $progress->daysTotal * 24;
-            $hoursIn = $testDate->diffInHours($startDt);
-            $progress->progressTime = $hoursIn / $hoursTotal * 100;
+                // Use hours to calculate more accurate progress
+                $hoursTotal = $progress->daysTotal * 24;
+                $hoursIn = $testDate->diffInHours($startDt);
+                $progress->progressTime = $hoursIn / $hoursTotal * 100;
+            }
 
             if ($this->targetType === 'budget') {
                 $progress->progressTarget = ($this->spend / $this->target) * 100;
@@ -682,6 +689,12 @@ class Campaign implements \JsonSerializable
             /* @var Schedule $event */
             $event->setDisplayNotifyService($this->displayNotifyService);
             $event->delete();
+        }
+
+        if ($this->type === 'ad') {
+            foreach ($this->scheduleFactory->getByParentCampaignId($this->campaignId) as $adEvent) {
+                $adEvent->delete();
+            }
         }
 
         // Delete the Actual Campaign
@@ -1038,11 +1051,11 @@ class Campaign implements \JsonSerializable
     /**
      * Add to the number of plays
      * @param int $plays
-     * @param float $spend
-     * @param float $impressions
+     * @param double $spend
+     * @param double $impressions
      * @return $this
      */
-    public function incrementPlays(int $plays, float $spend, float $impressions): Campaign
+    public function incrementPlays(int $plays, $spend, $impressions): Campaign
     {
         $this->plays += $plays;
         $this->additionalPlays += $plays;

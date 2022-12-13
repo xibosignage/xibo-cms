@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -243,7 +243,9 @@ class NotificationFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isEmail', 'isInterrupt', 'isSystem']
+            ]);
         }
 
         // Paging

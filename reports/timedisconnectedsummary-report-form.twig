@@ -34,15 +34,15 @@
 
     <div class="widget">
         <div class="widget-title">
-            <span>{% trans "Time Connected" %}</span>
+            <span>{% trans "Time Connected Summary" %}</span>
         </div>
 
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
-                <div class="XiboFilter">
-                    <div class="FilterDiv card-body" id="availabilityFilter">
+                <div class="XiboFilterCustom">
+                    <div class="FilterDiv card-body" id="timeDisconnectedReport">
                         <form class="form-inline">
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("availabilityFromDt", title, defaults.fromDate, "", "", "", "") }}
@@ -70,13 +70,12 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value:  url_for("displayGroup.search") },
+                                { name: "data-search-url", value: url_for("displayGroup.search") },
                                 { name: "data-search-term", value: "displayGroup" },
-                                { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayGroupId" },
                                 { name: "data-text-property", value: "displayGroup" }
                             ] %}
-                            {{ inline.dropdown("displayGroupId", "single", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
+                            {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
 
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}
@@ -88,36 +87,79 @@
 
                             {% set title %}{% trans "Only show currently logged in?" %}{% endset %}
                             {{ inline.checkbox("onlyLoggedIn", title) }}
+
+                            <div class="w-100">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
                         </form>
                     </div>
                 </div>
-                <br/>
-                <div class="XiboData card pt-3">
-                    <table id="stats" class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>{% trans "Display ID" %}</th>
-                            <th>{% trans "Display" %}</th>
-                            <th>{% trans "Time Disconnected" %}</th>
-                            <th>{% trans "Time Connected" %}</th>
-                            <th>{% trans "Units" %}</th>
 
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
+                <!-- Card Header -->
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="chart-tab" data-toggle="tab" href="#chartTab" role="tab"
+                               aria-controls="chartTab" aria-selected="true">Chart</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="tabular-tab" data-toggle="tab" href="#tabularTab" role="tab"
+                               aria-controls="tabularTab" aria-selected="false">Tabular</a>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="widget">
-        <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboData" style="margin-top: 25px;">
-                    <canvas id="availabilityChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- CHART TAB-->
+                        <div class="tab-pane active" id="chartTab" role="tabpanel" aria-labelledby="chart-tab">
+                            <div class="chart-container" style="height:550px;">
+                                <canvas id="canvas" style="clear:both; margin-top:25px;" height="70%"></canvas>
+                                <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
+                            </div>
+                        </div>
+
+                        <!-- TABULAR TAB-->
+                        <div class="tab-pane show" id="tabularTab" role="tabpanel" aria-labelledby="tabular-tab">
+                            <!-- DATATABLE -->
+                            <div class="table-container" id="table_wrapper">
+                                <table id="timeDisconnectedTbl"
+                                       class="table xibo-table table-striped table-full-width"
+                                       style="width: 100%"
+                                       data-url="/report/data/timedisconnectedsummary"
+                                >
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Display ID" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Time Disconnected" %}</th>
+                                        <th>{% trans "Time Connected" %}</th>
+                                        <th>{% trans "Units" %}</th>
+
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                    <tfoot>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,29 +174,28 @@
 
             $('[data-toggle="popover"]').popover();
 
-            let availabilityChart = null;
-            let table = $("#stats").DataTable({
-                "language": dataTablesLanguage,
-                dom: dataTablesTemplate,
-                serverSide: true,
-                stateSave: true, stateDuration: 0,
-                filter: false,
-                searchDelay: 3000,
-                "order": [[0, "asc"]],
-                ajax: {
-                    "url": "{{ url_for("report.data", {name: reportName}) }}",
-                    "data": function (d) {
-                        $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                    },
-                    dataFilter: function(data){
-                        let json = $.parseJSON(data);
-                        json.recordsFiltered = json.recordsTotal;
-                        json.data = json.table;
+            let $report = $("#timeDisconnectedReport");
+            let $dataTable = $('#timeDisconnectedTbl'); // Datatable
+            let chart = null;
+            let result; // XHR get data result
 
-                        return JSON.stringify( json ); // return JSON string
-                    }
-                },
-                "columns": [
+            let imageLoader = $("#imageLoader");
+            let $warning = $("#applyWarning");
+            let $applyBtn = $("#applyBtn");
+
+            // Initialize table with empty data
+            let table = $dataTable.DataTable({
+                language: dataTablesLanguage,
+                dom: dataTablesTemplate,
+                searching: false,
+                paging: true,
+                bInfo: false,
+                stateSave: true,
+                bDestroy: true,
+                processing: true,
+                ordering: false,
+                data: {},
+                columns: [
                     {"data": "displayId"},
                     {"data": "display"},
                     {"data": "timeDisconnected", "sortable": false},
@@ -163,75 +204,115 @@
                 ]
             });
 
-            table.on('draw', dataTableDraw);
-            table.on('processing.dt', function(e, settings, processing) {
-                dataTableProcessing(e, settings, processing);
+            // Get Data
+            function getData(url) {
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    dataType: 'json',
+                    data: $report.find("form").serialize(),
+                    success: function success(data) {
+                        result = data;
+                        $applyBtn.removeClass('disabled');
 
-                if (!processing) {
-                    // Render a Time Disconnected graph
-                    if (availabilityChart !== undefined && availabilityChart !== null) {
-                        availabilityChart.destroy();
-                    }
-
-                    // Organise our rows into datasets for the chart
-                    let availabilityData = [];
-                    let availabilityDataConnected = [];
-                    let availabilityLabels = [];
-                    let postUnits = "";
-                    let dataSets = [];
-
-                    $.each(table.data(), function(index, el) {
-                        availabilityData.push(el.timeDisconnected);
-                        availabilityDataConnected.push(el.timeConnected);
-                        availabilityLabels.push(el.display);
-                        postUnits = el.postUnits;
-                    });
-                    dataSets.push({
-                        label: "{% trans "Downtime" %}",
-                        backgroundColor: "rgb(11, 98, 164)",
-                        data: availabilityData
-                    });
-                    if (availabilityDataConnected != null) {
-                        dataSets.push({
-                            label: "{% trans "Uptime" %}",
-                            backgroundColor: "rgb(0, 255, 0)",
-                            data: availabilityDataConnected
-                        });
-                    }
-
-                    // Create our chart
-                    availabilityChart = new Chart($("#availabilityChart"), {
-                        type: "bar",
-                        data: {
-                            labels: availabilityLabels,
-                            datasets: dataSets
-                        },
-                        options: {
-                            scales: {
-                                xAxes: [{
-                                    stacked: true
-                                }],
-                                yAxes: [{
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: postUnits,
-                                    },
-                                    stacked: true
-                                }]
-                            },
-                            legend: {
-                                display: false
-                            },
-                            maintainAspectRatio: false,
+                        // Based on tab load data
+                        if ($('.nav-tabs .nav-item a.active').attr("href") === '#tabularTab') {
+                            setTabularData(table, result.table);
+                        } else {
+                            setChartData(result.chart);
                         }
-                    });
+                    },
+                    error: function error(xhr, textStatus, _error) {
+                        $applyBtn.removeClass('disabled');
+                        toastr.error(xhr.responseJSON.message);
+                    }
+                });
+            }
+
+            function setTabularData(table, data) {
+                table.clear().draw();
+
+                if (Object.keys(data).length > 0) {
+                    table.rows.add( data ).draw()
+                }
+            }
+
+            function setChartData(data) {
+                imageLoader.show();
+
+                setTimeout(function() {
+                    $applyBtn.removeClass('disabled');
+                }, 300);
+
+                imageLoader.hide();
+                if (chart !== undefined && chart !== null) {
+                    chart.destroy();
+                }
+
+                // Create our chart
+                chart = new Chart($("#canvas"), data);
+            }
+
+            // Tab shown/click load relevant table/chart
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                let activeTab = $(e.target).attr("href")
+                if (result) {
+                    if (activeTab === '#tabularTab') {
+                        setTabularData(table, result.table);
+                    } else {
+                        setChartData(result.chart);
+                    }
                 }
             });
+
+            // Apply
+            $applyBtn.click(function () {
+                $(this).addClass('disabled');
+
+                if ($('.nav-tabs .nav-item a.active').attr("href") === '#tabularTab') {
+                    // table.processing( true );
+                } else {
+                    imageLoader.show();
+                }
+
+                getData($dataTable.data().url);
+            });
+
+            // If we select a displayId we hide the display group filter
+            $('#displayId').off('change').change( function() {
+
+                let displayId = $('#displayId').val();
+                if (displayId) {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                } else {
+                    $('#displayId option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                }
+            });
+
+            imageLoader.hide();
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();
             });
         });
+
+        function timeDisconnectedScheduleCallback(dialog) {
+
+            // If we select a displayId we hide the display group filter
+            $('#reportScheduleAddForm #displayId').off('change').change( function() {
+
+                let displayId = $('#reportScheduleAddForm #displayId').val();
+                if (displayId) {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().hide();
+                } else {
+                    $('#reportScheduleAddForm #displayId option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().show();
+                }
+            });
+        }
 
     </script>
 {% endblock %}

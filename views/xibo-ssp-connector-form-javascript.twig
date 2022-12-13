@@ -35,6 +35,12 @@
   });
 
   window.sspFormOpen = function(dialog) {
+    // CMS Url
+    var $cmsUrl = dialog.find('input[name="cmsUrl"]');
+    if ($cmsUrl.val() === '') {
+      $cmsUrl.val(window.location.origin || null);
+    }
+
     // Share of voice
     var $shareOfVoice = dialog.find('.share-of-voice-control');
     $shareOfVoice.on('change paste keyup', function() {
@@ -123,7 +129,7 @@
 
       footerCallback: function(row, data, start, end, display) {
         var json = this.api().ajax.json();
-        if (json) {
+        if (json && json.stats) {
            $(this.api().column(0).footer()).html(json.stats.scheduled || 0);
            $(this.api().column(3).footer()).html(json.stats.played || 0);
            $(this.api().column(4).footer()).html(json.stats.errored || 0);
@@ -133,7 +139,9 @@
 
       drawCallback: function(settings) {
         setTimeout(function() {
-          dialog.find('a[data-apply-button="true"]').removeClass('disabled');
+          dialog.find('a[data-apply-button="true"]')
+           .removeClass('disabled')
+           .find('.saving').remove();
         }, 300);
       },
     });
@@ -144,7 +152,7 @@
 
     // Find the apply button
     dialog.find('a[data-apply-button="true"]').on('click', function() {
-      $(this).addClass('disabled');
+      $(this).addClass('disabled').append('<span class="saving fa fa-cog fa-spin p-1"></span>');
       table.ajax.reload(null, true);
     });
   };
@@ -155,13 +163,17 @@
           <div class="FilterDiv card-body" id="connector-ssp-activity-log">
               <form class="form-inline">
                   {% set title %}{% trans "From Date" %}{% endset %}
-                  {{ inline.date("activityFromDt", title, "", "", "activity-from-dt", "", "") }}
+                  {{ inline.dateTime("activityFromDt", title, "", "", "activity-from-dt", "", "") }}
 
                   {% set title %}{% trans "To Date" %}{% endset %}
-                  {{ inline.date("activityToDt", title, "", "", "activity-to-dt", "", "") }}
+                  {{ inline.dateTime("activityToDt", title, "", "", "activity-to-dt", "", "") }}
 
                   {% set title %}{% trans "Display ID" %}{% endset %}
                   {{ inline.number("displayId", title) }}
+
+                  {% set title %}{% trans "Partner" %}{% endset %}
+                  {{ inline.input("campaignId", title) }}
+
                   <div class="w-100">
                       <a data-apply-button="true" class="btn btn-success">
                           <span>{% trans "Apply" %}</span>
