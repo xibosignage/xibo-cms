@@ -227,7 +227,8 @@ class Property implements \JsonSerializable
 
             case 'code':
                 return $params->getParam($key);
-
+            case 'richText':
+                return $params->getParam($key);
             case 'input':
             default:
                 return $params->getString($key);

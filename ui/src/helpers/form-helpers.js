@@ -492,11 +492,11 @@ const formHelpers = function() {
 
           $.each(data.data, function(index, element) {
             results.push({
-              'id': element.mediaId,
-              'text': element.name,
-              'imageUrl':
+              id: element.mediaId,
+              text: element.name,
+              imageUrl:
                 selector.data().imageUrl.replace(':id', element.mediaId),
-              'disabled': false,
+              disabled: false,
             });
           });
 
@@ -629,6 +629,7 @@ const formHelpers = function() {
    * @param {string=} customNoDataMessage
    *   - Custom message to appear when the field is empty
    * @param {boolean} focusOnBuild - Focus on the editor after building
+   * @param {boolean} updateOnBlur - Update the field on blur
    * @return {object} CKEDITOR instance
    */
   this.setupCKEditor = function(
@@ -637,7 +638,9 @@ const formHelpers = function() {
     textAreaId,
     inline = false,
     customNoDataMessage = null,
-    focusOnBuild = false) {
+    focusOnBuild = false,
+    updateOnBlur = false,
+  ) {
     const self = this;
 
     // COLORS
@@ -660,8 +663,24 @@ const formHelpers = function() {
       this.mainObject.backgroundImage != null
     );
 
+    const scaleToContainer = (regionDimensions, $scaleTo, inline) => {
+      // Inner width and a padding for the scrollbar
+      const width = (!inline) ?
+        $scaleTo.innerWidth() - 32 - ((iframeBorderWidth + iframeMargin) * 2) :
+        $scaleTo.outerWidth();
+
+      // Element side plus margin
+      const elementWidth = regionDimensions.width;
+      const scale = width / elementWidth;
+
+      return scale;
+    };
+
+    const iframeMargin = 10;
+    const iframeBorderWidth = 2;
+
     // DIMENSIONS
-    const region = {};
+    let region = {};
 
     // Get region dimensions
     if (this.namespace == undefined) {
@@ -693,8 +712,6 @@ const formHelpers = function() {
 
     let regionDimensions = null;
     let scale = 1;
-    const iframeMargin = 10;
-    const iframeBorderWidth = 2;
 
     // Calculate dimensions
     if (region.dimensions === undefined) {
@@ -735,28 +752,35 @@ const formHelpers = function() {
       // Calculate scale based on the form
       // text area ( if scale checkbox check is true)
       if ($(dialog).find('.text_editor_scale').is(':checked')) {
-        // Inner width and a padding for the scrollbar
-        const width = $(dialog).find('form').innerWidth() -
-          32 -
-          ((iframeBorderWidth + iframeMargin) * 2);
-
-        // Element side plus margin
-        const elementWidth = regionDimensions.width;
-        scale = width / elementWidth;
+        scale = scaleToContainer(
+          regionDimensions,
+          $(dialog).find('form'),
+          inline);
       }
     } else {
       // If region dimensions are defined, use them as base for the editor
       regionDimensions = region.dimensions;
 
       if (this.namespace != undefined && this.namespace.viewer != undefined) {
-        // Calculate scale based on the region previewed in the viewer
-        scale =
-          this.namespace.viewer.DOMObject.find('.viewer-element').width() /
-          regionDimensions.width;
+        if (inline) {
+          scale = scaleToContainer(
+            regionDimensions,
+            $(dialog).find('#' + textAreaId).parents('.rich-text-input'),
+            true);
+        } else {
+          // Calculate scale based on the region previewed in the viewer
+          scale =
+            this.namespace.viewer.DOMObject.find('.viewer-element').width() /
+            regionDimensions.width;
+        }
       }
     }
 
     const applyContentsToIframe = function(field) {
+      const $container = $(CKEDITOR.instances[textAreaId].container.$);
+      const $inputContainer =
+        $container.parents('.rich-text-input');
+
       if (inline) {
         // Inline editor div tweaks to make them
         // behave like the iframe rendered content
@@ -794,6 +818,14 @@ const formHelpers = function() {
             innerShadowWidth + ' ' +
             innerShadowWidth + ' red',
           );
+
+        // Save new dimensions to data
+        $('.cke_textarea_inline').data({
+          width: regionDimensions.width * scale,
+          height: regionDimensions.height * scale,
+          scale: scale,
+        });
+
         $('.cke_textarea_inline p').css('margin', '0 0 16px');
         $('.cke_textarea_inline').show();
       } else {
@@ -813,6 +845,26 @@ const formHelpers = function() {
           'transform-origin: 0 0; }' +
           'h1, h2, h3, h4, p { margin-top: 0;}' +
           '</style>');
+      }
+
+      // Set parent container height if data exists
+      const containerData = $container.data();
+      const buttonHeight =
+        $container.siblings('.text-area-buttons').outerHeight();
+      if (containerData !== undefined) {
+        $container.parents('.rich-text-container')
+          .css('height', containerData.height + buttonHeight)
+          .css('width', containerData.width);
+      }
+
+      // If the field with changed width, apply the new scale
+      if (regionDimensions.width * scale != $inputContainer.width()) {
+        scale = scaleToContainer(
+          regionDimensions,
+          $(dialog).find('#' + textAreaId).parents('.rich-text-input'),
+          true);
+
+        applyContentsToIframe(field);
       }
     };
 
@@ -848,7 +900,7 @@ const formHelpers = function() {
       });
 
       // Get the template data from the text area field
-      const data = $('#' + textAreaId).val();
+      let data = $('#' + textAreaId).val();
 
       // Replace color if exists
       if (data != undefined) {
@@ -922,6 +974,14 @@ const formHelpers = function() {
       });
     }
 
+    // Update on blur
+    if (updateOnBlur) {
+      CKEDITOR.instances[textAreaId].on('blur', function() {
+        // Update CKEditor, but don't parse data (do that only on save)
+        self.updateCKEditor(textAreaId);
+      });
+    }
+
     return false;
   };
 
@@ -941,20 +1001,25 @@ const formHelpers = function() {
 
   /**
    * Update text callback CKEDITOR instance
-   * @param {Object} instance - The instance object
+   * @param {Object=} instance - The instance object
+   * @param {boolean=} updateParsedData - Update parsed data on CKEditor
    */
-  this.updateCKEditor = function(instance) {
+  this.updateCKEditor = function(instance = null, updateParsedData = false) {
     const self = this;
 
     try {
       // Update specific instance
-      if (instance != undefined && CKEDITOR.instances[instance] != undefined) {
+      if (
+        instance != undefined &&
+        instance != null &&
+        CKEDITOR.instances[instance] != undefined
+      ) {
         // Parse editor data and update it
-        self.parseCKEditorData(instance);
+        self.parseCKEditorData(instance, null, updateParsedData);
       } else {
-        $.each(CKEDITOR.instances, function(index, value) {
+        $.each(CKEDITOR.instances, function(index, _value) {
           // Parse editor data and update it
-          self.parseCKEditorData(index);
+          self.parseCKEditorData(index, null, updateParsedData);
         });
       }
     } catch (e) {
@@ -998,8 +1063,13 @@ const formHelpers = function() {
    * Parse Editor data to turn media path into library tags
    * @param {string} instance - CKEditor instance name to update
    * @param {function=} callback - A function to run after data update
+   * @param {boolean=} updateDataAfterParse - Update data after parse
    */
-  this.parseCKEditorData = function(instance, callback) {
+  this.parseCKEditorData = function(
+    instance,
+    callback = null,
+    updateDataAfterParse = true,
+  ) {
     // If instance is not set, stop right here
     if (CKEDITOR.instances[instance] === undefined) {
       return;
@@ -1022,10 +1092,12 @@ const formHelpers = function() {
     $('textarea#' + instance).val(data);
 
     // Set the appropriate text editor field with this data
-    if (callback !== undefined) {
-      CKEDITOR.instances[instance].setData(data, callback);
-    } else {
-      CKEDITOR.instances[instance].setData(data);
+    if (updateDataAfterParse) {
+      if (callback !== null) {
+        CKEDITOR.instances[instance].setData(data, callback);
+      } else {
+        CKEDITOR.instances[instance].setData(data);
+      }
     }
   };
 
@@ -1302,23 +1374,23 @@ const formHelpers = function() {
     const grid = $('#permissionsTable', dialog).closest('.XiboGrid');
 
     const table = $('#permissionsTable', dialog).DataTable({
-      'language': dataTablesLanguage,
-      'serverSide': true,
-      'stateSave': true,
-      'filter': false,
-      'searchDelay': 3000,
-      'order': [[0, 'asc']],
-      'ajax': {
-        'url': grid.data().url,
-        'data': function(d) {
+      language: dataTablesLanguage,
+      serverSide: true,
+      stateSave: true,
+      filter: false,
+      searchDelay: 3000,
+      order: [[0, 'asc']],
+      ajax: {
+        url: grid.data().url,
+        data: function(d) {
           $.extend(d, grid.find('.permissionsTableFilter form')
             .serializeObject());
         },
       },
-      'columns': [
+      columns: [
         {
-          'data': 'group',
-          'render': function(data, type, row, meta) {
+          data: 'group',
+          render: function(data, type, row, meta) {
             if (type != 'display') {
               return data;
             }
@@ -1330,7 +1402,7 @@ const formHelpers = function() {
           },
         },
         {
-          'data': 'view', 'render': function(data, type, row, meta) {
+          data: 'view', render: function(data, type, row, meta) {
             if (type != 'display') {
               return data;
             }
@@ -1341,7 +1413,7 @@ const formHelpers = function() {
           },
         },
         {
-          'data': 'edit', 'render': function(data, type, row, meta) {
+          data: 'edit', render: function(data, type, row, meta) {
             if (type != 'display') {
               return data;
             }
@@ -1352,7 +1424,7 @@ const formHelpers = function() {
           },
         },
         {
-          'data': 'delete', 'render': function(data, type, row, meta) {
+          data: 'delete', render: function(data, type, row, meta) {
             if (type != 'display') {
               return data;
             }
@@ -1405,9 +1477,9 @@ const formHelpers = function() {
     const $formContainer = $('.permissions-form', dialog);
 
     const permissions = {
-      'groupIds': $('.permissionsGrid', dialog).data().permissions,
-      'ownerId': $formContainer.find('select[name=ownerId]').val(),
-      'cascade': $formContainer.find('#cascade').is(':checked'),
+      groupIds: $('.permissionsGrid', dialog).data().permissions,
+      ownerId: $formContainer.find('select[name=ownerId]').val(),
+      cascade: $formContainer.find('#cascade').is(':checked'),
     };
 
     return $.param(permissions);
@@ -1614,6 +1686,18 @@ const formHelpers = function() {
    * @param {object} widgetType - Widget/module type
    */
   this.widgetFormEditAfterOpen = function(container, widgetType) {
+    // Create button container if it doesn't exist
+    const createButtonContainer = ($target) => {
+      const $buttonContainer = $target.parent().find('.text-area-buttons');
+      if ($buttonContainer.length === 0) {
+        return $('<div/>', {
+          class: 'text-area-buttons',
+        }).insertBefore($target);
+      } else {
+        return $buttonContainer;
+      }
+    };
+
     // Check if form edit open function exists
     if (typeof window[widgetType + '_form_edit_open'] === 'function') {
       window[widgetType + '_form_edit_open'].bind(container)();
@@ -1625,12 +1709,12 @@ const formHelpers = function() {
     // Create copy buttons for text areas
     container.find('textarea').each((key, el) => {
       const $newButton = $('<button/>', {
-        'html': '<i class="fas fa-copy"></i>',
-        'type': 'button',
-        'title': editorsTrans.copyToClipboard,
+        html: '<i class="fas fa-copy"></i>',
+        type: 'button',
+        title: editorsTrans.copyToClipboard,
         'data-container': '.properties-panel',
-        'class': 'btn btn-sm copyTextAreaButton',
-        'click': function() {
+        class: 'btn btn-sm copyTextAreaButton',
+        click: function() {
           const $input = $(el);
           let disabled = false;
 
@@ -1640,8 +1724,15 @@ const formHelpers = function() {
           }
 
           // Select the input to copy
-          $input.focus();
-          $input.select();
+          let hasNoneClass = false;
+          if ($input.hasClass('d-none')) {
+            $input.removeClass('d-none');
+            hasNoneClass = true;
+          } else {
+            $input.show();
+          }
+          $input.trigger('focus');
+          $input.trigger('select');
 
           // Try to copy to clipboard and give feedback
           try {
@@ -1656,8 +1747,13 @@ const formHelpers = function() {
           }
 
           // Unselect the input
-          $input.focus();
-          $input.blur();
+          $input.trigger('focus');
+          $input.trigger('blur');
+          if (hasNoneClass) {
+            $input.addClass('d-none');
+          } else {
+            $input.hide();
+          }
 
           // Restore disabled if existed
           if (disabled) {
@@ -1679,8 +1775,94 @@ const formHelpers = function() {
         }, 1000);
       });
 
-      // Add button to the text area
-      $(el).before($newButton);
+      // Create or get button container
+      $buttonContainer = createButtonContainer($(el));
+
+      // Add button to the button container for the text area
+      $buttonContainer.append($newButton);
+    });
+
+    // Create buttons for rich text areas
+    container.find('textarea.rich-text').each((key, el) => {
+      // Button to detach editor
+      const $detachButton = $('<button/>', {
+        html: '<i class="fas fa-window-restore"></i>',
+        type: 'button',
+        title: editorsTrans.detachEditor,
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm detachEditorButton',
+        click: function() {
+          const $input = $(el);
+          const $container = $input.closest('.form-group');
+          const $editor = $container.find('.rich-text-container');
+          const $detachButton = $container.find('.detachEditorButton');
+          const $attachButton = $container.find('.attachEditorButton');
+
+          // Create overlay
+          const $customOverlay = $('.custom-overlay').clone();
+          $customOverlay
+            .attr('id', 'richTextDetachedOverlay')
+            .appendTo('body');
+          $customOverlay
+            .show()
+            .css({
+              'z-index': 3000,
+            });
+
+          // Create temporary container with editor dimensions
+          $('<div/>', {
+            class: 'temp-container',
+            css: {
+              width: $editor.width(),
+              height: $editor.height(),
+            },
+          }).appendTo($container);
+
+          // if click on overlay, reattach editor
+          $customOverlay.on('click', function() {
+            $attachButton.trigger('click');
+          });
+
+          // Detach editor
+          $editor.addClass('detached');
+          $detachButton.addClass('d-none');
+          $attachButton.removeClass('d-none');
+        },
+      }).tooltip();
+
+      // Button to attach editor
+      const $attachButton = $('<button/>', {
+        html: '<i class="fas fa-window-maximize"></i>',
+        type: 'button',
+        title: editorsTrans.attachEditor,
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm attachEditorButton d-none',
+        click: function() {
+          const $input = $(el);
+          const $container = $input.closest('.form-group');
+          const $editor = $container.find('.rich-text-container');
+          const $detachButton = $container.find('.detachEditorButton');
+          const $attachButton = $container.find('.attachEditorButton');
+
+          // Remove temporary container
+          $container.find('.temp-container').remove();
+
+          // Remove overlay
+          $('#richTextDetachedOverlay').remove();
+
+          // Attach editor
+          $editor.removeClass('detached');
+          $detachButton.removeClass('d-none');
+          $attachButton.addClass('d-none');
+        },
+      }).tooltip();
+
+      // Create or get button container
+      $buttonContainer = createButtonContainer($(el));
+
+      // Add detach and attach buttons to container for the text area
+      $buttonContainer.append($detachButton);
+      $buttonContainer.append($attachButton);
     });
 
     // Hide/Show back button depending on the type of widget
@@ -1700,10 +1882,8 @@ const formHelpers = function() {
    * @param {object} widgetType - Widget/module type
    */
   this.widgetFormEditBeforeSubmit = function(container, widgetType) {
-    // Check if form edit submit function exists
-    if (typeof window[widgetType + '_form_edit_submit'] === 'function') {
-      window[widgetType + '_form_edit_submit'].bind(container)();
-    }
+    // Update CKEditor instances
+    this.updateCKEditor();
   };
 
   /**

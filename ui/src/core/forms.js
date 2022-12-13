@@ -321,6 +321,20 @@ window.forms = {
         );
       }
     });
+
+    // Rich text input
+    $(container).find(
+      '.rich-text',
+    ).each(function(_k, el) {
+      formHelpers.setupCKEditor(
+        container,
+        {},
+        $(el).attr('id'),
+        true,
+        null,
+        false,
+        true);
+    });
   },
   /**
      * Handle form field replacements

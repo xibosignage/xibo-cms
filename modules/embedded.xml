@@ -56,7 +56,7 @@
         <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
             <title>Custom Style Sheets</title>
         </property>
-        <property id="embedScript" type="code" allowLibraryRefs="true" variant="javascript">
+        <property id="embedScript" type="code" variant="javascript">
             <title>JavaScript to embed</title>
             <helpText>Please include script tags.</helpText>
         </property>
@@ -76,7 +76,6 @@
     <onInitialize><![CDATA[
 // id: The id of the widget
 // target: The target element to render
-// items: The items to render
 // properties: The properties for the widget
 // -------------------------------------------
 if(typeof EmbedInit === 'function') {

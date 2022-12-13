@@ -19,6 +19,7 @@ window.templates = {
     hidden: require('./src/templates/forms/inputs/hidden.hbs'),
     date: require('./src/templates/forms/inputs/date.hbs'),
     header: require('./src/templates/forms/inputs/header.hbs'),
+    richText: require('./src/templates/forms/inputs/richText.hbs'),
     // More to be added
   },
 };
