@@ -68,8 +68,35 @@ window.forms = {
 
         // Append the property to the target container
         if (templates.forms.hasOwnProperty(property.type)) {
-          $(templates.forms[property.type](property))
+          const $newField = $(templates.forms[property.type](property))
             .appendTo($(targetContainer));
+
+          // Handle help text
+          if (property.helpText) {
+            $newField.find('.input-info-container').append(
+              $(templates.forms.addOns.helpText({
+                helpText: property.helpText,
+              })),
+            );
+          }
+
+          // Handle custom popover
+          if (property.customPopOver) {
+            $newField.find('.input-info-container').append(
+              $(templates.forms.addOns.customPopOver({
+                content: property.customPopOver,
+              })),
+            );
+          }
+
+          // Handle player compatibility
+          if (property.playerCompatibility) {
+            $newField.find('.input-info-container').append(
+              $(templates.forms.addOns.playerCompatibility(
+                property.playerCompatibility,
+              )),
+            );
+          }
         } else {
           console.error('Form type not found: ' + property.type);
         }
@@ -293,6 +320,20 @@ window.forms = {
           },
         );
       }
+    });
+
+    // Rich text input
+    $(container).find(
+      '.rich-text',
+    ).each(function(_k, el) {
+      formHelpers.setupCKEditor(
+        container,
+        {},
+        $(el).attr('id'),
+        true,
+        null,
+        false,
+        true);
     });
   },
   /**

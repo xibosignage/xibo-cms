@@ -64,8 +64,6 @@ const Toolbar = function(
  * @param {boolean=} [options.isPlaylist] - is it a playlist toolbar?
  */
 Toolbar.prototype.init = function({isPlaylist = false} = {}) {
-  console.log('isPlaylist', isPlaylist);
-
   // Modules to be used in Widgets
   const moduleListFiltered = [];
 

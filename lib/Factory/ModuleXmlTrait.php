@@ -171,9 +171,12 @@ trait ModuleXmlTrait
                         $playerCompatibility->linux = $playerCompat->getAttribute('linux');
                         $playerCompatibility->webos = $playerCompat->getAttribute('webos');
                         $playerCompatibility->tizen = $playerCompat->getAttribute('tizen');
-                        $property->playerCompatability = $playerCompatibility;
+                        $property->playerCompatibility = $playerCompatibility;
                     }
                 }
+
+                // Custom popover
+                $property->customPopOver = __($this->getFirstValueOrDefaultFromXmlNode($node, 'customPopOver'));
 
                 $properties[] = $property;
             }

@@ -198,10 +198,20 @@ jQuery.fn.extend({
 
         // For each item, create a DIV if element doesn't exist on the DOM
         // Or clone the element if it does, hide the original and show the clone
-        const $newItem = $.contains(element, items[i]) ?
-          $(items[i]).hide().clone().show() :
-          $('<div/>').html(items[i]);
+        let $newItem;
+        let $oldItem;
+        if ($.contains(element, items[i])) {
+          $oldItem = $(items[i]);
+          $newItem = $oldItem.clone();
+        } else {
+          $oldItem = null;
+          $newItem = $('<div/>').html(items[i]);
+        }
 
+        // Hide and mark as hidden the original element
+        ($oldItem) && $oldItem.hide().addClass('hidden-element');
+
+        // Append the item to the page
         $newItem
           .addClass('item anim-item')
           .appendTo(appendTo);
@@ -286,9 +296,16 @@ jQuery.fn.extend({
         options.speed = (options.speed == 0) ? 1 : options.speed;
 
         // Stack the articles up and move them across the screen
-        $(options.marqueeInlineSelector, $contentDiv).css({
-          display: 'inline',
-          'padding-left': '10px',
+        $(
+          options.marqueeInlineSelector + ':not(.hidden-element)',
+          $contentDiv,
+        ).each(function(_idx, _el) {
+          if (!$(_el).hasClass('hidden-element')) {
+            $(_el).css({
+              display: 'inline',
+              'padding-left': '10px',
+            });
+          }
         });
       } else if (
         options.effect == 'marqueeUp' ||

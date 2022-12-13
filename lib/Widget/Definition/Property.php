@@ -57,7 +57,10 @@ class Property implements \JsonSerializable
     public $allowLibraryRefs = false;
 
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
-    public $playerCompatability;
+    public $playerCompatibility;
+
+    /** @var string HTML to populate a custom popover to be shown next to the input */
+    public $customPopOver;
     
     public $value;
     
@@ -75,7 +78,8 @@ class Property implements \JsonSerializable
             'validation' => $this->validation,
             'default' => $this->default,
             'options' => $this->options,
-            'playerCompatability' => $this->playerCompatability,
+            'customPopOver' => $this->customPopOver,
+            'playerCompatibility' => $this->playerCompatibility,
             'visibility' => $this->visibility,
             'allowLibraryRefs' => $this->allowLibraryRefs
         ];
@@ -223,7 +227,8 @@ class Property implements \JsonSerializable
 
             case 'code':
                 return $params->getParam($key);
-
+            case 'richText':
+                return $params->getParam($key);
             case 'input':
             default:
                 return $params->getString($key);

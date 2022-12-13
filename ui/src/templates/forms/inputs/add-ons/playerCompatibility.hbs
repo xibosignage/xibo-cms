@@ -1,0 +1,12 @@
+<i class="fa fa-info-circle input-info tooltip-always-on"
+    data-toggle="popover"
+    data-trigger="hover"
+    data-placement="bottom"
+    data-html="true"
+    data-content='{{#if message }}<p>{{ message }}</p>{{/if}}<ul class="player-compatibility">
+    {{#if android }}<li><span class="fa fa-android"></span> {{ android }}</li>{{/if}}
+    {{#if linux }}<li><span class="fa fa-linux"></span> {{ linux }}</li>{{/if}}
+    {{#if tizen }}<li>Tizen: {{ tizen }}</li>{{/if}}
+    {{#if webos }}<li>webOS: {{ webos }}</li>{{/if}}
+    {{#if windows }}<li><span class="fa fa-windows"></span> {{ windows }}</li>{{/if}}</ul>'
+>

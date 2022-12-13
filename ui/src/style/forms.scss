@@ -1,13 +1,25 @@
 @import "variables";
+@import "mixins";
 
-.form-help-popup {
+
+.input-info-container {
     float: right;
     padding-top: 6px;
-    color: $xibo-color-primary-l60;
 
-    &.checkbox-popup {
-        padding-top: 3px;
+    .input-info {
+        float: right;
+        margin-left: 4px;
+        color: $xibo-color-primary-l60;
+
+        &.checkbox-popup {
+            padding-top: 3px;
+        }
     }
+}
+
+.text-area-buttons {
+    display: flex;
+    justify-content: flex-end;
 }
 
 /* Code input */
@@ -54,5 +66,32 @@
     &.main {
         color: $xibo-color-primary-d60;
         font-size: 1.3rem;
+    }
+}
+
+/* Rich text input */
+.rich-text-container {
+    transition: transform 200ms;
+    transform-origin: top right;
+
+    .cke_textarea_inline {
+        box-shadow: none !important;
+        outline: 2px solid $xibo-color-neutral-700;
+    }
+
+    &.detached {
+        transform: scale(2);
+        z-index: 3001;
+        position: absolute;
+
+        .text-area-buttons {
+            transform: scale(calc(1/2));
+            transform-origin: bottom right;
+            @include set-transparent-color(background-color, $xibo-color-neutral-1000, 0.1);
+
+            button {
+                color: $xibo-color-neutral-0;
+            }
+        }
     }
 }

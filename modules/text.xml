@@ -33,6 +33,13 @@
     <defaultDuration>10</defaultDuration>
     <settings></settings>
     <properties>
+        <property id="ta_text" type="richText" allowLibraryRefs="true">
+            <title>Enter text or HTML in the box below.</title>
+            <helpText>Enter the text to display. The red rectangle reflects the size of the region you are editing. Shift+Enter will drop a single line. Enter alone starts a new paragraph.</helpText>
+        </property>
+        <property id="javaScript" type="code" variant="javascript">
+            <title>Optional JavaScript</title>
+        </property>
         <property id="backgroundColor" type="color">
             <title>Background Colour</title>
             <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -61,14 +68,113 @@
         <property id="speed" type="number">
             <title>Speed</title>
             <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
+            <visibility>
+                <test>
+                    <condition field="#effect" type="neq">none</condition>
+                </test>
+            </visibility>
         </property>
         <property id="marqueeInlineSelector" type="text">
             <title>Marquee Selector</title>
+            <default>.item p</default>
             <helpText>The selector to use for stacking marquee items in a line when scrolling Left/Right.</helpText>
+            <visibility>
+                <test>
+                    <condition field="#effect" type="neq">none</condition>
+                </test>
+            </visibility>
         </property>
     </properties>
     <preview></preview>
     <stencil>
-        <twig><![CDATA[]]></twig>
+        <twig><![CDATA[
+<script type="text/javascript">
+    {{javaScript|raw}}
+</script>
+<style>
+{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+</style>
+        ]]></twig>
     </stencil>
+    <onInitialize><![CDATA[
+// id: The id of the widget
+// target: The target element to render
+// properties: The properties for the widget
+// -------------------------------------------
+let hasClock = false;
+
+// Parse any Clock elements
+if (properties.ta_text.indexOf('[Clock]') >= 0) {
+    hasClock = true;
+    properties.ta_text = properties.ta_text.replace('[Clock]', '[HH:mm]');
+}
+
+if (properties.ta_text.indexOf('[Clock|') >= 0) {
+    hasClock = true;
+    properties.ta_text = properties.ta_text.replace('[Clock|', '[');
+}
+
+if (properties.ta_text.indexOf('[Date]') >= 0) {
+    hasClock = true;
+    properties.ta_text = properties.ta_text.replace('[Date]', '[DD/MM/YYYY]');
+}
+
+if (properties.ta_text.indexOf('[Date|') >= 0) {
+    hasClock = true;
+    properties.ta_text = properties.ta_text.replace('[Date|', '[');
+}
+
+if (hasClock) {
+    // Use regex to out the bit between the [] brackets and use that as the format mask for moment.
+    let text = properties.ta_text;
+    let regex = /\[.*?\]/g;
+
+    properties.ta_text = text.replace(regex, function (match) {
+        return '<span class="clock" format="' + match.replace('[', '').replace(']', '') + '"></span>';
+    });
+}
+
+// Save hasClock as global variable
+xiboIC.set(id, 'hasClock', hasClock);
+    ]]></onInitialize>
+    <onRender>
+        <![CDATA[
+// Module renderer options
+// id: The id of the widget
+// target: The target element to render
+// properties: The properties for the widget
+
+// Send property type  = text
+properties.type = 'text';
+
+// Scale the layout
+$('body').xiboLayoutScaler(properties);
+
+// Replace content with the parsed text
+$(target).find('#content').html(properties.ta_text);
+
+$(target).xiboTextRender(
+    Object.assign(properties, globalOptions),
+    $(target).find('#content > *'),
+);
+    ]]></onRender>
+    <onVisible><![CDATA[
+// If we have a clock, create method and start it
+if (xiboIC.get(id, 'hasClock')) {
+    function updateClock() {
+        $(".clock").each(function() {
+            $(this).html(moment().format($(this).attr("format")));
+        });
+    }
+
+    // Start the first time
+    updateClock();
+
+    // Update every second
+    setInterval(updateClock, 1000);
+}
+
+// Start effects for this widget
+$(target).xiboLayoutAnimate(properties);
+    ]]></onVisible>
 </module>

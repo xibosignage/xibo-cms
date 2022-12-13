@@ -1,6 +1,13 @@
 // --- Build all Global templates ----
 window.templates = {
   forms: {
+    addOns: {
+      helpText: require('./src/templates/forms/inputs/add-ons/helpText.hbs'),
+      playerCompatibility:
+        require('./src/templates/forms/inputs/add-ons/playerCompatibility.hbs'),
+      customPopOver:
+        require('./src/templates/forms/inputs/add-ons/customPopOver.hbs'),
+    },
     button: require('./src/templates/forms/button.hbs'),
     text: require('./src/templates/forms/inputs/text.hbs'),
     checkbox: require('./src/templates/forms/inputs/checkbox.hbs'),
@@ -12,6 +19,7 @@ window.templates = {
     hidden: require('./src/templates/forms/inputs/hidden.hbs'),
     date: require('./src/templates/forms/inputs/date.hbs'),
     header: require('./src/templates/forms/inputs/header.hbs'),
+    richText: require('./src/templates/forms/inputs/richText.hbs'),
     // More to be added
   },
 };
