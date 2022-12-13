@@ -352,16 +352,14 @@ class CampaignProofOfPlay implements ReportInterface
 
         // Dispatch the event - listened by Audience Report Connector
         $this->dispatcher->dispatch($event, ReportDataEvent::$NAME);
-
-        // Get results from the event
-        $result['result'] = $event->getResults();
+        $results = $event->getResults();
 
         $result['periodStart'] = $params['fromDt'];
         $result['periodEnd'] = $params['toDt'];
 
         // Sanitize results??
         $rows = [];
-        foreach ($result['result'] as $row) {
+        foreach ($results['json'] as $row) {
             $entry = [];
 
             $entry['labelDate'] = $row['labelDate'];
@@ -387,7 +385,9 @@ class CampaignProofOfPlay implements ReportInterface
         return new ReportResult(
             $metadata,
             $rows,
-            $recordsTotal
+            $recordsTotal,
+            [],
+            $results['error'] ?? null
         );
     }
 }

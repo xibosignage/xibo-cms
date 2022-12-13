@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\ConnectorReportEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -90,13 +91,19 @@ class Stats extends Base
      */
     function displayReportPage(Request $request, Response $response)
     {
+        // ------------
+        // Dispatch an event to get connector reports
+        $event = new ConnectorReportEvent();
+        $this->getDispatcher()->dispatch($event, ConnectorReportEvent::$NAME);
+
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
                 'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
                 'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
                 'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-                'availableReports' => $this->reportService->listReports()
+                'availableReports' => $this->reportService->listReports(),
+                'connectorReports' => $event->getReports()
             ]
         ];
 

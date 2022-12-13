@@ -38,6 +38,8 @@ use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Listener\CampaignListener;
+use Xibo\Event\ConnectorReportEvent;
+use Xibo\Listener\ConnectorReportListener;
 
 /**
  * This middleware is used to register listeners against the dispatcher
@@ -83,6 +85,13 @@ class ListenersMiddleware implements MiddlewareInterface
         // Listen for events that affect campaigns
         (new CampaignListener(
             $c->get('campaignFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for events that affect reports
+        (new ConnectorReportListener(
             $c->get('store')
         ))
             ->useLogger($c->get('logger'))

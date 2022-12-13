@@ -285,6 +285,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         }
     }
 
+    /**
+     * @throws GeneralException
+     */
     public function onAudienceReport(ReportDataEvent $event)
     {
         $type = $event->getReportType();
@@ -310,6 +313,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                         $json = json_decode($body, true);
                     } catch (RequestException $requestException) {
                         $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $error = 'Failed to get campaign  proofofplay result: '.$requestException->getMessage();
                     }
                     break;
 
@@ -317,7 +321,10 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $this->getLogger()->error('Report type not found ');
             }
 
-            $event->setResults($json);
+            $event->setResults([
+                'json' => $json,
+                'error' => $error ?? null
+            ]);
         }
     }
 

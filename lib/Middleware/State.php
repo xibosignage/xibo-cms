@@ -150,7 +150,7 @@ class State implements Middleware
 
         // Register the report service
         $container->set('reportService', function (ContainerInterface $container) {
-            return new ReportService(
+            $reportService = new ReportService(
                 $container,
                 $container->get('store'),
                 $container->get('timeSeriesStore'),
@@ -159,6 +159,8 @@ class State implements Middleware
                 $container->get('sanitizerService'),
                 $container->get('savedReportFactory')
             );
+            $reportService->setDispatcher($container->get('dispatcher'));
+            return $reportService;
         });
 
         // Set some public routes

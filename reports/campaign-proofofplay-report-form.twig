@@ -250,6 +250,10 @@
                         } else {
                             setChartData(result.chart);
                         }
+
+                        if (result.error) {
+                            toastr.error(result.error);
+                        }
                     },
                     error: function error(xhr, textStatus, _error) {
                         $applyBtn.removeClass('disabled');
