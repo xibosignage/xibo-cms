@@ -117,7 +117,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
-        // TODO: Implement processSettingsForm() method.
+        if (!$this->isProviderSetting('apiKey')) {
+            $settings['apiKey'] = $params->getString('apiKey');
+        }
         return $settings;
     }
 
@@ -355,7 +357,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
         $reports = [];
         foreach ($connectorReports as $connectorReport) {
-
             // Compatibility check
             if (!isset($connectorReport['feature']) || !isset($connectorReport['category'])) {
                 continue;

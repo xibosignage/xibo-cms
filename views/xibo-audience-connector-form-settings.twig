@@ -27,7 +27,13 @@
 {% block callBack %}audienceFormOpen{% endblock %}
 {% block connectorFormFields %}
 
-    <h4>Coming soon</h4>
-    <p>We're working on bringing you this exciting connector in the next update.</p>
+    {% if not interface.isProviderSetting("apiKey") %}
+    <h4>Settings</h4>
+    <p>Your API key allows for secure communication between the CMS and the Xibo audience service. It is used
+        to register your credentials and retrieve reports. It is never possible to retrieve credentials.</p>
 
+    {% set title %}{% trans "API Key" %}{% endset %}
+    {% set helpText %}{% trans "Enter your API Key from Xibo." %}{% endset %}
+    {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
+{% endif %}
 {% endblock %}
