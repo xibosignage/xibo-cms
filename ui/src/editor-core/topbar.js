@@ -166,6 +166,7 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
         const query = {
           layout: params.term,
           onlyMyLayouts: $('#onlyMyLayouts').is(':checked'),
+          retired : 0,
           start: 0,
           length: 10,
         };
@@ -351,3 +352,4 @@ Topbar.prototype.updateLayoutStatus = function() {
 };
 
 module.exports = Topbar;
+

@@ -102,6 +102,7 @@
     "leaflet-search": "^3.0.3",
     "leaflet-easyprint": "^2.1.9",
     "leaflet.markercluster": "^1.4.1",
+    "leaflet-fullscreen": "^1.0.2",
     "masonry-layout": "^4.2.2",
     "material-design-icons": "^3.0.1",
     "moment": "~2.29.4",

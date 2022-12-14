@@ -477,12 +477,15 @@ class ProofOfPlay implements ReportInterface
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
             $displayName = $sanitizedRow->getString('display');
             $layoutName = $sanitizedRow->getString('layout');
+            $parentCampaignName = $sanitizedRow->getString('parentCampaign');
 
             $entry['type'] = $sanitizedRow->getString('type');
             $entry['displayId'] = $sanitizedRow->getInt('displayId');
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
             $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
+            $entry['parentCampaignId'] = $sanitizedRow->getInt('parentCampaignId');
+            $entry['parentCampaign'] = $parentCampaignName;
             $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
             $entry['media'] = $widgetName;
             $entry['tag'] = $sanitizedRow->getString('tag');
@@ -550,7 +553,8 @@ class ProofOfPlay implements ReportInterface
         $select = '
           SELECT stat.type,
               display.Display,
-              campaign.campaign,
+              stat.parentCampaignId,
+              campaign.campaign as parentCampaign,
               IFNULL(layout.Layout, 
                   (SELECT MAX(`layout`) AS layout 
                      FROM `layout` 
@@ -735,7 +739,8 @@ class ProofOfPlay implements ReportInterface
 
         // Campaign Filter
         if ($parentCampaignId != null) {
-            $body .= ' AND `stat`.parentCampaignId = ' . $parentCampaignId;
+            $body .= ' AND `stat`.parentCampaignId = :parentCampaignId ';
+            $params['parentCampaignId'] = $parentCampaignId;
         }
 
         // Layout Filter
@@ -769,7 +774,7 @@ class ProofOfPlay implements ReportInterface
             GROUP BY stat.type, 
                 stat.tag, 
                 display.Display, 
-                campaign.campaign, 
+                stat.parentCampaignId,
                 stat.displayId, 
                 stat.campaignId,
                 layout.layout, 
@@ -798,6 +803,8 @@ class ProofOfPlay implements ReportInterface
             $entry['displayId'] = $row['displayId'];
             $entry['display'] = $row['Display'];
             $entry['layout'] = $row['Layout'];
+            $entry['parentCampaignId'] = $row['parentCampaignId'];
+            $entry['parentCampaign'] = $row['parentCampaign'];
             $entry['media'] = $row['Media'];
             $entry['numberPlays'] = $row['NumberPlays'];
             $entry['duration'] = $row['Duration'];
@@ -947,6 +954,8 @@ class ProofOfPlay implements ReportInterface
             'media' => 'media',
             'eventName' => 'eventName',
             'layoutId' => 'layoutId',
+            'parentCampaignId' => 'parentCampaignId',
+            'parentCampaign' => 'parentCampaign',
             'widgetId' => 'widgetId',
             '_id.displayId' => 'displayId',
             'numberPlays' => 'numberPlays',
@@ -990,6 +999,8 @@ class ProofOfPlay implements ReportInterface
                 'widgetName' =>  1,
                 'layoutId' =>  1,
                 'layoutName' =>  1,
+                'parentCampaignId' =>  1,
+                'parentCampaign' =>  1,
                 'displayId' =>  1,
                 'displayName' =>  1,
                 'start' => 1,
@@ -1005,6 +1016,7 @@ class ProofOfPlay implements ReportInterface
             '$group' => [
                 '_id' => [
                     'type' => '$type',
+                    'parentCampaignId'=> '$parentCampaignId',
                     'campaignId'=> [ '$ifNull' => [ '$campaignId', '$layoutId' ] ],
                     'mediaorwidget'=> [ '$ifNull' => [ '$mediaId', '$widgetId' ] ],
                     'displayId'=> [ '$ifNull' => [ '$displayId', null ] ],
@@ -1023,6 +1035,9 @@ class ProofOfPlay implements ReportInterface
 
                 // use the last layoutId to say that is the latest layoutId
                 'layoutId' => ['$last' => '$layoutId'],
+
+                'parentCampaign' => ['$first' => '$parentCampaign'],
+                'parentCampaignId' => ['$first' => '$parentCampaignId'],
 
                 'minStart' => ['$min' => '$start'],
                 'maxEnd' => ['$max' => '$end'],
@@ -1057,6 +1072,8 @@ class ProofOfPlay implements ReportInterface
                 $entry['displayId'] = $row['_id']['displayId'];
                 $entry['display'] = isset($row['_id']['display']) ? $row['_id']['display']: 'No display';
                 $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
+                $entry['parentCampaignId'] = isset($row['parentCampaignId']) ? $row['parentCampaignId']: '';
+                $entry['parentCampaign'] = isset($row['parentCampaign']) ? $row['parentCampaign']: '';
                 $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
                 $entry['numberPlays'] = $row['numberPlays'];
                 $entry['duration'] = $row['duration'];

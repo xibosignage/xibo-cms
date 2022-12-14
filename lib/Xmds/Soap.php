@@ -1360,6 +1360,7 @@ class Soap
                 $layout->setAttribute("todt", '2030-01-19 00:00:00');
                 $layout->setAttribute("scheduleid", 0);
                 $layout->setAttribute("priority", 0);
+                $layout->setAttribute('duration', $defaultLayout->duration);
 
                 if ($options['dependentsAsNodes'] && array_key_exists($defaultLayoutId, $layoutDependents)) {
                     $dependentNode = $scheduleXml->createElement("dependents");
@@ -1379,6 +1380,7 @@ class Soap
             // Add on the default layout node
             $default = $scheduleXml->createElement("default");
             $default->setAttribute("file", $defaultLayoutId);
+            $default->setAttribute('duration', $defaultLayout->duration);
 
             if ($options['dependentsAsNodes'] && array_key_exists($defaultLayoutId, $layoutDependents)) {
                 $dependentNode = $scheduleXml->createElement("dependents");

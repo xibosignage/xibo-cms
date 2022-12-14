@@ -704,7 +704,11 @@
                 // Calling map
                 map = L.map('display-map', {
                     center: [mapConfig.setArea.lat, mapConfig.setArea.long],
-                    zoom: mapConfig.setArea.zoom
+                    zoom: mapConfig.setArea.zoom,
+                    fullscreenControl: true,
+                    fullscreenControlOptions: {
+                        position: 'topleft'
+                    }
                 });
 
                 let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -719,8 +723,16 @@
                     hideControlContainer: true
                 }).addTo(map);
 
-                var markers = L.markerClusterGroup();
-
+                var markers = L.markerClusterGroup({
+                    maxClusterRadius: function (mapZoom) {
+                        if (mapZoom > 9) {
+                            return 20;
+                        } else {
+                            return 80;
+                        }
+                    }
+                });
+                
                 let bounds;
                 bounds = map.getBounds().toBBoxString();
 

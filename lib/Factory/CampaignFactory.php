@@ -393,7 +393,6 @@ class CampaignFactory extends BaseFactory
                     'target',
                     'startDt',
                     'endDt',
-                    'impressions',
                     'modifiedBy',
                 ],
                 'stringProperties' => [

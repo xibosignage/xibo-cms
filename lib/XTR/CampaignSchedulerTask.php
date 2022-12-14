@@ -80,6 +80,7 @@ class CampaignSchedulerTask implements TaskInterface
 
         // Do not schedule more than an hours worth of schedules.
         $totalSovAvailable = 3600;
+        $totalSovPerDisplay = [];
 
         // See what we can schedule for each one.
         $notifyDisplayGroupIds = [];
@@ -91,6 +92,11 @@ class CampaignSchedulerTask implements TaskInterface
                 $displayGroups = [];
                 foreach ($campaign->loadDisplayGroupIds() as $displayGroupId) {
                     $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
+                    
+                    // SoV per Display, each display starts with 3600 ($totalSovAvailable)
+                    if (!array_key_exists($displayGroupId, $totalSovPerDisplay)) {
+                        $totalSovPerDisplay[$displayGroupId] = $totalSovAvailable;
+                    }
 
                     // Add to our list of displays to notify once finished.
                     if (!in_array($displayGroupId, $notifyDisplayGroupIds)) {
@@ -178,9 +184,12 @@ class CampaignSchedulerTask implements TaskInterface
                     // create a scheduled event for all displays assigned.
                     // and for each geo fence
                     // how much time do we need to schedule?
-                    if ($totalSovAvailable <= 0) {
-                        $this->log->debug('campaignSchedulerTask: total SOV available has been consumed');
-                        break 2;
+                    foreach ($displayGroups as $displayGroup) {
+                        // if any of the Displays assigned to this ad campaign went over the SoV
+                        // we log an error, but we do allow the schedule to be created
+                        if ($totalSovPerDisplay[$displayGroup->displayGroupId] <= 0) {
+                            $this->log->error('campaignSchedulerTask: total SOV available has been consumed for Display ' . $displayGroup->displayGroup);
+                        }
                     }
 
                     $schedule = $this->scheduleFactory->createEmpty();
@@ -232,9 +241,12 @@ class CampaignSchedulerTask implements TaskInterface
                             $schedule->save(['notify' => false]);
                         }
                     } else {
-                        // Reduce the total available
+                        // Reduce the total available on a per Displays basis
                         // (geo schedules do not count against totalSovAvailable)
-                        $totalSovAvailable -= $schedule->shareOfVoice;
+                        foreach ($displayGroups as $displayGroup) {
+                            $totalSovPerDisplay[$displayGroup->displayGroupId] -= $schedule->shareOfVoice;
+                        }
+
                         $schedule->save(['notify' => false]);
                     }
                 }

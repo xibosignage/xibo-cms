@@ -241,6 +241,16 @@ class Stats extends Base
      *      )
      *  ),
      *   @SWG\Parameter(
+     *      name="parentCampaignId",
+     *      description="An optional Parent Campaign ID to filter",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
      *      name="mediaId",
      *      description="An optional array of media Id to filter",
      *      in="query",
@@ -312,6 +322,7 @@ class Stats extends Base
         $statDateLessThan = $sanitizedQueryParams->getDate('statDateLessThan');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
+        $parentCampaignId = $sanitizedQueryParams->getInt('parentCampaignId');
         $eventTag = $sanitizedQueryParams->getString('eventTag');
 
         // Return formatting
@@ -351,6 +362,7 @@ class Stats extends Base
                 'statDateLessThan' => $statDateLessThan,
                 'statId' => $statId,
                 'campaignId' => $campaignId,
+                'parentCampaignId' => $parentCampaignId,
                 'eventTag' => $eventTag,
                 'displayTags' => in_array('displayTags', $embed),
                 'layoutTags' => in_array('layoutTags', $embed),
@@ -740,7 +752,7 @@ class Stats extends Base
         ]);
 
         $out = fopen($tempFileName, 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Campaign', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
             $sanitizedRow = $this->getSanitizer($row);
@@ -755,13 +767,14 @@ class Stats extends Base
             $toDt = $resultSet->getDateFromValue($row['end'])->format(DateFormatHelper::getSystemFormat());
             $engagements = $resultSet->getEngagementsFromRow($row, false);
             $layout = $sanitizedRow->getString('layout', ['default' => __('Not Found')]);
+            $parentCampaign = $sanitizedRow->getString('parentCampaign', ['default' => '']);
             $display = $sanitizedRow->getString('display', ['default' => __('Not Found')]);
             $media = $sanitizedRow->getString('media', ['default' => '']);
             $tag = $sanitizedRow->getString('tag', ['default' => '']);
             $duration = $sanitizedRow->getInt('duration', ['default' => 0]);
             $count = $sanitizedRow->getInt('count', ['default' => 0]);
 
-            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
+            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $parentCampaign, $display, $media, $tag, $duration, $count, $engagements]);
         }
 
         fclose($out);

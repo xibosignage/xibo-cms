@@ -972,14 +972,10 @@ class LayoutFactory extends BaseFactory
                 //
                 // Get all widget options
                 //
-                $layoutSubPlaylistId = null;
+                $subPlaylistsOption = [];
                 foreach ($mediaNode['widgetOptions'] as $optionsNode) {
-                    if ($optionsNode['option'] == 'subPlaylistOptions') {
-                        $subPlaylistOptions = json_decode($optionsNode['value']);
-                    }
-
-                    if ($optionsNode['option'] == 'subPlaylistIds') {
-                        $layoutSubPlaylistId = json_decode($optionsNode['value']);
+                    if ($optionsNode['option'] == 'subPlaylists') {
+                        $subPlaylistsOption = json_decode($optionsNode['value'], true);
                     }
 
                     $widgetOption = $this->widgetOptionFactory->createEmpty();
@@ -1022,8 +1018,6 @@ class LayoutFactory extends BaseFactory
 
                 // Sub-Playlist widgets with Playlists
                 if ($widget->type == 'subplaylist') {
-                    $layoutSubPlaylistIds = [];
-                    $subPlaylistOptionsUpdated = [];
                     $widgets = [];
                     $this->getLog()->debug('Layout import, creating layout Playlists from JSON, there are ' . count($playlistJson) . ' Playlists to create');
 
@@ -1041,54 +1035,36 @@ class LayoutFactory extends BaseFactory
                         }
 
                         // Check to see if it matches our Sub-Playlist widget config
-                        if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
-                            // Store the oldId to swap permissions later
-                            $oldIds[] = $newPlaylist->playlistId;
+                        foreach ($subPlaylistsOption as $subPlaylistItem) {
+                            if ($newPlaylist->playlistId === $subPlaylistItem['playlistId']) {
+                                // Store the oldId to swap permissions later
+                                $oldIds[] = $newPlaylist->playlistId;
 
-                            // Store the Widgets on the Playlist
-                            $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
+                                // Store the Widgets on the Playlist
+                                $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
-                            // Save a new Playlist and capture the Id
-                            $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
+                                // Save a new Playlist and capture the Id
+                                $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
 
-                            $newIds[] = $newPlaylist->playlistId;
+                                $newIds[] = $newPlaylist->playlistId;
+                            }
                         }
                     }
-
-                    $oldAssignedIds = $layoutSubPlaylistId;
+                    
                     $combined = array_combine($oldIds, $newIds);
 
                     $playlists = $this->createNestedPlaylistWidgets($widgets, $combined, $playlists);
-
+                    $updatedSubPlaylists = [];
                     foreach ($combined as $old => $new) {
-                        if (in_array($old, $oldAssignedIds)) {
-                            $layoutSubPlaylistIds[] = $new;
-                        }
-                    }
-
-                    $widget->setOptionValue('subPlaylistIds', 'attrib', json_encode($layoutSubPlaylistIds));
-
-                    foreach ($layoutSubPlaylistIds as $value) {
-                        foreach ($subPlaylistOptions as $playlistId => $options) {
-                            foreach ($options as $optionName => $optionValue) {
-                                if ($optionName == 'subPlaylistIdSpots') {
-                                    $spots = $optionValue;
-                                } elseif ($optionName == 'subPlaylistIdSpotLength') {
-                                    $spotsLength = $optionValue;
-                                } elseif ($optionName == 'subPlaylistIdSpotFill') {
-                                    $spotFill = $optionValue;
-                                }
+                        foreach ($subPlaylistsOption as $subPlaylistItem) {
+                            if ($subPlaylistItem['playlistId'] === $old) {
+                                $subPlaylistItem['playlistId'] = $new;
+                                $updatedSubPlaylists[] = $subPlaylistItem;
                             }
                         }
-
-                        $subPlaylistOptionsUpdated[$value] = [
-                            'subPlaylistIdSpots' => isset($spots) ? $spots : '',
-                            'subPlaylistIdSpotLength' => isset($spotsLength) ? $spotsLength : '',
-                            'subPlaylistIdSpotFill' => isset($spotFill) ? $spotFill : ''
-                        ];
                     }
 
-                    $widget->setOptionValue('subPlaylistOptions', 'attrib', json_encode($subPlaylistOptionsUpdated));
+                    $widget->setOptionValue('subPlaylists', 'attrib', json_encode($updatedSubPlaylists));
                 }
 
                 // Add the widget to the regionPlaylist
@@ -1882,17 +1858,12 @@ class LayoutFactory extends BaseFactory
                 $playlistWidget->mediaIds = $widgetsDetail['mediaIds'];
                 $playlistWidget->widgetOptions = [];
 
-                $nestedSubPlaylistOptions = [];
-                $nestedSubPlaylistId = [];
+                $nestedSubPlaylists = [];
 
                 foreach ($widgetsDetail['widgetOptions'] as $widgetOptionE) {
                     if ($playlistWidget->type == 'subplaylist') {
-                        if ($widgetOptionE['option'] == 'subPlaylistOptions') {
-                            $nestedSubPlaylistOptions = json_decode($widgetOptionE['value']);
-                        }
-
-                        if ($widgetOptionE['option'] == 'subPlaylistIds') {
-                            $nestedSubPlaylistId = json_decode($widgetOptionE['value']);
+                        if ($widgetOptionE['option'] == 'subPlaylists') {
+                            $nestedSubPlaylists = json_decode($widgetOptionE['value'], true);
                         }
                     }
 
@@ -1905,50 +1876,31 @@ class LayoutFactory extends BaseFactory
                 }
 
                 $module = $modules[$playlistWidget->type];
-                $subPlaylistIds = [];
-                $nestedPlaylistOptionsUpdated = [];
 
                 if ($playlistWidget->type == 'subplaylist') {
-                    $oldAssignedIds = $nestedSubPlaylistId;
-
+                    $updatedSubPlaylists = [];
                     foreach ($combined as $old => $new) {
-                        if (in_array($old, $oldAssignedIds)) {
-                            $subPlaylistIds[] = $new;
-                        }
-                    }
-
-                    $playlistWidget->setOptionValue('subPlaylistIds', 'attrib', json_encode($subPlaylistIds));
-
-                    foreach ($subPlaylistIds as $value) {
-                        foreach ($nestedSubPlaylistOptions as $playlistId => $options) {
-                            foreach ($options as $optionName => $optionValue) {
-                                if ($optionName == 'subPlaylistIdSpots') {
-                                    $spots = $optionValue;
-                                } elseif ($optionName == 'subPlaylistIdSpotLength') {
-                                    $spotsLength = $optionValue;
-                                } elseif ($optionName == 'subPlaylistIdSpotFill') {
-                                    $spotFill = $optionValue;
-                                }
+                        foreach ($nestedSubPlaylists as $subPlaylistItem) {
+                            if ($subPlaylistItem['playlistId'] === $old) {
+                                $subPlaylistItem['playlistId'] = $new;
+                                $updatedSubPlaylists[] = $subPlaylistItem;
                             }
                         }
+                    }
 
-                        $nestedPlaylistOptionsUpdated[$value] = [
-                            'subPlaylistIdSpots' => isset($spots) ? $spots : '',
-                            'subPlaylistIdSpotLength' => isset($spotsLength) ? $spotsLength : '',
-                            'subPlaylistIdSpotFill' => isset($spotFill) ? $spotFill : ''
-                        ];
-
+                    foreach ($updatedSubPlaylists as $updatedSubPlaylistItem) {
                         $this->getStore()->insert('
-                                                INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
-                                                SELECT p.parentId, c.childId, p.depth + c.depth + 1
-                                                  FROM lkplaylistplaylist p, lkplaylistplaylist c
-                                                 WHERE p.childId = :parentId AND c.parentId = :childId
-                                            ', [
+                            INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
+                            SELECT p.parentId, c.childId, p.depth + c.depth + 1
+                              FROM lkplaylistplaylist p, lkplaylistplaylist c
+                             WHERE p.childId = :parentId AND c.parentId = :childId
+                        ', [
                             'parentId' => $playlist->playlistId,
-                            'childId' => $value
+                            'childId' => $updatedSubPlaylistItem['playlistId']
                         ]);
                     }
-                    $playlistWidget->setOptionValue('subPlaylistOptions', 'attrib', json_encode($nestedPlaylistOptionsUpdated));
+
+                    $playlistWidget->setOptionValue('subPlaylists', 'attrib', json_encode($updatedSubPlaylists));
                 }
 
                 $playlist->assignWidget($playlistWidget);

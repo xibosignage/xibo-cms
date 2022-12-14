@@ -216,15 +216,21 @@
     }
 }
 
+.cal-event-time-bar {
+    padding: 0 15px;
+    margin: 0 -15px;
+    height: 50px;
+}
+
 .cal-event-time-bar .slider.slider-horizontal {
     float: left;
-    width: calc(100% - 68px);
+    width: calc(100% - 80px);
     margin-top: 7px;
 }
 
 .cal-event-time-bar .slider-step-btn {
     float: left;
-    width: 34px;
+    width: 40px;
     color: #337ab7;
 }
 
@@ -238,8 +244,17 @@
     font-size: 1rem;
 }
 
+.cal-event-time-bar .slider .slider-tick:not(.in-selection) {
+    background-image: linear-gradient(to bottom, #d7f2ff, #d0f0ff);
+}
+
+.cal-event-time-bar .slider-handle:hover {
+    cursor: grabbing;
+}
+
 .cal-event-agenda-filter {
     margin-top: 30px;
+    padding: 0 30px;
 }
 
 .cal-event-location {
