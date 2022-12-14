@@ -90,13 +90,6 @@ class ListenersMiddleware implements MiddlewareInterface
             ->useLogger($c->get('logger'))
             ->registerWithDispatcher($dispatcher);
 
-        // Listen for events that affect reports
-        (new ConnectorReportListener(
-            $c->get('store')
-        ))
-            ->useLogger($c->get('logger'))
-            ->registerWithDispatcher($dispatcher);
-
         // Media Delete Events
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\MenuBoardListener(
             $c->get('menuBoardCategoryFactory')

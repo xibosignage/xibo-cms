@@ -25,17 +25,16 @@ use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Entity\User;
+use Xibo\Event\ConnectorReportEvent;
 use Xibo\Event\ReportDataEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
-use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -43,8 +42,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 {
     use ConnectorTrait;
 
-    /** @var StorageServiceInterface */
-    private $store;
+    /** @var User */
+    private $user;
 
     /** @var TimeSeriesStoreInterface */
     private $timeSeriesStore;
@@ -64,7 +63,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
      */
     public function setFactories(ContainerInterface $container): ConnectorInterface
     {
-        $this->store = $container->get('store');
+        $this->user = $container->get('user');
         $this->timeSeriesStore = $container->get('timeSeriesStore');
         $this->sanitizer = $container->get('sanitizerService');
         $this->campaignFactory = $container->get('campaignFactory');
@@ -77,6 +76,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     {
         $dispatcher->addListener(MaintenanceRegularEvent::$NAME, [$this, 'onRegularMaintenance']);
         $dispatcher->addListener(ReportDataEvent::$NAME, [$this, 'onAudienceReport']);
+        $dispatcher->addListener(ConnectorReportEvent::$NAME, [$this, 'onRequestConnectorReport']);
 
         return $this;
     }
@@ -326,6 +326,52 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 'error' => $error ?? null
             ]);
         }
+    }
+
+    /**
+     * Get this connector reports
+     * @param ConnectorReportEvent $event
+     * @return void
+     */
+    public function onRequestConnectorReport(ConnectorReportEvent $event)
+    {
+        $this->getLogger()->debug('onRequestConnectorReport');
+
+        $connectorReports = [
+            [
+                'name'=> 'campaignProofOfPlayReport',
+                'description'=> 'Campaign Proof of Play',
+                'class'=> '\\Xibo\\Report\\CampaignProofOfPlay',
+                'type'=> 'Report',
+                'output_type'=> 'table',
+                'color'=> 'gray',
+                'fa_icon'=> 'fa-th',
+                'category'=> 'Connector Reports',
+                'feature'=> 'campaign-proof-of-play',
+                'adminOnly'=> 0,
+                'sort_order' => 3
+            ],
+        ];
+
+        $reports = [];
+        foreach ($connectorReports as $connectorReport) {
+
+            // Compatibility check
+            if (!isset($connectorReport['feature']) || !isset($connectorReport['category'])) {
+                continue;
+            }
+
+            // Check if only allowed for admin
+            if ($this->user->userTypeId != 1) {
+                if (isset($connectorReport['adminOnly']) && !empty($connectorReport['adminOnly'])) {
+                    continue;
+                }
+            }
+
+            $reports[$connectorReport['category']][] = (object) $connectorReport;
+        }
+
+        $event->setReportObject($reports);
     }
 
 
