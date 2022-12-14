@@ -372,7 +372,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $reports[$connectorReport['category']][] = (object) $connectorReport;
         }
 
-        $event->setReportObject($reports);
+        if (count($reports) > 0) {
+            $event->setReportObject($reports);
+        }
     }
 
 
