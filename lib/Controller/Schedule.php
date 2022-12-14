@@ -1858,7 +1858,7 @@ class Schedule extends Base
         }
 
         // Is this an event coming from an ad campaign?
-        if ($event->parentCampaignId !== null && $event->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+        if (!empty($event->parentCampaignId) && $event->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
             return false;
         }
 

@@ -449,6 +449,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $layoutIds = $filterBy['layoutIds'] ?? [];
         $mediaIds = $filterBy['mediaIds'] ?? [];
         $campaignId = $filterBy['campaignId'] ?? null;
+        $parentCampaignId = $filterBy['parentCampaignId'] ?? null;
         $eventTag = $filterBy['eventTag'] ?? null;
 
         // Limit
@@ -496,7 +497,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['displayId'] = ['$in' => $displayIds];
         }
 
-        // Campaign Filter
+        // Campaign/Layout Filter
         // ---------------
         // Use the Layout Factory to get all Layouts linked to the provided CampaignId
         if ($campaignId != null) {
@@ -543,6 +544,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // Media Filter
         if (count($mediaIds) != 0) {
             $match['$match']['mediaId'] = ['$in' => $mediaIds];
+        }
+
+        // Parent Campaign Filter
+        if ($parentCampaignId != null) {
+            $match['$match']['parentCampaignId'] = $parentCampaignId;
         }
 
         // Select collection
@@ -603,6 +609,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     'widgetId'=> 1,
                     'mediaId'=> 1,
                     'campaignId'=> 1,
+                    'parentCampaign'=> 1,
+                    'parentCampaignId'=> 1,
+                    'campaignStart'=> 1,
+                    'campaignEnd'=> 1,
                     'statDate'=> 1,
                     'engagements'=> 1,
                     'tagFilter' => 1

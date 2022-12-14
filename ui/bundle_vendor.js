@@ -127,6 +127,7 @@ require('./src/vendor/jquery-message-queuing/jquery.ba-jqmq.min.js');
 require('leaflet');
 require('leaflet-draw');
 require('leaflet-search');
+
 window.L = require('leaflet');
 window.leafletPip = require('@mapbox/leaflet-pip');
 
@@ -139,6 +140,7 @@ L.Icon.Default.mergeOptions({
 
 require('leaflet.markercluster');
 require('leaflet-easyprint');
+require('leaflet-fullscreen');
 
 // typeahead
 window.Bloodhound = require('corejs-typeahead/dist/bloodhound.min.js');

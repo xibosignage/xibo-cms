@@ -920,9 +920,9 @@ class UserGroupFactory extends BaseFactory
         if (!array_key_exists($homepage, $this->homepages)) {
             $this->homepages[$homepage] = new Homepage(
                 $homepage,
+                $feature,
                 $title,
-                $description,
-                $feature
+                $description
             );
         }
         return $this;

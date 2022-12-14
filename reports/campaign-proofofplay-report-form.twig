@@ -1,7 +1,7 @@
 {#
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -24,7 +24,7 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
-{% block title %}{% trans "Report: Proof of Play" %} | {% endblock %}
+{% block title %}{% trans "Report: Campaign Proof of Play" %} | {% endblock %}
 
 {% block actionMenu %}
     {% include "report-schedule-buttons.twig" %}
@@ -34,7 +34,7 @@
 
     <div class="widget">
         <div class="widget-title">
-            <span>{% trans "Proof of Play" %}</span>
+            <span>{% trans "Campaign Proof of Play" %}</span>
         </div>
 
         {% include "report-selector.twig" %}
@@ -42,7 +42,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView" data-refresh-on-form-submit="false">
                 <div class="XiboFilterCustom card bg-light mb-3">
-                    <div class="FilterDiv card-body" id="proofofplayReport">
+                    <div class="FilterDiv card-body" id="campaignProofOfPlayReport">
                         <!-- Form Filter -->
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
@@ -68,17 +68,26 @@
                             ] %}
                             {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
 
+
+                            {% set title %}{% trans "Group by" %}{% endset %}
+                            {% set hour %}{% trans "Hour" %}{% endset %}
+                            {% set day %}{% trans "Day" %}{% endset %}
+                            {% set week %}{% trans "Week" %}{% endset %}
+                            {% set month %}{% trans "Month" %}{% endset %}
+
+                            {% set options = [
+                                { name: "hour", filter: hour },
+                                { name: "day", filter: day },
+                                { name: "week", filter: week },
+                                { name: "month", filter: month },
+                            ] %}
+                            {{ inline.dropdown("groupBy", "single", title, "today", options, "name", "filter") }}
+
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
 
-                            {% set title %}{% trans "Time" %}{% endset %}
-                            {{ inline.time("statsFromDtTime", title, "00:00", "", "stats-from-dt-time") }}
-
                             {% set title %}{% trans "To Date" %}{% endset %}
                             {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
-
-                            {% set title %}{% trans "Time" %}{% endset %}
-                            {{ inline.time("statsToDtTime", title, "00:00", "", "stats-to-dt-time") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -107,21 +116,6 @@
                             ] %}
                             {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
 
-                            {% set attributes = [
-                                { name: "data-width", value: "200px" },
-                                { name: "data-allow-clear", value: "true" },
-                                { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: url_for("layout.search") },
-                                { name: "data-search-term", value: "layout" },
-                                { name: "data-search-term-tags", value: "tags" },
-                                { name: "data-id-property", value: "layoutId" },
-                                { name: "data-text-property", value: "layout" }
-                            ] %}
-
-                            {% set title %}{% trans "Layout" %}{% endset %}
-                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
-
                             {# Campaign list only. #}
                             {% set attributes = [
                                 { name: "data-search-url", value:  url_for("campaign.search") },
@@ -134,53 +128,6 @@
                             {% set title %}{% trans "Campaign" %}{% endset %}
                             {% set helpText %}{% trans "Please select a Campaign" %}{% endset %}
                             {{ inline.dropdown("parentCampaignId", "single", title, "", null, "campaignId", "campaign", "", "", "", "", "", attributes) }}
-
-                            {% set attributes = [
-                                { name: "data-width", value: "200px" },
-                                { name: "data-allow-clear", value: "true" },
-                                { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: url_for("library.search") },
-                                { name: "data-search-term", value: "media" },
-                                { name: "data-search-term-tags", value: "tags" },
-                                { name: "data-id-property", value: "mediaId" },
-                                { name: "data-text-property", value: "name" }
-                            ] %}
-                            {% set title %}{% trans "Media" %}{% endset %}
-                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", null, "mediaId", "name", "", "pagedSelect", "", "m", "", attributes) }}
-
-                            {% set title %}{% trans "Type" %}{% endset %}
-                            {% set layout %}{% trans "Layout" %}{% endset %}
-                            {% set media %}{% trans "Media" %}{% endset %}
-                            {% set widget %}{% trans "Widget" %}{% endset %}
-                            {% set event %}{% trans "Event" %}{% endset %}
-                            {% set options = [
-                                { typeid: "", type: null },
-                                { typeid: "layout", type: layout },
-                                { typeid: "media", type: media },
-                                { typeid: "widget", type: widget },
-                                { typeid: "event", type: event }
-                            ] %}
-                            {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
-
-                            {% set title %}{% trans "Tags from" %}{% endset %}
-                            {% set dg %}{% trans "Display Group" %}{% endset %}
-                            {% set layout %}{% trans "Layout" %}{% endset %}
-                            {% set media %}{% trans "Media" %}{% endset %}
-                            {% set options = [
-                                { tagsTypeid: "dg", tagsType: dg },
-                                { tagsTypeid: "layout", tagsType: layout },
-                                { tagsTypeid: "media", tagsType: media }
-                            ] %}
-                            {{ inline.dropdown("tagsType", "single", title, "dg", options, "tagsTypeid", "tagsType") }}
-
-                            {% if currentUser.featureEnabled("tag.tagging") %}
-                                {% set title %}{% trans "Tags" %}{% endset %}
-                                {% set exactMatchTitle %}{% trans "Should Tags filter by exact match?" %}{% endset %}
-                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
-                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactMatchTitle, logicalOperatorTitle) }}
-                            {% endif %}
 
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
@@ -212,23 +159,13 @@
                                        class="table xibo-table table-striped table-full-width"
                                        style="width: 100%"
                                        data-state-preference-name="proofOfPlayGrid"
-                                       data-url="/report/data/proofofplayReport">
+                                       data-url="/report/data/campaignProofOfPlayReport">
                                     <thead>
                                     <tr>
-                                        <th>{% trans "Type" %}</th>
-                                        <th>{% trans "Display ID" %}</th>
-                                        <th>{% trans "Display" %}</th>
-                                        <th>{% trans "Campaign" %}</th>
-                                        <th>{% trans "Layout ID" %}</th>
-                                        <th>{% trans "Layout" %}</th>
-                                        <th>{% trans "Widget ID" %}</th>
-                                        <th>{% trans "Media" %}</th>
-                                        <th>{% trans "Tag" %}</th>
-                                        <th>{% trans "Number of Plays" %}</th>
-                                        <th>{% trans "Total Duration" %}</th>
-                                        <th>{% trans "Total Duration (s)" %}</th>
-                                        <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "First Period Shown" %}</th>
-                                        <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "Last Period Shown" %}</th>
+                                        <th>Period</th>
+                                        <th>Ad Plays</th>
+                                        <th>Ad Duration</th>
+                                        <th>Audience Impressions</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -236,16 +173,6 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
-                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -265,7 +192,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         $(document).ready(function() {
-            let $report = $("#proofofplayReport");
+            let $report = $("#campaignProofOfPlayReport");
             let $dataTable = $('#stats'); // Datatable
             let chart = null; // Chart
             let result; // XHR get data result
@@ -294,75 +221,11 @@
                 "order": [[1, "asc"]],
                 data:{},
                 "columns": [
-                    {"data": "type"},
-                    {"data": "displayId"},
-                    {"data": "display"},
-                    {"data": "parentCampaign"},
-                    {"data": "layoutId"},
-                    {"data": "layout"},
-                    {"data": "widgetId"},
-                    {"data": "media"},
-                    {"data": "tag"},
-                    {"data": "numberPlays"},
-                    {
-                        "data": "duration",
-                        "render": function (data, type, row, meta) {
-                            if (type != "display")
-                                return "";
-
-                            var durationData = moment.duration(data, "seconds");
-                            var dataM = '';
-
-                            var months = durationData.months();
-                            if (months > 0) {
-                                durationData.subtract(moment.duration(months,'months'));
-                                dataM += months + '{% trans "month" %} ';
-                            }
-
-                            var days = durationData.days();
-                            durationData.subtract(moment.duration(days,'days'));
-                            dataM += days + '{% trans "day" %} ';
-
-                            var hours = durationData.hours();
-                            durationData.subtract(moment.duration(hours,'hours'));
-                            dataM += hours + '{% trans "hr" %} ';
-
-                            var minutes = durationData.minutes();
-                            durationData.subtract(moment.duration(minutes,'minutes'));
-                            dataM += minutes + '{% trans "min" %} ';
-
-                            var seconds = durationData.seconds();
-                            dataM += seconds + '{% trans "sec" %} ';
-
-                            return  dataM;
-                        }
-                    },
-                    {"data": "duration"},
-                    {"data": "minStart"},
-                    {"data": "maxEnd"}
-
+                    {"data": "labelDate"},
+                    {"data": "adPlays"},
+                    {"data": "adDuration"},
+                    {"data": "impressions"}
                 ],
-                footerCallback: function (row, data, start, end, display) {
-                    let api = this.api();
-
-                    // Total over all pages
-                    let totalNumberPlays = api.column(9).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-                    let totalDuration = api.column(11).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-                    let totalNumberPlaysPage = api.column(9, { page: 'current'}).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-                    let totalDurationPage = api.column(11, { page: 'current'}).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-
-                    // Update footer
-                    $(api.column(9).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
-                    $(api.column(11).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
-                },
             });
 
             // table.on('draw', dataTableDraw);
@@ -516,8 +379,7 @@
                 let tags = $("#tags").val();
                 let exactTags = $('#exactTags').is(":checked");
 
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
-                    + "&reportName=proofofplayReport" );
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=campaignProofOfPlayReport" );
 
             };
 
@@ -600,18 +462,12 @@
             })
         });
 
-        function proofOfPlayScheduleCallback() {
+        function campaignProofOfPlayScheduleCallback() {
 
-            let $displayId = $('#proofofplayReport #displayId');
-            let $layoutId = $('#proofofplayReport [id="layoutId[]"]');
-            let $mediaId = $('#proofofplayReport [id="mediaId[]"]');
-            let $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
-            let $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
-            let $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
+            let $displayId = $('#campaignProofOfPlayReport #displayId');
+            let $newDisplayId = $('#campaignProofofplayScheduleAddForm #displayId');
 
             appendOptions($newDisplayId, $displayId.find('option:selected').clone());
-            appendOptions($newLayoutId, $layoutId.find('option:selected').clone());
-            appendOptions($newMediaId, $mediaId.find('option:selected').clone());
         }
 
         function appendOptions(element, options) {

@@ -77,12 +77,14 @@ class AdCampaignMigration extends AbstractMigration
                 'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
                 'default' => 0,
             ])
-            ->addColumn('spend', 'integer', [
-                'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+            ->addColumn('spend', 'decimal', [
+                'precision' => 30,
+                'scale' => 4,
                 'default' => 0,
             ])
-            ->addColumn('impressions', 'integer', [
-                'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
+            ->addColumn('impressions', 'decimal', [
+                'precision' => 30,
+                'scale' => 4,
                 'default' => 0,
             ])
             ->addColumn('lastPopId', 'string', [
@@ -177,7 +179,11 @@ class AdCampaignMigration extends AbstractMigration
                 'options' => '[]',
                 'schedule' => '45 * * * *',
                 'isActive' => '1',
-                'configFile' => '/tasks/campaign-scheduler.task'
+                'configFile' => '/tasks/campaign-scheduler.task',
+                'pid' => 0,
+                'lastRunDt' => 0,
+                'lastRunDuration' => 0,
+                'lastRunExitCode' => 0
             ])
             ->save();
 

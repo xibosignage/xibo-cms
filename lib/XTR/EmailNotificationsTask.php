@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,7 +26,6 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Slim\Views\Twig;
-use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 
 /**
@@ -73,35 +72,55 @@ class EmailNotificationsTask implements TaskInterface
         $this->log->debug('Notification Queue sending from ' . $msgFrom);
 
         foreach ($this->userNotificationFactory->getEmailQueue() as $notification) {
-            /** @var UserNotification $notification */
-
             $this->log->debug('Notification found: ' . $notification->notificationId);
 
-            // System notification for the system user
-            if ($notification->isSystem == 1 && $notification->userId == 0) {
-                $notification->email = $this->user->email ?? $this->config->getSetting('mail_to');
-            }
+            if (!empty($notification->email) || $notification->isSystem == 1) {
+                $mail = new \PHPMailer\PHPMailer\PHPMailer();
 
-            if ($notification->email != '') {
+                // System notifications, override the email address
+                if ($notification->isSystem == 1) {
+                    // We should send the system notification to:
+                    //  - the system user
+                    //  - the mail_to (if different)
+                    $mailTo = $this->config->getSetting('mail_to');
+
+                    // We add this below.
+                    $notification->email = $this->user->email ?? $mailTo;
+
+                    // Make sure we've been able to resolve an address.
+                    if (empty($notification->email)) {
+                        $this->log->error('Discarding NotificationId ' . $notification->notificationId
+                            . ' as no email address could be resolved.');
+                        continue;
+                    }
+
+                    // Also add the mail_to
+                    if ($mailTo !== $notification->email && !empty($mailTo)) {
+                        $mail->addAddress($mailTo);
+                    }
+                }
 
                 $this->log->debug('Sending Notification email to ' . $notification->email);
+                $mail->addAddress($notification->email);
 
-                // Send them an email
-                $mail = new \PHPMailer\PHPMailer\PHPMailer();
+                // Email them
                 $mail->CharSet = 'UTF-8';
                 $mail->Encoding = 'base64';
                 $mail->From = $msgFrom;
 
                 // Add attachment
                 if ($notification->filename != null) {
-                    $mail->addAttachment($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/' . $notification->filename, $notification->originalFileName);
+                    $mail->addAttachment(
+                        $this->config->getSetting('LIBRARY_LOCATION') . 'attachment/' . $notification->filename,
+                        $notification->originalFileName
+                    );
                 }
 
-                if ($msgFromName != null)
+                if (!empty($msgFromName)) {
                     $mail->FromName = $msgFromName;
+                }
 
                 $mail->Subject = $notification->subject;
-                $mail->addAddress($notification->email);
 
                 $addresses = explode(',', $notification->nonusers);
                 foreach ($addresses as $address) {
@@ -123,7 +142,8 @@ class EmailNotificationsTask implements TaskInterface
 
                 $this->log->debug('Marking notification as sent');
             } else {
-                $this->log->error('Discarding NotificationId ' . $notification->notificationId . ' as no email address could be resolved.');
+                $this->log->error('Discarding NotificationId ' . $notification->notificationId
+                    . ' as no email address could be resolved.');
             }
 
             // Mark as sent

@@ -139,6 +139,11 @@ class ScheduleFactory extends BaseFactory
     {
         return $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
     }
+    
+    public function getByParentCampaignId($campaignId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'parentCampaignId' => $campaignId]);
+    }
 
     /**
      * Get by OwnerId
@@ -352,6 +357,11 @@ class ScheduleFactory extends BaseFactory
         if ($parsedFilter->getInt('campaignId') !== null) {
             $sql .= ' AND `schedule`.campaignId = :campaignId ';
             $params['campaignId'] = $parsedFilter->getInt('campaignId');
+        }
+
+        if ($parsedFilter->getInt('parentCampaignId') !== null) {
+            $sql .= ' AND `schedule`.parentCampaignId = :parentCampaignId ';
+            $params['parentCampaignId'] = $parsedFilter->getInt('parentCampaignId');
         }
 
         if ($parsedFilter->getInt('ownerId') !== null) {
