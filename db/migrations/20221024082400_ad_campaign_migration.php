@@ -177,7 +177,11 @@ class AdCampaignMigration extends AbstractMigration
                 'options' => '[]',
                 'schedule' => '45 * * * *',
                 'isActive' => '1',
-                'configFile' => '/tasks/campaign-scheduler.task'
+                'configFile' => '/tasks/campaign-scheduler.task',
+                'pid' => 0,
+                'lastRunDt' => 0,
+                'lastRunDuration' => 0,
+                'lastRunExitCode' => 0
             ])
             ->save();
 
