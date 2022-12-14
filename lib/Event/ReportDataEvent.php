@@ -21,6 +21,9 @@
  */
 namespace Xibo\Event;
 
+/**
+ * Event used to get report results
+ */
 class ReportDataEvent extends Event
 {
     public static $NAME = 'audience.report.data.event';

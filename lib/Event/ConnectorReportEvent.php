@@ -21,6 +21,9 @@
  */
 namespace Xibo\Event;
 
+/**
+ * Event used to get list of connector reports
+ */
 class ConnectorReportEvent extends Event
 {
     public static $NAME = 'connector.report.event';
