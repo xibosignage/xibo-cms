@@ -38,8 +38,6 @@ use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Listener\CampaignListener;
-use Xibo\Event\ConnectorReportEvent;
-use Xibo\Listener\ConnectorReportListener;
 
 /**
  * This middleware is used to register listeners against the dispatcher

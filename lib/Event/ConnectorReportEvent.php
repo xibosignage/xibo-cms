@@ -29,7 +29,7 @@ class ConnectorReportEvent extends Event
     public static $NAME = 'connector.report.event';
 
     /** @var array */
-    private $reports;
+    private $reports = [];
 
     public function getReports()
     {

@@ -148,9 +148,12 @@ class ReportService implements ReportServiceInterface
         // Get reports that are allowed by connectors
         $event = new ConnectorReportEvent();
         $this->getDispatcher()->dispatch($event, ConnectorReportEvent::$NAME);
+        $connectorReports = $event->getReports();
 
         // Merge built in reports and connector reports
-        $reports = array_merge($reports, $event->getReports());
+        if (count($connectorReports) > 0) {
+            $reports = array_merge($reports, $connectorReports);
+        }
 
         foreach ($reports as $k => $report) {
             usort($report, function ($a, $b) {
