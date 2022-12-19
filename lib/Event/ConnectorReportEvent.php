@@ -36,9 +36,9 @@ class ConnectorReportEvent extends Event
         return $this->reports;
     }
 
-    public function setReportObject($reports)
+    public function addReports($reports)
     {
-        $this->reports = $reports;
+        $this->reports = array_merge_recursive($this->reports, $reports);
 
         return $this;
     }

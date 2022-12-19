@@ -40,7 +40,7 @@
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView" data-refresh-on-form-submit="false">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="campaignProofOfPlayView" data-refresh-on-form-submit="false">
                 <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="campaignProofOfPlayReport">
                         <!-- Form Filter -->
@@ -192,7 +192,6 @@
 {% block javaScript %}
     <script type="text/javascript">
         $(document).ready(function() {
-            let $report = $("#campaignProofOfPlayReport");
             let $dataTable = $('#stats'); // Datatable
             let chart = null; // Chart
             let result; // XHR get data result
