@@ -22,52 +22,23 @@
 namespace Xibo\Event;
 
 /**
- * Event used to get report results
+ * Event used to get list of connector reports
  */
-class ReportDataEvent extends Event
+class ConnectorReportEvent extends Event
 {
-    public static $NAME = 'audience.report.data.event';
+    public static $NAME = 'connector.report.event';
 
-    private $type;
+    /** @var array */
+    private $reports = [];
 
-    private $params;
-
-    private $results;
-
-    /**
-     * ReportDataEvent constructor.
-     * @param $type
-     */
-    public function __construct($type)
+    public function getReports()
     {
-        $this->type = $type;
+        return $this->reports;
     }
 
-    public function getReportType()
+    public function addReports($reports)
     {
-        return $this->type;
-    }
-
-    public function getParams()
-    {
-        return $this->params;
-    }
-
-    public function setParams($params)
-    {
-        $this->params = $params;
-
-        return $this;
-    }
-
-    public function getResults()
-    {
-        return $this->results;
-    }
-
-    public function setResults($results)
-    {
-        $this->results = $results;
+        $this->reports = array_merge_recursive($this->reports, $reports);
 
         return $this;
     }

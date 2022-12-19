@@ -62,11 +62,6 @@ class CampaignProofOfPlay implements ReportInterface
     private $displayFactory;
 
     /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
      * @var LayoutFactory
      */
     private $layoutFactory;
@@ -91,21 +86,11 @@ class CampaignProofOfPlay implements ReportInterface
      */
     private $state;
 
-    private $table = 'stat';
-
-    private $tagsType = [
-        'dg' => 'Display group',
-        'media' => 'Media',
-        'layout' => 'Layout'
-    ];
-
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
     {
         $this->campaignFactory = $container->get('campaignFactory');
         $this->displayFactory = $container->get('displayFactory');
-        $this->mediaFactory = $container->get('mediaFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
         $this->sanitizer = $container->get('sanitizerService');
         $this->dispatcher = $container->get('dispatcher');
@@ -130,7 +115,7 @@ class CampaignProofOfPlay implements ReportInterface
         return new ReportForm(
             'campaign-proofofplay-report-form',
             'campaignProofOfPlay',
-            'Campaign Proof of Play',
+            'Connector Reports',
             [
                 'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
                 'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
@@ -220,6 +205,10 @@ class CampaignProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        // Get filter criteria
+        $rs = $this->reportScheduleFactory->getById($savedReport->reportScheduleId, 1)->filterCriteria;
+        $filterCriteria = json_decode($rs, true);
+
         // Show filter criteria
         $metadata = [];
 
@@ -345,23 +334,21 @@ class CampaignProofOfPlay implements ReportInterface
 
         // --------
         // ReportDataEvent
-        $event = new ReportDataEvent('proofofplay');
+        $event = new ReportDataEvent('campaignProofofplay');
 
         // Set query params for audience proof of play report
         $event->setParams($params);
 
         // Dispatch the event - listened by Audience Report Connector
         $this->dispatcher->dispatch($event, ReportDataEvent::$NAME);
-
-        // Get results from the event
-        $result['result'] = $event->getResults();
+        $results = $event->getResults();
 
         $result['periodStart'] = $params['fromDt'];
         $result['periodEnd'] = $params['toDt'];
 
         // Sanitize results??
         $rows = [];
-        foreach ($result['result'] as $row) {
+        foreach ($results['json'] as $row) {
             $entry = [];
 
             $entry['labelDate'] = $row['labelDate'];
@@ -387,7 +374,9 @@ class CampaignProofOfPlay implements ReportInterface
         return new ReportResult(
             $metadata,
             $rows,
-            $recordsTotal
+            $recordsTotal,
+            [],
+            $results['error'] ?? null
         );
     }
 }

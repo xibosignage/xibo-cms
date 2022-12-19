@@ -25,17 +25,16 @@ use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Entity\User;
+use Xibo\Event\ConnectorReportEvent;
 use Xibo\Event\ReportDataEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
-use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -43,8 +42,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 {
     use ConnectorTrait;
 
-    /** @var StorageServiceInterface */
-    private $store;
+    /** @var User */
+    private $user;
 
     /** @var TimeSeriesStoreInterface */
     private $timeSeriesStore;
@@ -64,7 +63,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
      */
     public function setFactories(ContainerInterface $container): ConnectorInterface
     {
-        $this->store = $container->get('store');
+        $this->user = $container->get('user');
         $this->timeSeriesStore = $container->get('timeSeriesStore');
         $this->sanitizer = $container->get('sanitizerService');
         $this->campaignFactory = $container->get('campaignFactory');
@@ -76,7 +75,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(MaintenanceRegularEvent::$NAME, [$this, 'onRegularMaintenance']);
-        $dispatcher->addListener(ReportDataEvent::$NAME, [$this, 'onAudienceReport']);
+        $dispatcher->addListener(ReportDataEvent::$NAME, [$this, 'onRequestReportData']);
+        $dispatcher->addListener(ConnectorReportEvent::$NAME, [$this, 'onListReports']);
 
         return $this;
     }
@@ -117,7 +117,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
-        // TODO: Implement processSettingsForm() method.
+        if (!$this->isProviderSetting('apiKey')) {
+            $settings['apiKey'] = $params->getString('apiKey');
+        }
         return $settings;
     }
 
@@ -285,19 +287,27 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         }
     }
 
-    public function onAudienceReport(ReportDataEvent $event)
+    /**
+     * Request Report results from the audience report service
+     * @throws GeneralException
+     */
+    public function onRequestReportData(ReportDataEvent $event)
     {
+        $this->getLogger()->debug('onRequestReportData');
+
         $type = $event->getReportType();
 
         $typeUrl = [
-            'proofofplay' => $this->getServiceUrl() . '/campaign/proofofplay'
+            'campaignProofofplay' => $this->getServiceUrl() . '/campaign/proofofplay',
+            'mobileProofofplay' => $this->getServiceUrl() . '/campaign/proofofplay/mobile',
+            'displayAdplays' => $this->getServiceUrl() . '/display/adplays'
         ];
 
         if (array_key_exists($type, $typeUrl)) {
             $json = [];
             switch ($type) {
-                case 'proofofplay':
-                    // Get audience proofofplay result
+                case 'campaignProofofplay':
+                    // Get campaign proofofplay result
                     try {
                         $response = $this->getClient()->get($typeUrl[$type], [
                             'headers' => [
@@ -310,6 +320,43 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                         $json = json_decode($body, true);
                     } catch (RequestException $requestException) {
                         $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $error = 'Failed to get campaign proofofplay result: '.$requestException->getMessage();
+                    }
+                    break;
+
+                case 'mobileProofofplay':
+                    // Get mobile proofofplay result
+                    try {
+                        $response = $this->getClient()->get($typeUrl[$type], [
+                            'headers' => [
+                                'X-API-KEY' => $this->getSetting('apiKey')
+                            ],
+                            'query' => $event->getParams()
+                        ]);
+
+                        $body = $response->getBody()->getContents();
+                        $json = json_decode($body, true);
+                    } catch (RequestException $requestException) {
+                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $error = 'Failed to get mobile proofofplay result: '.$requestException->getMessage();
+                    }
+                    break;
+
+                case 'displayAdplays':
+                    // Get display adplays result
+                    try {
+                        $response = $this->getClient()->get($typeUrl[$type], [
+                            'headers' => [
+                                'X-API-KEY' => $this->getSetting('apiKey')
+                            ],
+                            'query' => $event->getParams()
+                        ]);
+
+                        $body = $response->getBody()->getContents();
+                        $json = json_decode($body, true);
+                    } catch (RequestException $requestException) {
+                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $error = 'Failed to get display adplays result: '.$requestException->getMessage();
                     }
                     break;
 
@@ -317,10 +364,111 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $this->getLogger()->error('Report type not found ');
             }
 
-            $event->setResults($json);
+            $event->setResults([
+                'json' => $json,
+                'error' => $error ?? null
+            ]);
         }
     }
 
+    /**
+     * Get this connector reports
+     * @param ConnectorReportEvent $event
+     * @return void
+     */
+    public function onListReports(ConnectorReportEvent $event)
+    {
+        $this->getLogger()->debug('onListReports');
+
+        $connectorReports = [
+            [
+                'name'=> 'campaignProofOfPlayReport',
+                'description'=> 'Campaign Proof of Play',
+                'class'=> '\\Xibo\\Report\\CampaignProofOfPlay',
+                'type'=> 'Report',
+                'output_type'=> 'table',
+                'color'=> 'gray',
+                'fa_icon'=> 'fa-th',
+                'category'=> 'Connector Reports',
+                'feature'=> 'campaign-proof-of-play',
+                'adminOnly'=> 0,
+                'sort_order' => 1
+            ],
+//            [
+//                'name'=> 'mobileProofOfPlayReport',
+//                'description'=> 'Mobile Proof of Play',
+//                'class'=> '\\Xibo\\Report\\MobileProofOfPlay',
+//                'type'=> 'Report',
+//                'output_type'=> 'table',
+//                'color'=> 'green',
+//                'fa_icon'=> 'fa-th',
+//                'category'=> 'Connector Reports',
+//                'feature'=> 'mobile-proof-of-play',
+//                'adminOnly'=> 0,
+//                'sort_order' => 2
+//            ],
+//            [
+//                'name'=> 'displayPlayedPercentageReport',
+//                'description'=> 'Display played percentage',
+//                'class'=> '\\Xibo\\Report\\DisplayPlayedPercentage',
+//                'type'=> 'Report',
+//                'output_type'=> 'table',
+//                'color'=> 'green',
+//                'fa_icon'=> 'fa-th',
+//                'category'=> 'Connector Reports',
+//                'feature'=> 'display-report',
+//                'adminOnly'=> 0,
+//                'sort_order' => 3
+//            ],
+//            [
+//                'name'=> 'revenueByDisplayReport',
+//                'description'=> 'Revenue by Display',
+//                'class'=> '\\Xibo\\Report\\RevenueByDisplay',
+//                'type'=> 'Report',
+//                'output_type'=> 'table',
+//                'color'=> 'green',
+//                'fa_icon'=> 'fa-th',
+//                'category'=> 'Connector Reports',
+//                'feature'=> 'display-report',
+//                'adminOnly'=> 0,
+//                'sort_order' => 4
+//            ],
+//            [
+//                'name'=> 'adPlaysReport',
+//                'description'=> 'Ad Plays',
+//                'class'=> '\\Xibo\\Report\\AdPlay',
+//                'type'=> 'Report',
+//                'output_type'=> 'table',
+//                'color'=> 'green',
+//                'fa_icon'=> 'fa-th',
+//                'category'=> 'Connector Reports',
+//                'feature'=> 'display-report',
+//                'adminOnly'=> 0,
+//                'sort_order' => 5
+//            ],
+        ];
+
+        $reports = [];
+        foreach ($connectorReports as $connectorReport) {
+            // Compatibility check
+            if (!isset($connectorReport['feature']) || !isset($connectorReport['category'])) {
+                continue;
+            }
+
+            // Check if only allowed for admin
+            if ($this->user->userTypeId != 1) {
+                if (isset($connectorReport['adminOnly']) && !empty($connectorReport['adminOnly'])) {
+                    continue;
+                }
+            }
+
+            $reports[$connectorReport['category']][] = (object) $connectorReport;
+        }
+
+        if (count($reports) > 0) {
+            $event->addReports($reports);
+        }
+    }
 
     // </editor-fold>
 }
