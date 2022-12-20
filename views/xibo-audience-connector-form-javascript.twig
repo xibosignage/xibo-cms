@@ -1,0 +1,219 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% import "forms.twig" as forms %}
+<script type="text/javascript">
+  window.audienceFormOpen = function($audienceConnector) {
+    // Make a datatable
+    var dialog = $audienceConnector.closest('.modal');
+    var $table = $('#audience-dma');
+    var audienceDmaTable;
+    audienceDmaTable = $table.DataTable({
+      language: dataTablesLanguage,
+      dom: dataTablesTemplate,
+      serverSide: false,
+      stateSave: false,
+      responsive: true,
+      filter: true,
+      searchDelay: 3000,
+      order: [[ 0, 'asc']],
+      ajax: {
+        url: $table.data('proxyUrl').replace(':method', 'dmaSearch'),
+        data: function (d) {
+          $.extend(d, $table.closest('.XiboGrid').find('.FilterDiv form').serializeObject());
+        }
+      },
+      columns: [
+        { data: 'name', responsivePriority: 1 },
+        { data: 'costPerPlay', responsivePriority: 1 },
+        { data: 'impressionsPerPlay', responsivePriority: 1 },
+        { data: 'impressionSource', responsivePriority: 10 },
+        { data: 'startDate', responsivePriority: 2 },
+        { data: 'endDate', responsivePriority: 2 },
+        { data: 'daysOfWeek', responsivePriority: 2 },
+        { data: 'startTime', responsivePriority: 2 },
+        { data: 'endTime', responsivePriority: 2 },
+        {
+          data: 'geoFence',
+          responsivePriority: 3,
+          render: function(data) {
+            return data && data.length > 0;
+          },
+        },
+        { data: 'priority', responsivePriority: 2 },
+        {
+          data: function(data) {
+            if (data.displays) {
+              return data.displays.length;
+            } else {
+              return 0;
+            }
+          },
+          responsivePriority: 1,
+        },
+        {
+          data: function(data, type, set, meta) {
+            if (type !== 'display') {
+              return '';
+            }
+            return '<a class="btn btn-sm" href="#" onclick="openDmaForm(' + meta.row + ')"><span class="fa fa-pencil" title="{% trans %}Edit{% endtrans %}"></span></a>'
+              + '<a class="btn btn-sm" href="#" onclick="deleteDmaForm(' + meta.row + ')"><span class="fa fa-trash" title="{% trans %}Delete{% endtrans %}"></span></a>';
+          },
+          responsivePriority: 1,
+        }
+      ],
+    });
+
+    table.on('draw', dataTableDraw);
+    table.on('processing.dt', dataTableProcessing);
+
+    // Add button
+    new $.fn.dataTable.Buttons(table, {
+      buttons: [
+        {
+          text: '{{ "Add DMA"|trans }}',
+          action: function (e, dt, node, config) {
+            openDmaForm();
+          },
+        },
+      ]
+    });
+    audienceDmaTable.buttons().container().css('margin-bottom', '10px').appendTo('.dataTables_folder');
+
+    setTimeout(function() {
+      audienceDmaTable.columns.adjust()
+    }, 500);
+
+    // Add an add button.
+    var dmaTemplate = Handlebars.compile($('#xibo-audience-connector-dma-form').html());
+    window.openDmaForm = function(id) {
+      let title;
+      let method;
+      let dma;
+      if (id !== null) {
+        dma = audienceDmaTable.rows(id).data()[0];
+        title = '{{ "Edit DMA"|trans }}';
+        method = 'dmaEdit';
+      } else {
+        title = '{{ "Add DMA"|trans }}';
+        method = 'dmaAdd';
+      }
+
+      bootbox.hideAll();
+      var dialog = bootbox.dialog({
+        message: dmaTemplate({
+          connectorId: $table.data('connectorId'),
+          method: method,
+          dma: dma,
+        }),
+        title: title,
+        animate: false,
+        size: 'large',
+        buttons: {
+          back: {
+            label: '{{ "Back"|trans }}',
+            className: 'btn-white',
+            callback: function() {
+              // Open up the connector config form.
+              bootbox.hideAll();
+              $('[data-connector-class-name-last="XiboAudienceReportingConnector"]').find('.btn-primary').click();
+            }
+          },
+          save: {
+            label: '{{ "Save"|trans }}',
+            className: 'btn-success',
+            callback: function() {
+              // Submit the form in the usual way, and then open up the connector config form.
+              const $form = $(dialog).find('form');
+              const button = $(dialog).find('.btn-success');
+              button.addClass('disabled').append('<span class="saving fa fa-cog fa-spin p-1"></span>');
+
+              XiboFormSubmit($form, null, function(xhr) {
+                if (xhr.success === false) {
+                  button.removeClass('disabled').find('.saving').remove();
+                } else {
+                  bootbox.hideAll();
+                  $('[data-connector-class-name-last="XiboAudienceReportingConnector"]').find('.btn-primary').click();
+                }
+              });
+              return false;
+            }
+          },
+        }
+      });
+    }
+
+    window.deleteDmaForm = function(id) {
+      const dma = audienceDmaTable.rows(id).data()[0];
+      bootbox.hideAll();
+      bootbox.confirm({
+        message: '{{ "Are you sure you want to delete this DMA?"|trans }}',
+        buttons: {
+          confirm: {
+            label: '{{ "Yes"|trans }}',
+            className: 'btn-success',
+          },
+          cancel: {
+            label: '{{ "No"|trans }}',
+            className: 'btn-danger',
+          },
+        },
+        callback: function (result) {
+          if (result) {
+            $.ajax({
+              method: 'POST',
+              url: $table.data('proxyUrl').replace(':method', 'dmaDelete') + '?_id=' + dma._id,
+              success: function(xhr) {
+                if (xhr && !xhr.success) {
+                  toastr.error(xhr.message);
+                } else {
+                  SystemMessage('{{ "DMA deleted"|trans }}', true);
+                }
+              },
+              error: function(xhr, textStatus, errorThrown) {
+                toastr.error(xhr.message);
+              },
+              complete: function() {
+                $('[data-connector-class-name-last="XiboAudienceReportingConnector"]').find('.btn-primary').click();
+              }
+            });
+          } else {
+            $('[data-connector-class-name-last="XiboAudienceReportingConnector"]').find('.btn-primary').click();
+          }
+        }
+      });
+    }
+  };
+</script>
+<script type="text/x-handlebars-template" id="xibo-audience-connector-dma-form">
+  <div class="row">
+        <div class="col-md-12">
+            <form class="form-horizontal" action="{{ url_for("connector.edit.form.proxy", {id: "{{connectorId}}", method: "{{method}}"}) }}" method="POST">
+                <input type="hidden" name="_id" value="{% verbatim %}{{ dma._id }}{% endverbatim %}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name of this DMA - (1 - 50 characters)" %}{% endset %}
+                {{ forms.input("name", title, "{{dma.name}}", helpText) }}
+            </form>
+        </div>
+    </div>
+</script>
