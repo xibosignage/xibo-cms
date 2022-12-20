@@ -300,7 +300,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $typeUrl = [
             'campaignProofofplay' => $this->getServiceUrl() . '/campaign/proofofplay',
             'mobileProofofplay' => $this->getServiceUrl() . '/campaign/proofofplay/mobile',
-            'displayAdplays' => $this->getServiceUrl() . '/display/adplays'
+            'displayAdPlay' => $this->getServiceUrl() . '/display/adplays'
         ];
 
         if (array_key_exists($type, $typeUrl)) {
@@ -361,7 +361,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     break;
 
                 default:
-                    $this->getLogger()->error('Report type not found ');
+                    $this->getLogger()->error('Connector Report not found ');
             }
 
             $event->setResults([

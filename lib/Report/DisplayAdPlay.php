@@ -358,7 +358,6 @@ class DisplayAdPlay implements ReportInterface
             $impressions = $row['impressions'];
             $impressionsData[] = ($impressions == '') ? 0 : $impressions;
 
-
             // ----
             // Build Tabular data
             $entry = [];
