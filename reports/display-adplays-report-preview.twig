@@ -48,17 +48,9 @@
                     <table id="stats" class="table table-striped">
                         <thead>
                         <tr>
-                            <th>{% trans "Start" %}</th>
-                            <th>{% trans "End" %}</th>
-                            <th>{% trans "Display Id" %}</th>
-                            <th>{% trans "Display" %}</th>
-                            <th>{% trans "Layout Id" %}</th>
-                            <th>{% trans "Layout" %}</th>
-                            <th>{% trans "Start Latitude" %}</th>
-                            <th>{% trans "Start Longitude" %}</th>
-                            <th>{% trans "End Latitude" %}</th>
-                            <th>{% trans "End Longitude" %}</th>
-                            <th>{% trans "Duration" %}</th>
+                            <th>{% trans "Period" %}</th>
+                            <th>{% trans "Ad Plays" %}</th>
+                            <th>{% trans "Impressions" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -90,22 +82,11 @@
                 "data": outputData,
                 "columns": [
                     {
-                        "data": "from",
+                        "data": "labelDate",
                         "render": dataTableDateFromIso
                     },
-                    {
-                        "data": "to",
-                        "render": dataTableDateFromIso
-                    },
-                    {"data": "displayId"},
-                    {"data": "display"},
-                    {"data": "layoutId"},
-                    {"data": "layout"},
-                    {"data": "startLat"},
-                    {"data": "startLong"},
-                    {"data": "endLat"},
-                    {"data": "endLong"},
-                    {"data": "duration"}
+                    {"data": "adPlays"},
+                    {"data": "impressions"}
                 ]
 
             });

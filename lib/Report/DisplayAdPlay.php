@@ -22,6 +22,7 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
+use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Controller\DataTablesDotNetTrait;
@@ -42,10 +43,10 @@ use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
- * Class MobileProofOfPlay
+ * Class DisplayAdPlay
  * @package Xibo\Report
  */
-class MobileProofOfPlay implements ReportInterface
+class DisplayAdPlay implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
@@ -89,7 +90,6 @@ class MobileProofOfPlay implements ReportInterface
     {
         $this->campaignFactory = $container->get('campaignFactory');
         $this->displayFactory = $container->get('displayFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
         $this->sanitizer = $container->get('sanitizerService');
         $this->dispatcher = $container->get('dispatcher');
@@ -97,27 +97,33 @@ class MobileProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return json_encode($results->chart);
+    }
+
+    /** @inheritdoc */
     public function getReportEmailTemplate()
     {
-        return 'mobile-proofofplay-email-template.twig';
+        return 'display-adplays-email-template.twig';
     }
 
     /** @inheritdoc */
     public function getSavedReportTemplate()
     {
-        return 'mobile-proofofplay-report-preview';
+        return 'display-adplays-report-preview';
     }
 
     /** @inheritdoc */
     public function getReportForm()
     {
         return new ReportForm(
-            'mobile-proofofplay-report-form',
-            'mobileProofOfPlay',
+            'display-adplays-report-form',
+            'displayAdPlay',
             'Connector Reports',
             [
                 'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             ],
             __('Select a display')
         );
@@ -128,11 +134,11 @@ class MobileProofOfPlay implements ReportInterface
     {
         $data = [];
 
-        $data['hiddenFields'] =  '';
-        $data['reportName'] = 'mobileProofOfPlay';
+        $data['hiddenFields'] = '';
+        $data['reportName'] = 'displayAdPlay';
 
         return [
-            'template' => 'mobile-proofofplay-schedule-form-add',
+            'template' => 'display-adplays-schedule-form-add',
             'data' => $data
         ];
     }
@@ -157,9 +163,11 @@ class MobileProofOfPlay implements ReportInterface
         } elseif ($filter == 'monthly') {
             $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
             $filterCriteria['reportFilter'] = 'lastmonth';
+            $filterCriteria['groupByFilter'] = 'byweek';
         } elseif ($filter == 'yearly') {
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
+            $filterCriteria['groupByFilter'] = 'bymonth';
         }
 
         $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
@@ -222,21 +230,14 @@ class MobileProofOfPlay implements ReportInterface
         return new ReportResult(
             $metadata,
             $json['table'],
-            $json['recordsTotal']
+            $json['recordsTotal'],
+            $json['chart']
         );
     }
 
-    /** @inheritdoc */
+    /** @inheritDoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
-        $layoutId = $sanitizedParams->getInt('layoutId');
-
-        // Get campaign
-        if (!empty($parentCampaignId)) {
-            $campaign = $this->campaignFactory->getById($parentCampaignId);
-        }
-
         // Display filter.
         try {
             // Get an array of display id this user has access to.
@@ -316,25 +317,15 @@ class MobileProofOfPlay implements ReportInterface
         }
 
         $params = [
-            'campaignId' => $parentCampaignId,
-            'layoutId' => $layoutId,
             'displayIds' => $displayIds,
+            'groupBy' => $sanitizedParams->getString('groupBy')
         ];
-        if (!empty($parentCampaignId)) {
-            $params['from'] = !empty($campaign->getStartDt()) ? $campaign->getStartDt()->format('Y-m-d H:i:s') : null;
-            $params['to'] = !empty($campaign->getEndDt()) ? $campaign->getEndDt()->format('Y-m-d H:i:s') : null;
-
-            if (empty($campaign->getStartDt()) || empty($campaign->getEndDt())) {
-                return new ReportResult();
-            }
-        } else {
-            $params['from'] = $fromDt->format('Y-m-d H:i:s');
-            $params['to'] =  $toDt->format('Y-m-d H:i:s');
-        }
+        $params['fromDt'] = $fromDt->format('Y-m-d H:i:s');
+        $params['toDt'] =  $toDt->format('Y-m-d H:i:s');
 
         // --------
         // ReportDataEvent
-        $event = new ReportDataEvent('mobileProofofplay');
+        $event = new ReportDataEvent('displayAdPlay');
 
         // Set query params for report
         $event->setParams($params);
@@ -343,48 +334,97 @@ class MobileProofOfPlay implements ReportInterface
         $this->dispatcher->dispatch($event, ReportDataEvent::$NAME);
         $results = $event->getResults();
 
-        $result['periodStart'] = $params['from'];
-        $result['periodEnd'] = $params['to'];
+        $result['periodStart'] = $params['fromDt'];
+        $result['periodEnd'] = $params['toDt'];
 
         $rows = [];
-        $displayCache = [];
-        $layoutCache = [];
+        $labels = [];
+        $adPlaysData = [];
+        $impressionsData = [];
+        $backgroundColor = [];
+        $borderColor = [];
+
         foreach ($results['json'] as $row) {
+            // ----
+            // Build Chart data
+            $labels[] = $row['labelDate'];
+
+            $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
+            $borderColor[] = 'rgb(240,93,41, 0.8)';
+
+            $adPlays = $row['adPlays'];
+            $adPlaysData[] = ($adPlays == '') ? 0 : $adPlays;
+
+            $impressions = $row['impressions'];
+            $impressionsData[] = ($impressions == '') ? 0 : $impressions;
+
+
+            // ----
+            // Build Tabular data
             $entry = [];
 
-            $entry['from'] = $row['from'];
-            $entry['to'] = $row['to'];
-
-            // --------
-            // Get Display
-            $entry['displayId'] = $row['displayId'];
-            if (!empty($entry['displayId'])) {
-                if (!array_key_exists($row['displayId'], $displayCache)) {
-                    $display = $this->displayFactory->getById($row['displayId']);
-                    $displayCache[$row['displayId']] = $display->display;
-                }
-            }
-            $entry['display'] = $displayCache[$row['displayId']] ?? '';
-
-            // --------
-            // Get layout
-            $entry['layoutId'] = $row['layoutId'];
-            if (!empty($entry['layoutId'])) {
-                if (!array_key_exists($row['layoutId'], $layoutCache)) {
-                    $layout = $this->layoutFactory->getById($row['layoutId']);
-                    $layoutCache[$row['layoutId']] = $layout->layout;
-                }
-            }
-            $entry['layout'] = $layoutCache[$row['layoutId']] ?? '';
-
-            $entry['startLat'] = $row['startLat'];
-            $entry['startLong'] = $row['startLong'];
-            $entry['endLat'] = $row['endLat'];
-            $entry['endLong'] = $row['endLong'];
-            $entry['duration'] = $row['duration'];
+            $entry['labelDate'] = $row['labelDate'];
+            $entry['adPlays'] = $row['adPlays'];
+            $entry['adDuration'] = $row['adDuration'];
+            $entry['impressions'] = $row['impressions'];
 
             $rows[] = $entry;
         }
+
+        // Build Chart to pass in twig file chart.js
+        $chart = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => __('Total ad plays'),
+                        'yAxisID' => 'AdPlay',
+                        'backgroundColor' => $backgroundColor,
+                        'data' => $adPlaysData
+                    ],
+                    [
+                        'label' => __('Total impressions'),
+                        'yAxisID' => 'Impression',
+                        'borderColor' => $borderColor,
+                        'type' => 'line',
+                        'fill' => false,
+                        'data' =>  $impressionsData
+                    ]
+                ]
+            ],
+            'options' => [
+                'scales' => [
+                    'yAxes' => [
+                        [
+                            'id' => 'AdPlay',
+                            'type' => 'linear',
+                            'position' =>  'left',
+                            'display' =>  true,
+                            'scaleLabel' =>  [
+                                'display' =>  true,
+                                'labelString' => __('Ad Play(s)')
+                            ],
+                            'ticks' =>  [
+                                'beginAtZero' => true
+                            ]
+                        ], [
+                            'id' => 'Impression',
+                            'type' => 'linear',
+                            'position' =>  'right',
+                            'display' =>  true,
+                            'scaleLabel' =>  [
+                                'display' =>  true,
+                                'labelString' => __('Impression(s)')
+                            ],
+                            'ticks' =>  [
+                                'beginAtZero' => true
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
 
         // Set Meta data
         $metadata = [
@@ -402,7 +442,7 @@ class MobileProofOfPlay implements ReportInterface
             $metadata,
             $rows,
             $recordsTotal,
-            [],
+            $chart,
             $results['error'] ?? null
         );
     }

@@ -114,6 +114,21 @@
                             {% set helpText %}{% trans "Please select a Campaign" %}{% endset %}
                             {{ inline.dropdown("parentCampaignId", "single", title, "", null, "campaignId", "campaign", "", "", "", "", "", attributes) }}
 
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Layout" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
+                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", helpText, "pagedSelect layout-select", "", "l", "", attributes) }}
+
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
@@ -144,20 +159,20 @@
                                        class="table xibo-table table-striped table-full-width"
                                        style="width: 100%"
                                        data-state-preference-name="proofOfPlayGrid"
-                                       data-url="/report/data/mobileProofOfPlayReport">
+                                       data-url="/report/data/mobileProofOfPlay">
                                     <thead>
                                     <tr>
-                                        <th>Start</th>
-                                        <th>End</th>
-                                        <th>Display Id</th>
-                                        <th>Display</th>
-                                        <th>Layout Id</th>
-                                        <th>Layout</th>
-                                        <th>Start Latitude</th>
-                                        <th>Start Longitude</th>
-                                        <th>End Latitude</th>
-                                        <th>End Longitude</th>
-                                        <th>Duration</th>
+                                        <th>{% trans "Start" %}</th>
+                                        <th>{% trans "End" %}</th>
+                                        <th>{% trans "Display Id" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Layout Id" %}</th>
+                                        <th>{% trans "Layout" %}</th>
+                                        <th>{% trans "Start Latitude" %}</th>
+                                        <th>{% trans "Start Longitude" %}</th>
+                                        <th>{% trans "End Latitude" %}</th>
+                                        <th>{% trans "End Longitude" %}</th>
+                                        <th>{% trans "Duration" %}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -386,7 +401,7 @@
                 let tags = $("#tags").val();
                 let exactTags = $('#exactTags').is(":checked");
 
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=mobileProofOfPlayReport" );
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=mobileProofOfPlay" );
 
             };
 

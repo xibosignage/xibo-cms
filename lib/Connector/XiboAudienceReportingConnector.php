@@ -342,7 +342,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     }
                     break;
 
-                case 'displayAdplays':
+                case 'displayAdPlay':
                     // Get display adplays result
                     try {
                         $response = $this->getClient()->get($typeUrl[$type], [
@@ -382,7 +382,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
         $connectorReports = [
             [
-                'name'=> 'campaignProofOfPlayReport',
+                'name'=> 'campaignProofOfPlay',
                 'description'=> 'Campaign Proof of Play',
                 'class'=> '\\Xibo\\Report\\CampaignProofOfPlay',
                 'type'=> 'Report',
@@ -394,19 +394,19 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 'adminOnly'=> 0,
                 'sort_order' => 1
             ],
-//            [
-//                'name'=> 'mobileProofOfPlayReport',
-//                'description'=> 'Mobile Proof of Play',
-//                'class'=> '\\Xibo\\Report\\MobileProofOfPlay',
-//                'type'=> 'Report',
-//                'output_type'=> 'table',
-//                'color'=> 'green',
-//                'fa_icon'=> 'fa-th',
-//                'category'=> 'Connector Reports',
-//                'feature'=> 'mobile-proof-of-play',
-//                'adminOnly'=> 0,
-//                'sort_order' => 2
-//            ],
+            [
+                'name'=> 'mobileProofOfPlay',
+                'description'=> 'Mobile Proof of Play',
+                'class'=> '\\Xibo\\Report\\MobileProofOfPlay',
+                'type'=> 'Report',
+                'output_type'=> 'table',
+                'color'=> 'green',
+                'fa_icon'=> 'fa-th',
+                'category'=> 'Connector Reports',
+                'feature'=> 'mobile-proof-of-play',
+                'adminOnly'=> 0,
+                'sort_order' => 2
+            ],
 //            [
 //                'name'=> 'displayPlayedPercentageReport',
 //                'description'=> 'Display played percentage',
@@ -433,19 +433,19 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 //                'adminOnly'=> 0,
 //                'sort_order' => 4
 //            ],
-//            [
-//                'name'=> 'adPlaysReport',
-//                'description'=> 'Ad Plays',
-//                'class'=> '\\Xibo\\Report\\AdPlay',
-//                'type'=> 'Report',
-//                'output_type'=> 'table',
-//                'color'=> 'green',
-//                'fa_icon'=> 'fa-th',
-//                'category'=> 'Connector Reports',
-//                'feature'=> 'display-report',
-//                'adminOnly'=> 0,
-//                'sort_order' => 5
-//            ],
+            [
+                'name'=> 'displayAdPlay',
+                'description'=> 'Display Ad Plays',
+                'class'=> '\\Xibo\\Report\\DisplayAdPlay',
+                'type'=> 'Chart',
+                'output_type'=> 'both',
+                'color'=> 'red',
+                'fa_icon'=> 'fa-bar-chart',
+                'category'=> 'Connector Reports',
+                'feature'=> 'display-report',
+                'adminOnly'=> 0,
+                'sort_order' => 5
+            ],
         ];
 
         $reports = [];

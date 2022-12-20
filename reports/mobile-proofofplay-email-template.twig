@@ -1,0 +1,62 @@
+{#
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "base-report.twig" %}
+
+{% block content %}
+<div>
+    <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
+</div>
+<p></p>
+
+<table class="saved-report-table">
+    <tr>
+        <th>{% trans "Start" %}</th>
+        <th>{% trans "End" %}</th>
+        <th>{% trans "Display Id" %}</th>
+        <th>{% trans "Display" %}</th>
+        <th>{% trans "Layout Id" %}</th>
+        <th>{% trans "Layout" %}</th>
+        <th>{% trans "Start Latitude" %}</th>
+        <th>{% trans "Start Longitude" %}</th>
+        <th>{% trans "End Latitude" %}</th>
+        <th>{% trans "End Longitude" %}</th>
+        <th>{% trans "Duration" %}</th>
+    </tr>
+    {% for item in tableData %}
+        <tr>
+            <td>{{ item.from }}</td>
+            <td>{{ item.to }}</td>
+            <td>{{ item.displayId }}</td>
+            <td>{{ item.display }}</td>
+            <td>{{ item.layoutId }}</td>
+            <td>{{ item.layout }}</td>
+            <td>{{ item.startLat }}</td>
+            <td>{{ item.startLong }}</td>
+            <td>{{ item.endLat }}</td>
+            <td>{{ item.endLong }}</td>
+            <td>{{ item.duration }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}
+
