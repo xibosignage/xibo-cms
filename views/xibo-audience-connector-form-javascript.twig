@@ -87,7 +87,7 @@
     table.on('processing.dt', dataTableProcessing);
 
     // Add button
-    new $.fn.dataTable.Buttons(table, {
+    new $.fn.dataTable.Buttons(audienceDmaTable, {
       buttons: [
         {
           text: '{{ "Add DMA"|trans }}',
@@ -97,6 +97,7 @@
         },
       ]
     });
+
     audienceDmaTable.buttons().container().css('margin-bottom', '10px').appendTo('.dataTables_folder');
 
     setTimeout(function() {
@@ -119,7 +120,7 @@
       }
 
       bootbox.hideAll();
-      var dialog = bootbox.dialog({
+      const $dialog = bootbox.dialog({
         message: dmaTemplate({
           connectorId: $table.data('connectorId'),
           method: method,
@@ -143,8 +144,8 @@
             className: 'btn-success',
             callback: function() {
               // Submit the form in the usual way, and then open up the connector config form.
-              const $form = $(dialog).find('form');
-              const button = $(dialog).find('.btn-success');
+              const $form = $dialog.find('form');
+              const button = $dialog.find('.btn-success');
               button.addClass('disabled').append('<span class="saving fa fa-cog fa-spin p-1"></span>');
 
               XiboFormSubmit($form, null, function(xhr) {
@@ -158,6 +159,19 @@
               return false;
             }
           },
+        },
+        onShown: function(e) {
+          const $form = $(e.target).find('form');
+          XiboInitialise('#' + $form.attr('id'));
+
+          const $daysOfWeek = $form.find('select[name="daysOfWeek[]"]');
+          if (dma && dma.daysOfWeek) {
+            $.each(dma.daysOfWeek, function(index, element) {
+              $daysOfWeek.find('option[value=' + element + ']')
+                .attr('selected', 'selected');
+            });
+          }
+          $daysOfWeek.select2({width: '100%'}).val();
         }
       });
     }
@@ -207,12 +221,57 @@
 <script type="text/x-handlebars-template" id="xibo-audience-connector-dma-form">
   <div class="row">
         <div class="col-md-12">
-            <form class="form-horizontal" action="{{ url_for("connector.edit.form.proxy", {id: "{{connectorId}}", method: "{{method}}"}) }}" method="POST">
+            <form id="{{ random() }}" class="form-horizontal" action="{{ url_for("connector.edit.form.proxy", {id: "{{connectorId}}", method: "{{method}}"}) }}" method="POST">
                 <input type="hidden" name="_id" value="{% verbatim %}{{ dma._id }}{% endverbatim %}">
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of this DMA - (1 - 50 characters)" %}{% endset %}
                 {{ forms.input("name", title, "{{dma.name}}", helpText) }}
+
+                {% set title %}{% trans "Cost per Play" %}{% endset %}
+                {% set helpText %}{% trans "The cost per play" %}{% endset %}
+                {{ forms.input("costPerPlay", title, "{{dma.costPerPlay}}", helpText) }}
+
+                {% set title %}{% trans "Impression Source" %}{% endset %}
+                {% set helpText %}{% trans "What is the source of this impression figure?" %}{% endset %}
+                {{ forms.input("impressionSource", title, "{{dma.impressionSource}}", helpText) }}
+
+                {% set title %}{% trans "Impressions per play" %}{% endset %}
+                {% set helpText %}{% trans "The impressions per play" %}{% endset %}
+                {{ forms.number("impressionsPerPlay", title, "{{dma.impressionsPerPlay}}", helpText) }}
+
+                {% set title %}{% trans "Start Date" %}{% endset %}
+                {% set helpText %}{% trans "Select the start date for this DMA" %}{% endset %}
+                {{ forms.date("startDate", title, "{{dma.startDate}}", helpText, "starttime-control", "", "") }}
+
+                {% set title %}{% trans "End Date" %}{% endset %}
+                {% set helpText %}{% trans "Select the end date for this DMA" %}{% endset %}
+                {{ forms.date("endDate", title, "{{dma.endDate}}", helpText, "endtime-control", "", "") }}
+
+                {% set title %}{% trans "Days of the week" %}{% endset %}
+                {% set helpText %}{% trans "Which days of the week should the layout be active?" %}{% endset %}
+                {% set options = [
+                  { id: 1, name: "Monday"|trans },
+                  { id: 2, name: "Tuesday"|trans },
+                  { id: 3, name: "Wednesday"|trans },
+                  { id: 4, name: "Thursday"|trans },
+                  { id: 5, name: "Friday"|trans },
+                  { id: 6, name: "Saturday"|trans },
+                  { id: 7, name: "Sunday"|trans },
+                ] %}
+                {{ forms.dropdown("daysOfWeek[]", "dropdownmulti", title, null, options, "id", "name", helpText) }}
+
+                {% set title %}{% trans "Start Time" %}{% endset %}
+                {% set helpText %}{% trans "Select the start time for this DMA" %}{% endset %}
+                {{ forms.time("startTime", title, "{{dma.startTime}}", helpText, "starttime-control", "", "") }}
+
+                {% set title %}{% trans "End Time" %}{% endset %}
+                {% set helpText %}{% trans "Select the end time for this DMA" %}{% endset %}
+                {{ forms.time("endTime", title, "{{dma.endTime}}", helpText, "endtime-control", "", "") }}
+
+                {% set title %}{% trans "Priority" %}{% endset %}
+                {% set helpText %}{% trans "Set a priority for this DMA. Higher priorities take precedence." %}{% endset %}
+                {{ forms.number("priority", title, "{{dma.priority}}", helpText) }}
             </form>
         </div>
     </div>
