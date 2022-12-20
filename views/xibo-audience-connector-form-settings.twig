@@ -35,4 +35,37 @@
         {% set helpText %}{% trans "Enter your API Key from Xibo." %}{% endset %}
         {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
     {% endif %}
+
+    <div class="form-group row">
+        <div class="XiboGrid container" id="{{ random() }}" data-grid-name="connector-audience-dma">
+            <div class="XiboData card pt-3">
+                <table id="audience-dma" class="table table-striped" style="width:100%"
+                       data-connector-id="{{ connector.connectorId }}"
+                       data-proxy-url="{{ url_for("connector.edit.form.proxy", {id: connector.connectorId, method: ":method"}) }}"
+                       data-state-preference-name="connector-audience-dma">
+                    <thead>
+                    <tr>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Cost per Play" %}</th>
+                        <th>{% trans "Impressions per Play" %}</th>
+                        <th>{% trans "Impression Source" %}</th>
+                        <th>{% trans "Start Date" %}</th>
+                        <th>{% trans "End Date" %}</th>
+                        <th>{% trans "Days of week" %}</th>
+                        <th>{% trans "Start Time" %}</th>
+                        <th>{% trans "End Time" %}</th>
+                        <th>{% trans "Is Geo?" %}</th>
+                        <th>{% trans "Priority" %}</th>
+                        <th>{% trans "Displays" %}</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}

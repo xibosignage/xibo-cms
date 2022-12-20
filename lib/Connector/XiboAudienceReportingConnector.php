@@ -22,18 +22,22 @@
 namespace Xibo\Connector;
 
 use Carbon\Carbon;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ServerException;
+use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\ConnectorReportEvent;
-use Xibo\Event\ReportDataEvent;
 use Xibo\Event\MaintenanceRegularEvent;
+use Xibo\Event\ReportDataEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -97,7 +101,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
      */
     private function getServiceUrl(): string
     {
-        return $this->getSetting('serviceUrl', 'https://exchange.xibo-adspace.com/api/audience');
+        return $this->getSetting('serviceUrl', 'https://exchange.xibo-adspace.com/api');
     }
 
     public function getDescription(): string
@@ -113,6 +117,11 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     public function getSettingsFormTwig(): string
     {
         return 'xibo-audience-connector-form-settings';
+    }
+
+    public function getSettingsFormJavaScript(): string
+    {
+        return 'xibo-audience-connector-form-javascript';
     }
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
@@ -140,7 +149,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
         // Get Watermark
         try {
-            $response = $this->getClient()->get($this->getServiceUrl() . '/watermark', [
+            $response = $this->getClient()->get($this->getServiceUrl() . '/audience/watermark', [
                 'headers' => [
                     'X-API-KEY' => $this->getSetting('apiKey')
                 ],
@@ -237,7 +246,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $statusCode = 0;
             if (count($rows) > 0) {
                 try {
-                    $response = $this->getClient()->post($this->getServiceUrl() . '/receiveStats', [
+                    $response = $this->getClient()->post($this->getServiceUrl() . '/audience/receiveStats', [
                         'headers' => [
                             'X-API-KEY' => $this->getSetting('apiKey')
                         ],
@@ -253,7 +262,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 // Get Campaign Total
                 if ($statusCode == 204) {
                     try {
-                        $response = $this->getClient()->get($this->getServiceUrl() . '/campaignTotal', [
+                        $response = $this->getClient()->get($this->getServiceUrl() . '/audience/campaignTotal', [
                             'headers' => [
                                 'X-API-KEY' => $this->getSetting('apiKey')
                             ],
@@ -298,9 +307,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $type = $event->getReportType();
 
         $typeUrl = [
-            'campaignProofofplay' => $this->getServiceUrl() . '/campaign/proofofplay',
-            'mobileProofofplay' => $this->getServiceUrl() . '/campaign/proofofplay/mobile',
-            'displayAdPlay' => $this->getServiceUrl() . '/display/adplays'
+            'campaignProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay',
+            'mobileProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay/mobile',
+            'displayAdplay' => $this->getServiceUrl() . '/audience/display/adplays'
         ];
 
         if (array_key_exists($type, $typeUrl)) {
@@ -471,4 +480,177 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     }
 
     // </editor-fold>
+
+    // <editor-fold desc="Proxy methods">
+
+    public function dmaSearch(SanitizerInterface $params): array
+    {
+        try {
+            $response = $this->getClient()->get($this->getServiceUrl() . '/dma', [
+                'timeout' => 120,
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey'),
+                ],
+            ]);
+
+            $body = json_decode($response->getBody()->getContents(), true);
+
+            if (!$body) {
+                throw new GeneralException(__('No response'));
+            }
+
+            return [
+                'data' => $body,
+                'recordsTotal' => count($body),
+            ];
+        } catch (\Exception $e) {
+            $this->getLogger()->error('activity: e = ' . $e->getMessage());
+        }
+
+        return [
+            'data' => [],
+            'recordsTotal' => 0,
+        ];
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function dmaAdd(SanitizerInterface $params): array
+    {
+        try {
+            $response = $this->getClient()->post($this->getServiceUrl() . '/dma', [
+                'timeout' => 120,
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey'),
+                ],
+                'json' => [
+                    'name' => $params->getString('name'),
+                    'displays' => $params->getIntArray('displays'),
+                    'costPerPlay' => $params->getDouble('costPerPlay'),
+                    'impressionSource' => $params->getString('impressionSource'),
+                    'impressionsPerPlay' => $params->getDouble('impressionsPerPlay'),
+                    'startDate' => $params->getString('startDate'),
+                    'endDate' => $params->getString('endDate'),
+                    'daysOfWeek' => $params->getString('daysOfWeek'),
+                    'startTime' => $params->getString('startTime'),
+                    'endTime' => $params->getString('endTime'),
+                    'geoFence' => $params->getString('geoFence'),
+                    'priority' => $params->getInt('priority'),
+                ],
+            ]);
+
+            $body = json_decode($response->getBody()->getContents(), true);
+
+            if (!$body) {
+                throw new GeneralException(__('No response'));
+            }
+
+            return $body;
+        } catch (\Exception $e) {
+            $this->handleException($e);
+        }
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function dmaEdit(SanitizerInterface $params): array
+    {
+        try {
+            $response = $this->getClient()->put($this->getServiceUrl() . '/dma/' . $params->getString('_id'), [
+                'timeout' => 120,
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey'),
+                ],
+                'json' => [
+                    'name' => $params->getString('name'),
+                    'displays' => $params->getIntArray('displays'),
+                    'costPerPlay' => $params->getDouble('costPerPlay'),
+                    'impressionSource' => $params->getString('impressionSource'),
+                    'impressionsPerPlay' => $params->getDouble('impressionsPerPlay'),
+                    'startDate' => $params->getString('startDate'),
+                    'endDate' => $params->getString('endDate'),
+                    'daysOfWeek' => $params->getString('daysOfWeek'),
+                    'startTime' => $params->getString('startTime'),
+                    'endTime' => $params->getString('endTime'),
+                    'geoFence' => $params->getString('geoFence'),
+                    'priority' => $params->getInt('priority'),
+                ],
+            ]);
+
+            $body = json_decode($response->getBody()->getContents(), true);
+
+            if (!$body) {
+                throw new GeneralException(__('No response'));
+            }
+
+            return $body;
+        } catch (\Exception $e) {
+            $this->handleException($e);
+        }
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function dmaDelete(SanitizerInterface $params)
+    {
+        try {
+            $this->getClient()->delete($this->getServiceUrl() . '/dma/' . $params->getString('_id'), [
+                'timeout' => 120,
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey'),
+                ],
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            $this->handleException($e);
+        }
+    }
+
+    // </editor-fold>
+
+    /**
+     * @param \Exception $exception
+     * @return void
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    private function handleException($exception)
+    {
+        if ($exception instanceof ClientException) {
+            if ($exception->hasResponse()) {
+                $body = $exception->getResponse()->getBody() ?? null;
+
+                switch ($exception->getResponse()->getStatusCode()) {
+                    case 422:
+                        throw new InvalidArgumentException($body);
+
+                    case 404:
+                        throw new NotFoundException($body);
+
+                    case 401:
+                        throw new AccessDeniedException($body);
+
+                    default:
+                        throw new GeneralException(sprintf(
+                            __('Unknown client exception processing your request, error code is %s'),
+                            $exception->getResponse()->getStatusCode()
+                        ));
+                }
+            } else {
+                throw new InvalidArgumentException(__('Invalid request'));
+            }
+        } else if ($exception instanceof ServerException) {
+            $this->getLogger()->error('handleException:' . $exception->getMessage());
+            throw new GeneralException(__('There was a problem processing your request, please try again'));
+        } else {
+            throw new GeneralException(__('Unknown Error'));
+        }
+    }
 }
