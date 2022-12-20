@@ -64,6 +64,7 @@ $(function() {
         );
       }
 
+      // For each data item, parse it and add it to the content
       $.each(dataItems, function(_key, item) {
         // Parse the data if there is a parser function
         if (typeof window['onParseData_' + widget.widgetId] === 'function') {
@@ -78,6 +79,12 @@ $(function() {
         // Add items to the widget object
         (item) && widget.items.push(item);
       });
+
+      // If we don't have data items
+      // and a we have a template, add it to the content
+      if (dataItems.length === 0 && $template.length > 0) {
+        (hbs) && $content.append(hbs());
+      }
 
       // Save template height and width if exists to global options
       if ($template.length > 0) {

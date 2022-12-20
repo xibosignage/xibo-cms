@@ -25,7 +25,8 @@
     <description>A module for displaying a Countdown timer</description>
     <class></class>
     <type>countdown</type>
-    <dataType></dataType>
+    <legacyType>countdown</legacyType>
+    <dataType>countdown</dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -84,7 +85,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="alignH" type="dropdown" mode="single">
+        <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>
             <helpText>How should this widget be horizontally aligned?</helpText>
             <default>center</default>
@@ -94,7 +95,7 @@
                 <option name="right">Right</option>
             </options>
         </property>
-        <property id="alignV" type="dropdown" mode="single">
+        <property id="alignmentV" type="dropdown" mode="single">
             <title>Vertical Align</title>
             <helpText>How should this widget be vertically aligned?</helpText>
             <default>middle</default>
@@ -104,21 +105,75 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
-        <property id="message" type="message">
-            <title>Enter a format for the Countdown e.g. [hha], [hh], [mm], [ss] or [DD]. See the manual for more information.</title>
-            <default></default>
-        </property>
-        <property id="simpleTextEditorMessage" type="message">
-            <title>Main Template - Enter text or HTML in the box below.</title>
-            <default></default>
-        </property>
-        <property id="mainTemplate" type="code">
-            <default></default>
-        </property>
-        <property id="styleSheet" type="code">
-            <title>Optional Stylesheet</title>
-            <default></default>
-        </property>
     </properties>
     <preview></preview>
+    <onRender><![CDATA[
+// Make replacements on render for all templates
+const $countdownContainer = $('.countdown-container', target);
+
+// Get countdown container html
+let countdownHTML = $countdownContainer.html();
+
+// Make replacements
+let text = countdownHTML;
+let regex = /\[.*?\]/g;
+countdownHTML = text.replace(regex, function (match) {
+    let replacement = '';
+    let matchParsed = match.replace('[', '').replace(']', '');
+
+    // Replace tags
+    switch (matchParsed) {
+        case 'ss':
+            replacement = '<span class="seconds"></span>';
+            break;
+        case 'ssa':
+            replacement = '<span class="secondsAll"></span>';
+            break;
+        case 'mm':
+            replacement = '<span class="minutes"></span>';
+            break;
+        case 'mma':
+            replacement = '<span class="minutesAll"></span>';
+            break;
+        case 'hh':
+            replacement = '<span class="hours"></span>';
+            break;
+        case 'hha':
+            replacement = '<span class="hoursAll"></span>';
+            break;
+        case 'DD':
+            replacement = '<span class="days"></span>';
+            break;
+        case 'WW':
+            replacement = '<span class="weeks"></span>';
+            break;
+        case 'MM':
+            replacement = '<span class="months"></span>';
+            break;
+        case 'YY':
+            replacement = '<span class="years"></span>';
+            break;
+        default:
+            replacement = 'NULL';
+            break;
+    }
+
+    return replacement;
+});
+
+// Attach html back to container
+$countdownContainer.html(countdownHTML);
+    ]]></onRender>
+    <onVisible><![CDATA[
+const $contentContainer = $(target).find('#content');
+
+// Render the countdown
+$(target).find('#content').xiboCountdownRender(
+    properties,
+    $contentContainer.html(),
+);
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+    ]]></onVisible>
 </module>

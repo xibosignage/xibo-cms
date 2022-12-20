@@ -643,6 +643,9 @@ const formHelpers = function() {
   ) {
     const self = this;
 
+    // Check if text area is visible
+    const visibleOnLoad = $(dialog).find('#' + textAreaId).is(':visible');
+
     // COLORS
     // Background color for the editor
     const backgroundColor =
@@ -664,10 +667,23 @@ const formHelpers = function() {
     );
 
     const scaleToContainer = (regionDimensions, $scaleTo, inline) => {
-      // Inner width and a padding for the scrollbar
-      const width = (!inline) ?
-        $scaleTo.innerWidth() - 32 - ((iframeBorderWidth + iframeMargin) * 2) :
-        $scaleTo.outerWidth();
+      let width;
+
+      // If element isn't visible, set default dimensions
+      if (visibleOnLoad === false) {
+        width = $(dialog).find('form .tab-content').width();
+      } else {
+        if (inline) {
+          // Outer width for the inline element
+          width = $scaleTo.outerWidth();
+        } else {
+          // Inner width and a padding for the scrollbar
+          width =
+            $scaleTo.innerWidth() -
+            32 -
+           ((iframeBorderWidth + iframeMargin) * 2);
+        }
+      }
 
       // Element side plus margin
       const elementWidth = regionDimensions.width;
@@ -849,16 +865,28 @@ const formHelpers = function() {
 
       // Set parent container height if data exists
       const containerData = $container.data();
-      const buttonHeight =
+      let buttonHeight =
         $container.siblings('.text-area-buttons').outerHeight();
       if (containerData !== undefined) {
+        // If buttonHeight is 0, but we have the button container
+        // set it to default size
+        if (
+          buttonHeight === 0 &&
+          $container.siblings('.text-area-buttons').length > 0
+        ) {
+          buttonHeight = 28;
+        }
+        // Set width and height to container
         $container.parents('.rich-text-container')
           .css('height', containerData.height + buttonHeight)
           .css('width', containerData.width);
       }
 
       // If the field with changed width, apply the new scale
-      if (regionDimensions.width * scale != $inputContainer.width()) {
+      if (
+        regionDimensions.width * scale != $inputContainer.width() &&
+        visibleOnLoad === true
+      ) {
         scale = scaleToContainer(
           regionDimensions,
           $(dialog).find('#' + textAreaId).parents('.rich-text-input'),

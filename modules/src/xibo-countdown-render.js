@@ -19,132 +19,139 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 jQuery.fn.extend({
-    xiboCountdownRender: function(options, body) {
-        // Check if the given input is a number/offset, or a date, and return the object
-        var getDate = function(inputDate) {
-            if($.isNumeric(inputDate)) {
-                return moment().add(inputDate, 's');
-            } else if(moment(inputDate).isValid()) {
-                return moment(inputDate);
-            } else {
-                console.error('Invalid Date/Time!!!');
-            }
-        };
+  xiboCountdownRender: function(options, body) {
+    // Check if the given input is a number/offset
+    // or a date, and return the object
+    const getDate = function(inputDate) {
+      if ($.isNumeric(inputDate)) {
+        return moment().add(inputDate, 's');
+      } else if (moment(inputDate).isValid()) {
+        return moment(inputDate);
+      } else {
+        console.error('Invalid Date/Time!!!');
+      }
+    };
 
-        // Ge remaining time
-        var getTimeRemaining = function(endtime) {
-            var timeNow = moment();
-            var duration = moment.duration(endtime.diff(timeNow));
+    // Ge remaining time
+    const getTimeRemaining = function(endtime) {
+      const timeNow = moment();
+      const duration = moment.duration(endtime.diff(timeNow));
 
-            return {
-                'now': timeNow,
-                'total': Math.floor(duration.asMilliseconds()),
-                'seconds': Math.round(duration.seconds()),
-                'secondsAll': Math.floor(duration.asSeconds()),
-                'minutes': Math.floor(duration.minutes()),
-                'minutesAll': Math.floor(duration.asMinutes()),
-                'hours': Math.floor(duration.hours()),
-                'hoursAll': Math.floor(duration.asHours()),
-                'days': Math.floor(duration.asDays()),
-                'weeks': Math.floor(duration.asWeeks()),
-                'months': Math.floor(duration.asMonths()),
-                'years': Math.floor(duration.asYears())
-            };
-        };
+      return {
+        now: timeNow,
+        total: Math.floor(duration.asMilliseconds()),
+        seconds: Math.round(duration.seconds()),
+        secondsAll: Math.floor(duration.asSeconds()),
+        minutes: Math.floor(duration.minutes()),
+        minutesAll: Math.floor(duration.asMinutes()),
+        hours: Math.floor(duration.hours()),
+        hoursAll: Math.floor(duration.asHours()),
+        days: Math.floor(duration.asDays()),
+        weeks: Math.floor(duration.asWeeks()),
+        months: Math.floor(duration.asMonths()),
+        years: Math.floor(duration.asYears()),
+      };
+    };
 
-        // Initialize clock
-        var initialiseClock = function(clock, deadlineDate, warningDate) {
-            var yearsSpan = clock.find('.years');
-            var monthsSpan = clock.find('.months');
-            var weeksSpan = clock.find('.weeks');
-            var daysSpan = clock.find('.days');
-            var hoursSpan = clock.find('.hours');
-            var hoursAllSpan = clock.find('.hoursAll');
-            var minutesSpan = clock.find('.minutes');
-            var minutesAllSpan = clock.find('.minutesAll');
-            var secondsSpan = clock.find('.seconds');
-            var secondsAllSpan = clock.find('.secondsAll');
+    // Initialize clock
+    const initialiseClock = function(clock, deadlineDate, warningDate) {
+      const yearsSpan = clock.find('.years');
+      const monthsSpan = clock.find('.months');
+      const weeksSpan = clock.find('.weeks');
+      const daysSpan = clock.find('.days');
+      const hoursSpan = clock.find('.hours');
+      const hoursAllSpan = clock.find('.hoursAll');
+      const minutesSpan = clock.find('.minutes');
+      const minutesAllSpan = clock.find('.minutesAll');
+      const secondsSpan = clock.find('.seconds');
+      const secondsAllSpan = clock.find('.secondsAll');
 
+      /**
+       * Update clock
+       */
+      function updateClock() {
+        const t = getTimeRemaining(deadlineDate);
+        yearsSpan.html(t.years);
+        monthsSpan.html(t.months);
+        weeksSpan.html(t.weeks);
+        daysSpan.html(t.days);
+        hoursSpan.html(('0' + t.hours).slice(-2));
+        hoursAllSpan.html(t.hoursAll);
+        minutesSpan.html(('0' + t.minutes).slice(-2));
+        minutesAllSpan.html(t.minutesAll);
+        secondsSpan.html(('0' + t.seconds).slice(-2));
+        secondsAllSpan.html(t.secondsAll);
 
-            function updateClock() {
-                var t = getTimeRemaining(deadlineDate);
-                yearsSpan.html(t.years);
-                monthsSpan.html(t.months);
-                weeksSpan.html(t.weeks);
-                daysSpan.html(t.days);
-                hoursSpan.html(('0' + t.hours).slice(-2));
-                hoursAllSpan.html(t.hoursAll);
-                minutesSpan.html(('0' + t.minutes).slice(-2));
-                minutesAllSpan.html(t.minutesAll);
-                secondsSpan.html(('0' + t.seconds).slice(-2));
-                secondsAllSpan.html(t.secondsAll);
+        if (
+          warningDate && deadlineDate.diff(warningDate) != 0 &&
+          warningDate.diff(t.now) <= 0
+        ) {
+          $(clock).addClass('warning');
+        }
 
-                if(warningDate && deadlineDate.diff(warningDate) != 0 && warningDate.diff(t.now) <= 0) {
-                    $(clock).addClass('warning');
-                }
+        if (t.total <= 0) {
+          $(clock).removeClass('warning').addClass('finished');
+          clearInterval(timeinterval);
+          yearsSpan.html('0');
+          monthsSpan.html('0');
+          daysSpan.html('0');
+          hoursSpan.html('00');
+          minutesSpan.html('00');
+          secondsSpan.html('00');
+          hoursAllSpan.html('0');
+          minutesAllSpan.html('0');
+          secondsAllSpan.html('0');
+        }
+      }
 
-                if(t.total <= 0) {
-                    $(clock).removeClass('warning').addClass('finished');
-                    clearInterval(timeinterval);
-                    yearsSpan.html('0');
-                    monthsSpan.html('0');
-                    daysSpan.html('0');
-                    hoursSpan.html('00');
-                    minutesSpan.html('00');
-                    secondsSpan.html('00');
-                    hoursAllSpan.html('0');
-                    minutesAllSpan.html('0');
-                    secondsAllSpan.html('0');
-                }
-            }
+      updateClock(); // run function once at first to avoid delay
 
-            updateClock(); // run function once at first to avoid delay
+      // Update every second
+      const timeinterval = setInterval(updateClock, 1000);
+    };
 
-            // Update every second
-            var timeinterval = setInterval(updateClock, 1000);
-        };
+    // Default options
+    const defaults = {
+      duration: '30',
+      previewWidth: 0,
+      previewHeight: 0,
+      scaleOverride: 0,
+    };
 
-        // Default options
-        var defaults = {
-            "duration": "30",
-            "previewWidth": 0,
-            "previewHeight": 0,
-            "scaleOverride": 0
-        };
+    options = $.extend({}, defaults, options);
 
-        options = $.extend({}, defaults, options);
+    // For each matched element
+    this.each(function(_idx, _el) {
+      // Calculate duration (use widget or given)
+      let initDuration = options.duration;
+      if (options.countdownType == 2) {
+        initDuration = options.countdownDuration;
+      } else if (options.countdownType == 3) {
+        initDuration = options.countdownDate;
+      }
 
-        // For each matched element
-        this.each(function() {
+      // Get deadline date
+      const deadlineDate = getDate(initDuration);
 
-            // Calculate duration (use widget or given)
-            var initDuration = options.duration;
-            if (options.countdownType == 2) {
-                initDuration = options.countdownDuration;
-            } else if(options.countdownType == 3) {
-                initDuration = options.countdownDate;
-            }
+      // Calculate warning duration ( use widget or given)
+      let warningDuration = 0;
+      if (options.countdownType == 1 || options.countdownType == 2) {
+        warningDuration = options.countdownWarningDuration;
+      } else if (options.countdownType == 3) {
+        warningDuration = options.countdownWarningDate;
+      }
+      // Get warning date
+      const warningDate =
+        (
+          warningDuration == 0 ||
+          warningDuration == '' ||
+          warningDuration == null
+        ) ? false : getDate(warningDuration);
 
-            // Get deadline date
-            var deadlineDate = getDate(initDuration);
+      // Initialise clock
+      initialiseClock($(_el), deadlineDate, warningDate);
+    });
 
-            // Calculate warning duration ( use widget or given)
-            var warningDuration = 0;
-            if(options.countdownType == 1 || options.countdownType == 2) {
-                warningDuration = options.countdownWarningDuration;
-            } else if(options.countdownType == 3) {
-                warningDuration = options.countdownWarningDate;
-            }
-            // Get warning date
-            var warningDate = (warningDuration == 0 || warningDuration == '' || warningDuration == null) ? false : getDate(warningDuration);
-
-            // Append template to the preview
-            $("#content").append(body);
-
-            // Initialise clock
-            initialiseClock($(this), deadlineDate, warningDate);
-        });
-
-        return $(this);
-    }
+    return $(this);
+  },
 });

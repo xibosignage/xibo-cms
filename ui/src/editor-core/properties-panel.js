@@ -324,8 +324,11 @@ PropertiesPanel.prototype.render = function(
         self.DOMObject.find('[href="#advancedTab"]').tab('show');
       }
 
-      // Appearance tab ( if template exists )
-      if (res.data.template) {
+      // Appearance tab ( if template exists and we have properties )
+      if (
+        res.data.template != undefined &&
+        res.data.template.properties.length > 0
+      ) {
         forms.createFields(
           res.data.template.properties,
           self.DOMObject.find('#appearanceTab'),
