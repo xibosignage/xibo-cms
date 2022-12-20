@@ -87,7 +87,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="alignH" type="dropdown" mode="single">
+        <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>
             <helpText>How should this widget be horizontally aligned?</helpText>
             <default>center</default>
@@ -97,7 +97,7 @@
                 <option name="right">Right</option>
             </options>
         </property>
-        <property id="alignV" type="dropdown" mode="single">
+        <property id="alignmentV" type="dropdown" mode="single">
             <title>Vertical Align</title>
             <helpText>How should this widget be vertically aligned?</helpText>
             <default>middle</default>
