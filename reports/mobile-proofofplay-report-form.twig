@@ -24,7 +24,7 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
-{% block title %}{% trans "Report: Campaign Proof of Play" %} | {% endblock %}
+{% block title %}{% trans "Report: Mobile Proof of Play" %} | {% endblock %}
 
 {% block actionMenu %}
     {% include "report-schedule-buttons.twig" %}
@@ -34,15 +34,15 @@
 
     <div class="widget">
         <div class="widget-title">
-            <span>{% trans "Campaign Proof of Play" %}</span>
+            <span>{% trans "Mobile Proof of Play" %}</span>
         </div>
 
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="campaignProofOfPlayView" data-refresh-on-form-submit="false">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="mobileProofOfPlayView" data-refresh-on-form-submit="false">
                 <div class="XiboFilterCustom card bg-light mb-3">
-                    <div class="FilterDiv card-body" id="campaignProofOfPlayReport">
+                    <div class="FilterDiv card-body" id="report">
                         <!-- Form Filter -->
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
@@ -69,24 +69,10 @@
                             {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
 
                             {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+                            {{ inline.date("fromDt", title, defaults.fromDateOneDay, "", "from-dt", "", "") }}
 
                             {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
-
-                            {% set title %}{% trans "Group by" %}{% endset %}
-                            {% set hour %}{% trans "Hour" %}{% endset %}
-                            {% set day %}{% trans "Day" %}{% endset %}
-                            {% set week %}{% trans "Week" %}{% endset %}
-                            {% set month %}{% trans "Month" %}{% endset %}
-
-                            {% set options = [
-                                { name: "hour", filter: hour },
-                                { name: "day", filter: day },
-                                { name: "week", filter: week },
-                                { name: "month", filter: month },
-                            ] %}
-                            {{ inline.dropdown("groupBy", "single", title, "today", options, "name", "filter") }}
+                            {{ inline.date("toDt", title, defaults.toDate, "", "to-dt", "", "") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -128,6 +114,21 @@
                             {% set helpText %}{% trans "Please select a Campaign" %}{% endset %}
                             {{ inline.dropdown("parentCampaignId", "single", title, "", null, "campaignId", "campaign", "", "", "", "", "", attributes) }}
 
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Layout" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
+                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", helpText, "pagedSelect layout-select", "", "l", "", attributes) }}
+
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
@@ -158,13 +159,20 @@
                                        class="table xibo-table table-striped table-full-width"
                                        style="width: 100%"
                                        data-state-preference-name="proofOfPlayGrid"
-                                       data-url="/report/data/campaignProofOfPlay">
+                                       data-url="/report/data/mobileProofOfPlay">
                                     <thead>
                                     <tr>
-                                        <th>{% trans "Period" %}</th>
-                                        <th>{% trans "Ad Plays" %}</th>
-                                        <th>{% trans "Ad Duration" %}</th>
-                                        <th>{% trans "Audience Impressions" %}</th>
+                                        <th>{% trans "Start" %}</th>
+                                        <th>{% trans "End" %}</th>
+                                        <th>{% trans "Display Id" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Layout Id" %}</th>
+                                        <th>{% trans "Layout" %}</th>
+                                        <th>{% trans "Start Latitude" %}</th>
+                                        <th>{% trans "Start Longitude" %}</th>
+                                        <th>{% trans "End Latitude" %}</th>
+                                        <th>{% trans "End Longitude" %}</th>
+                                        <th>{% trans "Duration" %}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -172,6 +180,13 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -219,10 +234,23 @@
                 "order": [[1, "asc"]],
                 data:{},
                 "columns": [
-                    {"data": "labelDate"},
-                    {"data": "adPlays"},
-                    {"data": "adDuration"},
-                    {"data": "impressions"}
+                    {
+                        "data": "from",
+                        "render": dataTableDateFromIso
+                    },
+                    {
+                        "data": "to",
+                        "render": dataTableDateFromIso
+                    },
+                    {"data": "displayId"},
+                    {"data": "display"},
+                    {"data": "layoutId"},
+                    {"data": "layout"},
+                    {"data": "startLat"},
+                    {"data": "startLong"},
+                    {"data": "endLat"},
+                    {"data": "endLong"},
+                    {"data": "duration"}
                 ],
             });
 
@@ -318,23 +346,19 @@
             // Hide / Show FromDt and ToDt
             function checkReportFilter(reportFilter) {
                 if (reportFilter.val() === '' || reportFilter.val() === undefined) {
-                    $(".stats-from-dt").show();
-                    $(".stats-to-dt").show();
-                    $(".stats-from-dt-time").show();
-                    $(".stats-to-dt-time").show();
+                    $(".from-dt").show();
+                    $(".to-dt").show();
                 } else {
-                    $(".stats-from-dt").hide();
-                    $(".stats-to-dt").hide();
-                    $(".stats-from-dt-time").hide();
-                    $(".stats-to-dt-time").hide();
+                    $(".from-dt").hide();
+                    $(".to-dt").hide();
                 }
             }
 
             // Calculate the difference of number of days of a selected range
             let calculateDaysShowHideWarn = function() {
 
-                let fromDt = moment($("#statsFromDt").val());
-                let toDt = moment($("#statsToDt").val());
+                let fromDt = moment($("#fromDt").val());
+                let toDt = moment($("#toDt").val());
 
                 let days = toDt.diff(fromDt, 'days');
 
@@ -346,11 +370,11 @@
                 return true;
             };
 
-            $("#statsFromDtLink").change( function() {
+            $("#fromDtLink").change( function() {
                 calculateDaysShowHideWarn();
             });
 
-            $("#statsToDtLink").change( function() {
+            $("#toDtLink").change( function() {
                 calculateDaysShowHideWarn();
             });
 
@@ -377,7 +401,7 @@
                 let tags = $("#tags").val();
                 let exactTags = $('#exactTags').is(":checked");
 
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=campaignProofOfPlay" );
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=mobileProofOfPlay" );
 
             };
 
@@ -460,10 +484,10 @@
             })
         });
 
-        function campaignProofOfPlayScheduleCallback() {
+        function reportScheduleCallback() {
 
-            let $displayId = $('#campaignProofOfPlayReport #displayId');
-            let $newDisplayId = $('#campaignProofofplayScheduleAddForm #displayId');
+            let $displayId = $('#report #displayId');
+            let $newDisplayId = $('#reportScheduleAddForm #displayId');
 
             appendOptions($newDisplayId, $displayId.find('option:selected').clone());
         }
