@@ -154,6 +154,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 'type' => 'layout',
                 'start' => 1,
                 'length' => 10000,
+                'mustHaveParentCampaign' => true
             ];
 
             if (!empty($watermark)) {
@@ -192,10 +193,17 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
                 } else {
                     $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
+                    $campaignCache[$parentCampaignId]['type'] = $parentCampaign->type;
+
                     $campaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
                     $campaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
                     $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
                     $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
+                }
+
+                // Skip list campaign stats, keep only ad campaign stats
+                if ($campaignCache[$parentCampaignId]['type'] !== 'ad') {
+                    continue;
                 }
 
                 // --------
