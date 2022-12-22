@@ -36,12 +36,21 @@
         {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
     {% endif %}
 
+    {% set options = interface.getOptionsFromAxe() %}
+    {% if options.error %}
+        <p class="alert alert-danger">{{ options.message }}</p>
+    {% else %}
+        {% set numberOfAuthedDisplays = options.displays %}
+        <p class="alert alert-info">{% trans %}Your API key is authorised for {{ numberOfAuthedDisplays }} displays.{% endtrans %}</p>
+    {% endif %}
+
     <div class="form-group row">
         <div class="XiboGrid container" id="{{ random() }}" data-grid-name="connector-audience-dma">
             <div class="XiboData card pt-3">
                 <table id="audience-dma" class="table table-striped" style="width:100%"
                        data-connector-id="{{ connector.connectorId }}"
                        data-proxy-url="{{ url_for("connector.edit.form.proxy", {id: connector.connectorId, method: ":method"}) }}"
+                       data-impression-sources="{{ options.impressionSource|json_encode }}"
                        data-state-preference-name="connector-audience-dma">
                     <thead>
                     <tr>

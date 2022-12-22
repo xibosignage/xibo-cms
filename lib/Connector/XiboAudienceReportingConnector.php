@@ -25,7 +25,6 @@ use Carbon\Carbon;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
-use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
@@ -39,6 +38,7 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -129,6 +129,10 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         if (!$this->isProviderSetting('apiKey')) {
             $settings['apiKey'] = $params->getString('apiKey');
         }
+
+        // Get this connector settings, etc.
+        $this->getOptionsFromAxe($settings['apiKey'], true);
+
         return $settings;
     }
 
@@ -536,7 +540,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     'daysOfWeek' => $params->getIntArray('daysOfWeek'),
                     'startTime' => $params->getString('startTime'),
                     'endTime' => $params->getString('endTime'),
-                    'geoFence' => $params->getString('geoFence'),
+                    'geoFence' => json_decode($params->getString('geoFence'), true),
                     'priority' => $params->getInt('priority'),
                 ],
             ]);
@@ -576,7 +580,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     'daysOfWeek' => $params->getIntArray('daysOfWeek'),
                     'startTime' => $params->getString('startTime'),
                     'endTime' => $params->getString('endTime'),
-                    'geoFence' => $params->getString('geoFence'),
+                    'geoFence' => json_decode($params->getString('geoFence'), true),
                     'priority' => $params->getInt('priority'),
                 ],
             ]);
@@ -616,6 +620,49 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     // </editor-fold>
 
     /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function getOptionsFromAxe($apiKey = null, $throw = false)
+    {
+        $apiKey = $apiKey ?? $this->getSetting('apiKey');
+        if (empty($apiKey)) {
+            if ($throw) {
+                throw new InvalidArgumentException(__('Please provide an API key'));
+            } else {
+                return [
+                    'error' => true,
+                    'message' => __('Please provide an API key'),
+                ];
+            }
+        }
+
+        try {
+            $response = $this->getClient()->get($this->getServiceUrl() . '/options', [
+                'timeout' => 120,
+                'headers' => [
+                    'X-API-KEY' => $apiKey,
+                ],
+            ]);
+
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            try {
+                $this->handleException($e);
+            } catch (\Exception $exception) {
+                if ($throw) {
+                    throw $exception;
+                } else {
+                    return [
+                        'error' => true,
+                        'message' => $exception->getMessage() ?: __('Unknown Error'),
+                    ];
+                }
+            }
+        }
+    }
+
+    /**
      * @param \Exception $exception
      * @return void
      * @throws \Xibo\Support\Exception\GeneralException
@@ -623,19 +670,28 @@ class XiboAudienceReportingConnector implements ConnectorInterface
      */
     private function handleException($exception)
     {
+        $this->getLogger()->debug('handleException: ' . $exception->getMessage());
+        $this->getLogger()->debug('handleException: ' . $exception->getTraceAsString());
+
         if ($exception instanceof ClientException) {
             if ($exception->hasResponse()) {
                 $body = $exception->getResponse()->getBody() ?? null;
+                if (!empty($body)) {
+                    $decodedBody = json_decode($body, true);
+                    $message = $decodedBody['message'] ?? $body;
+                } else {
+                    $message = __('An unknown error has occurred.');
+                }
 
                 switch ($exception->getResponse()->getStatusCode()) {
                     case 422:
-                        throw new InvalidArgumentException($body);
+                        throw new InvalidArgumentException($message);
 
                     case 404:
-                        throw new NotFoundException($body);
+                        throw new NotFoundException($message);
 
                     case 401:
-                        throw new AccessDeniedException($body);
+                        throw new AccessDeniedException(__('Access denied, please check your API key'));
 
                     default:
                         throw new GeneralException(sprintf(
