@@ -468,6 +468,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $mediaIds = $filterBy['mediaIds'] ?? [];
         $campaignId = $filterBy['campaignId'] ?? null;
         $parentCampaignId = $filterBy['parentCampaignId'] ?? null;
+        $hasParentCampaign = $filterBy['hasParentCampaign'] ?? false;
         $eventTag = $filterBy['eventTag'] ?? null;
 
         // Limit
@@ -567,6 +568,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // Parent Campaign Filter
         if ($parentCampaignId != null) {
             $match['$match']['parentCampaignId'] = $parentCampaignId;
+        }
+
+        // Has Parent Campaign Filter
+        if ($hasParentCampaign) {
+            $match['$match']['parentCampaignId'] = ['$exists' => true, '$ne' => 0];
         }
 
         // Select collection
