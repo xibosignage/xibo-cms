@@ -151,6 +151,13 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             return;
         }
 
+        // Set displays on DMAs
+        foreach ($this->dmaSearch($this->sanitizer->getSanitizer([]))['data'] as $dma) {
+            if ($dma['displayGroupId'] !== null) {
+                $this->setDisplaysForDma($dma['_id'], $dma['displayGroupId']);
+            }
+        }
+
         // Get Watermark
         try {
             $response = $this->getClient()->get($this->getServiceUrl() . '/audience/watermark', [
@@ -531,7 +538,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 ],
                 'json' => [
                     'name' => $params->getString('name'),
-                    'displays' => $params->getIntArray('displays'),
                     'costPerPlay' => $params->getDouble('costPerPlay'),
                     'impressionSource' => $params->getString('impressionSource'),
                     'impressionsPerPlay' => $params->getDouble('impressionsPerPlay'),
@@ -542,6 +548,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     'endTime' => $params->getString('endTime'),
                     'geoFence' => json_decode($params->getString('geoFence'), true),
                     'priority' => $params->getInt('priority'),
+                    'displayGroupId' => $params->getInt('displayGroupId'),
                 ],
             ]);
 
@@ -550,6 +557,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             if (!$body) {
                 throw new GeneralException(__('No response'));
             }
+
+            // Set the displays
+            $this->setDisplaysForDma($body['_id'], $params->getInt('displayGroupId'));
 
             return $body;
         } catch (\Exception $e) {
@@ -571,7 +581,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 ],
                 'json' => [
                     'name' => $params->getString('name'),
-                    'displays' => $params->getIntArray('displays'),
                     'costPerPlay' => $params->getDouble('costPerPlay'),
                     'impressionSource' => $params->getString('impressionSource'),
                     'impressionsPerPlay' => $params->getDouble('impressionsPerPlay'),
@@ -582,6 +591,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     'endTime' => $params->getString('endTime'),
                     'geoFence' => json_decode($params->getString('geoFence'), true),
                     'priority' => $params->getInt('priority'),
+                    'displayGroupId' => $params->getInt('displayGroupId'),
                 ],
             ]);
 
@@ -590,6 +600,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             if (!$body) {
                 throw new GeneralException(__('No response'));
             }
+
+            // Set the displays
+            $this->setDisplaysForDma($body['_id'], $params->getInt('displayGroupId'));
 
             return $body;
         } catch (\Exception $e) {
@@ -659,6 +672,30 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     ];
                 }
             }
+        }
+    }
+
+    private function setDisplaysForDma($dmaId, $displayGroupId)
+    {
+        // Get displays
+        $displayIds = [];
+        foreach ($this->displayFactory->getByDisplayGroupId($displayGroupId) as $display) {
+            $displayIds[] = $display->displayId;
+        }
+
+        // Make a blind call to update this DMA.
+        try {
+            $this->getClient()->post($this->getServiceUrl() . '/dma/' . $dmaId . '/displays', [
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey')
+                ],
+                'json' => [
+                    'displays' => $displayIds,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            $this->getLogger()->error('Exception updating Displays for dmaId: ' . $dmaId
+                . ', e: ' . $e->getMessage());
         }
     }
 

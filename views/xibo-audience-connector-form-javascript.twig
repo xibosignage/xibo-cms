@@ -205,6 +205,16 @@
         },
         onShown: function(e) {
           const $form = $(e.target).find('form');
+
+          // Before we initialise we work out if we need to set the initial key/value on the displayGroupId
+          // select list.
+          const $displayGroupId = $form.find('select[name=displayGroupId]');
+          if (dma && dma.displayGroupId) {
+            $displayGroupId.attr('data-initial-key', 'displayGroupId');
+            $displayGroupId.attr('data-initial-value', dma.displayGroupId);
+          }
+
+          // Initialise general fields.
           XiboInitialise('#' + $form.attr('id'));
 
           const $daysOfWeek = $form.find('select[name="daysOfWeek[]"]');
@@ -380,6 +390,21 @@
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Set a priority for this DMA. Higher priorities take precedence." %}{% endset %}
                         {{ forms.number("priority", title, "{{dma.priority}}", helpText) }}
+
+                        {% set title %}{% trans "Display Group" %}{% endset %}
+                        {% set helpText %}{% trans "Which displays would you like this DMA to apply to?" %}{% endset %}
+                        {% set attributes = [
+                          { name: "data-width", value: "200px" },
+                          { name: "data-allow-clear", value: "true" },
+                          { name: "data-placeholder--id", value: null },
+                          { name: "data-placeholder--value", value: "" },
+                          { name: "data-search-url", value:  url_for("displayGroup.search") },
+                          { name: "data-search-term", value: "displayGroup" },
+                          { name: "data-search-term-tags", value: "tags" },
+                          { name: "data-id-property", value: "displayGroupId" },
+                          { name: "data-text-property", value: "displayGroup" },
+                        ] %}
+                        {{ forms.dropdown("displayGroupId", "single", title, null, null, "displayGroupId", "displayGroup", helpText, "pagedSelect", "", "d", "", attributes) }}
 
                         {% set title %}{% trans "Cost per Play" %}{% endset %}
                         {% set helpText %}{% trans "The cost per play" %}{% endset %}
