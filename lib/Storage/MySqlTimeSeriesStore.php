@@ -213,7 +213,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $mediaIds = $filterBy['mediaIds'] ?? [];
         $campaignId = $filterBy['campaignId'] ?? null;
         $parentCampaignId = $filterBy['parentCampaignId'] ?? null;
-        $hasParentCampaign = $filterBy['hasParentCampaign'] ?? false;
+        $mustHaveParentCampaign = $filterBy['mustHaveParentCampaign'] ?? false;
         $eventTag = $filterBy['eventTag'] ?? null;
 
         // Tag embedding
@@ -381,7 +381,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         // Has Parent Campaign Filter
-        if ($hasParentCampaign) {
+        if ($mustHaveParentCampaign) {
             $body .= ' AND IFNULL(`stat`.parentCampaignId, 0) != 0 ';
         }
 
