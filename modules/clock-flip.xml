@@ -1,0 +1,184 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-clock-flip</id>
+    <name>Clock - Flip</name>
+    <author>Core</author>
+    <description>Flip Clock</description>
+    <class></class>
+    <type>clock-flip</type>
+    <group>clock</group>
+    <legacyType>clock</legacyType>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="clockFace" type="dropdown" mode="single">
+            <title>Theme</title>
+            <helpText>Please select a clock face.</helpText>
+            <default>TwelveHourClock</default>
+            <options>
+                <option name="TwelveHourClock">12h Clock</option>
+                <option name="TwentyFourHourClock">24h Clock</option>
+                <option name="HourlyCounter">Hourly Counter</option>
+                <option name="MinuteCounter">Minute Counter</option>
+                <option name="DailyCounter">Daily Counter</option>
+            </options>
+        </property>
+        <property id="showSeconds" type="checkbox">
+            <title>Show Seconds?</title>
+            <helpText>Should the clock show seconds or not?</helpText>
+            <default></default>
+        </property>
+        <property id="offset" type="text">
+            <title>Offset</title>
+            <helpText>The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s.</helpText>
+            <default></default>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <hbs><![CDATA[
+<div id="clock"></div>
+        ]]></hbs>
+<twig><![CDATA[
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+}
+
+h1, h2, h3, h4, p {
+    margin-top: 0;
+}
+
+.flip-clock-wrapper {
+    text-align: center;
+    position: relative;
+    margin: 0;
+}
+</style>
+        ]]></twig>
+    </stencil>
+    <onInitialize><![CDATA[
+// Set moment locale
+moment.locale(globalOptions.locale);
+
+// Save get time remaining function to xiboIC be able to use it in the template
+xiboIC.set(id, 'getTimeRemaining', function getTimeRemaining(endtime) {
+    // for IE and Windows player
+    var endtimeFormatted = endtime.replace(/^(.*-[0-9][0-9])( )([0-9][0-9]:.*$)/, '$1T$3');
+
+    var t = Date.parse(endtimeFormatted) - Date.parse(new Date());
+    var seconds = Math.floor( (t/1000) % 60 );
+    var minutes = Math.floor( (t/1000/60) % 60 );
+    var hours = Math.floor( (t/(1000*60*60)) % 24 );
+    var days = Math.floor( t/(1000*60*60*24) );
+    return {
+        'total': t,
+        'days': days,
+        'hours': hours,
+        'minutes': minutes,
+        'seconds': seconds
+    };
+});
+    ]]></onInitialize>
+    <onRender><![CDATA[
+var width = properties.originalWidth;
+var height = properties.originalHeight;
+
+if (width == 0 || height == 0) {
+    width = $(window).width();
+    height = $(window).height();
+}
+
+var clock_width = 460;
+
+// Flip clock is always the same size
+if (properties.clockFace === "DailyCounter") {
+    clock_width = 620;
+}
+
+// If we are a clock, then reduce the width to fit without the seconds if appropriate
+if (properties.showSeconds === 0 && (properties.clockFace === "TwelveHourClock" || properties.clockFace === 'TwentyFourHourClock')) {
+    clock_width = 300;
+}
+
+// Calculate the width ratio between the actual width and the clock_width
+var ratio = width / clock_width;
+
+// What IE are we?
+if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
+    $("#clock").css({
+        "width": clock_width + "px",
+        "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod='auto expand'"
+    });
+}
+else {
+    $("#clock").css({
+        "width": clock_width + "px",
+        "transform": "scale(" + ratio + ")",
+        "transform-origin": "0 0"
+    });
+}
+
+// Initialize or restart the clock
+var offset = properties.offset;
+var getTimeRemaining = xiboIC.get(id, 'getTimeRemaining');
+
+// If flip clock is already initialized, destroy it
+if (window.flipClock) {
+    window.flipClock.stop();
+}
+
+if (properties.clockFace === "TwelveHourClock" || properties.clockFace === "TwentyFourHourClock") {
+    window.flipClock = $('#clock').FlipClock({
+        clockFace: properties.clockFace,
+        showSeconds: (parseInt(properties.showSeconds) === 1)
+    });
+
+    var date = new Date(window.flipClock.getTime().time);
+
+    window.flipClock.setTime(new Date(date.valueOf() + (properties.offset * 60 * 1000)));
+} else {
+    var duration;
+    if (isNaN(properties.offset)) {
+        duration = getTimeRemaining(properties.offset).total / 1000;
+    } else {
+        duration = properties.duration;
+    }
+
+    window.flipClock = $('#clock').FlipClock(duration, {
+        clockFace: properties.clockFace,
+        showSeconds: (parseInt(properties.showSeconds) === 1),
+        countdown: true
+    });
+}
+
+// Scale the element
+$(target).xiboLayoutScaler(properties);
+    ]]></onRender>
+</module>

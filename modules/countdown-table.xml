@@ -19,14 +19,16 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <module>
-    <id>core-countdown</id>
-    <name>Countdown</name>
+    <id>core-countdown-table</id>
+    <name>Countdown - Table</name>
     <author>Core</author>
-    <description>A module for displaying a Countdown timer</description>
+    <description>A module for displaying a Countdown timer in a table</description>
     <class></class>
-    <type>countdown</type>
+    <type>countdown-table</type>
+    <group>countdown</group>
     <legacyType>countdown</legacyType>
-    <dataType>countdown</dataType>
+    <legacyTemplate>countdown3</legacyTemplate>
+    <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -107,6 +109,84 @@
         </property>
     </properties>
     <preview></preview>
+    <stencil>
+        <width id="width">600</width>
+        <height id="height">400</height>
+        <hbs><![CDATA[
+<div class="countdown-container">
+    <table>
+        <tr class="main-header">
+            <td colspan="2">||Years||</td>
+        </tr>
+        <tr>
+            <td colspan="2">[YY]</td>
+        </tr>
+        <tr class="header">
+            <td>||Months||</td>
+            <td>||Weeks||</td>
+        </tr>
+        <tr>
+            <td>[MM]</td>
+            <td>[WW]</td>
+        </tr>
+        <tr class="header">
+            <td>||Days||</td>
+            <td>||Total Hours||</td>
+        </tr>
+        <tr>
+            <td>[DD]</td>
+            <td>[hha]</td>
+        </tr>
+        <tr class="header">
+            <td>||Total Minutes||</td>
+            <td>||Total Seconds||</td>
+        </tr>
+        <tr>
+            <td>[mma]</td>
+            <td>[ssa]</td>
+        </tr>
+    </table>
+</div>
+        ]]></hbs>
+        <twig><![CDATA[
+<style>
+body {
+    width: 600px !important;
+    height: 400px !important;
+}
+
+table {
+    color: #333;
+    font-family: Helvetica, Arial, sans-serif;
+    width: 600px;
+    height: 400px;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td, th {
+    border: 1px solid #CCC;
+    height: 30px;
+}
+
+td {
+    background: #ececec;
+    text-align: center;
+}
+
+tr.header td {
+    background: #d7d7d7;
+    font-weight: bolder;
+}
+
+tr.main-header td {
+    background: #747474;
+    color: #f1f1f1;
+    font-weight: bolder;
+}
+</style>
+        ]]></twig>
+    </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates
 const $countdownContainer = $('.countdown-container', target);
@@ -163,17 +243,15 @@ countdownHTML = text.replace(regex, function (match) {
 
 // Attach html back to container
 $countdownContainer.html(countdownHTML);
-    ]]></onRender>
-    <onVisible><![CDATA[
-const $contentContainer = $(target).find('#content');
-
-// Render the countdown
-$(target).find('#content').xiboCountdownRender(
-    properties,
-    $contentContainer.html(),
-);
 
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
-    ]]></onVisible>
+
+// Render the countdown
+const $contentContainer = $(target).find('#content');
+$contentContainer.xiboCountdownRender(
+    properties,
+    $contentContainer.html(),
+);
+    ]]></onRender>
 </module>

@@ -44,6 +44,15 @@ jQuery.fn.extend({
 
     options = $.extend({}, defaults, options);
 
+    const resetAnimElements = function($contentDiv) {
+      // Remove animation items
+      $contentDiv.find('.text-render-anim-item').remove();
+
+      // Show and reset the hidden elements
+      $contentDiv.find('.text-render-hidden-element')
+        .removeClass('text-render-hidden-element').show();
+    };
+
     // Calculate the dimensions of this item
     // based on the preview/original dimensions
     let width = height = 0;
@@ -98,6 +107,9 @@ jQuery.fn.extend({
         options.effect === 'marqueeRight' ||
         options.effect === 'marqueeUp' ||
         options.effect === 'marqueeDown';
+
+      // Reset the animation elements
+      resetAnimElements($contentDiv);
 
       // 1st Objective - filter the items array we have been given
       // settings involved:
@@ -174,9 +186,6 @@ jQuery.fn.extend({
         $contentDiv.cycle('destroy');
       }
 
-      // Remove previous created items
-      $contentDiv.find('.anim-item').remove();
-
       // Loop around each of the items we have been given
       // and append them to this element (in a div)
       for (let i = 0; i < items.length; i++) {
@@ -188,7 +197,7 @@ jQuery.fn.extend({
             (itemsThisPage >= options.itemsPerPage || i === 0)
           ) {
             // Append a new page to the body
-            appendTo = $('<div/>').addClass('page anim-item')
+            appendTo = $('<div/>').addClass('page text-render-anim-item')
               .appendTo($contentDiv);
 
             // Reset the row count on this page
@@ -209,11 +218,11 @@ jQuery.fn.extend({
         }
 
         // Hide and mark as hidden the original element
-        ($oldItem) && $oldItem.hide().addClass('hidden-element');
+        ($oldItem) && $oldItem.hide().addClass('text-render-hidden-element');
 
         // Append the item to the page
         $newItem
-          .addClass('item anim-item')
+          .addClass('item text-render-anim-item')
           .appendTo(appendTo);
 
         itemsThisPage++;
@@ -297,10 +306,10 @@ jQuery.fn.extend({
 
         // Stack the articles up and move them across the screen
         $(
-          options.marqueeInlineSelector + ':not(.hidden-element)',
+          options.marqueeInlineSelector + ':not(.text-render-hidden-element)',
           $contentDiv,
         ).each(function(_idx, _el) {
-          if (!$(_el).hasClass('hidden-element')) {
+          if (!$(_el).hasClass('text-render-hidden-element')) {
             $(_el).css({
               display: 'inline',
               'padding-left': '10px',

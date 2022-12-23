@@ -1,0 +1,92 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-clock-digital</id>
+    <name>Clock - Digital</name>
+    <author>Core</author>
+    <description>Digital Clock</description>
+    <class></class>
+    <type>clock-digital</type>
+    <group>clock</group>
+    <legacyType>clock</legacyType>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="ta_text" type="richText" allowLibraryRefs="true">
+            <title>Enter text or HTML in the box below.</title>
+            <helpText>Enter a format for the Digital Clock e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information.</helpText>
+            <default><![CDATA[
+<span style="font-size: 48px; color:#1c1c1c;">[HH:mm:ss]</span>
+            ]]></default>
+        </property>
+        <property id="offset" type="text">
+            <title>Offset</title>
+            <helpText>The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s.</helpText>
+            <default></default>
+        </property>
+    </properties>
+    <preview></preview>
+    <onInitialize><![CDATA[
+// Set moment locale
+moment.locale(globalOptions.locale);
+
+// Parse any Clock elements
+// Use regex to out the bit between the [] brackets and use that as the format mask for moment.
+let text = properties.ta_text;
+let regex = /\[.*?\]/g;
+
+properties.ta_text = text.replace(regex, function (match) {
+    return '<span class="clock" format="' + match.replace('[', '').replace(']', '') + '"></span>';
+});
+
+// Replace content with the parsed text
+$(target).find('#content').html(properties.ta_text);
+
+// Create updateClock method and save to the interactive controller
+xiboIC.set(
+    id,
+    'updateClock', 
+    function updateClock() {
+        var offset = properties.offset || 0;
+        $(".clock").each(function() {
+            $(this).html(moment().format($(this).attr("format")));
+            $(this).html(moment().add(' + offset + ', "m").format($(this).attr("format")));
+        });
+    }
+);
+    ]]></onInitialize>
+    <onVisible><![CDATA[
+const updateClock = xiboIC.get(id, 'updateClock');
+// Run update clock if it's defined in the template 
+if (typeof updateClock === 'function') {
+    // Start the first time
+    updateClock();
+
+    // Update every second
+    setInterval(updateClock, 1000);
+}
+    ]]></onVisible>
+</module>

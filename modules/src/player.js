@@ -23,13 +23,51 @@ $(function() {
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
 
+  // Defaut scaler function
+  const defaultScaler = function(
+    _id,
+    target,
+    _items,
+    properties,
+  ) {
+    // If target is not defined, use the body
+    target = (target) ? target : $('body');
+
+    // If properties is empty
+    // use the global options with widget properties
+    properties = (properties) ?
+      properties : Object.assign(widget.properties, globalOptions);
+
+    // Scale the content if there's no scaleContent property
+    // or if it's set to true
+    if (
+      !properties.hasOwnProperty('scaleContent') ||
+      properties.scaleContent
+    ) {
+      // Scale the content
+      $(target).xiboLayoutScaler(properties);
+    }
+  };
+
   // Call the data url and parse out the template.
   $.each(widgetData, function(_key, widget) {
-    // Load the template
-    const $template = $('#hbs-' + widget.templateId);
-    const hbs = ($template.length > 0) ?
-      Handlebars.compile($template.html()) :
-      null;
+    // Check if we have template from templateId or module
+    // and set it as the template
+    let $template = null;
+    let moduleTemplate = false;
+    if ($('#hbs-' + widget.templateId).length > 0) {
+      $template = $('#hbs-' + widget.templateId);
+    } else if ($('#hbs-module').length > 0) {
+      $template = $('#hbs-module');
+      moduleTemplate = true;
+    }
+
+    let hbs = null;
+    // Compile the template if it exists
+    if ($template && $template.length > 0) {
+      hbs = Handlebars.compile($template.html());
+    }
+
     const $content = $('#content');
     widget.items = [];
     $.ajax({
@@ -80,14 +118,16 @@ $(function() {
         (item) && widget.items.push(item);
       });
 
-      // If we don't have data items
-      // and a we have a template, add it to the content
-      if (dataItems.length === 0 && $template.length > 0) {
-        (hbs) && $content.append(hbs());
+      // TODO - We need to address the case of no dataType and templates!!!
+
+      // If we don't have dataType, or we have a module template
+      // add it to the content
+      if (moduleTemplate && hbs) {
+        $content.append(hbs());
       }
 
       // Save template height and width if exists to global options
-      if ($template.length > 0) {
+      if ($template && $template.length > 0) {
         globalOptions.widgetDesignWidth = $template.data('width');
         globalOptions.widgetDesignHeight = $template.data('height');
       }
@@ -101,58 +141,49 @@ $(function() {
 
       // Run the onRender function if it exists
       if (typeof window['onRender_' + widget.widgetId] === 'function') {
-        window['onRender_' + widget.widgetId](
-          widget.widgetId,
-          $target,
-          widget.items,
-          widget.properties,
-        );
+        window.onRender =
+          window['onRender_' + widget.widgetId];
       }
 
       // Handle the rendering of the template
       if (
         typeof window['onTemplateRender_' + widget.templateId] === 'function'
       ) { // Custom scaler
-        window.renderContent =
+        window.onTemplateRender =
           window['onTemplateRender_' + widget.templateId];
-      } else {
-        // Default scaler
-        window.renderContent = function(
-          _id,
-          target,
-          _items,
-          properties,
-        ) {
-          // If target is not defined, use the body
-          target = (target) ? target : $('body');
-
-          // If properties is empty
-          // use the global options with widget properties
-          properties = (properties) ?
-            properties : Object.assign(widget.properties, globalOptions);
-
-          // Scale the content if there's no scaleContent property
-          // or if it's set to true
-          if (
-            !properties.hasOwnProperty('scaleContent') ||
-            properties.scaleContent
-          ) {
-            // Scale the content
-            $(target).xiboLayoutScaler(properties);
-          }
-        };
       }
+
+      // Create global render array of functions
+      window.renders = [];
+      // Template render function
+      if (window.onTemplateRender) {
+        // Save the render method in renders
+        window.renders.push(window.onTemplateRender);
+      }
+
+      // Module render function
+      if (window.onRender) {
+        // Save the render method in renders
+        window.renders.push(window.onRender);
+      }
+
+      // If there's no elements in renders, use the default scaler
+      if (window.renders.length === 0) {
+        window.renders.push(defaultScaler);
+      }
+
+      // Run all render functions
+      $.each(window.renders, function(_key, render) {
+        render(
+          widget.widgetId,
+          $target,
+          widget.items,
+          Object.assign(widget.properties, globalOptions),
+        );
+      });
 
       // Save widget as global variable
       window.widget = widget;
-
-      // Call the render function on body
-      window.renderContent(
-        widget.widgetId,
-        $target,
-        widget.items,
-        Object.assign(widget.properties, globalOptions),
-      );
 
       // Call the run on visible function if it exists
       if (

@@ -193,10 +193,6 @@ body {
 </style>
             ]]></twig>
         </stencil>
-        <onTemplateRender><![CDATA[
-$(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
-        ]]></onTemplateRender>
     </template>
     <template>
         <id>twitter2</id>
@@ -378,9 +374,5 @@ body {
 </style>
             ]]></twig>
         </stencil>
-        <onTemplateRender><![CDATA[
-$(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
-        ]]></onTemplateRender>
     </template>
 </templates>

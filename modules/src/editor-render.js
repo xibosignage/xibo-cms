@@ -34,7 +34,7 @@ $(function() {
       globalOptions.pauseEffectOnStart =
         e.data.options.pauseEffectOnStart ?? false;
 
-      // Arguments for both renderContent and runOnVisible
+      // Arguments for both reRender
       const args = (typeof widget != 'undefined') ? [
         e.data.options.id, // id
         $('body'), // target
@@ -42,9 +42,11 @@ $(function() {
         Object.assign(widget.properties, globalOptions), // properties
       ] : [];
 
-      // Call render content if exists
-      if (typeof renderContent === 'function') {
-        window.renderContent(...args);
+      // Call render array of functions if exists and it's an array
+      if (window.renders && Array.isArray(window.renders)) {
+        window.renders.forEach((render) => {
+          render(...args);
+        });
       }
     }
   };

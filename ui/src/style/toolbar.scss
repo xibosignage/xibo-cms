@@ -447,6 +447,8 @@
                     height: $toolbar-widgets-card-height;
                     margin-bottom: $toolbar-widgets-card-margin-bottom;
                     display: flex;
+                    gap: 8px;
+                    padding: 8px;
                     align-items: center;
                     @include border-radius(4px);
 
@@ -481,7 +483,6 @@
                         line-height: 25px;
                         font-size: 1.25rem;
                         max-width: 35px;
-                        padding: 0 8px 0 12px;
                     }
 
                     .btn-favourite {

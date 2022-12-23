@@ -104,22 +104,22 @@
 let hasClock = false;
 
 // Parse any Clock elements
-if (properties.ta_text.indexOf('[Clock]') >= 0) {
+if (properties.ta_text && properties.ta_text.indexOf('[Clock]') >= 0) {
     hasClock = true;
     properties.ta_text = properties.ta_text.replace('[Clock]', '[HH:mm]');
 }
 
-if (properties.ta_text.indexOf('[Clock|') >= 0) {
+if (properties.ta_text && properties.ta_text.indexOf('[Clock|') >= 0) {
     hasClock = true;
     properties.ta_text = properties.ta_text.replace('[Clock|', '[');
 }
 
-if (properties.ta_text.indexOf('[Date]') >= 0) {
+if (properties.ta_text && properties.ta_text.indexOf('[Date]') >= 0) {
     hasClock = true;
     properties.ta_text = properties.ta_text.replace('[Date]', '[DD/MM/YYYY]');
 }
 
-if (properties.ta_text.indexOf('[Date|') >= 0) {
+if (properties.ta_text && properties.ta_text.indexOf('[Date|') >= 0) {
     hasClock = true;
     properties.ta_text = properties.ta_text.replace('[Date|', '[');
 }
@@ -132,6 +132,9 @@ if (hasClock) {
     properties.ta_text = text.replace(regex, function (match) {
         return '<span class="clock" format="' + match.replace('[', '').replace(']', '') + '"></span>';
     });
+
+    // Set moment locale
+    moment.locale(globalOptions.locale);
 }
 
 // Save hasClock as global variable
@@ -147,11 +150,11 @@ xiboIC.set(id, 'hasClock', hasClock);
 // Send property type  = text
 properties.type = 'text';
 
-// Scale the layout
-$('body').xiboLayoutScaler(properties);
-
 // Replace content with the parsed text
 $(target).find('#content').html(properties.ta_text);
+
+// Scale the layout
+$('body').xiboLayoutScaler(properties);
 
 $(target).xiboTextRender(
     Object.assign(properties, globalOptions),

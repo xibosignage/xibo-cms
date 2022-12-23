@@ -32,6 +32,7 @@ use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -217,6 +218,8 @@ class WidgetHtmlRenderer
         foreach ($matches[1] as $match) {
             if ($match === 'PlayerBundle') {
                 $output = str_replace('[[PlayerBundle]]', $urlFor('layout.preview.bundle', []), $output);
+            } else if ($match === 'FontBundle') {
+                $output = str_replace('[[FontBundle]]', $urlFor('library.font.css', []), $output);
             } else if ($match === 'ViewPortWidth') {
                 $output = str_replace('[[ViewPortWidth]]', $region->width, $output);
             } else if (Str::startsWith($match, 'dataUrl')) {
@@ -267,6 +270,8 @@ class WidgetHtmlRenderer
         foreach ($matches[1] as $match) {
             if ($match === 'PlayerBundle') {
                 $output = str_replace('[[PlayerBundle]]', '-1.js', $output);
+            } else if ($match === 'FontBundle') {
+                $output = str_replace('[[FontBundle]]', 'fonts.css', $output);
             } else if ($match === 'ViewPortWidth') {
                 // Player does this itself.
                 continue;
@@ -317,6 +322,7 @@ class WidgetHtmlRenderer
         $twig['width'] = $region->width;
         $twig['height'] = $region->height;
         $twig['cmsDateFormat'] = $this->config->getSetting('DATE_FORMAT');
+        $twig['locale'] = Translate::GetJSLocale();
 
         // Output some data for each widget.
         $twig['data'] = [];

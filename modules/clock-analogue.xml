@@ -1,0 +1,211 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-clock-analogue</id>
+    <name>Clock - Analogue</name>
+    <author>Core</author>
+    <description>Analogue Clock</description>
+    <class></class>
+    <type>clock-analogue</type>
+    <group>clock</group>
+    <legacyType>clock</legacyType>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="themeId" type="dropdown" mode="single">
+            <title>Theme</title>
+            <helpText>Please select a theme for the clock.</helpText>
+            <default>1</default>
+            <options>
+                <option name="1">Light</option>
+                <option name="2">Dark</option>
+            </options>
+        </property>
+        <property id="offset" type="text">
+            <title>Offset</title>
+            <helpText>The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s.</helpText>
+            <default></default>
+        </property>
+        <property id="alignmentH" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this widget be horizontally aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+        </property>
+        <property id="alignmentV" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this widget be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <width id="width">250</width>
+        <height id="height">250</height>
+        <hbs><![CDATA[
+<div id="clock" class="hero-circle hero-circle-transparent hero-circle-bg-image">
+    <div class="hero-face">
+        <div id="hour" class="hero-hour"></div>
+        <div id="minute" class="hero-minute"></div>
+        <div id="second" class="hero-second"></div>
+    </div>
+</div>
+        ]]></hbs>
+<twig><![CDATA[
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+}
+
+#content, .hero-face, .hero-circle {
+    width: 100%;
+    height: 100%;
+}
+
+h1, h2, h3, h4, p {
+    margin-top: 0;
+}
+
+.hero-circle {
+    margin: 0 auto;
+    position: relative;
+    background-image: url(data:image/png;base64,{{ clockFace|raw }});
+
+    /* Whilst image isn't working, we give it a outline property */
+    outline: 2px solid #000;
+    outline-offset: -3px;
+    border-radius: 50%;
+}
+
+.light .hero-circle {
+    outline-color: #fff;
+}
+
+.dark .hero-circle {
+    outline-color: #000;
+}
+
+.hero-circle-bg-image {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.hero-face:after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border-radius: 6px;
+    content: "";
+    display: block;
+}
+
+.light .hero-face:after {
+    background: #fff;
+}
+
+.dark .hero-face:after {
+    background: #000;
+}
+
+.hero-hour {
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -4px 0 -4px -25%;
+    padding: 4px 0 4px 25%;
+    -webkit-transform-origin: 100% 50%;
+    -ms-transform-origin: 100% 50%;
+    transform-origin: 100% 50%;
+    border-radius: 4px 0 0 4px;
+}
+
+.dark .hero-hour, .dark .hero-minute, .dark .hero-second {
+    background: #000;
+}
+
+.light .hero-hour, .light .hero-minute, .light .hero-second {
+    background: #FFF;
+}
+
+.hero-minute{width:0;height:0;position:absolute;top:50%;left:50%;margin:-40% -3px 0;padding:40% 3px 0;-webkit-transform-origin:50% 100%;-ms-transform-origin:50% 100%;transform-origin:50% 100%;border-radius:3px 3px 0 0;}
+
+.hero-second{width:0;height:0;position:absolute;top:50%;left:50%;margin:-40% -1px 0 0;padding:40% 1px 0;-webkit-transform-origin:50% 100%;-ms-transform-origin:50% 100%;transform-origin:50% 100%;}
+</style>
+        ]]></twig>
+    </stencil>
+    <onInitialize><![CDATA[
+// Set moment locale
+moment.locale(globalOptions.locale);
+
+// Save updateClock function to xiboIC
+xiboIC.set(
+    id,
+    'updateClock', 
+    function updateClock(){
+        var now = moment().add(' + offset + ', "m"),
+                second = now.seconds() * 6,
+                minute = now.minutes() * 6 + second / 60,
+                hour = ((now.hours() % 12) / 12) * 360 + 90 + minute / 12;
+
+        $('#hour').css("transform", "rotate(" + hour + "deg)");
+        $('#minute').css("transform", "rotate(" + minute + "deg)");
+        $('#second').css("transform", "rotate(" + second + "deg)");
+    }
+);
+
+// Set the theme
+var theme = (properties.themeId == 1) ? "light" : "dark";
+$(target).addClass(theme);
+    ]]></onInitialize>
+    <onVisible><![CDATA[
+const updateClock = xiboIC.get(id, 'updateClock');
+// Run update clock if it's defined in the template 
+if (typeof updateClock === 'function') {
+    // Start the first time
+    updateClock();
+
+    // Update every second
+    setInterval(updateClock, 1000);
+}
+    ]]></onVisible>
+</module>
