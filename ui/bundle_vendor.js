@@ -99,6 +99,7 @@ require('colors.js');
 
 // chart.js
 require('chart.js');
+window.ChartDataLabels = require('chartjs-plugin-datalabels');
 
 // form-serializer
 require('form-serializer');
