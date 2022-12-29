@@ -549,7 +549,7 @@ class SubPlaylist extends ModuleWidget
                         continue;
                     } else {
                         // Not the first list, so we can swap over to fill mode and use the first list instead
-                        $spotFill = 'fill';
+                        $playlistItem->spotFill = 'fill';
                     }
                 }
 
