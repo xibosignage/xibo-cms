@@ -49,6 +49,9 @@ class CampaignSchedulerTask implements TaskInterface
     /** @var \Xibo\Factory\DisplayGroupFactory */
     private $displayGroupFactory;
 
+    /** @var \Xibo\Factory\DisplayFactory */
+    private $displayFactory;
+
     /** @var \Xibo\Service\DisplayNotifyServiceInterface */
     private $displayNotifyService;
 
@@ -62,6 +65,7 @@ class CampaignSchedulerTask implements TaskInterface
         $this->scheduleFactory = $container->get('scheduleFactory');
         $this->dayPartFactory = $container->get('dayPartFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
+        $this->displayFactory = $container->get('displayFactory');
         $this->displayNotifyService = $container->get('displayNotifyService');
         return $this;
     }
@@ -78,29 +82,34 @@ class CampaignSchedulerTask implements TaskInterface
             'endDt' => $nextHour->unix(),
         ]);
 
-        // Do not schedule more than an hours worth of schedules.
-        $totalSovAvailable = 3600;
-        $totalSovPerDisplay = [];
+        // We will need to notify some displays at the end.
+        $notifyDisplayGroupIds = [];
 
         // See what we can schedule for each one.
-        $notifyDisplayGroupIds = [];
         foreach ($activeCampaigns as $campaign) {
             try {
                 $this->log->debug('campaignSchedulerTask: active campaign found, id: ' . $campaign->campaignId);
 
                 // Display groups
                 $displayGroups = [];
+                $countDisplays = 0;
+                $costPerPlay = 0;
+                $impressionsPerPlay = 0;
+
                 foreach ($campaign->loadDisplayGroupIds() as $displayGroupId) {
                     $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
-                    
-                    // SoV per Display, each display starts with 3600 ($totalSovAvailable)
-                    if (!array_key_exists($displayGroupId, $totalSovPerDisplay)) {
-                        $totalSovPerDisplay[$displayGroupId] = $totalSovAvailable;
-                    }
 
-                    // Add to our list of displays to notify once finished.
+                    // Record ids to notify
                     if (!in_array($displayGroupId, $notifyDisplayGroupIds)) {
                         $notifyDisplayGroupIds[] = $displayGroupId;
+                    }
+
+                    foreach ($this->displayFactory->getByDisplayGroupId($displayGroupId) as $display) {
+                        if ($display->licensed === 1 && $display->loggedIn === 1) {
+                            $countDisplays++;
+                            $costPerPlay += $display->costPerPlay;
+                            $impressionsPerPlay += $display->impressionsPerPlay;
+                        }
                     }
                 }
 
@@ -160,38 +169,58 @@ class CampaignSchedulerTask implements TaskInterface
                 // We work out how much we should have played vs how much we have played
                 $progress = $campaign->getProgress($nextHour->copy());
 
-                // A simple assessment of how many plays we need to check in this hour period (we assume the campaign
+                // A simple assessment of how much of the target we need in this hour period (we assume the campaign
                 // will play for 24 hours a day and that adjustments to later scheduling will solve any underplay)
-                $playsNeeded = $progress->targetPerDay / 24;
+                $targetNeededPerDay = $progress->targetPerDay / 24;
+
+                // If we are more than 5% ahead of where we should be, or we are at 100% already, then don't
+                // schedule anything else
+                if ($progress->progressTarget >= 100) {
+                    $this->log->debug('campaignSchedulerTask: campaign has completed, skipping');
+                    continue;
+                } else if ($progress->progressTime > 0
+                    && ($progress->progressTime - $progress->progressTarget + 5) <= 0
+                ) {
+                    $this->log->debug('campaignSchedulerTask: campaign is 5% or more ahead of schedule, skipping');
+                    continue;
+                }
 
                 if ($progress->progressTime > 0 && $progress->progressTarget > 0) {
                     // If we're behind, then increase our play rate accordingly
-                    // again, this is a simple calculation
                     $ratio = $progress->progressTime / $progress->progressTarget;
-                    $playsNeeded = $playsNeeded * $ratio;
+                    $targetNeededPerDay = $targetNeededPerDay * $ratio;
 
-                    $this->log->debug('campaignSchedulerTask: playsNeeded is ' . $playsNeeded
+                    $this->log->debug('campaignSchedulerTask: targetNeededPerDay is ' . $targetNeededPerDay
                         . ', adjusted by ' . $ratio);
                 }
 
                 // Spread across the layouts
-                $playsNeededPerLayout = intval(ceil($playsNeeded / $countActiveLayouts));
+                $targetNeededPerLayout = $targetNeededPerDay / $countActiveLayouts;
 
-                $this->log->debug('campaignSchedulerTask: playsNeededPerLayout is ' . $playsNeededPerLayout);
+                // Modify the target depending on what units it is expressed in
+                // This also caters for spreading the target across the active displays because the
+                // cost/impressions/displays are sums.
+                if ($campaign->targetType === 'budget') {
+                    $playsNeededPerLayout = $targetNeededPerLayout / $costPerPlay;
+                } else if ($campaign->targetType === 'impressions') {
+                    $playsNeededPerLayout = $targetNeededPerLayout / $impressionsPerPlay;
+                } else {
+                    $playsNeededPerLayout = $targetNeededPerLayout / $countDisplays;
+                }
+
+                // Take the ceiling because we can't do part plays
+                $playsNeededPerLayout = intval(ceil($playsNeededPerLayout));
+
+                $this->log->debug('campaignSchedulerTask: targetNeededPerLayout is ' . $targetNeededPerLayout
+                    . ', targetType: ' . $campaign->targetType
+                    . ', playsNeededPerLayout: ' . $playsNeededPerLayout
+                    . ', there are ' . $countDisplays . ' displays.');
 
                 foreach ($activeLayouts as $layout) {
                     // We are on an active day of the week and within an active day part
                     // create a scheduled event for all displays assigned.
                     // and for each geo fence
-                    // how much time do we need to schedule?
-                    foreach ($displayGroups as $displayGroup) {
-                        // if any of the Displays assigned to this ad campaign went over the SoV
-                        // we log an error, but we do allow the schedule to be created
-                        if ($totalSovPerDisplay[$displayGroup->displayGroupId] <= 0) {
-                            $this->log->error('campaignSchedulerTask: total SOV available has been consumed for Display ' . $displayGroup->displayGroup);
-                        }
-                    }
-
+                    // Create our schedule
                     $schedule = $this->scheduleFactory->createEmpty();
                     $schedule->setCampaignFactory($this->campaignFactory);
 
@@ -217,7 +246,7 @@ class CampaignSchedulerTask implements TaskInterface
                     $schedule->syncEvent = 0;
 
                     // We cap SOV at 3600
-                    $schedule->shareOfVoice = min($playsNeededPerLayout * $layout->duration, $totalSovAvailable);
+                    $schedule->shareOfVoice = min($playsNeededPerLayout * $layout->duration, 3600);
                     $schedule->maxPlaysPerHour = $playsNeededPerLayout;
 
                     // Do we have a geofence? (geo schedules do not count against totalSovAvailable)
@@ -241,12 +270,6 @@ class CampaignSchedulerTask implements TaskInterface
                             $schedule->save(['notify' => false]);
                         }
                     } else {
-                        // Reduce the total available on a per Displays basis
-                        // (geo schedules do not count against totalSovAvailable)
-                        foreach ($displayGroups as $displayGroup) {
-                            $totalSovPerDisplay[$displayGroup->displayGroupId] -= $schedule->shareOfVoice;
-                        }
-
                         $schedule->save(['notify' => false]);
                     }
                 }
