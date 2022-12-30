@@ -1745,6 +1745,7 @@ class Soap
             // Cache a count for this scheduleId
             $parentCampaignId = 0;
             $parentCampaign = null;
+
             if ($scheduleId > 0) {
                 // Lookup this schedule
                 if (!array_key_exists($scheduleId, $schedules)) {
@@ -1761,7 +1762,8 @@ class Soap
                         $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
                     }
 
-                    if ($campaigns[$parentCampaignId]->type === 'ad') {
+                    // For a layout stat we should increment the number of plays on the Campaign
+                    if ($type === 'layout' && $campaigns[$parentCampaignId]->type === 'ad') {
                         $parentCampaign = $campaigns[$parentCampaignId];
 
                         // spend/impressions multiplier for this display
