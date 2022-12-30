@@ -198,19 +198,18 @@ class CampaignSchedulerTask implements TaskInterface
                 $targetNeededPerLayout = $targetNeededPerDay / $countActiveLayouts;
 
                 // Modify the target depending on what units it is expressed in
+                // This also caters for spreading the target across the active displays because the
+                // cost/impressions/displays are sums.
                 if ($campaign->targetType === 'budget') {
                     $playsNeededPerLayout = $targetNeededPerLayout / $costPerPlay;
                 } else if ($campaign->targetType === 'impressions') {
                     $playsNeededPerLayout = $targetNeededPerLayout / $impressionsPerPlay;
                 } else {
-                    // Target is plays, so we just take the calculated value.
-                    $playsNeededPerLayout = $targetNeededPerLayout;
+                    $playsNeededPerLayout = $targetNeededPerLayout / $countDisplays;
                 }
 
-                // Cater for the number of displays in total.
-                // These are the displays belonging to matching display groups which are online
-                // and authorised presently.
-                $playsNeededPerLayout = intval(ceil($playsNeededPerLayout / $countDisplays));
+                // Take the ceiling because we can't do part plays
+                $playsNeededPerLayout = intval(ceil($playsNeededPerLayout));
 
                 $this->log->debug('campaignSchedulerTask: targetNeededPerLayout is ' . $targetNeededPerLayout
                     . ', targetType: ' . $campaign->targetType
