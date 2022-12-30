@@ -186,7 +186,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
             // Array of campaigns for which we will update the total spend, impresssions, and plays
             $campaigns = [];
-            $campaignCache = [];
+            $adCampaignCache = [];
+            $listCampaignCache = [];
             $displayCache = [];
 
             $rows = [];
@@ -200,30 +201,34 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     continue;
                 }
 
-                $entry['parentCampaignId'] = $parentCampaignId;
+                if (array_key_exists($parentCampaignId, $listCampaignCache)) {
+                    $this->getLogger()->debug('onRegularMaintenance: Campaign is a list campaign ' . $parentCampaignId);
+                    continue;
+                }
 
-                // Campaign list in array
-                $campaigns[] = $parentCampaignId;
+                $entry['parentCampaignId'] = $parentCampaignId;
 
                 // --------
                 // Get Campaign
                 // Campaign start and end date
-                if (array_key_exists($parentCampaignId, $campaignCache)) {
-                    $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
-                    $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
+                if (array_key_exists($parentCampaignId, $adCampaignCache)) {
+                    $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
+                    $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
                 } else {
                     $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
-                    $campaignCache[$parentCampaignId]['type'] = $parentCampaign->type;
+                    if ($parentCampaign->type == 'ad') {
+                        $adCampaignCache[$parentCampaignId]['type'] = $parentCampaign->type;
+                    } else {
+                        $listCampaignCache[$parentCampaignId] = $parentCampaignId;
+                        continue;
+                    }
 
-                    $campaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
-                    $campaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
-                    $entry['campaignStart'] = $campaignCache[$parentCampaignId]['start'];
-                    $entry['campaignEnd'] = $campaignCache[$parentCampaignId]['end'];
-                }
-
-                // Skip list campaign stats, keep only ad campaign stats
-                if ($campaignCache[$parentCampaignId]['type'] !== 'ad') {
-                    continue;
+                    if (!empty($parentCampaign->getStartDt()) && !empty($parentCampaign->getEndDt())) {
+                        $adCampaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
+                        $adCampaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
+                        $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
+                        $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
+                    }
                 }
 
                 // --------
@@ -241,12 +246,17 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
                 }
 
-                if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-                    $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
-                    $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
-                } else {
-                    $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
-                    $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
+                try {
+                    if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+                        $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                        $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                    } else {
+                        $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                        $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
+                    }
+                } catch (\Exception $exception) {
+                    $this->getLogger()->debug('onRegularMaintenance: Date convert ' . $exception->getMessage());
+                    continue;
                 }
 
                 $entry['id'] = $resultSet->getIdFromRow($row);
@@ -258,9 +268,13 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
                 $rows[] = $entry;
+
+                // Campaign list in array
+                $campaigns[] = $parentCampaignId;
             }
 
             $this->getLogger()->debug('onRegularMaintenance: Records sent: ' . count($rows) . ', Watermark: ' . $watermark);
+            $this->getLogger()->debug('onRegularMaintenance: Campaigns: ' . json_encode($campaigns));
 
             $statusCode = 0;
             if (count($rows) > 0) {
@@ -328,7 +342,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $typeUrl = [
             'campaignProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay',
             'mobileProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay/mobile',
-            'displayAdplay' => $this->getServiceUrl() . '/audience/display/adplays'
+            'displayAdPlay' => $this->getServiceUrl() . '/audience/display/adplays',
+             'displayPercentage' => $this->getServiceUrl() . '/audience/display/percentage'
         ];
 
         if (array_key_exists($type, $typeUrl)) {
@@ -388,6 +403,24 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     }
                     break;
 
+                case 'displayPercentage':
+                    // Get display played percentage result
+                    try {
+                        $response = $this->getClient()->get($typeUrl[$type], [
+                            'headers' => [
+                                'X-API-KEY' => $this->getSetting('apiKey')
+                            ],
+                            'query' => $event->getParams()
+                        ]);
+
+                        $body = $response->getBody()->getContents();
+                        $json = json_decode($body, true);
+                    } catch (RequestException $requestException) {
+                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $error = 'Failed to get display played percentage result: '.$requestException->getMessage();
+                    }
+                    break;
+
                 default:
                     $this->getLogger()->error('Connector Report not found ');
             }
@@ -435,19 +468,19 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 'adminOnly'=> 0,
                 'sort_order' => 2
             ],
-//            [
-//                'name'=> 'displayPlayedPercentageReport',
-//                'description'=> 'Display played percentage',
-//                'class'=> '\\Xibo\\Report\\DisplayPlayedPercentage',
-//                'type'=> 'Report',
-//                'output_type'=> 'table',
-//                'color'=> 'green',
-//                'fa_icon'=> 'fa-th',
-//                'category'=> 'Connector Reports',
-//                'feature'=> 'display-report',
-//                'adminOnly'=> 0,
-//                'sort_order' => 3
-//            ],
+            [
+                'name'=> 'displayPercentage',
+                'description'=> 'Display Played Percentage',
+                'class'=> '\\Xibo\\Report\\DisplayPercentage',
+                'type'=> 'Chart',
+                'output_type'=> 'both',
+                'color'=> 'blue',
+                'fa_icon'=> 'fa-pie-chart',
+                'category'=> 'Connector Reports',
+                'feature'=> 'display-report',
+                'adminOnly'=> 0,
+                'sort_order' => 3
+            ],
 //            [
 //                'name'=> 'revenueByDisplayReport',
 //                'description'=> 'Revenue by Display',
