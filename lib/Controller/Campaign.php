@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1446,7 +1446,12 @@ class Campaign extends Base
         }
 
         // Save
-        $campaign->save();
+        $campaign->save([
+            'validate' => false,
+            'notify' => false,
+            'collectNow' => false,
+            'saveTags' => false
+        ]);
 
         // Return
         $this->getState()->hydrate([
