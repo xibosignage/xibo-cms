@@ -1,6 +1,7 @@
-/**
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -110,7 +111,7 @@ window.getXiboApp = function() {
 $(document).ready(function() {
     // Get layout id
     const layoutId = lD.editorContainer.attr("data-layout-id");
-    
+
     lD.common.showLoadingScreen();
 
     // Append loading html to the main div
@@ -300,7 +301,7 @@ $(document).ready(function() {
 
                 // Load user preferences
                 lD.loadAndSavePref('useLibraryDuration', 0);
-                
+
                 // Call layout status every minute
                 lD.checkLayoutStatus();
                 setInterval(lD.checkLayoutStatus, 1000 * 60); // Every minute
@@ -354,7 +355,7 @@ $(document).ready(function() {
             } else {
                 lD.renderContainer(lD.viewer, lD.selectedObject);
             }
-            
+
             lD.renderContainer(lD.timeline);
             lD.renderContainer(lD.drawer);
         }
@@ -443,15 +444,15 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                             this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
                         }
                     }
-                    
+
                     break;
 
                 default:
                     break;
             }
-            
+
         }
-        
+
         // Set to the default object
         this.selectedObject = this.layout;
         this.selectedObject.type = 'layout';
@@ -481,7 +482,7 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                         // use the region as selected Object to handle widget selection
                         this.layout.regions[newSelectedId].selected = true;
                     }
-                    
+
                     this.selectedObject = this.layout.regions[newSelectedId];
                 }
             } else if(newSelectedType === 'widget') {
@@ -557,17 +558,17 @@ lD.reloadData = function(layout, refreshBeforeSelect = false, captureThumbnail =
                     if(lD.selectedObject.type == 'widget') {
                         lD.timeline.highlightOnLoad = lD.selectedObject;
                     }
-                    
+
                     // Make the timeline scroll to the new widget on load
                     lD.timeline.scrollOnLoad = lD.selectedObject;
                 }
-                
+
                 // Select the same object ( that will refresh the layout too )
                 const selectObjectId = lD.selectedObject.id;
                 lD.selectedObject = {};
 
                 lD.selectObject($('#' + selectObjectId));
-            
+
                 // Reload the form helper connection
                 formHelpers.setup(lD, lD.layout);
 
@@ -630,7 +631,7 @@ lD.checkoutLayout = function() {
             // Hide read only message
             lD.editorContainer.removeClass('view-mode');
             lD.editorContainer.find('#read-only-message').remove();
-            
+
             // Reload layout
             lD.reloadData(res.data, false, true);
 
@@ -687,7 +688,7 @@ lD.publishLayout = function() {
             window.location.href = urlsForApi.layout.designer.url.replace(':id', res.data.layoutId) + '?vM=1';
         } else {
             lD.common.hideLoadingScreen();
-            
+
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
@@ -701,7 +702,7 @@ lD.publishLayout = function() {
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         lD.common.hideLoadingScreen();
-        
+
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
     });
@@ -862,7 +863,7 @@ lD.welcomeScreen = function() {
 lD.enterReadOnlyMode = function() {
     // Add alert message to the layout designer
     lD.editorContainer.addClass('view-mode');
-    
+
     // Turn on read only mode
     lD.readOnlyMode = true;
 };
@@ -960,7 +961,7 @@ lD.showErrorMessage = function() {
  * Layout checkout screen
  */
 lD.showCheckoutScreen = function() {
-    
+
     bootbox.dialog({
         title: layoutEditorTrans.checkoutTitle + ' ' + lD.layout.name,
         message: layoutEditorTrans.checkoutMessage,
@@ -992,7 +993,7 @@ lD.showCheckoutScreen = function() {
 lD.showPublishScreen = function() {
     // Deselect all objects before opening the form
     lD.selectObject();
-    
+
     lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control'); lD.uploadThumbnail($('#layoutPublishForm #publishPreview'));", "lD.publishLayout();");
 };
 
@@ -1037,7 +1038,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
     if(id != null) {
         requestPath = requestPath.replace(':id', id);
     }
-    
+
     // Create dialog
     var calculatedId = new Date().getTime();
 
@@ -1081,7 +1082,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
                                     } else {
                                         eval(url);
                                     }
-    
+
                                     return false;
                                 }
                             };
@@ -1260,7 +1261,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
                         lD.layout.deleteElement(objectType, objectId, options).then((res) => { // Success
                             // Reset timeline zoom
                             lD.timeline.resetZoom();
-                            
+
                             // Behavior if successful
                             toastr.success(res.message);
                             lD.reloadData(lD.layout);
@@ -1378,7 +1379,7 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
             playlistId = lD.layout.drawer.playlists.playlistId;
         } else {
             playlistId = lD.layout.regions[droppableId].playlists.playlistId;
-            
+
             // Select region ( and avoid deselect if region was already selected )
             lD.selectObject($(droppable), true);
         }
@@ -1397,8 +1398,8 @@ lD.getUploadDialogClassName = function() {
 
 /**
  * Add module to playlist
- * @param {number} playlistId 
- * @param {string} moduleType 
+ * @param {number} playlistId
+ * @param {string} moduleType
  * @param {object} moduleData
  * @param {number=} addToPosition
  */
@@ -1473,7 +1474,7 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
 
         lD.manager.addChange(
             'addWidget',
-            'playlist', // targetType 
+            'playlist', // targetType
             playlistId,  // targetId
             null,  // oldValues
             addOptions, // newValues
@@ -1486,7 +1487,7 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 }
             }
         ).then((res) => { // Success
-            // Behavior if successful 
+            // Behavior if successful
             toastr.success(res.message);
 
             lD.timeline.resetZoom();
@@ -1516,12 +1517,12 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
             // Show toast message
             toastr.error(errorMessagesTrans.addModuleFailed.replace('%error%', errorMessage));
         });
-    }  
+    }
 };
 
 /**
  * Add media from library to a playlist
- * @param {number} playlistId 
+ * @param {number} playlistId
  * @param {Array.<number>} media
  * @param {number=} addToPosition
  */
@@ -1559,7 +1560,7 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
     // Create change to be uploaded
     lD.manager.addChange(
         'addMedia',
-        'playlist', // targetType 
+        'playlist', // targetType
         playlistId,  // targetId
         null,  // oldValues
         mediaToAdd, // newValues
@@ -1568,7 +1569,7 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
             updateTargetType: 'widget'
         }
     ).then((res) => { // Success
-        // Behavior if successful 
+        // Behavior if successful
         toastr.success(res.message);
 
         // The new selected object as the id based on the previous selected region
@@ -1730,7 +1731,7 @@ lD.openPlaylistEditor = function(playlistId, region) {
         } else {
             // Create or load container
             let $editor = ($('#editor-container').length > 0) ? $('#editor-container') : $('<div/>').attr('id', 'editor-container').appendTo(lD.editorContainer.parent());
-            
+
             // Populate container
             $editor.html(res.html);
 
@@ -1745,10 +1746,10 @@ lD.openPlaylistEditor = function(playlistId, region) {
 
                 // Close playlist editor
                 pE.close();
-                
+
                 // Remove region id from data
                 $editor.removeData('regionObj');
-                
+
                 // Show layout designer toolbar
                 lD.toolbar.DOMObject.show();
 
@@ -1785,7 +1786,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
     // Create menu and append to the designer div ( using the object extended with translations )
     lD.editorContainer.append(contextMenuTemplate(Object.assign(layoutObject, {trans: contextMenuTrans})));
-    
+
     // Set menu position ( and fix page limits )
     let contextMenuWidth = lD.editorContainer.find('.context-menu').outerWidth();
     let contextMenuHeight = lD.editorContainer.find('.context-menu').outerHeight();
@@ -1904,14 +1905,14 @@ lD.toggleLockedMode = function(enable = true, expiryDate = '') {
             // Prepend the element to the custom overlay
             $customOverlay.after($lockedMessage);
         }
-        
+
         // Update locked overlay message content
         $lockedMessage.html('<strong>' + layoutEditorTrans.lockedModeTitle + '</strong>&nbsp;' + lockedMainMessage);
 
         // Add locked class to main container
         lD.editorContainer.addClass('locked-for-user');
     } else {
-        // Remove overlay 
+        // Remove overlay
         lD.editorContainer.find('#lockedOverlay').remove();
 
         // Remove message
@@ -2020,7 +2021,7 @@ lD.checkHistory = function() {
 
 /**
  * Toggle panel and refresh view containers
- * @param {jquery object} $panel 
+ * @param {jquery object} $panel
  */
 lD.togglePanel = function($panel, forceToggle) {
     $panel.toggleClass('opened', forceToggle);
@@ -2150,9 +2151,9 @@ lD.addRegion = function () {
 
     lD.layout.addElement('region').then((res) => { // Success
 
-        lD.common.hideLoadingScreen(); 
+        lD.common.hideLoadingScreen();
 
-        // Behavior if successful 
+        // Behavior if successful
         toastr.success(res.message);
 
         // Reload with the new added element
@@ -2161,7 +2162,7 @@ lD.addRegion = function () {
         lD.reloadData(lD.layout, true);
     }).catch((error) => { // Fail/error
 
-        lD.common.hideLoadingScreen(); 
+        lD.common.hideLoadingScreen();
         // Show error returned or custom message to the user
         let errorMessage = '';
 
@@ -2172,12 +2173,12 @@ lD.addRegion = function () {
         }
 
         toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
-    });  
+    });
 };
 
 /**
  * Handle messages coming other windows (iframe)
- * @param {object} event 
+ * @param {object} event
  */
 lD.handleMessage = function(event) {
     var messageFromSender = event.data;
@@ -2218,7 +2219,7 @@ lD.handleMessage = function(event) {
             if(loadedData.propertiesPanelStatus != undefined && loadedData.propertiesPanelStatus != propertiesPanelToggle.hasClass('opened')) {
                 self.togglePanel(propertiesPanelToggle, loadedData.propertiesPanelStatus);
             }
-            
+
             self.common.displayTooltips = (loadedData.displayTooltips == 1 || loadedData.displayTooltips == undefined);
         } else {
             // Login Form needed?
