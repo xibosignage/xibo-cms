@@ -1,6 +1,7 @@
-/**
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -107,7 +108,7 @@ pE.loadEditor = function() {
 
     // Get playlist id
     const playlistId = pE.editorContainer.attr("playlist-id");
-    
+
     // Update main object id
     pE.mainObjectId = playlistId;
 
@@ -183,7 +184,7 @@ pE.loadEditor = function() {
                 );
                 pE.toolbar.parent = pE;
 
-                // Default selected 
+                // Default selected
                 pE.selectObject();
 
                 // Setup helpers
@@ -237,7 +238,7 @@ window.getXiboApp = function() {
 pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
     // Clear rogue tooltips
     pE.common.clearTooltips();
-    
+
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -429,7 +430,7 @@ pE.deleteObject = function(objectType, objectId) {
 
                             pE.common.hideLoadingScreen('deleteObject');
 
-                            // Behavior if successful 
+                            // Behavior if successful
                             toastr.success(res.message);
                             pE.reloadData();
                         }).catch((error) => { // Fail/error
@@ -526,7 +527,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                 }
             };
         }
-        
+
         buttons.confirm = {
             label: editorsTrans.yes,
             className: 'btn-danger btn-bb-confirm',
@@ -558,15 +559,15 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
                     // Delete element from the playlist
                     pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
-                        // Behavior if successful 
+                        // Behavior if successful
                         toastr.success(res.message)
-                        
+
                         deletedElements++;
 
                         if(deletedElements == $objects.length) {
                             // Hide loading screen
                             pE.common.hideLoadingScreen('deleteObjects');
-                            
+
                             // Reload data
                             pE.reloadData();
 
@@ -576,7 +577,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                             index++;
                             deleteObject();
                         }
-                        
+
                     }).catch((error) => { // Fail/error
 
                         pE.common.hideLoadingScreen('deleteObjects');
@@ -625,7 +626,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
             let widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
             let linkToAPI = urlsForApi.media.isUsed;
             let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
-    
+
             if(widgetToDelete.isRegionSpecific()) {
                 arrayOfWidgets.push({
                     'objectId': widgetId,
@@ -634,7 +635,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                     'hasMedia': false,
                     'dataUsed': false
                 });
-    
+
                 if(arrayOfWidgets.length == objectIds.length) {
                     createMultiDeleteModal(arrayOfWidgets);
                     pE.common.hideLoadingScreen('checkMediaIsUsed');
@@ -654,7 +655,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                                 'hasMedia': true,
                                 'dataUsed': res.data.isUsed
                             });
-    
+
                             if(arrayOfWidgets.length == objectIds.length) {
                                 createMultiDeleteModal(arrayOfWidgets);
                                 pE.common.hideLoadingScreen('checkMediaIsUsed');
@@ -671,9 +672,9 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                             }
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
-    
+
                         pE.common.hideLoadingScreen('checkMediaIsUsed');
-    
+
                         // Output error to console
                         console.error(jqXHR, textStatus, errorThrown);
                     });
@@ -725,7 +726,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
         this.editorContainer.find('#editing-container').hide();
         this.editorContainer.find('#dropzone-container').show();
-        
+
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
             this.toolbar.firstRun = false;
@@ -817,7 +818,7 @@ pE.saveOrder = function() {
 
         pE.common.hideLoadingScreen('saveOrder');
 
-        // Behavior if successful            
+        // Behavior if successful
         toastr.success(res.message);
 
         self.reloadData();
@@ -846,7 +847,7 @@ pE.close = function() {
 
     /**
      * Clear all object own properties
-     * @param {object} objectToClean 
+     * @param {object} objectToClean
      */
     const deleteObjectProperties = function(objectToClean) {
         for(var x in objectToClean) if(objectToClean.hasOwnProperty(x)) delete objectToClean[x];
