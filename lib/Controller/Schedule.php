@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -989,6 +989,15 @@ class Schedule extends Base
         // Set the parentCampaignId for campaign events
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
             $schedule->parentCampaignId = $schedule->campaignId;
+
+            // Make sure we're not directly scheduling an ad campaign
+            $campaign = $this->campaignFactory->getById($schedule->campaignId);
+            if ($campaign->type === 'ad') {
+                throw new InvalidArgumentException(
+                    __('Direct scheduling of an Ad Campaign is not allowed'),
+                    'campaignId'
+                );
+            }
         }
 
         // Fields only collected for interrupt events
@@ -1550,6 +1559,15 @@ class Schedule extends Base
         // Set the parentCampaignId for campaign events
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
             $schedule->parentCampaignId = $schedule->campaignId;
+
+            // Make sure we're not directly scheduling an ad campaign
+            $campaign = $this->campaignFactory->getById($schedule->campaignId);
+            if ($campaign->type === 'ad') {
+                throw new InvalidArgumentException(
+                    __('Direct scheduling of an Ad Campaign is not allowed'),
+                    'campaignId'
+                );
+            }
         }
 
         // Fields only collected for interrupt events
