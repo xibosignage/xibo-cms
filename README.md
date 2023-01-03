@@ -1,6 +1,6 @@
 # Introduction
 Xibo - Digital Signage - https://xibo.org.uk
-Copyright (C) 2006-2022 Xibo Signage Ltd and Contributors.
+Copyright (C) 2006-2023 Xibo Signage Ltd and Contributors.
 
 
 
