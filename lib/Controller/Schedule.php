@@ -282,7 +282,13 @@ class Schedule extends Base
         ];
 
         if ($campaignId != null) {
-            $filter['campaignId'] = $campaignId;
+            // Is this an ad campaign?
+            $campaign = $this->campaignFactory->getById($campaignId);
+            if ($campaign->type === 'ad') {
+                $filter['parentCampaignId'] = $campaignId;
+            } else {
+                $filter['campaignId'] = $campaignId;
+            }
         }
 
         foreach ($this->scheduleFactory->query('FromDT', $filter) as $row) {
@@ -324,7 +330,7 @@ class Schedule extends Base
                 $title = __('%s scheduled on %s', $row->command, $displayGroupList);
             } else {
                 // Should we show the Layout name, or not (depending on permission)
-                // Make sure we only run the below code if we have to, its quite expensive
+                // Make sure we only run the below code if we have to, it's quite expensive
                 if (!$showLayoutName && !$this->getUser()->isSuperAdmin()) {
                     // Campaign
                     $campaign = $this->campaignFactory->getById($row->campaignId);
@@ -333,7 +339,12 @@ class Schedule extends Base
                         $row->campaign = __('Private Item');
                     }
                 }
-                $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
+
+                $title = sprintf(
+                    __('%s scheduled on %s'),
+                    $row->getUnmatchedProperty('parentCampaignName', $row->campaign),
+                    $displayGroupList
+                );
 
                 if ($row->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
                     $title .= __(' with Share of Voice %d seconds per hour', $row->shareOfVoice);
