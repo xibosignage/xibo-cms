@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -571,6 +571,16 @@ class XiboAudienceReportingConnector implements ConnectorInterface
      */
     public function dmaAdd(SanitizerInterface $params): array
     {
+        $startDate = $params->getDate('startDate');
+        if ($startDate !== null) {
+            $startDate = $startDate->format('Y-m-d');
+        }
+
+        $endDate = $params->getDate('endDate');
+        if ($endDate !== null) {
+            $endDate = $endDate->format('Y-m-d');
+        }
+
         try {
             $response = $this->getClient()->post($this->getServiceUrl() . '/dma', [
                 'timeout' => 120,
@@ -582,8 +592,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     'costPerPlay' => $params->getDouble('costPerPlay'),
                     'impressionSource' => $params->getString('impressionSource'),
                     'impressionsPerPlay' => $params->getDouble('impressionsPerPlay'),
-                    'startDate' => $params->getString('startDate'),
-                    'endDate' => $params->getString('endDate'),
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
                     'daysOfWeek' => $params->getIntArray('daysOfWeek'),
                     'startTime' => $params->getString('startTime'),
                     'endTime' => $params->getString('endTime'),
@@ -614,6 +624,16 @@ class XiboAudienceReportingConnector implements ConnectorInterface
      */
     public function dmaEdit(SanitizerInterface $params): array
     {
+        $startDate = $params->getDate('startDate');
+        if ($startDate !== null) {
+            $startDate = $startDate->format('Y-m-d');
+        }
+
+        $endDate = $params->getDate('endDate');
+        if ($endDate !== null) {
+            $endDate = $endDate->format('Y-m-d');
+        }
+
         try {
             $response = $this->getClient()->put($this->getServiceUrl() . '/dma/' . $params->getString('_id'), [
                 'timeout' => 120,
@@ -625,8 +645,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     'costPerPlay' => $params->getDouble('costPerPlay'),
                     'impressionSource' => $params->getString('impressionSource'),
                     'impressionsPerPlay' => $params->getDouble('impressionsPerPlay'),
-                    'startDate' => $params->getString('startDate'),
-                    'endDate' => $params->getString('endDate'),
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
                     'daysOfWeek' => $params->getIntArray('daysOfWeek'),
                     'startTime' => $params->getString('startTime'),
                     'endTime' => $params->getString('endTime'),
