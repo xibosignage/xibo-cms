@@ -180,7 +180,7 @@
                         {{ forms.number("isPriority", title, event.isPriority, helpText, 'priority-control') }}
 
                         {% set title %}{% trans "Maximum plays per hour" %}{% endset %}
-                        {% set helpText %}{% trans "Limit the number of times this event will play per hour on each display. For unlimited plays set to 0." %}{{ forms.playerCompat("R308", "R306", "", "", "") }}{% endset %}
+                        {% set helpText %}{% trans "Limit the number of times this event will play per hour on each display. For unlimited plays set to 0." %}{{ forms.playerCompat("R308", "", "", "", "R306", "") }}{% endset %}
                         {{ forms.number("maxPlaysPerHour", title, event.maxPlaysPerHour, helpText, 'max-plays-control') }}
 
                         {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
