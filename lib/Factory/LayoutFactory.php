@@ -1751,14 +1751,17 @@ class LayoutFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $params = [];
-        $select = 'SELECT DISTINCT code ';
-        $body = ' FROM layout WHERE code IS NOT NULL ';
+        $select = 'SELECT DISTINCT code, `campaign`.CampaignID, `campaign`.permissionsFolderId ';
+        $body = ' FROM layout INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.LayoutID = layout.LayoutID INNER JOIN `campaign` ON lkcampaignlayout.CampaignID = campaign.CampaignID AND campaign.IsLayoutSpecific = 1 WHERE code IS NOT NULL';
 
         // get by Code
         if ($parsedFilter->getString('code') != '') {
             $body.= ' AND layout.code LIKE :code ';
             $params['code'] = '%' . $parsedFilter->getString('code') . '%';
         }
+
+        // Logged in user view permissions
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         $order = ' ORDER BY code';
 
