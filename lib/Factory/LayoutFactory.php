@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -922,6 +922,19 @@ class LayoutFactory extends BaseFactory
                 //
                 $subPlaylistsOption = [];
                 foreach ($mediaNode['widgetOptions'] as $optionsNode) {
+                    // subPlaylistOptions and subPlaylistIds are no longer in use from 2.3
+                    // we need to capture these options to support Layout with sub-playlist import from older CMS
+                    // we use continue for those 2 options, as we do not need to create widgetOption for them
+                    if ($optionsNode['option'] == 'subPlaylistOptions') {
+                        $oldSubPlaylistOptions = json_decode($optionsNode['value'], true);
+                        continue;
+                    }
+
+                    if ($optionsNode['option'] == 'subPlaylistIds') {
+                        $oldSubPlaylistIds = json_decode($optionsNode['value'], true);
+                        continue;
+                    }
+
                     if ($optionsNode['option'] == 'subPlaylists') {
                         $subPlaylistsOption = json_decode($optionsNode['value'], true);
                     }
@@ -937,6 +950,11 @@ class LayoutFactory extends BaseFactory
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
                     }
+                }
+
+                // convert old sub-playlist Widget options to the new way we handle them
+                if (isset($oldSubPlaylistIds) && isset($oldSubPlaylistOptions)) {
+                    $subPlaylistsOption = $this->convertOldPlaylistOptions($oldSubPlaylistIds, $oldSubPlaylistOptions);
                 }
 
                 //
@@ -1685,6 +1703,19 @@ class LayoutFactory extends BaseFactory
 
                 foreach ($widgetsDetail['widgetOptions'] as $widgetOptionE) {
                     if ($playlistWidget->type == 'subplaylist') {
+                        // subPlaylistOptions and subPlaylistIds are no longer in use from 2.3
+                        // we need to capture these options to support Layout with sub-playlist import from older CMS
+                        // we use continue for those 2 options, as we do not need to create widgetOption for them
+                        if ($widgetOptionE['option'] == 'subPlaylistOptions') {
+                            $oldNestedSubPlaylistOptions = json_decode($widgetOptionE['value'], true);
+                            continue;
+                        }
+
+                        if ($widgetOptionE['option'] == 'subPlaylistIds') {
+                            $oldNestedSubPlaylistIds = json_decode($widgetOptionE['value'], true);
+                            continue;
+                        }
+
                         if ($widgetOptionE['option'] == 'subPlaylists') {
                             $nestedSubPlaylists = json_decode($widgetOptionE['value'], true);
                         }
@@ -1696,6 +1727,11 @@ class LayoutFactory extends BaseFactory
                     $widgetOption->value = $widgetOptionE['value'];
 
                     $playlistWidget->widgetOptions[] = $widgetOption;
+                }
+
+                // convert old sub-playlist Widget options to the new way we handle them
+                if (isset($oldNestedSubPlaylistIds) && isset($oldNestedSubPlaylistOptions)) {
+                    $nestedSubPlaylists = $this->convertOldPlaylistOptions($oldNestedSubPlaylistIds, $oldNestedSubPlaylistOptions);
                 }
 
                 $module = $modules[$playlistWidget->type];
@@ -2624,6 +2660,24 @@ class LayoutFactory extends BaseFactory
         $lock->expiresAfter(10); // Expire straight away (but give it time to save the thing)
 
         $this->getPool()->save($lock);
+    }
+
+    public function convertOldPlaylistOptions($playlistIds, $playlistOptions)
+    {
+        $convertedPlaylistOption = [];
+        $i = 0;
+        foreach ($playlistIds as $playlistId) {
+            $i++;
+            $convertedPlaylistOption[] = [
+                'rowNo' => $i,
+                'playlistId' => $playlistId,
+                'spotFill' => $playlistOptions[$playlistId]['subPlaylistIdSpotFill'] ?? null,
+                'spotLength' => $playlistOptions[$playlistId]['subPlaylistIdSpotLength'] ?? null,
+                'spots' => $playlistOptions[$playlistId]['subPlaylistIdSpots'] ?? null,
+            ];
+        }
+
+        return $convertedPlaylistOption;
     }
 
     // </editor-fold>
