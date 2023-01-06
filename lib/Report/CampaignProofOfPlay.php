@@ -322,7 +322,7 @@ class CampaignProofOfPlay implements ReportInterface
         ];
 
         // when the group by is wholecampaign take campaign start/end as form/to date
-        if (!empty($parentCampaignId) && $sanitizedParams->getString('groupBy') === 'wholecampaign') {
+        if (!empty($parentCampaignId) && $sanitizedParams->getString('reportFilter') === 'wholecampaign') {
             $params['fromDt'] = !empty($campaign->getStartDt()) ? $campaign->getStartDt()->format('Y-m-d H:i:s') : null;
             $params['toDt'] = !empty($campaign->getEndDt()) ? $campaign->getEndDt()->format('Y-m-d H:i:s') : null;
 
@@ -357,6 +357,7 @@ class CampaignProofOfPlay implements ReportInterface
             $entry['adPlays'] = $row['adPlays'];
             $entry['adDuration'] = $row['adDuration'];
             $entry['impressions'] = $row['impressions'];
+            $entry['spend'] = $row['spend'];
 
             $rows[] = $entry;
         }

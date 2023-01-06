@@ -174,7 +174,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $params =   [
                 'type' => 'layout',
                 'start' => 1,
-                'length' => 10000,
+                'length' => 5000,
                 'mustHaveParentCampaign' => true
             ];
 
@@ -283,7 +283,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             if (count($rows) > 0) {
                 try {
                     $response = $this->getClient()->post($this->getServiceUrl() . '/audience/receiveStats', [
-                        'timeout' => 180,
+                        'timeout' => 300, // 5 minutes
                         'headers' => [
                             'X-API-KEY' => $this->getSetting('apiKey')
                         ],
@@ -355,7 +355,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             'campaignProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay',
             'mobileProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay/mobile',
             'displayAdPlay' => $this->getServiceUrl() . '/audience/display/adplays',
-             'displayPercentage' => $this->getServiceUrl() . '/audience/display/percentage'
+            'displayPercentage' => $this->getServiceUrl() . '/audience/display/percentage'
         ];
 
         if (array_key_exists($type, $typeUrl)) {
