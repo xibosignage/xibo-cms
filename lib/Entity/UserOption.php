@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,10 +19,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Entity;
+
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-
 
 /**
  * Class UserOption
@@ -74,16 +75,18 @@ class UserOption implements \JsonSerializable
 
     public function save()
     {
-        if (!$this->hasPropertyChanged('value')) {
-            return;
+        // when the option is not in the database and default is on, switching option value to off
+        // would not insert the record, hence the additional condition here xibosignage/xibo#2975
+        if ($this->hasPropertyChanged('value')
+            || ($this->getOriginalValue('value') === null && $this->value !== null)
+        ) {
+            $this->getStore()->insert('INSERT INTO `useroption` (`userId`, `option`, `value`) VALUES (:userId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2', [
+                'userId' => $this->userId,
+                'option' => $this->option,
+                'value' => $this->value,
+                'value2' => $this->value,
+            ]);
         }
-
-        $this->getStore()->insert('INSERT INTO `useroption` (`userId`, `option`, `value`) VALUES (:userId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2', [
-            'userId' => $this->userId,
-            'option' => $this->option,
-            'value' => $this->value,
-            'value2' => $this->value,
-        ]);
     }
 
     public function delete()
