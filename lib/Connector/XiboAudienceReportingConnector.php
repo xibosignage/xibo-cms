@@ -160,6 +160,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
         // Get Watermark
         try {
+            $this->getLogger()->debug('onRegularMaintenance: Get Watermark');
             $response = $this->getClient()->get($this->getServiceUrl() . '/audience/watermark', [
                 'headers' => [
                     'X-API-KEY' => $this->getSetting('apiKey')
@@ -270,7 +271,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 $rows[] = $entry;
 
                 // Campaign list in array
-                $campaigns[] = $parentCampaignId;
+                if (!in_array($parentCampaignId, $campaigns)) {
+                    $campaigns[] = $parentCampaignId;
+                }
             }
 
             $this->getLogger()->debug('onRegularMaintenance: Records sent: ' . count($rows) . ', Watermark: ' . $watermark);
@@ -280,6 +283,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             if (count($rows) > 0) {
                 try {
                     $response = $this->getClient()->post($this->getServiceUrl() . '/audience/receiveStats', [
+                        'timeout' => 180,
                         'headers' => [
                             'X-API-KEY' => $this->getSetting('apiKey')
                         ],
@@ -292,8 +296,12 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $this->getLogger()->error('Audience receiveStats: failed e = ' . $requestException->getMessage());
                 }
 
+                $this->getLogger()->debug('onRegularMaintenance: Receive Stats StatusCode: ' . $statusCode);
+
                 // Get Campaign Total
                 if ($statusCode == 204) {
+                    $this->getLogger()->debug('onRegularMaintenance: Get Campaign Total');
+
                     try {
                         $response = $this->getClient()->get($this->getServiceUrl() . '/audience/campaignTotal', [
                             'headers' => [
@@ -306,15 +314,19 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
                         $body = $response->getBody()->getContents();
                         $results = json_decode($body, true);
+                        $this->getLogger()->debug('onRegularMaintenance: Campaign Total Results: ' . json_encode($results));
+
 
                         foreach ($results as $item) {
                             // Save the total in the camapign
                             $campaign = $this->campaignFactory->getById($item['id']);
+                            $this->getLogger()->debug('onRegularMaintenance: Campaign Id: ' . $item['id'] . ' Spend: ' . $campaign->spend . ' Impressions: ' . $campaign->impressions);
 
                             $campaign->spend = $item['spend'];
                             $campaign->impressions = $item['impressions'];
 
-                            $campaign->save(['validate' => false]);
+                            $campaign->overwritePlays();
+                            $this->getLogger()->debug('onRegularMaintenance: Campaign Id: ' . $item['id'] . ' Spend(U): ' . $campaign->spend . ' Impressions(U): ' . $campaign->impressions);
                         }
                     } catch (RequestException $requestException) {
                         $event->addMessage(__('Error getting campaign total:'. $requestException->getMessage()));
@@ -800,7 +812,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             } else {
                 throw new InvalidArgumentException(__('Invalid request'));
             }
-        } else if ($exception instanceof ServerException) {
+        } elseif ($exception instanceof ServerException) {
             $this->getLogger()->error('handleException:' . $exception->getMessage());
             throw new GeneralException(__('There was a problem processing your request, please try again'));
         } else {

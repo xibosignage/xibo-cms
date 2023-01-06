@@ -47,6 +47,7 @@
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set wholecampaign %}{% trans "Whole Campaign" %}{% endset %}
                             {% set today %}{% trans "Today" %}{% endset %}
                             {% set yesterday %}{% trans "Yesterday" %}{% endset %}
                             {% set thisweek %}{% trans "This Week" %}{% endset %}
@@ -57,6 +58,7 @@
                             {% set lastyear %}{% trans "Last Year" %}{% endset %}
                             {% set options = [
                                 { filterName: "", reportFilter: range },
+                                { filterName: "wholecampaign", reportFilter: wholecampaign },
                                 { filterName: "today", reportFilter: today },
                                 { filterName: "yesterday", reportFilter: yesterday },
                                 { filterName: "thisweek", reportFilter: thisweek },
@@ -86,7 +88,7 @@
                                 { name: "week", filter: week },
                                 { name: "month", filter: month },
                             ] %}
-                            {{ inline.dropdown("groupBy", "single", title, "today", options, "name", "filter") }}
+                            {{ inline.dropdown("groupBy", "single", title, "day", options, "name", "filter") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -320,13 +322,9 @@
                 if (reportFilter.val() === '' || reportFilter.val() === undefined) {
                     $(".stats-from-dt").show();
                     $(".stats-to-dt").show();
-                    $(".stats-from-dt-time").show();
-                    $(".stats-to-dt-time").show();
                 } else {
                     $(".stats-from-dt").hide();
                     $(".stats-to-dt").hide();
-                    $(".stats-from-dt-time").hide();
-                    $(".stats-to-dt-time").hide();
                 }
             }
 
@@ -372,11 +370,6 @@
                 });
 
                 let anchorReportAddBtn = $("button#reportAddBtn");
-                let type = $("#type").val();
-                let tagsType = $("#tagsType").val();
-                let tags = $("#tags").val();
-                let exactTags = $('#exactTags').is(":checked");
-
                 anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=campaignProofOfPlay" );
 
             };

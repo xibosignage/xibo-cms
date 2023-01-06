@@ -318,7 +318,7 @@
             // Set chart data
             let spendChart;
             function setSpendChartData($chartCanvas, response) {
-
+                $('.chart-container .alert-info').remove();
                 if (spendChart !== undefined && spendChart !== null) {
                     spendChart.destroy();
                 }
@@ -431,7 +431,7 @@
 
             let playtimeChart;
             function setPlaytimeChartData($chartCanvas, response) {
-
+                $('.chart-container .alert-info').remove();
                 if (playtimeChart !== undefined && playtimeChart !== null) {
                     playtimeChart.destroy();
                 }
