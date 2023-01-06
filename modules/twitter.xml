@@ -106,8 +106,12 @@ if(properties.removeUrls == 1) {
 // Return the parsed item
 return item;
     ]]></onParseData>
+        <onRender><![CDATA[
+$(target).xiboLayoutScaler(properties);
+$(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+        ]]></onRender>
     <onVisible><![CDATA[
-// Start effects for this widget
+// Start effects for this widge t
 $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[

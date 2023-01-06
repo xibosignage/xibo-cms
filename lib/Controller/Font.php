@@ -584,15 +584,15 @@ class Font extends Base
             $cacheItem->set($localCss);
             $cacheItem->expiresAfter(new \DateInterval('P30D'));
             $this->getMediaService()->getPool()->saveDeferred($cacheItem);
-
-            // Return the CSS to the browser as a file
-            $out = fopen($tempFileName, 'w');
-            fputs($out, $localCss);
-            fclose($out);
         } else {
             $this->getLog()->debug('local font css file served from cache ');
             $localCss = $cacheItem->get();
         }
+
+        // Return the CSS to the browser as a file
+        $out = fopen($tempFileName, 'w');
+        fputs($out, $localCss);
+        fclose($out);
 
         // Work out the etag
         $response = HttpCacheProvider::withEtag($response, md5($localCss));

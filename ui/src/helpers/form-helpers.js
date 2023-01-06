@@ -21,6 +21,45 @@ const templates = {
     require('../templates/form-helpers-menuboard-product.hbs'),
 };
 
+/**
+ * Get CKEditor config
+ * @return {Promise} - Promise
+ */
+const getCKEditorConfig = function() {
+  let fontNames = CKEDITOR.config.font_names;
+
+  // Base editor config
+  const editorConfig = {
+    contentsCss: [CKEDITOR.getUrl('contents.css'), libraryFontCSS],
+    imageDownloadUrl: imageDownloadUrl,
+  };
+
+  return new Promise((resolve, reject) => {
+    $.get(getFontsUrl + '?length=10000')
+      .done(function(res) {
+        // Get res.data fonts into the fontNames string
+        res.data.forEach(function(font) {
+          fontNames += `;${font.name}/${font.familyName}`;
+        });
+
+        // Sort the fontNames string
+        fontNames = fontNames.split(';').sort().join(';');
+
+        // Set fontNames to the editorConfig
+        editorConfig.font_names = fontNames;
+
+        // Resolve the promise and return the editorConfig
+        resolve(editorConfig);
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+
+        // Reject the promise
+        reject(jqXHR, textStatus, errorThrown);
+      });
+  });
+};
+
 const formHelpers = function() {
   // Default params ( might change )
   this.defaultBackgroundColor = '#eee';
@@ -630,7 +669,6 @@ const formHelpers = function() {
    *   - Custom message to appear when the field is empty
    * @param {boolean} focusOnBuild - Focus on the editor after building
    * @param {boolean} updateOnBlur - Update the field on blur
-   * @return {object} CKEDITOR instance
    */
   this.setupCKEditor = function(
     dialog,
@@ -681,7 +719,7 @@ const formHelpers = function() {
           width =
             $scaleTo.innerWidth() -
             32 -
-           ((iframeBorderWidth + iframeMargin) * 2);
+            ((iframeBorderWidth + iframeMargin) * 2);
         }
       }
 
@@ -896,121 +934,127 @@ const formHelpers = function() {
       }
     };
 
-    // Set CKEDITOR viewer height based on
-    // region height ( plus content default margin + border*2: 40px )
-    const newHeight = (regionDimensions.height * scale) + (iframeMargin * 2);
-    CKEDITOR.config.height = (newHeight > 500) ? 500 : newHeight;
+    // CKEditor default config and init after config is loaded
+    getCKEditorConfig().then(function(config) {
+      CKEDITOR_DEFAULT_CONFIG = config;
 
-    // Conjure up a text editor
-    if (inline) {
-      CKEDITOR.inline(textAreaId, CKEDITOR_DEFAULT_CONFIG);
-      (self.namespace.enableInlineModeEditing) &&
-        self.namespace.enableInlineModeEditing();
-    } else {
-      CKEDITOR.replace(textAreaId, CKEDITOR_DEFAULT_CONFIG);
-    }
+      // Set CKEDITOR viewer height based on
+      // region height ( plus content default margin + border*2: 40px )
+      const newHeight = (regionDimensions.height * scale) + (iframeMargin * 2);
+      CKEDITOR.config.height = (newHeight > 500) ? 500 : newHeight;
 
-    // Bind to instance ready so that we
-    // can adjust some things about the editor.
-    CKEDITOR.instances[textAreaId].on('instanceReady', function() {
-      // If not defined, cancel instance setup
-      if (CKEDITOR.instances[textAreaId] === undefined) {
-        return;
+      // Conjure up a text editor
+      if (inline) {
+        CKEDITOR.inline(textAreaId, CKEDITOR_DEFAULT_CONFIG);
+        (self.namespace.enableInlineModeEditing) &&
+          self.namespace.enableInlineModeEditing();
+      } else {
+        CKEDITOR.replace(textAreaId, CKEDITOR_DEFAULT_CONFIG);
       }
 
-      // Apply scaling to this editor instance
-      applyContentsToIframe(textAreaId);
+      // Bind to instance ready so that we
+      // can adjust some things about the editor.
+      CKEDITOR.instances[textAreaId].on('instanceReady', function() {
+        // If not defined, cancel instance setup
+        if (CKEDITOR.instances[textAreaId] === undefined) {
+          return;
+        }
 
-      // Reapply the background style after switching
-      // to source view and back to the normal editing view
-      CKEDITOR.instances[textAreaId].on('contentDom', function() {
+        // Apply scaling to this editor instance
         applyContentsToIframe(textAreaId);
-      });
 
-      // Get the template data from the text area field
-      let data = $('#' + textAreaId).val();
+        // Reapply the background style after switching
+        // to source view and back to the normal editing view
+        CKEDITOR.instances[textAreaId].on('contentDom', function() {
+          applyContentsToIframe(textAreaId);
+        });
 
-      // Replace color if exists
-      if (data != undefined) {
-        data = data.replace(/#Color#/g, color);
-      }
+        // Get the template data from the text area field
+        let data = $('#' + textAreaId).val();
 
-      // Handle no message data
-      if (data == '') {
-        let dataMessage = '';
-
-        if (textAreaId === 'noDataMessage') {
-          dataMessage = translations.noDataMessage;
-        } else if (customNoDataMessage !== null) {
-          dataMessage = customNoDataMessage;
-        } else {
-          dataMessage = translations.enterText;
+        // Replace color if exists
+        if (data != undefined) {
+          data = data.replace(/#Color#/g, color);
         }
 
-        data = '<span style="font-size: 48px;"><span style="color: ' +
-          color +
-          ';">' +
-          dataMessage +
-          '</span></span>';
-      }
+        // Handle no message data
+        if (data == '') {
+          let dataMessage = '';
 
-      // Handle initial template set up
-      data = self.convertLibraryReferences(data);
-
-      CKEDITOR.instances[textAreaId].setData(data);
-
-      if (focusOnBuild) {
-        CKEDITOR.instances[textAreaId].focus();
-      }
-    });
-
-    // Do we have any snippets selector?
-    const $selectPickerSnippets =
-      $(
-        '.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]',
-        dialog);
-    // Select2 has been initialized
-    if ($selectPickerSnippets.length > 0) {
-      this.setupSnippetsSelector($selectPickerSnippets, function(e) {
-        const linkedTo = $selectPickerSnippets.data().linkedTo;
-        const value = e.params.data.element.value;
-
-        if (CKEDITOR.instances[linkedTo] != undefined && value !== undefined) {
-          const text = '[' + value + ']';
-
-          CKEDITOR.instances[linkedTo].insertText(text);
-        }
-      });
-    }
-
-    // Do we have a media selector?
-    const $selectPicker =
-      $(
-        '.ckeditor_library_select[data-linked-to="' + textAreaId + '"]',
-        dialog);
-    if ($selectPicker.length > 0) {
-      this.setupMediaSelector($selectPicker, function(e) {
-        const linkedTo = $selectPicker.data().linkedTo;
-        const value = e.params.data.imageUrl;
-
-        if (value !== undefined && value !== '' && linkedTo != null) {
-          if (CKEDITOR.instances[linkedTo] != undefined) {
-            CKEDITOR.instances[linkedTo]
-              .insertHtml('<img src="' + value + '" />');
+          if (textAreaId === 'noDataMessage') {
+            dataMessage = translations.noDataMessage;
+          } else if (customNoDataMessage !== null) {
+            dataMessage = customNoDataMessage;
+          } else {
+            dataMessage = translations.enterText;
           }
+
+          data = '<span style="font-size: 48px;"><span style="color: ' +
+            color +
+            ';">' +
+            dataMessage +
+            '</span></span>';
+        }
+
+        // Handle initial template set up
+        data = self.convertLibraryReferences(data);
+
+        CKEDITOR.instances[textAreaId].setData(data);
+
+        if (focusOnBuild) {
+          CKEDITOR.instances[textAreaId].focus();
         }
       });
-    }
 
-    // Update on blur
-    if (updateOnBlur) {
-      CKEDITOR.instances[textAreaId].on('blur', function() {
-        // Update CKEditor, but don't parse data (do that only on save)
-        self.updateCKEditor(textAreaId);
-      });
-    }
+      // Do we have any snippets selector?
+      const $selectPickerSnippets =
+        $(
+          '.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]',
+          dialog);
+      // Select2 has been initialized
+      if ($selectPickerSnippets.length > 0) {
+        this.setupSnippetsSelector($selectPickerSnippets, function(e) {
+          const linkedTo = $selectPickerSnippets.data().linkedTo;
+          const value = e.params.data.element.value;
 
-    return false;
+          if (CKEDITOR.instances[linkedTo] != undefined &&
+              value !== undefined) {
+            const text = '[' + value + ']';
+
+            CKEDITOR.instances[linkedTo].insertText(text);
+          }
+        });
+      }
+
+      // Do we have a media selector?
+      const $selectPicker =
+        $(
+          '.ckeditor_library_select[data-linked-to="' + textAreaId + '"]',
+          dialog);
+      if ($selectPicker.length > 0) {
+        this.setupMediaSelector($selectPicker, function(e) {
+          const linkedTo = $selectPicker.data().linkedTo;
+          const value = e.params.data.imageUrl;
+
+          if (value !== undefined && value !== '' && linkedTo != null) {
+            if (CKEDITOR.instances[linkedTo] != undefined) {
+              CKEDITOR.instances[linkedTo]
+                .insertHtml('<img src="' + value + '" />');
+            }
+          }
+        });
+      }
+
+      // Update on blur
+      if (updateOnBlur) {
+        CKEDITOR.instances[textAreaId].on('blur', function() {
+          // Update CKEditor, but don't parse data (do that only on save)
+          self.updateCKEditor(textAreaId);
+        });
+      }
+
+      return false;
+    });
   };
 
   /**

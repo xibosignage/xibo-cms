@@ -198,6 +198,8 @@ $fa-font-path: "~font-awesome/fonts";
 }
 
 /* Modules icons */
+// Font Awesome
+/* TODO: Module icons should be based on classes defined in the module XML */
 .module-icon-audio, .media-icon-audio {
     @extend .fa-file-audio;
 }
@@ -214,11 +216,11 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-pie-chart;
 }
 
-.module-icon-clock {
+.module-icon-clock, .module-icon-clock-digital, .module-icon-clock-flip, .module-icon-clock-analogue {
     @extend .fa-clock-o;
 }
 
-.module-icon-countdown {
+.module-icon-countdown, .module-icon-countdown-days, .module-icon-countdown-table, .module-icon-countdown-text, .module-icon-countdown-clock {
     @extend .fa-hourglass-o;
 }
 
