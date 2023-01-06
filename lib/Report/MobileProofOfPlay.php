@@ -367,7 +367,7 @@ class MobileProofOfPlay implements ReportInterface
                 }
                 $entry['display'] = $displayCache[$row['displayId']] ?? '';
             } catch (\Exception $e) {
-                $entry['display'] = 'Not found';
+                $entry['display'] = __('Not found');
             }
             // --------
             // Get layout
@@ -381,7 +381,7 @@ class MobileProofOfPlay implements ReportInterface
                 }
                 $entry['layout'] = $layoutCache[$row['layoutId']] ?? '';
             } catch (\Exception $e) {
-                $entry['layout'] = 'Not found';
+                $entry['layout'] = __('Not found');
             }
 
             $entry['startLat'] = $row['startLat'];
