@@ -20,6 +20,8 @@ window.templates = {
     date: require('./src/templates/forms/inputs/date.hbs'),
     header: require('./src/templates/forms/inputs/header.hbs'),
     richText: require('./src/templates/forms/inputs/richText.hbs'),
+    divider: require('./src/templates/forms/inputs/divider.hbs'),
+    custom: require('./src/templates/forms/inputs/custom.hbs'),
     // More to be added
   },
 };

@@ -1,0 +1,150 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-worldclock-custom</id>
+    <name>World Clock - Custom</name>
+    <author>Core</author>
+    <description>Custom World Clock</description>
+    <class></class>
+    <type>worldclock-digital-custom</type>
+    <group>clock</group>
+    <legacyType>worldclock</legacyType>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property type="header">
+            <title>Clocks</title>
+        </property>
+        <property id="worldClocks" type="custom">
+            <customClass>world-clock-timezone</customClass>
+        </property>
+        <property id="template_html" type="code" allowLibraryRefs="true" variant="html">
+            <title>Template - HTML</title>
+            <helpText>Enter text or HTML in the box below. Use squared brackets for elements to be replaced (e.g. [HH:mm] for time, or [label] to show the timezone name</helpText>
+            <default><![CDATA[
+<div class="clock">
+    <div class="inner-clock">
+        [HH:mm:ss]
+    </div>
+    <p class="label">[label]</p>
+</div>
+            ]]></default>
+        </property>
+        <property id="template_style" type="code" allowLibraryRefs="true" variant="css">
+            <title>Template - Stylesheet</title>
+            <helpText>Enter CSS styling in the box below.</helpText>
+            <default><![CDATA[
+.clock {
+    background: #a6b1f2;
+    color: #161616;
+    width: 190px;
+    height: 90px;
+    border-radius: 15px;
+    text-align: center;
+    margin: 5px;
+}
+
+.inner-clock {
+    position: relative;
+    top: 20px;
+    font-size: 24px;
+}
+
+.label {
+    position: relative;
+    font-size: 18px;
+    top: 26px;
+}
+            
+            ]]></default>
+        </property>
+        <property id="widgetDesignWidth" type="number">
+            <title>Original Width</title>
+            <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default>200</default>
+        </property>
+        <property id="widgetDesignHeight" type="number">
+            <title>Original Height</title>
+            <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            <default>100</default>
+        </property>
+        <property id="numCols" type="number">
+            <title>Clock Columns</title>
+            <helpText>Number of columns to display</helpText>
+            <default>1</default>
+        </property>
+        <property id="numRows" type="number">
+            <title>Clock Rows</title>
+            <helpText>Number of rows to display</helpText>
+            <default>1</default>
+        </property>
+        <property id="alignmentH" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this widget be horizontally aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+        </property>
+        <property id="alignmentV" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this widget be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <twig><![CDATA[
+<div class="custom-clock-template" style="display: none;">
+    {{template_html|raw}}
+</div>
+<style>
+    {{template_style|raw}}
+</style>
+        ]]></twig>
+    </stencil>
+    <onInitialize><![CDATA[
+// Set moment locale
+moment.locale(globalOptions.locale);
+    ]]></onInitialize>
+    <onRender><![CDATA[
+// Render world clock only once
+if (typeof $(target).data('customClockRendered') === 'undefined') {
+    $(target).data('customClockRendered', true);
+    $(target).xiboWorldClockRender(properties, $(target).find('.custom-clock-template'));
+}
+
+// Scale the element every time
+$(target).xiboLayoutScaler(properties);
+    ]]></onRender>
+</module>

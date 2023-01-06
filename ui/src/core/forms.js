@@ -335,6 +335,151 @@ window.forms = {
         false,
         true);
     });
+
+    // World clock timezone input
+    $(container).find(
+      '.world-clock-timezone',
+    ).each(function(_k, el) {
+      // If there's no clock container
+      // create one and add it to the element
+      let $clocksContainer = $(el).find('.clocksContainer');
+      if ($clocksContainer.length == 0) {
+        $clocksContainer = $('<div class="clocksContainer""></div>');
+        $(el).append($clocksContainer);
+      }
+
+      // Get hidden input
+      const $hiddenInput = $(el).find('#worldClocks');
+
+      /**
+       * Configure the multiple world clock form
+       * @param {*} container
+       * @return {void}
+       */
+      function configureMultipleWorldClocks(container) {
+        if (container.length == 0) {
+          return;
+        }
+
+        const worldClockTemplate =
+          formHelpers.getTemplate('worldClockTemplate');
+        const worldClocks = $hiddenInput.attr('value') ?
+          JSON.parse($hiddenInput.attr('value')) : [];
+
+        if (worldClocks.length == 0) {
+          // Add a template row
+          const context = {
+            title: '1',
+            clockTimezone: '',
+            timezones: timezones,
+            buttonGlyph: 'fa-plus',
+          };
+          $(worldClockTemplate(context)).appendTo($clocksContainer);
+          initClockRows(el);
+        } else {
+          // For each of the existing codes, create form components
+          let i = 0;
+          $.each(worldClocks, function(_index, field) {
+            i++;
+
+            const context = {
+              title: i,
+              clockTimezone: field.clockTimezone,
+              clockHighlight: field.clockHighlight,
+              clockLabel: field.clockLabel,
+              timezones: timezones,
+              buttonGlyph: ((i == 1) ? 'fa-plus' : 'fa-minus'),
+            };
+            $clocksContainer.append(worldClockTemplate(context));
+          });
+          updateClockCountLabel(el);
+          initClockRows(el);
+        }
+
+        // Nabble the resulting buttons
+        $clocksContainer.on('click', 'button', function(e) {
+          e.preventDefault();
+
+          // find the gylph
+          if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
+            const context = {
+              title: $clocksContainer.find('.form-clock').length + 1,
+              clockTimezone: '',
+              timezones: timezones,
+              buttonGlyph: 'fa-minus',
+            };
+            $clocksContainer.append(worldClockTemplate(context));
+            initClockRows(el);
+          } else {
+            // Remove this row
+            $(e.currentTarget).closest('.form-clock').remove();
+          }
+
+          updateClockCountLabel(el);
+        });
+      }
+
+      /**
+       * Update the clock count label
+       * @param {object} container
+       */
+      function updateClockCountLabel(container) {
+        const clockCount = $(container).find('.form-clock').length;
+        $(container).find('.clockCount')
+          .html((clockCount > 1) ? '(' + clockCount + ')' : '');
+
+        // Update the hidden input
+        updateClocksHiddenInput(container);
+      }
+
+      /**
+       * Update the hidden input with the current clock values
+       * @param {object} container
+       */
+      function updateClocksHiddenInput(container) {
+        const worldClocks = [];
+        $(container).find('.form-clock').each(function(_k, el2) {
+          // Only add if the timezone is set
+          if ($(el2).find('.localSelect select').val() != '') {
+            worldClocks.push({
+              clockTimezone: $(el2).find('.localSelect select').val(),
+              clockHighlight: $(el2).find('.clockHighlight').is(':checked'),
+              clockLabel: $(el2).find('.clockLabel').val(),
+            });
+          }
+        });
+        $(container).find('#worldClocks')
+          .attr('value', JSON.stringify(worldClocks));
+      }
+
+      /**
+       * Initialise the select2 elements
+       * @param {object} container
+       */
+      function initClockRows(container) {
+        // Initialise select2 elements
+        $(container).find('.localSelect select.form-control')
+          .each(function(_k, el2) {
+            makeLocalSelect(
+              $(el2),
+              ($(container).hasClass('modal') ? $(container) : $('body')),
+            );
+          });
+
+        // Update the hidden input when the clock values change
+        $(container).find('input[type="checkbox"]').on('click', function() {
+          updateClocksHiddenInput(container);
+        });
+        $(container).find('input[type="text"], select')
+          .on('change', function() {
+            updateClocksHiddenInput(container);
+          });
+      }
+
+      // Setup multiple clocks
+      configureMultipleWorldClocks($(el));
+      initClockRows(el);
+    });
   },
   /**
      * Handle form field replacements

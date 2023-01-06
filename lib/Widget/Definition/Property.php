@@ -53,6 +53,9 @@ class Property implements \JsonSerializable
     /** @var string The data format */
     public $format;
 
+    /** @var string Custom CSS class to apply to the input */
+    public $customClass;
+
     /** @var bool Should library refs be permitted in the value? */
     public $allowLibraryRefs = false;
 
@@ -81,7 +84,8 @@ class Property implements \JsonSerializable
             'customPopOver' => $this->customPopOver,
             'playerCompatibility' => $this->playerCompatibility,
             'visibility' => $this->visibility,
-            'allowLibraryRefs' => $this->allowLibraryRefs
+            'allowLibraryRefs' => $this->allowLibraryRefs,
+            'customClass' => $this->customClass,
         ];
     }
 

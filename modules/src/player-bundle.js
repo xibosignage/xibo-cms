@@ -30,7 +30,7 @@ window.Handlebars = require('handlebars/dist/handlebars.min.js');
 // most likely this can be done more efficiently.
 require('chart.js');
 window.Hls = require('hls.js');
-const pdflib = require('pdfjs-dist/legacy/build/pdf.min.js');
+window.pdflib = require('pdfjs-dist/legacy/build/pdf.min.js');
 
 import '../vendor/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
