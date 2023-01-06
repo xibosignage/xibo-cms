@@ -320,7 +320,9 @@ class CampaignProofOfPlay implements ReportInterface
             'displayIds' => $displayIds,
             'groupBy' => $sanitizedParams->getString('groupBy')
         ];
-        if (!empty($parentCampaignId)) {
+
+        // when the group by is wholecampaign take campaign start/end as form/to date
+        if (!empty($parentCampaignId) && $sanitizedParams->getString('groupBy') === 'wholecampaign') {
             $params['fromDt'] = !empty($campaign->getStartDt()) ? $campaign->getStartDt()->format('Y-m-d H:i:s') : null;
             $params['toDt'] = !empty($campaign->getEndDt()) ? $campaign->getEndDt()->format('Y-m-d H:i:s') : null;
 
