@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -84,36 +84,14 @@ class CampaignSchedulerTask implements TaskInterface
 
         // We will need to notify some displays at the end.
         $notifyDisplayGroupIds = [];
+        $campaignsProcessed = 0;
+        $campaignsScheduled = 0;
 
         // See what we can schedule for each one.
         foreach ($activeCampaigns as $campaign) {
+            $campaignsProcessed++;
             try {
                 $this->log->debug('campaignSchedulerTask: active campaign found, id: ' . $campaign->campaignId);
-
-                // Display groups
-                $displayGroups = [];
-                $countDisplays = 0;
-                $costPerPlay = 0;
-                $impressionsPerPlay = 0;
-
-                foreach ($campaign->loadDisplayGroupIds() as $displayGroupId) {
-                    $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
-
-                    // Record ids to notify
-                    if (!in_array($displayGroupId, $notifyDisplayGroupIds)) {
-                        $notifyDisplayGroupIds[] = $displayGroupId;
-                    }
-
-                    foreach ($this->displayFactory->getByDisplayGroupId($displayGroupId) as $display) {
-                        if ($display->licensed === 1 && $display->loggedIn === 1) {
-                            $countDisplays++;
-                            $costPerPlay += $display->costPerPlay;
-                            $impressionsPerPlay += $display->impressionsPerPlay;
-                        }
-                    }
-                }
-
-                $this->log->debug('campaignSchedulerTask: campaign has ' . count($displayGroups) . ' displays');
 
                 // What schedules should I create?
                 $activeLayouts = [];
@@ -162,6 +140,58 @@ class CampaignSchedulerTask implements TaskInterface
 
                 if ($countActiveLayouts <= 0) {
                     $this->log->debug('campaignSchedulerTask: no active layouts for campaign');
+                    continue;
+                }
+
+                // The campaign is active
+                // Display groups
+                $displayGroups = [];
+                $allDisplays = [];
+                $countDisplays = 0;
+                $costPerPlay = 0;
+                $impressionsPerPlay = 0;
+
+                // First pass uses only logged in displays from the display group
+                foreach ($campaign->loadDisplayGroupIds() as $displayGroupId) {
+                    $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
+
+                    // Record ids to notify
+                    if (!in_array($displayGroupId, $notifyDisplayGroupIds)) {
+                        $notifyDisplayGroupIds[] = $displayGroupId;
+                    }
+
+                    foreach ($this->displayFactory->getByDisplayGroupId($displayGroupId) as $display) {
+                        // Keep track of these in case we resolve 0 logged in displays
+                        $allDisplays[] = $display;
+                        if ($display->licensed === 1 && $display->loggedIn === 1) {
+                            $countDisplays++;
+                            $costPerPlay += $display->costPerPlay;
+                            $impressionsPerPlay += $display->impressionsPerPlay;
+                        }
+                    }
+                }
+
+                $this->log->debug('campaignSchedulerTask: campaign has ' . $countDisplays
+                    . ' logged in and authorised displays');
+
+                // If there are 0 displays, then process again ignoring the logged in status.
+                if ($countDisplays <= 0) {
+                    $this->log->debug('campaignSchedulerTask: processing displays again ignoring logged in status');
+
+                    foreach ($allDisplays as $display) {
+                        if ($display->licensed === 1) {
+                            $countDisplays++;
+                            $costPerPlay += $display->costPerPlay;
+                            $impressionsPerPlay += $display->impressionsPerPlay;
+                        }
+                    }
+                }
+
+                $this->log->debug('campaignSchedulerTask: campaign has ' . $countDisplays
+                    . ' authorised displays');
+
+                if ($countDisplays <= 0) {
+                    $this->log->debug('campaignSchedulerTask: skipping campaign due to no authorised displays');
                     continue;
                 }
 
@@ -278,11 +308,16 @@ class CampaignSchedulerTask implements TaskInterface
                 foreach ($notifyDisplayGroupIds as $displayGroupId) {
                     $this->displayNotifyService->notifyByDisplayGroupId($displayGroupId);
                 }
+
+                $campaignsScheduled++;
             } catch (\Exception $exception) {
                 $this->log->error('campaignSchedulerTask: ' . $exception->getMessage());
                 $this->appendRunMessage($campaign->campaign . ' failed');
             }
         }
+
+        $this->appendRunMessage($campaignsProcessed . ' campaigns processed, of which ' . $campaignsScheduled
+            . ' were scheduled. Skipped ' . ($campaignsProcessed - $campaignsScheduled) . ' for various reasons');
     }
 
     private function getCustomDayPart(): DayPart
