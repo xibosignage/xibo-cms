@@ -280,7 +280,7 @@ class DisplayPercentage implements ReportInterface
                 }
                 $entry['label'] = $displayCache[$row['displayId']] ?? '';
             } catch (\Exception $e) {
-                $entry['label'] = 'Not found';
+                $entry['label'] = __('Not found');
             }
 
             $entry['spendData'] = $row['spendData'];

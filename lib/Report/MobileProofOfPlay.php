@@ -358,24 +358,31 @@ class MobileProofOfPlay implements ReportInterface
             // --------
             // Get Display
             $entry['displayId'] = $row['displayId'];
-            if (!empty($entry['displayId'])) {
-                if (!array_key_exists($row['displayId'], $displayCache)) {
-                    $display = $this->displayFactory->getById($row['displayId']);
-                    $displayCache[$row['displayId']] = $display->display;
+            try {
+                if (!empty($entry['displayId'])) {
+                    if (!array_key_exists($row['displayId'], $displayCache)) {
+                        $display = $this->displayFactory->getById($row['displayId']);
+                        $displayCache[$row['displayId']] = $display->display;
+                    }
                 }
+                $entry['display'] = $displayCache[$row['displayId']] ?? '';
+            } catch (\Exception $e) {
+                $entry['display'] = __('Not found');
             }
-            $entry['display'] = $displayCache[$row['displayId']] ?? '';
-
             // --------
             // Get layout
             $entry['layoutId'] = $row['layoutId'];
-            if (!empty($entry['layoutId'])) {
-                if (!array_key_exists($row['layoutId'], $layoutCache)) {
-                    $layout = $this->layoutFactory->getById($row['layoutId']);
-                    $layoutCache[$row['layoutId']] = $layout->layout;
+            try {
+                if (!empty($entry['layoutId'])) {
+                    if (!array_key_exists($row['layoutId'], $layoutCache)) {
+                        $layout = $this->layoutFactory->getById($row['layoutId']);
+                        $layoutCache[$row['layoutId']] = $layout->layout;
+                    }
                 }
+                $entry['layout'] = $layoutCache[$row['layoutId']] ?? '';
+            } catch (\Exception $e) {
+                $entry['layout'] = __('Not found');
             }
-            $entry['layout'] = $layoutCache[$row['layoutId']] ?? '';
 
             $entry['startLat'] = $row['startLat'];
             $entry['startLong'] = $row['startLong'];
