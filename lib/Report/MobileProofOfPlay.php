@@ -300,10 +300,10 @@ class MobileProofOfPlay implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()]);
+                $fromDt = $sanitizedParams->getDate('fromDt', ['default' => Carbon::now()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' => Carbon::now()]);
+                $toDt = $sanitizedParams->getDate('toDt', ['default' => Carbon::now()]);
                 $toDt->endOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -320,7 +320,9 @@ class MobileProofOfPlay implements ReportInterface
             'layoutId' => $layoutId,
             'displayIds' => $displayIds,
         ];
-        if (!empty($parentCampaignId)) {
+
+        // when the reportfilter is wholecampaign take campaign start/end as form/to date
+        if (!empty($parentCampaignId) && $sanitizedParams->getString('reportFilter') === 'wholecampaign') {
             $params['from'] = !empty($campaign->getStartDt()) ? $campaign->getStartDt()->format('Y-m-d H:i:s') : null;
             $params['to'] = !empty($campaign->getEndDt()) ? $campaign->getEndDt()->format('Y-m-d H:i:s') : null;
 
