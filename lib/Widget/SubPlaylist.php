@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -109,8 +109,9 @@ class SubPlaylist extends ModuleWidget
             $item->rowNo = intval($playlist['rowNo']);
             $item->playlistId = $playlist['playlistId'];
             $item->spotFill = $playlist['spotFill'] ?? null;
-            $item->spotLength = $playlist['spotLength'] ?? null;
-            $item->spots = $playlist['spots'] ?: null;
+            $item->spotLength =  $playlist['spotLength'] !== '' ? intval($playlist['spotLength']) : null;
+            $item->spots = $playlist['spots'] !== '' ? intval($playlist['spots']) : null;
+
             $playlistItems[] = $item;
         }
         return $playlistItems;
@@ -296,8 +297,8 @@ class SubPlaylist extends ModuleWidget
             $item = new SubPlaylistItem();
             $item->playlistId = $playlistId;
             $item->rowNo = $i + 1;
-            $item->spots = $spots[$i] ?? null;
-            $item->spotLength = $spotLength[$i] ?? null;
+            $item->spots = $spots[$i] ?? '';
+            $item->spotLength = $spotLength[$i] ?? '';
             $item->spotFill = $spotFill[$i] ?? null;
             $subPlaylists[] = $item;
 

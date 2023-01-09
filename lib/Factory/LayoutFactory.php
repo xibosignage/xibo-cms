@@ -2469,12 +2469,11 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param int $layoutId
+     * @param array $actionLayoutIds
      * @return array
      */
-    public function getActionPublishedLayoutIds($layoutId): array
+    public function getActionPublishedLayoutIds(int $layoutId, array &$actionLayoutIds): array
     {
-        $actionLayoutIds = [];
-
         // Get Layout Codes set in Actions on this Layout
         // Actions directly on this Layout
         $sql = '
@@ -2533,6 +2532,8 @@ class LayoutFactory extends BaseFactory
 
         foreach ($actionLayoutCodes as $row) {
             $actionLayoutIds[] = $row['layoutId'];
+            // check if this layout is linked with any further navLayout actions
+            $this->getActionPublishedLayoutIds($row['layoutId'], $actionLayoutIds);
         }
 
         return $actionLayoutIds;

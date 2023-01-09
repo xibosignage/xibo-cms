@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -258,21 +258,19 @@ class DataSetData extends Base
         foreach ($dataSet->getColumn() as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
-
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
                     $value = $sanitizedParams->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
-                }
-                else if ($column->dataTypeId == 3) {
+                } else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = $sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId)->format(DateFormatHelper::getSystemFormat());
-                }
-                else if ($column->dataTypeId == 5) {
+                    $date = $sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId);
+                    // format only if we have the date provided.
+                    $value = $date === null ? $date : $date->format(DateFormatHelper::getSystemFormat());
+                } else if ($column->dataTypeId == 5) {
                     // Media Id
                     $value = $sanitizedParams->getInt('dataSetColumnId_' . $column->dataSetColumnId);
-                }
-                else {
+                } else {
                     // String
                     $value = $sanitizedParams->getString('dataSetColumnId_' . $column->dataSetColumnId);
                 }
