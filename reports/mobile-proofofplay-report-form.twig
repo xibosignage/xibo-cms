@@ -47,6 +47,7 @@
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set wholecampaign %}{% trans "Whole Campaign" %}{% endset %}
                             {% set today %}{% trans "Today" %}{% endset %}
                             {% set yesterday %}{% trans "Yesterday" %}{% endset %}
                             {% set thisweek %}{% trans "This Week" %}{% endset %}
@@ -57,6 +58,7 @@
                             {% set lastyear %}{% trans "Last Year" %}{% endset %}
                             {% set options = [
                                 { filterName: "", reportFilter: range },
+                                { filterName: "wholecampaign", reportFilter: wholecampaign },
                                 { filterName: "today", reportFilter: today },
                                 { filterName: "yesterday", reportFilter: yesterday },
                                 { filterName: "thisweek", reportFilter: thisweek },
@@ -231,7 +233,7 @@
                     }, 300);
                 },
                 filter: false,
-                "order": [[1, "asc"]],
+                "order": [[0, "asc"]],
                 data:{},
                 "columns": [
                     {

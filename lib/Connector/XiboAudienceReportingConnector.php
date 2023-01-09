@@ -173,7 +173,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
             $params =   [
                 'type' => 'layout',
-                'start' => 1,
+                'start' => 0,
                 'length' => 5000,
                 'mustHaveParentCampaign' => true
             ];
