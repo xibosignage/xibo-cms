@@ -36,6 +36,8 @@
         {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
     {% endif %}
 
+    <p>{% trans "Once enabled additional reporting will be shown for your Ad Campaigns in the 'All Reports' section. To vary your cost/impressions per play by date, time of day, day of week or geo location, add a DMA (designated market area) below." %}</p>
+
     {% set options = interface.getOptionsFromAxe() %}
     {% if options.error %}
         <p class="alert alert-danger">{{ options.message }}</p>

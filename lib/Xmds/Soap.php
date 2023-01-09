@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1764,10 +1764,11 @@ class Soap
                         $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
                     }
 
+                    // Set the parent campaign so that it is recorded with the stat record
+                    $parentCampaign = $campaigns[$parentCampaignId];
+
                     // For a layout stat we should increment the number of plays on the Campaign
                     if ($type === 'layout' && $campaigns[$parentCampaignId]->type === 'ad') {
-                        $parentCampaign = $campaigns[$parentCampaignId];
-
                         // spend/impressions multiplier for this display
                         $spend = empty($this->display->costPerPlay)
                             ? 0
