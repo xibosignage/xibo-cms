@@ -1,0 +1,137 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-worldclock-digital-date</id>
+    <name>World Clock - Time and Date</name>
+    <author>Core</author>
+    <description>Time and Date World Clock</description>
+    <class></class>
+    <type>worldclock-digital-date</type>
+    <group>clock</group>
+    <legacyType condition="templateId == 'worldclock2'">worldclock</legacyType>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property type="header">
+            <title>Clocks</title>
+        </property>
+        <property id="worldClocks" type="custom">
+            <customClass>world-clock-timezone</customClass>
+        </property>
+        <property id="numCols" type="number">
+            <title>Clock Columns</title>
+            <helpText>Number of columns to display</helpText>
+            <default>1</default>
+        </property>
+        <property id="numRows" type="number">
+            <title>Clock Rows</title>
+            <helpText>Number of rows to display</helpText>
+            <default>1</default>
+        </property>
+        <property id="alignmentH" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this widget be horizontally aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+        </property>
+        <property id="alignmentV" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this widget be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <width id="width">200</width>
+        <height id="height">80</height>
+        <hbs><![CDATA[
+<div class="digital-clock-template" style="display: none;">
+    <div class="clockContainer">
+        <p>[label]</p>
+        <p>[DD MMMM, YYYY]</p>
+        <p>[HH:mm:ss]</p>
+    </div>
+</div>
+        ]]></hbs>
+        <twig><![CDATA[
+<style>
+body {
+   background: #222;
+ }
+
+.world-clock {
+  color: #f9f9f9;
+  font-size: 14px;
+}
+
+.clockContainer {
+  padding: 10px;
+  text-align: left;
+}
+
+.world-clock-label {
+  color: #2993c3;
+  font-size: 16px;
+}
+
+.highlighted .world-clock-label {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.clockContainer p {
+  margin: 0;
+  line-height: 18px;
+}
+</style>
+        ]]></twig>
+    </stencil>
+    <onInitialize><![CDATA[
+// Set moment locale
+moment.locale(globalOptions.locale);
+
+
+    ]]></onInitialize>
+    <onRender><![CDATA[
+// Render world clock only once
+if (typeof $(target).data('analogueClockRendered') === 'undefined') {
+    $(target).data('analogueClockRendered', true);
+    $(target).xiboWorldClockRender(properties, $(target).find('.digital-clock-template'));
+}
+
+// Scale the element every time
+$(target).xiboLayoutScaler(properties);
+    ]]></onRender>
+</module>

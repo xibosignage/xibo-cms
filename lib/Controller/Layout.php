@@ -45,6 +45,7 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
 use Xibo\Service\MediaService;
@@ -230,6 +231,12 @@ class Layout extends Base
         $moduleFactory = $this->moduleFactory;
         $isTemplate = $layout->hasTag('template');
 
+        // Get a list of timezones
+        $timeZones = [];
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
         // Set up any JavaScript translations
         $data = [
             'publishedLayoutId' => $id,
@@ -240,7 +247,8 @@ class Layout extends Base
                 'default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)
             ]),
             'users' => $this->userFactory->query(),
-            'modules' => $moduleFactory->getAssignableModules()
+            'modules' => $moduleFactory->getAssignableModules(),
+            'timeZones' => $timeZones,
         ];
 
         // Call the render the template

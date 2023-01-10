@@ -121,9 +121,11 @@ $(function() {
       // TODO - We need to address the case of no dataType and templates!!!
 
       // If we don't have dataType, or we have a module template
-      // add it to the content
+      // add it to the content with widget properties and global options
       if (moduleTemplate && hbs) {
-        $content.append(hbs());
+        $content.append(hbs(
+          Object.assign(widget.properties, globalOptions),
+        ));
       }
 
       // Save template height and width if exists to global options

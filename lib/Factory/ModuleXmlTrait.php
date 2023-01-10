@@ -99,6 +99,7 @@ trait ModuleXmlTrait
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
+                $property->customClass = __($this->getFirstValueOrDefaultFromXmlNode($node, 'customClass'));
 
                 // Default value
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');

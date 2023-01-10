@@ -1,0 +1,541 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-worldclock-analogue</id>
+    <name>World Clock - Analogue</name>
+    <author>Core</author>
+    <description>Analogue World Clock</description>
+    <class></class>
+    <type>worldclock-analogue</type>
+    <group>clock</group>
+    <legacyType condition="clockType == 2">worldclock</legacyType>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property type="header">
+            <title>Clocks</title>
+        </property>
+        <property id="worldClocks" type="custom">
+            <customClass>world-clock-timezone</customClass>
+        </property>
+        <property id="numCols" type="number">
+            <title>Clock Columns</title>
+            <helpText>Number of columns to display</helpText>
+            <default>1</default>
+        </property>
+        <property id="numRows" type="number">
+            <title>Clock Rows</title>
+            <helpText>Number of rows to display</helpText>
+            <default>1</default>
+        </property>
+        <property id="alignmentH" type="dropdown" mode="single">
+            <title>Horizontal Align</title>
+            <helpText>How should this widget be horizontally aligned?</helpText>
+            <default>center</default>
+            <options>
+                <option name="left">Left</option>
+                <option name="center">Centre</option>
+                <option name="right">Right</option>
+            </options>
+        </property>
+        <property id="alignmentV" type="dropdown" mode="single">
+            <title>Vertical Align</title>
+            <helpText>How should this widget be vertically aligned?</helpText>
+            <default>middle</default>
+            <options>
+                <option name="top">Top</option>
+                <option name="middle">Middle</option>
+                <option name="bottom">Bottom</option>
+            </options>
+        </property>
+        <!-- TODO: Move the next fields to a new tab -->
+        <property type="header">
+            <title>Analogue Clock Settings</title>
+        </property>
+        <property id="bgColor" type="color">
+            <title>Background colour</title>
+            <helpText>Use the colour picker to select the background colour</helpText>
+            <default></default>
+        </property>
+        <property id="faceColor" type="color">
+            <title>Face colour</title>
+            <helpText>Use the colour picker to select the face colour</helpText>
+            <default>#f9f9f9</default>
+        </property>
+        <property id="caseColor" type="color">
+            <title>Case colour</title>
+            <helpText>Use the colour picker to select the case colour</helpText>
+            <default>#222</default>
+        </property>
+        <property id="hourHandColor" type="color">
+            <title>Hour hand colour</title>
+            <helpText>Use the colour picker to select the hour hand colour</helpText>
+            <default>#333</default>
+        </property>
+        <property id="minuteHandColor" type="color">
+            <title>Minute hand colour</title>
+            <helpText>Use the colour picker to select the minute hand colour</helpText>
+            <default>#333</default>
+        </property>
+        <property id="showSecondsHand" type="checkbox">
+            <title>Show seconds hand?</title>
+            <helpText>Tick if you would like to show the seconds hand</helpText>
+            <default>1</default>
+        </property>
+        <property id="seconds-fields-1" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showSecondsHand" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="secondsHandColor" type="color">
+            <title>Seconds hand colour</title>
+            <helpText>Use the colour picker to select the seconds hand colour</helpText>
+            <default>#aa0202</default>
+            <visibility>
+                <test>
+                    <condition field="#showSecondsHand" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="seconds-fields-2" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showSecondsHand" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="dialColor" type="color">
+            <title>Dial centre colour</title>
+            <helpText>Use the colour picker to select the dial centre colour</helpText>
+            <default>#222</default>
+        </property>
+        <property id="showSteps" type="checkbox">
+            <title>Show steps?</title>
+            <helpText>Tick if you would like to show the clock steps</helpText>
+            <default>1</default>
+        </property>
+        <property id="steps-fields-1" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showSteps" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="stepsColor" type="color">
+            <title>Steps colour</title>
+            <helpText>Use the colour picker to select the steps colour</helpText>
+            <default>#333</default>
+            <visibility>
+                <test>
+                    <condition field="#showSteps" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="secondaryStepsColor" type="color">
+            <title>Secondary steps colour</title>
+            <helpText>Use the colour picker to select the secondary steps colour</helpText>
+            <default>#333</default>
+            <visibility>
+                <test>
+                    <condition field="#showSteps" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="steps-fields-2" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showSteps" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="showDetailed" type="checkbox">
+            <title>Detailed look?</title>
+            <helpText>Tick if you would like to show a more detailed look for the clock ( using shadows and 3D effects )</helpText>
+            <default>1</default>
+        </property>
+        <property id="showMiniDigitalClock" type="checkbox">
+            <title>Show inner digital clock?</title>
+            <helpText>Tick if you would like to show a small inner digital clock</helpText>
+            <default>1</default>
+        </property>
+        <property id="inner-digital-fields-1" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="digitalClockTextColor" type="color">
+            <title>Digital clock text colour</title>
+            <helpText>Use the colour picker to select the digital clock text colour</helpText>
+            <default>#3b3b3b</default>
+            <visibility>
+                <test>
+                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="digitalClockBgColor" type="color">
+            <title>Digital clock background colour</title>
+            <helpText>Use the colour picker to select the digital clock background colour</helpText>
+            <default>#e6e6e6</default>
+            <visibility>
+                <test>
+                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="inner-digital-fields-2" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="showLabel" type="checkbox">
+            <title>Show label?</title>
+            <helpText>Tick if you would like to show the timezone label</helpText>
+            <default>1</default>
+        </property>
+        <property id="label-fields-1" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showLabel" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="labelTextColor" type="color">
+            <title>Label text colour</title>
+            <helpText>Use the colour picker to select the label text colour</helpText>
+            <default>#f9f9f9</default>
+            <visibility>
+                <test>
+                    <condition field="#showLabel" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="labelBgColor" type="color">
+            <title>Label background colour</title>
+            <helpText>Use the colour picker to select the label background colour</helpText>
+            <default>#222</default>
+            <visibility>
+                <test>
+                    <condition field="#showLabel" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="label-fields-2" type="divider">
+            <visibility>
+                <test>
+                    <condition field="#showLabel" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <width id="width">250</width>
+        <height id="height">250</height>
+        <hbs><![CDATA[
+<div class="analogue-clock-template" style="display: none;">
+    <div class="analogue-clock">
+        {{#eq showMiniDigitalClock 1}}
+            <div class="analogue-mini-digital">
+                [HH:mm:ss]
+            </div>
+        {{/eq}}
+        <div class="analogue-clock-hour"></div>
+        <div class="analogue-clock-minute"></div>
+        {{#eq showSecondsHand 1}}
+            <div class="analogue-clock-second"></div>
+        {{/eq}}
+        <div class="analogue-center"></div>
+        {{#eq showDetailed 1}}
+            <div class="analogue-overlay"></div>
+        {{/eq}}
+        {{#eq showSteps 1}}
+            <div class="analogue-steps">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        {{/eq}}
+    </div>
+
+    {{#eq showLabel 1}}
+        <div class="analogue-clock-label">[label]</div>
+    {{/eq}}
+</div>
+        ]]></hbs>
+        <twig><![CDATA[
+<style>
+.analogue-clock {
+    {% if bgColor %}
+        background: {{bgColor}};
+    {% endif %}
+    position: relative;
+    text-align: center;
+    box-sizing: border-box;
+    border-radius: 50%;
+    width: 180px;
+    height: 180px;
+    left: 35px;
+    top: 20px;
+}
+
+.analogue-center {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    {% if dialColor %}
+        background: {{dialColor}};
+    {% endif %}
+}
+
+.analogue-clock-hour {
+    {% if hourHandColor %}
+        background: {{hourHandColor}};
+    {% endif %}
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -3px 0 -4px -25%;
+    padding: 3px 0 4px 25%;
+    -webkit-transform-origin: 100% 50%;
+    -ms-transform-origin: 100% 50%;
+    transform-origin: 100% 50%;
+    border-radius: 3px;
+}
+
+.analogue-clock-minute {
+    {% if minuteHandColor %}
+        background: {{minuteHandColor}};
+    {% endif %}
+    width:0;
+    height:0;
+    position:absolute;
+    top:50%;
+    left:50%;
+    margin:-40% -2px 0;
+    padding:40% 2px 0;
+    -webkit-transform-origin:50% 100%;
+    -ms-transform-origin:50% 100%;
+    transform-origin:50% 100%;
+    border-radius: 2px;
+}
+
+/* Highlighted */
+.highlighted .analogue-clock-label {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+{% if showLabel == 1 %}
+    .analogue-clock-label {
+        {% if labelBgColor %}
+            background: {{labelBgColor}};
+        {% endif %}
+        {% if labelTextColor %}
+            color: {{labelTextColor}};
+        {% endif %}
+        bottom: -30px;
+        position: relative;
+        font-size: 18px;
+        width: 80%;
+        left: 10%;
+        text-align: center;
+        line-height: 28px;
+    }
+{% else %}
+    .analogue-clock {
+        top: 35px;
+    }
+{% endif %}
+
+/* Mini digital clock */
+{% if showMiniDigitalClock == 1 %}
+    .analogue-mini-digital {
+        {% if digitalClockBgColor %}
+            background: {{digitalClockBgColor}};
+        {% endif %}
+        {% if digitalClockTextColor %}
+            color: {{digitalClockTextColor}};
+        {% endif %}
+        top: 120px;
+        position: relative;
+        left: 50%;
+        width: 70px;
+        -webkit-transform: translateX(-50%);
+        transform: translateX(-50%);
+        line-height: 22px;
+    }
+{% endif %}
+
+/* Seconds hand */
+{% if showSecondsHand == 1 %}
+    .analogue-clock-second {
+        width:0;
+        height:0;
+        {% if secondsHandColor %}
+            background: {{secondsHandColor}};
+        {% endif %}
+        position:absolute;
+        top:45%;
+        left:50%;
+        margin:-40% -1px 0;
+        padding:45% 1px 0;
+        -webkit-transform-origin:45% 100%;
+        -ms-transform-origin:45% 100%;
+        transform-origin:45% 100%;
+        border-radius: 1px;
+    }
+{% endif %}
+
+/* Detailed version CSS ( shadows and 3D effects ) */
+{% if showDetailed == 1 %}
+    .analogue-overlay {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(330deg, rgb(176, 176, 176) 68%, rgb(255, 255, 255) 76%);
+        position: absolute;
+        top: 0;
+        border-radius: 50%;
+        opacity: 0.1;
+    }
+    .analogue-clock {
+        -moz-box-shadow: inset 1px 1px 4px -1px #222, 1px 1px 2px 0px #575757;
+        -webkit-box-shadow: inset 1px 1px 4px -1px #222, 1px 1px 2px 0px #575757;
+        box-shadow: inset 1px 1px 4px -1px #222, 1px 1px 2px 0px #575757;
+    }
+    
+    .analogue-mini-digital {
+        -moz-box-shadow: inset 1px 1px 3px -2px #222;
+        -webkit-box-shadow: inset 1px 1px 3px -2px #222;
+        box-shadow: inset 1px 1px 3px -2px #222;
+    }
+    
+    .analogue-clock-hour,  .analogue-clock-minute, .analogue-clock-second, .analogue-center {
+        -moz-box-shadow: inset 0px 0px 3px -1px #222;
+        -webkit-box-shadow: inset 0px 0px 3px -1px #222;
+        box-shadow: inset 0px 0px 3px -1px #222;
+    }
+
+    /* If there's label background, show shadows/effects */
+    {% if labelBgColor %}
+        .analogue-clock-label {
+            -moz-box-shadow: inset 1px 1px 4px -2px #222, 1px 1px 2px 0px #575757;
+            -webkit-box-shadow: inset 1px 1px 4px -2px #222, 1px 1px 2px 0px #575757;
+            box-shadow: inset 1px 1px 4px -2px #222, 1px 1px 2px 0px #575757;
+        }
+    {% endif %}
+{% endif %}
+
+/* Dial steps */
+{% if showSteps == 1 %}
+    .analogue-steps > div {
+        {% if secondaryStepsColor %}
+            background: {{secondaryStepsColor}};
+        {% endif %}
+        width: 4px;
+        height: 10px;
+        position: absolute;
+        top: 6px;
+        left: 88px;
+        -webkit-transform-origin: 2px 84px;
+        -ms-transform-origin: 2px 84px;
+        transform-origin: 2px 84px;
+    }
+    
+    .analogue-steps > div:nth-child(3n+1) {
+        {% if stepsColor %}
+            background: {{stepsColor}};
+        {% endif %}
+        height: 14px;
+    }
+
+    {% for i in 0..11 %}
+        .analogue-steps > div:nth-child({{i + 1}}) {
+            transform: rotate({{i * 30}}deg);
+            -webkit-transform: rotate({{i * 30}}deg);
+        }
+    {% endfor %}
+{% endif %}
+
+/* If there's a case colour, show the clock border and adjust the steps' positions */
+{% if caseColor != '' %}
+    .analogue-clock {
+        border: 6px solid {{caseColor}};
+    }
+    
+    .analogue-steps > div {
+        top: 0px;
+        left: 82px;
+    }
+{% endif %}
+</style>
+        ]]></twig>
+    </stencil>
+    <onInitialize><![CDATA[
+// Set moment locale
+moment.locale(globalOptions.locale);
+
+Handlebars.registerHelper('eq', function (v1, v2, opts) {
+  if (v1 === v2) {
+    return opts.fn(this);
+  } else {
+    return opts.inverse(this);
+  }
+});
+    ]]></onInitialize>
+    <onRender><![CDATA[
+// Render world clock only once
+if (typeof $(target).data('analogueClockRendered') === 'undefined') {
+    $(target).data('analogueClockRendered', true);
+    $(target).xiboWorldClockRender(properties, $(target).find('.analogue-clock-template'));
+}
+
+// Scale the element every time
+$(target).xiboLayoutScaler(properties);
+    ]]></onRender>
+</module>

@@ -60,6 +60,8 @@
     </properties>
     <preview></preview>
     <stencil>
+        <width id="width">250</width>
+        <height id="height">250</height>
         <hbs><![CDATA[
 <div id="clock"></div>
         ]]></hbs>
