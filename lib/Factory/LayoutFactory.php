@@ -2531,9 +2531,12 @@ class LayoutFactory extends BaseFactory
         ]);
 
         foreach ($actionLayoutCodes as $row) {
-            $actionLayoutIds[] = $row['layoutId'];
-            // check if this layout is linked with any further navLayout actions
-            $this->getActionPublishedLayoutIds($row['layoutId'], $actionLayoutIds);
+            // if we have not processed this Layout yet, do it now
+            if (!in_array($row['layoutId'], $actionLayoutIds)) {
+                $actionLayoutIds[] = $row['layoutId'];
+                // check if this layout is linked with any further navLayout actions
+                $this->getActionPublishedLayoutIds($row['layoutId'], $actionLayoutIds);
+            }
         }
 
         return $actionLayoutIds;
