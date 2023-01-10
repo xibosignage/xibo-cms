@@ -1,0 +1,513 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{% trans "Report: Mobile Proof of Play" %} | {% endblock %}
+
+{% block actionMenu %}
+    {% include "report-schedule-buttons.twig" %}
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <span>{% trans "Mobile Proof of Play" %}</span>
+        </div>
+
+        {% include "report-selector.twig" %}
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="mobileProofOfPlayView" data-refresh-on-form-submit="false">
+                <div class="XiboFilterCustom card bg-light mb-3">
+                    <div class="FilterDiv card-body" id="report">
+                        <!-- Form Filter -->
+                        <form class="form-inline">
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set wholecampaign %}{% trans "Whole Campaign" %}{% endset %}
+                            {% set today %}{% trans "Today" %}{% endset %}
+                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
+                            {% set thisweek %}{% trans "This Week" %}{% endset %}
+                            {% set thismonth %}{% trans "This Month" %}{% endset %}
+                            {% set thisyear %}{% trans "This Year" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
+                            {% set options = [
+                                { filterName: "", reportFilter: range },
+                                { filterName: "wholecampaign", reportFilter: wholecampaign },
+                                { filterName: "today", reportFilter: today },
+                                { filterName: "yesterday", reportFilter: yesterday },
+                                { filterName: "thisweek", reportFilter: thisweek },
+                                { filterName: "thismonth", reportFilter: thismonth },
+                                { filterName: "thisyear", reportFilter: thisyear },
+                                { filterName: "lastweek", reportFilter: lastweek },
+                                { filterName: "lastmonth", reportFilter: lastmonth },
+                                { filterName: "lastyear", reportFilter: lastyear },
+                            ] %}
+                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
+
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("fromDt", title, defaults.fromDateOneDay, "", "from-dt", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("toDt", title, defaults.toDate, "", "to-dt", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set title %}{% trans "Display Group" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("displayGroup.search") },
+                                { name: "data-search-term", value: "displayGroup" },
+                                { name: "data-id-property", value: "displayGroupId" },
+                                { name: "data-text-property", value: "displayGroup" }
+                            ] %}
+                            {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {# Campaign list only. #}
+                            {% set attributes = [
+                                { name: "data-search-url", value:  url_for("campaign.search") },
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                            ] %}
+
+                            {% set title %}{% trans "Campaign" %}{% endset %}
+                            {% set helpText %}{% trans "Please select a Campaign" %}{% endset %}
+                            {{ inline.dropdown("parentCampaignId", "single", title, "", null, "campaignId", "campaign", "", "", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Layout" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
+                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", helpText, "pagedSelect layout-select", "", "l", "", attributes) }}
+
+                            <div class="w-100">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Card Header -->
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="tabular-tab" data-toggle="tab" href="#tabularTab" role="tab"
+                               aria-controls="tabularTab" aria-selected="true">Tabular</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- TABULAR TAB-->
+                        <div class="tab-pane active" id="tabularTab" role="tabpanel" aria-labelledby="tabular-tab">
+                            <!-- DATATABLE -->
+                            <div class="table-container" id="table_wrapper">
+                                <table id="stats"
+                                       class="table xibo-table table-striped table-full-width"
+                                       style="width: 100%"
+                                       data-state-preference-name="proofOfPlayGrid"
+                                       data-url="/report/data/mobileProofOfPlay">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Start" %}</th>
+                                        <th>{% trans "End" %}</th>
+                                        <th>{% trans "Display Id" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Layout Id" %}</th>
+                                        <th>{% trans "Layout" %}</th>
+                                        <th>{% trans "Start Latitude" %}</th>
+                                        <th>{% trans "Start Longitude" %}</th>
+                                        <th>{% trans "End Latitude" %}</th>
+                                        <th>{% trans "End Longitude" %}</th>
+                                        <th>{% trans "Duration" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                    <tfoot>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            let $dataTable = $('#stats'); // Datatable
+            let chart = null; // Chart
+            let result; // XHR get data result
+
+            let imageLoader = $("#imageLoader");
+            let $warning = $("#applyWarning");
+            let $applyBtn = $("#applyBtn");
+
+            // Report Filter
+            let reportFilter = $("#reportFilter"); // Report Filter
+
+            // Grid
+            let table = $dataTable.DataTable({
+                "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
+                drawCallback: function( settings ) {
+                    setTimeout(function() {
+                        $("#applyBtn").removeClass('disabled');
+                    }, 300);
+                },
+                filter: false,
+                "order": [[0, "asc"]],
+                data:{},
+                "columns": [
+                    {
+                        "data": "from",
+                        "render": dataTableDateFromIso
+                    },
+                    {
+                        "data": "to",
+                        "render": dataTableDateFromIso
+                    },
+                    {"data": "displayId"},
+                    {"data": "display"},
+                    {"data": "layoutId"},
+                    {"data": "layout"},
+                    {"data": "startLat"},
+                    {"data": "startLong"},
+                    {"data": "endLat"},
+                    {"data": "endLong"},
+                    {"data": "duration"}
+                ],
+            });
+
+            // Get Data
+            function getData(url) {
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    dataType: 'json',
+                    data: $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject(),
+                    success: function success(data) {
+                        result = data;
+                        $applyBtn.removeClass('disabled');
+
+                        // Based on tab load data
+                        if ($('.nav-tabs .nav-item a.active').attr("href") === '#tabularTab') {
+                            setTabularData(table, result.table);
+                        } else {
+                            setChartData(result.chart);
+                        }
+
+                        if (result.error) {
+                            toastr.error(result.error);
+                        }
+                    },
+                    error: function error(xhr, textStatus, _error) {
+                        $applyBtn.removeClass('disabled');
+                        toastr.error(xhr.responseJSON.message);
+                    }
+                });
+            }
+
+            function setTabularData(table, data) {
+                table.clear().draw();
+
+                if (Object.keys(data).length > 0) {
+                    table.rows.add( data ).draw()
+                }
+            }
+
+            function setChartData(data) {
+                imageLoader.show();
+
+                setTimeout(function() {
+                    $applyBtn.removeClass('disabled');
+                }, 300);
+
+                imageLoader.hide();
+                if (chart !== undefined && chart !== null) {
+                    chart.destroy();
+                }
+
+                // Create our chart
+                chart = new Chart($("#canvas"), data);
+            }
+
+            // Tab shown/click load relevant table/chart
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                let activeTab = $(e.target).attr("href")
+                if (result) {
+                    if (activeTab === '#tabularTab') {
+                        setTabularData(table, result.table);
+                    } else {
+                        setChartData(result.chart);
+                    }
+                }
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#stats_wrapper').find('.dataTables_buttons'));
+
+            // Apply
+            $applyBtn.click(function () {
+                $(this).addClass('disabled');
+                getData($dataTable.data().url);
+            });
+
+            // If we select a displayId we hide the display group filter
+            $('#displayId').off('change').change( function() {
+
+                let displayId = $('#displayId').val();
+                if (displayId) {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                } else {
+                    $('#displayId option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                }
+            });
+
+            // Hide / Show FromDt and ToDt
+            function checkReportFilter(reportFilter) {
+                if (reportFilter.val() === '' || reportFilter.val() === undefined) {
+                    $(".from-dt").show();
+                    $(".to-dt").show();
+                } else {
+                    $(".from-dt").hide();
+                    $(".to-dt").hide();
+                }
+            }
+
+            // Calculate the difference of number of days of a selected range
+            let calculateDaysShowHideWarn = function() {
+
+                let fromDt = moment($("#fromDt").val());
+                let toDt = moment($("#toDt").val());
+
+                let days = toDt.diff(fromDt, 'days');
+
+                $warning.hide();
+                if ( days >= 30) {
+                    $warning.show();
+                }
+
+                return true;
+            };
+
+            $("#fromDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            $("#toDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            let checkFilterAndApply = function() {
+
+                reportFilter.off('change').change( function() {
+                    let value = reportFilter.val();
+
+                    // Hide / Show FromDt and ToDt
+                    checkReportFilter(reportFilter);
+
+                    // Hide / Show Warning
+                    $warning.hide();
+                    if ( value === '') {
+                        calculateDaysShowHideWarn();
+                    } else if ( value === 'thismonth' || value === 'lastmonth' || value === 'thisyear' || value === 'lastyear') {
+                        $warning.show();
+                    }
+                });
+
+                let anchorReportAddBtn = $("button#reportAddBtn");
+                let type = $("#type").val();
+                let tagsType = $("#tagsType").val();
+                let tags = $("#tags").val();
+                let exactTags = $('#exactTags').is(":checked");
+
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=mobileProofOfPlay" );
+
+            };
+
+            checkReportFilter(reportFilter);
+            checkFilterAndApply();
+
+
+            var $campaignSelect = $('#parentCampaignId');
+            $campaignSelect.select2({
+                ajax: {
+                    url: $campaignSelect.data("searchUrl"),
+                    dataType: "json",
+                    placeholder: 'Campaign',
+                    allowClear: true,
+                    data: function(params) {
+
+                        var query = {
+                            isLayoutSpecific: 0,
+                            retired: 0,
+                            totalDuration: 0,
+                            name: params.term,
+                            start: 0,
+                            length: 10,
+                            columns: [
+                                {
+                                    "data": "isLayoutSpecific"
+                                },
+                                {
+                                    "data": "campaign"
+                                }
+                            ],
+                            order: [
+                                {
+                                    "column": 0,
+                                    "dir": "asc"
+                                },
+                                {
+                                    "column": 1,
+                                    "dir": "asc"
+                                }
+                            ]
+                        };
+
+                        // Set the start parameter based on the page number
+                        if (params.page != null) {
+                            query.start = (params.page - 1) * 10;
+                        }
+
+                        return query;
+                    },
+                    processResults: function(data, params) {
+
+                        var results = [];
+                        var campaigns = [];
+
+                        $.each(data.data, function(index, element) {
+                            campaigns.push({
+                                "id": element.campaignId,
+                                "text": element.campaign
+                            });
+                        });
+
+                        results.push({
+                            "text": $campaignSelect.data('transCampaigns'),
+                            "children": campaigns
+                        })
+
+
+                        var page = params.page || 1;
+                        page = (page > 1) ? page - 1 : page;
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    }
+                }
+            })
+        });
+
+        function reportScheduleCallback() {
+
+            let $displayId = $('#report #displayId');
+            let $newDisplayId = $('#reportScheduleAddForm #displayId');
+
+            appendOptions($newDisplayId, $displayId.find('option:selected').clone());
+        }
+
+        function appendOptions(element, options) {
+
+            for (let i = 0; i < options.length; i++) {
+
+                let option = options[i];
+                element.append(option).trigger('change');
+                $(option).prop('selected', true);
+                element.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: option
+                    }
+                });
+            }
+        }
+    </script>
+{% endblock %}

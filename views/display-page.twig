@@ -1126,8 +1126,9 @@
                 $inputFields = $inputFields.clone(true);
 
                 if(select2FixFlag) {
-                    // Restore old field to a select2
-                    makePagedSelect($inputFieldsOld);
+                    // Mark old field as select2 with the select2 class
+                    // so it can be reinitialised if needed
+                    $inputFieldsOld.addClass('select2-hidden-accessible');
                 }
                 // Add input field to the target
                 $(target).html($inputFields);

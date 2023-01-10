@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1313,7 +1313,7 @@ class Campaign extends Base
         $newCampaign->campaign = $sanitizedParams->getString('name');
 
         // assign the same layouts to the new Campaign
-        foreach ($campaign->layouts as $layout) {
+        foreach ($campaign->loadLayouts() as $layout) {
             $newCampaign->assignLayout(
                 $layout->layoutId,
                 $layout->displayOrder,
@@ -1321,6 +1321,12 @@ class Campaign extends Base
                 $layout->daysOfWeek,
                 $layout->geoFence
             );
+        }
+
+        // is the original campaign an ad campaign?
+        if ($campaign->type === 'ad') {
+            // assign the same displays to the new Campaign
+            $newCampaign->replaceDisplayGroupIds($campaign->loadDisplayGroupIds());
         }
 
         $newCampaign->save();
@@ -1446,7 +1452,12 @@ class Campaign extends Base
         }
 
         // Save
-        $campaign->save();
+        $campaign->save([
+            'validate' => false,
+            'notify' => false,
+            'collectNow' => false,
+            'saveTags' => false
+        ]);
 
         // Return
         $this->getState()->hydrate([

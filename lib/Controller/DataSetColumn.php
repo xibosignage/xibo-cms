@@ -369,6 +369,11 @@ class DataSetColumn extends Base
         // Assign the column to set the column order if necessary
         $dataSet->assignColumn($column);
 
+        // client side formula disable sort
+        if (substr($column->formula, 0, 1) === '$') {
+            $column->showSort = 0;
+        }
+
         // Save the column
         $column->save();
 
@@ -569,6 +574,12 @@ class DataSetColumn extends Base
         $column->tooltip = $sanitizedParams->getString('tooltip');
         $column->isRequired = $sanitizedParams->getCheckbox('isRequired');
         $column->dateFormat = $sanitizedParams->getString('dateFormat', ['default' => null]);
+
+        // client side formula disable sort
+        if (substr($column->formula, 0, 1) === '$') {
+            $column->showSort = 0;
+        }
+        
         $column->save();
 
         if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')) {

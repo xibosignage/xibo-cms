@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -500,11 +500,13 @@ class Soap
         }
 
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
+        $actionLayoutIds = [];
         foreach ($layouts as $layoutId) {
-            $actionLayoutIds = $this->layoutFactory->getActionPublishedLayoutIds($layoutId);
+            // this is recursive function, as we need to get 2nd level nesting and beyond
+            $this->layoutFactory->getActionPublishedLayoutIds($layoutId, $actionLayoutIds);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
-            if (!empty($actionLayoutIds) ) {
+            if (!empty($actionLayoutIds)) {
                 $layouts = array_unique(array_merge($layouts, $actionLayoutIds));
             }
         }
@@ -1745,6 +1747,7 @@ class Soap
             // Cache a count for this scheduleId
             $parentCampaignId = 0;
             $parentCampaign = null;
+
             if ($scheduleId > 0) {
                 // Lookup this schedule
                 if (!array_key_exists($scheduleId, $schedules)) {
@@ -1761,9 +1764,11 @@ class Soap
                         $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
                     }
 
-                    if ($campaigns[$parentCampaignId]->type === 'ad') {
-                        $parentCampaign = $campaigns[$parentCampaignId];
+                    // Set the parent campaign so that it is recorded with the stat record
+                    $parentCampaign = $campaigns[$parentCampaignId];
 
+                    // For a layout stat we should increment the number of plays on the Campaign
+                    if ($type === 'layout' && $campaigns[$parentCampaignId]->type === 'ad') {
                         // spend/impressions multiplier for this display
                         $spend = empty($this->display->costPerPlay)
                             ? 0

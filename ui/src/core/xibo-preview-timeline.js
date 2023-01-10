@@ -1,6 +1,7 @@
-/**
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -26,7 +27,7 @@ function Preview(regionElement)
 	this.regionElement = regionElement;
 	this.width	= $(regionElement).width();
 	this.height = $(regionElement).height();
-	
+
 	this.previewElement = $('.preview',regionElement);
 	this.previewContent = $('.previewContent', this.previewElement);
 
@@ -35,7 +36,7 @@ function Preview(regionElement)
     var regionId = this.regionId;
 
 	Preview.instances[regionId] = this;
-	
+
 	// Create the Nav Buttons
 	$('.previewNav', this.previewElement)
 		.append("<div class='prevSeq fa fa-arrow-left'></div>")
@@ -45,31 +46,31 @@ function Preview(regionElement)
 	$('.prevSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionId];
 		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
-				
+
 		var currentSeq = preview.seq;
 		currentSeq--;
-		
+
 		if (currentSeq <= 0)
 		{
 			currentSeq = maxSeq;
 		}
-		
+
 		preview.SetSequence(currentSeq);
 	});
-	
+
 	$('.nextSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionId];
 		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
-		
+
 		var currentSeq = preview.seq;
 		currentSeq++;
-		
+
 		if (currentSeq > maxSeq)
 			currentSeq = 1;
-		
+
 		preview.SetSequence(currentSeq);
-	});	
-	
+	});
+
 	this.SetSequence(1);
 }
 
@@ -78,19 +79,19 @@ Preview.instances = {};
 Preview.prototype.SetSequence = function(seq)
 {
 	this.seq = seq;
-	
+
 	var previewContent 	= this.previewContent;
 	var previewElement = this.previewElement;
 
 	this.width	= $(this.regionElement).width();
 	this.height = $(this.regionElement).height();
-	
+
 	// Get the sequence via AJAX
 	$.ajax({
         type:"get",
 		url: this.url,
-		cache: false, 
-		dataType: "json", 
+		cache: false,
+		dataType: "json",
 		data:{
 			"seq": seq,
 			"width": this.width,
@@ -98,7 +99,7 @@ Preview.prototype.SetSequence = function(seq)
 			"scale_override": $(this.regionElement).attr("designer_scale")
 		},
 		success: function(response) {
-		
+
 			if (response.success) {
 
                 if (response.extra.empty) {
@@ -126,7 +127,7 @@ Preview.prototype.SetSequence = function(seq)
 					.data("maxSeq", response.extra.number_items);
 			}
 			else {
-				// Why did we fail? 
+				// Why did we fail?
 				if (response.login) {
 					// We were logged out
 		            LoginBox(response.message);

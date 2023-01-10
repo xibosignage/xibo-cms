@@ -40,13 +40,14 @@
         {% include "report-selector.twig" %}
 
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView" data-refresh-on-form-submit="false">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="campaignProofOfPlayView" data-refresh-on-form-submit="false">
                 <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="campaignProofOfPlayReport">
                         <!-- Form Filter -->
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set wholecampaign %}{% trans "Whole Campaign" %}{% endset %}
                             {% set today %}{% trans "Today" %}{% endset %}
                             {% set yesterday %}{% trans "Yesterday" %}{% endset %}
                             {% set thisweek %}{% trans "This Week" %}{% endset %}
@@ -57,6 +58,7 @@
                             {% set lastyear %}{% trans "Last Year" %}{% endset %}
                             {% set options = [
                                 { filterName: "", reportFilter: range },
+                                { filterName: "wholecampaign", reportFilter: wholecampaign },
                                 { filterName: "today", reportFilter: today },
                                 { filterName: "yesterday", reportFilter: yesterday },
                                 { filterName: "thisweek", reportFilter: thisweek },
@@ -68,6 +70,11 @@
                             ] %}
                             {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
 
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
 
                             {% set title %}{% trans "Group by" %}{% endset %}
                             {% set hour %}{% trans "Hour" %}{% endset %}
@@ -81,13 +88,7 @@
                                 { name: "week", filter: week },
                                 { name: "month", filter: month },
                             ] %}
-                            {{ inline.dropdown("groupBy", "single", title, "today", options, "name", "filter") }}
-
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+                            {{ inline.dropdown("groupBy", "single", title, "day", options, "name", "filter") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -159,13 +160,14 @@
                                        class="table xibo-table table-striped table-full-width"
                                        style="width: 100%"
                                        data-state-preference-name="proofOfPlayGrid"
-                                       data-url="/report/data/campaignProofOfPlayReport">
+                                       data-url="/report/data/campaignProofOfPlay">
                                     <thead>
                                     <tr>
-                                        <th>Period</th>
-                                        <th>Ad Plays</th>
-                                        <th>Ad Duration</th>
-                                        <th>Audience Impressions</th>
+                                        <th>{% trans "Period" %}</th>
+                                        <th>{% trans "Ad Plays" %}</th>
+                                        <th>{% trans "Ad Duration" %}</th>
+                                        <th>{% trans "Audience Impressions" %}</th>
+                                        <th>{% trans "Spend" %}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -173,6 +175,7 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
+                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -192,7 +195,6 @@
 {% block javaScript %}
     <script type="text/javascript">
         $(document).ready(function() {
-            let $report = $("#campaignProofOfPlayReport");
             let $dataTable = $('#stats'); // Datatable
             let chart = null; // Chart
             let result; // XHR get data result
@@ -218,19 +220,16 @@
                     }, 300);
                 },
                 filter: false,
-                "order": [[1, "asc"]],
+                "order": [[0, "asc"]],
                 data:{},
                 "columns": [
                     {"data": "labelDate"},
                     {"data": "adPlays"},
                     {"data": "adDuration"},
-                    {"data": "impressions"}
+                    {"data": "impressions"},
+                    {"data": "spend"}
                 ],
             });
-
-            // table.on('draw', dataTableDraw);
-            // table.on('processing.dt', dataTableProcessing);
-            // dataTableAddButtons(table, $('#stats_wrapper').find('.dataTables_buttons'));
 
             // Get Data
             function getData(url) {
@@ -249,6 +248,10 @@
                             setTabularData(table, result.table);
                         } else {
                             setChartData(result.chart);
+                        }
+
+                        if (result.error) {
+                            toastr.error(result.error);
                         }
                     },
                     error: function error(xhr, textStatus, _error) {
@@ -322,13 +325,9 @@
                 if (reportFilter.val() === '' || reportFilter.val() === undefined) {
                     $(".stats-from-dt").show();
                     $(".stats-to-dt").show();
-                    $(".stats-from-dt-time").show();
-                    $(".stats-to-dt-time").show();
                 } else {
                     $(".stats-from-dt").hide();
                     $(".stats-to-dt").hide();
-                    $(".stats-from-dt-time").hide();
-                    $(".stats-to-dt-time").hide();
                 }
             }
 
@@ -374,12 +373,7 @@
                 });
 
                 let anchorReportAddBtn = $("button#reportAddBtn");
-                let type = $("#type").val();
-                let tagsType = $("#tagsType").val();
-                let tags = $("#tags").val();
-                let exactTags = $('#exactTags').is(":checked");
-
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=campaignProofOfPlayReport" );
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=campaignProofOfPlay" );
 
             };
 

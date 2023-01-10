@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1486,7 +1486,7 @@ class Display extends Base
      *      name="costPerPlay",
      *      in="formData",
      *      description="The Cost Per Play of this Display",
-     *      type="double",
+     *      type="number",
      *      required=false
      *   ),
      *  @SWG\Parameter(
