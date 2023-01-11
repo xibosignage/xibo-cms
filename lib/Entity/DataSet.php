@@ -513,14 +513,12 @@ class DataSet implements \JsonSerializable
         // Select (columns)
         foreach ($this->getColumn() as $column) {
             /* @var DataSetColumn $column */
-            $allowedOrderCols[] = $column->heading;
-
-            if ($column->dataSetColumnTypeId == 2 && !$options['includeFormulaColumns'])
+            if ($column->dataSetColumnTypeId == 2 && !$options['includeFormulaColumns']) {
                 continue;
+            }
 
             // Formula column?
             if ($column->dataSetColumnTypeId == 2) {
-
                 // Is this a client side column?
                 if (substr($column->formula, 0, 1) === '$') {
                     $clientSideFormula[] = $column;
@@ -531,10 +529,11 @@ class DataSet implements \JsonSerializable
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
                 $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
-            }
-            else {
+            } else {
                 $heading = '`' . $column->heading . '`';
             }
+
+            $allowedOrderCols[] = $column->heading;
 
             $body .= ', ' . $heading;
         }
@@ -551,8 +550,7 @@ class DataSet implements \JsonSerializable
         }
 
         // Filter by ID
-        if (
-            $sanitizer->getInt('id') !== null) {
+        if ($sanitizer->getInt('id') !== null) {
             $body .= ' AND id = :id ';
             $params['id'] = $sanitizer->getInt('id');
         }
@@ -570,25 +568,42 @@ class DataSet implements \JsonSerializable
 
                 // Check allowable
                 if (!in_array($sanitized, $allowedOrderCols)) {
-                    $this->getLog()->info('Disallowed column: ' . $sanitized);
-                    continue;
+                    $found = false;
+                    $this->getLog()->info('Potentially disallowed column: ' . $sanitized);
+                    // the gridRenderSort will strip spaces on column names go through allowed order columns
+                    // and see if we can find a match by stripping spaces from the heading
+                    foreach ($allowedOrderCols as $allowedOrderCol) {
+                        $this->getLog()->info('Checking spaces in original name : ' . $sanitized);
+                        if (str_replace(' ', '', $allowedOrderCol) === $sanitized) {
+                            $found = true;
+                            // put the column heading with the space as sanitized to make sql happy.
+                            $sanitized = $allowedOrderCol;
+                        }
+                    }
+
+                    // we tried, but it was not found, omit this pair
+                    if (!$found) {
+                        continue;
+                    }
                 }
 
                 // Substitute
                 if (strripos($orderPair, ' DESC')) {
                     $order .= sprintf(' `%s`  DESC,', $sanitized);
-                }
-                else if (strripos($orderPair, ' ASC')) {
+                } else if (strripos($orderPair, ' ASC')) {
                     $order .= sprintf(' `%s`  ASC,', $sanitized);
-                }
-                else {
+                } else {
                     $order .= sprintf(' `%s`,', $sanitized);
                 }
             }
 
             $order = trim($order, ',');
-        }
-        else {
+
+            // if after all that we still do not have any column name to order by, default to order by id
+            if (trim($order) === 'ORDER BY') {
+                $order = ' ORDER BY id ';
+            }
+        } else {
             $order = ' ORDER BY id ';
         }
 

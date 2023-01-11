@@ -986,4 +986,26 @@ class Campaign implements \JsonSerializable
         ]);
         return $this;
     }
+
+    /**
+     * Overwrite the number of plays/spend and impressions
+     * @return $this
+     */
+    public function overwritePlays(): Campaign
+    {
+
+        $this->getStore()->update('
+            UPDATE `campaign`
+                SET `plays` = :plays,
+                    `spend` = :spend,
+                    `impressions` = :impressions
+             WHERE campaignId = :campaignId
+        ', [
+            'plays' => $this->plays,
+            'spend' => $this->spend,
+            'impressions' => $this->impressions,
+            'campaignId' => $this->campaignId,
+        ]);
+        return $this;
+    }
 }

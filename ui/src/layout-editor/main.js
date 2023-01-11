@@ -1,7 +1,8 @@
 /* eslint-disable prefer-promise-reject-errors */
 /**
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -2419,6 +2420,7 @@ lD.addAction = function(options) {
 
   return true;
 };
+
 
 /**
  * Save action

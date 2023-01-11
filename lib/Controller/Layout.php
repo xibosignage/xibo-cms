@@ -3069,7 +3069,8 @@ class Layout extends Base
             foreach ($layout->regions as $region) {
                 try {
                     // Get widgets in this region
-                    $widgets = $region->regionPlaylist->expandWidgets();
+                    $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
+                    $widgets = $playlist->expandWidgets();
 
                     if (count($widgets) <= 0) {
                         // Render the region (draw a grey box)

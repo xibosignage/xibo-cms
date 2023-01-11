@@ -1,7 +1,8 @@
 <?php
 /*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
