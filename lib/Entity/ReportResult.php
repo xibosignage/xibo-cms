@@ -42,6 +42,12 @@ class ReportResult implements \JsonSerializable
     public $chart;
 
     /**
+     * Error message
+     * @var null|string
+     */
+    public $error;
+
+    /**
      * Metadata that is used in the report preview or in the email template
      * @var array
      */
@@ -59,17 +65,20 @@ class ReportResult implements \JsonSerializable
      * @param array $table
      * @param int $recordsTotal
      * @param array $chart
+     * @param null|string $error
      */
     public function __construct(
         array $metadata = [],
         array $table = [],
         int   $recordsTotal = 0,
-        array $chart = []
+        array $chart = [],
+        string $error = null
     ) {
         $this->metadata = $metadata;
         $this->table = $table;
         $this->recordsTotal = $recordsTotal;
         $this->chart = $chart;
+        $this->error = $error;
 
         return $this;
     }
@@ -95,7 +104,8 @@ class ReportResult implements \JsonSerializable
             'metadata' => $this->metadata,
             'table' => $this->table,
             'recordsTotal' => $this->recordsTotal,
-            'chart' => $this->chart
+            'chart' => $this->chart,
+            'error' => $this->error
         ];
     }
 }

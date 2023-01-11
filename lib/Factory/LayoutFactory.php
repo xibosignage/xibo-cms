@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -974,6 +974,19 @@ class LayoutFactory extends BaseFactory
                 //
                 $subPlaylistsOption = [];
                 foreach ($mediaNode['widgetOptions'] as $optionsNode) {
+                    // subPlaylistOptions and subPlaylistIds are no longer in use from 2.3
+                    // we need to capture these options to support Layout with sub-playlist import from older CMS
+                    // we use continue for those 2 options, as we do not need to create widgetOption for them
+                    if ($optionsNode['option'] == 'subPlaylistOptions') {
+                        $oldSubPlaylistOptions = json_decode($optionsNode['value'], true);
+                        continue;
+                    }
+
+                    if ($optionsNode['option'] == 'subPlaylistIds') {
+                        $oldSubPlaylistIds = json_decode($optionsNode['value'], true);
+                        continue;
+                    }
+
                     if ($optionsNode['option'] == 'subPlaylists') {
                         $subPlaylistsOption = json_decode($optionsNode['value'], true);
                     }
@@ -989,6 +1002,11 @@ class LayoutFactory extends BaseFactory
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
                     }
+                }
+
+                // convert old sub-playlist Widget options to the new way we handle them
+                if (isset($oldSubPlaylistIds) && isset($oldSubPlaylistOptions)) {
+                    $subPlaylistsOption = $this->convertOldPlaylistOptions($oldSubPlaylistIds, $oldSubPlaylistOptions);
                 }
 
                 //
@@ -1050,7 +1068,7 @@ class LayoutFactory extends BaseFactory
                             }
                         }
                     }
-                    
+
                     $combined = array_combine($oldIds, $newIds);
 
                     $playlists = $this->createNestedPlaylistWidgets($widgets, $combined, $playlists);
@@ -1353,7 +1371,7 @@ class LayoutFactory extends BaseFactory
 
             // Check if it's a font file
             $isFont = (isset($file['font']) && $file['font'] == 1);
-            
+
             if ($isFont) {
                 try {
                     $font = $this->fontFactory->getByName($intendedMediaName);
@@ -1429,7 +1447,7 @@ class LayoutFactory extends BaseFactory
                     $media->save();
                 }
             }
-            
+
             // Find where this is used and swap for the real mediaId
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
@@ -1573,7 +1591,7 @@ class LayoutFactory extends BaseFactory
                 $columnWithImages = [];
                 // We must null the ID so that we don't try to load the dataset when we assign columns
                 $dataSet->dataSetId = null;
-                
+
                 // Hydrate the columns
                 foreach ($item['columns'] as $columnItem) {
                     $this->getLog()->debug(sprintf('Assigning column: %s', json_encode($columnItem)));
@@ -1862,6 +1880,19 @@ class LayoutFactory extends BaseFactory
 
                 foreach ($widgetsDetail['widgetOptions'] as $widgetOptionE) {
                     if ($playlistWidget->type == 'subplaylist') {
+                        // subPlaylistOptions and subPlaylistIds are no longer in use from 2.3
+                        // we need to capture these options to support Layout with sub-playlist import from older CMS
+                        // we use continue for those 2 options, as we do not need to create widgetOption for them
+                        if ($widgetOptionE['option'] == 'subPlaylistOptions') {
+                            $oldNestedSubPlaylistOptions = json_decode($widgetOptionE['value'], true);
+                            continue;
+                        }
+
+                        if ($widgetOptionE['option'] == 'subPlaylistIds') {
+                            $oldNestedSubPlaylistIds = json_decode($widgetOptionE['value'], true);
+                            continue;
+                        }
+
                         if ($widgetOptionE['option'] == 'subPlaylists') {
                             $nestedSubPlaylists = json_decode($widgetOptionE['value'], true);
                         }
@@ -1873,6 +1904,11 @@ class LayoutFactory extends BaseFactory
                     $widgetOption->value = $widgetOptionE['value'];
 
                     $playlistWidget->widgetOptions[] = $widgetOption;
+                }
+
+                // convert old sub-playlist Widget options to the new way we handle them
+                if (isset($oldNestedSubPlaylistIds) && isset($oldNestedSubPlaylistOptions)) {
+                    $nestedSubPlaylists = $this->convertOldPlaylistOptions($oldNestedSubPlaylistIds, $oldNestedSubPlaylistOptions);
                 }
 
                 $module = $modules[$playlistWidget->type];
@@ -1928,14 +1964,17 @@ class LayoutFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $params = [];
-        $select = 'SELECT DISTINCT code ';
-        $body = ' FROM layout WHERE code IS NOT NULL ';
+        $select = 'SELECT DISTINCT code, `campaign`.CampaignID, `campaign`.permissionsFolderId ';
+        $body = ' FROM layout INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.LayoutID = layout.LayoutID INNER JOIN `campaign` ON lkcampaignlayout.CampaignID = campaign.CampaignID AND campaign.IsLayoutSpecific = 1 WHERE code IS NOT NULL';
 
         // get by Code
         if ($parsedFilter->getString('code') != '') {
             $body.= ' AND layout.code LIKE :code ';
             $params['code'] = '%' . $parsedFilter->getString('code') . '%';
         }
+
+        // Logged in user view permissions
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         $order = ' ORDER BY code';
 
@@ -2609,12 +2648,11 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param int $layoutId
+     * @param array $actionLayoutIds
      * @return array
      */
-    public function getActionPublishedLayoutIds($layoutId): array
+    public function getActionPublishedLayoutIds(int $layoutId, array &$actionLayoutIds): array
     {
-        $actionLayoutIds = [];
-
         // Get Layout Codes set in Actions on this Layout
         // Actions directly on this Layout
         $sql = '
@@ -2673,6 +2711,8 @@ class LayoutFactory extends BaseFactory
 
         foreach ($actionLayoutCodes as $row) {
             $actionLayoutIds[] = $row['layoutId'];
+            // check if this layout is linked with any further navLayout actions
+            $this->getActionPublishedLayoutIds($row['layoutId'], $actionLayoutIds);
         }
 
         return $actionLayoutIds;
@@ -2800,6 +2840,24 @@ class LayoutFactory extends BaseFactory
         $lock->expiresAfter(10); // Expire straight away (but give it time to save the thing)
 
         $this->getPool()->save($lock);
+    }
+
+    public function convertOldPlaylistOptions($playlistIds, $playlistOptions)
+    {
+        $convertedPlaylistOption = [];
+        $i = 0;
+        foreach ($playlistIds as $playlistId) {
+            $i++;
+            $convertedPlaylistOption[] = [
+                'rowNo' => $i,
+                'playlistId' => $playlistId,
+                'spotFill' => $playlistOptions[$playlistId]['subPlaylistIdSpotFill'] ?? null,
+                'spotLength' => $playlistOptions[$playlistId]['subPlaylistIdSpotLength'] ?? null,
+                'spots' => $playlistOptions[$playlistId]['subPlaylistIdSpots'] ?? null,
+            ];
+        }
+
+        return $convertedPlaylistOption;
     }
 
     // </editor-fold>

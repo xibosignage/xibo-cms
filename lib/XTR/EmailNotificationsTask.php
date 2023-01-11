@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\XTR;
-
 
 use Carbon\Carbon;
 use Slim\Views\Twig;
@@ -68,6 +66,7 @@ class EmailNotificationsTask implements TaskInterface
 
         $msgFrom = $this->config->getSetting('mail_from');
         $msgFromName = $this->config->getSetting('mail_from_name');
+        $processedNotifications = [];
 
         $this->log->debug('Notification Queue sending from ' . $msgFrom);
 
@@ -77,31 +76,34 @@ class EmailNotificationsTask implements TaskInterface
             if (!empty($notification->email) || $notification->isSystem == 1) {
                 $mail = new \PHPMailer\PHPMailer\PHPMailer();
 
-                // System notifications, override the email address
+                $this->log->debug('Sending Notification email to ' . $notification->email);
+                $mail->addAddress($notification->email);
+
+                // System notifications, add mail_to to addresses if set.
                 if ($notification->isSystem == 1) {
                     // We should send the system notification to:
-                    //  - the system user
-                    //  - the mail_to (if different)
+                    //  - all assigned users
+                    //  - the mail_to (if set)
                     $mailTo = $this->config->getSetting('mail_to');
 
-                    // We add this below.
-                    $notification->email = $this->user->email ?? $mailTo;
-
                     // Make sure we've been able to resolve an address.
-                    if (empty($notification->email)) {
+                    if (empty($notification->email) && empty($mailTo)) {
                         $this->log->error('Discarding NotificationId ' . $notification->notificationId
                             . ' as no email address could be resolved.');
                         continue;
                     }
 
-                    // Also add the mail_to
-                    if ($mailTo !== $notification->email && !empty($mailTo)) {
+                    // if mail_to is set and is different from user email, and we did not
+                    // process this notification yet (the same notificationId will be returned for each assigned user)
+                    // add it to addresses
+                    if ($mailTo !== $notification->email
+                        && !empty($mailTo)
+                        && !in_array($notification->notificationId, $processedNotifications)
+                    ) {
+                        $this->log->debug('Sending Notification email to mailTo ' . $mailTo);
                         $mail->addAddress($mailTo);
                     }
                 }
-
-                $this->log->debug('Sending Notification email to ' . $notification->email);
-                $mail->addAddress($notification->email);
 
                 // Email them
                 $mail->CharSet = 'UTF-8';
@@ -146,6 +148,7 @@ class EmailNotificationsTask implements TaskInterface
                     . ' as no email address could be resolved.');
             }
 
+            $processedNotifications[] = $notification->notificationId;
             // Mark as sent
             $notification->setEmailed(Carbon::now()->format('U'));
             $notification->save();

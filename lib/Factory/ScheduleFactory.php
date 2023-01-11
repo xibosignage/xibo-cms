@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -139,7 +139,7 @@ class ScheduleFactory extends BaseFactory
     {
         return $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
     }
-    
+
     public function getByParentCampaignId($campaignId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'parentCampaignId' => $campaignId]);
@@ -314,6 +314,8 @@ class ScheduleFactory extends BaseFactory
             `schedule`.lastRecurrenceWatermark,
             campaign.campaignId,
             campaign.campaign,
+            parentCampaign.campaign AS parentCampaignName,
+            parentCampaign.type AS parentCampaignType,
             `command`.commandId,
             `command`.command,
             `schedule`.dayPartId,
@@ -334,6 +336,8 @@ class ScheduleFactory extends BaseFactory
             ON `daypart`.dayPartId = `schedule`.dayPartId
             LEFT OUTER JOIN `campaign`
             ON campaign.CampaignID = `schedule`.CampaignID
+            LEFT OUTER JOIN `campaign` parentCampaign
+            ON parentCampaign.campaignId = `schedule`.parentCampaignId
             LEFT OUTER JOIN `command`
             ON `command`.commandId = `schedule`.commandId
           WHERE 1 = 1

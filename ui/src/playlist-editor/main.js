@@ -1,6 +1,7 @@
-/**
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -247,6 +248,7 @@ pE.selectObject = function({
   if (!$.isEmptyObject(this.toolbar.selectedCard)) {
     if (
       obj.data('type') == 'playlist'
+      // TODO: merge conflict: if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
     ) {
       // Get card object
       const card = this.toolbar.selectedCard[0];
@@ -444,6 +446,12 @@ pE.deleteObject = function(objectType, objectId) {
                 pE.reloadData();
               }).catch((error) => { // Fail/error
                 pE.common.hideLoadingScreen('deleteObject');
+                            // Behavior if successful
+                            toastr.success(res.message);
+                            pE.reloadData();
+                        }).catch((error) => { // Fail/error
+
+                            pE.common.hideLoadingScreen('deleteObject');
 
                 // Show error returned or custom message to the user
                 let errorMessage = '';
