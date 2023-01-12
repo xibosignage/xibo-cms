@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget\Render;
@@ -99,7 +100,12 @@ class WidgetDataProviderCache
             return false;
         } else {
             $dataProvider->clearData();
-            $dataProvider->addItems($data);
+            $dataProvider->clearMeta();
+            $dataProvider->addItems($data['data'] ?? []);
+
+            foreach (($data['meta'] ?? []) as $key => $item) {
+                $dataProvider->addOrUpdateMeta($key, $item);
+            }
             return true;
         }
     }
@@ -115,7 +121,10 @@ class WidgetDataProviderCache
         }
 
         // Set our cache from the data provider.
-        $this->cache->set($dataProvider->getData());
+        $this->cache->set([
+            'data' => $dataProvider->getData(),
+            'meta' => $dataProvider->getMeta(),
+        ]);
         $this->cache->expiresAfter($dataProvider->getCacheTtl());
 
         // Save to the pool

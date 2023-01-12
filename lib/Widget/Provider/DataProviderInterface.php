@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget\Provider;
@@ -47,6 +48,12 @@ interface DataProviderInterface
      * @return string
      */
     public function getDataType(): string;
+
+    /**
+     * Get the ID for this display
+     * @return int
+     */
+    public function getDisplayId(): int;
 
     /**
      * Get the latitude for this display
@@ -107,6 +114,12 @@ interface DataProviderInterface
     public function getData(): array;
 
     /**
+     * Get metadata already added to this provider
+     * @return array
+     */
+    public function getMeta(): array;
+
+    /**
      * Add an item to the provider
      * You should ensure that you provide all properties required by the datatype you are returning
      * example data types would be: article, social, event, menu, tabular
@@ -125,6 +138,15 @@ interface DataProviderInterface
     public function addItems(array $items): DataProviderInterface;
 
     /**
+     * Add metadata to the provider
+     * This is a key/value array of metadata which should be delivered alongside the data
+     * @param string $key
+     * @param \JsonSerializable $item An array containing the metadata, which must be JSON serializable
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function addOrUpdateMeta(string $key, \JsonSerializable $item): DataProviderInterface;
+
+    /**
      * Add an image to the data provider and return the URL for that image
      * @param string $id A unique ID for this image, we recommend adding a module/connector specific prefix
      * @param string $url The URL on which this image should be downloaded
@@ -139,6 +161,12 @@ interface DataProviderInterface
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
     public function clearData(): DataProviderInterface;
+
+    /**
+     * Clear any metadata already added to this provider
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function clearMeta(): DataProviderInterface;
 
     /**
      * Set the cache TTL
