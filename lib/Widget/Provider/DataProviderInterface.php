@@ -141,10 +141,10 @@ interface DataProviderInterface
      * Add metadata to the provider
      * This is a key/value array of metadata which should be delivered alongside the data
      * @param string $key
-     * @param \JsonSerializable $item An array containing the metadata, which must be JSON serializable
+     * @param mixed $item An array/object containing the metadata, which must be JSON serializable
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
-    public function addOrUpdateMeta(string $key, \JsonSerializable $item): DataProviderInterface;
+    public function addOrUpdateMeta(string $key, $item): DataProviderInterface;
 
     /**
      * Add an image to the data provider and return the URL for that image
@@ -155,6 +155,14 @@ interface DataProviderInterface
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addImage(string $id, string $url, int $expiresAt): string;
+
+    /**
+     * Add a library file
+     * @param int $mediaId The mediaId for this file.
+     * @return string
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function addLibraryFile(int $mediaId): string;
 
     /**
      * Clear any data already added to this provider

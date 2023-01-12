@@ -1041,6 +1041,7 @@ class Widget extends Base
                         // Success
                         // We don't need to do anything else, references to mediaId will be built when we decorate
                         // the HTML.
+                        // Nothing is linked to a display when in preview mode.
                         $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
                     });
                 }
@@ -1068,7 +1069,7 @@ class Widget extends Base
 
         return $response->withJson([
             'data' => $data,
-            'meta' => $dataProvider->getMetaData(),
+            'meta' => $dataProvider->getMeta(),
         ]);
     }
 

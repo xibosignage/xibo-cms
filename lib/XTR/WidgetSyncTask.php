@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\XTR;
@@ -182,7 +183,7 @@ class WidgetSyncTask implements TaskInterface
         // Set our provider up for the displays
         if ($displayId !== null) {
             $display = $this->displayFactory->getById($displayId);
-            $dataProvider->setDisplayProperties($display->latitude, $display->longitude);
+            $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $displayId);
         } else {
             $dataProvider->setDisplayProperties(
                 $this->getConfig()->getSetting('DEFAULT_LAT'),

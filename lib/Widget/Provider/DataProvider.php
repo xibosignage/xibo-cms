@@ -229,8 +229,12 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function addOrUpdateMeta(string $key, \JsonSerializable $item): DataProviderInterface
+    public function addOrUpdateMeta(string $key, $item): DataProviderInterface
     {
+        if (!is_array($item) && !($item instanceof \JsonSerializable)) {
+            throw new \RuntimeException('Item must be an array or a JSON serializable object');
+        }
+
         $this->meta[$key] = $item;
         return $this;
     }
@@ -241,6 +245,17 @@ class DataProvider implements DataProviderInterface
     public function addImage(string $id, string $url, int $expiresAt): string
     {
         $media = $this->mediaFactory->queueDownload($id, $url, $expiresAt);
+        $this->media[] = $media;
+
+        return '[[mediaId=' . $media->mediaId . ']]';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addLibraryFile(int $mediaId): string
+    {
+        $media = $this->mediaFactory->getById($mediaId);
         $this->media[] = $media;
 
         return '[[mediaId=' . $media->mediaId . ']]';
