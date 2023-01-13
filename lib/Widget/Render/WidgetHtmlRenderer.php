@@ -416,6 +416,7 @@ class WidgetHtmlRenderer
                         'content' => $this->decorateTranslations($module->stencil->hbs),
                         'width' => $module->stencil->width,
                         'height' => $module->stencil->height,
+                        'padding' => $module->stencil->padding,
                     ];
                 }
             }
@@ -432,6 +433,7 @@ class WidgetHtmlRenderer
                     'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
                     'width' => $moduleTemplate->stencil->width,
                     'height' => $moduleTemplate->stencil->height,
+                    'padding' => $moduleTemplate->stencil->padding,
                 ];
             }
 

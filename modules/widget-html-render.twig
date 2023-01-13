@@ -74,7 +74,7 @@
         {% endif %}
     </script>
 {% for id, item in hbs %}
-    <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}">{{ item.content|raw }}</script>
+    <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}" data-padding="{{ item.padding }}">{{ item.content|raw }}</script>
 {% endfor %}
 {% for widgetId, parser in onInitialize %}
     <script type="text/javascript" id="onInitialize-{{ widgetId }}">

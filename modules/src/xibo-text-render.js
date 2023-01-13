@@ -35,16 +35,20 @@ jQuery.fn.extend({
       previewHeight: 0,
       scaleOverride: 0,
       randomiseItems: 0,
-      marqueeInlineSelector: '.item, .item p',
+      marqueeInlineSelector: '.text-render-item, .text-render-item p',
       alignmentV: 'top',
       widgetDesignWidth: 0,
       widgetDesignHeight: 0,
       widgetDesignPadding: 0,
+      displayDirection: 0,
     };
 
     options = $.extend({}, defaults, options);
 
-    const resetAnimElements = function($contentDiv) {
+    const resetRenderElements = function($contentDiv) {
+      // Remove item classes
+      $contentDiv.find('.text-render-item').removeClass('text-render-item');
+
       // Remove animation items
       $contentDiv.find('.text-render-anim-item').remove();
 
@@ -72,7 +76,13 @@ jQuery.fn.extend({
     let paddingBottom = paddingRight = 0;
     if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
       if (options.itemsPerPage > 0) {
-        if ($(window).width() >= $(window).height()) {
+        if (
+          (
+            $(window).width() >= $(window).height() &&
+            options.displayDirection == '0'
+          ) ||
+          (options.displayDirection == '1')
+        ) {
           // Landscape or square size plus padding
           options.widgetDesignWidth =
             (options.itemsPerPage * options.widgetDesignWidth) +
@@ -81,7 +91,13 @@ jQuery.fn.extend({
           width = options.widgetDesignWidth;
           height = options.widgetDesignHeight;
           paddingRight = options.widgetDesignPadding;
-        } else {
+        } else if (
+          (
+            $(window).width() < $(window).height() &&
+            options.displayDirection == '0'
+          ) ||
+          (options.displayDirection == '2')
+        ) {
           // Portrait size plus padding
           options.widgetDesignHeight =
             (options.itemsPerPage * options.widgetDesignHeight) +
@@ -109,7 +125,7 @@ jQuery.fn.extend({
         options.effect === 'marqueeDown';
 
       // Reset the animation elements
-      resetAnimElements($contentDiv);
+      resetRenderElements($contentDiv);
 
       // 1st Objective - filter the items array we have been given
       // settings involved:
@@ -176,56 +192,72 @@ jQuery.fn.extend({
       // console.log("[Xibo] We need to have " + numberOfPages + " pages");
       let appendTo = $contentDiv;
 
-
       // Clear previous animation elements
       if (isMarquee) {
         // Destroy marquee plugin
         $contentDiv.marquee('destroy');
       } else {
         // Destroy cycle plugin
-        $contentDiv.cycle('destroy');
+        $(element).find('.anim-cycle').cycle('destroy');
       }
 
+      // If we have animations
       // Loop around each of the items we have been given
       // and append them to this element (in a div)
-      for (let i = 0; i < items.length; i++) {
-        // We don't add any pages for marquee / none transitions.
-        if (options.effect != 'none' && !isMarquee) {
-          // If we need to set pages, have we switched over to a new page?
-          if (
-            options.itemsPerPage > 1 &&
-            (itemsThisPage >= options.itemsPerPage || i === 0)
-          ) {
-            // Append a new page to the body
-            appendTo = $('<div/>').addClass('page text-render-anim-item')
-              .appendTo($contentDiv);
+      if (options.effect != 'none') {
+        for (let i = 0; i < items.length; i++) {
+          // We don't add any pages for marquee
+          if (!isMarquee) {
+            // If we need to set pages, have we switched over to a new page?
+            if (
+              options.itemsPerPage > 1 &&
+              (itemsThisPage >= options.itemsPerPage || i === 0)
+            ) {
+              // Append a new page to the body
+              appendTo = $('<div/>')
+                .addClass('text-render-page text-render-anim-item')
+                .appendTo($contentDiv);
 
-            // Reset the row count on this page
-            itemsThisPage = 0;
+              // Reset the row count on this page
+              itemsThisPage = 0;
+            }
+          }
+
+          // For each item, create a DIV if element doesn't exist on the DOM
+          // Or clone the element if it does
+          // hide the original and show the clone
+          let $newItem;
+          let $oldItem;
+          if ($.contains(element, items[i])) {
+            $oldItem = $(items[i]);
+            $newItem = $oldItem.clone();
+          } else {
+            $oldItem = null;
+            $newItem = $('<div/>').html(items[i]);
+          }
+
+          // Hide and mark as hidden the original element
+          ($oldItem) && $oldItem.hide().addClass('text-render-hidden-element');
+
+          // Append the item to the page
+          $newItem
+            .addClass('text-render-item text-render-anim-item')
+            .appendTo(appendTo);
+
+          itemsThisPage++;
+        }
+      } else {
+        // if we have no animations, hide the items
+        // after the options.itemsPerPage value if it's higher than 0
+        if (options.itemsPerPage > 0) {
+          for (let i = 0; i < items.length; i++) {
+            if (i >= options.itemsPerPage) {
+              $(items[i]).hide();
+            } else {
+              $(items[i]).addClass('text-render-item');
+            }
           }
         }
-
-        // For each item, create a DIV if element doesn't exist on the DOM
-        // Or clone the element if it does, hide the original and show the clone
-        let $newItem;
-        let $oldItem;
-        if ($.contains(element, items[i])) {
-          $oldItem = $(items[i]);
-          $newItem = $oldItem.clone();
-        } else {
-          $oldItem = null;
-          $newItem = $('<div/>').html(items[i]);
-        }
-
-        // Hide and mark as hidden the original element
-        ($oldItem) && $oldItem.hide().addClass('text-render-hidden-element');
-
-        // Append the item to the page
-        $newItem
-          .addClass('item text-render-anim-item')
-          .appendTo(appendTo);
-
-        itemsThisPage++;
       }
 
       // 4th objective - move the items around, start the timer
@@ -241,7 +273,10 @@ jQuery.fn.extend({
         options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
         // Cycle slides are either page or item
-        let slides = (options.itemsPerPage > 1) ? '.page' : '.item';
+        let slides =
+          (options.itemsPerPage > 1) ?
+            '.text-render-page' :
+            '.text-render-item';
 
         // If we only have 1 item, then
         // we are in trouble and need to duplicate it.
@@ -283,7 +318,7 @@ jQuery.fn.extend({
         }
 
         // Cycle handles this for us
-        $contentDiv.cycle({
+        $contentDiv.addClass('anim-cycle').cycle({
           fx: (options.effect === 'noTransition') ? 'none' : options.effect,
           speed: (options.effect === 'noTransition') ?
             noTransitionSpeed : options.speed,
@@ -395,15 +430,15 @@ jQuery.fn.extend({
       // Add aditional padding to the items
       if (paddingRight > 0 || paddingBottom > 0) {
         // Add padding to all item elements
-        $('.item').css(
+        $('.text-render-item').css(
           'padding',
           '0px ' + paddingRight + 'px ' + paddingBottom + 'px 0px',
         );
 
         // Exclude the last item on the page and
-        // the last on the content ( if there is no pages )
-        $('.page .item:last-child').css('padding', 0);
-        $('#content .item:last-child').css('padding', 0);
+        // the last on the content ( if there are no pages )
+        $('.text-render-page .text-render-item:last-child').css('padding', 0);
+        $('#content .text-render-item:last').css('padding', 0);
       }
 
       // Align the whole thing according to vAlignment

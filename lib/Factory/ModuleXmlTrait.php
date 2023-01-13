@@ -60,6 +60,8 @@ trait ModuleXmlTrait
                     $stencil->width = doubleval($childNode->textContent);
                 } else if ($childNode->nodeName === 'height') {
                     $stencil->height = doubleval($childNode->textContent);
+                } else if ($childNode->nodeName === 'padding') {
+                    $stencil->padding = doubleval($childNode->textContent);
                 }
             }
 
@@ -99,6 +101,7 @@ trait ModuleXmlTrait
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
+                $property->value = $this->getFirstValueOrDefaultFromXmlNode($node, 'value');
                 $property->customClass = __($this->getFirstValueOrDefaultFromXmlNode($node, 'customClass'));
 
                 // Default value
