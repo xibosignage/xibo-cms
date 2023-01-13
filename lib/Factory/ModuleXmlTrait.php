@@ -60,8 +60,8 @@ trait ModuleXmlTrait
                     $stencil->width = doubleval($childNode->textContent);
                 } else if ($childNode->nodeName === 'height') {
                     $stencil->height = doubleval($childNode->textContent);
-                } else if ($childNode->nodeName === 'padding') {
-                    $stencil->padding = doubleval($childNode->textContent);
+                } else if ($childNode->nodeName === 'gapBetweenHbs') {
+                    $stencil->gapBetweenHbs = doubleval($childNode->textContent);
                 }
             }
 

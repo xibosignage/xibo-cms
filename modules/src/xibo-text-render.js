@@ -39,7 +39,7 @@ jQuery.fn.extend({
       alignmentV: 'top',
       widgetDesignWidth: 0,
       widgetDesignHeight: 0,
-      widgetDesignPadding: 0,
+      widgetDesignGap: 0,
       displayDirection: 0,
     };
 
@@ -86,11 +86,11 @@ jQuery.fn.extend({
           // Landscape or square size plus padding
           options.widgetDesignWidth =
             (options.itemsPerPage * options.widgetDesignWidth) +
-            (options.widgetDesignPadding * (options.itemsPerPage - 1));
+            (options.widgetDesignGap * (options.itemsPerPage - 1));
           options.widgetDesignHeight = options.widgetDesignHeight;
           width = options.widgetDesignWidth;
           height = options.widgetDesignHeight;
-          paddingRight = options.widgetDesignPadding;
+          paddingRight = options.widgetDesignGap;
         } else if (
           (
             $(window).width() < $(window).height() &&
@@ -101,11 +101,11 @@ jQuery.fn.extend({
           // Portrait size plus padding
           options.widgetDesignHeight =
             (options.itemsPerPage * options.widgetDesignHeight) +
-            (options.widgetDesignPadding * (options.itemsPerPage - 1));
+            (options.widgetDesignGap * (options.itemsPerPage - 1));
           options.widgetDesignWidth = options.widgetDesignWidth;
           width = options.widgetDesignWidth;
           height = options.widgetDesignHeight;
-          paddingBottom = options.widgetDesignPadding;
+          paddingBottom = options.widgetDesignGap;
         }
       }
     }
