@@ -46,6 +46,9 @@ class Stencil implements \JsonSerializable
     /** @var double Optional positional information if contained as part of an element group */
     public $height;
 
+    /** @var double Optional positional information if contained as part of an element group */
+    public $gapBetweenHbs;
+
     /** @inheritDoc */
     public function jsonSerialize()
     {
@@ -54,6 +57,7 @@ class Stencil implements \JsonSerializable
             'hbs' => $this->hbs,
             'width' => $this->width,
             'height' => $this->height,
+            'gapBetweenHbs' => $this->gapBetweenHbs,
             'elements' => $this->elements
         ];
     }

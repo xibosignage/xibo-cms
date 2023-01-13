@@ -132,6 +132,7 @@ $(function() {
       if ($template && $template.length > 0) {
         globalOptions.widgetDesignWidth = $template.data('width');
         globalOptions.widgetDesignHeight = $template.data('height');
+        globalOptions.widgetDesignGap = $template.data('gap');
       }
 
       // Save template properties to widget properties

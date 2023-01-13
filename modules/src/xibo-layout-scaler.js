@@ -26,7 +26,7 @@ jQuery.fn.extend({
       originalHeight: 0,
       widgetDesignWidth: 0,
       widgetDesignHeight: 0,
-      widgetDesignPadding: 0,
+      widgetDesignGap: 0,
       itemsPerPage: 0,
       alignmentH: 'center',
       alignmentV: 'middle',
@@ -60,7 +60,7 @@ jQuery.fn.extend({
           // display direction is horizontal
           options.widgetDesignWidth =
             (options.itemsPerPage * options.widgetDesignWidth) +
-            (options.widgetDesignPadding * (options.itemsPerPage - 1));
+            (options.widgetDesignGap * (options.itemsPerPage - 1));
           options.widgetDesignHeight = options.widgetDesignHeight;
         } else if (
           (newWidth < newHeight && options.displayDirection == '0') ||
@@ -70,7 +70,7 @@ jQuery.fn.extend({
           // display direction is vertical
           options.widgetDesignHeight =
             (options.itemsPerPage * options.widgetDesignHeight) +
-            (options.widgetDesignPadding * (options.itemsPerPage - 1));
+            (options.widgetDesignGap * (options.itemsPerPage - 1));
           options.widgetDesignWidth = options.widgetDesignWidth;
         }
       }

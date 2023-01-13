@@ -27,7 +27,7 @@ jQuery.fn.extend({
     options = $.extend({}, defaults, options);
 
     this.each(function(_key, element) {
-      const $contentDiv = $(element).find('#content');
+      const $contentDiv = $(element);
       // Marquee effect
       if (
         options.effect == 'marqueeLeft' ||
@@ -46,7 +46,7 @@ jQuery.fn.extend({
         }
       } else if (options.effect != 'none') { // Cycle effect
         // Resume effect
-        $contentDiv.cycle('resume');
+        $contentDiv.find('.anim-cycle').cycle('resume');
       }
     });
 
