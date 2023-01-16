@@ -1,9 +1,8 @@
-<div class="form-group row form-colors">
-    <label class="col-sm-2 control-label" for="{{ colorId }}" accesskey="">{{ title }}</label>
-    <div class="col-sm-8">
-        <input class="form-control" name="color[]" id="{{ colorId }}" type="text" value="{{ value }}">
+<div class="form-group row form-colors mb-0">
+    <div class="col-sm-10 pl-0">
+        {{> forms/inputs/color id=colorId name="color[]" value=value customClass="custom-color" }}
     </div>
-    <div class="col-sm-1">
+    <div class="col-sm-2">
         <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
     </div>
 </div>

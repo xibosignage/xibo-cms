@@ -141,6 +141,10 @@ class TwitterConnector implements ConnectorInterface
                         // Mini image
                         $url = str_replace('_normal', '_mini', $item['user']['profile_image_url']);
                         $tweet->userProfileImageMini = $dataProvider->addImage($id . '_mini', $url, $expires);
+
+                        // Bigger image
+                        $url = str_replace('_normal', '_bigger', $item['user']['profile_image_url']);
+                        $tweet->userProfileImageBigger = $dataProvider->addImage($id . '_bigger', $url, $expires);
                     }
 
                     // Photo
@@ -195,7 +199,7 @@ class TwitterConnector implements ConnectorInterface
         $query = [
             'q' => trim($searchTerm),
             'result_type' => $dataProvider->getProperty('resultType', 'mixed'),
-            'count' => $dataProvider->getProperty('tweetCount', 15),
+            'count' => $dataProvider->getProperty('numItems', 15),
             'include_entities' => true,
             'tweet_mode' => 'extended'
         ];
