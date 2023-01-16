@@ -199,7 +199,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 $parentCampaignId = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
                 $displayId = $sanitizedRow->getInt(('displayId'));
 
-                if (empty($parentCampaignId) || empty($displayId) || in_array($parentCampaignId, $erroredCampaign)) {
+                if (empty($parentCampaignId) || empty($displayId) || array_key_exists($parentCampaignId, $erroredCampaign)) {
                     continue;
                 }
 
@@ -238,12 +238,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
                         }
                     } catch (\Exception $exception) {
-                        $erroredCampaign[] = $parentCampaignId;
-                        $event->addMessage(__('Error caching ad/list campaign:') . $parentCampaignId .
-                            ' ' . 'StatId' . ' ' . $entry['id'] .
-                            ' ' . $exception->getMessage());
-                        $this->getLogger()->error('onRegularMaintenance: caching ad/list campaign failed for StatId: ' .
-                            $entry['id'] . ' Errored campaign:' .json_encode($erroredCampaign) . ' ' . $exception->getMessage());
+                        $erroredCampaign[$parentCampaignId] = $entry['id']; // first stat id
                         continue;
                     }
                 }
@@ -289,6 +284,12 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 if (!in_array($parentCampaignId, $campaigns)) {
                     $campaigns[] = $parentCampaignId;
                 }
+            }
+
+            if (count($erroredCampaign) > 0) {
+                $event->addMessage(__('Error caching ad/list campaign:') . ' CampaignId/StatId:' . json_encode($erroredCampaign));
+                $this->getLogger()->error('onRegularMaintenance: caching ad/list campaign failed for StatId: ' .
+                    ' Errored CampaignId/StatId:' . json_encode($erroredCampaign));
             }
 
             $this->getLogger()->debug('onRegularMaintenance: Records sent: ' . count($rows) . ', Watermark: ' . $watermark);
