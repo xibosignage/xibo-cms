@@ -1747,6 +1747,7 @@ class Soap
             // Cache a count for this scheduleId
             $parentCampaignId = 0;
             $parentCampaign = null;
+            $deletedCampaignIds = [];
 
             if ($scheduleId > 0) {
                 // Lookup this schedule
@@ -1754,31 +1755,35 @@ class Soap
                     // Look up the campaign.
                     $schedules[$scheduleId] = $this->scheduleFactory->getById($scheduleId);
                 }
+                $parentCampaignId = $schedules[$scheduleId]->parentCampaignId ?? 0;
 
                 // Does this event have a parent campaign?
-                if (!empty($schedules[$scheduleId]->parentCampaignId)) {
-                    $parentCampaignId = $schedules[$scheduleId]->parentCampaignId;
+                if (!empty($parentCampaignId) && !in_array($parentCampaignId, $deletedCampaignIds)) {
+                    try {
+                        // Look it up
+                        if (!array_key_exists($parentCampaignId, $campaigns)) {
+                            $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
+                        }
 
-                    // Look it up
-                    if (!array_key_exists($parentCampaignId, $campaigns)) {
-                        $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
-                    }
+                        // Set the parent campaign so that it is recorded with the stat record
+                        $parentCampaign = $campaigns[$parentCampaignId];
 
-                    // Set the parent campaign so that it is recorded with the stat record
-                    $parentCampaign = $campaigns[$parentCampaignId];
+                        // For a layout stat we should increment the number of plays on the Campaign
+                        if ($type === 'layout' && $campaigns[$parentCampaignId]->type === 'ad') {
+                            // spend/impressions multiplier for this display
+                            $spend = empty($this->display->costPerPlay)
+                                ? 0
+                                : ($count * $this->display->costPerPlay);
+                            $impressions = empty($this->display->impressionsPerPlay)
+                                ? 0
+                                : ($count * $this->display->impressionsPerPlay);
 
-                    // For a layout stat we should increment the number of plays on the Campaign
-                    if ($type === 'layout' && $campaigns[$parentCampaignId]->type === 'ad') {
-                        // spend/impressions multiplier for this display
-                        $spend = empty($this->display->costPerPlay)
-                            ? 0
-                            : ($count * $this->display->costPerPlay);
-                        $impressions = empty($this->display->impressionsPerPlay)
-                            ? 0
-                            : ($count * $this->display->impressionsPerPlay);
-
-                        // record
-                        $parentCampaign->incrementPlays($count, $spend, $impressions);
+                            // record
+                            $parentCampaign->incrementPlays($count, $spend, $impressions);
+                        }
+                    } catch (NotFoundException $notFoundException) {
+                        $deletedCampaignIds[] = $parentCampaignId;
+                        $this->getLog()->error('Campaign with ID ' . $parentCampaignId . ' no-longer exists');
                     }
                 }
             }
