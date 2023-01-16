@@ -190,6 +190,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $adCampaignCache = [];
             $listCampaignCache = [];
             $displayCache = [];
+            $erroredCampaign = [];
 
             $rows = [];
             while ($row = $resultSet->getNextRow()) {
@@ -198,7 +199,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 $parentCampaignId = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
                 $displayId = $sanitizedRow->getInt(('displayId'));
 
-                if (empty($parentCampaignId) || empty($displayId)) {
+                if (empty($parentCampaignId) || empty($displayId) || in_array($parentCampaignId, $erroredCampaign)) {
                     continue;
                 }
 
@@ -208,6 +209,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 }
 
                 $entry['parentCampaignId'] = $parentCampaignId;
+
+                // Stat id
+                $entry['id'] = $resultSet->getIdFromRow($row);
 
                 // --------
                 // Get Campaign
@@ -234,8 +238,12 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
                         }
                     } catch (\Exception $exception) {
-                        $event->addMessage(__('Error caching ad/list campaign:'. $exception->getMessage()));
-                        $this->getLogger()->error('onRegularMaintenance: caching ad/list campaign failed' . $exception->getMessage());
+                        $erroredCampaign[] = $parentCampaignId;
+                        $event->addMessage(__('Error caching ad/list campaign:') . $parentCampaignId .
+                            ' ' . 'StatId' . ' ' . $entry['id'] .
+                            ' ' . $exception->getMessage());
+                        $this->getLogger()->error('onRegularMaintenance: caching ad/list campaign failed for StatId: ' .
+                            $entry['id'] . ' Errored campaign:' .json_encode($erroredCampaign) . ' ' . $exception->getMessage());
                         continue;
                     }
                 }
@@ -268,7 +276,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     continue;
                 }
 
-                $entry['id'] = $resultSet->getIdFromRow($row);
                 $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
                 $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
                 $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
