@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -309,6 +309,32 @@ class Soap5 extends Soap4
                         } catch (\DOMException $DOMException) {
                             $this->getLog()->error('Cannot add command to settings for displayId ' . $this->display->displayId . ', ' . $DOMException->getMessage());
                         }
+                    }
+                }
+
+                // Tags
+                if (count($display->tags) > 0) {
+                    $tagsElement = $return->createElement('tags');
+                    $displayElement->appendChild($tagsElement);
+
+                    foreach ($display->tags as $tagLink) {
+                        $tagNode = $return->createElement('tag');
+
+                        $tagNameNode = $return->createElement('tagName');
+                        $tag = $return->createTextNode($tagLink->tag);
+                        $tagNameNode->appendChild($tag);
+
+                        $tagNode->appendChild($tagNameNode);
+
+                        if ($tagLink->value !== null) {
+                            $valueNode = $return->createElement('tagValue');
+                            $value = $return->createTextNode($tagLink->value);
+                            $valueNode->appendChild($value);
+
+                            $tagNode->appendChild($valueNode);
+                        }
+
+                        $tagsElement->appendChild($tagNode);
                     }
                 }
 

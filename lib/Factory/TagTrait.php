@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -70,7 +70,7 @@ trait TagTrait
             $tagLink = new TagLink($this->getStore(), $this->getLog(), $this->getDispatcher());
             $tagLink->tagId = $sanitizedRow->getInt('tagId');
             $tagLink->tag = $sanitizedRow->getString('tag');
-            $tagLink->value = $sanitizedRow->getString('value');
+            $tagLink->value = $sanitizedRow->getString('value', ['defaultOnEmptyString' => true]);
 
             foreach ($entries as $entry) {
                 if ($entry->$column === $sanitizedRow->getInt($column)) {
