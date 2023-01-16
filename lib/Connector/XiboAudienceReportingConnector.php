@@ -216,19 +216,28 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
                     $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
                 } else {
-                    $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
-                    if ($parentCampaign->type == 'ad') {
-                        $adCampaignCache[$parentCampaignId]['type'] = $parentCampaign->type;
-                    } else {
-                        $listCampaignCache[$parentCampaignId] = $parentCampaignId;
-                        continue;
-                    }
 
-                    if (!empty($parentCampaign->getStartDt()) && !empty($parentCampaign->getEndDt())) {
-                        $adCampaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
-                        $adCampaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
-                        $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
-                        $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
+                    // Get Campaign
+                    try {
+                        $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
+
+                        if ($parentCampaign->type == 'ad') {
+                            $adCampaignCache[$parentCampaignId]['type'] = $parentCampaign->type;
+                        } else {
+                            $listCampaignCache[$parentCampaignId] = $parentCampaignId;
+                            continue;
+                        }
+
+                        if (!empty($parentCampaign->getStartDt()) && !empty($parentCampaign->getEndDt())) {
+                            $adCampaignCache[$parentCampaignId]['start'] =  $parentCampaign->getStartDt()->format(DateFormatHelper::getSystemFormat());
+                            $adCampaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()->format(DateFormatHelper::getSystemFormat());
+                            $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
+                            $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
+                        }
+                    } catch (\Exception $exception) {
+                        $event->addMessage(__('Error caching ad/list campaign:'. $exception->getMessage()));
+                        $this->getLogger()->error('onRegularMaintenance: caching ad/list campaign failed' . $exception->getMessage());
+                        continue;
                     }
                 }
 
@@ -256,7 +265,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                         $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
                     }
                 } catch (\Exception $exception) {
-                    $this->getLogger()->debug('onRegularMaintenance: Date convert ' . $exception->getMessage());
+                    $this->getLogger()->error('onRegularMaintenance: Date convert failed ' . $exception->getMessage());
                     continue;
                 }
 
