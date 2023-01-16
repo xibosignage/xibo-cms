@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -71,6 +71,8 @@ class WidgetSyncTask implements TaskInterface
         $countWidgets = 0;
 
         // Update for widgets which are active on displays
+        // TODO: decide if this is soon enough to do this work (none of these widgets will have any data until
+        //  this runs).
         $sql = '
           SELECT DISTINCT `requiredfile`.itemId 
             FROM `requiredfile` 
@@ -95,6 +97,11 @@ class WidgetSyncTask implements TaskInterface
                 $widget->load();
 
                 $module = $this->moduleFactory->getByType($widget->type);
+
+                // If this widget's module expects data to be provided (i.e. has a datatype) then make sure that
+                // data is cached ahead of time here.
+                // This also refreshes any library or external images referenced by the data so that they aren't
+                // considered for removal.
                 if ($module->isDataProviderExpected()) {
                     // Record start time
                     $countWidgets++;
@@ -147,6 +154,8 @@ class WidgetSyncTask implements TaskInterface
                 $this->log->error('Cannot process widget ' . $widgetId . ', E = ' . $xiboException->getMessage());
             }
         }
+
+        // TODO: remove display_media records which have not been touched for a defined period of time.
 
         $this->log->info('Total time spent caching is ' . $timeCaching);
 

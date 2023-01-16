@@ -942,6 +942,8 @@ class Soap
                                     ->save();
                                 $newRfIds[] = $getDataRf->rfId;
                             }
+
+                            // TODO: add any assets from this widget/template (unless assetId already added)
                         }
                     }
                 }

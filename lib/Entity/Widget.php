@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -775,6 +775,7 @@ class Widget implements \JsonSerializable
 
                 $this->setOptionValue($property->id, $type, $property->value);
 
+                // TODO: add parsing for `allowAssetRefs`
                 if ($property->allowLibraryRefs) {
                     // Parse them out and replace for our special syntax.
                     $matches = [];
