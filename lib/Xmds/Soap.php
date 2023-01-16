@@ -1567,9 +1567,11 @@ class Soap
         $widgetIdsNotFound = [];
         $memoryCache = [];
 
-        // Cache of scheduleIds and counts
+        // Cache of scheduleIds, counts and deleted entities
         $schedules = [];
         $campaigns = [];
+        $deletedScheduleIds = [];
+        $deletedCampaignIds = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1747,8 +1749,6 @@ class Soap
             // Cache a count for this scheduleId
             $parentCampaignId = 0;
             $parentCampaign = null;
-            $deletedScheduleIds = [];
-            $deletedCampaignIds = [];
 
             if ($scheduleId > 0 && !in_array($scheduleId, $deletedScheduleIds)) {
                 try {
