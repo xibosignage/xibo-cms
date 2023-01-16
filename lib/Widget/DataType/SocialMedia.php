@@ -32,6 +32,7 @@ class SocialMedia implements \JsonSerializable
     public $user;
     public $userProfileImage;
     public $userProfileImageMini;
+    public $userProfileImageBigger;
     public $location;
     public $screenName;
     public $date;
@@ -45,6 +46,7 @@ class SocialMedia implements \JsonSerializable
             'user' => $this->user,
             'userProfileImage' => $this->userProfileImage,
             'userProfileImageMini' => $this->userProfileImageMini,
+            'userProfileImageBigger' => $this->userProfileImageBigger,
             'location' => $this->location,
             'screenName' => $this->screenName,
             'date' => $this->date,

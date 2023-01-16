@@ -26,7 +26,7 @@
     <class></class>
     <type>twitter</type>
     <dataType>social-media</dataType>
-    <dataCacheKey>%searchTerm%_%language%_%resultType%_%tweetCount%</dataCacheKey>
+    <dataCacheKey>%searchTerm%_%language%_%resultType%_%numItems%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -44,7 +44,7 @@
             <helpText>Language in which tweets should be returned</helpText>
             <default></default>
         </property>
-        <property id="tweetCount" type="number">
+        <property id="numItems" type="number">
             <title>Count</title>
             <helpText>The number of Tweets to return (default = 15).</helpText>
             <default>15</default>
@@ -60,15 +60,10 @@
             </options>
             <playerCompatibility android="v3 R304" windows="v3 R303" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
         </property>
-        <property id="resultContent" type="dropdown" mode="single">
-            <title>Content Type</title>
-            <helpText>This is the intended tweet content type.</helpText>
-            <default>1</default>
-            <options>
-                <option name="0">All Tweets</option>
-                <option name="1">Tweets with text only content</option>
-                <option name="2">Tweets with text and image content</option>
-            </options>
+        <property id="dateFormat" type="text" variant="dateFormat">
+            <title>Date Format</title>
+            <helpText>The format to apply to all dates returned by the Widget.</helpText>
+            <default>#DATE_FORMAT#</default>
         </property>
         <property id="tweetDistance" type="number">
             <title>Distance</title>
@@ -103,15 +98,14 @@ if(properties.removeHashtags == 1) {
 if(properties.removeUrls == 1) {
     item.text = item.text.replace(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9()@:%_\+.~#?&//=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, '');
 }
+if(properties.dateFormat != '') {
+    item.date = moment(item.date).format(properties.dateFormat);
+}
 // Return the parsed item
 return item;
     ]]></onParseData>
-        <onRender><![CDATA[
-$(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
-        ]]></onRender>
     <onVisible><![CDATA[
-// Start effects for this widge t
+// Start effects for this widget
 $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
@@ -123,7 +117,8 @@ $(target).xiboLayoutAnimate(properties);
     "user": "Tweet user",
     "screenName": "@twitter_user",
     "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
+    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
@@ -133,7 +128,8 @@ $(target).xiboLayoutAnimate(properties);
     "user": "Tweet user",
     "screenName": "@twitter_user",
     "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
+    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
@@ -143,7 +139,8 @@ $(target).xiboLayoutAnimate(properties);
     "user": "Tweet user",
     "screenName": "@twitter_user",
     "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
+    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
@@ -153,7 +150,8 @@ $(target).xiboLayoutAnimate(properties);
     "user": "Tweet user",
     "screenName": "@twitter_user",
     "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
+    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
@@ -163,7 +161,8 @@ $(target).xiboLayoutAnimate(properties);
     "user": "Tweet user",
     "screenName": "@twitter_user",
     "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg"
+    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
+    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
 }]
     ]]></sampleData>
     <preview></preview>
