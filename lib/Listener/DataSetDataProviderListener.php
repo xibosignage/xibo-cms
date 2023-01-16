@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Listener;
@@ -26,7 +25,7 @@ namespace Xibo\Listener;
 use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
-use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Event\DataSetDataRequestEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -58,8 +57,7 @@ class DataSetDataProviderListener
         ConfigServiceInterface $config,
         DataSetFactory $dataSetFactory,
         DisplayFactory $displayFactory
-    )
-    {
+    ) {
         $this->store = $store;
         $this->config = $config;
         $this->dataSetFactory = $dataSetFactory;
@@ -68,11 +66,11 @@ class DataSetDataProviderListener
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): DataSetDataProviderListener
     {
-        $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(DataSetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
         return $this;
     }
 
-    public function onDataRequest(WidgetDataRequestEvent $event)
+    public function onDataRequest(DataSetDataRequestEvent $event)
     {
         if ($event->getDataProvider()->getDataSource() === 'dataSet') {
             $dataProvider = $event->getDataProvider();
@@ -273,10 +271,10 @@ class DataSetDataProviderListener
             $timeZone = ($timeZone == '') ? $this->config->getSetting('defaultTimezone') : $timeZone;
             $dateNow->timezone($timeZone);
             $this->logger->debug(sprintf(
-                    'Display Timezone Resolved: %s. Time: %s.',
-                    $timeZone,
-                    $dateNow->toDateTimeString())
-            );
+                'Display Timezone Resolved: %s. Time: %s.',
+                $timeZone,
+                $dateNow->toDateTimeString()
+            ));
         }
 
         // Run this command on a new connection so that we do not interfere with any other queries on this connection.

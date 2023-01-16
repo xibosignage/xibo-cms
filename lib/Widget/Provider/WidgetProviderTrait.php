@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,6 +24,8 @@ namespace Xibo\Widget\Provider;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * A trait to set common objects on a Widget Provider Interface
@@ -31,6 +33,7 @@ use Psr\Log\NullLogger;
 trait WidgetProviderTrait
 {
     private $log;
+    private $dispatcher;
 
     public function getLog(): LoggerInterface
     {
@@ -43,6 +46,22 @@ trait WidgetProviderTrait
     public function setLog(LoggerInterface $logger): WidgetProviderInterface
     {
         $this->log = $logger;
+        return $this;
+    }
+
+    /** @inheritDoc */
+    public function getDispatcher(): EventDispatcherInterface
+    {
+        if ($this->dispatcher === null) {
+            $this->dispatcher = new EventDispatcher();
+        }
+        return $this->dispatcher;
+    }
+
+    /** @inheritDoc */
+    public function setDispatcher(EventDispatcherInterface $dispatcher): WidgetProviderInterface
+    {
+        $this->dispatcher = $dispatcher;
         return $this;
     }
 }

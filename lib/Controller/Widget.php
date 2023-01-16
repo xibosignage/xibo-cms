@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Controller;
@@ -110,7 +109,7 @@ class Widget extends Base
         $this->regionFactory = $regionFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
     }
-    
+
     /**
      * Add Widget
      *
@@ -415,7 +414,7 @@ class Widget extends Base
             }
             $widget->applyProperties($template->properties);
         }
-        
+
         // Check to see if the media we've assigned exists.
         foreach ($widget->mediaIds as $mediaId) {
             try {
@@ -988,10 +987,10 @@ class Widget extends Base
         $module = $this->moduleFactory->getByType($widget->type);
 
         // This is always a preview
-        if (!$module->isDataProviderExpected()) {
+        if (!$module->isDataProviderExpected() && !$module->isWidgetProviderAvailable()) {
             return $response->withJson([]);
         }
-        
+
         // Populate the widget with its properties.
         $widget->load();
         $module->decorateProperties($widget, true);
