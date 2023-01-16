@@ -216,7 +216,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
                     $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
                 } else {
-
                     // Get Campaign
                     try {
                         $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
