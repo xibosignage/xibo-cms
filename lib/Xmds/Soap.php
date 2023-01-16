@@ -1747,15 +1747,21 @@ class Soap
             // Cache a count for this scheduleId
             $parentCampaignId = 0;
             $parentCampaign = null;
+            $deletedScheduleIds = [];
             $deletedCampaignIds = [];
 
-            if ($scheduleId > 0) {
-                // Lookup this schedule
-                if (!array_key_exists($scheduleId, $schedules)) {
-                    // Look up the campaign.
-                    $schedules[$scheduleId] = $this->scheduleFactory->getById($scheduleId);
+            if ($scheduleId > 0 && !in_array($scheduleId, $deletedScheduleIds)) {
+                try {
+                    // Lookup this schedule
+                    if (!array_key_exists($scheduleId, $schedules)) {
+                        // Look up the campaign.
+                        $schedules[$scheduleId] = $this->scheduleFactory->getById($scheduleId);
+                    }
+                    $parentCampaignId = $schedules[$scheduleId]->parentCampaignId ?? 0;
+                } catch (NotFoundException $notFoundException) {
+                    $this->getLog()->error('Schedule with ID ' . $scheduleId . ' no-longer exists');
+                    $deletedScheduleIds[] = $scheduleId;
                 }
-                $parentCampaignId = $schedules[$scheduleId]->parentCampaignId ?? 0;
 
                 // Does this event have a parent campaign?
                 if (!empty($parentCampaignId) && !in_array($parentCampaignId, $deletedCampaignIds)) {
