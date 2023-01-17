@@ -2470,70 +2470,80 @@ class LayoutFactory extends BaseFactory
     /**
      * @param int $layoutId
      * @param array $actionLayoutIds
+     * @param array $processedLayoutIds
      * @return array
      */
-    public function getActionPublishedLayoutIds(int $layoutId, array &$actionLayoutIds): array
+    public function getActionPublishedLayoutIds(int $layoutId, array &$actionLayoutIds, array &$processedLayoutIds): array
     {
-        // Get Layout Codes set in Actions on this Layout
-        // Actions directly on this Layout
-        $sql = '
-            SELECT DISTINCT `action`.layoutCode
-              FROM `action`
-                INNER JOIN `layout`
-                ON `layout`.layoutId = `action`.sourceId
-             WHERE `action`.actionType = :actionType
-                AND `layout`.layoutId = :layoutId
-                AND `layout`.parentId IS NULL
-        ';
+        // if Layout was already processed, do not attempt to do it again
+        // we should have all actionLayoutsIds from it at this point, there is no need to process it again
+        if (!in_array($layoutId, $processedLayoutIds)) {
+            // Get Layout Codes set in Actions on this Layout
+            // Actions directly on this Layout
+            $sql = '
+                SELECT DISTINCT `action`.layoutCode
+                  FROM `action`
+                    INNER JOIN `layout`
+                    ON `layout`.layoutId = `action`.sourceId
+                 WHERE `action`.actionType = :actionType
+                    AND `layout`.layoutId = :layoutId
+                    AND `layout`.parentId IS NULL
+            ';
 
-        // Actions on this Layout's Regions
-        $sql .= '
-            UNION
-            SELECT DISTINCT `action`.layoutCode
-              FROM `action`
-                INNER JOIN `region`
-                ON `region`.regionId = `action`.sourceId
-                INNER JOIN `layout`
-                ON `layout`.layoutId = `region`.layoutId
-             WHERE `action`.actionType = :actionType
-                AND `layout`.layoutId = :layoutId
-                AND `layout`.parentId IS NULL
-        ';
+            // Actions on this Layout's Regions
+            $sql .= '
+                UNION
+                SELECT DISTINCT `action`.layoutCode
+                  FROM `action`
+                    INNER JOIN `region`
+                    ON `region`.regionId = `action`.sourceId
+                    INNER JOIN `layout`
+                    ON `layout`.layoutId = `region`.layoutId
+                 WHERE `action`.actionType = :actionType
+                    AND `layout`.layoutId = :layoutId
+                    AND `layout`.parentId IS NULL
+            ';
 
-        // Actions on this Layout's Widgets
-        $sql .= '
-            UNION
-            SELECT DISTINCT `action`.layoutCode
-              FROM `action`
-                INNER JOIN `widget`
-                ON `widget`.widgetId = `action`.sourceId
-                INNER JOIN `playlist`
-                ON `playlist`.playlistId = `widget`.playlistId
-                INNER JOIN `region`
-                ON `region`.regionId = `playlist`.regionId
-                INNER JOIN `layout`
-                ON `layout`.layoutId = `region`.layoutId
-             WHERE `action`.actionType = :actionType
-                AND `layout`.layoutId = :layoutId
-                AND `layout`.parentId IS NULL
-        ';
+            // Actions on this Layout's Widgets
+            $sql .= '
+                UNION
+                SELECT DISTINCT `action`.layoutCode
+                  FROM `action`
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `action`.sourceId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `playlist`.regionId
+                    INNER JOIN `layout`
+                    ON `layout`.layoutId = `region`.layoutId
+                 WHERE `action`.actionType = :actionType
+                    AND `layout`.layoutId = :layoutId
+                    AND `layout`.parentId IS NULL
+            ';
 
-        // Join them together and get the Layout's referenced by those codes
-        $actionLayoutCodes = $this->getStore()->select('
-            SELECT `layout`.layoutId
-              FROM `layout`
-             WHERE `layout`.code IN (
-                 ' . $sql . '
-             )
-        ', [
-            'actionType' => 'navLayout',
-            'layoutId' => $layoutId,
-        ]);
+            // Join them together and get the Layout's referenced by those codes
+            $actionLayoutCodes = $this->getStore()->select('
+                SELECT `layout`.layoutId
+                  FROM `layout`
+                 WHERE `layout`.code IN (
+                     ' . $sql . '
+                 )
+            ', [
+                'actionType' => 'navLayout',
+                'layoutId' => $layoutId,
+            ]);
 
-        foreach ($actionLayoutCodes as $row) {
-            $actionLayoutIds[] = $row['layoutId'];
-            // check if this layout is linked with any further navLayout actions
-            $this->getActionPublishedLayoutIds($row['layoutId'], $actionLayoutIds);
+            $processedLayoutIds[] = $layoutId;
+
+            foreach ($actionLayoutCodes as $row) {
+                // if we have not processed this Layout yet, do it now
+                if (!in_array($row['layoutId'], $actionLayoutIds)) {
+                    $actionLayoutIds[] = $row['layoutId'];
+                    // check if this layout is linked with any further navLayout actions
+                    $this->getActionPublishedLayoutIds($row['layoutId'], $actionLayoutIds, $processedLayoutIds);
+                }
+            }
         }
 
         return $actionLayoutIds;

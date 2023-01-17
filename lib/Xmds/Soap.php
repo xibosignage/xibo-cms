@@ -501,9 +501,10 @@ class Soap
 
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
         $actionLayoutIds = [];
+        $processedLayoutIds = [];
         foreach ($layouts as $layoutId) {
             // this is recursive function, as we need to get 2nd level nesting and beyond
-            $this->layoutFactory->getActionPublishedLayoutIds($layoutId, $actionLayoutIds);
+            $this->layoutFactory->getActionPublishedLayoutIds($layoutId, $actionLayoutIds, $processedLayoutIds);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
             if (!empty($actionLayoutIds)) {
