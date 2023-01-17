@@ -66,6 +66,21 @@ window.forms = {
           property.visibility = JSON.stringify(rules);
         }
 
+        // Special properties
+        // Dataset selector
+        if (property.type === 'datasetSelector') {
+          property.datasetSearchUrl = urlsForApi.dataset.search.url;
+
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'dataSetId';
+          }
+        }
+
         // Append the property to the target container
         if (templates.forms.hasOwnProperty(property.type)) {
           const $newField = $(templates.forms[property.type](property))
@@ -97,6 +112,11 @@ window.forms = {
               )),
             );
           }
+
+          // Handle depends on property
+          if (property.dependsOn) {
+            $newField.attr('data-depends-on', property.dependsOn);
+          }
         } else {
           console.error('Form type not found: ' + property.type);
         }
@@ -113,11 +133,30 @@ window.forms = {
   },
   /**
    * Initialise the form fields
-   * @param {object} container - Main container
+   * @param {string} container - Main container Jquery selector
+   * @param {object} target - Target Jquery selector or object
    */
-  initFields: function(container) {
+  initFields: function(container, target) {
+    // Find elements, either they match
+    // the children of the container or they are the target
+    const findElements = function(selector, target) {
+      if (target) {
+        if ($(target).is(selector)) {
+          return $(target);
+        } else {
+          // Return empty object
+          return $();
+        }
+      }
+
+      return $(container).find(selector);
+    };
+
     // Code editor
-    $(container).find('.xibo-code-input').each(function(_k, el) {
+    findElements(
+      '.xibo-code-input',
+      target,
+    ).each(function(_k, el) {
       const $textArea = $(el).find('.code-input');
       const inputValue = $textArea.val();
       const codeType = $textArea.data('codeType');
@@ -145,8 +184,9 @@ window.forms = {
     });
 
     // Colour picker
-    $(container).find(
+    findElements(
       '.colorpicker-input',
+      target,
     ).each(function(_k, el) {
       // Init the colour picker
       $(el).colorpicker();
@@ -164,8 +204,9 @@ window.forms = {
     });
 
     // Date picker - date only
-    $(container).find(
+    findElements(
       '.dateControl.date:not(.datePickerHelper)',
+      target,
     ).each(function(_k, el) {
       if (calendarType == 'Jalali') {
         initDatePicker(
@@ -192,8 +233,9 @@ window.forms = {
     });
 
     // Date picker - date and time
-    $(container).find(
+    findElements(
       '.dateControl.dateTime:not(.datePickerHelper)',
+      target,
     ).each(function(_k, el) {
       const enableSeconds = dateFormat.includes('s');
       const enable24 = !dateFormat.includes('A');
@@ -229,8 +271,9 @@ window.forms = {
     });
 
     // Date picker - month only
-    $(container).find(
+    findElements(
       '.dateControl.month:not(.datePickerHelper)',
+      target,
     ).each(function(_k, el) {
       if (calendarType == 'Jalali') {
         initDatePicker(
@@ -279,8 +322,9 @@ window.forms = {
     });
 
     // Date picker - time only
-    $(container).find(
+    findElements(
       '.dateControl.time:not(.datePickerHelper)',
+      target,
     ).each(function(_k, el) {
       const enableSeconds = dateFormat.includes('s');
 
@@ -323,8 +367,9 @@ window.forms = {
     });
 
     // Rich text input
-    $(container).find(
+    findElements(
       '.rich-text',
+      target,
     ).each(function(_k, el) {
       formHelpers.setupCKEditor(
         container,
@@ -337,8 +382,9 @@ window.forms = {
     });
 
     // World clock timezone input
-    $(container).find(
+    findElements(
       '.world-clock-timezone',
+      target,
     ).each(function(_k, el) {
       // If there's no clock container
       // create one and add it to the element
@@ -480,6 +526,37 @@ window.forms = {
       configureMultipleWorldClocks($(el));
       initClockRows(el);
     });
+
+    // Handle field dependencies for the container
+    // only if we don't have a target
+    if (!target) {
+      $(container).find(
+        '.xibo-form-input[data-depends-on]',
+      ).each(function(_k, el) {
+        const $target = $(el);
+        const dependency = $target.data('dependsOn');
+
+        // If the dependency has already been added, skip
+        if ($target.data('dependsOnAdded')) {
+          return;
+        }
+
+        // Mark dependency as added to the target
+        $target.data('dependsOnAdded', true);
+
+        // Add event listener to the dependency
+        $(container).find(dependency).on('change', function(_k, el) {
+          // Reset the value of the target
+          console.log('Dependency changed');
+
+          // Set dependency value to the target as a data attribute
+          $target.data('dependsOnValue', $(el).val());
+
+          // Reset the target form field
+          forms.initFields(container, $target);
+        });
+      });
+    }
   },
   /**
      * Handle form field replacements

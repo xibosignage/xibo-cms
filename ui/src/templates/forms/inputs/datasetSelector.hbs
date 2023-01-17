@@ -1,0 +1,17 @@
+{{> dropdown id=id value=value title=title customClass="pagedSelect"
+    options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name"
+    customData=(arr 
+        (obj name='width' value='100%')
+        (obj name='allow-clear' value='true')
+        (obj name='placeholder--id' value=null)
+        (obj name='placeholder--value' value='')
+        (obj name='search-url' value=datasetSearchUrl)
+        (obj name='search-term' value='dataSet')
+        (obj name='id-property' value='dataSetId')
+        (obj name='text-property' value='dataSet')
+        (obj name='selected-property' value='selected')
+        (obj name='initial-value' value=initialValue)
+        (obj name='initial-key' value=initialKey)
+    )
+    helpText=helpText
+}}

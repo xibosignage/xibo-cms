@@ -83,14 +83,14 @@ $(function() {
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
-      } else if (data.length === 0 && widget.sample) {
+      } else if (data.data.length === 0 && widget.sample) {
         // If data is empty, use sample data instead
         // Add single element or array of elements
         dataItems = (Array.isArray(widget.sample)) ?
           widget.sample.slice(0) : [widget.sample];
       } else {
         // Add items to the widget
-        dataItems = data;
+        dataItems = data.data;
       }
 
       // Run the onInitialize function if it exists

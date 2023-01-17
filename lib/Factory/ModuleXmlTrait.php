@@ -102,6 +102,7 @@ trait ModuleXmlTrait
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
                 $property->value = $this->getFirstValueOrDefaultFromXmlNode($node, 'value');
+                $property->dependsOn = $this->getFirstValueOrDefaultFromXmlNode($node, 'dependsOn');
                 $property->customClass = __($this->getFirstValueOrDefaultFromXmlNode($node, 'customClass'));
 
                 // Default value

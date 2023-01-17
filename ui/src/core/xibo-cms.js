@@ -3017,8 +3017,10 @@ function makePagedSelect(element, parent) {
     });
 
     // Set initial value if exists
-    if(element.data("initialValue") != undefined && element.data("initialKey") != undefined) {
-
+    if(
+        [undefined, ''].indexOf(element.data("initialValue")) == -1 &&
+        [undefined, ''].indexOf(element.data("initialKey")) == -1
+    ) {
         var initialValue = element.data("initialValue");
         var initialKey = element.data("initialKey");
 
