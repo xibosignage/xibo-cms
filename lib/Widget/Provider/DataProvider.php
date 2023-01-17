@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget\Provider;
@@ -47,11 +48,17 @@ class DataProvider implements DataProviderInterface
     /** @var array the data */
     private $data = [];
 
+    /** @var array the metadata */
+    private $meta = [];
+
     /** @var \Xibo\Entity\Media[] */
     private $media = [];
 
     /** @var int the cache ttl in seconds - default to 7 days */
     private $cacheTtl = 86400 * 7;
+
+    /** @var int the displayId */
+    private $displayId = 0;
 
     /** @var float the display latitude */
     private $latitude;
@@ -82,16 +89,18 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
-     * Set the latitue and longitude for this data provider.
+     * Set the latitude and longitude for this data provider.
      *  This is primary used if a widget is display specific
      * @param $latitude
      * @param $longitude
+     * @param int $displayId
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
-    public function setDisplayProperties($latitude, $longitude): DataProviderInterface
+    public function setDisplayProperties($latitude, $longitude, int $displayId = 0): DataProviderInterface
     {
         $this->latitude = $latitude;
         $this->longitude = $longitude;
+        $this->displayId = $displayId;
         return $this;
     }
 
@@ -119,6 +128,14 @@ class DataProvider implements DataProviderInterface
     public function getDataType(): string
     {
         return $this->module->dataType;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDisplayId(): int
+    {
+        return $this->displayId ?? 0;
     }
 
     /**
@@ -176,6 +193,14 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
+    public function getMeta(): array
+    {
+        return $this->meta;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function addItem($item): DataProviderInterface
     {
         if (!is_array($item) && !is_object($item)) {
@@ -204,9 +229,33 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
+    public function addOrUpdateMeta(string $key, $item): DataProviderInterface
+    {
+        if (!is_array($item) && !($item instanceof \JsonSerializable)) {
+            throw new \RuntimeException('Item must be an array or a JSON serializable object');
+        }
+
+        $this->meta[$key] = $item;
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function addImage(string $id, string $url, int $expiresAt): string
     {
         $media = $this->mediaFactory->queueDownload($id, $url, $expiresAt);
+        $this->media[] = $media;
+
+        return '[[mediaId=' . $media->mediaId . ']]';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addLibraryFile(int $mediaId): string
+    {
+        $media = $this->mediaFactory->getById($mediaId);
         $this->media[] = $media;
 
         return '[[mediaId=' . $media->mediaId . ']]';
@@ -226,6 +275,15 @@ class DataProvider implements DataProviderInterface
     public function clearData(): DataProviderInterface
     {
         $this->data = [];
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function clearMeta(): DataProviderInterface
+    {
+        $this->meta = [];
         return $this;
     }
 

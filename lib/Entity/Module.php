@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -252,6 +252,15 @@ class Module implements \JsonSerializable
     }
 
     /**
+     * Is a widget provider available
+     * @return bool
+     */
+    public function isWidgetProviderAvailable(): bool
+    {
+        return $this->widgetProvider !== null;
+    }
+
+    /**
      * Get this module's widget provider, or null if there isn't one
      * @return \Xibo\Widget\Provider\WidgetProviderInterface|null
      */
@@ -303,7 +312,9 @@ class Module implements \JsonSerializable
     public function setWidgetProvider(WidgetProviderInterface $widgetProvider): Module
     {
         $this->widgetProvider = $widgetProvider;
-        $this->widgetProvider->setLog($this->getLog()->getLoggerInterface());
+        $this->widgetProvider
+            ->setLog($this->getLog()->getLoggerInterface())
+            ->setDispatcher($this->getDispatcher());
         return $this;
     }
 
