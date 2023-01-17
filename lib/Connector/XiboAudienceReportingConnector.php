@@ -404,7 +404,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                         $body = $response->getBody()->getContents();
                         $json = json_decode($body, true);
                     } catch (RequestException $requestException) {
-                        $this->getLogger()->debug('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
                         $error = 'Failed to get campaign proofofplay result: '.$requestException->getMessage();
                     }
                     break;
@@ -422,7 +422,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                         $body = $response->getBody()->getContents();
                         $json = json_decode($body, true);
                     } catch (RequestException $requestException) {
-                        $this->getLogger()->debug('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
                         $error = 'Failed to get mobile proofofplay result: '.$requestException->getMessage();
                     }
                     break;
@@ -440,7 +440,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                         $body = $response->getBody()->getContents();
                         $json = json_decode($body, true);
                     } catch (RequestException $requestException) {
-                        $this->getLogger()->debug('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
                         $error = 'Failed to get display adplays result: '.$requestException->getMessage();
                     }
                     break;
@@ -458,13 +458,13 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                         $body = $response->getBody()->getContents();
                         $json = json_decode($body, true);
                     } catch (RequestException $requestException) {
-                        $this->getLogger()->debug('Get '. $type.': failed. e = ' . $requestException->getMessage());
+                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
                         $error = 'Failed to get display played percentage result: '.$requestException->getMessage();
                     }
                     break;
 
                 default:
-                    $this->getLogger()->debug('Connector Report not found ');
+                    $this->getLogger()->error('Connector Report not found ');
             }
 
             $event->setResults([
@@ -598,7 +598,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 'recordsTotal' => count($body),
             ];
         } catch (\Exception $e) {
-            $this->getLogger()->debug('activity: e = ' . $e->getMessage());
+            $this->getLogger()->error('activity: e = ' . $e->getMessage());
         }
 
         return [
@@ -797,7 +797,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 ]
             ]);
         } catch (\Exception $e) {
-            $this->getLogger()->debug('Exception updating Displays for dmaId: ' . $dmaId
+            $this->getLogger()->error('Exception updating Displays for dmaId: ' . $dmaId
                 . ', e: ' . $e->getMessage());
         }
     }
@@ -843,7 +843,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 throw new InvalidArgumentException(__('Invalid request'));
             }
         } elseif ($exception instanceof ServerException) {
-            $this->getLogger()->debug('handleException:' . $exception->getMessage());
+            $this->getLogger()->error('handleException:' . $exception->getMessage());
             throw new GeneralException(__('There was a problem processing your request, please try again'));
         } else {
             throw new GeneralException(__('Unknown Error'));
