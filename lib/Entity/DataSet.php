@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (c) 2022-2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 
@@ -471,7 +472,6 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [], $options = [])
     {
-
         $sanitizer = $this->getSanitizer($filterBy);
 
         $start = $sanitizer->getInt('start', ['default' => 0]);
@@ -482,7 +482,8 @@ class DataSet implements \JsonSerializable
 
         $options = array_merge([
             'includeFormulaColumns' => true,
-            'requireTotal' => true
+            'requireTotal' => true,
+            'connection' => 'default'
         ], $options);
 
         // Params
@@ -623,11 +624,15 @@ class DataSet implements \JsonSerializable
 
         $sql = $select . $body . $order . $limit;
 
-        $data = $this->getStore()->select($sql, $params);
+        $data = $this->getStore()->select($sql, $params, $options['connection']);
 
         // If there are limits run some SQL to work out the full payload of rows
         if ($options['requireTotal']) {
-            $results = $this->getStore()->select('SELECT COUNT(*) AS total FROM (' . $body, $params);
+            $results = $this->getStore()->select(
+                'SELECT COUNT(*) AS total FROM (' . $body,
+                $params,
+                $options['connection']
+            );
             $this->countLast = intval($results[0]['total']);
         }
 

@@ -102,7 +102,7 @@ class WidgetSyncTask implements TaskInterface
                 // data is cached ahead of time here.
                 // This also refreshes any library or external images referenced by the data so that they aren't
                 // considered for removal.
-                if ($module->isDataProviderExpected()) {
+                if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
                     // Record start time
                     $countWidgets++;
                     $startTime = microtime(true);
@@ -191,7 +191,7 @@ class WidgetSyncTask implements TaskInterface
         // Set our provider up for the displays
         if ($displayId !== null) {
             $display = $this->displayFactory->getById($displayId);
-            $dataProvider->setDisplayProperties($display->latitude, $display->longitude);
+            $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $displayId);
         } else {
             $dataProvider->setDisplayProperties(
                 $this->getConfig()->getSetting('DEFAULT_LAT'),

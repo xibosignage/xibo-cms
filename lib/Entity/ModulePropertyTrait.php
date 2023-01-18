@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -44,6 +44,12 @@ trait ModulePropertyTrait
                 $property->value = $property->default;
             }
 
+            if ($property->type === 'integer' && $property->value !== null) {
+                $property->value = intval($property->value);
+            } else if ($property->type === 'double' && $property->value !== null) {
+                $property->value = intval($property->value);
+            }
+
             if ($property->variant === 'uri') {
                 $property->value = urldecode($property->value);
             }
@@ -61,6 +67,7 @@ trait ModulePropertyTrait
         foreach ($this->properties as $property) {
             $value = $property->value;
 
+            // TODO: should we cast values to their appropriate field formats.
             if ($decorateForOutput) {
                 // Does this property have library references?
                 if ($property->allowLibraryRefs) {

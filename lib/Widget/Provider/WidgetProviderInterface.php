@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Provider;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * The Widget Provider Interface should be implemented by any Widget which specifies a `class` in its Module
@@ -37,6 +38,19 @@ interface WidgetProviderInterface
 {
     public function getLog(): LoggerInterface;
     public function setLog(LoggerInterface $logger): WidgetProviderInterface;
+
+    /**
+     * Get the event dispatcher
+     * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
+     */
+    public function getDispatcher(): EventDispatcherInterface;
+
+    /**
+     * Set the event dispatcher
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $logger
+     * @return \Xibo\Widget\Provider\WidgetProviderInterface
+     */
+    public function setDispatcher(EventDispatcherInterface $logger): WidgetProviderInterface;
 
     /**
      * Fetch data

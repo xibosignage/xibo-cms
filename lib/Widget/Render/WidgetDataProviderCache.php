@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -99,7 +99,12 @@ class WidgetDataProviderCache
             return false;
         } else {
             $dataProvider->clearData();
-            $dataProvider->addItems($data);
+            $dataProvider->clearMeta();
+            $dataProvider->addItems($data['data'] ?? []);
+
+            foreach (($data['meta'] ?? []) as $key => $item) {
+                $dataProvider->addOrUpdateMeta($key, $item);
+            }
             return true;
         }
     }
@@ -115,7 +120,10 @@ class WidgetDataProviderCache
         }
 
         // Set our cache from the data provider.
-        $this->cache->set($dataProvider->getData());
+        $this->cache->set([
+            'data' => $dataProvider->getData(),
+            'meta' => $dataProvider->getMeta(),
+        ]);
         $this->cache->expiresAfter($dataProvider->getCacheTtl());
 
         // Save to the pool
@@ -143,9 +151,9 @@ class WidgetDataProviderCache
         foreach ($data as $item) {
             // This is either an object or an array
             if (is_array($item)) {
-                for ($i = 0; $i < count($item); $i++) {
-                    if (is_string($item[$i])) {
-                        $item[$i] = $this->decorateMediaForPreview($libraryUrl, $item[$i]);
+                foreach ($item as $key => $value) {
+                    if (is_string($value)) {
+                        $item[$key] = $this->decorateMediaForPreview($libraryUrl, $value);
                     }
                 }
             } else if (is_object($item)) {

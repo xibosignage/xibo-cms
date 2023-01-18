@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -109,7 +109,7 @@ class Widget extends Base
         $this->regionFactory = $regionFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
     }
-    
+
     /**
      * Add Widget
      *
@@ -414,7 +414,7 @@ class Widget extends Base
             }
             $widget->applyProperties($template->properties);
         }
-        
+
         // Check to see if the media we've assigned exists.
         foreach ($widget->mediaIds as $mediaId) {
             try {
@@ -987,10 +987,10 @@ class Widget extends Base
         $module = $this->moduleFactory->getByType($widget->type);
 
         // This is always a preview
-        if (!$module->isDataProviderExpected()) {
+        if (!$module->isDataProviderExpected() && !$module->isWidgetProviderAvailable()) {
             return $response->withJson([]);
         }
-        
+
         // Populate the widget with its properties.
         $widget->load();
         $module->decorateProperties($widget, true);
@@ -1040,6 +1040,7 @@ class Widget extends Base
                         // Success
                         // We don't need to do anything else, references to mediaId will be built when we decorate
                         // the HTML.
+                        // Nothing is linked to a display when in preview mode.
                         $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
                     });
                 }
@@ -1065,7 +1066,10 @@ class Widget extends Base
             ])
         );
 
-        return $response->withJson($data);
+        return $response->withJson([
+            'data' => $data,
+            'meta' => $dataProvider->getMeta(),
+        ]);
     }
 
     /**
