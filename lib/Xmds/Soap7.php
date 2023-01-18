@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Xmds;
@@ -221,16 +222,17 @@ class Soap7 extends Soap6
                         $media[$row['mediaId']] = $row['storedAs'];
                     };
 
-                    $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
+                    $resource = json_encode([
+                        'data' => $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media),
+                        'meta' => $dataProvider->getMeta(),
+                    ]);
                 } catch (GeneralException $exception) {
                     // We ignore this.
                     $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId);
-                    $data = [];
+                    $resource = '{"data":[], "meta": {}}';
                 }
-
-                $resource = json_encode($data);
             } else {
-                $resource = '{}';
+                $resource = '{"data":[], "meta": {}}';
             }
 
             // Log bandwidth

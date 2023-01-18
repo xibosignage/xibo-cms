@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -95,7 +95,7 @@ class WidgetSyncTask implements TaskInterface
                 $widget->load();
 
                 $module = $this->moduleFactory->getByType($widget->type);
-                if ($module->isDataProviderExpected()) {
+                if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
                     // Record start time
                     $countWidgets++;
                     $startTime = microtime(true);
@@ -182,7 +182,7 @@ class WidgetSyncTask implements TaskInterface
         // Set our provider up for the displays
         if ($displayId !== null) {
             $display = $this->displayFactory->getById($displayId);
-            $dataProvider->setDisplayProperties($display->latitude, $display->longitude);
+            $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $displayId);
         } else {
             $dataProvider->setDisplayProperties(
                 $this->getConfig()->getSetting('DEFAULT_LAT'),

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Middleware;
@@ -38,6 +39,7 @@ use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Listener\CampaignListener;
+use Xibo\Listener\DataSetDataProviderListener;
 use Xibo\Listener\DisplayGroupListener;
 use Xibo\Listener\LayoutListener;
 use Xibo\Listener\MediaListener;
@@ -308,6 +310,16 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(DependencyFileSizeEvent::$NAME, (new \Xibo\Listener\OnGettingDependencyFileSize\PlayerVersionListener(
             $c->get('playerVersionFactory')
         )));
+
+        // Widget related listeners for getting core data
+        (new DataSetDataProviderListener(
+            $c->get('store'),
+            $c->get('configService'),
+            $c->get('dataSetFactory'),
+            $c->get('displayFactory')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
     }
 
     /**

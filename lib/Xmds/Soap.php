@@ -2234,7 +2234,7 @@ class Soap
             if (!$isSupportsDataUrl) {
                 foreach ($widgets as $widget) {
                     $dataModule = $this->moduleFactory->getByType($widget->type);
-                    if ($dataModule->isDataProviderExpected()) {
+                    if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
                         // We only ever return cache.
                         $dataProvider = $module->createDataProvider($widget);
 
@@ -2260,7 +2260,10 @@ class Soap
                                 . ', e: ' . $exception->getMessage());
                         }
 
-                        $data[$widget->widgetId] = $dataProvider->getData();
+                        $data[$widget->widgetId] = [
+                            'data' => $data,
+                            'meta' => $dataProvider->getMeta()
+                        ];
                     }
                 }
             }
