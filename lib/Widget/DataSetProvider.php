@@ -37,7 +37,11 @@ class DataSetProvider implements WidgetProviderInterface
 
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
-        $this->getDispatcher()->dispatch(new DataSetDataRequestEvent($dataProvider));
+        $this->getLog()->debug('fetchData: DataSetProvider passing to event');
+        $this->getDispatcher()->dispatch(
+            new DataSetDataRequestEvent($dataProvider),
+            DataSetDataRequestEvent::$NAME
+        );
         return $this;
     }
 

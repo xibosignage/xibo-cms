@@ -72,26 +72,26 @@ class DataSetDataProviderListener
 
     public function onDataRequest(DataSetDataRequestEvent $event)
     {
-        if ($event->getDataProvider()->getDataSource() === 'dataSet') {
-            $dataProvider = $event->getDataProvider();
+        $this->getLogger()->error('onDataRequest: data source is ' . $event->getDataProvider()->getDataSource());
 
-            // We must have a dataSetId configured.
-            $dataSetId = $dataProvider->getProperty('dataSetId', 0);
-            if (empty($dataSetId)) {
-                $this->getLogger()->debug('onDataRequest: no dataSetId.');
-                return;
-            }
+        $dataProvider = $event->getDataProvider();
 
-            // Get this dataset
-            try {
-                $dataSet = $this->dataSetFactory->getById($dataSetId);
-            } catch (NotFoundException $notFoundException) {
-                $this->getLogger()->error('onDataRequest: dataSetId ' . $dataSetId . ' not found.');
-                return;
-            }
-
-            $this->getData($dataSet, $dataProvider);
+        // We must have a dataSetId configured.
+        $dataSetId = $dataProvider->getProperty('dataSetId', 0);
+        if (empty($dataSetId)) {
+            $this->getLogger()->debug('onDataRequest: no dataSetId.');
+            return;
         }
+
+        // Get this dataset
+        try {
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
+        } catch (NotFoundException $notFoundException) {
+            $this->getLogger()->error('onDataRequest: dataSetId ' . $dataSetId . ' not found.');
+            return;
+        }
+
+        $this->getData($dataSet, $dataProvider);
     }
 
     private function getData(DataSet $dataSet, DataProviderInterface $dataProvider): void
