@@ -96,13 +96,18 @@ class DataSetDataProviderListener
 
     private function getData(DataSet $dataSet, DataProviderInterface $dataProvider): void
     {
+        // Load the dataSet
         $dataSet->load();
 
         // Columns
         // Build a list of column mappings we will make available as metadata
         $mappings = [];
         $columnIds = $dataProvider->getProperty('columns');
-        $columnIds = $columnIds !== null ? explode(',', $columnIds) : null;
+        $columnIds = empty($columnIds) ? null : explode(',', $columnIds);
+
+        $this->getLogger()->debug('getData: loaded dataSetId ' . $dataSet->dataSetId . ', there are '
+            . count($dataSet->columns) . '. We have selected ' . ($columnIds !== null ? count($columnIds) : 'all')
+            . ' of them');
 
         foreach ($dataSet->columns as $column) {
             if ($columnIds === null || in_array($column->dataSetColumnId, $columnIds)) {
@@ -113,6 +118,8 @@ class DataSetDataProviderListener
                 ];
             }
         }
+
+        $this->getLogger()->debug('getData: resolved ' . count($mappings) . ' column mappings');
 
         // Build filter, order and limit parameters to pass to the DataSet entity
         // Ordering
@@ -143,6 +150,9 @@ class DataSetDataProviderListener
             // Size should be the distance between upper and lower
             $filter['start'] = $lowerLimit;
             $filter['size'] = $upperLimit - $lowerLimit;
+
+            $this->getLogger()->debug('getData: applied limits, start: '
+                . $filter['start'] . ', end: ' . $filter['end']);
         }
 
         // Expiry time for any images
@@ -154,6 +164,9 @@ class DataSetDataProviderListener
             $this->setTimezone($dataProvider);
 
             $dataSetResults = $dataSet->getData($filter);
+
+            $this->getLogger()->debug('getData: finished getting data. There are '
+                . count($dataSetResults) . ' records returned');
 
             foreach ($dataSetResults as $row) {
                 // Add an item containing the columns we have selected
@@ -280,5 +293,7 @@ class DataSetDataProviderListener
 
         // Run this command on a new connection so that we do not interfere with any other queries on this connection.
         $this->store->setTimeZone($dateNow->format('P'), 'dataset');
+
+        $this->getLogger()->debug('setTimezone: finished setting timezone');
     }
 }
