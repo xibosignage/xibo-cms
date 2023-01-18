@@ -2,7 +2,11 @@
     <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
     <div class="rich-text-container">
-        <textarea type="text" class="form-control rich-text" id="{{id}}" name="{{id}}" />{{value}}</textarea>
+        <textarea type="text" class="form-control rich-text" id="{{id}}" name="{{id}}"
+            {{#each customData}}
+                data-{{this.name}}="{{this.value}}"
+            {{/each}}
+        />{{value}}</textarea>
     </div>
     {{#if richTextControls}}
         <div>Rich Text Controls</div>

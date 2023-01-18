@@ -381,6 +381,169 @@ window.forms = {
         true);
     });
 
+    // Color templates input
+    $(container).find(
+      '.color-templates',
+    ).each(function(_k, el) {
+      // Get template
+      const twittermetroColorsTemplate =
+        formHelpers.getTemplate('twittermetroColorsTemplate');
+
+      // Get hidden input
+      const $hiddenInput = $(el).find('input[type="hidden"]');
+      const templateId = $hiddenInput.data().templateId;
+      const $templateIdField = $(container).find('#' + templateId);
+      const availableTemplates = JSON.parse($templateIdField.data().templates);
+
+      /**
+       * Update hidden input with the chosen colours
+       */
+      function updateHiddenInput() {
+        const chosenColors = [];
+        $(el).find('.custom-color input').each(function(_k, el) {
+          if ($(el).val() != '') {
+            chosenColors.push($(el).val());
+          }
+        });
+
+        $hiddenInput.val(chosenColors.join(','));
+      }
+
+      /**
+       * Configure the colours in the input
+       * @param {object} container
+       */
+      function configureColours(container) {
+        const chosenColors = $hiddenInput.val();
+
+        // Get the empty div field and check if exists
+        // If not, create it
+        let $templateColorsFields = $(container).find('#templateColors');
+        if ($templateColorsFields.length == 0) {
+          $templateColorsFields = $(
+            `<div id="templateColors"
+              class="template-override-controls alert alert-primary"
+              style="margin-top: -8px;">
+            </div>`,
+          );
+
+          // Append to element
+          $templateColorsFields.appendTo($(el));
+        }
+
+        // Reset all the fields and the click event
+        $templateColorsFields.off('click');
+        $templateColorsFields.empty();
+
+        // Add plus button
+        const $addButton = $(
+          `<button type="button" class="btn btn-primary btn-block mb-2"
+            id="addColorButton">
+            <i class="fa fa-plus"></i>
+          </button>`,
+        ).appendTo($templateColorsFields);
+
+        let colorsUsed;
+        const templateColoursId = $templateIdField.val();
+        if (
+          chosenColors != null &&
+          chosenColors.length > 0 &&
+          templateColoursId == 'custom'
+        ) {
+          colorsUsed = chosenColors.split(',');
+        } else {
+          // Get the current template id and fill
+          // the text field with its colour values
+          for (let i = 0; i < availableTemplates.length; i++) {
+            if (availableTemplates[i].id == templateColoursId) {
+              colorsUsed = availableTemplates[i].colors;
+              updateHiddenInput();
+              break;
+            }
+          }
+        }
+
+        if (colorsUsed == null || colorsUsed.length == 0) {
+          // Add a empty row
+          const context = {
+            value: '',
+            colorId: 'color1',
+            buttonGlyph: 'fa-minus',
+          };
+          $addButton.before(twittermetroColorsTemplate(context));
+
+          // Call init fields to create color picker
+          forms.initFields($templateColorsFields);
+        } else {
+          for (let i = 0; i < colorsUsed.length; i++) {
+            const colorId = 'color' + i;
+            const context = {
+              value: colorsUsed[i],
+              colorId: colorId,
+              buttonGlyph: 'fa-minus',
+            };
+
+            $addButton.before(twittermetroColorsTemplate(context));
+
+            // Call init fields to create color picker
+            forms.initFields($templateColorsFields);
+          }
+        }
+
+        // Create an event to add/remove color input fields
+        $templateColorsFields.on('click', 'button', function(e) {
+          e.preventDefault();
+
+          // find the glyph
+          if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
+            // Add a empty row
+            const colorId =
+              'color' + $templateColorsFields.find('.form-group').length;
+            const context = {
+              value: '',
+              colorId: colorId,
+              buttonGlyph: 'fa-minus',
+            };
+            $addButton.before(twittermetroColorsTemplate(context));
+
+            // Call init fields to create color picker
+            forms.initFields($templateColorsFields);
+
+            // Create an event for the new button
+            $templateColorsFields.find('#' + colorId)
+              .on('change', function(e) {
+                e.preventDefault();
+                updateHiddenInput();
+              });
+          } else if ($(e.currentTarget).find('i').hasClass('fa-minus')) {
+            // Remove e.currentTarget row
+            $(e.currentTarget).closest('.form-group').remove();
+          }
+
+          // Update the hidden input
+          updateHiddenInput();
+        });
+
+        // Create an event to add/remove color input fields
+        $templateColorsFields.find('input').on('change', function(e) {
+          e.preventDefault();
+          updateHiddenInput();
+        });
+
+        // Update the hidden input
+        updateHiddenInput();
+      }
+
+      // Call the configure colours function
+      configureColours(container);
+
+      // Call when dropdown changes
+      $templateIdField.on('change', function(e) {
+        e.preventDefault();
+        configureColours(container);
+      });
+    });
+
     // World clock timezone input
     findElements(
       '.world-clock-timezone',

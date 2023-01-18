@@ -138,6 +138,20 @@ trait ModuleXmlTrait
                     }
                 }
 
+                // Custom Data
+                $customData = $node->getElementsByTagName('customData');
+                if (count($customData) > 0) {
+                    foreach ($customData->item(0)->childNodes as $dataNode) {
+                        if ($dataNode->nodeType === XML_ELEMENT_NODE) {
+                            /** @var \DOMElement $dataNode */
+                            $property->addData(
+                                $dataNode->getAttribute('name'),
+                                $dataNode->textContent
+                            );
+                        }
+                    }
+                }
+
                 // Visibility conditions
                 $visibility = $node->getElementsByTagName('visibility');
                 if (count($visibility) > 0) {
