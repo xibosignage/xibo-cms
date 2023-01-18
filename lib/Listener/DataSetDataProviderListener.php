@@ -183,6 +183,7 @@ class DataSetDataProviderListener
             // Add the mapping we've generated to the metadata
             $dataProvider->addOrUpdateMeta('mapping', $mappings);
         } catch (\Exception $exception) {
+            $this->getLogger()->debug('onDataRequest: ' . $exception->getTraceAsString());
             $this->getLogger()->error('onDataRequest: unable to get data for dataSetId ' . $dataSet->dataSetId
                 . ' e: ' . $exception->getMessage());
         }

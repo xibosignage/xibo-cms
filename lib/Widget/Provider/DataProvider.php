@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\Provider;
@@ -162,7 +161,14 @@ class DataProvider implements DataProviderInterface
         if ($this->properties === null) {
             $this->properties = $this->module->getPropertyValues(false);
         }
-        return $this->properties[$property] ?? $default;
+
+        $value = $this->properties[$property] ?? $default;
+        if (is_integer($default)) {
+            return intval($value);
+        } else if (is_numeric($value)) {
+            return doubleval($value);
+        }
+        return $value;
     }
 
     /**
