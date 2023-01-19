@@ -997,6 +997,7 @@ class Widget extends Base
 
         $dataProvider = $module->createDataProvider($widget);
         $dataProvider->setMediaFactory($this->mediaFactory);
+        $dataProvider->setPreview(true);
         $dataProvider->setDisplayProperties(
             $this->getConfig()->getSetting('DEFAULT_LAT'),
             $this->getConfig()->getSetting('DEFAULT_LONG')

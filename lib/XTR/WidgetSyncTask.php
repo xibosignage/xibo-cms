@@ -181,9 +181,11 @@ class WidgetSyncTask implements TaskInterface
 
         // Set our provider up for the displays
         if ($displayId !== null) {
+            $dataProvider->setPreview(false);
             $display = $this->displayFactory->getById($displayId);
             $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $displayId);
         } else {
+            $dataProvider->setPreview(true);
             $dataProvider->setDisplayProperties(
                 $this->getConfig()->getSetting('DEFAULT_LAT'),
                 $this->getConfig()->getSetting('DEFAULT_LONG')
