@@ -148,12 +148,12 @@ class WidgetDataProviderCache
      */
     public function decorateForPreview(array $data, string $libraryUrl): array
     {
-        foreach ($data as $item) {
+        foreach ($data as $row => $item) {
             // This is either an object or an array
             if (is_array($item)) {
                 foreach ($item as $key => $value) {
                     if (is_string($value)) {
-                        $item[$key] = $this->decorateMediaForPreview($libraryUrl, $value);
+                        $data[$row][$key] = $this->decorateMediaForPreview($libraryUrl, $value);
                     }
                 }
             } else if (is_object($item)) {
@@ -202,12 +202,12 @@ class WidgetDataProviderCache
         array $data,
         array $storedAs
     ): array {
-        foreach ($data as $item) {
+        foreach ($data as $row => $item) {
             // Each data item can be an array or an object
             if (is_array($item)) {
-                for ($i = 0; $i < count($item); $i++) {
-                    if (is_string($item[$i])) {
-                        $item[$i] = $this->decorateMediaForPlayer($storedAs, $item[$i]);
+                foreach ($item as $key => $value) {
+                    if (is_string($value)) {
+                        $data[$row][$key] = $this->decorateMediaForPlayer($storedAs, $value);
                     }
                 }
             } else if (is_object($item)) {

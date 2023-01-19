@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -62,6 +62,9 @@ class Property implements \JsonSerializable
     /** @var bool Should library refs be permitted in the value? */
     public $allowLibraryRefs = false;
 
+    /** @var bool Should asset refs be permitted in the value? */
+    public $allowAssetRefs = false;
+
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatibility;
 
@@ -72,7 +75,7 @@ class Property implements \JsonSerializable
     public $dependsOn;
 
     public $value;
-    
+
     /** @inheritDoc */
     public function jsonSerialize()
     {

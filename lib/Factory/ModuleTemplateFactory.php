@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -173,6 +173,15 @@ class ModuleTemplateFactory extends BaseFactory
             $template->errors[] = __('Invalid stencils');
             $this->getLog()->error('Module ' . $template->templateId
                 . ' has invalid stencils. e: ' .  $e->getMessage());
+        }
+
+        // Parse assets
+        try {
+            $template->assets = $this->parseAssets($xml->getElementsByTagName('assets'));
+        } catch (\Exception $e) {
+            $template->errors[] = __('Invalid assets');
+            $this->getLog()->error('Module ' . $template->templateId
+                . ' has invalid assets. e: ' .  $e->getMessage());
         }
 
         return $template;

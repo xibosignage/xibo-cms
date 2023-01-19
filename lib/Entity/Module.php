@@ -138,6 +138,9 @@ class Module implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;
 
+    /** @var \Xibo\Widget\Definition\Asset[]|null */
+    public $assets;
+
     /**
      * @SWG\Property(description="JavaScript function run when a module is initialised, before data is returned")
      * @var string
@@ -332,6 +335,15 @@ class Module implements \JsonSerializable
         }
 
         return $props;
+    }
+
+    /**
+     * Get assets
+     * @return \Xibo\Widget\Definition\Asset[]
+     */
+    public function getAssets(): array
+    {
+        return $this->assets;
     }
 
     /**

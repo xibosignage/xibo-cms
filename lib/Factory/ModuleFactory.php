@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -412,7 +412,7 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
-        
+
         // Event listeners
         $module->onInitialize = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onInitialize');
         if (!empty($module->onInitialize)) {
@@ -448,6 +448,15 @@ class ModuleFactory extends BaseFactory
             if ($legacyTypeNode instanceof \DOMElement) {
                 $module->legacyTypes[] = $legacyTypeNode->textContent;
             }
+        }
+
+        // Parse assets
+        try {
+            $module->assets = $this->parseAssets($xml->getElementsByTagName('assets'));
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid assets');
+            $this->getLog()->error('Module ' . $module->moduleId
+                . ' has invalid assets. e: ' .  $e->getMessage());
         }
 
         // Default values for remaining expected properties

@@ -64,6 +64,7 @@ use Xibo\Support\Exception\DeadlockException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
+use Xibo\Xmds\Entity\Dependency;
 
 /**
  * Class Soap
@@ -416,96 +417,21 @@ class Soap
         // -------------------
         // Output player dependencies such as the player bundle, fonts, etc.
         // 1) get a list of dependencies.
-        $dependencyListEvent = new XmdsDependencyListEvent();
-        $playerVersionMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
-
-        if ($this->display->clientType == 'sssp') {
-            $playerVersionMediaId = null;
-        }
-
-        if ($playerVersionMediaId !== null) {
-            $dependencyListEvent->setPlayerVersion($playerVersionMediaId);
-        }
+        $dependencyListEvent = new XmdsDependencyListEvent($this->display);
 
         $this->getDispatcher()->dispatch($dependencyListEvent, 'xmds.dependency.list');
 
         // 2) Each dependency returned needs to be added to RF.
         foreach ($dependencyListEvent->getDependencies() as $dependency) {
-            $file = $requiredFilesXml->createElement('file');
-
-            // HTTP downloads?
-            // 3) some dependencies don't support HTTP downloads because they aren't in the library
-            $httpFilePath = null;
-            if ($httpDownloads && $dependency->isAvailableOverHttp) {
-                $httpFilePath = $this->generateRequiredFileDownloadPath(
-                    RequiredFile::$TYPE_DEPENDENCY,
-                    $dependency->id,
-                    $playerNonce,
-                    $dependency->fileType
-                );
-
-                $file->setAttribute('download', 'http');
-            } else {
-                $file->setAttribute('download', 'xmds');
-            }
-
-            $dependencyId = $dependency->id;
-            $dependencyBasePath = basename($dependency->path);
-            $file->setAttribute('size', $dependency->size);
-            $file->setAttribute('md5', $dependency->md5);
-            $file->setAttribute('saveAs', $dependencyBasePath);
-
-            // 4) earlier versions of XMDS do not support GetDependency, and will therefore need to have their
-            // dependencies added as media nodes.
-            if ($isSupportsDependency) {
-                // Soap7+: GetDependency supported
-                $file->setAttribute('type', 'dependency');
-                $file->setAttribute('fileType', $dependency->fileType);
-                if ($httpFilePath !== null) {
-                    $file->setAttribute('path', $httpFilePath);
-                } else {
-                    $file->setAttribute('path', $dependencyBasePath);
-                }
-                $file->setAttribute('saveAs', $dependencyBasePath);
-                $file->setAttribute('id', $dependency->id);
-            } else {
-                // We have no choice but to pretend we're a media download.
-                // Soap3/4 are modified to cater for this.
-                // Soap3: players read, send and save using the `path`. Expects `id.ext`.
-                // Soap4: we only have the ID, but we can use HTTP downloads.
-                // Soap5,6,7: use Soap4
-                $file->setAttribute('type', 'media');
-                if ($httpFilePath !== null) {
-                    $file->setAttribute('path', $httpFilePath);
-                } else {
-                    $file->setAttribute('path', $dependencyBasePath);
-                }
-
-                // For this workaround we need to set a negative ID so that we can differentiate between a normal
-                // media download and a dependency download.
-                // We can't make the ID negative, because dependencies can come from different tables
-                // and have the same IDs.
-                if ($dependency->fileType === 'font') {
-                    $dependencyId = ($dependency->id + 100000000) * -1;
-                } else {
-                    $dependencyId = $dependency->id * -1;
-                }
-                $file->setAttribute('id', $dependencyId);
-            }
-
-            // Add our node
-            $fileElements->appendChild($file);
-
             // Add a new required file for this.
-            $newRfIds[] = $this->requiredFileFactory
-                ->createForGetDependency(
-                    $this->display->displayId,
-                    $dependency->fileType,
-                    $dependencyId,
-                    $dependency->id,
-                    $dependencyBasePath
-                )
-                ->save()->rfId;
+            $newRfIds[] = $this->addDependency(
+                $requiredFilesXml,
+                $fileElements,
+                $playerNonce,
+                $httpDownloads,
+                $isSupportsDependency,
+                $dependency
+            );
         }
         // ------------
         // Dependencies finished
@@ -941,6 +867,59 @@ class Soap
                                     ->createForGetData($this->display->displayId, $widget->widgetId)
                                     ->save();
                                 $newRfIds[] = $getDataRf->rfId;
+                            }
+                        }
+
+                        // Add any assets from this widget/template (unless assetId already added)
+                        if (!in_array('module_' . $widget->type, $resourcesAdded)) {
+                            foreach ($modules[$widget->type]->getAssets() as $asset) {
+                                try {
+                                    // Add a new required file for this.
+                                    $newRfIds[] = $this->addDependency(
+                                        $requiredFilesXml,
+                                        $fileElements,
+                                        $playerNonce,
+                                        $httpDownloads,
+                                        $isSupportsDependency,
+                                        $asset->getDependency()
+                                    );
+                                } catch (\Exception $exception) {
+                                    $this->getLog()->error('Invalid asset: ' . $exception->getMessage());
+                                }
+                            }
+
+                            $resourcesAdded[] = 'module_' . $widget->type;
+                        }
+
+                        // Templates (there should only be one)
+                        if ($modules[$widget->type]->isTemplateExpected()) {
+                            $templateId = $widget->getOptionValue('templateId', null);
+                            if ($templateId !== null && !in_array('template_' . $templateId, $resourcesAdded)) {
+                                // Get this template and its assets
+                                $templates = $this->widgetFactory->getTemplatesForWidgets(
+                                    $modules[$widget->type],
+                                    [$widget]
+                                );
+
+                                foreach ($templates as $template) {
+                                    foreach ($template->getAssets() as $asset) {
+                                        try {
+                                            // Add a new required file for this.
+                                            $newRfIds[] = $this->addDependency(
+                                                $requiredFilesXml,
+                                                $fileElements,
+                                                $playerNonce,
+                                                $httpDownloads,
+                                                $isSupportsDependency,
+                                                $asset->getDependency()
+                                            );
+                                        } catch (\Exception $exception) {
+                                            $this->getLog()->error('Invalid asset: ' . $exception->getMessage());
+                                        }
+                                    }
+                                }
+
+                                $resourcesAdded[] = 'template_' . $templateId;
                             }
                         }
                     }
@@ -2626,6 +2605,84 @@ class Soap
             // Serve a HTTP link to XMDS
             return $saveAsPath;
         }
+    }
+
+    /**
+     * Add a dependency to the provided DOM element
+     * @throws \DOMException
+     */
+    private function addDependency(
+        \DOMDocument $requiredFilesXml,
+        \DOMElement $fileElements,
+        string $playerNonce,
+        bool $httpDownloads,
+        bool $isSupportsDependency,
+        Dependency $dependency
+    ): int {
+        $file = $requiredFilesXml->createElement('file');
+
+        // HTTP downloads?
+        // 3) some dependencies don't support HTTP downloads because they aren't in the library
+        $httpFilePath = null;
+        if ($httpDownloads && $dependency->isAvailableOverHttp) {
+            $httpFilePath = $this->generateRequiredFileDownloadPath(
+                RequiredFile::$TYPE_DEPENDENCY,
+                $dependency->id,
+                $playerNonce,
+                $dependency->fileType
+            );
+
+            $file->setAttribute('download', 'http');
+        } else {
+            $file->setAttribute('download', 'xmds');
+        }
+
+        $dependencyBasePath = basename($dependency->path);
+        $file->setAttribute('size', $dependency->size);
+        $file->setAttribute('md5', $dependency->md5);
+        $file->setAttribute('saveAs', $dependencyBasePath);
+
+        // 4) earlier versions of XMDS do not support GetDependency, and will therefore need to have their
+        // dependencies added as media nodes.
+        if ($isSupportsDependency) {
+            // Soap7+: GetDependency supported
+            $file->setAttribute('type', 'dependency');
+            $file->setAttribute('fileType', $dependency->fileType);
+            if ($httpFilePath !== null) {
+                $file->setAttribute('path', $httpFilePath);
+            } else {
+                $file->setAttribute('path', $dependencyBasePath);
+            }
+            $file->setAttribute('saveAs', $dependencyBasePath);
+            $file->setAttribute('id', $dependency->id);
+        } else {
+            // We have no choice but to pretend we're a media download.
+            // Soap3/4 are modified to cater for this.
+            // Soap3: players read, send and save using the `path`. Expects `id.ext`.
+            // Soap4: we only have the ID, but we can use HTTP downloads.
+            // Soap5,6,7: use Soap4
+            $file->setAttribute('type', 'media');
+            if ($httpFilePath !== null) {
+                $file->setAttribute('path', $httpFilePath);
+            } else {
+                $file->setAttribute('path', $dependencyBasePath);
+            }
+            $file->setAttribute('id', $dependency->legacyId);
+        }
+
+        // Add our node
+        $fileElements->appendChild($file);
+
+        // Add a new required file for this.
+        return $this->requiredFileFactory
+            ->createForGetDependency(
+                $this->display->displayId,
+                $dependency->fileType,
+                ($isSupportsDependency ? $dependency->id : $dependency->legacyId),
+                $dependency->id,
+                $dependencyBasePath
+            )
+            ->save()->rfId;
     }
 
     /**
