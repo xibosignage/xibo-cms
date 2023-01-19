@@ -152,6 +152,296 @@ window.forms = {
       return $(container).find(selector);
     };
 
+    // Dataset order clause
+    findElements(
+      '.dataset-order-clause',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+      const datasetId = $el.data('depends-on-value');
+
+      // Initialise the dataset order clause
+      // if the dataset id is not empty
+      if (datasetId) {
+        // Get the dataset columns
+        $.ajax({
+          url: urlsForApi.dataset.search.url,
+          type: 'GET',
+          data: {
+            dataSetId: datasetId,
+          },
+        }).done(function(data) {
+          // Get the columns
+          const datasetCols = data.data[0].columns;
+
+          // Order Clause
+          const $orderClauseFields = $el.find('.order-clause-container');
+          if ($orderClauseFields.length == 0) {
+            return;
+          }
+
+          const $orderClauseHiddenInput = $el.find('#' + $el.data('order-id'));
+          const orderClauseValues = $orderClauseHiddenInput.val() ?
+            JSON.parse(
+              $orderClauseHiddenInput.val(),
+            ) : [];
+
+          // Update the hidden field with a JSON string
+          // of the order clauses
+          const updateHiddenField = function() {
+            const orderClauses = [];
+            $orderClauseFields.find('.order-clause-row').each(function(
+              _index,
+              el,
+            ) {
+              const $el = $(el);
+              const orderClause = $el.find('.order-clause').val();
+              const orderClauseDirection =
+                $el.find('.order-clause-direction').val();
+
+              if (orderClause) {
+                orderClauses.push({
+                  orderClause: orderClause,
+                  orderClauseDirection: orderClauseDirection,
+                });
+              }
+            });
+
+            // Update the hidden field with a JSON string
+            $orderClauseHiddenInput.val(JSON.stringify(orderClauses));
+          };
+
+          // Clear existing fields
+          $orderClauseFields.empty();
+
+          // Get template
+          const orderClauseTemplate =
+            formHelpers.getTemplate('dataSetOrderClauseTemplate');
+
+          const ascTitle = datasetQueryBuilderTranslations.ascTitle;
+          const descTitle = datasetQueryBuilderTranslations.descTitle;
+
+          if (orderClauseValues.length == 0) {
+            // Add a template row
+            const context = {
+              columns: datasetCols,
+              title: '1',
+              orderClause: '',
+              orderClauseAsc: '',
+              orderClauseDesc: '',
+              buttonGlyph: 'fa-plus',
+              ascTitle: ascTitle,
+              descTitle: descTitle,
+            };
+            $orderClauseFields.append(orderClauseTemplate(context));
+          } else {
+            // For each of the existing codes, create form components
+            let i = 0;
+            $.each(orderClauseValues, function(_index, field) {
+              i++;
+
+              const direction = (field.orderClauseDirection == 'ASC');
+
+              const context = {
+                columns: datasetCols,
+                title: i,
+                orderClause: field.orderClause,
+                orderClauseAsc: direction,
+                orderClauseDesc: !direction,
+                buttonGlyph: ((i == 1) ? 'fa-plus' : 'fa-minus'),
+                ascTitle: ascTitle,
+                descTitle: descTitle,
+              };
+
+              $orderClauseFields.append(orderClauseTemplate(context));
+            });
+          }
+
+          // Nabble the resulting buttons
+          $orderClauseFields.on('click', 'button', function(e) {
+            e.preventDefault();
+
+            // find the gylph
+            if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
+              const context = {
+                columns: datasetCols,
+                title: $orderClauseFields.find('.form-inline').length + 1,
+                orderClause: '',
+                orderClauseAsc: '',
+                orderClauseDesc: '',
+                buttonGlyph: 'fa-minus',
+                ascTitle: ascTitle,
+                descTitle: descTitle,
+              };
+              $orderClauseFields.append(orderClauseTemplate(context));
+            } else {
+              // Remove this row
+              $(e.currentTarget).closest('.form-inline').remove();
+            }
+
+            updateHiddenField();
+          });
+
+          // Update the hidden field when the order clause changes
+          $el.on('change', 'select', function() {
+            updateHiddenField();
+          });
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          console.error(jqXHR, textStatus, errorThrown);
+        });
+      }
+    });
+
+    // Dataset filter clause
+    findElements(
+      '.dataset-filter-clause',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+      const datasetId = $el.data('depends-on-value');
+
+      // Initialise the dataset filter clause
+      // if the dataset id is not empty
+      if (datasetId) {
+        // Get the dataset columns
+        $.ajax({
+          url: urlsForApi.dataset.search.url,
+          type: 'GET',
+          data: {
+            dataSetId: datasetId,
+          },
+        }).done(function(data) {
+          // Get the columns
+          const datasetCols = data.data[0].columns;
+
+          // Filter Clause
+          const $filterClauseFields = $el.find('.filter-clause-container');
+          if ($filterClauseFields.length == 0) {
+            return;
+          }
+
+          const $filterClauseHiddenInput =
+            $el.find('#' + $el.data('filter-id'));
+          const filterClauseValues = $filterClauseHiddenInput.val() ?
+            JSON.parse(
+              $filterClauseHiddenInput.val(),
+            ) : [];
+
+          // Update the hidden field with a JSON string
+          // of the filter clauses
+          const updateHiddenField = function() {
+            const filterClauses = [];
+            $filterClauseFields.find('.filter-clause-row').each(function(
+              _index,
+              el,
+            ) {
+              const $el = $(el);
+              const filterClause = $el.find('.filter-clause').val();
+              const filterClauseOperator =
+                $el.find('.filter-clause-operator').val();
+              const filterClauseCriteria =
+                $el.find('.filter-clause-criteria').val();
+              const filterClauseValue =
+                $el.find('.filter-clause-value').val();
+
+              if (filterClause) {
+                filterClauses.push({
+                  filterClause: filterClause,
+                  filterClauseOperator: filterClauseOperator,
+                  filterClauseCriteria: filterClauseCriteria,
+                  filterClauseValue: filterClauseValue,
+                });
+              }
+            });
+
+            // Update the hidden field with a JSON string
+            $filterClauseHiddenInput.val(JSON.stringify(filterClauses));
+          };
+
+          // Clear existing fields
+          $filterClauseFields.empty();
+
+          // Get template
+          const filterClauseTemplate =
+            formHelpers.getTemplate('dataSetFilterClauseTemplate');
+
+          const filterOptions =
+            datasetQueryBuilderTranslations.filterOptions;
+          const filterOperatorOptions =
+            datasetQueryBuilderTranslations.filterOperatorOptions;
+
+          if (filterClauseValues.length == 0) {
+            // Add a template row
+            const context = {
+              columns: datasetCols,
+              filterOptions: filterOptions,
+              filterOperatorOptions: filterOperatorOptions,
+              title: '1',
+              filterClause: '',
+              filterClauseOperator: 'AND',
+              filterClauseCriteria: '',
+              filterClauseValue: '',
+              buttonGlyph: 'fa-plus',
+            };
+            $filterClauseFields.append(filterClauseTemplate(context));
+          } else {
+            // For each of the existing codes, create form components
+            let j = 0;
+            $.each(filterClauseValues, function(_index, field) {
+              j++;
+
+              const context = {
+                columns: datasetCols,
+                filterOptions: filterOptions,
+                filterOperatorOptions: filterOperatorOptions,
+                title: j,
+                filterClause: field.filterClause,
+                filterClauseOperator: field.filterClauseOperator,
+                filterClauseCriteria: field.filterClauseCriteria,
+                filterClauseValue: field.filterClauseValue,
+                buttonGlyph: ((j == 1) ? 'fa-plus' : 'fa-minus'),
+              };
+
+              $filterClauseFields.append(filterClauseTemplate(context));
+            });
+          }
+
+          // Nabble the resulting buttons
+          $filterClauseFields.on('click', 'button', function(e) {
+            e.preventDefault();
+
+            // find the gylph
+            if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
+              const context = {
+                columns: datasetCols,
+                filterOptions: filterOptions,
+                filterOperatorOptions: filterOperatorOptions,
+                title: $filterClauseFields.find('.form-inline').length + 1,
+                filterClause: '',
+                filterClauseOperator: 'AND',
+                filterClauseCriteria: '',
+                filterClauseValue: '',
+                buttonGlyph: 'fa-minus',
+              };
+              $filterClauseFields.append(filterClauseTemplate(context));
+            } else {
+              // Remove this row
+              $(e.currentTarget).closest('.form-inline').remove();
+            }
+
+            updateHiddenField();
+          });
+
+          // Update the hidden field when the filter clause changes
+          $el.on('change', 'select, input', function() {
+            updateHiddenField();
+          });
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          console.error(jqXHR, textStatus, errorThrown);
+        });
+      }
+    });
+
     // Code editor
     findElements(
       '.xibo-code-input',
@@ -697,23 +987,20 @@ window.forms = {
         '.xibo-form-input[data-depends-on]',
       ).each(function(_k, el) {
         const $target = $(el);
-        const dependency = $target.data('dependsOn');
+        const dependency = $target.data('depends-on');
 
         // If the dependency has already been added, skip
-        if ($target.data('dependsOnAdded')) {
+        if ($target.data('depends-on-added')) {
           return;
         }
 
         // Mark dependency as added to the target
-        $target.data('dependsOnAdded', true);
+        $target.data('depends-on-added', true);
 
         // Add event listener to the dependency
-        $(container).find(dependency).on('change', function(_k, el) {
-          // Reset the value of the target
-          console.log('Dependency changed');
-
+        $(container).find(dependency).on('change', function(ev) {
           // Set dependency value to the target as a data attribute
-          $target.data('dependsOnValue', $(el).val());
+          $target.data('depends-on-value', $(ev.currentTarget).val());
 
           // Reset the target form field
           forms.initFields(container, $target);

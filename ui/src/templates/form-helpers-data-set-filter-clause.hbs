@@ -1,14 +1,14 @@
-<div class="form-inline justify-content-between p-1">
-    <label class="form-group">{{ title }}</label>
-    <div class="form-group" {{#eq title "1"}}class="d-none"{{/eq}}>
-        <select class="form-control" name="filterClauseOperator[]">
+<div class="filter-clause-row flex-nowrap form-inline p-1">
+    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
+    <div class="form-group {{#eq title "1"}}d-none{{/eq}}">
+        <select class="form-control filter-clause-operator" name="filterClauseOperator[]">
             {{#each filterOperatorOptions}}
                 <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
             {{/each}}
         </select>
     </div>
     <div class="form-group">
-        <select class="form-control" name="filterClause[]">
+        <select class="form-control filter-clause" name="filterClause[]">
             <option value=""></option>
             {{#each columns}}
                 <option value="{{ heading }}" {{#eq heading ../filterClause}}selected{{/eq}}>{{ heading }}</option>
@@ -16,14 +16,13 @@
         </select>
     </div>
     <div class="form-group">
-        <select class="form-control" name="filterClauseCriteria[]">
+        <select class="form-control filter-clause-criteria" name="filterClauseCriteria[]">
             {{#each filterOptions}}
-            <option value="{{ id }}" {{#eq id ../filterClauseCriteria}}selected{{/eq}}>{{ value }}</option>
+                <option value="{{ id }}" {{#eq id ../filterClauseCriteria}}selected{{/eq}}>{{ value }}</option>
             {{/each}}
         </select>
     </div>
     <div class="form-group">
-        <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
+        <input class="form-control filter-clause-value" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
     </div>
-    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
 </div>

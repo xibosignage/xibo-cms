@@ -76,19 +76,20 @@ $(function() {
     }).done(function(data) {
       const $target = $('body');
       let dataItems = [];
+      const isArray = Array.isArray(data);
 
       // If the request failed, and we're in preview, show the error message
-      if (data.success === false && isPreview) {
+      if (!isArray && data.success === false && isPreview) {
         $target.append(
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
-      } else if (data.data.length === 0 && widget.sample) {
+      } else if (!isArray && data.data.length === 0 && widget.sample) {
         // If data is empty, use sample data instead
         // Add single element or array of elements
         dataItems = (Array.isArray(widget.sample)) ?
           widget.sample.slice(0) : [widget.sample];
-      } else {
+      } else if (!isArray && data.data.length > 0) {
         // Add items to the widget
         dataItems = data.data;
       }
@@ -117,8 +118,6 @@ $(function() {
         // Add items to the widget object
         (item) && widget.items.push(item);
       });
-
-      // TODO - We need to address the case of no dataType and templates!!!
 
       // If we don't have dataType, or we have a module template
       // add it to the content with widget properties and global options

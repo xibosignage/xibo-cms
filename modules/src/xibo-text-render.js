@@ -133,7 +133,7 @@ jQuery.fn.extend({
       //  numItems (ticker number of items from the start/end),
       //  takeItemsFrom (ticker sort or reverse sort the array)
       //  randomiseItems (randomise the items)
-      if (options.randomiseItems === 1) {
+      if (parseInt(options.randomiseItems) === 1) {
         // Sort the items in a random order (considering the entire list)
         // Durstenfeld shuffle
         // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm

@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Display DataSet content as a Ticker</description>
     <class>\Xibo\Widget\DataSetProvider</class>
+    <dataCacheKey>%dataSetId%</dataCacheKey>
     <type>datasetticker</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
@@ -37,7 +38,7 @@
             <title>DataSet</title>
             <helpText>Please select the DataSet to use as a source of data for this ticker.</helpText>
         </property>
-        <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
+        <property id="template" type="code" allowLibraryRefs="true" variant="html">
             <title>Item Template</title>
             <helpText>Enter text in the box below, used to display each article.</helpText>
             <visibility>
@@ -148,7 +149,6 @@
                     <condition field="#dataSetId" type="neq"></condition>
                 </test>
             </visibility>
-            <dependsOn>#dataSetId</dependsOn>
         </property>
         <property id="effect" type="dropdown" mode="single">
             <title>Effect</title>
@@ -194,7 +194,9 @@
                 </test>
             </visibility>
         </property>
-        <property id="orderClause" type="datasetOrder">
+        <property id="orderClauses" type="datasetOrder">
+            <default>[]</default>
+            <dependsOn>#dataSetId</dependsOn>
             <visibility>
                 <test type="and">
                     <condition field="#dataSetId" type="neq"></condition>
@@ -240,7 +242,9 @@
                 </test>
             </visibility>
         </property>
-        <property id="filterClause" type="datasetFilter">
+        <property id="filterClauses" type="datasetFilter">
+            <default>[]</default>
+            <dependsOn>#dataSetId</dependsOn>
             <visibility>
                 <test type="and">
                     <condition field="#dataSetId" type="neq"></condition>
@@ -332,10 +336,12 @@ body {
     <onParseData><![CDATA[
 // item - element to be parsed
 // properties - object containing the values to be evaluated/used
-console.log('onParseData', item, properties);
 
-// Add the content to the item by replacing the columns between [ and ]
-item.content = properties.ta_text.replace(/\[(.*?)\]/g, function (match, column) {
+// Handle the template
+item.content = properties.template;
+
+// Handle square bracket replacements
+item.content = item.content.replace(/\[(.*?)\]/g, function (match, column) {
     return item[column];
 });
 
@@ -349,9 +355,28 @@ return item;
 // items: The items to render
 // properties: The properties for the widget
 
+// Clear the content container
+$(target).find('#content').empty();
+
+// Randomise the order of the items
+if (properties.randomiseItems) {
+    items = items.sort(function () {
+        return 0.5 - Math.random();
+    });
+}
+
 // Add content for each item
+// and wrap it in a div with the item class
 for (var i = 0; i < items.length; i++) {
-    $(target).find('#content').append(items[i].content);
+    var item = items[i];
+    var content = item.content;
+
+    // Add the content to the target
+    $(target).find('#content').append(
+        $('<div>')
+            .addClass('item')
+            .append(content)
+    );
 }
 
 // Scale the layout
