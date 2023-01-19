@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 use Illuminate\Support\Str;
 use Xibo\Entity\Module;
+use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Definition\Element;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
@@ -99,6 +100,7 @@ trait ModuleXmlTrait
                 $property->variant = $node->getAttribute('variant');
                 $property->format = $node->getAttribute('format');
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
+                $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
                 $property->value = $this->getFirstValueOrDefaultFromXmlNode($node, 'value');
@@ -106,7 +108,7 @@ trait ModuleXmlTrait
 
                 // Default value
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
-                
+
                 // Is this a variable?
                 if ($module !== null && Str::startsWith($defaultValue, '%') && Str::endsWith($defaultValue, '%')) {
                     $defaultValue = $module->getSetting(str_replace('%', '', $defaultValue));
@@ -240,6 +242,37 @@ trait ModuleXmlTrait
         }
 
         return $elements;
+    }
+
+    /**
+     * Parse assets
+     * @param \DOMNode[]|\DOMNodeList $assetNodes
+     * @return \Xibo\Widget\Definition\Asset[]
+     */
+    private function parseAssets($assetNodes): array
+    {
+        if ($assetNodes instanceof \DOMNodeList) {
+            // Asset nodes are the parent node
+            if (count($assetNodes) <= 0) {
+                return [];
+            }
+            $assetNodes = $assetNodes->item(0)->childNodes;
+        }
+
+        $assets = [];
+        foreach ($assetNodes as $node) {
+            if ($node->nodeType === XML_ELEMENT_NODE) {
+                /** @var \DOMElement $node */
+                $asset = new Asset();
+                $asset->id = $node->getAttribute('id');
+                $asset->path = $node->getAttribute('path');
+                $asset->mimeType = $node->getAttribute('mimeType');
+                $asset->type = $node->getAttribute('type');
+                $assets[] = $asset;
+            }
+        }
+
+        return $assets;
     }
 
     /**

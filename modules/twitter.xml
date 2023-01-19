@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -166,4 +166,8 @@ $(target).xiboLayoutAnimate(properties);
 }]
     ]]></sampleData>
     <preview></preview>
+    <assets>
+        <asset id="twitter_blue" type="path" mime="image/png" path="/modules/assets/twitter_blue.png"></asset>
+        <asset id="twitter_white" type="path" mime="image/png" path="/modules/assets/twitter_white.png"></asset>
+    </assets>
 </module>

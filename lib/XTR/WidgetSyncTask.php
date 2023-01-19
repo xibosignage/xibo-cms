@@ -22,9 +22,11 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 
@@ -155,7 +157,8 @@ class WidgetSyncTask implements TaskInterface
             }
         }
 
-        // TODO: remove display_media records which have not been touched for a defined period of time.
+        // Remove display_media records which have not been touched for a defined period of time.
+        $this->removeOldDisplayLinks();
 
         $this->log->info('Total time spent caching is ' . $timeCaching);
 
@@ -286,5 +289,18 @@ class WidgetSyncTask implements TaskInterface
                 ]);
             }
         }
+    }
+
+    /**
+     * Remove any display/media links which are older than $days days
+     * @param int $days
+     * @return void
+     */
+    private function removeOldDisplayLinks(int $days = 5)
+    {
+        $sql = 'DELETE FROM `display_media` WHERE modifiedAt < :modifiedAt';
+        $this->store->update($sql, [
+            'modifiedAt' => Carbon::now()->subDays($days)->format(DateFormatHelper::getSystemFormat()),
+        ]);
     }
 }

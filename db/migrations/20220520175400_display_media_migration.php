@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -36,6 +36,11 @@ class DisplayMediaMigration extends AbstractMigration
         $table
             ->addColumn('displayId', 'integer')
             ->addColumn('mediaId', 'integer')
+            ->addColumn('modifiedAt', 'timestamp', [
+                'null' => true,
+                'default' => null,
+                'update' => 'CURRENT_TIMESTAMP'
+            ])
             ->addIndex(['displayId', 'mediaId'], ['unique' => true])
             ->addForeignKey('displayId', 'display', 'displayId')
             ->addForeignKey('mediaId', 'media', 'mediaId')
