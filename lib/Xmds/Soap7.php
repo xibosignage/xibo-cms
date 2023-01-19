@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Xmds;
@@ -195,9 +194,9 @@ class Soap7 extends Soap6
                     );
 
                     $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
-                    $widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey);
 
-                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+                    // We do not pass a modifiedDt in here because we always expect to be cached.
+                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null)) {
                         throw new NotFoundException('Cache not ready');
                     }
 

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -234,6 +234,11 @@ class RssProvider implements WidgetProviderInterface
     public function getDataCacheKey(DataProviderInterface $dataProvider): ?string
     {
         // No special cache key requirements.
+        return null;
+    }
+
+    public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
+    {
         return null;
     }
 }

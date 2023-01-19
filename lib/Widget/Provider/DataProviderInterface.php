@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,10 +18,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\Provider;
+
+use Carbon\Carbon;
 
 /**
  * Data Provider
@@ -118,6 +119,12 @@ interface DataProviderInterface
      * @return array
      */
     public function getMeta(): array;
+
+    /**
+     * Get the widget modifiedDt
+     * @return \Carbon\Carbon|null
+     */
+    public function getWidgetModifiedDt(): ?Carbon;
 
     /**
      * Add an item to the provider

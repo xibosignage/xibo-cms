@@ -202,7 +202,17 @@ class WidgetSyncTask implements TaskInterface
             );
         }
 
-        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+        // Get the data modified date
+        $dataModifiedDt = null;
+        if ($widgetInterface !== null) {
+            $dataModifiedDt = $widgetInterface->getDataModifiedDt($dataProvider);
+
+            if ($dataModifiedDt !== null) {
+                $this->getLogger()->debug('cache: data modifiedDt is ' . $dataModifiedDt->toAtomString());
+            }
+        }
+
+        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)) {
             $this->getLogger()->debug('Cache expired, pulling fresh');
 
             try {

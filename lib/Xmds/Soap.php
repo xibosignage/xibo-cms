@@ -2228,7 +2228,8 @@ class Soap
                                 $module->getWidgetProviderOrNull()
                             );
 
-                            if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+                            // We do not pass a modifiedDt in here because we always expect to be cached.
+                            if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null)) {
                                 throw new NotFoundException('Cache not ready');
                             }
 
