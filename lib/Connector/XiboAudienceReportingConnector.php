@@ -174,7 +174,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $params = [
                 'type' => 'layout',
                 'start' => 0,
-                'length' => $this->getSetting('batchSize') ?? 5000,
+                'length' => $this->getSetting('batchSize', 5000),
                 'mustHaveParentCampaign' => true
             ];
 
@@ -349,7 +349,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 // All outcomes from here are either a break; or an exception to stop the loop.
                 try {
                     $response = $this->getClient()->post($this->getServiceUrl() . '/audience/receiveStats', [
-                        'timeout' => 300, // 5 minutes
+                        'timeout' => $this->getSetting('receiveStatsTimeout', 300), // 5 minutes
                         'headers' => [
                             'X-API-KEY' => $this->getSetting('apiKey')
                         ],
