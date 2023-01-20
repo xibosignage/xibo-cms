@@ -117,16 +117,6 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
-     * @param $isPreview
-     * @return DataProviderInterface
-     */
-    public function setPreview($isPreview) : DataProviderInterface
-    {
-        $this->isPreview = $isPreview;
-        return $this;
-    }
-
-    /**
      * @inheritDoc
      */
     public function getDataSource(): string
@@ -171,7 +161,7 @@ class DataProvider implements DataProviderInterface
      */
     public function isPreview(): bool
     {
-        return $this->isPreview;
+        return !empty($this->displayId);
     }
 
     /**
