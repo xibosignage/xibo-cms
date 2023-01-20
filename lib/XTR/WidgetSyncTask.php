@@ -22,6 +22,7 @@
 
 namespace Xibo\XTR;
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetDataRequestEvent;
@@ -51,6 +52,9 @@ class WidgetSyncTask implements TaskInterface
 
     /** @var \Symfony\Component\EventDispatcher\EventDispatcher */
     private $eventDispatcher;
+    
+    /** @var PoolInterface */
+    private $pool;
 
     /** @inheritdoc */
     public function setFactories($container)
@@ -60,6 +64,7 @@ class WidgetSyncTask implements TaskInterface
         $this->mediaFactory = $container->get('mediaFactory');
         $this->displayFactory = $container->get('displayFactory');
         $this->eventDispatcher = $container->get('dispatcher');
+        $this->pool = $container->get('pool');
         return $this;
     }
 
@@ -168,6 +173,7 @@ class WidgetSyncTask implements TaskInterface
         // Each time we call this we use a new provider
         $dataProvider = $module->createDataProvider($widget);
         $dataProvider->setMediaFactory($this->mediaFactory);
+        $dataProvider->setPool($this->pool);
         $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
 
         // Get the cache key
