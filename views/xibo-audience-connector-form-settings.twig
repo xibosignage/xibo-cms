@@ -34,6 +34,10 @@
         {% set title %}{% trans "API Key" %}{% endset %}
         {% set helpText %}{% trans "Enter your API Key from Xibo." %}{% endset %}
         {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
+
+        {% set title %}{% trans "Batch Size" %}{% endset %}
+        {% set helpText %}{% trans "Enter the batch size of proof of play exported to the Xibo audience service in each run of Regular Maintenance Task." %}{% endset %}
+        {{ forms.input("batchSize", title, interface.getSetting("batchSize"), helpText) }}
     {% endif %}
 
     <p>{% trans "Once enabled additional reporting will be shown for your Ad Campaigns in the 'All Reports' section. To vary your cost/impressions per play by date, time of day, day of week or geo location, add a DMA (designated market area) below." %}</p>
