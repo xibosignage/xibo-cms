@@ -340,7 +340,6 @@ class AlphaVantageConnector implements ConnectorInterface
                 $item['Name'] = $item['FromName'] . '/' . $item['ToName'];
                 $currencyName = ($reverseConversion) ? $item['FromName'] : $item['ToName'];
                 $item['NameShort'] =  $currencyName;
-                $item['CurrencyFlag'] = PROJECT_ROOT . '/modules/assets/currency-flags/' . $currencyName . '.svg';
 
                 // work out the change when compared to the previous day
                 if ($percentageChangeRequested) {
