@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Provider;
 
 use GuzzleHttp\Client;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Factory\MediaFactory;
@@ -73,6 +74,10 @@ class DataProvider implements DataProviderInterface
 
     /** @var null cached property values. */
     private $properties = null;
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
 
     /**
      * Constructor
@@ -111,6 +116,20 @@ class DataProvider implements DataProviderInterface
     {
         $this->mediaFactory = $mediaFactory;
         return $this;
+    }
+
+    public function setPool(PoolInterface $pool): DataProviderInterface
+    {
+        $this->pool = $pool;
+        return $this;
+    }
+
+    /**
+     * @return PoolInterface
+     */
+    public function getPool(): PoolInterface
+    {
+        return $this->pool;
     }
 
     /**
