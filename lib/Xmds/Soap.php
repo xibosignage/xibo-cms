@@ -2249,7 +2249,13 @@ class Soap
             }
 
             // Decorate for the player
-            $resource = $renderer->decorateForPlayer($resource, $media, false, $data);
+            $resource = $renderer->decorateForPlayer(
+                $resource,
+                $media,
+                false,
+                $data,
+                $this->moduleFactory->getAssetsFromTemplates($templates)
+            );
 
             if ($resource == '') {
                 throw new ControllerNotImplemented();

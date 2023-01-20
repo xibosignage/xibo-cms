@@ -23,18 +23,49 @@
 namespace Xibo\Xmds\Listeners;
 
 use Xibo\Event\XmdsDependencyRequestEvent;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Listener\ListenerLoggerTrait;
+use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * Listener which handles requests for assets.
+ */
 class XmdsAssetsListener
 {
     use ListenerLoggerTrait;
 
+    /** @var \Xibo\Factory\ModuleFactory */
+    private $moduleFactory;
+
+    /** @var \Xibo\Factory\ModuleTemplateFactory */
+    private $moduleTemplateFactory;
+
+    /**
+     * @param \Xibo\Factory\ModuleFactory $moduleFactory
+     * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
+     */
+    public function __construct(ModuleFactory $moduleFactory, ModuleTemplateFactory $moduleTemplateFactory)
+    {
+        $this->moduleFactory = $moduleFactory;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
     public function onDependencyRequest(XmdsDependencyRequestEvent $event)
     {
-        $this->getLogger()->debug('onDependencyRequest: XmdsFontsListener');
+        $this->getLogger()->debug('onDependencyRequest: XmdsAssetsListener');
 
         if ($event->getFileType() === 'asset') {
-            // TODO: Get the asset (we need the path!?)
+            // Get the asset using only the assetId.
+            try {
+                $this->moduleFactory->getAssetsFromAnywhereById($event->getId(), $this->moduleTemplateFactory);
+
+                // Return the full path to this asset
+                $event->setFullPath(PROJECT_ROOT . '/modules/bundle.min.js');
+                $event->stopPropagation();
+            } catch (NotFoundException $notFoundException) {
+                $this->getLogger()->info('No asset found for assetId: ' . $event->getId());
+            }
         }
     }
 }
