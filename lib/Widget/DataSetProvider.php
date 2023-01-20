@@ -22,7 +22,9 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Xibo\Event\DataSetDataRequestEvent;
+use Xibo\Event\DataSetModifiedDtRequestEvent;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -54,5 +56,19 @@ class DataSetProvider implements WidgetProviderInterface
     {
         // No special cache key requirements.
         return null;
+    }
+
+    public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
+    {
+        $this->getLog()->debug('fetchData: DataSetProvider passing to modifiedDt request event');
+        $dataSetId = $dataProvider->getProperty('dataSetId');
+        if ($dataSetId !== null) {
+            // Raise an event to get the modifiedDt of this dataSet
+            $event = new DataSetModifiedDtRequestEvent($dataSetId);
+            $this->getDispatcher()->dispatch($event, DataSetModifiedDtRequestEvent::$NAME);
+            return max($event->getModifiedDt(), $dataProvider->getWidgetModifiedDt());
+        } else {
+            return null;
+        }
     }
 }

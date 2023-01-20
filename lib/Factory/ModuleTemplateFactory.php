@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,6 +26,7 @@ use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ModuleTemplate;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\Asset;
 
 /**
  * Factory for working with Module Templates
@@ -83,6 +84,24 @@ class ModuleTemplateFactory extends BaseFactory
             }
         }
         return $templates;
+    }
+
+    /**
+     * @param string $assetId
+     * @return \Xibo\Widget\Definition\Asset
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAssetById(string $assetId): Asset
+    {
+        foreach ($this->load() as $template) {
+            foreach ($template->getAssets() as $asset) {
+                if ($asset->id === $assetId) {
+                    return $asset;
+                }
+            }
+        }
+
+        throw new NotFoundException(__('Asset not found'));
     }
 
     /**
@@ -173,6 +192,15 @@ class ModuleTemplateFactory extends BaseFactory
             $template->errors[] = __('Invalid stencils');
             $this->getLog()->error('Module ' . $template->templateId
                 . ' has invalid stencils. e: ' .  $e->getMessage());
+        }
+
+        // Parse assets
+        try {
+            $template->assets = $this->parseAssets($xml->getElementsByTagName('assets'));
+        } catch (\Exception $e) {
+            $template->errors[] = __('Invalid assets');
+            $this->getLog()->error('Module ' . $template->templateId
+                . ' has invalid assets. e: ' .  $e->getMessage());
         }
 
         return $template;

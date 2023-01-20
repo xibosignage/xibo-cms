@@ -22,6 +22,7 @@
 
 namespace Xibo\Widget\Provider;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
@@ -226,6 +227,14 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
+    public function getWidgetModifiedDt(): ?Carbon
+    {
+        return Carbon::createFromTimestamp($this->widget->modifiedDt);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function addItem($item): DataProviderInterface
     {
         if (!is_array($item) && !is_object($item)) {
@@ -256,7 +265,7 @@ class DataProvider implements DataProviderInterface
      */
     public function addOrUpdateMeta(string $key, $item): DataProviderInterface
     {
-        if (!is_array($item) && !($item instanceof \JsonSerializable)) {
+        if (!is_array($item) && (is_object($item) && !$item instanceof \JsonSerializable)) {
             throw new \RuntimeException('Item must be an array or a JSON serializable object');
         }
 

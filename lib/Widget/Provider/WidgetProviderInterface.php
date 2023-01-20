@@ -22,6 +22,7 @@
 
 namespace Xibo\Widget\Provider;
 
+use Carbon\Carbon;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -84,4 +85,13 @@ interface WidgetProviderInterface
      * @return string|null
      */
     public function getDataCacheKey(DataProviderInterface $dataProvider): ?string;
+
+    /**
+     * Get data modified date
+     * Use this method to invalidate cache ahead of its expiry date/time by returning the date/time that the underlying
+     * data is expected to or has been modified
+     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @return \Carbon\Carbon|null
+     */
+    public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon;
 }

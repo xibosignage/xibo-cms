@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -126,7 +126,7 @@ class WidgetHtmlRenderer
                 ]);
             }
         }
-        
+
         // Render an icon.
         return $this->twig->fetch('module-icon-preview.twig', [
             'moduleName' => $module->name,
@@ -226,10 +226,7 @@ class WidgetHtmlRenderer
                 $value = explode('=', $match);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $urlFor('module.getData', [
-                        'regionId' => $region->regionId,
-                        'id' => ':id'
-                    ])),
+                    $urlFor('module.getData', ['regionId' => $region->regionId, 'id' => $value[1]]),
                     $output
                 );
             } else if (Str::startsWith($match, 'data=')) {
@@ -237,13 +234,20 @@ class WidgetHtmlRenderer
                 $output = str_replace('"[[' . $match . ']]"', '[]', $output);
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
-                $params = ['id' => ':id',];
+                $params = ['id' => $value[1]];
                 if (Str::startsWith($match, 'mediaId')) {
                     $params['type'] = 'image';
                 }
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $urlFor('library.download', $params) . '?preview=1'),
+                    $urlFor('library.download', $params) . '?preview=1',
+                    $output
+                );
+            } else if (Str::startsWith($match, 'assetId')) {
+                $value = explode('=', $match);
+                $output = str_replace(
+                    '[[' . $match . ']]',
+                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '?preview=1',
                     $output
                 );
             }
@@ -257,13 +261,15 @@ class WidgetHtmlRenderer
      * @param array $storedAs A keyed array of library media this widget has access to
      * @param bool $isSupportsDataUrl
      * @param array $data A keyed array of data this widget has access to
+     * @param \Xibo\Widget\Definition\Asset[] $assets A keyed array of assets this widget has access to
      * @return string
      */
     public function decorateForPlayer(
         string $output,
         array $storedAs,
         bool $isSupportsDataUrl = true,
-        array $data = []
+        array $data = [],
+        array $assets = []
     ): string {
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
@@ -288,6 +294,13 @@ class WidgetHtmlRenderer
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
                     $output = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $output);
+                } else {
+                    $output = str_replace('[[' . $match . ']]', '', $output);
+                }
+            } else if (Str::startsWith($match, 'assetId')) {
+                $value = explode('=', $match);
+                if (array_key_exists($value[1], $assets)) {
+                    $output = str_replace('[[' . $match . ']]', $assets[$value[1]]->getFilename(), $output);
                 } else {
                     $output = str_replace('[[' . $match . ']]', '', $output);
                 }
@@ -343,14 +356,14 @@ class WidgetHtmlRenderer
 
             // templateId or "elements"
             $templateId = $widget->getOptionValue('templateId', null);
-            
+
             // Output some sample data and a data url.
             $widgetData = [
                 'widgetId' => $widget->widgetId,
                 'url' => '[[dataUrl=' . $widget->widgetId . ']]',
                 'data' => '[[data=' . $widget->widgetId . ']]',
                 'templateId' => $templateId,
-                'sample' => $module->sampleData,
+                'sample' => $module->sampleData, //TODO decorate for player/preview [[sampleData=]]
                 'properties' => $module->getPropertyValues(),
             ];
 
@@ -372,14 +385,14 @@ class WidgetHtmlRenderer
             if (!empty($module->onVisible)) {
                 $twig['onVisible'][$widget->widgetId] = $module->onVisible;
             }
-            
+
             // Find my template
             if ($templateId !== 'elements') {
                 foreach ($moduleTemplates as $moduleTemplate) {
                     if ($moduleTemplate->templateId === $templateId) {
                         $moduleTemplate->decorateProperties($widget, true);
                         $widgetData['templateProperties'] = $moduleTemplate->getPropertyValues();
-                        
+
                         $this->getLog()->debug('Static template to include: ' . $moduleTemplate->templateId);
                         if ($moduleTemplate->stencil !== null) {
                             if ($moduleTemplate->stencil->twig !== null) {

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Middleware;
@@ -45,6 +44,7 @@ use Xibo\Listener\LayoutListener;
 use Xibo\Listener\MediaListener;
 use Xibo\Listener\PlaylistListener;
 use Xibo\Listener\TaskListener;
+use Xibo\Xmds\Listeners\XmdsAssetsListener;
 use Xibo\Xmds\Listeners\XmdsFontsListener;
 use Xibo\Xmds\Listeners\XmdsPlayerBundleListener;
 use Xibo\Xmds\Listeners\XmdsPlayerVersionListener;
@@ -341,11 +341,17 @@ class ListenersMiddleware implements MiddlewareInterface
         $playerVersionListner = new XmdsPlayerVersionListener($c->get('playerVersionFactory'));
         $playerVersionListner->useLogger($c->get('logger'));
 
+        $assetsListener = new XmdsAssetsListener(
+            $c->get('moduleFactory'),
+            $c->get('moduleTemplateFactory')
+        );
+
         $dispatcher->addListener('xmds.dependency.list', [$playerBundleListener, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$playerBundleListener, 'onDependencyRequest']);
         $dispatcher->addListener('xmds.dependency.list', [$fontsListener, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$fontsListener, 'onDependencyRequest']);
         $dispatcher->addListener('xmds.dependency.list', [$playerVersionListner, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$playerVersionListner, 'onDependencyRequest']);
+        $dispatcher->addListener('xmds.dependency.request', [$assetsListener, 'onDependencyRequest']);
     }
 }

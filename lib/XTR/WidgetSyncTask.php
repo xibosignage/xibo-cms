@@ -22,10 +22,12 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 
@@ -76,6 +78,8 @@ class WidgetSyncTask implements TaskInterface
         $countWidgets = 0;
 
         // Update for widgets which are active on displays
+        // TODO: decide if this is soon enough to do this work (none of these widgets will have any data until
+        //  this runs).
         $sql = '
           SELECT DISTINCT `requiredfile`.itemId 
             FROM `requiredfile` 
@@ -100,6 +104,11 @@ class WidgetSyncTask implements TaskInterface
                 $widget->load();
 
                 $module = $this->moduleFactory->getByType($widget->type);
+
+                // If this widget's module expects data to be provided (i.e. has a datatype) then make sure that
+                // data is cached ahead of time here.
+                // This also refreshes any library or external images referenced by the data so that they aren't
+                // considered for removal.
                 if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
                     // Record start time
                     $countWidgets++;
@@ -153,6 +162,9 @@ class WidgetSyncTask implements TaskInterface
             }
         }
 
+        // Remove display_media records which have not been touched for a defined period of time.
+        $this->removeOldDisplayLinks();
+
         $this->log->info('Total time spent caching is ' . $timeCaching);
 
         $this->appendRunMessage('Synced ' . $countWidgets . ' widgets');
@@ -196,7 +208,17 @@ class WidgetSyncTask implements TaskInterface
             );
         }
 
-        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+        // Get the data modified date
+        $dataModifiedDt = null;
+        if ($widgetInterface !== null) {
+            $dataModifiedDt = $widgetInterface->getDataModifiedDt($dataProvider);
+
+            if ($dataModifiedDt !== null) {
+                $this->getLogger()->debug('cache: data modifiedDt is ' . $dataModifiedDt->toAtomString());
+            }
+        }
+
+        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)) {
             $this->getLogger()->debug('Cache expired, pulling fresh');
 
             try {
@@ -283,5 +305,18 @@ class WidgetSyncTask implements TaskInterface
                 ]);
             }
         }
+    }
+
+    /**
+     * Remove any display/media links which are older than $days days
+     * @param int $days
+     * @return void
+     */
+    private function removeOldDisplayLinks(int $days = 5)
+    {
+        $sql = 'DELETE FROM `display_media` WHERE modifiedAt < :modifiedAt';
+        $this->store->update($sql, [
+            'modifiedAt' => Carbon::now()->subDays($days)->format(DateFormatHelper::getSystemFormat()),
+        ]);
     }
 }

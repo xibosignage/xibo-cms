@@ -1021,8 +1021,18 @@ class Widget extends Base
 
         $this->getLog()->debug('cacheKey: ' . $cacheKey);
 
+        // Get the data modified date
+        $dataModifiedDt = null;
+        if ($widgetInterface !== null) {
+            $dataModifiedDt = $widgetInterface->getDataModifiedDt($dataProvider);
+
+            if ($dataModifiedDt !== null) {
+                $this->getLog()->debug('getData: data modifiedDt is ' . $dataModifiedDt->toAtomString());
+            }
+        }
+
         // Use the cache if we can.
-        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)) {
             $this->getLog()->debug('Pulling fresh data');
 
             try {

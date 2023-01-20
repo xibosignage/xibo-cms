@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Event\DataSetDataRequestEvent;
+use Xibo\Event\DataSetModifiedDtRequestEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -67,6 +68,7 @@ class DataSetDataProviderListener
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): DataSetDataProviderListener
     {
         $dispatcher->addListener(DataSetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(DataSetModifiedDtRequestEvent::$NAME, [$this, 'onModifiedDtRequest']);
         return $this;
     }
 
@@ -92,6 +94,24 @@ class DataSetDataProviderListener
         }
 
         $this->getData($dataSet, $dataProvider);
+
+        // Cache timeout
+        $dataProvider->setCacheTtl($dataProvider->getProperty('updateInterval', 60) * 60);
+    }
+
+    public function onModifiedDtRequest(DataSetModifiedDtRequestEvent $event)
+    {
+        $this->getLogger()->error('onModifiedDtRequest: get modifiedDt with dataSetId: ' . $event->getDataSetId());
+
+        try {
+            $dataSet = $this->dataSetFactory->getById($event->getDataSetId());
+            $event->setModifiedDt(Carbon::createFromTimestamp($dataSet->lastDataEdit));
+
+            // Remote dataSets are kept "active" by required files
+            $dataSet->setActive();
+        } catch (NotFoundException $notFoundException) {
+            $this->getLogger()->error('onModifiedDtRequest: dataSetId ' . $event->getDataSetId() . ' not found.');
+        }
     }
 
     private function getData(DataSet $dataSet, DataProviderInterface $dataProvider): void
@@ -152,7 +172,7 @@ class DataSetDataProviderListener
             $filter['size'] = $upperLimit - $lowerLimit;
 
             $this->getLogger()->debug('getData: applied limits, start: '
-                . $filter['start'] . ', end: ' . $filter['end']);
+                . $filter['start'] . ', size: ' . $filter['size']);
         }
 
         // Expiry time for any images
@@ -174,7 +194,9 @@ class DataSetDataProviderListener
                 foreach ($mappings as $mapping) {
                     // This column is selected
                     $cellValue = $row[$mapping['heading']];
-                    if ($mapping['dataTypeId'] === 4) {
+                    if (empty($cellValue)) {
+                        $item[$mapping['heading']] = null;
+                    } else if ($mapping['dataTypeId'] === 4) {
                         // Grab the external image
                         $item[$mapping['heading']] = $dataProvider->addImage(
                             'dataset_' . md5($dataSet->dataSetId . $mapping['dataSetColumnId'] . $cellValue),
@@ -183,8 +205,15 @@ class DataSetDataProviderListener
                         );
                     } else if ($mapping['dataTypeId'] === 5) {
                         // Library Image
+                        $this->getLogger()->debug('getData: Library media reference found: ' . $cellValue);
+
                         // The content is the ID of the image
-                        $item[$mapping['heading']] = $dataProvider->addLibraryFile(intval($cellValue));
+                        try {
+                            $item[$mapping['heading']] = $dataProvider->addLibraryFile(intval($cellValue));
+                        } catch (NotFoundException $notFoundException) {
+                            $this->getLogger()->error('getData: Invalid library media reference: ' . $cellValue);
+                            $item[$mapping['heading']] = '';
+                        }
                     } else {
                         // Just a normal column
                         $item[$mapping['heading']] = $cellValue;
