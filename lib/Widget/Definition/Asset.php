@@ -22,6 +22,12 @@
 
 namespace Xibo\Widget\Definition;
 
+use GuzzleHttp\Psr7\Stream;
+use Illuminate\Support\Str;
+use Intervention\Image\ImageManagerStatic as Img;
+use Psr\Http\Message\ResponseInterface;
+use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Xmds\Entity\Dependency;
 
@@ -73,6 +79,32 @@ class Asset implements \JsonSerializable
             $md5,
             false
         );
+    }
+
+    public function getFilename(): string
+    {
+        return basename($this->path);
+    }
+
+    /**
+     * Generate a PSR response for this asset.
+     * We cannot use sendfile because the asset isn't in the library folder.
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function psrResponse(ServerRequest $request, Response $response): ResponseInterface
+    {
+        // Make sure this asset exists
+        if (!file_exists(PROJECT_ROOT . $this->path)) {
+            throw new NotFoundException(__('Asset file does not exist'));
+        }
+
+        if (Str::startsWith('image', $this->mimeType)) {
+            return Img::make(PROJECT_ROOT . '/' . $this->path)->psrResponse();
+        } else {
+            // Set the right content type.
+            $response = $response->withAddedHeader('Content-Type', $this->mimeType);
+            return $response->withBody(new Stream(fopen(PROJECT_ROOT . $this->path, 'r')));
+        }
     }
 
     private function getLegacyId(): int

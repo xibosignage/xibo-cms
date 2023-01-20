@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -612,9 +612,8 @@ $app->get('/module/templates/{dataType}', [
     '\Xibo\Controller\Module', 'templateGrid'
 ])->setName('module.template.search');
 
-$app->get('/module/templates/{dataType}/{templateId}/image', [
-    '\Xibo\Controller\Module', 'templateImage'
-])->setName('module.template.image');
+$app->get('/module/asset/{assetId}/download', ['\Xibo\Controller\Module', 'assetDownload'])
+    ->setName('module.asset.download');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/module/settings/{id}', ['\Xibo\Controller\Module','settings'])->setName('module.settings');

@@ -26,6 +26,7 @@ use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ModuleTemplate;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\Asset;
 
 /**
  * Factory for working with Module Templates
@@ -83,6 +84,24 @@ class ModuleTemplateFactory extends BaseFactory
             }
         }
         return $templates;
+    }
+
+    /**
+     * @param string $assetId
+     * @return \Xibo\Widget\Definition\Asset
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAssetById(string $assetId): Asset
+    {
+        foreach ($this->load() as $template) {
+            foreach ($template->getAssets() as $asset) {
+                if ($asset->id === $assetId) {
+                    return $asset;
+                }
+            }
+        }
+
+        throw new NotFoundException(__('Asset not found'));
     }
 
     /**

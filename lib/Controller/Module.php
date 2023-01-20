@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
@@ -282,42 +281,26 @@ class Module extends Base
     }
 
     /**
-     * Pulls the image for a templateId
+     * Serve an asset
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
-     * @param string $dataType
-     * @param string $templateId the template id
+     * @param string $assetId the ID of the asset to serve
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function templateImage(Request $request, Response $response, string $dataType, string $templateId): Response
+    public function assetDownload(Request $request, Response $response, string $assetId): Response
     {
-        if (empty($dataType)) {
-            throw new InvalidArgumentException(__('Please provide a data type'), 'dataType');
+        if (empty($assetId)) {
+            throw new InvalidArgumentException(__('Please provide an assetId'), 'assetId');
         }
 
-        if (empty($templateId)) {
-            throw new InvalidArgumentException(__('Please provide a templateId'), 'templateId');
-        }
+        // Get this asset from somewhere
+        $asset = $this->moduleFactory->getAssetsFromAnywhereById($assetId, $this->moduleTemplateFactory);
 
-        // Get this template
-        $template = $this->moduleTemplateFactory->getByDataTypeAndId($dataType, $templateId);
+        $this->getLog()->debug('assetDownload: found appropriate asset for assetId ' . $assetId);
 
-        // does this template have an image?
-        if (empty($template->thumbnail)) {
-            throw new NotFoundException(__('Template does not have a thumbnail'));
-        }
-
-        if (file_exists(PROJECT_ROOT . '/custom/modules/' . $template->thumbnail)) {
-            $file = PROJECT_ROOT . '/custom/modules/' . $template->thumbnail;
-        } else if (file_exists(PROJECT_ROOT . '/modules/' . $template->thumbnail)) {
-            $file = PROJECT_ROOT . '/modules/' . $template->thumbnail;
-        } else {
-            throw new NotFoundException(__('Specified thumbnail not found'));
-        }
-
-        // Serve the file directly.
-        return $response->withBody(new Stream(fopen($file, 'r')));
+        // The asset can serve itself.
+        return $asset->psrResponse($request, $response);
     }
 }
