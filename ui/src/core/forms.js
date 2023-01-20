@@ -81,6 +81,11 @@ window.forms = {
           }
         }
 
+        // Fonts selector
+        if (property.type === 'fontSelector') {
+          property.fontsSearchUrl = getFontsUrl + '?length=10000';
+        }
+
         // Append the property to the target container
         if (templates.forms.hasOwnProperty(property.type)) {
           const $newField = $(templates.forms[property.type](property))
@@ -291,6 +296,144 @@ window.forms = {
         });
       }
     });
+
+    // Dataset column selector
+    findElements(
+      '.dataset-column-selector',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+      const datasetId = $el.data('depends-on-value');
+
+      // Initialise the dataset column selector
+      // if the dataset id is not empty
+      if (datasetId) {
+        // Get the dataset columns
+        $.ajax({
+          url: urlsForApi.dataset.search.url,
+          type: 'GET',
+          data: {
+            dataSetId: datasetId,
+          },
+        }).done(function(data) {
+          // Get the columns
+          const datasetCols = data.data[0].columns;
+
+          // Order Clause
+          const $colsOutContainer = $el.find('#columnsOut');
+          const $colsInContainer = $el.find('#columnsIn');
+
+          if ($colsOutContainer.length == 0 ||
+            $colsInContainer.length == 0) {
+            return;
+          }
+
+          const $selectHiddenInput = $el.find('#' + $el.data('select-id'));
+          const selectedValue = $selectHiddenInput.val() ?
+            JSON.parse(
+              $selectHiddenInput.val(),
+            ) : [];
+
+          // Update the hidden field with a JSON string
+          // of the order clauses
+          const updateHiddenField = function() {
+            const selectedCols = [];
+
+            $colsInContainer.find('li').each(function(_index, el) {
+              const colId = $(el).attr('id');
+              selectedCols.push(colId);
+            });
+
+            // Delete all temporary fields
+            $el.find('.temp').remove();
+
+            // Create a hidden field for each of the selected columns
+            $.each(selectedCols, function(_index, col) {
+              $el.append(
+                '<input type="hidden" class="temp" ' +
+                'name="dataSetColumnId[]" value="' +
+                col + '" />',
+              );
+            });
+
+            // Update the hidden field with a JSON string
+            $selectHiddenInput.val(JSON.stringify(selectedCols));
+          };
+
+          // Clear existing fields
+          $colsOutContainer.empty();
+          $colsInContainer.empty();
+
+          const colAvailableTitle =
+            datasetColumnSelectorTranslations.colAvailable;
+          const colSelectedTitle =
+            datasetColumnSelectorTranslations.colSelected;
+
+          // Set titles
+          $el.find('.col-out-title').text(colAvailableTitle);
+          $el.find('.col-in-title').text(colSelectedTitle);
+
+          // Get the selected columns
+          const datasetColsOut = [];
+          const datasetColsIn = [];
+
+          // If the column is in the dataset
+          // add it to the selected columns
+          // if not add it to the remaining columns
+          $.each(datasetCols, function(_index, col) {
+            const dataSetColumnId = col.dataSetColumnId.toString();
+            if (selectedValue.includes(dataSetColumnId)) {
+              datasetColsIn.push(col);
+            } else {
+              datasetColsOut.push(col);
+            }
+          });
+
+          // Populate the available columns
+          const $columnsOut = $el.find('#columnsOut');
+          $.each(datasetColsOut, function(_index, col) {
+            $columnsOut.append(
+              '<li class="li-sortable" id="' + col.dataSetColumnId + '">' +
+              col.heading +
+              '</li>',
+            );
+          });
+
+          // Populate the selected columns
+          const $columnsIn = $el.find('#columnsIn');
+          $.each(datasetColsIn, function(_index, col) {
+            $columnsIn.append(
+              '<li class="li-sortable" id="' + col.dataSetColumnId + '">' +
+              col.heading +
+              '</li>',
+            );
+          });
+
+          // Setup lists drag and sort ( with double click )
+          $el.find('#columnsIn, #columnsOut').sortable({
+            connectWith: '.connectedSortable',
+            dropOnEmpty: true,
+            receive: function() {
+              updateHiddenField();
+            },
+          }).disableSelection();
+
+          // Double click to switch lists
+          $el.find('.li-sortable').on('dblclick', function(ev) {
+            const $this = $(ev.currentTarget);
+            $this.appendTo($this.parent().is('#columnsIn') ?
+              $columnsOut : $columnsIn);
+            updateHiddenField();
+          });
+
+          // Update hidden field on start
+          updateHiddenField();
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          console.error(jqXHR, textStatus, errorThrown);
+        });
+      }
+    });
+
 
     // Dataset filter clause
     findElements(
@@ -978,6 +1121,40 @@ window.forms = {
       // Setup multiple clocks
       configureMultipleWorldClocks($(el));
       initClockRows(el);
+    });
+
+    // Font selector
+    findElements(
+      '.font-selector',
+      target,
+    ).each(function(_k, el) {
+      // Populate the font list with options
+      const $el = $(el).find('select');
+      $.ajax({
+        method: 'GET',
+        url: $el.data('searchUrl'),
+        success: function(res) {
+          if (res.data !== undefined && res.data.length > 0) {
+            $.each(res.data, function(_index, element) {
+              if ($el.data('value') === element.familyName) {
+                $el.append(
+                  $('<option value="' +
+                    element.familyName +
+                    '" selected>' +
+                    element.name +
+                    '</option>'));
+              } else {
+                $el.append(
+                  $('<option value="' +
+                    element.familyName +
+                    '">' +
+                    element.name +
+                    '</option>'));
+              }
+            });
+          }
+        },
+      });
     });
 
     // Handle field dependencies for the container

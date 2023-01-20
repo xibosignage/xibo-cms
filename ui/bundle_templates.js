@@ -26,6 +26,9 @@ window.templates = {
       require('./src/templates/forms/inputs/datasetSelector.hbs'),
     datasetOrder: require('./src/templates/forms/inputs/datasetOrder.hbs'),
     datasetFilter: require('./src/templates/forms/inputs/datasetFilter.hbs'),
+    datasetColumnSelector:
+      require('./src/templates/forms/inputs/datasetColumnSelector.hbs'),
+    fontSelector: require('./src/templates/forms/inputs/fontSelector.hbs'),
     // More to be added
   },
 };

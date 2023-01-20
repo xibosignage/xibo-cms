@@ -1,0 +1,2101 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>dataset_ticker</id>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>Dataset Ticker</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="template" type="code" allowLibraryRefs="true" variant="html">
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
+                <title>Optional Stylesheet Template</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="itemsSideBySide" type="checkbox">
+                <title>Show items side by side?</title>
+                <helpText>Should items be shown side by side?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="numItems" type="number">
+                <title>Number of Items</title>
+                <helpText>The Number of items you want to display</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="effect" type="dropdown" mode="single">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.</helpText>
+                <default>none</default>
+                <options>
+                    <option name="none">No effect - all items are shown</option>
+                    <option name="marqueeLeft">Marquee Left</option>
+                    <option name="marqueeRight">Marquee Right</option>
+                    <option name="marqueeUp">Marquee Up</option>
+                    <option name="marqueeDown">Marquee Down</option>
+                    <option name="noTransition">No transition</option>
+                    <option name="fade">Fade</option>
+                    <option name="fadeout">Fade Out</option>
+                    <option name="scrollHorz">Scroll Horizontal</option>
+                    <option name="scrollVert">Scroll Vertical</option>
+                    <option name="flipHorz">Flip Horizontal</option>
+                    <option name="flipVert">Flip Vertical</option>
+                    <option name="shuffle">Shuffle</option>
+                    <option name="tileSlide">Tile Slide</option>
+                    <option name="tileBlind">Tile Blind</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
+                <default>1000</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="#effect" type="neq">noTransition</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="itemsPerPage" type="number">
+                <title>Items per page</title>
+                <helpText>If an effect has been selected, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
+                <default>1</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="#effect" type="neq">marqueeLeft</condition>
+                        <condition field="#effect" type="neq">marqueeRight</condition>
+                        <condition field="#effect" type="neq">marqueeUp</condition>
+                        <condition field="#effect" type="neq">marqueeDown</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview><stencil>
+        <twig><![CDATA[
+{% if javaScript %}
+<script type="text/javascript">
+    {{javaScript|raw}}
+</script>
+{% endif %}
+
+<style>
+{% if itemsSideBySide %}
+.item, .page {
+    float: left;
+}
+{% endif %}
+
+{% if backgroundColor != '' %}
+body {
+    background-color: {{ backgroundColor }};
+}
+{% endif %}
+</style>
+
+{% if ta_css %}
+<style>
+    {{ta_css|raw}}
+</style>
+{% endif %}
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Module renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+
+// Clear the content container
+$(target).find('#content').empty();
+
+// Randomise the order of the items
+if (properties.randomiseItems) {
+    items = items.sort(function () {
+        return 0.5 - Math.random();
+    });
+}
+
+// Add content for each item
+// make replacements
+// and wrap it in a div with the item class
+for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+
+    // Replace the template with the item content
+    var content = properties.template.replace(/\[(.*?)\]/g, function (match, column) {
+        return item[column] ? item[column] : '';
+    });
+
+    // Add the content to the target
+    $(target).find('#content').append(
+        $('<div>')
+            .addClass('item')
+            .append(content)
+    );
+}
+
+// Scale the layout
+$('body').xiboLayoutScaler(properties);
+
+$(target).xiboTextRender(
+    Object.assign(properties, globalOptions),
+    $(target).find('#content > *'),
+);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_1</id>
+        <legacyTemplateId>empty</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>Plain Table (Customisable)</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+
+            <property type="header" variant="main">
+                <title>Colours</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+                <property id="backgroundColor" type="color">
+                    <title>Background Colour</title>
+                    <helpText>Use the colour picker to select the background colour</helpText>
+                    <visibility>
+                        <test>
+                            <condition field="#dataSetId" type="neq"></condition>
+                        </test>
+                    </visibility>
+                </property>
+                <property id="borderColor" type="color">
+                    <title>Border Colour</title>
+                    <helpText>Use the colour picker to select the border colour</helpText>
+                    <visibility>
+                        <test>
+                            <condition field="#dataSetId" type="neq"></condition>
+                        </test>
+                    </visibility>
+                </property>
+                <property id="fontColor" type="color">
+                    <title>Font Colour</title>
+                    <helpText>Use the colour picker to select the font colour</helpText>
+                    <visibility>
+                        <test>
+                            <condition field="#dataSetId" type="neq"></condition>
+                        </test>
+                    </visibility>
+                </property>
+            </properties>
+            <stencil>
+            <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    width: 100%;
+    font-size: 14px;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+td.DataSetColumn img {
+    height: 80px;
+}
+
+/* Constructed Styles */
+{% if backgroundColor %}
+table.DataSetTable {
+    background-color: {{backgroundColor}};
+}
+{% endif %}
+
+{% if borderColor %}
+table.DataSetTable, table.DataSetTable tr, table.DataSetTable th, table.DataSetTable td {
+    border: 1px solid {{borderColor}};
+}
+{% endif %}
+
+{% if fontColor %}
+table.DataSetTable {
+    color: {{fontColor}};
+}
+{% endif %}
+
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+            ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_2</id>
+        <legacyTemplateId>light-green</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>A light green background with darker green borders. White heading text.</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+tr.HeaderRow {
+    font-size: 1.1em;
+    text-align: center;
+    padding-top: 5px;
+    padding-bottom: 4px;
+    background-color: #A7C942;
+    color: #ffffff;
+}
+
+tr#row_1 {
+    color: #000000;
+    background-color: #EAF2D3;
+}
+
+td#col_1 {
+    color: #000000;
+    background-color: #EAF2D3;
+}
+
+td.DataSetColumn {
+    color: #000000;
+    background-color: #EAF2D3;
+    border: 1px solid #98bf21
+}
+
+td.DataSetColumn img {
+    max-width: 100%;
+    max-height: 50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tr.DataSetRow {
+    text-align: center;
+    color: #000000;
+    background-color: #EAF2D3;
+    border: 1px solid #98bf21 padding-top:5px;
+    padding-bottom: 4px;
+}
+
+th.DataSetColumnHeaderCell {
+    font-size: 1em;
+    border: 1px solid #98bf21;
+    padding: 3px 7px 2px 7px;
+}
+
+/* Constructed Styles */
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_3</id>
+        <legacyTemplateId>simple-round</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>Simple white table with rounded rows.</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    table-layout: fixed;
+    font-size: 14px;
+    color: #3b3b3b;
+}
+
+tr.HeaderRow {
+    font-size: 1.1em;
+    font-weight: 900;
+    color: #5e5e5e;
+    text-align: left;
+}
+
+td.DataSetColumn {
+    padding: 8px;
+}
+
+td.DataSetColumn:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+td.DataSetColumn:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+td.DataSetColumn img {
+    max-width: 100%;
+    max-height: 50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tr.DataSetRow {
+    background-color: #f6f6f6;
+    border-top: 2px solid #d3d3d3;
+}
+
+th.DataSetColumnHeaderCell {
+    padding: 8px 8px 0px 8px;
+}
+
+/* Constructed Styles */
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_4</id>
+        <legacyTemplateId>transparent-blue</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>Striped blue table with darker blue header.</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 14px;
+}
+
+tr.HeaderRow {
+    font-size: 1.1em;
+    text-align: center;
+    background-color: #30426a;
+    color: #f9f9f9;
+}
+
+td.DataSetColumn {
+    padding: 6px;
+}
+
+td.DataSetColumn img {
+    max-width: 100%;
+    max-height: 50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tr.DataSetRow {
+    text-align: center;
+    color: #000000;
+    background-color: #96acde;
+    background-color: #96acde8e;
+}
+
+tr.DataSetRow:nth-child(even) {
+    background-color: #758cc1;
+    background-color: #758cc18e;
+}
+
+th.DataSetColumnHeaderCell {
+    padding-top: 8px;
+    padding-bottom: 6px;
+}
+
+/* Constructed Styles */
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_5</id>
+        <legacyTemplateId>orange-grey-striped</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>White striped table with orange header.</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    table-layout: fixed;
+    font-size: 14px;
+    color: #3b3b3b;
+}
+
+tr.HeaderRow {
+    font-size: 1.1em;
+    font-weight: 900;
+    background-color: #ea6153;
+    color: #fff;
+}
+
+td.DataSetColumn {
+    padding: 6px;
+}
+
+td.DataSetColumn img {
+    max-width: 100%;
+    max-height: 50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tr.DataSetRow {
+    background-color: #f6f6f6;
+}
+
+tr.DataSetRow:nth-child(even) {
+    background-color: #e9e9e9;
+}
+
+th.DataSetColumnHeaderCell {
+    padding-top: 8px;
+    padding-bottom: 6px;
+}
+
+/* Constructed Styles */
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_6</id>
+        <legacyTemplateId>split-rows</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>White and grey table with split rows.</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    table-layout: fixed;
+    font-size: 14px;
+    color: #3b3b3b;
+}
+
+tr.HeaderRow {
+    font-size: 1.1em;
+    font-weight: 900;
+    background-color: #95A5A6;
+    color: #222;
+    text-align: left;
+}
+
+td.DataSetColumn {
+    padding: 8px;
+}
+
+td.DataSetColumn img {
+    max-width: 100%;
+    max-height: 50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tr.DataSetRow {
+    background-color: #f6f6f6;
+    border-bottom: 6px solid #95a5a6;
+}
+
+th.DataSetColumnHeaderCell {
+    padding: 8px;
+    padding-top: 8px;
+}
+
+/* Constructed Styles */
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_7</id>
+        <legacyTemplateId>dark-round</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>A dark table with round borders and yellow heading text.</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    font-family: Montserrat, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-size: 14px;
+    width: 100%;
+    table-layout: fixed;
+    border-radius: 12px;
+    background-color: #333333;
+    padding: 8px;
+    overflow: hidden;
+    opacity: 0.85;
+}
+
+tr.HeaderRow {
+    font-size: 1.1em;
+    text-align: left;
+    color: #dd5;
+}
+
+td.DataSetColumn {
+    padding: 6px !important;
+    color: #f9f9f9;
+}
+
+td.DataSetColumn img {
+    max-width: 100%;
+    max-height: 50px;
+    display: block;
+}
+
+th.DataSetColumnHeaderCell {
+    padding: 4px 6px !important;
+}
+
+/* Constructed Styles */
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>dataset_table_8</id>
+        <legacyTemplateId>pill-colored</legacyTemplateId>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>Round cells with multi colours and a full coloured header.</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="columns" type="datasetColumnSelector">
+                <dependsOn>#dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showHeadings" type="checkbox">
+                <title>Show the table headings?</title>
+                <helpText>Should the Table headings be shown?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rowsPerPage" type="number">
+                <title>Rows per page</title>
+                <helpText>Please enter the number of rows per page. 0 for no pages.</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <helpText>Set the font size</helpText>
+                <visibility>
+                    <test>
+                        <condition field="#dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer">
+<table class="DataSetTable">
+</table>
+</div>
+<style>
+/* Template Styles */
+table.DataSetTable {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    table-layout: fixed;
+    font-size: 14px;
+    color: #3b3b3b;
+    text-align: center;
+}
+
+tr.HeaderRow {
+    font-size: 1.1em;
+    font-weight: 900;
+    color: #222;
+}
+
+td.DataSetColumn {
+    padding: 6px;
+    border-radius: 8px;
+    border-width: 2px;
+    border-style: solid;
+}
+
+td.DataSetColumn:nth-child(4n) {
+    border-color: #ee6c6c;
+}
+
+td.DataSetColumn:nth-child(4n+1) {
+    border-color: #9b99f3;
+}
+
+td.DataSetColumn:nth-child(4n+2) {
+    border-color: #5be280;
+}
+
+td.DataSetColumn:nth-child(4n+3) {
+    border-color: #fbdc61;
+}
+
+td.DataSetColumn img {
+    max-width: 100%;
+    max-height: 50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tr.DataSetRow {
+    background-color: #f6f6f6;
+    border-bottom: 6px solid #95a5a6;
+}
+
+th.DataSetColumnHeaderCell {
+    padding: 6px;
+    border-radius: 8px;
+    border-width: 2px;
+    border-style: solid;
+    border-color: transparent;
+}
+
+th.DataSetColumnHeaderCell:nth-child(4n) {
+    background-color: #ee6c6c;
+}
+
+th.DataSetColumnHeaderCell:nth-child(4n+1) {
+    background-color: #9b99f3;
+}
+
+th.DataSetColumnHeaderCell:nth-child(4n+2) {
+    background-color: #5be280;
+}
+
+th.DataSetColumnHeaderCell:nth-child(4n+3) {
+    background-color: #fbdc61;
+}
+
+/* Constructed Styles */
+{% if fontFamily %}
+table.DataSetTable {
+    font-family: {{fontFamily}};
+}
+{% endif %}
+
+{% if fontSize %}
+table.DataSetTable {
+    font-size: {{fontSize}}px;
+}
+{% endif %}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTable = $datasetTableContainer.find('.DataSetTable');
+
+// Clear the table
+$datasetTable.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Show the table headings if required
+if (properties.showHeadings === 1) {
+    // Build the headings
+    var headings = columns.map(function (column, colIdx) {
+        return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+    });
+
+    // Add the headings to the table
+    $datasetTable.append(
+        $('<thead>')
+            .append(
+                $('<tr class="HeaderRow">')
+                    .append(headings)
+            )
+    );
+}
+
+// Append table body
+$datasetTable.append(
+    $('<tbody>')
+);
+
+// Add rows to the table
+for (var i = 0; i < items.length; i++) {
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    $datasetTable.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table into content container
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+    </template>
+</templates>

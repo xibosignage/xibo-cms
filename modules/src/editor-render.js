@@ -40,6 +40,7 @@ $(function() {
         $('body'), // target
         widget.items, // items
         Object.assign(widget.properties, globalOptions), // properties
+        widget.meta, // meta
       ] : [];
 
       // Call render array of functions if exists and it's an array

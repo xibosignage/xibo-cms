@@ -95,3 +95,27 @@
         }
     }
 }
+
+// Data set column selector
+.dataset-column-selector {
+    display: flex;
+    gap: 6px;
+
+    .connectedlist {
+        flex: 1;
+        min-width: 0;
+
+        .text-info {
+            color: $xibo-color-secondary;
+        }
+
+        .ui-sortable {
+            width: 100% !important;
+            background-color: $xibo-color-primary-l60 !important;
+        }
+
+        .li-sortable {
+            width: calc(100% - 12px);
+        }
+    }
+}

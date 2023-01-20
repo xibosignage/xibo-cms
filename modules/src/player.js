@@ -84,7 +84,12 @@ $(function() {
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
-      } else if (!isArray && data.data.length === 0 && widget.sample) {
+      } else if (
+        !isArray &&
+        data.data.length === 0 &&
+        widget.sample &&
+        isPreview
+      ) {
         // If data is empty, use sample data instead
         // Add single element or array of elements
         dataItems = (Array.isArray(widget.sample)) ?
@@ -94,12 +99,18 @@ $(function() {
         dataItems = data.data;
       }
 
+      // Add meta to the widget if it exists
+      if (!isArray && data.meta) {
+        widget.meta = data.meta;
+      }
+
       // Run the onInitialize function if it exists
       if (typeof window['onInitialize_' + widget.widgetId] === 'function') {
         window['onInitialize_' + widget.widgetId](
           widget.widgetId,
           $target,
           widget.properties,
+          widget.meta,
         );
       }
 
@@ -109,7 +120,7 @@ $(function() {
         if (typeof window['onParseData_' + widget.widgetId] === 'function') {
           item = window[
             'onParseData_' + widget.widgetId
-          ](item, widget.properties);
+          ](item, widget.properties, widget.meta);
         }
 
         // Add the item to the content
@@ -181,6 +192,7 @@ $(function() {
           $target,
           widget.items,
           Object.assign(widget.properties, globalOptions),
+          widget.meta,
         );
       });
 
@@ -197,6 +209,7 @@ $(function() {
             $target,
             widget.items,
             widget.properties,
+            widget.meta,
           );
         };
         if (xiboIC.checkVisible()) {

@@ -19,45 +19,30 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <module>
-    <id>core-datasetticker</id>
-    <name>Dataset Ticker</name>
+    <id>core-dataset</id>
+    <name>Dataset</name>
     <author>Core</author>
-    <description>Display DataSet content as a Ticker</description>
+    <description>Display DataSet content</description>
     <class>\Xibo\Widget\DataSetProvider</class>
-    <dataCacheKey>%dataSetId%</dataCacheKey>
-    <type>datasetticker</type>
-    <dataType></dataType>
+    <dataCacheKey>%dataSetId%lowerLimit%lowerLimit%numItems%orderClauses%useOrderingClause%ordering%filterClauses%useFilteringClause%filter%</dataCacheKey>
+    <type>dataset</type>
+    <dataType>dataset</dataType>
+    <legacyType>datasetticker</legacyType>
+    <legacyType>datasetview</legacyType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
-    <defaultDuration>30</defaultDuration>
+    <defaultDuration>10</defaultDuration>
     <settings></settings>
     <properties>
         <property id="dataSetId" type="datasetSelector">
             <title>DataSet</title>
             <helpText>Please select the DataSet to use as a source of data for this ticker.</helpText>
         </property>
-        <property id="template" type="code" allowLibraryRefs="true" variant="html">
-            <title>Item Template</title>
-            <helpText>Enter text in the box below, used to display each article.</helpText>
-            <visibility>
-                <test>
-                    <condition field="#dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
         <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
             <title>No data message</title>
             <helpText>A message to display when no data is returned from the source</helpText>
-            <visibility>
-                <test>
-                    <condition field="#dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
-        <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
-            <title>Optional Stylesheet Template</title>
             <visibility>
                 <test>
                     <condition field="#dataSetId" type="neq"></condition>
@@ -75,16 +60,6 @@
 
         <property type="header" variant="main">
             <title>Configuration</title>
-            <visibility>
-                <test>
-                    <condition field="#dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
-        <property id="itemsSideBySide" type="checkbox">
-            <title>Show items side by side?</title>
-            <helpText>Should items be shown side by side?</helpText>
-            <default>0</default>
             <visibility>
                 <test>
                     <condition field="#dataSetId" type="neq"></condition>
@@ -111,66 +86,10 @@
                 </test>
             </visibility>
         </property>
-        <property id="numItems" type="number">
-            <title>Number of Items</title>
-            <helpText>The Number of items you want to display</helpText>
-            <default>0</default>
-            <visibility>
-                <test>
-                    <condition field="#dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
         <property id="randomiseItems" type="checkbox">
             <title>Randomise?</title>
             <helpText>Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order.</helpText>
             <default>0</default>
-            <visibility>
-                <test>
-                    <condition field="#dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
-
-        <property type="header" variant="main">
-            <title>Appearance</title>
-            <visibility>
-                <test>
-                    <condition field="#dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
-        <property id="backgroundColor" type="color">
-            <title>Background Colour</title>
-            <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
-            <default></default>
-            <visibility>
-                <test>
-                    <condition field="#dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
-        <property id="effect" type="dropdown" mode="single">
-            <title>Effect</title>
-            <helpText>Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.</helpText>
-            <default>none</default>
-            <options>
-                <option name="none">No effect - all items are shown</option>
-                <option name="marqueeLeft">Marquee Left</option>
-                <option name="marqueeRight">Marquee Right</option>
-                <option name="marqueeUp">Marquee Up</option>
-                <option name="marqueeDown">Marquee Down</option>
-                <option name="noTransition">No transition</option>
-                <option name="fade">Fade</option>
-                <option name="fadeout">Fade Out</option>
-                <option name="scrollHorz">Scroll Horizontal</option>
-                <option name="scrollVert">Scroll Vertical</option>
-                <option name="flipHorz">Flip Horizontal</option>
-                <option name="flipVert">Flip Vertical</option>
-                <option name="shuffle">Shuffle</option>
-                <option name="tileSlide">Tile Slide</option>
-                <option name="tileBlind">Tile Blind</option>
-            </options>
             <visibility>
                 <test>
                     <condition field="#dataSetId" type="neq"></condition>
@@ -304,89 +223,6 @@
         </property>
     </properties>
     <preview></preview>
-    <stencil>
-        <twig><![CDATA[
-{% if javaScript %}
-<script type="text/javascript">
-    {{javaScript|raw}}
-</script>
-{% endif %}
-
-<style>
-{% if itemsSideBySide %}
-.item, .page {
-    float: left;
-}
-{% endif %}
-
-{% if backgroundColor != '' %}
-body {
-    background-color: {{ backgroundColor }};
-}
-{% endif %}
-</style>
-
-{% if ta_css %}
-<style>
-    {{ta_css|raw}}
-</style>
-{% endif %}
-        ]]></twig>
-    </stencil>
-    <onParseData><![CDATA[
-// item - element to be parsed
-// properties - object containing the values to be evaluated/used
-
-// Handle the template
-item.content = properties.template;
-
-// Handle square bracket replacements
-item.content = item.content.replace(/\[(.*?)\]/g, function (match, column) {
-    return item[column];
-});
-
-return item;
-    ]]></onParseData>
-    <onRender>
-        <![CDATA[
-// Module renderer options
-// id: The id of the widget
-// target: The target element to render
-// items: The items to render
-// properties: The properties for the widget
-
-// Clear the content container
-$(target).find('#content').empty();
-
-// Randomise the order of the items
-if (properties.randomiseItems) {
-    items = items.sort(function () {
-        return 0.5 - Math.random();
-    });
-}
-
-// Add content for each item
-// and wrap it in a div with the item class
-for (var i = 0; i < items.length; i++) {
-    var item = items[i];
-    var content = item.content;
-
-    // Add the content to the target
-    $(target).find('#content').append(
-        $('<div>')
-            .addClass('item')
-            .append(content)
-    );
-}
-
-// Scale the layout
-$('body').xiboLayoutScaler(properties);
-
-$(target).xiboTextRender(
-    Object.assign(properties, globalOptions),
-    $(target).find('#content > *'),
-);
-    ]]></onRender>
     <onVisible><![CDATA[
 // Start effects for this widget
 $(target).xiboLayoutAnimate(properties);
@@ -397,7 +233,7 @@ if (properties.freshnessTimeout > 0) {
     var now = moment();
     // Set up an interval to check whether or not we have exceeded our freshness
     var timer = setInterval(function() {
-        if (moment(now).add(properties.freshnessTimeout, 'minutes').isBefore(moment())) {
+        if (moment(meta.cacheDt).add(properties.freshnessTimeout, 'minutes').isBefore(moment())) {
             $("#content").empty().append(properties.noDataMessage);
             clearInterval(timer);
         }

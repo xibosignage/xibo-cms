@@ -2260,6 +2260,11 @@ lD.hasTarget = function(element, targetType) {
   // Get target data
   let targetData = $(element).data('target');
 
+  // If target data is not defined, return false
+  if (targetData == undefined) {
+    return false;
+  }
+
   // If target type isn't an array, make it one
   if (!Array.isArray(targetData)) {
     targetData = targetData.split(' ');
