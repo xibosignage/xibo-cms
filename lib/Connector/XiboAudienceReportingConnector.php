@@ -130,10 +130,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $settings['apiKey'] = $params->getString('apiKey');
         }
 
-        if (!$this->isProviderSetting('batchSize')) {
-            $settings['batchSize'] = $params->getInt('batchSize');
-        }
-
         // Get this connector settings, etc.
         $this->getOptionsFromAxe($settings['apiKey'], true);
 
