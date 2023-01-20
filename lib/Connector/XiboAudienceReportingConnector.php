@@ -164,221 +164,216 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         try {
             // Get Watermark (might be null - start from beginning)
             $watermark = $this->getWatermark();
+ 
+            // Loop over 5000 stat records
+            // Only interested in layout stats which belong to a parent campaign
+            $params = [
+                'type' => 'layout',
+                'start' => 0,
+                'length' => $this->getSetting('batchSize', 5000),
+                'mustHaveParentCampaign' => true
+            ];
 
-            // If a block of stats could not be processed then do a while loop until we save a watermark
-            // This would mean we are progressing
-            $skip = 0;
-            $length = 5000;
+            // If the watermark is not empty, we go from this point
+            if (!empty($watermark)) {
+                $params['statId'] = $watermark;
+            }
 
-            // Loop over 5000 stat records until we say stop (requireSendingStat = false, or break)
-            while (true) {
-                // Only interested in layout stats which belong to a parent campaign
-                $params = [
-                    'type' => 'layout',
-                    'start' => $skip,
-                    'length' => $length,
-                    'mustHaveParentCampaign' => true
-                ];
+            $this->getLogger()->debug('onRegularMaintenance: Processing batch of stats with params: '
+                . json_encode($params));
 
-                // If the watermark is not empty, we go from this point
-                if (!empty($watermark)) {
-                    $params['statId'] = $watermark;
-                }
+            // Call the time series interface getStats
+            $resultSet = $this->timeSeriesStore->getStats($params);
 
-                $this->getLogger()->debug('onRegularMaintenance: Processing batch of stats with params: '
-                    . json_encode($params));
+            // Array of campaigns for which we will update the total spend, impresssions, and plays
+            $campaigns = [];
+            $adCampaignCache = [];
+            $listCampaignCache = [];
+            $displayCache = [];
+            $displayIdsDeleted = [];
+            $erroredCampaign = [];
+            $rows = [];
 
-                // Call the time series interface getStats
-                $resultSet = $this->timeSeriesStore->getStats($params);
+            $updateWatermark = null;
 
-                // Array of campaigns for which we will update the total spend, impresssions, and plays
-                $campaigns = [];
-                $adCampaignCache = [];
-                $listCampaignCache = [];
-                $displayCache = [];
-                $displayIdsDeleted = [];
-                $erroredCampaign = [];
-                $rows = [];
+            // Process the stats one by one
+            while ($row = $resultSet->getNextRow()) {
+                try {
+                    $sanitizedRow = $this->sanitizer->getSanitizer($row);
 
-                // Process the stats one by one
-                while ($row = $resultSet->getNextRow()) {
-                    try {
-                        $sanitizedRow = $this->sanitizer->getSanitizer($row);
+                    $parentCampaignId = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
+                    $displayId = $sanitizedRow->getInt('displayId');
+                    $statId = $resultSet->getIdFromRow($row);
 
-                        $parentCampaignId = $sanitizedRow->getInt('parentCampaignId', ['default' => 0]);
-                        $displayId = $sanitizedRow->getInt('displayId');
+                    // Keep this watermark, so we update it later
+                    $updateWatermark = $statId;
 
-                        // Skip records we're not interested in, or records that have already been discounted before.
-                        if (empty($parentCampaignId)
-                            || empty($displayId)
-                            || in_array($displayId, $displayIdsDeleted)
-                            || array_key_exists($parentCampaignId, $erroredCampaign)
-                            || array_key_exists($parentCampaignId, $listCampaignCache)
-                        ) {
-                            // Comment out this log to save recording messages unless we need to troubleshoot in dev
-                            //$this->getLogger()->debug('onRegularMaintenance: Campaign is a list campaign '
-                            //    . $parentCampaignId);
+                    // Skip records we're not interested in, or records that have already been discounted before.
+                    if (empty($parentCampaignId)
+                        || empty($displayId)
+                        || in_array($displayId, $displayIdsDeleted)
+                        || array_key_exists($parentCampaignId, $erroredCampaign)
+                        || array_key_exists($parentCampaignId, $listCampaignCache)
+                    ) {
+                        // Comment out this log to save recording messages unless we need to troubleshoot in dev
+                        //$this->getLogger()->debug('onRegularMaintenance: Campaign is a list campaign '
+                        //    . $parentCampaignId);
+                        continue;
+                    }
+
+                    // Build an array to represent the row we want to send.
+                    $entry = [
+                        'id' => $statId,
+                        'parentCampaignId' => $parentCampaignId,
+                        'displayId' => $displayId,
+                    ];
+
+                    // --------
+                    // Get Campaign
+                    // Campaign start and end date
+                    if (array_key_exists($parentCampaignId, $adCampaignCache)) {
+                        $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
+                        $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
+                    } else {
+                        // Get Campaign
+                        try {
+                            $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
+                        } catch (\Exception $exception) {
+                            $this->getLogger()->error('onRegularMaintenance: campaign with ID '
+                                . $parentCampaignId . ' not found');
+
+                            $erroredCampaign[$parentCampaignId] = $entry['id']; // first stat id
                             continue;
                         }
 
-                        // Build an array to represent the row we want to send.
-                        $entry = [
-                            'id' => $resultSet->getIdFromRow($row),
-                            'parentCampaignId' => $parentCampaignId,
-                            'displayId' => $displayId,
-                        ];
+                        if ($parentCampaign->type == 'ad') {
+                            $adCampaignCache[$parentCampaignId]['type'] = $parentCampaign->type;
+                        } else {
+                            $this->getLogger()->debug('onRegularMaintenance: campaign is a list '
+                                . $parentCampaignId);
+                            $listCampaignCache[$parentCampaignId] = $parentCampaignId;
+                            continue;
+                        }
 
-                        // --------
-                        // Get Campaign
-                        // Campaign start and end date
-                        if (array_key_exists($parentCampaignId, $adCampaignCache)) {
+                        if (!empty($parentCampaign->getStartDt()) && !empty($parentCampaign->getEndDt())) {
+                            $adCampaignCache[$parentCampaignId]['start'] = $parentCampaign->getStartDt()
+                                ->format(DateFormatHelper::getSystemFormat());
+                            $adCampaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()
+                                ->format(DateFormatHelper::getSystemFormat());
+
                             $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
                             $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
                         } else {
-                            // Get Campaign
-                            try {
-                                $parentCampaign = $this->campaignFactory->getById($parentCampaignId);
-                            } catch (\Exception $exception) {
-                                $this->getLogger()->error('onRegularMaintenance: campaign with ID '
-                                    . $parentCampaignId . ' not found');
+                            $this->getLogger()->error('onRegularMaintenance: campaign without dates '
+                                . $parentCampaignId);
 
-                                $erroredCampaign[$parentCampaignId] = $entry['id']; // first stat id
-                                continue;
-                            }
-
-                            if ($parentCampaign->type == 'ad') {
-                                $adCampaignCache[$parentCampaignId]['type'] = $parentCampaign->type;
-                            } else {
-                                $this->getLogger()->debug('onRegularMaintenance: campaign is a list '
-                                    . $parentCampaignId);
-                                $listCampaignCache[$parentCampaignId] = $parentCampaignId;
-                                continue;
-                            }
-
-                            if (!empty($parentCampaign->getStartDt()) && !empty($parentCampaign->getEndDt())) {
-                                $adCampaignCache[$parentCampaignId]['start'] = $parentCampaign->getStartDt()
-                                    ->format(DateFormatHelper::getSystemFormat());
-                                $adCampaignCache[$parentCampaignId]['end'] = $parentCampaign->getEndDt()
-                                    ->format(DateFormatHelper::getSystemFormat());
-
-                                $entry['campaignStart'] = $adCampaignCache[$parentCampaignId]['start'];
-                                $entry['campaignEnd'] = $adCampaignCache[$parentCampaignId]['end'];
-                            } else {
-                                $this->getLogger()->error('onRegularMaintenance: campaign without dates '
-                                    . $parentCampaignId);
-
-                                $erroredCampaign[$parentCampaignId] = $entry['id']; // first stat id
-                                continue;
-                            }
-                        }
-
-                        // Get Display
-                        // -----------
-                        // Cost per play and impressions per play
-                        if (!array_key_exists($displayId, $displayCache)) {
-                            try {
-                                $display = $this->displayFactory->getById($displayId);
-                                $displayCache[$displayId]['costPerPlay'] = $display->costPerPlay;
-                                $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
-                            } catch (NotFoundException $notFoundException) {
-                                $this->getLogger()->error('onRegularMaintenance: display not found with ID: '
-                                    . $displayId);
-                                $displayIdsDeleted[] = $displayId;
-                                continue;
-                            }
-                        }
-                        $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
-                        $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
-
-                        // Converting the date into the format expected by the API
-                        try {
-                            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-                                $start = $row['start']->toDateTime()->format(DateFormatHelper::getSystemFormat());
-                                $end = $row['end']->toDateTime()->format(DateFormatHelper::getSystemFormat());
-                            } else {
-                                $start = Carbon::createFromTimestamp($row['start'])
-                                    ->format(DateFormatHelper::getSystemFormat());
-                                $end = Carbon::createFromTimestamp($row['end'])
-                                    ->format(DateFormatHelper::getSystemFormat());
-                            }
-                        } catch (\Exception $exception) {
-                            $this->getLogger()->error('onRegularMaintenance: Date convert failed for ID '
-                                . $entry['id'] . ' with error: '. $exception->getMessage());
+                            $erroredCampaign[$parentCampaignId] = $entry['id']; // first stat id
                             continue;
                         }
+                    }
 
-                        $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
-                        $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
-                        $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
-                        $entry['start'] = $start;
-                        $entry['end'] = $end;
-                        $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
+                    // Get Display
+                    // -----------
+                    // Cost per play and impressions per play
+                    if (!array_key_exists($displayId, $displayCache)) {
+                        try {
+                            $display = $this->displayFactory->getById($displayId);
+                            $displayCache[$displayId]['costPerPlay'] = $display->costPerPlay;
+                            $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
+                        } catch (NotFoundException $notFoundException) {
+                            $this->getLogger()->error('onRegularMaintenance: display not found with ID: '
+                                . $displayId);
+                            $displayIdsDeleted[] = $displayId;
+                            continue;
+                        }
+                    }
+                    $entry['costPerPlay'] = $displayCache[$displayId]['costPerPlay'];
+                    $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
 
-                        $rows[] = $entry;
-
-                        // Campaign list in array
-                        if (!in_array($parentCampaignId, $campaigns)) {
-                            $campaigns[] = $parentCampaignId;
+                    // Converting the date into the format expected by the API
+                    try {
+                        if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+                            $start = $row['start']->toDateTime()->format(DateFormatHelper::getSystemFormat());
+                            $end = $row['end']->toDateTime()->format(DateFormatHelper::getSystemFormat());
+                        } else {
+                            $start = Carbon::createFromTimestamp($row['start'])
+                                ->format(DateFormatHelper::getSystemFormat());
+                            $end = Carbon::createFromTimestamp($row['end'])
+                                ->format(DateFormatHelper::getSystemFormat());
                         }
                     } catch (\Exception $exception) {
-                        $this->getLogger()->error('onRegularMaintenance: unexpected exception processing row '
-                            . ($entry['id'] ?? null) . ', e: ' . $exception->getMessage());
+                        $this->getLogger()->error('onRegularMaintenance: Date convert failed for ID '
+                            . $entry['id'] . ' with error: '. $exception->getMessage());
+                        continue;
                     }
-                }
 
-                if (count($erroredCampaign) > 0) {
-                    $event->addMessage(sprintf(
-                        __('There were %d campaigns which failed. A summary is in the error log.'),
-                        count($erroredCampaign)
-                    ));
+                    $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
+                    $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
+                    $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
+                    $entry['start'] = $start;
+                    $entry['end'] = $end;
+                    $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
-                    $this->getLogger()->error('onRegularMaintenance: Failure summary of campaignId and first statId:'
-                        . json_encode($erroredCampaign));
-                }
+                    $rows[] = $entry;
 
-                $this->getLogger()->debug('onRegularMaintenance: Records to send: ' . count($rows)
-                    . ', Watermark: ' . $watermark);
-                $this->getLogger()->debug('onRegularMaintenance: Campaigns: ' . json_encode($campaigns));
-
-                // If we have rows, send them.
-                if (count($rows) > 0) {
-                    // All outcomes from here are either a break; or an exception to stop the loop.
-                    try {
-                        $response = $this->getClient()->post($this->getServiceUrl() . '/audience/receiveStats', [
-                            'timeout' => 300, // 5 minutes
-                            'headers' => [
-                                'X-API-KEY' => $this->getSetting('apiKey')
-                            ],
-                            'json' => $rows
-                        ]);
-
-                        $statusCode = $response->getStatusCode();
-
-                        $this->getLogger()->debug('onRegularMaintenance: Receive Stats StatusCode: ' . $statusCode);
-
-                        // Get Campaign Total
-                        if ($statusCode == 204) {
-                            $this->getAndUpdateCampaignTotal($campaigns);
-                        }
-
-                        $event->addMessage('Added ' . count($rows) . ' to audience API');
-
-                        // Stop processing (we should only process one block of 5000 each time)
-                        break;
-                    } catch (RequestException $requestException) {
-                        // If a request fails completely, we should stop and log the error.
-                        $this->getLogger()->error('onRegularMaintenance: Audience receiveStats: failed e = '
-                            . $requestException->getMessage());
-
-                        throw new GeneralException(__('Failed to send stats to audience API'));
+                    // Campaign list in array
+                    if (!in_array($parentCampaignId, $campaigns)) {
+                        $campaigns[] = $parentCampaignId;
                     }
-                } else {
-                    // We send the next block
-                    $skip = $skip + $length;
-
-                    $this->getLogger()->debug('onRegularMaintenance: not records to send, will reprocess with skip: '
-                        . $skip);
+                } catch (\Exception $exception) {
+                    $this->getLogger()->error('onRegularMaintenance: unexpected exception processing row '
+                        . ($entry['id'] ?? null) . ', e: ' . $exception->getMessage());
                 }
+            }
+
+            if (count($erroredCampaign) > 0) {
+                $event->addMessage(sprintf(
+                    __('There were %d campaigns which failed. A summary is in the error log.'),
+                    count($erroredCampaign)
+                ));
+
+                $this->getLogger()->error('onRegularMaintenance: Failure summary of campaignId and first statId:'
+                    . json_encode($erroredCampaign));
+            }
+
+            $this->getLogger()->debug('onRegularMaintenance: Records to send: ' . count($rows)
+                . ', Watermark: ' . $watermark);
+            $this->getLogger()->debug('onRegularMaintenance: Campaigns: ' . json_encode($campaigns));
+
+            // If we have rows, send them.
+            if (count($rows) > 0) {
+                // All outcomes from here are either a break; or an exception to stop the loop.
+                try {
+                    $response = $this->getClient()->post($this->getServiceUrl() . '/audience/receiveStats', [
+                        'timeout' => $this->getSetting('receiveStatsTimeout', 300), // 5 minutes
+                        'headers' => [
+                            'X-API-KEY' => $this->getSetting('apiKey')
+                        ],
+                        'json' => $rows
+                    ]);
+
+                    $statusCode = $response->getStatusCode();
+
+                    $this->getLogger()->debug('onRegularMaintenance: Receive Stats StatusCode: ' . $statusCode);
+
+                    // Get Campaign Total
+                    if ($statusCode == 204) {
+                        $this->getAndUpdateCampaignTotal($campaigns);
+                    }
+
+                    $event->addMessage('Added ' . count($rows) . ' to audience API');
+                } catch (RequestException $requestException) {
+                    // If a request fails completely, we should stop and log the error.
+                    $this->getLogger()->error('onRegularMaintenance: Audience receiveStats: failed e = '
+                        . $requestException->getMessage());
+
+                    throw new GeneralException(__('Failed to send stats to audience API'));
+                }
+            }
+
+            // Update the last statId of the block as the watermark
+            if (!empty($updateWatermark)) {
+                $this->setWatermark($updateWatermark);
             }
         } catch (GeneralException $exception) {
             // We should have recorded in the error log already, so we just append to the event message for task
@@ -409,6 +404,28 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         } catch (RequestException $requestException) {
             $this->getLogger()->error('getWatermark: failed e = ' . $requestException->getMessage());
             throw new GeneralException(__('Cannot get watermark'));
+        }
+    }
+
+    /**
+     * Set the watermark representing how far we've processed already
+     * @return void
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function setWatermark($watermark)
+    {
+        // If the watermark set fails, we should error.
+        try {
+            $this->getLogger()->debug('onRegularMaintenance: Set Watermark ' . $watermark);
+            $this->getClient()->post($this->getServiceUrl() . '/audience/watermark', [
+                'headers' => [
+                    'X-API-KEY' => $this->getSetting('apiKey')
+                ],
+                'json' => ['watermark' => $watermark]
+            ]);
+        } catch (RequestException $requestException) {
+            $this->getLogger()->error('setWatermark: failed e = ' . $requestException->getMessage());
+            throw new GeneralException(__('Cannot set watermark'));
         }
     }
 
