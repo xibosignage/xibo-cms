@@ -21,13 +21,13 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Widget;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\ValueTooLargeException;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -813,5 +813,10 @@ class SubPlaylist implements WidgetProviderInterface
 
         $durationProvider->setDuration($duration);
         return $this;
+    }
+
+    public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
+    {
+        return null;
     }
 }

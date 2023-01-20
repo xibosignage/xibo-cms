@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -63,6 +63,9 @@ class ModuleTemplate implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Stencil|null */
     public $stencil;
 
+    /** @var  */
+    public $assets;
+
     /** @var string A Renderer to run if custom rendering is required. */
     public $onTemplateRender;
 
@@ -84,5 +87,14 @@ class ModuleTemplate implements \JsonSerializable
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
+    /**
+     * Get assets
+     * @return \Xibo\Widget\Definition\Asset[]
+     */
+    public function getAssets(): array
+    {
+        return $this->assets;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -49,7 +49,8 @@ class XmdsPlayerBundleListener
             PROJECT_ROOT . '/modules/bundle.min.js',
             $bundleSize,
             md5_file($bundlePath),
-            false
+            false,
+            -1
         );
     }
 

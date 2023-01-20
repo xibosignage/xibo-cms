@@ -1,0 +1,71 @@
+<?php
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Xibo\Xmds\Listeners;
+
+use Xibo\Event\XmdsDependencyRequestEvent;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ModuleTemplateFactory;
+use Xibo\Listener\ListenerLoggerTrait;
+use Xibo\Support\Exception\NotFoundException;
+
+/**
+ * Listener which handles requests for assets.
+ */
+class XmdsAssetsListener
+{
+    use ListenerLoggerTrait;
+
+    /** @var \Xibo\Factory\ModuleFactory */
+    private $moduleFactory;
+
+    /** @var \Xibo\Factory\ModuleTemplateFactory */
+    private $moduleTemplateFactory;
+
+    /**
+     * @param \Xibo\Factory\ModuleFactory $moduleFactory
+     * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
+     */
+    public function __construct(ModuleFactory $moduleFactory, ModuleTemplateFactory $moduleTemplateFactory)
+    {
+        $this->moduleFactory = $moduleFactory;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
+    public function onDependencyRequest(XmdsDependencyRequestEvent $event)
+    {
+        $this->getLogger()->debug('onDependencyRequest: XmdsAssetsListener');
+
+        if ($event->getFileType() === 'asset') {
+            // Get the asset using only the assetId.
+            try {
+                $this->moduleFactory->getAssetsFromAnywhereById($event->getId(), $this->moduleTemplateFactory);
+
+                // Return the full path to this asset
+                $event->setFullPath(PROJECT_ROOT . '/modules/bundle.min.js');
+                $event->stopPropagation();
+            } catch (NotFoundException $notFoundException) {
+                $this->getLogger()->info('No asset found for assetId: ' . $event->getId());
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -37,7 +37,7 @@ class RequiredFile implements \JsonSerializable
     public static $TYPE_LAYOUT = 'L';
     public static $TYPE_MEDIA = 'M';
     public static $TYPE_WIDGET_DATA = 'D';
-    
+
     use EntityTrait;
     public $rfId;
     public $displayId;
@@ -49,6 +49,8 @@ class RequiredFile implements \JsonSerializable
     public $complete = 0;
     public $released = 1;
     public $fileType;
+
+    /** @var string The realId of a dependency which we will use to resolve it */
     public $realId;
 
     /**

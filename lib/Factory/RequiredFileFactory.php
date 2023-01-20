@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -274,7 +274,7 @@ class RequiredFileFactory extends BaseFactory
      * @param $displayId
      * @param $fileType
      * @param $id
-     * @param $realId
+     * @param string|int $realId
      * @param $path
      * @return RequiredFile
      */

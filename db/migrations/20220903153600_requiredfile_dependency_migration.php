@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -37,12 +37,13 @@ class RequiredfileDependencyMigration extends AbstractMigration
                 'null' => true,
                 'default' => null
             ])
-            ->addColumn('realId', 'integer', [
+            ->addColumn('realId', 'string', [
+                'limit' => 254,
                 'null' => true,
                 'default' => null
             ])
             ->save();
-        
+
         $this->table('bandwidthtype')
             ->insert([
                 [

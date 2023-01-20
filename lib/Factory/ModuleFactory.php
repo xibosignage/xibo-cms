@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -29,6 +29,7 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProvider;
@@ -329,6 +330,76 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
+     * @param string $assetId
+     * @return \Xibo\Widget\Definition\Asset
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAssetById(string $assetId): Asset
+    {
+        foreach ($this->getEnabled() as $module) {
+            foreach ($module->getAssets() as $asset) {
+                if ($asset->id === $assetId) {
+                    return $asset;
+                }
+            }
+        }
+
+        throw new NotFoundException(__('Asset not found'));
+    }
+
+    /**
+     * @param \Xibo\Entity\ModuleTemplate[] $templates
+     * @return void
+     */
+    public function getAssetsFromTemplates(array $templates): array
+    {
+        $assets = [];
+        foreach ($this->getEnabled() as $module) {
+            foreach ($module->getAssets() as $asset) {
+                $assets[$asset->id] = $asset;
+            }
+
+            foreach ($templates as $template) {
+                foreach ($template->getAssets() as $asset) {
+                    $assets[$asset->id] = $asset;
+                }
+            }
+        }
+
+        return $assets;
+    }
+
+    /**
+     * Get an asset from anywhere by its ID
+     * @param string $assetId
+     * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
+     * @return \Xibo\Widget\Definition\Asset
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAssetsFromAnywhereById(string $assetId, ModuleTemplateFactory $moduleTemplateFactory): Asset
+    {
+        $asset = null;
+        try {
+            $asset = $this->getAssetById($assetId);
+        } catch (NotFoundException $notFoundException) {
+            // Not a module asset.
+        }
+
+        // Try a template instead
+        try {
+            $asset = $moduleTemplateFactory->getAssetById($assetId);
+        } catch (NotFoundException $notFoundException) {
+            // Not a module template asset.
+        }
+
+        if ($asset !== null) {
+            return $asset;
+        } else {
+            throw new NotFoundException(__('Asset not found'));
+        }
+    }
+
+    /**
      * Load all modules into an array for use throughout this quest
      * @return \Xibo\Entity\Module[]
      */
@@ -412,7 +483,7 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
-        
+
         // Event listeners
         $module->onInitialize = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onInitialize');
         if (!empty($module->onInitialize)) {
@@ -448,6 +519,15 @@ class ModuleFactory extends BaseFactory
             if ($legacyTypeNode instanceof \DOMElement) {
                 $module->legacyTypes[] = $legacyTypeNode->textContent;
             }
+        }
+
+        // Parse assets
+        try {
+            $module->assets = $this->parseAssets($xml->getElementsByTagName('assets'));
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid assets');
+            $this->getLog()->error('Module ' . $module->moduleId
+                . ' has invalid assets. e: ' .  $e->getMessage());
         }
 
         // Default values for remaining expected properties

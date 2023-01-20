@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -775,6 +775,8 @@ class Widget implements \JsonSerializable
 
                 $this->setOptionValue($property->id, $type, $property->value);
 
+                // If this property allows library references to be added, we parse them out here and assign
+                // the matching media to the widget.
                 if ($property->allowLibraryRefs) {
                     // Parse them out and replace for our special syntax.
                     $matches = [];

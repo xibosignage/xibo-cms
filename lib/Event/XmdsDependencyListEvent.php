@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Event;
 
+use Xibo\Entity\Display;
 use Xibo\Xmds\Entity\Dependency;
 
 /**
@@ -31,10 +32,14 @@ class XmdsDependencyListEvent extends Event
     private static $NAME = 'xmds.dependency.list';
 
     private $dependencies = [];
-    /**
-     * @var int
-     */
-    private $playerVersionId = null;
+
+    /** @var \Xibo\Entity\Display */
+    private $display;
+
+    public function __construct(Display $display)
+    {
+        $this->display = $display;
+    }
 
     /**
      * @return Dependency[]
@@ -52,6 +57,7 @@ class XmdsDependencyListEvent extends Event
      * @param int $size
      * @param string $md5
      * @param bool $isAvailableOverHttp
+     * @param int $legacyId
      * @return $this
      */
     public function addDependency(
@@ -60,19 +66,19 @@ class XmdsDependencyListEvent extends Event
         string $path,
         int $size,
         string $md5,
-        bool $isAvailableOverHttp
+        bool $isAvailableOverHttp,
+        int $legacyId
     ): XmdsDependencyListEvent {
-        $this->dependencies[] = new Dependency($fileType, $id, $path, $size, $md5, $isAvailableOverHttp);
+        $this->dependencies[] = new Dependency($fileType, $id, $legacyId, $path, $size, $md5, $isAvailableOverHttp);
         return $this;
     }
 
-    public function setPlayerVersion(int $playerVersionId)
+    /**
+     * Get the display which raised this event
+     * @return \Xibo\Entity\Display
+     */
+    public function getDisplay(): Display
     {
-        $this->playerVersionId = $playerVersionId;
-    }
-
-    public function getPlayerVersion()
-    {
-        return $this->playerVersionId;
+        return $this->display;
     }
 }

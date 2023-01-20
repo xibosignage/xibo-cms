@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -434,7 +434,7 @@ class WidgetFactory extends BaseFactory
      * Get all templates for a set of widgets.
      * @param \Xibo\Entity\Module $module The lead module we're rendering for
      * @param Widget[] $widgets
-     * @return array
+     * @return \Xibo\Entity\ModuleTemplate[]
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getTemplatesForWidgets(Module $module, array $widgets): array

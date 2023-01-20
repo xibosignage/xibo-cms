@@ -22,6 +22,7 @@
 
 namespace Xibo\Widget\Render;
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -84,16 +85,21 @@ class WidgetDataProviderCache
      * Decorate this data provider with cache
      * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
      * @param string $cacheKey
+     * @param \Carbon\Carbon|null $dataModifiedDt The date any associated data was modified.
      * @return bool
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function decorateWithCache(
         DataProviderInterface $dataProvider,
-        string $cacheKey
+        string $cacheKey,
+        ?Carbon $dataModifiedDt
     ): bool {
         $this->cache = $this->pool->getItem('/widget/html/' . md5($cacheKey));
         $data = $this->cache->get();
-        if ($this->cache->isMiss() || $data === null) {
+        if ($this->cache->isMiss()
+            || $data === null
+            || ($dataModifiedDt !== null && $dataModifiedDt->isAfter($this->cache->getCreation()))
+        ) {
             // Lock it up
             $this->concurrentRequestLock();
             return false;
@@ -105,6 +111,8 @@ class WidgetDataProviderCache
             foreach (($data['meta'] ?? []) as $key => $item) {
                 $dataProvider->addOrUpdateMeta($key, $item);
             }
+            $dataProvider->addOrUpdateMeta('cacheDt', $this->cache->getCreation()->format('c'));
+            $dataProvider->addOrUpdateMeta('expireDt', $this->cache->getExpiration()->format('c'));
             return true;
         }
     }
@@ -120,6 +128,12 @@ class WidgetDataProviderCache
         }
 
         // Set our cache from the data provider.
+        $dataProvider->addOrUpdateMeta('cacheDt', Carbon::now()->format('c'));
+        $dataProvider->addOrUpdateMeta(
+            'expireDt',
+            Carbon::now()->addSeconds($dataProvider->getCacheTtl())->format('c')
+        );
+
         $this->cache->set([
             'data' => $dataProvider->getData(),
             'meta' => $dataProvider->getMeta(),
@@ -148,12 +162,12 @@ class WidgetDataProviderCache
      */
     public function decorateForPreview(array $data, string $libraryUrl): array
     {
-        foreach ($data as $item) {
+        foreach ($data as $row => $item) {
             // This is either an object or an array
             if (is_array($item)) {
                 foreach ($item as $key => $value) {
                     if (is_string($value)) {
-                        $item[$key] = $this->decorateMediaForPreview($libraryUrl, $value);
+                        $data[$row][$key] = $this->decorateMediaForPreview($libraryUrl, $value);
                     }
                 }
             } else if (is_object($item)) {
@@ -202,12 +216,12 @@ class WidgetDataProviderCache
         array $data,
         array $storedAs
     ): array {
-        foreach ($data as $item) {
+        foreach ($data as $row => $item) {
             // Each data item can be an array or an object
             if (is_array($item)) {
-                for ($i = 0; $i < count($item); $i++) {
-                    if (is_string($item[$i])) {
-                        $item[$i] = $this->decorateMediaForPlayer($storedAs, $item[$i]);
+                foreach ($item as $key => $value) {
+                    if (is_string($value)) {
+                        $data[$row][$key] = $this->decorateMediaForPlayer($storedAs, $value);
                     }
                 }
             } else if (is_object($item)) {
