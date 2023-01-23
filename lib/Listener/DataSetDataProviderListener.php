@@ -169,7 +169,6 @@ class DataSetDataProviderListener
             // Start should be the lower limit
             // Size should be the distance between upper and lower
             $filter['start'] = $lowerLimit;
-            $filter['end'] = $upperLimit;
             $filter['size'] = $upperLimit - $lowerLimit;
 
             $this->getLogger()->debug('getData: applied limits, start: '
