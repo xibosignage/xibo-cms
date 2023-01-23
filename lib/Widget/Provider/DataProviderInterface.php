@@ -69,6 +69,18 @@ interface DataProviderInterface
     public function getDisplayLongitude(): float;
 
     /**
+     * Get the preview flag
+     * @return bool
+     */
+    public function isPreview(): bool;
+
+    /**
+     * Get the ID for this Widget
+     * @return int
+     */
+    public function getWidgetId() : int;
+
+    /**
      * Get a configured Guzzle client
      *  this will have its proxy configuration set and be ready to use.
      * @param array $requestOptions An optional array of additional request options.

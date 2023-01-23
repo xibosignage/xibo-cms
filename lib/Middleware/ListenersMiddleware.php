@@ -42,6 +42,7 @@ use Xibo\Listener\DataSetDataProviderListener;
 use Xibo\Listener\DisplayGroupListener;
 use Xibo\Listener\LayoutListener;
 use Xibo\Listener\MediaListener;
+use Xibo\Listener\NotificationDataProviderListener;
 use Xibo\Listener\PlaylistListener;
 use Xibo\Listener\TaskListener;
 use Xibo\Xmds\Listeners\XmdsAssetsListener;
@@ -317,6 +318,14 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('configService'),
             $c->get('dataSetFactory'),
             $c->get('displayFactory')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        (new NotificationDataProviderListener(
+            $c->get('configService'),
+            $c->get('notificationFactory'),
+            $c->get('user')
         ))
             ->useLogger($c->get('logger'))
             ->registerWithDispatcher($dispatcher);

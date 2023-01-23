@@ -66,6 +66,9 @@ class DataProvider implements DataProviderInterface
     /** @var float the display longitude */
     private $longitude;
 
+    /** @var bool isPreview flag */
+    private $isPreview;
+
     /** @var \GuzzleHttp\Client */
     private $client;
 
@@ -152,6 +155,22 @@ class DataProvider implements DataProviderInterface
     public function getDisplayLongitude(): float
     {
         return $this->longitude;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isPreview(): bool
+    {
+        return !empty($this->displayId);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getWidgetId() : int
+    {
+        return $this->widget->widgetId;
     }
 
     /**
