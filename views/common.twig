@@ -305,7 +305,13 @@
                 edit: {
                     url: "{{ url_for("action.edit", {id: ':id'}) }}",
                     type: 'PUT'
+                },
             },
+            dataset: {
+                search: {
+                    url: "{{ url_for("dataSet.search") }}",
+                    type: 'GET'
+                },
             }
         };
 
@@ -663,6 +669,11 @@
                         value: "{{ "And"|trans }}"
                     }
                 ]
+            };
+
+            var datasetColumnSelectorTranslations = {
+                colAvailable: "{{ "Columns Available"|trans }}",
+                colSelected: "{{ "Columns Selected"|trans }}",
             };
 
             var actionsTranslations = {

@@ -76,21 +76,32 @@ $(function() {
     }).done(function(data) {
       const $target = $('body');
       let dataItems = [];
+      const isArray = Array.isArray(data);
 
       // If the request failed, and we're in preview, show the error message
-      if (data.success === false && isPreview) {
+      if (!isArray && data.success === false && isPreview) {
         $target.append(
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
-      } else if (data.length === 0 && widget.sample) {
+      } else if (
+        !isArray &&
+        data.data.length === 0 &&
+        widget.sample &&
+        isPreview
+      ) {
         // If data is empty, use sample data instead
         // Add single element or array of elements
         dataItems = (Array.isArray(widget.sample)) ?
           widget.sample.slice(0) : [widget.sample];
-      } else {
+      } else if (!isArray && data.data.length > 0) {
         // Add items to the widget
-        dataItems = data;
+        dataItems = data.data;
+      }
+
+      // Add meta to the widget if it exists
+      if (!isArray && data.meta) {
+        widget.meta = data.meta;
       }
 
       // Run the onInitialize function if it exists
@@ -99,6 +110,7 @@ $(function() {
           widget.widgetId,
           $target,
           widget.properties,
+          widget.meta,
         );
       }
 
@@ -108,7 +120,7 @@ $(function() {
         if (typeof window['onParseData_' + widget.widgetId] === 'function') {
           item = window[
             'onParseData_' + widget.widgetId
-          ](item, widget.properties);
+          ](item, widget.properties, widget.meta);
         }
 
         // Add the item to the content
@@ -117,8 +129,6 @@ $(function() {
         // Add items to the widget object
         (item) && widget.items.push(item);
       });
-
-      // TODO - We need to address the case of no dataType and templates!!!
 
       // If we don't have dataType, or we have a module template
       // add it to the content with widget properties and global options
@@ -182,6 +192,7 @@ $(function() {
           $target,
           widget.items,
           Object.assign(widget.properties, globalOptions),
+          widget.meta,
         );
       });
 
@@ -198,6 +209,7 @@ $(function() {
             $target,
             widget.items,
             widget.properties,
+            widget.meta,
           );
         };
         if (xiboIC.checkVisible()) {

@@ -71,6 +71,9 @@ class Property implements \JsonSerializable
     /** @var string HTML to populate a custom popover to be shown next to the input */
     public $customPopOver;
 
+    /** @var string HTML selector of the element that this property depends on */
+    public $dependsOn;
+
     public $value;
 
     /** @inheritDoc */
@@ -91,6 +94,7 @@ class Property implements \JsonSerializable
             'playerCompatibility' => $this->playerCompatibility,
             'visibility' => $this->visibility,
             'allowLibraryRefs' => $this->allowLibraryRefs,
+            'dependsOn' => $this->dependsOn,
             'customClass' => $this->customClass,
             'customData' => $this->customData,
         ];

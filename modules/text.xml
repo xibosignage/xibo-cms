@@ -153,6 +153,9 @@ properties.type = 'text';
 // Replace content with the parsed text
 $(target).find('#content').html(properties.ta_text);
 
+// Image render
+$(target).find('img').xiboImageRender(properties);
+
 // Scale the layout
 $('body').xiboLayoutScaler(properties);
 

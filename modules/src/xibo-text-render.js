@@ -133,7 +133,7 @@ jQuery.fn.extend({
       //  numItems (ticker number of items from the start/end),
       //  takeItemsFrom (ticker sort or reverse sort the array)
       //  randomiseItems (randomise the items)
-      if (options.randomiseItems === 1) {
+      if (parseInt(options.randomiseItems) === 1) {
         // Sort the items in a random order (considering the entire list)
         // Durstenfeld shuffle
         // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
@@ -183,10 +183,12 @@ jQuery.fn.extend({
       let numberOfItems = options.numItems;
 
       // How many pages to we need?
+      // if there's no effect, we don't need any pages
       const numberOfPages =
-        (options.itemsPerPage > 0) ?
+        (options.itemsPerPage > 0 && options.effect != 'none') ?
           Math.ceil(options.numItems / options.itemsPerPage) :
           options.numItems;
+
       let itemsThisPage = 1;
 
       // console.log("[Xibo] We need to have " + numberOfPages + " pages");
@@ -245,18 +247,6 @@ jQuery.fn.extend({
             .appendTo(appendTo);
 
           itemsThisPage++;
-        }
-      } else {
-        // if we have no animations, hide the items
-        // after the options.itemsPerPage value if it's higher than 0
-        if (options.itemsPerPage > 0) {
-          for (let i = 0; i < items.length; i++) {
-            if (i >= options.itemsPerPage) {
-              $(items[i]).hide();
-            } else {
-              $(items[i]).addClass('text-render-item');
-            }
-          }
         }
       }
 

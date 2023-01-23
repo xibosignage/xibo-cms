@@ -78,35 +78,35 @@
 {% endfor %}
 {% for widgetId, parser in onInitialize %}
     <script type="text/javascript" id="onInitialize-{{ widgetId }}">
-        function onInitialize_{{ widgetId }}(id, target, properties) {
+        function onInitialize_{{ widgetId }}(id, target, properties, meta) {
           {{ parser|raw }}
         }
     </script>
 {% endfor %}
 {% for widgetId, parser in onParseData %}
     <script type="text/javascript" id="onParseData-{{ widgetId }}">
-      function onParseData_{{ widgetId }}(item, properties) {
+      function onParseData_{{ widgetId }}(item, properties, meta) {
         {{ parser|raw }}
       }
     </script>
 {% endfor %}
 {% for widgetId, parser in onRender %}
     <script type="text/javascript" id="onRender-{{ widgetId }}">
-        function onRender_{{ widgetId }}(id, target, items, properties) {
+        function onRender_{{ widgetId }}(id, target, items, properties, meta) {
           {{ parser|raw }}
         }
     </script>
 {% endfor %}
 {% for widgetId, parser in onVisible %}
     <script type="text/javascript" id="onVisible-{{ widgetId }}">
-        function onVisible_{{ widgetId }}(id, target, items, properties) {
+        function onVisible_{{ widgetId }}(id, target, items, properties, meta) {
           {{ parser|raw }}
         }
     </script>
 {% endfor %}
 {% for templateId, renderer in onTemplateRender %}
     <script type="text/javascript" id="onTemplateRender-{{ templateId }}">
-        function onTemplateRender_{{ templateId }}(id, target, items, properties) {
+        function onTemplateRender_{{ templateId }}(id, target, items, properties, meta) {
             {{ renderer|raw  }}
         }
     </script>

@@ -22,6 +22,13 @@ window.templates = {
     richText: require('./src/templates/forms/inputs/richText.hbs'),
     divider: require('./src/templates/forms/inputs/divider.hbs'),
     custom: require('./src/templates/forms/inputs/custom.hbs'),
+    datasetSelector:
+      require('./src/templates/forms/inputs/datasetSelector.hbs'),
+    datasetOrder: require('./src/templates/forms/inputs/datasetOrder.hbs'),
+    datasetFilter: require('./src/templates/forms/inputs/datasetFilter.hbs'),
+    datasetColumnSelector:
+      require('./src/templates/forms/inputs/datasetColumnSelector.hbs'),
+    fontSelector: require('./src/templates/forms/inputs/fontSelector.hbs'),
     // More to be added
   },
 };

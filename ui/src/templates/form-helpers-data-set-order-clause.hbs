@@ -1,7 +1,7 @@
-<div class="form-inline justify-content-between p-1">
-    <label class="form-group">{{ title }}</label>
+<div class="order-clause-row form-inline justify-content-between p-1">
+    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
     <div class="form-group">
-        <select class="form-control" name="orderClause[]">
+        <select class="form-control order-clause" name="orderClause[]">
             <option value=""></option>
             {{#each columns}}
                 <option value="{{ heading }}" {{#eq heading ../orderClause}} selected{{/eq}}>{{ heading }}</option>
@@ -9,10 +9,9 @@
         </select>
     </div>
     <div class="form-group">
-        <select class="form-control" name="orderClauseDirection[]">
+        <select class="form-control order-clause-direction" name="orderClauseDirection[]">
             <option value="ASC" {{#if orderClauseAsc}}selected{{/if}}>{{ ascTitle }}</option>
             <option value="DESC" {{#if orderClauseDesc}}selected{{/if}}>{{ descTitle }}</option>
         </select>
     </div>
-    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
 </div>

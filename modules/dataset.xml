@@ -1,0 +1,243 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-dataset</id>
+    <name>Dataset</name>
+    <author>Core</author>
+    <description>Display DataSet content</description>
+    <class>\Xibo\Widget\DataSetProvider</class>
+    <dataCacheKey>%dataSetId%lowerLimit%lowerLimit%numItems%orderClauses%useOrderingClause%ordering%filterClauses%useFilteringClause%filter%</dataCacheKey>
+    <type>dataset</type>
+    <dataType>dataset</dataType>
+    <legacyType>datasetticker</legacyType>
+    <legacyType>datasetview</legacyType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>10</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="dataSetId" type="datasetSelector">
+            <title>DataSet</title>
+            <helpText>Please select the DataSet to use as a source of data for this ticker.</helpText>
+        </property>
+        <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <title>No data message</title>
+            <helpText>A message to display when no data is returned from the source</helpText>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
+            <title>Optional JavaScript</title>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+
+        <property type="header" variant="main">
+            <title>Configuration</title>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="lowerLimit" type="number">
+            <title>Lower Row Limit</title>
+            <helpText>Please enter the Lower Row Limit for this DataSet (enter 0 for no limit).</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="upperLimit" type="number">
+            <title>Upper Row Limit</title>
+            <helpText>Please enter the Upper Row Limit for this DataSet (enter 0 for no limit).</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="randomiseItems" type="checkbox">
+            <title>Randomise?</title>
+            <helpText>Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order.</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+
+        <property type="header" variant="main">
+            <title>Order</title>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property type="message">
+            <title>The DataSet results can be ordered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated order be required the advanced checkbox can be selected to provide custom SQL syntax.</title>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="orderClauses" type="datasetOrder">
+            <default>[]</default>
+            <dependsOn>#dataSetId</dependsOn>
+            <visibility>
+                <test type="and">
+                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="#useOrderingClause" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="useOrderingClause" type="checkbox">
+            <title>Use advanced order clause?</title>
+            <helpText>Provide a custom clause instead of using the clause builder above.</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="ordering" type="text">
+            <title>Order</title>
+            <helpText>Please enter a SQL clause for how this dataset should be ordered</helpText>
+            <default></default>
+            <visibility>
+                <test type="and">
+                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="#useOrderingClause" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+
+        <property type="header" variant="main">
+            <title>Filter</title>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property type="message">
+            <title>The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax. The substitution [DisplayId] can be used in filter clauses and will be substituted at run time with the Display ID. When shown in the CMS it will be substituted with 0.</title>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="filterClauses" type="datasetFilter">
+            <default>[]</default>
+            <dependsOn>#dataSetId</dependsOn>
+            <visibility>
+                <test type="and">
+                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="#useFilteringClause" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="useFilteringClause" type="checkbox">
+            <title>Use advanced filter clause?</title>
+            <helpText>Provide a custom clause instead of using the clause builder above.</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="filter" type="text">
+            <title>Filter</title>
+            <helpText>Please enter a SQL clause to filter this DataSet.</helpText>
+            <default></default>
+            <visibility>
+                <test type="and">
+                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="#useFilteringClause" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+
+        <property type="header" variant="main">
+            <title>Caching</title>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="updateInterval" type="number">
+            <title>Update Interval (mins)</title>
+            <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default>5</default>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="freshnessTimeout" type="number">
+            <title>Freshness (mins)</title>
+            <helpText>If the Player is offline it will switch to the No Data Template after this freshness time. Set this to 0 to never switch.</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="#dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+    </properties>
+    <preview></preview>
+    <onVisible><![CDATA[
+// Start effects for this widget
+$(target).xiboLayoutAnimate(properties);
+
+// Do we have a freshnessTimeout?
+if (properties.freshnessTimeout > 0) {
+    // Get the now moment time
+    var now = moment();
+    // Set up an interval to check whether or not we have exceeded our freshness
+    var timer = setInterval(function() {
+        if (moment(meta.cacheDt).add(properties.freshnessTimeout, 'minutes').isBefore(moment())) {
+            $("#content").empty().append(properties.noDataMessage);
+            clearInterval(timer);
+        }
+    }, 10000);
+}
+    ]]></onVisible>
+</module>

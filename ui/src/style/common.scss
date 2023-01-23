@@ -228,11 +228,7 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-line-chart;
 }
 
-.module-icon-datasetticker {
-    @extend .fa-list;
-}
-
-.module-icon-datasetview {
+.module-icon-dataset {
     @extend .fa-table;
 }
 
