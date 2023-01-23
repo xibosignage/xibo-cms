@@ -25,7 +25,6 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Stash\Interfaces\PoolInterface;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetDataRequestEvent;
