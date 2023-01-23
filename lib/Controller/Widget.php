@@ -77,9 +77,6 @@ class Widget extends Base
     /** @var WidgetAudioFactory */
     protected $widgetAudioFactory;
 
-    /** @var  PoolInterface */
-    private $pool;
-
     /**
      * Set common dependencies.
      * @param ModuleFactory $moduleFactory
@@ -101,8 +98,7 @@ class Widget extends Base
         $widgetFactory,
         $transitionFactory,
         $regionFactory,
-        $widgetAudioFactory,
-        $pool
+        $widgetAudioFactory
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -113,7 +109,6 @@ class Widget extends Base
         $this->transitionFactory = $transitionFactory;
         $this->regionFactory = $regionFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
-        $this->pool = $pool;
     }
 
     /**
@@ -1003,7 +998,6 @@ class Widget extends Base
 
         $dataProvider = $module->createDataProvider($widget);
         $dataProvider->setMediaFactory($this->mediaFactory);
-        $dataProvider->setPool($this->pool);
         $dataProvider->setDisplayProperties(
             $this->getConfig()->getSetting('DEFAULT_LAT'),
             $this->getConfig()->getSetting('DEFAULT_LONG')

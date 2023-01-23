@@ -586,8 +586,7 @@ class Controllers
                     $c->get('widgetFactory'),
                     $c->get('transitionFactory'),
                     $c->get('regionFactory'),
-                    $c->get('widgetAudioFactory'),
-                    $c->get('pool')
+                    $c->get('widgetAudioFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

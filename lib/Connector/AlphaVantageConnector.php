@@ -24,7 +24,6 @@ namespace Xibo\Connector;
 
 use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
-use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\WidgetDataRequestEvent;
@@ -146,7 +145,7 @@ class AlphaVantageConnector implements ConnectorInterface
             $name = ($parsedSymbol[1] ?? $symbol);
             $currency = ($parsedSymbol[2] ?? '');
 
-            $result = $this->getStockQuote($symbol, $this->getSetting('isPaidPlan'), $dataProvider->getPool());
+            $result = $this->getStockQuote($symbol, $this->getSetting('isPaidPlan'));
 
             $this->getLogger()->debug(
                 'AlphaVantage Connector : getStockResults data: ' .
@@ -185,14 +184,13 @@ class AlphaVantageConnector implements ConnectorInterface
      *
      * @param string $symbol
      * @param ?int $isPaidPlan
-     * @param PoolInterface $pool
      * @return array
      * @throws GeneralException
      */
-    protected function getStockQuote(string $symbol, ?int $isPaidPlan, PoolInterface $pool): array
+    protected function getStockQuote(string $symbol, ?int $isPaidPlan): array
     {
         try {
-            $cache = $pool->getItem('/widget/Stocks/'.md5($symbol));
+            $cache = $this->getPool()->getItem('/widget/Stocks/'.md5($symbol));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();

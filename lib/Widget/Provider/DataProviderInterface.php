@@ -77,12 +77,6 @@ interface DataProviderInterface
     public function getGuzzleClient(array $requestOptions = []): \GuzzleHttp\Client;
 
     /**
-     * Get Stash pool interface
-     *  User it if any data needs to be cached inside the Data Provider
-     */
-    public function getPool() : \Stash\Interfaces\PoolInterface;
-
-    /**
      * Get property
      * Properties are set on Widgets and can be things like "feedUrl"
      *  the property must exist in module properties for this type of widget
