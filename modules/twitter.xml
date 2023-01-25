@@ -113,61 +113,65 @@ $(target).xiboLayoutAnimate(properties);
     "date": "Sun Jan 01 10:10:00 +0000 1001",
     "text": "This is a sample tweet text",
     "location": "Tweet location",
-    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "photo": "[[assetId=twitterContentPhoto]]",
     "user": "Tweet user",
     "screenName": "@twitter_user",
-    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
-    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
+    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
     "text": "This is a sample tweet text",
     "location": "Tweet location",
-    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "photo": "[[assetId=twitterContentPhoto]]",
     "user": "Tweet user",
     "screenName": "@twitter_user",
-    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
-    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
+    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
     "text": "This is a sample tweet text",
     "location": "Tweet location",
-    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "photo": "[[assetId=twitterContentPhoto]]",
     "user": "Tweet user",
     "screenName": "@twitter_user",
-    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
-    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
+    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
     "text": "This is a sample tweet text",
     "location": "Tweet location",
-    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "photo": "[[assetId=twitterContentPhoto]]",
     "user": "Tweet user",
     "screenName": "@twitter_user",
-    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
-    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
+    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
     "text": "This is a sample tweet text",
     "location": "Tweet location",
-    "photo": "https://cdn.cms-twdigitalassets.com/content/dam/about-twitter/en/brand-toolkit/brand-download-img-1.jpg.twimg.2560.jpg",
+    "photo": "[[assetId=twitterContentPhoto]]",
     "user": "Tweet user",
     "screenName": "@twitter_user",
-    "userProfileImage": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg",
-    "userProfileImageMini": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_200x200.jpg",
-    "userProfileImageBigger": "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg"
+    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
 }]
     ]]></sampleData>
     <preview></preview>
     <assets>
-        <asset id="twitter_blue" type="path" mime="image/png" path="/modules/assets/twitter_blue.png"></asset>
-        <asset id="twitter_white" type="path" mime="image/png" path="/modules/assets/twitter_white.png"></asset>
+        <asset id="providerLogo" type="path" mime="image/png" path="/modules/assets/twitter_blue.png"></asset>
+        <asset id="providerLogoWhite" type="path" mime="image/png" path="/modules/assets/twitter_white.png"></asset>
+        <asset id="twitterContentPhoto" type="path" mime="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
+        <asset id="twitterProfilePhoto" type="path" mime="image/png" path="/modules/assets/twitter_profile_photo.jpg"></asset>
+        <asset id="twitterProfilePhotoMini" type="path" mime="image/png" path="/modules/assets/twitter_profile_photo_mini.jpg"></asset>
+        <asset id="twitterProfilePhotoBigger" type="path" mime="image/png" path="/modules/assets/twitter_profile_photo_bigger.jpg"></asset>
     </assets>
 </module>

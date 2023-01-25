@@ -1548,7 +1548,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         </div>
         <div class="footer">
             <div class="social-col col-2 img-container">
-                <img class="center-block img-responsive" src="{{providerLogoWhite}}" />
+                <img class="center-block img-responsive" src="[[assetId=providerLogoWhite]]" />
             </div>
             <div class="social-col col-10 user">{{screenName}}</div>
         </div>
@@ -1581,6 +1581,7 @@ body {
     float: left;
     border: 1px solid #ddd;
     background: #FFF;
+    width: 100%;
 }
 
 .main-text {
@@ -1742,7 +1743,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <div class="main-text">{{text}}</div>
         <div class="footer">
             <div class="social-col col-2 center-block">
-                <img class="center-block img-responsive" src="{{providerLogoWhite}}" />
+                <img class="center-block img-responsive" src="[[assetId=providerLogoWhite]]" />
             </div>
             <div class="social-col col-10 user">{{screenName}}</div>
         </div>
@@ -1841,6 +1842,12 @@ body {
     margin-left: 12px;
     width: 38px;
 }
+
+.img-responsive {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
 </style>
             ]]></twig>
         </stencil>
@@ -1936,9 +1943,9 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
 <div class="container main-container">
     <div class="post">
         <div class="header">
-            <div class="social-col col-8 user">{{user}}</div>
-            <div class="social-col col-2 pull-right icon">
-                <img class="img-responsive" src="{{providerLogoWhite}}" />
+            <div class="social-col user">{{user}}</div>
+            <div class="social-col pull-right icon">
+                <img class="img-responsive" src="[[assetId=providerLogoWhite]]" />
             </div>
         </div>
         <div class="arrow_box">&nbsp;</div>
@@ -1976,10 +1983,7 @@ body {
     float: left;
     border: 1px solid #ddd;
     background: #FFF;
-}
-
-.icon {
-  margin-top: 4px;
+    width: 100%;
 }
 
 .main-text {
@@ -1998,8 +2002,7 @@ body {
 .header {
     background: #1da1f2;
     width: 100%;
-    height: 35px;
-    margin-bottom: -2px;
+    height: 40px;
 }
 
 .user {
@@ -2012,7 +2015,7 @@ body {
 }
 
 .arrow_box {
-    height: 12px;
+    height: 6px;
     position: relative;
     background: #1da1f2;
 }
@@ -2042,29 +2045,24 @@ body {
     margin-left: -26px;
 }
 
-.row {
-    margin-right: -15px;
-    margin-left: -15px;
-}
-
-.col-2 {
-    width: 16.66666667%;
-}
-
-.col-8 {
-    width: 66.66666667%;
-}
-
-.col-12 {
-    width: 100%;
-}
-
 .social-col {
     float: left;
     position: relative;
     min-height: 1px;
-    padding-right: 15px;
-    padding-left: 15px;
+    height: 34px;
+    width: 320px;
+    margin-left: 10px;
+}
+.social-col.icon {
+    text-align: right;
+    height: 38px;
+    width: 50px;
+    padding: 4px 0;
+    margin-right: 10px;
+}
+.img-responsive {
+    max-width: 100%;
+    height: 100%;
 }
 </style>
             ]]></twig>
@@ -2168,7 +2166,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <div class="body">
             <div class="main-text">{{text}}</div>
             <div class="social-col date">{{date}}</div>
-            <div class="social-col logo"><img class="img-responsive" src="{{providerLogoDark}}" /></div>
+            <div class="social-col logo"><img class="img-responsive" src="[[assetId=providerLogo]]" /></div>
         </div>
     </div>
 </div>
@@ -2244,6 +2242,7 @@ body {
 .body {
     background: #FFF;
     height: 530px;
+    position: relative;
 }
 
 .main-text {
@@ -2261,12 +2260,17 @@ body {
 }
 
 .logo {
-    width: 80px;
-    height: 80px;
+    width: 65px;
+    height: 65px;
     text-align: center;
     position: absolute;
     bottom: 4px;
     right: 4px;
+}
+
+.logo img {
+    max-width: 100%;
+    max-height: 100%;
 }
 </style>
             ]]></twig>

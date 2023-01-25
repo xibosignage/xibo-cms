@@ -133,7 +133,8 @@
                 </visibility>
             </property>
         </properties>
-        <preview></preview><stencil>
+        <preview></preview>
+        <stencil>
         <twig><![CDATA[
 {% if javaScript %}
 <script type="text/javascript">

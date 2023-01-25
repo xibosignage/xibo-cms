@@ -83,7 +83,7 @@
     </div>
 </div>
         ]]></hbs>
-<twig><![CDATA[
+        <twig><![CDATA[
 <style>
 body {
     margin: 0;
@@ -103,20 +103,16 @@ h1, h2, h3, h4, p {
 .hero-circle {
     margin: 0 auto;
     position: relative;
-    background-image: url(data:image/png;base64,{{ clockFace|raw }});
-
-    /* Whilst image isn't working, we give it a outline property */
-    outline: 2px solid #000;
-    outline-offset: -3px;
-    border-radius: 50%;
 }
 
 .light .hero-circle {
     outline-color: #fff;
+    background-image: url([[assetId=clock_bg_modern_light]]);
 }
 
 .dark .hero-circle {
     outline-color: #000;
+    background-image: url([[assetId=clock_bg_modern_dark]]);
 }
 
 .hero-circle-bg-image {
@@ -208,4 +204,8 @@ if (typeof updateClock === 'function') {
     setInterval(updateClock, 1000);
 }
     ]]></onVisible>
+    <assets>
+        <asset id="clock_bg_modern_dark" type="path" mime="image/png" path="/modules/assets/clock_bg_modern_dark.png"></asset>
+        <asset id="clock_bg_modern_light" type="path" mime="image/png" path="/modules/assets/clock_bg_modern_light.png"></asset>
+    </assets>
 </module>
