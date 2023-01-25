@@ -35,6 +35,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -55,6 +56,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     /** @var  SanitizerService */
     private $sanitizer;
 
+    /** @var ConfigServiceInterface */
+    private $config;
+
     /** @var CampaignFactory */
     private $campaignFactory;
 
@@ -70,6 +74,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $this->user = $container->get('user');
         $this->timeSeriesStore = $container->get('timeSeriesStore');
         $this->sanitizer = $container->get('sanitizerService');
+        $this->config = $container->get('configService');
         $this->campaignFactory = $container->get('campaignFactory');
         $this->displayFactory = $container->get('displayFactory');
 
@@ -162,6 +167,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
         // Handle sending stats to the audience connector service API
         try {
+            $defaultTimezone = $this->config->getSetting('defaultTimezone');
+
             // Get Watermark (might be null - start from beginning)
             $watermark = $this->getWatermark();
  
@@ -280,6 +287,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             $display = $this->displayFactory->getById($displayId);
                             $displayCache[$displayId]['costPerPlay'] = $display->costPerPlay;
                             $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
+                            $displayCache[$displayId]['timeZone'] = $display->timeZone;
                         } catch (NotFoundException $notFoundException) {
                             $this->getLogger()->error('onRegularMaintenance: display not found with ID: '
                                 . $displayId);
@@ -293,13 +301,19 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     // Converting the date into the format expected by the API
                     try {
                         if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-                            $start = $row['start']->toDateTime()->format(DateFormatHelper::getSystemFormat());
-                            $end = $row['end']->toDateTime()->format(DateFormatHelper::getSystemFormat());
+
+                            // Dates are saved in UTC format in MongoDB
+                            // Retrieve the start/end date in the local time zone, rather than UTC format
+                            // Convert the dates to the display time zone if available, otherwise use the CMS time zone
+                            $start = ($displayCache[$displayId]['timeZone'] != null)
+                                ? Carbon::instance($row['start']->toDateTime())->timezone($displayCache[$displayId]['timeZone'])
+                                : Carbon::instance($row['start']->toDateTime())->timezone($defaultTimezone);
+                            $end = ($displayCache[$displayId]['timeZone'] != null)
+                                ? Carbon::instance($row['end']->toDateTime())->timezone($displayCache[$displayId]['timeZone'])
+                                : Carbon::instance($row['end']->toDateTime())->timezone($defaultTimezone);
                         } else {
-                            $start = Carbon::createFromTimestamp($row['start'])
-                                ->format(DateFormatHelper::getSystemFormat());
-                            $end = Carbon::createFromTimestamp($row['end'])
-                                ->format(DateFormatHelper::getSystemFormat());
+                            $start = Carbon::createFromTimestamp($row['start']);
+                            $end = Carbon::createFromTimestamp($row['end']);
                         }
                     } catch (\Exception $exception) {
                         $this->getLogger()->error('onRegularMaintenance: Date convert failed for ID '
@@ -310,8 +324,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
                     $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
                     $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
-                    $entry['start'] = $start;
-                    $entry['end'] = $end;
+                    $entry['start'] = $start->format(DateFormatHelper::getSystemFormat());
+                    $entry['end'] = $end->format(DateFormatHelper::getSystemFormat());
                     $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
                     $rows[] = $entry;
