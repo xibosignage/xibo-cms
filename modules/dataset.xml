@@ -24,7 +24,7 @@
     <author>Core</author>
     <description>Display DataSet content</description>
     <class>\Xibo\Widget\DataSetProvider</class>
-    <dataCacheKey>%dataSetId%lowerLimit%lowerLimit%numItems%orderClauses%useOrderingClause%ordering%filterClauses%useFilteringClause%filter%</dataCacheKey>
+    <dataCacheKey>%dataSetId%_%lowerLimit%_%lowerLimit%_%numItems%_%orderClauses%_%useOrderingClause%_%ordering%_%filterClauses%_%useFilteringClause%_%filter%</dataCacheKey>
     <type>dataset</type>
     <dataType>dataset</dataType>
     <legacyType>datasetticker</legacyType>
