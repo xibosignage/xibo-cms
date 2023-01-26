@@ -710,6 +710,7 @@ class Stats extends Base
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
         $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/stats_' . Random::generateString();
+        $dateFormat = $sanitizedParams->getString('dateFormat'); // UTC/CMS local time
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -761,17 +762,48 @@ class Stats extends Base
         $out = fopen($tempFileName, 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Campaign', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
+
         while ($row = $resultSet->getNextRow() ) {
             $sanitizedRow = $this->getSanitizer($row);
             $sanitizedRow->setDefaultOptions(['defaultIfNotExists' => true]);
 
             // Read the columns
             $type = strtolower($sanitizedRow->getString('type'));
-            $statDate = isset($row['statDate'])
-                ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat())
-                : null;
-            $fromDt = $resultSet->getDateFromValue($row['start'])->format(DateFormatHelper::getSystemFormat());
-            $toDt = $resultSet->getDateFromValue($row['end'])->format(DateFormatHelper::getSystemFormat());
+            $statDate = isset($row['statDate']) ? $resultSet->getDateFromValue($row['statDate']) : null;
+            $fromDt = $resultSet->getDateFromValue($row['start']);
+            $toDt = $resultSet->getDateFromValue($row['end']);
+            // MySQL stores dates in the timezone of the CMS,
+            // while MongoDB converts those dates to UTC before storing them.
+
+            // If we choose to retrieve the dates in UTC:
+            // MongoDB: We don't need to convert the dates as they are "already" in UTC
+            // MySQL: We need to convert the dates to UTC as they are in CMS Local Time
+
+            // If we choose to retrieve the dates in CMS Local Time:
+            // MongoDB: We need to convert the dates to CMS Local Time
+            // MySQL: We don't need to convert the dates, as they are "already" in CMS Local Time
+
+            // For MySQL, dates are already in CMS Local Time
+            // For MongoDB, dates are in UTC
+            if ($dateFormat == 'utc') {
+                if ($this->timeSeriesStore->getEngine() == 'mysql') {
+                    $fromDt = $fromDt->setTimezone('UTC');
+                    $toDt = $toDt->setTimezone('UTC');
+                    $statDate = isset($statDate) ? $statDate->setTimezone('UTC') : null;
+                }
+            } else {
+                if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+                    $fromDt = $fromDt->setTimezone($defaultTimezone);
+                    $toDt = $toDt->setTimezone($defaultTimezone);
+                    $statDate = isset($statDate) ? $statDate->setTimezone($defaultTimezone) : null;
+                }
+            }
+
+            $statDate = isset($statDate) ? $statDate->format(DateFormatHelper::getSystemFormat()) : null;
+            $fromDt = $fromDt->format(DateFormatHelper::getSystemFormat());
+            $toDt = $toDt->format(DateFormatHelper::getSystemFormat());
+
             $engagements = $resultSet->getEngagementsFromRow($row, false);
             $layout = $sanitizedRow->getString('layout', ['default' => __('Not Found')]);
             $parentCampaign = $sanitizedRow->getString('parentCampaign', ['default' => '']);
