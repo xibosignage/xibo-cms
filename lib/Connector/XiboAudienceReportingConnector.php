@@ -287,7 +287,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             $display = $this->displayFactory->getById($displayId);
                             $displayCache[$displayId]['costPerPlay'] = $display->costPerPlay;
                             $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
-                            $displayCache[$displayId]['timeZone'] = $display->timeZone;
+                            $displayCache[$displayId]['timeZone'] = empty($display->timeZone) ? $defaultTimezone : $display->timeZone;
                         } catch (NotFoundException $notFoundException) {
                             $this->getLogger()->error('onRegularMaintenance: display not found with ID: '
                                 . $displayId);
@@ -299,33 +299,36 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
 
                     // Converting the date into the format expected by the API
-                    try {
-                        if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                            // Dates are saved in UTC format in MongoDB
-                            // Retrieve the start/end date in the local time zone, rather than UTC format
-                            // Convert the dates to the display time zone if available, otherwise use the CMS time zone
-                            $start = ($displayCache[$displayId]['timeZone'] != null)
-                                ? Carbon::instance($row['start']->toDateTime())->timezone($displayCache[$displayId]['timeZone'])
-                                : Carbon::instance($row['start']->toDateTime())->timezone($defaultTimezone);
-                            $end = ($displayCache[$displayId]['timeZone'] != null)
-                                ? Carbon::instance($row['end']->toDateTime())->timezone($displayCache[$displayId]['timeZone'])
-                                : Carbon::instance($row['end']->toDateTime())->timezone($defaultTimezone);
-                        } else {
-                            $start = Carbon::createFromTimestamp($row['start']);
-                            $end = Carbon::createFromTimestamp($row['end']);
-                        }
+                    // --------
+                    // We know that player's local dates were stored in the CMS's configured timezone
+                    // Dates were saved in Unix timestamps in MySQL
+                    // Dates were saved in UTC format in MongoDB
+                    // The main difference is that MySQL stores dates in the timezone of the CMS,
+                    // while MongoDB converts those dates to UTC before storing them.
+
+                    // -----MySQL
+                    // Carbon::createFromTimestamp() always applies the CMS timezone
+
+                    // ------MongoDB
+                    // $date->toDateTime() returns a PHP DateTime object from MongoDB BSON Date type (UTC)
+                    // Carbon::instance() keeps the timezone as UTC
+                    try {
+                        $start = $resultSet->getDateFromValue($row['start']);
+                        $end = $resultSet->getDateFromValue($row['end']);
                     } catch (\Exception $exception) {
                         $this->getLogger()->error('onRegularMaintenance: Date convert failed for ID '
                             . $entry['id'] . ' with error: '. $exception->getMessage());
                         continue;
                     }
 
+                    // Convert dates to display timezone
+                    $entry['start'] = $start->timezone($displayCache[$displayId]['timeZone'])->format(DateFormatHelper::getSystemFormat());
+                    $entry['end'] = $end->timezone($displayCache[$displayId]['timeZone'])->format(DateFormatHelper::getSystemFormat());
+
                     $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
                     $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
                     $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
-                    $entry['start'] = $start->format(DateFormatHelper::getSystemFormat());
-                    $entry['end'] = $end->format(DateFormatHelper::getSystemFormat());
                     $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
                     $rows[] = $entry;
