@@ -61,7 +61,7 @@
                 {{ forms.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
                 {% set title %}{% trans "Output dates as UTC? Leave unchecked for local CMS time." %}{% endset %}
-                {{ forms.checkbox("dateFormat", title, true) }}
+                {{ forms.checkbox("isOutputUtc", title, true) }}
 
                 <div id="totalStat"></div>
                 <div class="loading-overlay" style="display: none">
