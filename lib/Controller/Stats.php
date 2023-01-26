@@ -710,7 +710,7 @@ class Stats extends Base
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
         $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/stats_' . Random::generateString();
-        $dateFormat = $sanitizedParams->getString('dateFormat'); // UTC/CMS local time
+        $dateFormat = $sanitizedParams->getCheckbox('dateFormat');
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -786,7 +786,7 @@ class Stats extends Base
 
             // For MySQL, dates are already in CMS Local Time
             // For MongoDB, dates are in UTC
-            if ($dateFormat == 'utc') {
+            if ($dateFormat) {
                 if ($this->timeSeriesStore->getEngine() == 'mysql') {
                     $fromDt = $fromDt->setTimezone('UTC');
                     $toDt = $toDt->setTimezone('UTC');

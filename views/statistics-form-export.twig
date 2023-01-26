@@ -60,15 +60,8 @@
                 ] %}
                 {{ forms.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
-                {% set title %}{% trans "Date Format" %}{% endset %}
-                {% set helpText %}{% trans "Select a date format, either in UTC or in the local time of the CMS" %}{% endset %}
-                {% set utc %}{% trans "UTC" %}{% endset %}
-                {% set localcms %}{% trans "CMS local time" %}{% endset %}
-                {% set options = [
-                    { formatid: "utc", format: utc },
-                    { formatid: "localcms", format: localcms },
-                ] %}
-                {{ forms.dropdown("dateFormat", "single", title, "", options, "formatid", "format", helpText) }}
+                {% set title %}{% trans "Output dates as UTC? Leave unchecked for local CMS time." %}{% endset %}
+                {{ forms.checkbox("dateFormat", title, true) }}
 
                 <div id="totalStat"></div>
                 <div class="loading-overlay" style="display: none">
