@@ -346,7 +346,7 @@ class Campaign implements \JsonSerializable
      */
     public function getEndDt()
     {
-        return $this->endDt == 0 ? null : Carbon::createFromTimestamp( $this->endDt);
+        return $this->endDt == 0 ? null : Carbon::createFromTimestamp($this->endDt);
     }
 
     /**
