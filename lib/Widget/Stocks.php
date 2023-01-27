@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -103,6 +103,7 @@ class Stocks extends AlphaVantageBase
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $apiKey = $sanitizedParams->getString('apiKey');
+        $isPaidPlan = $sanitizedParams->getCheckbox('isPaidPlan');
         $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 14400]);
 
         if ($this->module->enabled != 0) {
@@ -114,6 +115,7 @@ class Stocks extends AlphaVantageBase
         }
 
         $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['isPaidPlan'] = $isPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         // Return an array of the processed settings.
