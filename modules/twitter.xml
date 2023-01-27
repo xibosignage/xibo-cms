@@ -167,11 +167,11 @@ $(target).xiboLayoutAnimate(properties);
     ]]></sampleData>
     <preview></preview>
     <assets>
-        <asset id="providerLogo" type="path" mime="image/png" path="/modules/assets/twitter_blue.png"></asset>
-        <asset id="providerLogoWhite" type="path" mime="image/png" path="/modules/assets/twitter_white.png"></asset>
-        <asset id="twitterContentPhoto" type="path" mime="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
-        <asset id="twitterProfilePhoto" type="path" mime="image/png" path="/modules/assets/twitter_profile_photo.jpg"></asset>
-        <asset id="twitterProfilePhotoMini" type="path" mime="image/png" path="/modules/assets/twitter_profile_photo_mini.jpg"></asset>
-        <asset id="twitterProfilePhotoBigger" type="path" mime="image/png" path="/modules/assets/twitter_profile_photo_bigger.jpg"></asset>
+        <asset id="providerLogo" type="path" mimeType="image/png" path="/modules/assets/twitter_blue.png"></asset>
+        <asset id="providerLogoWhite" type="path" mimeType="image/png" path="/modules/assets/twitter_white.png"></asset>
+        <asset id="twitterContentPhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
+        <asset id="twitterProfilePhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo.jpg"></asset>
+        <asset id="twitterProfilePhotoMini" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_mini.jpg"></asset>
+        <asset id="twitterProfilePhotoBigger" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_bigger.jpg"></asset>
     </assets>
 </module>

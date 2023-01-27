@@ -102,7 +102,7 @@ class Asset implements \JsonSerializable
             return Img::make(PROJECT_ROOT . '/' . $this->path)->psrResponse();
         } else {
             // Set the right content type.
-            $response = $response->withAddedHeader('Content-Type', $this->mimeType);
+            $response = $response->withHeader('Content-Type', $this->mimeType);
             return $response->withBody(new Stream(fopen(PROJECT_ROOT . $this->path, 'r')));
         }
     }

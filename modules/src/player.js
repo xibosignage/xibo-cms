@@ -62,6 +62,9 @@ $(function() {
       moduleTemplate = true;
     }
 
+    // Save widgetData to xic
+    xiboIC.set(widget.widgetId, 'widgetData', widget);
+
     let hbs = null;
     // Compile the template if it exists
     if ($template && $template.length > 0) {
