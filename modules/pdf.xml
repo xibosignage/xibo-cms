@@ -44,5 +44,161 @@
             <helpText>The duration specified is per page otherwise it is per document.</helpText>
         </property>
     </properties>
-    <preview></preview>
+    <stencil>
+        <twig><![CDATA[
+<div class="pdf-container" style="text-align: center">
+    <canvas id="the-canvas"></canvas>
+</div>
+        ]]></twig>
+    </stencil>
+<onInitialize><![CDATA[
+// Get widgetData from xic
+var widgetData = xiboIC.get(id, 'widgetData');
+var url = widgetData.libraryId;
+pdfjsLib.GlobalWorkerOptions.workerSrc = "[[assetId=pdfWorkerSrc]]";
+
+var pdfDoc = null,
+  pageNum = 1,
+  pageRendering = false,
+  pageNumPending = null,
+  scale = 1,
+  width,
+  height,
+  interval;
+
+var canvas = document.getElementById('the-canvas');
+var ctx = canvas.getContext('2d');
+
+width = $('body').width();
+height = $('body').height();
+
+canvas.width = width;
+canvas.height = height;
+
+/**
+* Get page info from document, resize canvas accordingly, and render page.
+* @param num Page number.
+*/
+function renderPage(num) {
+  pageRendering = true;
+  // Using promise to fetch the page
+  pdfDoc.getPage(num).then(function(page) {
+    // Get new window size
+    width = $('body').width();
+    height = $('body').height();
+    
+    var unscaledViewport = page.getViewport({scale: 1});
+    var scale = Math.min((height / unscaledViewport.height), (width / unscaledViewport.width));
+    var viewport = page.getViewport({scale: scale});
+
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    // Render PDF page into canvas context
+    var renderContext = {
+      canvasContext: ctx,
+      transform: null,
+      viewport: viewport
+    };
+    var renderTask = page.render(renderContext);
+
+    // Wait for rendering to finish
+    renderTask.promise.then(function() {
+      pageRendering = false;
+      if (pageNumPending !== null) {
+        // New page rendering is pending
+        renderPage(pageNumPending);
+        pageNumPending = null;
+      }
+    });
+  });
+}
+
+/**
+* If another page rendering in progress, waits until the rendering is
+* finised. Otherwise, executes rendering immediately.
+*/
+function queueRenderPage(num) {
+  if (pageRendering) {
+    pageNumPending = num;
+  } else {
+    renderPage(num);
+  }
+}
+
+/**
+* Displays previous page.
+*/
+function onPrevPage() {
+  if (pageNum <= 1) {
+    return;
+  }
+  pageNum--;
+  queueRenderPage(pageNum);
+}
+
+/**
+* Displays next page.
+*/
+function onNextPage() {
+  if (pageNum >= pdfDoc.numPages) {
+    pageNum = 0;
+  }
+  pageNum++;
+  queueRenderPage(pageNum);
+}
+
+/** 
+* Back to first page
+*/
+function onFirstPage() {
+  pageNum = 1;
+  queueRenderPage(pageNum);
+}
+
+/**
+* Asynchronously downloads PDF.
+*/
+pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+  pdfDoc = pdfDoc_;
+
+  var startInterval = function(interval) {
+    // Set a timer
+    setInterval(function() {
+      onNextPage();
+    }, interval * 1000);
+  };
+
+  // Initial/first page rendering
+  renderPage(pageNum);
+
+  if (properties.durationIsPerItem) {
+    // Set new widget duration by number of pages
+    xiboIC.setWidgetDuration(
+      (properties.duration * pdfDoc.numPages),
+      {
+        done: function() { // Callback after the request
+          // Start interval ( the defined duration )
+          startInterval(properties.duration);
+        },
+        error: function() {
+          // If the call fails, keep the defalt behaviour
+          startInterval(properties.duration / pdfDoc.numPages);
+        }
+      }
+    );
+  } else {
+    // Start interval ( total duration divided by the number of pages )
+    startInterval(properties.duration / pdfDoc.numPages);
+  }
+});
+
+// Render page on window resize
+window.addEventListener('resize', function(event) {
+  onFirstPage();
+}, true);
+    ]]></onInitialize>
+    <assets>
+        <asset id="pdfWorkerSrc" type="path" mimeType="text/javascript" path="/modules/vendor/pdf.worker.min.js"></asset>
+    </assets>
 </module>
