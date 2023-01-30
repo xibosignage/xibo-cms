@@ -327,6 +327,9 @@ function checkFitPosition(array, index, size, cellsPerRow) {
  * Check if a given item has background image
  */
 function checkBackgroundImage(array, index) {
+    if (array[index] == undefined) {
+        return false;
+    }
     return (array[index].indexOf("background-image") >= 0);
 }
 

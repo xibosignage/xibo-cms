@@ -35,6 +35,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -55,6 +56,9 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     /** @var  SanitizerService */
     private $sanitizer;
 
+    /** @var ConfigServiceInterface */
+    private $config;
+
     /** @var CampaignFactory */
     private $campaignFactory;
 
@@ -70,6 +74,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
         $this->user = $container->get('user');
         $this->timeSeriesStore = $container->get('timeSeriesStore');
         $this->sanitizer = $container->get('sanitizerService');
+        $this->config = $container->get('configService');
         $this->campaignFactory = $container->get('campaignFactory');
         $this->displayFactory = $container->get('displayFactory');
 
@@ -162,6 +167,8 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
         // Handle sending stats to the audience connector service API
         try {
+            $defaultTimezone = $this->config->getSetting('defaultTimezone');
+
             // Get Watermark (might be null - start from beginning)
             $watermark = $this->getWatermark();
  
@@ -280,6 +287,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                             $display = $this->displayFactory->getById($displayId);
                             $displayCache[$displayId]['costPerPlay'] = $display->costPerPlay;
                             $displayCache[$displayId]['impressionsPerPlay'] = $display->impressionsPerPlay;
+                            $displayCache[$displayId]['timeZone'] = empty($display->timeZone) ? $defaultTimezone : $display->timeZone;
                         } catch (NotFoundException $notFoundException) {
                             $this->getLogger()->error('onRegularMaintenance: display not found with ID: '
                                 . $displayId);
@@ -291,27 +299,36 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                     $entry['impressionsPerPlay'] = $displayCache[$displayId]['impressionsPerPlay'];
 
                     // Converting the date into the format expected by the API
+
+                    // --------
+                    // We know that player's local dates were stored in the CMS's configured timezone
+                    // Dates were saved in Unix timestamps in MySQL
+                    // Dates were saved in UTC format in MongoDB
+                    // The main difference is that MySQL stores dates in the timezone of the CMS,
+                    // while MongoDB converts those dates to UTC before storing them.
+
+                    // -----MySQL
+                    // Carbon::createFromTimestamp() always applies the CMS timezone
+
+                    // ------MongoDB
+                    // $date->toDateTime() returns a PHP DateTime object from MongoDB BSON Date type (UTC)
+                    // Carbon::instance() keeps the timezone as UTC
                     try {
-                        if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-                            $start = $row['start']->toDateTime()->format(DateFormatHelper::getSystemFormat());
-                            $end = $row['end']->toDateTime()->format(DateFormatHelper::getSystemFormat());
-                        } else {
-                            $start = Carbon::createFromTimestamp($row['start'])
-                                ->format(DateFormatHelper::getSystemFormat());
-                            $end = Carbon::createFromTimestamp($row['end'])
-                                ->format(DateFormatHelper::getSystemFormat());
-                        }
+                        $start = $resultSet->getDateFromValue($row['start']);
+                        $end = $resultSet->getDateFromValue($row['end']);
                     } catch (\Exception $exception) {
                         $this->getLogger()->error('onRegularMaintenance: Date convert failed for ID '
                             . $entry['id'] . ' with error: '. $exception->getMessage());
                         continue;
                     }
 
+                    // Convert dates to display timezone
+                    $entry['start'] = $start->timezone($displayCache[$displayId]['timeZone'])->format(DateFormatHelper::getSystemFormat());
+                    $entry['end'] = $end->timezone($displayCache[$displayId]['timeZone'])->format(DateFormatHelper::getSystemFormat());
+
                     $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
                     $entry['numberPlays'] = $sanitizedRow->getInt('count', ['default' => 0]);
                     $entry['duration'] = $sanitizedRow->getInt('duration', ['default' => 0]);
-                    $entry['start'] = $start;
-                    $entry['end'] = $end;
                     $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
                     $rows[] = $entry;

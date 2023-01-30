@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -125,8 +125,9 @@ abstract class AlphaVantageBase extends ModuleWidget
      */
     protected function getStockQuote($symbol)
     {
+        $isPaidPlan = $this->getSetting('isPaidPlan', 0) == 1;
         try {
-            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($symbol)));
+            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($symbol . $isPaidPlan)));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
@@ -141,7 +142,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 $request = $client->request('GET', 'https://www.alphavantage.co/query', $this->getConfig()->getGuzzleProxy([
                     'query' => [
-                        'function' => 'TIME_SERIES_DAILY',
+                        'function' => $isPaidPlan ? 'TIME_SERIES_DAILY' : 'TIME_SERIES_DAILY_ADJUSTED',
                         'symbol' => $symbol,
                         'apikey' => $this->getApiKey()
                     ]
