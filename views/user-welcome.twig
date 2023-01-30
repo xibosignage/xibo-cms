@@ -840,7 +840,18 @@
                     reflex: true,
                     container: '.bootbox',
                     placement: "bottom",
-                    template: no_nav_template
+                    template: no_nav_template,
+                    delayOnElement: {
+                        delayElement: "element",
+                        maxDelay: 2000
+                    },
+                    onElementUnavailable: function() {
+                        // Check if we have a toast success message
+                        if($('.toast-success').length > 0) {
+                            // Go to next step
+                            cmsTours.authDisplayTour.next();
+                        }
+                    }
                 },
                 { // 10
                     element: '#displays tbody tr:first td button.dropdown-toggle',
