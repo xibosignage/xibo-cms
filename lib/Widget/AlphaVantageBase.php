@@ -150,6 +150,11 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 $data = json_decode($request->getBody(), true);
 
+                if (!array_key_exists('Time Series (Daily)', $data)) {
+                    $this->getLog()->debug('getStockQuote Data: ' . var_export($data, true));
+                    throw new InvalidArgumentException(__('Stocks data invalid'), 'Time Series (Daily)');
+                }
+
                 // Cache this and expire in the cache period
                 $cache->set($data);
                 $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
