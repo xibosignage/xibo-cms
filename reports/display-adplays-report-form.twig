@@ -191,6 +191,7 @@
                                         <th>{% trans "Period" %}</th>
                                         <th>{% trans "Ad Plays" %}</th>
                                         <th>{% trans "Impressions" %}</th>
+                                        <th>{% trans "Spend" %}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -198,6 +199,7 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
+                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -241,12 +243,18 @@
                     }, 300);
                 },
                 filter: false,
-                "order": [[1, "asc"]],
                 data:{},
                 "columns": [
                     {"data": "labelDate"},
                     {"data": "adPlays"},
-                    {"data": "impressions"}
+                    {
+                        "data": "impressions",
+                        "render": dataTableRoundDecimal
+                    },
+                    {
+                        "data": "spend",
+                        "render": dataTableRoundDecimal
+                    }
                 ],
             });
 
@@ -282,8 +290,9 @@
             function setTabularData(table, data) {
                 table.clear().draw();
 
+                // Sort table by period
                 if (Object.keys(data).length > 0) {
-                    table.rows.add( data ).draw()
+                    table.rows.add(data).order([0, 'asc']).draw()
                 }
             }
 
