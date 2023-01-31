@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,6 +25,7 @@ namespace Xibo\Listener\OnUserDelete;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Listener\ListenerLoggerTrait;
 
@@ -34,10 +35,15 @@ class PlaylistListener implements OnUserDeleteInterface
 
     /** @var PlaylistFactory */
     private $playlistFactory;
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
 
-    public function __construct(PlaylistFactory $playlistFactory)
+    public function __construct(PlaylistFactory $playlistFactory, ModuleFactory $moduleFactory)
     {
         $this->playlistFactory = $playlistFactory;
+        $this->moduleFactory = $moduleFactory;
     }
 
     /**
@@ -66,6 +72,7 @@ class PlaylistListener implements OnUserDeleteInterface
     {
         // Delete Playlists owned by this user
         foreach ($this->playlistFactory->getByOwnerId($user->userId) as $playlist) {
+            $playlist->setModuleFactory($this->moduleFactory);
             $playlist->delete();
         }
     }

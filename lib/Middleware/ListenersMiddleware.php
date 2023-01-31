@@ -168,7 +168,8 @@ class ListenersMiddleware implements MiddlewareInterface
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\PlaylistListener(
-            $c->get('playlistFactory')
+            $c->get('playlistFactory'),
+            $c->get('moduleFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\RegionListener(

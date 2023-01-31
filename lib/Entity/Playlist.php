@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -740,9 +740,12 @@ class Playlist implements \JsonSerializable
             $this->load();
         }
 
-        if (!$options['regionDelete'] && $this->regionId != 0)
-            throw new InvalidArgumentException(__('This Playlist belongs to a Region, please delete the Region instead.'), 'regionId');
-
+        if (!$options['regionDelete'] && $this->regionId != 0) {
+            throw new InvalidArgumentException(
+                __('This Playlist belongs to a Region, please delete the Region instead.'),
+                'regionId'
+            );
+        }
         // Notify we're going to delete
         // we do this here, because once we've deleted we lose the references for the storage query
         $this->notifyLayouts();
@@ -755,12 +758,15 @@ class Playlist implements \JsonSerializable
             $parent->load();
             foreach ($parent->widgets as $widget) {
                 if ($widget->type === 'subplaylist') {
+                    $isWidgetSavedRequired = false;
+                    /** @var $module SubPlaylist **/
+                    $module = $this->moduleFactory->createWithWidget($widget);
                     // we get an array with all subplaylists assigned to the parent
-                    $subPlaylistItems = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
+                    $subPlaylistItems = $module->getAssignedPlaylists();
                     $i = 0;
                     foreach ($subPlaylistItems as $subPlaylistItem) {
                         // find the matching playlistId to the playlistId we want to delete
-                        if ($subPlaylistItem['playlistId'] == $this->playlistId) {
+                        if ($subPlaylistItem->playlistId == $this->playlistId) {
                             // if there is only one playlistItem in subPlaylists option then remove the widget
                             if (count($subPlaylistItems) === 1) {
                                 $widget->delete(['notify' => false]);
@@ -769,11 +775,33 @@ class Playlist implements \JsonSerializable
                                 // we want to just unassign our playlist from it and save the widget,
                                 // we don't want to remove the whole widget in this case
                                 unset($subPlaylistItems[$i]);
-                                $widget->setOptionValue('subPlaylists', 'attrib', json_encode(array_values($subPlaylistItems)));
-                                $widget->save();
+                                $isWidgetSavedRequired = true;
                             }
                         }
                         $i++;
+                    }
+
+                    if ($isWidgetSavedRequired) {
+                        // update row numbers for each element
+                        // from getAssignedPlaylists the spots/length will come as null/int
+                        // make sure spots and spotLength are saved as string if empty
+                        $j = 1;
+                        foreach ($subPlaylistItems as $subPlaylistItem) {
+                            $subPlaylistItem->rowNo = $j;
+                            $subPlaylistItem->spots = $subPlaylistItem->spots ?? '';
+                            $subPlaylistItem->spotLength = $subPlaylistItem->spotLength ?? '';
+                            $j++;
+                        }
+
+                        // update subPlaylists Widget option
+                        $widget->setOptionValue('subPlaylists', 'attrib', json_encode(array_values($subPlaylistItems)));
+
+                        // Tidy up any old options
+                        if ($module->getOption('subPlaylistIds') !== null) {
+                            $widget->setOptionValue('subPlaylistIds', 'attrib', null);
+                            $widget->setOptionValue('subPlaylistOptions', 'attrib', null);
+                        }
+                        $widget->save();
                     }
                 }
             }

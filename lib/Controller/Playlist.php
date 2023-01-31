@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -964,6 +964,7 @@ class Playlist extends Base
         }
 
         // Issue the delete
+        $playlist->setModuleFactory($this->moduleFactory);
         $playlist->delete();
 
         // Success
