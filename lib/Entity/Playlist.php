@@ -758,7 +758,7 @@ class Playlist implements \JsonSerializable
             $parent->load();
             foreach ($parent->widgets as $widget) {
                 if ($widget->type === 'subplaylist') {
-                    $isWidgetSavedRequired = false;
+                    $isWidgetSaveRequired = false;
                     /** @var $module SubPlaylist **/
                     $module = $this->moduleFactory->createWithWidget($widget);
                     // we get an array with all subplaylists assigned to the parent
@@ -775,13 +775,13 @@ class Playlist implements \JsonSerializable
                                 // we want to just unassign our playlist from it and save the widget,
                                 // we don't want to remove the whole widget in this case
                                 unset($subPlaylistItems[$i]);
-                                $isWidgetSavedRequired = true;
+                                $isWidgetSaveRequired = true;
                             }
                         }
                         $i++;
                     }
 
-                    if ($isWidgetSavedRequired) {
+                    if ($isWidgetSaveRequired) {
                         // update row numbers for each element
                         // from getAssignedPlaylists the spots/length will come as null/int
                         // make sure spots and spotLength are saved as string if empty
