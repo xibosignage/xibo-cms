@@ -238,6 +238,14 @@ class DisplayAdPlay implements ReportInterface
     /** @inheritDoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
+
+        // Get campaign
+        if (!empty($parentCampaignId)) {
+            $campaign = $this->campaignFactory->getById($parentCampaignId);
+        }
+
         // Display filter.
         try {
             // Get an array of display id this user has access to.
@@ -317,11 +325,24 @@ class DisplayAdPlay implements ReportInterface
         }
 
         $params = [
+            'campaignId' => $parentCampaignId,
+            'layoutId' => $layoutId,
             'displayIds' => $displayIds,
             'groupBy' => $sanitizedParams->getString('groupBy')
         ];
-        $params['fromDt'] = $fromDt->format('Y-m-d H:i:s');
-        $params['toDt'] =  $toDt->format('Y-m-d H:i:s');
+
+        // when the reportfilter is wholecampaign take campaign start/end as form/to date
+        if (!empty($parentCampaignId) && $sanitizedParams->getString('reportFilter') === 'wholecampaign') {
+            $params['fromDt'] = !empty($campaign->getStartDt()) ? $campaign->getStartDt()->format('Y-m-d H:i:s') : null;
+            $params['toDt'] = !empty($campaign->getEndDt()) ? $campaign->getEndDt()->format('Y-m-d H:i:s') : null;
+
+            if (empty($campaign->getStartDt()) || empty($campaign->getEndDt())) {
+                return new ReportResult();
+            }
+        } else {
+            $params['fromDt'] = $fromDt->format('Y-m-d H:i:s');
+            $params['toDt'] =  $toDt->format('Y-m-d H:i:s');
+        }
 
         // --------
         // ReportDataEvent
