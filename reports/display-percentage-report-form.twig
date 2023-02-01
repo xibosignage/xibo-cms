@@ -271,7 +271,7 @@
                         },
                         datalabels: {
                             render: 'percentage',
-                            fontColor: 'white',
+                            color: 'white',
                             precision: 2,
                         }
                     },
@@ -375,6 +375,8 @@
                     // Combine the Other slice in Main Chart
                     labels.push('Other');
                     data.push(otherChartTotal);
+
+                    // Set background color of "Other Slice"
                     backgroundColor.push('#808080');
 
                     // Show two buttons Other and Main

@@ -301,10 +301,10 @@ class DisplayAdPlay implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()]);
+                $fromDt = $sanitizedParams->getDate('fromDt', ['default' => Carbon::now()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' => Carbon::now()]);
+                $toDt = $sanitizedParams->getDate('toDt', ['default' => Carbon::now()]);
                 $toDt->endOfDay();
 
                 // What if the fromdt and todt are exactly the same?
