@@ -1535,6 +1535,16 @@ function dataTableDateFromIso(data, type, row) {
     return moment(data, systemDateFormat).format(jsDateFormat);
 }
 
+function dataTableRoundDecimal(data, type, row) {
+    if (type !== "display" && type !== "export")
+        return data;
+
+    if (data == null)
+        return "";
+
+    return parseFloat(data).toFixed(2);
+}
+
 function dataTableDateFromUnix(data, type, row) {
     if (type !== "display" && type !== "export")
         return data;
