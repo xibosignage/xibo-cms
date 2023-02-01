@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -22,10 +22,11 @@
     <id>core-stocks</id>
     <name>Stocks</name>
     <author>Core</author>
-    <description>A module for displaying Stocks information</description>
+    <description>A module for showing Stock quotes</description>
     <class></class>
     <type>stocks</type>
-    <dataType></dataType>
+    <dataType>stock</dataType>
+    <dataCacheKey>%items%</dataCacheKey>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -33,20 +34,32 @@
     <defaultDuration>30</defaultDuration>
     <settings></settings>
     <properties>
+        <property type="header" variant="main">
+            <title>Configuration</title>
+        </property>
         <property id="items" type="text">
             <title>Stock Symbols</title>
             <helpText>A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.</helpText>
-            <default></default>
+        </property>
+        <property id="loop" type="checkbox">
+            <title>Reverse conversion?</title>
+            <helpText>Tick if you would like your base currency to be used as the comparison currency for each currency you've entered. For example base/compare becomes compare/base - USD/GBP becomes GBP/USD.</helpText>
+            <default>0</default>
         </property>
         <property id="backgroundColor" type="color">
             <title>Background Colour</title>
             <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
             <default></default>
         </property>
-        <property id="dateFormat" type="date" format="DD/MM/YYYY" variant="date">
+        <property id="dateFormat" type="text" variant="dateFormat">
             <title>Date Format</title>
             <helpText>The format to apply to all dates returned by the Widget.</helpText>
-            <default></default>
+            <default>#DATE_FORMAT#</default>
+        </property>
+        <property id="loop" type="checkbox">
+            <title>Duration is per page</title>
+            <helpText>The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items.</helpText>
+            <default>0</default>
         </property>
         <property id="effect" type="dropdown" mode="single">
             <title>Effect</title>
@@ -54,6 +67,7 @@
             <default>none</default>
             <options>
                 <option name="none">None</option>
+                <option name="noTransition">No transition</option>
                 <option name="fade">Fade</option>
                 <option name="fadeout">Fade Out</option>
                 <option name="scrollHorz">Scroll Horizontal</option>
@@ -63,27 +77,14 @@
                 <option name="shuffle">Shuffle</option>
                 <option name="tileSlide">Tile Slide</option>
                 <option name="tileBlind">Tile Blind</option>
-<!--                <option name="marqueeLeft">Marquee Left</option>-->
-<!--                <option name="marqueeRight">Marquee Right</option>-->
-<!--                <option name="marqueeUp">Marquee Up</option>-->
-<!--                <option name="marqueeDown">Marquee Down</option>-->
             </options>
         </property>
         <property id="speed" type="number">
             <title>Speed</title>
             <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
-            <default></default>
             <visibility>
-                <test type="or">
-                    <condition field="#effect" type="eq">fade</condition>
-                    <condition field="#effect" type="eq">fadeout</condition>
-                    <condition field="#effect" type="eq">scrollHorz</condition>
-                    <condition field="#effect" type="eq">scrollVert</condition>
-                    <condition field="#effect" type="eq">flipHorz</condition>
-                    <condition field="#effect" type="eq">flipVert</condition>
-                    <condition field="#effect" type="eq">shuffle</condition>
-                    <condition field="#effect" type="eq">tileSlide</condition>
-                    <condition field="#effect" type="eq">tileBlind</condition>
+                <test>
+                    <condition field="#effect" type="neq">none</condition>
                 </test>
             </visibility>
         </property>
@@ -107,42 +108,18 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
-        <property id="simpleTextEditorMessage" type="message">
-            <title>Main Template - Enter text or HTML in the box below.</title>
-            <default></default>
-        </property>
-        <property id="mainTemplate" type="code">
-            <default></default>
-        </property>
-        <property id="simpleTextEditorMessage" type="message">
-            <title>Main Template - Enter text or HTML in the box below.</title>
-            <default></default>
-        </property>
-        <property id="itemTemplate" type="code">
-            <helpText>Enter the template for each item. Replaces [itemsTemplate] in main template.</helpText>
-            <default></default>
-        </property>
-        <property id="styleSheet" type="code">
-            <title>Optional Stylesheet</title>
-            <default></default>
-        </property>
-        <property id="javaScript" type="code">
-            <title>Optional JavaScript</title>
-            <default></default>
-        </property>
-        <property id="noRecordsMessage" type="text">
-            <title>Message</title>
-            <helpText>A message to display when there are no records returned by the search query</helpText>
-            <default></default>
-        </property>
         <property id="updateInterval" type="number">
             <title>Update Interval (mins)</title>
             <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
-            <default></default>
+            <default>60</default>
         </property>
     </properties>
     <preview></preview>
     <stencil>
         <twig><![CDATA[]]></twig>
     </stencil>
+    <onVisible><![CDATA[
+// Start effects for this widget
+$(target).xiboLayoutAnimate(properties);
+    ]]></onVisible>
 </module>
