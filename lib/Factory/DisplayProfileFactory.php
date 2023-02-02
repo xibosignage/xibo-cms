@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -327,6 +327,20 @@ class DisplayProfileFactory extends BaseFactory
             ]
         ];
 
+        // get array keys (player types) from the default config
+        // called by getAvailableTypes function, to ensure the default types are always available for selection
+        if ($type === 'defaultTypes') {
+            // remove unknown from the array
+            array_shift($config);
+
+            // build key value array to merge with distinct types from database
+            $defaultTypes = [];
+            foreach (array_keys($config) as $type) {
+                $defaultTypes[]['type'] = $type;
+            }
+            return $defaultTypes;
+        }
+
         if (!isset($config[$type])) {
             $config[$type] = $this->getCustomProfileConfig($type);
         }
@@ -440,7 +454,14 @@ class DisplayProfileFactory extends BaseFactory
 
     public function getAvailableTypes()
     {
-        $types = $this->getStore()->select('SELECT DISTINCT type FROM `displayprofile` ORDER BY type', []);
+        // get distinct player types from the displayprofile table, this will include any custom profile types as well
+        $dbTypes = $this->getStore()->select('SELECT DISTINCT type FROM `displayprofile` ORDER BY type', []);
+        // get an array of default player types from default config,
+        // this is to ensure we will always have the default types available for add form
+        $defaultTypes = $this->loadForType('defaultTypes');
+
+        // merge arrays removing any duplicates
+        $types = array_unique(array_merge($dbTypes, $defaultTypes), SORT_REGULAR);
 
         $entries = [];
         foreach ($types as $row) {
