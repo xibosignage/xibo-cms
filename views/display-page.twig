@@ -288,6 +288,8 @@
 
         $(document).ready(function() {
 
+            //<editor-fold desc="Display Grid>
+
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
                 dom: dataTablesTemplate,
@@ -673,6 +675,9 @@
                 table.ajax.reload();
             });
 
+            // </editor-fold>
+
+            //<editor-fold desc="The button click event displaying the map or grid>
 
             // Detect the dimensions of our container and set to match.
             const $displayMap = $('#display-map');
@@ -682,6 +687,29 @@
             const $dataTablesFolder = $('.dataTables_folder');
 
             $listBtn.hide();
+
+            $mapBtn.click(function () {
+                $('.map-legend').show()
+                $displayMap.show();
+                $mapBtn.hide();
+                $listBtn.show();
+                $dataTablesFolder.siblings().hide();
+                $dataTablesFolder.parent().siblings().hide();
+            });
+
+            $listBtn.click(function () {
+                $('.map-legend').hide();
+                $displayMap.hide();
+                $listBtn.hide();
+                $mapBtn.show();
+                $dataTablesFolder.siblings().show();
+                $dataTablesFolder.parent().siblings().show();
+            });
+
+            // </editor-fold>
+
+
+            // <editor-fold desc="Leaflet Map>
 
             let map;
 
@@ -701,7 +729,7 @@
                 $displayMap.width($mapParent.width() - 10);
                 $displayMap.height($(window).height() - 100);
 
-                // Calling map
+                // Create the map
                 map = L.map('display-map', {
                     center: [mapConfig.setArea.lat, mapConfig.setArea.long],
                     zoom: mapConfig.setArea.zoom,
@@ -711,6 +739,7 @@
                     }
                 });
 
+                // Tile layer
                 let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 }).addTo(map);
@@ -723,50 +752,82 @@
                     hideControlContainer: true
                 }).addTo(map);
 
-                var markers = L.markerClusterGroup({
+                // Create the marker cluster group
+                var markerClusterGroup = L.markerClusterGroup({
                     maxClusterRadius: function (mapZoom) {
-                        if (mapZoom > 9) {
-                            return 20;
-                        } else {
-                            return 80;
+                        return mapZoom > 9 ? 20 : 80;
+                    },
+
+                    // This defines the icon appearance of the cluster markers
+                    iconCreateFunction: function (cluster) {
+                        let upToDate = 0;
+                        let outOfDate = 0;
+                        let downloading = 0;
+
+                        const children = cluster.getAllChildMarkers();
+                        for (const marker of children) {
+                            switch (marker.mediaInventoryStatus) {
+                                case 1:
+                                    upToDate++;
+                                    break;
+                                case 3:
+                                    outOfDate++;
+                                    break;
+                                default:
+                                    downloading++;
+                                    break;
+                            }
                         }
+
+                        // Create a div showing number of displays by status in the cluster group
+                        let pieHtml = createPieChart(
+                            [upToDate, outOfDate, downloading],
+                            ['rgba(181, 226, 140, 0.9)', 'rgba(243, 194, 18, 0.9)', 'rgba(219, 70, 79, 0.9)']
+                        );
+
+                        // Create custom icons for the cluster markers
+                        return L.divIcon({
+                            html:  pieHtml,
+                            className: '',
+                            iconSize: L.point(40, 40)
+                        });
                     }
                 });
-                
+
                 let bounds;
                 bounds = map.getBounds().toBBoxString();
 
                 map.on("moveend", _.debounce(function() {
                     bounds = map.getBounds().toBBoxString();
-                    getPoints(false);
+                    addMarkersToMap(false);
                 }, 500));
 
                 map.on("resize", function() {
                     map.invalidateSize();
                 });
 
-                // Get points
-                getPoints(false);
+                // Get display points and add to the map
+                // Do not clear layers
+                addMarkersToMap(false);
 
                 // Bind the filter form
-                $('.XiboGrid').find(".XiboFilter form input").on("keyup",  getPoints);
-                $('.XiboGrid').find(".XiboFilter form input, .XiboFilter form select").on("change", getPoints);
+                $('.XiboGrid').find(".XiboFilter form input").on("keyup",  addMarkersToMap);
+                $('.XiboGrid').find(".XiboFilter form input, .XiboFilter form select").on("change", addMarkersToMap);
 
+                // Cache displayId
                 var added = [];
 
-                /**
-                 * Gets Displays.
-                 */
-                function getPoints(clear = true) {
+                // Add display markers to the cluster group
+                function addMarkersToMap(clear = true) {
 
                     if (clear) {
-                        markers.clearLayers();
+                        markerClusterGroup.clearLayers();
                         added = [];
                         // console.log('Clear Layer');
                     }
 
-
-                    // Make an ajax request for the displays
+                    // Make an ajax request for the displays feature
+                    // Load GeoJSON data and add it to the marker cluster group
                     $.ajax($displayMap.data('displaysUrl'), {
                         method: 'GET',
                         data: $('.XiboGrid').find(".XiboFilter form").serialize() + '&bounds=' + bounds,
@@ -774,6 +835,7 @@
                             // displays
                             if (response.features.length > 0) {
 
+                                // Define icons for display
                                 let uptoDateLoggedInIcon = L.icon({
                                     iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check.png',
                                     iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check-2x.png',
@@ -811,29 +873,30 @@
                                     iconAnchor: [12, 40]
                                 });
 
-                                let feature = L.geoJSON(response, {
+                                // Loop through features (GeoJSON data) and add each marker to the cluster
+                                    let feature = L.geoJSON(response, {
                                     pointToLayer: function (feature, latlng) {
                                         let icon;
 
-                                        if (feature.properties.mediaInventoryStatus === 1) {
-                                            if (feature.properties.loggedIn) {
-                                                icon = uptoDateLoggedInIcon;
-                                            } else {
-                                                icon = uptoDateLoggedOutIcon;
+                                        const icons = {
+                                            1: {
+                                                true: uptoDateLoggedInIcon,
+                                                false: uptoDateLoggedOutIcon
+                                            },
+                                            3: {
+                                                true: outOfDateLoggedInIcon,
+                                                false: outOfDateLoggedOutIcon
+                                            },
+                                            default: {
+                                                true: downloadingLoggedInIcon,
+                                                false: downloadingLoggedOutIcon
                                             }
-                                        } else if (feature.properties.mediaInventoryStatus === 3) {
-                                            if (feature.properties.loggedIn) {
-                                                icon = outOfDateLoggedInIcon;
-                                            } else {
-                                                icon = outOfDateLoggedOutIcon;
-                                            }
-                                        } else {
-                                            if (feature.properties.loggedIn) {
-                                                icon = downloadingLoggedInIcon;
-                                            } else {
-                                                icon = downloadingLoggedOutIcon;
-                                            }
-                                        }
+                                        };
+
+                                        // The value of "mediaInventoryStatus" and "loggedIn" determines the "icon"
+                                        const loggedIn = feature.properties.loggedIn ? true: false;
+                                        const iconType = icons[feature.properties.mediaInventoryStatus] || icons.default;
+                                        icon = iconType[loggedIn];
 
                                         let options = {
                                             icon: icon
@@ -873,10 +936,16 @@
                                             // Cache displayId
                                             added.push(feature.properties.displayId);
 
-                                            return L.marker(latlng, options)
-                                                .bindPopup(popup)
+                                            var marker = L.marker(latlng, options);
+
+                                            // Add the inventory status to each marker so that we can count
+                                            // the status based displays in iconCreateFunction
+                                            marker.mediaInventoryStatus = feature.properties.mediaInventoryStatus;
+
+                                            // Add a marker
+                                            return marker.bindPopup(popup)
                                                 .openPopup()
-                                                .addTo(markers);
+                                                .addTo(markerClusterGroup);
                                         }
                                     },
                                 });
@@ -884,30 +953,99 @@
                         }
                     });
 
-                    markers.addTo(map);
+                    // Add the cluster group to the map
+                    markerClusterGroup.addTo(map);
+
+                    markerClusterGroup.on('clustermouseover', function(event) {
+                        var clusterMarkers = event.layer.getAllChildMarkers();
+
+                        let upToDate = 0;
+                        let outOfDate = 0;
+                        let downloading = 0;
+
+                        clusterMarkers.forEach(function(marker) {
+                            switch (marker.mediaInventoryStatus) {
+                                case 1:
+                                    upToDate++;
+                                    break;
+                                case 3:
+                                    outOfDate++;
+                                    break;
+                                default:
+                                    downloading++;
+                                    break;
+                            }
+                        });
+
+                        let popContent = '<div><strong>Total number of displays</strong>';
+                        const statuses = [
+                            { count: upToDate, text: 'Up to date' },
+                            { count: outOfDate, text: 'Out of date' },
+                            { count: downloading, text: 'Downloading' }
+                        ];
+                        for (const { count, text } of statuses) {
+                            if (count > 0) {
+                                popContent += `<div>${text}: ${count}</div>`;
+                            }
+                        }
+                        popContent += '</div>';
+
+                        var popup = L.popup()
+                            .setLatLng(event.latlng)
+                            .setContent(popContent)
+                            .openOn(map);
+                    }).on('clustermouseout',function(event){
+                        map.closePopup();
+                    }).on('clusterclick',function(event){
+                        map.closePopup();
+                    });
                 }
 
                 // Hide map/ Show Display List
                 $displayMap.hide();
             }
 
-            $mapBtn.click(function () {
-                $('.map-legend').show()
-                $displayMap.show();
-                $mapBtn.hide();
-                $listBtn.show();
-                $dataTablesFolder.siblings().hide();
-                $dataTablesFolder.parent().siblings().hide();
-            });
+            // Creating a pie chart for cluster childrens using HTML, CSS
+            var createPieChart = function(data, colors) {
+                // Get the total of all the data
+                let total = data.reduce(function(a, b) {
+                    return a + b;
+                });
 
-            $listBtn.click(function () {
-                $('.map-legend').hide();
-                $displayMap.hide();
-                $listBtn.hide();
-                $mapBtn.show();
-                $dataTablesFolder.siblings().show();
-                $dataTablesFolder.parent().siblings().show();
-            });
+                // Get the percentage of each data point
+                let percentages = data.map(function(d) {
+                    return d / total;
+                });
+
+                // Create the pie chart
+                let pie = $('<div></div>');
+                pie.css('width', '30px');
+                pie.css('height', '30px');
+                pie.css('border-radius', '50%');
+                pie.css('display', 'flex');
+                pie.css('align-items', 'center');
+                pie.css('justify-content', 'center');
+
+                // Create conic-gradient for each data point
+                let gradient = 'conic-gradient(';
+                let percentageSum = 0;
+                percentages.forEach(function(percentages, i) {
+                    let color = colors[i];
+                    let percentStart = percentageSum * 100;
+                    let percentEnd = percentStart + percentages * 100;
+                    percentageSum += percentages;
+                    gradient += color + ' ' + percentStart + '%, ' + color + ' ' + percentEnd + '%, ';
+                });
+                gradient += 'white 0%)';
+
+                // Set the pie chart's background to the conic-gradient
+                pie.css('background', gradient);
+                pie.css('box-shadow', '5px 5px 10px rgba(0, 0, 0, 0.3)');
+                pie.append('<div style="color: black; font-weight: bold;">'+ total + '</div>');
+                return  $("<div />").append(pie.clone()).html();
+            };
+
+            // </editor-fold>
         });
 
         {% set showThumbnailColumn = currentUser.getOptionValue("showThumbnailColumn", 1) %}
