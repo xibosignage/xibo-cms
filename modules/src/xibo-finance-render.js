@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,99 +19,137 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 jQuery.fn.extend({
-    xiboFinanceRender: function(options, items, body) {
+  xiboFinanceRender: function(options, items, body) {
+    // Default options
+    const defaults = {
+      effect: 'none',
+      pauseEffectOnStart: true,
+      speed: '2',
+      duration: '30',
+      durationIsPerPage: false,
+      numItems: items.length,
+      maxItemsPerPage: 5,
+      previewWidth: 0,
+      previewHeight: 0,
+      scaleOverride: 0,
+    };
 
-        // Default options
-        var defaults = {
-            "fx": "none",
-            "speed": "2",
-            "duration": "30",
-            "durationIsPerPage": false,
-            "numItems": 0,
-            "maxItemsPerPage": 5,
-            "previewWidth": 0,
-            "previewHeight": 0,
-            "scaleOverride": 0
-        };
+    options = $.extend({}, defaults, options);
 
-        options = $.extend({}, defaults, options);
+    // Calculate the dimensions of this itemoptions.numItems
+    // based on the preview/original dimensions
+    let width = height = 0;
+    if (options.previewWidth === 0 || options.previewHeight === 0) {
+      width = options.originalWidth;
+      height = options.originalHeight;
+    } else {
+      width = options.previewWidth;
+      height = options.previewHeight;
+    }
 
-        // Calculate the dimensions of this item based on the preview/original dimensions
-        var width = height = 0;
-        if (options.previewWidth === 0 || options.previewHeight === 0) {
-            width = options.originalWidth;
-            height = options.originalHeight;
-        } else {
-            width = options.previewWidth;
-            height = options.previewHeight;
+    if (options.scaleOverride !== 0) {
+      width = width / options.scaleOverride;
+      height = height / options.scaleOverride;
+    }
+
+    if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
+      options.widgetDesignWidth = options.widgetDesignWidth;
+      options.widgetDesignHeight = options.widgetDesignHeight;
+      width = options.widgetDesignWidth;
+      height = options.widgetDesignHeight;
+    }
+
+    // For each matched element
+    this.each(function(_idx, _elem) {
+      // How many pages to we need?
+      const numberOfPages =
+        (options.numItems > options.maxItemsPerPage) ?
+          Math.ceil(options.numItems / options.maxItemsPerPage) : 1;
+      const $mainContainer = $(_elem);
+
+      // Destroy any existing cycle
+      $mainContainer.find('.anim-cycle')
+        .cycle('destroy');
+
+      // Remove previous content
+      $mainContainer.find('.container-main:not(.template-container)').remove();
+
+      // Clone the main HTML
+      // and remove template-container class
+      const $mainHTML = $(body).clone()
+        .removeClass('template-container')
+        .show();
+
+      // Hide main HTML
+      $(body).hide();
+
+      // Create the pages
+      for (let i = 0; i < numberOfPages; i++) {
+        // Create a page
+        const $itemsHTML = $('<div />').addClass('page');
+        for (let j = 0; j < options.maxItemsPerPage; j++) {
+          if (((i * options.maxItemsPerPage) + j) < options.numItems) {
+            const $item = $(items[(i * options.maxItemsPerPage) + j]);
+            // Clone and append the item to the page
+            // and remove template-item class
+            $item.clone().appendTo($itemsHTML)
+              .show().removeClass('template-item');
+
+            // Hide the original item
+            $item.hide();
+          }
         }
 
-        if (options.scaleOverride !== 0) {
-            width = width / options.scaleOverride;
-            height = height / options.scaleOverride;
-        }
+        // Append the page to the item container
+        $mainHTML.find('.items-container').append($itemsHTML);
+      }
 
-        if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
-            options.widgetDesignWidth = options.widgetDesignWidth;
-            options.widgetDesignHeight = options.widgetDesignHeight;
-            width = options.widgetDesignWidth;
-            height = options.widgetDesignHeight;
-        }
+      // Append the main HTML to the container
+      $mainContainer.append($mainHTML);
 
-        // For each matched element
-        this.each(function() {
-            // How many pages to we need?
-            var numberOfPages = (options.numItems > options.maxItemsPerPage) ? Math.ceil(options.numItems / options.maxItemsPerPage) : 1;
+      const duration =
+        (options.durationIsPerPage) ?
+          options.duration :
+          options.duration / numberOfPages;
 
-            var mainHTML = body;
-            var itemsHTML = '';
+      // Make sure the speed is something sensible
+      options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
-            // Create the pages
-            for (var i = 0; i < numberOfPages; i++) {
-                itemsHTML += "<div class='page'>";
-                for (var j = 0; j < options.maxItemsPerPage; j++) {
-                    if (((i * options.maxItemsPerPage) + j) < options.numItems)
-                        itemsHTML += items[(i * options.maxItemsPerPage) + j];
-                }
-                itemsHTML += "</div>"
-            }
+      // Timeout is the duration in ms
+      const timeout = (duration * 1000) - (options.speed * 0.7);
 
-            mainHTML = mainHTML.replace('[itemsTemplate]', itemsHTML);
-            $("#content").append(mainHTML);
+      const slides = (numberOfPages > 1) ? '.page' : '.item';
 
-            var duration = (options.durationIsPerPage) ? options.duration : options.duration / numberOfPages;
+      const $cycleContainer = $mainContainer.find('#cycle-container');
 
-            // Make sure the speed is something sensible
-            options.speed = (options.speed <= 200) ? 1000 : options.speed;
+      // Set the content div to the height of the original window
+      $cycleContainer.css('height', height);
 
-            // Timeout is the duration in ms
-            var timeout = (duration * 1000) - (options.speed * 0.7);
+      // Set the width on the cycled slides
+      $cycleContainer.find(slides).css({
+        width: width,
+        height: height,
+      });
 
-            var slides = (numberOfPages > 1) ? ".page" : ".item";
-
-            // Set the content div to the height of the original window
-            $("#cycle-container").css("height", height);
-
-            // Set the width on the cycled slides
-            $(slides, "#cycle-container").css({
-                width: width,
-                height: height
-            });
-
-            // Cycle handles this for us
-            $("#cycle-container").cycle({
-                fx: options.fx,
-                speed: options.speed,
-                timeout: timeout,
-                slides: "> " + slides
-            });
-
-            // Protect against images that don't load
-            $(this).find("img").on("error", function() {
-                $(this).unbind("error").attr("src", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=");
-            });
+      // Cycle handles this for us
+      $cycleContainer.addClass('anim-cycle')
+        .cycle({
+          fx: options.effect,
+          speed: options.speed,
+          timeout: timeout,
+          slides: '> ' + slides,
+          paused: options.pauseEffectOnStart,
+          log: false,
         });
 
-        return $(this);
-    }
+      // Protect against images that don't load
+      $mainContainer.find('img').on('error', function(ev) {
+        $(ev.currentTarget).off('error')
+          // eslint-disable-next-line max-len
+          .attr('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=');
+      });
+    });
+
+    return $(this);
+  },
 });
