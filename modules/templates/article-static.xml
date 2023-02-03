@@ -25,27 +25,10 @@
         <dataType>article</dataType>
         <title>Articles shown with custom HTML</title>
         <properties>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="all">
                 <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays.</helpText>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">No effect - all items are shown</option>
-                    <option name="marqueeLeft">Marquee Left</option>
-                    <option name="marqueeRight">Marquee Right</option>
-                    <option name="marqueeUp">Marquee Up</option>
-                    <option name="marqueeDown">Marquee Down</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>

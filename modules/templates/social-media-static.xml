@@ -45,34 +45,21 @@
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -242,34 +229,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -457,34 +431,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -584,34 +545,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -729,34 +677,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -875,34 +810,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -1069,34 +991,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -1273,34 +1182,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -1482,34 +1378,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -1678,34 +1561,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -1883,34 +1753,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -2099,34 +1956,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
                 <visibility>
                     <test>
-                        <condition field="#itemsPerPage" type="gt">1</condition>
+                        <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>
@@ -2394,34 +2238,21 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <default>#99b433,#00a300,#ff0097,#9f00a7,#00aba9,#2b5797,#da532c,#b91d47</default>
                 <visibility>
                     <test>
-                        <condition field="#colorTemplateId" type="eq">custom</condition>
+                        <condition field="colorTemplateId" type="eq">custom</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
                 <default>noTransition</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
                 <visibility>
                     <test>
-                        <condition field="#effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">none</condition>
                     </test>
                 </visibility>
             </property>

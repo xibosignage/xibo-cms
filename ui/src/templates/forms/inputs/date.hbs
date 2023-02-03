@@ -2,7 +2,7 @@
     <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
     <div class="input-group">
-        <input type="text" class="form-control dateControl {{variant}}" id="{{id}}" name="{{id}}" value="{{value}}" {{#if format }}data-custom-format="{{ format }}"{{/if}}
+        <input type="text" class="form-control dateControl {{variant}}" id="{{id}}" name="{{name}}" value="{{value}}" {{#if format }}data-custom-format="{{ format }}"{{/if}}
             {{#each customData}}
                 data-{{this.name}}="{{this.value}}"
             {{/each}}

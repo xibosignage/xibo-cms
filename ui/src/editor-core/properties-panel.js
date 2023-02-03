@@ -315,6 +315,7 @@ PropertiesPanel.prototype.render = function(
         forms.createFields(
           res.data.module.properties,
           self.DOMObject.find('#configureTab'),
+          element.widgetId,
         );
       } else {
         // Remove configure tab
@@ -332,6 +333,7 @@ PropertiesPanel.prototype.render = function(
         forms.createFields(
           res.data.template.properties,
           self.DOMObject.find('#appearanceTab'),
+          element.widgetId,
         );
 
         // Show the appearance tab
@@ -342,7 +344,11 @@ PropertiesPanel.prototype.render = function(
 
     // Set condition and handle replacements
     forms.handleFormReplacements(self.DOMObject.find('form'), res.data);
-    forms.setConditions(self.DOMObject.find('form'), res.data);
+    forms.setConditions(
+      self.DOMObject.find('form'),
+      res.data,
+      element.widgetId,
+    );
 
     // Run form open module optional function
     if (element.type === 'widget') {
@@ -406,7 +412,12 @@ PropertiesPanel.prototype.render = function(
     }
 
     // Call Xibo Init for this form
-    XiboInitialise('#' + self.DOMObject.attr('id'));
+    XiboInitialise(
+      '#' + self.DOMObject.attr('id'),
+      (element.type == 'widget') ?
+        {targetId: element.widgetId} :
+        null,
+    );
 
     // For the layout properties, call background Setup
     // TODO Move method to a common JS file

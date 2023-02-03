@@ -63,8 +63,8 @@
             <default>0</default>
             <visibility>
                 <test type="and">
-                    <condition field="#useDuration" type="eq">1</condition>
-                    <condition field="#duration" type="gt">%media.duration%</condition>
+                    <condition field="useDuration" type="eq">1</condition>
+                    <condition field="duration" type="gt">%media.duration%</condition>
                 </test>
             </visibility>
         </property>

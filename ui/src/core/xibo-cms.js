@@ -88,8 +88,9 @@ $(document).ready(function() {
 /**
  * Initialises the page/form
  * @param {Object} scope (the form or page)
+ * @param {Object} [options] (options for the form)
  */
-function XiboInitialise(scope) {
+function XiboInitialise(scope, options) {
 
     // If the scope isnt defined then assume the entire page
     if (scope == undefined || scope == "") {
@@ -1191,6 +1192,8 @@ function XiboInitialise(scope) {
         // Initialise fields, with scope of body if we don't have a specific scope
         forms.initFields(
             (scope === " ") ? "body" : scope,
+            null,
+            (options && options.targetId) ? options.targetId : null
         );
     }
 }
