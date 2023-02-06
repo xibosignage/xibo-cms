@@ -45,7 +45,7 @@
             <helpText>A message to display when no data is returned from the source</helpText>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -53,7 +53,7 @@
             <title>Optional JavaScript</title>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -62,7 +62,7 @@
             <title>Configuration</title>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -72,7 +72,7 @@
             <default>0</default>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -82,7 +82,7 @@
             <default>0</default>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -92,7 +92,7 @@
             <default>0</default>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -101,7 +101,7 @@
             <title>Order</title>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -109,17 +109,17 @@
             <title>The DataSet results can be ordered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated order be required the advanced checkbox can be selected to provide custom SQL syntax.</title>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
         <property id="orderClauses" type="datasetOrder">
             <default>[]</default>
-            <dependsOn>#dataSetId</dependsOn>
+            <dependsOn>dataSetId</dependsOn>
             <visibility>
                 <test type="and">
-                    <condition field="#dataSetId" type="neq"></condition>
-                    <condition field="#useOrderingClause" type="eq">0</condition>
+                    <condition field="dataSetId" type="neq"></condition>
+                    <condition field="useOrderingClause" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
@@ -129,7 +129,7 @@
             <default>0</default>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -139,8 +139,8 @@
             <default></default>
             <visibility>
                 <test type="and">
-                    <condition field="#dataSetId" type="neq"></condition>
-                    <condition field="#useOrderingClause" type="eq">1</condition>
+                    <condition field="dataSetId" type="neq"></condition>
+                    <condition field="useOrderingClause" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -149,7 +149,7 @@
             <title>Filter</title>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -157,17 +157,17 @@
             <title>The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax. The substitution [DisplayId] can be used in filter clauses and will be substituted at run time with the Display ID. When shown in the CMS it will be substituted with 0.</title>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
         <property id="filterClauses" type="datasetFilter">
             <default>[]</default>
-            <dependsOn>#dataSetId</dependsOn>
+            <dependsOn>dataSetId</dependsOn>
             <visibility>
                 <test type="and">
-                    <condition field="#dataSetId" type="neq"></condition>
-                    <condition field="#useFilteringClause" type="eq">0</condition>
+                    <condition field="dataSetId" type="neq"></condition>
+                    <condition field="useFilteringClause" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
@@ -177,7 +177,7 @@
             <default>0</default>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -187,8 +187,8 @@
             <default></default>
             <visibility>
                 <test type="and">
-                    <condition field="#dataSetId" type="neq"></condition>
-                    <condition field="#useFilteringClause" type="eq">1</condition>
+                    <condition field="dataSetId" type="neq"></condition>
+                    <condition field="useFilteringClause" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -197,7 +197,7 @@
             <title>Caching</title>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -207,7 +207,7 @@
             <default>5</default>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>
@@ -217,7 +217,7 @@
             <default>0</default>
             <visibility>
                 <test>
-                    <condition field="#dataSetId" type="neq"></condition>
+                    <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
         </property>

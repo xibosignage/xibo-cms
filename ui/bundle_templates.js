@@ -29,6 +29,7 @@ window.templates = {
     datasetColumnSelector:
       require('./src/templates/forms/inputs/datasetColumnSelector.hbs'),
     fontSelector: require('./src/templates/forms/inputs/fontSelector.hbs'),
+    effectSelector: require('./src/templates/forms/inputs/effectSelector.hbs'),
     // More to be added
   },
 };

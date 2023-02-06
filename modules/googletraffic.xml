@@ -44,7 +44,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#useDisplayLocation" type="eq">0</condition>
+                    <condition field="useDisplayLocation" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
@@ -54,7 +54,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#useDisplayLocation" type="eq">0</condition>
+                    <condition field="useDisplayLocation" type="eq">0</condition>
                 </test>
             </visibility>
         </property>

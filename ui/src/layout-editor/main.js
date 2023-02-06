@@ -2728,13 +2728,16 @@ lD.populateDropdownWithLayoutElements = function(
 
   // Add drawer widgets to dropdown
   if (getDrawerWidgets) {
-    // Add widgets to dropdown
-    for (const widget of Object.values(lD.layout.drawer.widgets)) {
-      addElementToDropdown({
-        id: widget.widgetId,
-        name: widget.widgetName,
-        type: 'widget',
-      });
+    // Check if we have any widget array
+    if (lD.layout.drawer.widgets) {
+      // Add widgets to dropdown
+      for (const widget of Object.values(lD.layout.drawer.widgets)) {
+        addElementToDropdown({
+          id: widget.widgetId,
+          name: widget.widgetName,
+          type: 'widget',
+        });
+      }
     }
   }
 

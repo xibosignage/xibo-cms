@@ -52,7 +52,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#countdownType" type="eq">2</condition>
+                    <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -62,7 +62,7 @@
             <default>10/10/2010 10:10:10</default>
             <visibility>
                 <test type="or">
-                    <condition field="#countdownType" type="eq">3</condition>
+                    <condition field="countdownType" type="eq">3</condition>
                 </test>
             </visibility>
         </property>
@@ -72,8 +72,8 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#countdownType" type="eq">1</condition>
-                    <condition field="#countdownType" type="eq">2</condition>
+                    <condition field="countdownType" type="eq">1</condition>
+                    <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -83,7 +83,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#countdownType" type="eq">3</condition>
+                    <condition field="countdownType" type="eq">3</condition>
                 </test>
             </visibility>
         </property>
