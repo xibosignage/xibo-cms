@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -259,9 +259,23 @@ class DataSet extends Base
                         'url' => $this->urlFor($request, 'dataSet.export.csv', ['id' => $dataSet->dataSetId]),
                         'text' => __('Export (CSV)')
                     ];
+
+                    if ($dataSet->isRemote === 1) {
+                        $dataSet->buttons[] = [
+                            'id' => 'dataset_button_clear_cache',
+                            'url' => $this->urlFor($request, 'dataSet.clear.cache.form', ['id' => $dataSet->dataSetId]),
+                            'text' => __('Clear Cache'),
+                            'dataAttributes' => [
+                                ['name' => 'auto-submit', 'value' => true],
+                                ['name' => 'commit-url', 'value' => $this->urlFor($request, 'dataSet.clear.cache', ['id' => $dataSet->dataSetId])],
+                                ['name' => 'commit-method', 'value' => 'POST']
+                            ]
+                        ];
+                    }
                 }
 
                 if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
+                    $dataSet->buttons[] = ['divider' => true];
                     // Delete DataSet
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_delete',
@@ -1518,5 +1532,49 @@ class DataSet extends Base
             $tempFileName,
             $dataSet->dataSet.'.csv'
         )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
+    }
+
+    public function clearCacheForm(Request $request, Response $response, $id)
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        $this->getState()->template = 'dataset-form-clear-cache';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('dataSetClearCacheForm');
+        $this->getState()->setData([
+            'dataSet' => $dataSet
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Clear cache for remote dataSet, only available via web interface
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function clearCache(Request $request, Response $response, $id)
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $dataSet->clearCache();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Cache cleared for %s', $dataSet->dataSet),
+            'id' => $dataSet->dataSetId
+        ]);
+
+        return $this->render($request, $response);
     }
 }
