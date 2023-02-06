@@ -540,7 +540,7 @@ class MaintenanceRegularTask implements TaskInterface
         $count = 0;
 
         foreach ($this->scheduleFactory->query(null, [
-            'eventTypeId' => Schedule::$INTERRUPT_EVENT,
+            'adCampaignsOnly' => 1,
             'toDt' => Carbon::now()->subDays(90)->unix()
         ]) as $event) {
             if (!empty($event->parentCampaignId)) {
