@@ -190,7 +190,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
                 . json_encode($params));
 
             // Call the time series interface getStats
-            $resultSet = $this->timeSeriesStore->getStats($params);
+            $resultSet = $this->timeSeriesStore->getStats($params, true);
 
             // Array of campaigns for which we will update the total spend, impresssions, and plays
             $campaigns = [];

@@ -443,7 +443,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function getStats($filterBy = [])
+    public function getStats($filterBy = [], $isBufferedQuery = false)
     {
         // do we consider that the fromDt and toDt will always be provided?
         $fromDt = $filterBy['fromDt'] ?? null;
