@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1200,5 +1200,14 @@ class DataSet implements \JsonSerializable
     public function copyRows($dataSetIdSource, $dataSetIdTarget)
     {
         $this->getStore()->insert('INSERT INTO `dataset_' . $dataSetIdTarget . '`  SELECT * FROM `dataset_' . $dataSetIdSource . '` ' ,[]);
+    }
+
+    /**
+     * Clear DataSet cache
+     */
+    public function clearCache()
+    {
+        $this->getLog()->debug('Force sync detected, clear cache for remote dataSet ID ' . $this->dataSetId);
+        $this->pool->deleteItem('/dataset/cache/' . $this->dataSetId);
     }
 }
