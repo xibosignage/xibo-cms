@@ -65,8 +65,8 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#modeId" type="eq">2</condition>
-                    <condition field="#modeId" type="eq">3</condition>
+                    <condition field="modeId" type="eq">2</condition>
+                    <condition field="modeId" type="eq">3</condition>
                 </test>
             </visibility>
         </property>
@@ -76,8 +76,8 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#modeId" type="eq">2</condition>
-                    <condition field="#modeId" type="eq">3</condition>
+                    <condition field="modeId" type="eq">2</condition>
+                    <condition field="modeId" type="eq">3</condition>
                 </test>
             </visibility>
         </property>
@@ -87,7 +87,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#modeId" type="eq">2</condition>
+                    <condition field="modeId" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -97,7 +97,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#modeId" type="eq">2</condition>
+                    <condition field="modeId" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -107,7 +107,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#modeId" type="eq">2</condition>
+                    <condition field="modeId" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -118,7 +118,7 @@
             <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
             <visibility>
                 <test type="or">
-                    <condition field="#modeId" type="eq">1</condition>
+                    <condition field="modeId" type="eq">1</condition>
                 </test>
             </visibility>
         </property>

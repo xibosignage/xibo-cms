@@ -108,7 +108,7 @@
         <property id="seconds-fields-1" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showSecondsHand" type="eq">1</condition>
+                    <condition field="showSecondsHand" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -118,14 +118,14 @@
             <default>#aa0202</default>
             <visibility>
                 <test>
-                    <condition field="#showSecondsHand" type="eq">1</condition>
+                    <condition field="showSecondsHand" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
         <property id="seconds-fields-2" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showSecondsHand" type="eq">1</condition>
+                    <condition field="showSecondsHand" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -142,7 +142,7 @@
         <property id="steps-fields-1" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showSteps" type="eq">1</condition>
+                    <condition field="showSteps" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -152,7 +152,7 @@
             <default>#333</default>
             <visibility>
                 <test>
-                    <condition field="#showSteps" type="eq">1</condition>
+                    <condition field="showSteps" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -162,14 +162,14 @@
             <default>#333</default>
             <visibility>
                 <test>
-                    <condition field="#showSteps" type="eq">1</condition>
+                    <condition field="showSteps" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
         <property id="steps-fields-2" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showSteps" type="eq">1</condition>
+                    <condition field="showSteps" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -186,7 +186,7 @@
         <property id="inner-digital-fields-1" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                    <condition field="showMiniDigitalClock" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -196,7 +196,7 @@
             <default>#3b3b3b</default>
             <visibility>
                 <test>
-                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                    <condition field="showMiniDigitalClock" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -206,14 +206,14 @@
             <default>#e6e6e6</default>
             <visibility>
                 <test>
-                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                    <condition field="showMiniDigitalClock" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
         <property id="inner-digital-fields-2" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showMiniDigitalClock" type="eq">1</condition>
+                    <condition field="showMiniDigitalClock" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -225,7 +225,7 @@
         <property id="label-fields-1" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showLabel" type="eq">1</condition>
+                    <condition field="showLabel" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -235,7 +235,7 @@
             <default>#f9f9f9</default>
             <visibility>
                 <test>
-                    <condition field="#showLabel" type="eq">1</condition>
+                    <condition field="showLabel" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -245,14 +245,14 @@
             <default>#222</default>
             <visibility>
                 <test>
-                    <condition field="#showLabel" type="eq">1</condition>
+                    <condition field="showLabel" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
         <property id="label-fields-2" type="divider">
             <visibility>
                 <test>
-                    <condition field="#showLabel" type="eq">1</condition>
+                    <condition field="showLabel" type="eq">1</condition>
                 </test>
             </visibility>
         </property>

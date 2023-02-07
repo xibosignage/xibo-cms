@@ -1,0 +1,374 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>currencies1</id>
+        <type>static</type>
+        <dataType>currency</dataType>
+        <title>Currencies 1</title>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
+            <property id="maxItemsPerPage" type="number">
+                <title>Items per Page</title>
+                <helpText>This is the intended number of items on each page.</helpText>
+                <default>4</default>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">820</width>
+            <height id="height">420</height>
+            <hbs><![CDATA[
+<div class="row-finance template-item">
+  <div class="flags">
+    <img class="img-circle center-block " src="{{CurrencyFlag}}">
+  </div>
+  <div class="name value">{{NameShort}}</div>
+  <div class="price text-center value">{{RawLastTradePriceOnly}}</div>
+</div>
+        ]]></hbs>
+            <twig><![CDATA[
+<div class="container-main template-container">
+    <div class="container">
+        <div class="row-header">
+            <div class="header-rate value">||RATE||</div>
+        </div>
+        <div id="cycle-container" class="items-container">
+        </div>
+    </div>
+</div>
+
+<style>
+body {
+    width: 820px !important;
+    height: 420px !important;
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.container-main {
+    height: 420px !important;
+    width: 820px !important;
+}
+
+.container {
+    height: 420px !important;
+    width: 820px !important;
+    float: left;
+}
+
+.row-finance {
+    height: 60px;
+    background: rgba(0, 0, 0, 0.87);
+    margin-bottom: 20px;
+}
+
+.row-header {
+    margin-right: -15px;
+    margin-left: -15px;
+    margin-bottom: 20px;
+}
+
+.header-rate {
+    margin-left: 70%;
+    width: 30%;
+    text-align: center;
+}
+
+.value {
+    font-size: 20px;
+    padding-top: 20px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.img-circle {
+    border-radius: 50%;
+    vertical-align: middle;
+    border: 0;
+}
+
+.center-block {
+    width: 50px;
+    height: 50px;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.down-arrow {
+    font-size: 20px;
+    color: red;
+    padding-top: 17px;
+}
+
+.up-arrow {
+    font-size: 20px;
+    color: green;
+    padding-top: 17px;
+}
+
+.variant {
+    font-size: 20px;
+    padding-top: 17px;
+}
+
+.flags {
+    padding-top: 4px;
+    width: 15%;
+    float: left;
+}
+
+.name {
+    width: 30%;
+    float: left;
+}
+
+.price {
+    float: right;
+    width: 30%;
+    text-align: center;
+}
+
+.center-block {
+    width: 50px;
+    height: 50px;
+}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Template renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+$(target).find("img").xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+
+// Get items
+var items = $(target).find(".template-item");
+
+// Get body
+var body = $(target).find(".template-container");
+
+$(target).find("#content").xiboFinanceRender(properties, items, body);
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>currencies2</id>
+        <type>static</type>
+        <dataType>currency</dataType>
+        <title>Currencies 2</title>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
+            <property id="maxItemsPerPage" type="number">
+                <title>Items per Page</title>
+                <helpText>This is the intended number of items on each page.</helpText>
+                <default>5</default>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">820</width>
+            <height id="height">420</height>
+            <hbs><![CDATA[
+<div class="row-finance template-item">
+     <div class="flags">
+        <img class="img-circle center-block" src="{{CurrencyFlag}}">
+    </div>
+    <div class="name value">{{NameShort}}</div>
+    <div class="price value">{{RawLastTradePriceOnly}}</div>
+    <div class="perc value {{ChangeStyle}}">{{ChangePercentage}}%</div>
+    <div class="arrow"><div class="{{ChangeIcon}}"></div></div>
+</div> 
+        ]]></hbs>
+            <twig><![CDATA[
+<div class="container-main template-container">
+  <div id="cycle-container" class="items-container">
+  </div>
+</div>
+
+<style>
+body {
+  width: 820px !important;
+  height: 420px !important;
+  font-family: "Helvetica", "Arial", sans-serif;
+  line-height: 1;
+}
+
+.img-circle {
+  width: 52px;
+}
+
+.container-main {
+  height: 420px !important;
+  width: 820px !important;
+  float: left;
+  margin-top: 25px;
+}
+
+.row-finance {
+  height: 60px;
+  background: #e0e0e0;
+  margin-bottom: 17px;
+  border-left: #264a88 10px solid;
+}
+
+.row-finance>div {
+  float: left;
+}
+
+.value {
+  font-size: 20px;
+  padding-top: 20px;
+  ;
+  color: #000;
+  white-space: nowrap;
+}
+
+.down-arrow {
+  margin: 25px 0px 0px 20px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid red;
+}
+
+.up-arrow {
+  margin: 25px 0px 0px 20px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid green;
+}
+
+.right-arrow {
+  margin: 20px 0px 0px 25px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid gray;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+}
+
+.img-circle {
+  border-radius: 50%;
+  vertical-align: middle;
+  border: 0;
+}
+
+.center-block {
+  width: 50px;
+  height: 50px;
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.variant {
+  font-size: 20px;
+  padding-top: 17px;
+}
+
+.flags {
+  padding-top: 4px;
+  width: 15%;
+}
+
+.name {
+  width: 20%;
+}
+
+.price {
+  width: 20%;
+  margin-left: 15%;
+  text-align: right;
+}
+
+.perc {
+  width: 20%;
+  text-align: right;
+}
+
+.arrow {
+  width: 8%;
+  margin-left: 2%;
+}
+
+.value-up {
+  color: green;
+  font-weight: bold
+}
+
+.value-down {
+  color: red;
+  font-weight: bold
+}
+
+.value-equal {
+  color: gray;
+  font-weight: bold
+}
+
+.name-stock {
+  color: gray;
+}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Template renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+$(target).find("img").xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+
+// Get items
+var items = $(target).find(".template-item");
+
+// Get body
+var body = $(target).find(".template-container");
+
+$(target).find("#content").xiboFinanceRender(properties, items, body);
+        ]]></onTemplateRender>
+    </template>
+</templates>

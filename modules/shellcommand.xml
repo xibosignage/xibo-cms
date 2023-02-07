@@ -39,7 +39,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#useDuration" type="eq">1</condition>
+                    <condition field="useDuration" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -49,7 +49,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#duration" type="eq">3</condition>
+                    <condition field="duration" type="eq">3</condition>
                 </test>
             </visibility>
         </property>
@@ -71,7 +71,7 @@
             </options>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">storedCommand</condition>
+                    <condition field="commandType" type="eq">storedCommand</condition>
                 </test>
             </visibility>
         </property>
@@ -81,7 +81,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">createCommand</condition>
+                    <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>
@@ -91,7 +91,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">createCommand</condition>
+                    <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>
@@ -101,7 +101,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">createCommand</condition>
+                    <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>
@@ -111,7 +111,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">createCommand</condition>
+                    <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>
@@ -121,7 +121,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">createCommand</condition>
+                    <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>
@@ -131,7 +131,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">createCommand</condition>
+                    <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>
@@ -141,7 +141,7 @@
             <default></default>
             <visibility>
                 <test type="or">
-                    <condition field="#commandType" type="eq">createCommand</condition>
+                    <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>

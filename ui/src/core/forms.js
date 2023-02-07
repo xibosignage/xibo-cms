@@ -27,8 +27,9 @@ window.forms = {
      * Create form inputs from an array of elements
      * @param {object} properties - The properties to set on the form
      * @param {object} targetContainer - The container to add the properties to
+     * @param {string} [targetId] - Target Id ( widget, element, etc.)
      */
-  createFields: function(properties, targetContainer) {
+  createFields: function(properties, targetContainer, targetId) {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
         const property = properties[key];
@@ -38,7 +39,7 @@ window.forms = {
           property.value = property.default;
         }
 
-        // Handle render condition
+        // Handle visibility
         if (
           property.visibility.length
         ) {
@@ -84,6 +85,16 @@ window.forms = {
         // Fonts selector
         if (property.type === 'fontSelector') {
           property.fontsSearchUrl = getFontsUrl + '?length=10000';
+        }
+
+        // Change the name of the property to the id
+        property.name = property.id;
+
+        // Create the property id based on the targetId
+        if (targetId) {
+          property.id = 'input_' + targetId + '_' + property.id;
+        } else {
+          property.id = 'input_' + property.id;
         }
 
         // Append the property to the target container
@@ -140,8 +151,9 @@ window.forms = {
    * Initialise the form fields
    * @param {string} container - Main container Jquery selector
    * @param {object} target - Target Jquery selector or object
+   * @param {string} [targetId] - Target Id ( widget, element, etc.)
    */
-  initFields: function(container, target) {
+  initFields: function(container, target, targetId) {
     // Find elements, either they match
     // the children of the container or they are the target
     const findElements = function(selector, target) {
@@ -1157,6 +1169,80 @@ window.forms = {
       });
     });
 
+    // Effect selector
+    findElements(
+      '.effect-selector',
+      target,
+    ).each(function(_k, el) {
+      // Populate the effect list with options
+      const $el = $(el).find('select');
+      const effectsType = $el.data('effects-type');
+
+      // Effects
+      const effects = [
+        {effect: 'none', group: 'all'},
+        {effect: 'marqueeLeft', group: 'showAll'},
+        {effect: 'marqueeRight', group: 'showAll'},
+        {effect: 'marqueeUp', group: 'showAll'},
+        {effect: 'marqueeDown', group: 'showAll'},
+        {effect: 'noTransition', group: 'showPaged'},
+        {effect: 'fade', group: 'showPaged'},
+        {effect: 'fadeout', group: 'showPaged'},
+        {effect: 'scrollHorz', group: 'showPaged'},
+        {effect: 'scrollVert', group: 'showPaged'},
+        {effect: 'flipHorz', group: 'showPaged'},
+        {effect: 'flipVert', group: 'showPaged'},
+        {effect: 'shuffle', group: 'showPaged'},
+        {effect: 'tileSlide', group: 'showPaged'},
+        {effect: 'tileBlind', group: 'showPaged'},
+      ];
+
+      // Add option groups
+      if (effectsType === 'showAll' || effectsType === 'all') {
+        $el.append(
+          $('<optgroup label="' + effectsTranslations.showAll + '">'),
+        );
+      }
+
+      if (effectsType === 'showPaged' || effectsType === 'all') {
+        $el.append(
+          $('<optgroup label="' + effectsTranslations.showPaged + '">'),
+        );
+      }
+
+      // Add the options to the respective groups
+      $.each(effects, function(_index, element) {
+        if (element.group === 'all') {
+          // Add before the optgroups
+          $el.prepend(
+            $('<option value="' +
+              element.effect +
+              '">' +
+              effectsTranslations[element.effect] +
+              '</option>'));
+        } else {
+          $el.find(
+            'optgroup[label="' +
+            effectsTranslations[element.group] +
+            '"]',
+          ).append(
+            $('<option value="' +
+              element.effect +
+              '" data-optgroup="' +
+              element.group +
+              '">' +
+              effectsTranslations[element.effect] +
+              '</option>'));
+        }
+      });
+
+
+      // If we have a value, select it
+      if ($el.data('value') !== undefined) {
+        $el.val($el.data('value'));
+      }
+    });
+
     // Handle field dependencies for the container
     // only if we don't have a target
     if (!target) {
@@ -1175,13 +1261,17 @@ window.forms = {
         $target.data('depends-on-added', true);
 
         // Add event listener to the dependency
-        $(container).find(dependency).on('change', function(ev) {
-          // Set dependency value to the target as a data attribute
-          $target.data('depends-on-value', $(ev.currentTarget).val());
+        const elementId = (targetId) ?
+          '#input_' + targetId + '_' + dependency :
+          '#input_' + dependency;
+        $(container).find(elementId)
+          .on('change', function(ev) {
+            // Set dependency value to the target as a data attribute
+            $target.data('depends-on-value', $(ev.currentTarget).val());
 
-          // Reset the target form field
-          forms.initFields(container, $target);
-        });
+            // Reset the target form field
+            forms.initFields(container, $target, targetId);
+          });
       });
     }
   },
@@ -1240,8 +1330,9 @@ window.forms = {
      * Set the form conditions
      * @param {object} container - The form container
      * @param {object} baseObject - The base object
+     * @param {string} targetId - The target id
      */
-  setConditions: function(container, baseObject) {
+  setConditions: function(container, baseObject, targetId) {
     $(container).find('.xibo-form-input[data-visibility]')
       .each(function(_idx, el) {
         let visibility = $(el).data('visibility');
@@ -1285,7 +1376,11 @@ window.forms = {
 
             for (let i = 0; i < testConditions.length; i++) {
               const condition = testConditions[i];
-              const $conditionTarget = $(container).find(condition.field);
+              const fieldId = (targetId) ?
+                '#input_' + targetId + '_' + condition.field :
+                '#input_' + condition.field;
+              const $conditionTarget =
+                $(container).find(fieldId);
 
               // Get condition target value based on type
               const conditionTargetValue =
@@ -1323,7 +1418,10 @@ window.forms = {
           // Get all the targets for the test
           for (let i = 0; i < test.conditions.length; i++) {
             // Add the target to the list
-            testTargets += test.conditions[i].field;
+            const fieldId = (targetId) ?
+              '#input_' + targetId + '_' + test.conditions[i].field :
+              '#input_' + test.conditions[i].field;
+            testTargets += fieldId;
 
             // If there are multiple conditions, add a comma
             if (i < test.conditions.length - 1) {

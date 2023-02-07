@@ -29,7 +29,7 @@
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -38,7 +38,7 @@
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -46,7 +46,7 @@
                 <title>Optional Stylesheet Template</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -56,7 +56,7 @@
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -66,7 +66,7 @@
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -76,34 +76,17 @@
                 <default></default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
-            <property id="effect" type="dropdown" mode="single">
+            <property id="effect" type="effectSelector" variant="all">
                 <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.</helpText>
-                <default>none</default>
-                <options>
-                    <option name="none">No effect - all items are shown</option>
-                    <option name="marqueeLeft">Marquee Left</option>
-                    <option name="marqueeRight">Marquee Right</option>
-                    <option name="marqueeUp">Marquee Up</option>
-                    <option name="marqueeDown">Marquee Down</option>
-                    <option name="noTransition">No transition</option>
-                    <option name="fade">Fade</option>
-                    <option name="fadeout">Fade Out</option>
-                    <option name="scrollHorz">Scroll Horizontal</option>
-                    <option name="scrollVert">Scroll Vertical</option>
-                    <option name="flipHorz">Flip Horizontal</option>
-                    <option name="flipVert">Flip Vertical</option>
-                    <option name="shuffle">Shuffle</option>
-                    <option name="tileSlide">Tile Slide</option>
-                    <option name="tileBlind">Tile Blind</option>
-                </options>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -113,8 +96,8 @@
                 <default>1000</default>
                 <visibility>
                     <test type="and">
-                        <condition field="#effect" type="neq">none</condition>
-                        <condition field="#effect" type="neq">noTransition</condition>
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">noTransition</condition>
                     </test>
                 </visibility>
             </property>
@@ -124,11 +107,11 @@
                 <default>1</default>
                 <visibility>
                     <test type="and">
-                        <condition field="#effect" type="neq">none</condition>
-                        <condition field="#effect" type="neq">marqueeLeft</condition>
-                        <condition field="#effect" type="neq">marqueeRight</condition>
-                        <condition field="#effect" type="neq">marqueeUp</condition>
-                        <condition field="#effect" type="neq">marqueeDown</condition>
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">marqueeLeft</condition>
+                        <condition field="effect" type="neq">marqueeRight</condition>
+                        <condition field="effect" type="neq">marqueeUp</condition>
+                        <condition field="effect" type="neq">marqueeDown</condition>
                     </test>
                 </visibility>
             </property>
@@ -219,7 +202,7 @@ $(target).xiboTextRender(
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -227,17 +210,17 @@ $(target).xiboTextRender(
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -247,7 +230,7 @@ $(target).xiboTextRender(
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -257,7 +240,7 @@ $(target).xiboTextRender(
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -266,7 +249,7 @@ $(target).xiboTextRender(
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -275,7 +258,7 @@ $(target).xiboTextRender(
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -284,7 +267,7 @@ $(target).xiboTextRender(
                 <title>Colours</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -293,7 +276,7 @@ $(target).xiboTextRender(
                     <helpText>Use the colour picker to select the background colour</helpText>
                     <visibility>
                         <test>
-                            <condition field="#dataSetId" type="neq"></condition>
+                            <condition field="dataSetId" type="neq"></condition>
                         </test>
                     </visibility>
                 </property>
@@ -302,7 +285,7 @@ $(target).xiboTextRender(
                     <helpText>Use the colour picker to select the border colour</helpText>
                     <visibility>
                         <test>
-                            <condition field="#dataSetId" type="neq"></condition>
+                            <condition field="dataSetId" type="neq"></condition>
                         </test>
                     </visibility>
                 </property>
@@ -311,7 +294,7 @@ $(target).xiboTextRender(
                     <helpText>Use the colour picker to select the font colour</helpText>
                     <visibility>
                         <test>
-                            <condition field="#dataSetId" type="neq"></condition>
+                            <condition field="dataSetId" type="neq"></condition>
                         </test>
                     </visibility>
                 </property>
@@ -484,7 +467,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -492,17 +475,17 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -512,7 +495,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -522,7 +505,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -531,7 +514,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -540,7 +523,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -739,7 +722,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -747,17 +730,17 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -767,7 +750,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -777,7 +760,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -786,7 +769,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -795,7 +778,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -985,7 +968,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -993,17 +976,17 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1013,7 +996,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1023,7 +1006,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1032,7 +1015,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1041,7 +1024,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1229,7 +1212,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1237,17 +1220,17 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1257,7 +1240,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1267,7 +1250,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1276,7 +1259,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1285,7 +1268,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1471,7 +1454,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1479,17 +1462,17 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1499,7 +1482,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1509,7 +1492,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1518,7 +1501,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1527,7 +1510,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1711,7 +1694,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1719,17 +1702,17 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1739,7 +1722,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1749,7 +1732,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1758,7 +1741,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1767,7 +1750,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1946,7 +1929,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Select a dataset to display appearance options.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="eq"></condition>
+                        <condition field="dataSetId" type="eq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1954,17 +1937,17 @@ $datasetTableContainer.dataSetRender(properties);
                 <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
             <property id="columns" type="datasetColumnSelector">
-                <dependsOn>#dataSetId</dependsOn>
+                <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1974,7 +1957,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>1</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1984,7 +1967,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <default>0</default>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -1993,7 +1976,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -2002,7 +1985,7 @@ $datasetTableContainer.dataSetRender(properties);
                 <helpText>Set the font size</helpText>
                 <visibility>
                     <test>
-                        <condition field="#dataSetId" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
