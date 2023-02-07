@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -549,7 +549,7 @@ class DataSetTicker extends ModuleWidget
 
         // Replace the head content
         $headContent = '';
-        
+
         if ($itemsSideBySide == 1) {
             $headContent .= ' .item, .page { float: left; }';
         }
@@ -624,6 +624,11 @@ class DataSetTicker extends ModuleWidget
      */
     private function getDataSetItems($displayId, $text)
     {
+        // We know there isn't any direct linked media here, so we can clear our mediaIds manually
+        // This is not needed in v4
+        // https://github.com/xibosignage/xibo/issues/3017
+        $this->widget->mediaIds = [];
+
         // Extra fields for data sets
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
