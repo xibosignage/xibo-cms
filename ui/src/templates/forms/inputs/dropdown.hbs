@@ -1,7 +1,7 @@
 <div class="form-group xibo-form-input {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
     <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
-    <select class="form-control" id="{{id}}" name="{{name}}"
+    <select class="form-control" id="{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
         {{#each customData}}
             data-{{this.name}}="{{this.value}}"
         {{/each}}
