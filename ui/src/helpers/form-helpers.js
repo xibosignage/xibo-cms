@@ -21,45 +21,6 @@ const templates = {
     require('../templates/form-helpers-menuboard-product.hbs'),
 };
 
-/**
- * Get CKEditor config
- * @return {Promise} - Promise
- */
-const getCKEditorConfig = function() {
-  let fontNames = CKEDITOR.config.font_names;
-
-  // Base editor config
-  const editorConfig = {
-    contentsCss: [CKEDITOR.getUrl('contents.css'), libraryFontCSS],
-    imageDownloadUrl: imageDownloadUrl,
-  };
-
-  return new Promise((resolve, reject) => {
-    $.get(getFontsUrl + '?length=10000')
-      .done(function(res) {
-        // Get res.data fonts into the fontNames string
-        res.data.forEach(function(font) {
-          fontNames += `;${font.name}/${font.familyName}`;
-        });
-
-        // Sort the fontNames string
-        fontNames = fontNames.split(';').sort().join(';');
-
-        // Set fontNames to the editorConfig
-        editorConfig.font_names = fontNames;
-
-        // Resolve the promise and return the editorConfig
-        resolve(editorConfig);
-      }).fail(function(jqXHR, textStatus, errorThrown) {
-        // Output error to console
-        console.error(jqXHR, textStatus, errorThrown);
-
-        // Reject the promise
-        reject(jqXHR, textStatus, errorThrown);
-      });
-  });
-};
-
 const formHelpers = function() {
   // Default params ( might change )
   this.defaultBackgroundColor = '#eee';
@@ -78,6 +39,45 @@ const formHelpers = function() {
   this.setup = function(namespace, mainObject) {
     this.namespace = namespace;
     this.mainObject = mainObject;
+  };
+
+  /**
+   * Get CKEditor config
+   * @return {Promise} - Promise
+   */
+  this.getCKEditorConfig = function() {
+    let fontNames = CKEDITOR.config.font_names;
+
+    // Base editor config
+    const editorConfig = {
+      contentsCss: [CKEDITOR.getUrl('contents.css'), libraryFontCSS],
+      imageDownloadUrl: imageDownloadUrl,
+    };
+
+    return new Promise((resolve, reject) => {
+      $.get(getFontsUrl + '?length=10000')
+        .done(function(res) {
+          // Get res.data fonts into the fontNames string
+          res.data.forEach(function(font) {
+            fontNames += `;${font.name}/${font.familyName}`;
+          });
+
+          // Sort the fontNames string
+          fontNames = fontNames.split(';').sort().join(';');
+
+          // Set fontNames to the editorConfig
+          editorConfig.font_names = fontNames;
+
+          // Resolve the promise and return the editorConfig
+          resolve(editorConfig);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          // Output error to console
+          console.error(jqXHR, textStatus, errorThrown);
+
+          // Reject the promise
+          reject(jqXHR, textStatus, errorThrown);
+        });
+    });
   };
 
   /**
@@ -935,7 +935,7 @@ const formHelpers = function() {
     };
 
     // CKEditor default config and init after config is loaded
-    getCKEditorConfig().then(function(config) {
+    this.getCKEditorConfig().then(function(config) {
       CKEDITOR_DEFAULT_CONFIG = config;
 
       // Set CKEDITOR viewer height based on
@@ -1018,7 +1018,7 @@ const formHelpers = function() {
           const value = e.params.data.element.value;
 
           if (CKEDITOR.instances[linkedTo] != undefined &&
-              value !== undefined) {
+            value !== undefined) {
             const text = '[' + value + ']';
 
             CKEDITOR.instances[linkedTo].insertText(text);
@@ -2085,7 +2085,7 @@ const formHelpers = function() {
       // If button is not a cancel or save button, add it to the button object
       if (
         !(inputButtons[button].includes('XiboDialogClose') ||
-        inputButtons[button].includes('.submit()'))
+          inputButtons[button].includes('.submit()'))
       ) {
         buttons[button] = {
           name: button,
