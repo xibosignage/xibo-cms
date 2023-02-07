@@ -1177,7 +1177,7 @@ class Schedule implements \JsonSerializable
                                 continue;
                             }
 
-                            if ($start >= $generateFromDt) {
+                            if ($end > $generateFromDt && $start < $generateToDt) {
                                 $this->getLog()->debug('Adding detail for ' . $start->toAtomString() . ' to ' . $end->toAtomString());
 
                                 if ($this->eventTypeId == self::$COMMAND_EVENT) {
