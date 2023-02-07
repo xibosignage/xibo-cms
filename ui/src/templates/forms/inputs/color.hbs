@@ -7,6 +7,6 @@
         <div class="input-group-prepend">
             <i class="input-group-text input-group-addon" id="{{id}}_label"></i>
         </div>
-        <input type="text" class="form-control" id="{{id}}" name="{{name}}" value="{{value}}" />
+        <input type="text" class="form-control" id="{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" value="{{value}}" />
     </div>
 </div>
