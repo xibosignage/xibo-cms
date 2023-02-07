@@ -92,9 +92,7 @@ window.forms = {
 
         // Create the property id based on the targetId
         if (targetId) {
-          property.id = 'input_' + targetId + '_' + property.id;
-        } else {
-          property.id = 'input_' + property.id;
+          property.id = targetId + '_' + property.id;
         }
 
         // Append the property to the target container

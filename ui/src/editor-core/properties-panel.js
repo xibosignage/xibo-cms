@@ -280,10 +280,17 @@ PropertiesPanel.prototype.render = function(
       buttons = formHelpers.widgetFormRenderButtons(formTemplates.buttons);
     }
 
+    // If we have a widget, add the widgetId to the data
+    const dataToRender = (element.type != 'widget') ?
+      res.data :
+      Object.assign(res.data, {
+        target: element.widgetId,
+      });
+
     const html = propertiesPanelTemplate({
       header: res.dialogTitle,
       style: element.type,
-      form: htmlTemplate(res.data),
+      form: htmlTemplate(dataToRender),
       buttons: buttons,
       trans: propertiesPanelTrans,
     });
