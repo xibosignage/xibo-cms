@@ -1,8 +1,8 @@
 <div class="form-group xibo-form-input rich-text-input {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
-    <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
+    <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
     <div class="rich-text-container">
-        <textarea type="text" class="form-control rich-text" id="{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
+        <textarea type="text" class="form-control rich-text" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
             {{#each customData}}
                 data-{{this.name}}="{{this.value}}"
             {{/each}}

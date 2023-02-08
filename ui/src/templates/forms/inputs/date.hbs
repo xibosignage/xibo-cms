@@ -1,8 +1,8 @@
 <div class="form-group xibo-form-input date-input-group {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}" {{/if}}>
-    <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
+    <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
     <div class="input-group">
-        <input type="text" class="form-control dateControl {{variant}}" id="{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" value="{{value}}" {{#if format }}data-custom-format="{{ format }}"{{/if}}
+        <input type="text" class="form-control dateControl {{variant}}" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" value="{{value}}" {{#if format }}data-custom-format="{{ format }}"{{/if}}
             {{#each customData}}
                 data-{{this.name}}="{{this.value}}"
             {{/each}}
