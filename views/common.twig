@@ -11,9 +11,6 @@
         var libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ url_for("library.search.all") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
-        var getFontsUrl = "{{ url_for("font.search") }}";
-        var libraryFontCSS = "{{ url_for("library.font.css") }}";
-        var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
         var defaultThumbnailUrl = '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
