@@ -42,12 +42,12 @@
         // Handle click action
         form.find('#setFullScreenButton').click(function() {
             // Set position values to 0
-            form.find('#top').val(0);
-            form.find('#left').val(0);
+            form.find('[name="top"]').val(0);
+            form.find('[name="left"]').val(0);
 
             // Set dimensions values to be the same as the layout's
-            form.find('#width').val(layout.width);
-            form.find('#height').val(layout.height);
+            form.find('[name="width"]').val(layout.width);
+            form.find('[name="height"]').val(layout.height);
 
             formChangesRegion({
                 'width': layout.width,
@@ -75,10 +75,10 @@
         var form = $(app.propertiesPanel.DOMObject).find('form');
 
         layout.regions[regionId].transform({
-            'width': form.find('#width').val(),
-            'height': form.find('#height').val(),
-            'top': form.find('#top').val(),
-            'left': form.find('#left').val()
+            'width': form.find('[name="width"]').val(),
+            'height': form.find('[name="height"]').val(),
+            'top': form.find('[name="top"]').val(),
+            'left': form.find('[name="left"]').val()
         }, true);
 
         app.viewer.updateRegion(layout.regions[regionId]);
@@ -104,11 +104,11 @@
         
         var regionDimensions = app.layout.regions[app.selectedObject.id].dimensions;
 
-        form.find('#top').val(regionDimensions.top);
-        form.find('#left').val(regionDimensions.left);
+        form.find('[name="top"]').val(regionDimensions.top);
+        form.find('[name="left"]').val(regionDimensions.left);
 
         // Set dimensions values to be the same as the layout's
-        form.find('#width').val(regionDimensions.width);
-        form.find('#height').val(regionDimensions.height);
+        form.find('[name="width"]').val(regionDimensions.width);
+        form.find('[name="height"]').val(regionDimensions.height);
     }
 </script>
