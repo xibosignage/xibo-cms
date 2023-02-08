@@ -65,7 +65,7 @@
                 {{ forms.dropdown("twoFactorTypeId", "single", title, currentUser.twoFactorTypeId, values, "id", "value", helpText) }}
 
                 {{ forms.hidden("twoFactorRecoveryCodes", currentUser.twoFactorRecoveryCodes) }}
-                <div id="qRCode">
+                <div id="qRCode" class="text-center">
                     <p>{% trans "Please scan the following image with your app:" %}</p>
                     <p id="qr"><img id="qrImage" src=""></p>
                     <div>

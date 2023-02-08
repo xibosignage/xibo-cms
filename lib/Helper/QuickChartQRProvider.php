@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,8 +22,8 @@
 
 namespace Xibo\Helper;
 
-use QRException;
 use RobThree\Auth\Providers\Qr\BaseHTTPQRCodeProvider;
+use RobThree\Auth\Providers\Qr\QRException;
 
 class QuickChartQRProvider extends BaseHTTPQRCodeProvider
 {
@@ -45,8 +45,15 @@ class QuickChartQRProvider extends BaseHTTPQRCodeProvider
      * @param string $format Valid values: png, svg
      * @throws QRException
      */
-    function __construct($url, $verifyssl = false, $errorCorrectionLevel = 'L', $margin = 4, $backgroundColor = 'ffffff', $color = '000000', $format = 'png')
-    {
+    public function __construct(
+        $url,
+        $verifyssl = false,
+        $errorCorrectionLevel = 'L',
+        $margin = 4,
+        $backgroundColor = 'ffffff',
+        $color = '000000',
+        $format = 'png'
+    ) {
         if (!is_bool($verifyssl)) {
             throw new QRException('VerifySSL must be bool');
         }
@@ -72,8 +79,10 @@ class QuickChartQRProvider extends BaseHTTPQRCodeProvider
                 return 'image/png';
             case 'svg':
                 return 'image/svg+xml';
+            case 'webp':
+                return 'image/webp';
         }
-        throw new \QRException(sprintf('Unknown MIME-type: %s', $this->format));
+        throw new QRException(sprintf('Unknown MIME-type: %s', $this->format));
     }
 
     public function getQRCodeImage($qrText, $size)
