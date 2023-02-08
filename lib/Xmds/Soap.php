@@ -1622,13 +1622,6 @@ class Soap
                 continue;
             }
 
-            // From date cannot be ahead of to date
-            if ($fromDt > $toDt) {
-                $this->getLog()->debug('Ignoring a Stat record because the fromDt ('
-                    . $fromDt . ') is greater than toDt (' . $toDt . ')');
-                continue;
-            }
-
             // Adjust the date according to the display timezone
             // stats are returned in player local date/time
             // the CMS will have been configured with that Player's timezone, so we can convert accordingly.
@@ -1653,6 +1646,13 @@ class Soap
                 // Protect against the date format being unreadable
                 $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: '
                     . $fromDt . ', toDt: ' . $toDt . '. E = ' . $e->getMessage());
+                continue;
+            }
+
+            // From date cannot be ahead of to date
+            if ($fromDt > $toDt) {
+                $this->getLog()->debug('Ignoring a Stat record because the fromDt ('
+                    . $fromDt . ') is greater than toDt (' . $toDt . ')');
                 continue;
             }
 
