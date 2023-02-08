@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -42,7 +42,7 @@ class DataSetView extends ModuleWidget
     {
         // Extends parent's method
         parent::installFiles();
-        
+
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-dataset-render.js')->save();
@@ -93,18 +93,18 @@ class DataSetView extends ModuleWidget
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
         $columnsSelected = [];
         $colIds = explode(',', $this->getOption('columns'));
-        
+
         // Cycle elements of the ordered columns Ids array $colIds
         foreach ($colIds as $colId) {
             // Cycle data set columns $columns
             foreach ($columns as $column) {
                 // See if the element on the odered list is the column
                 if ($column->dataSetColumnId == $colId) {
-                    $columnsSelected[] = $column;    
+                    $columnsSelected[] = $column;
                 }
             }
         }
-        
+
         return $columnsSelected;
     }
 
@@ -495,21 +495,21 @@ class DataSetView extends ModuleWidget
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
         ;
-    
+
         // Get CSS from the original template or from the input field
         $styleSheet = '';
 
         if ($this->getOption('overrideTemplate', 1) == 0) {
-            
+
             $template = $this->getTemplateById($this->getOption('templateId'));
-            
+
             if (isset($template)) {
                 $styleSheet = $template['css'];
             }
         } else {
             $styleSheet = $this->getRawNode('styleSheet', '');
         }
-        
+
         // Get the embedded HTML out of RAW
         $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
 
@@ -603,6 +603,11 @@ class DataSetView extends ModuleWidget
      */
     private function dataSetTableHtml($displayId = 0)
     {
+        // We know there isn't any direct linked media here, so we can clear our mediaIds manually
+        // This is not needed in v4
+        // https://github.com/xibosignage/xibo/issues/3017
+        $this->widget->mediaIds = [];
+
         // Show a preview of the data set table output.
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');

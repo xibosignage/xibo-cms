@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -421,6 +421,8 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/dataset/form/copy/{id}', ['\Xibo\Controller\DataSet', 'copyForm'])->setName('dataSet.copy.form');
     $group->get('/dataset/form/delete/{id}', ['\Xibo\Controller\DataSet', 'deleteForm'])->setName('dataSet.delete.form');
     $group->get('/dataset/form/import/{id}', ['\Xibo\Controller\DataSet', 'importForm'])->setName('dataSet.import.form');
+    $group->get('/dataset/form/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCacheForm'])->setName('dataSet.clear.cache.form');
+    $group->post('/dataset/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCache'])->setName('dataSet.clear.cache');
 
     // columns
     $group->get('/dataset/{id}/column/view', ['\Xibo\Controller\DataSetColumn','displayPage'])->setName('dataSet.column.view');

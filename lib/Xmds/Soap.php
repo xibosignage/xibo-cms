@@ -501,9 +501,10 @@ class Soap
 
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
         $actionLayoutIds = [];
+        $processedLayoutIds = [];
         foreach ($layouts as $layoutId) {
             // this is recursive function, as we need to get 2nd level nesting and beyond
-            $this->layoutFactory->getActionPublishedLayoutIds($layoutId, $actionLayoutIds);
+            $this->layoutFactory->getActionPublishedLayoutIds($layoutId, $actionLayoutIds, $processedLayoutIds);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
             if (!empty($actionLayoutIds)) {
@@ -1567,9 +1568,11 @@ class Soap
         $widgetIdsNotFound = [];
         $memoryCache = [];
 
-        // Cache of scheduleIds and counts
+        // Cache of scheduleIds, counts and deleted entities
         $schedules = [];
         $campaigns = [];
+        $deletedScheduleIds = [];
+        $deletedCampaignIds = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1619,13 +1622,6 @@ class Soap
                 continue;
             }
 
-            // From date cannot be ahead of to date
-            if ($fromDt > $toDt) {
-                $this->getLog()->debug('Ignoring a Stat record because the fromDt ('
-                    . $fromDt . ') is greater than toDt (' . $toDt . ')');
-                continue;
-            }
-
             // Adjust the date according to the display timezone
             // stats are returned in player local date/time
             // the CMS will have been configured with that Player's timezone, so we can convert accordingly.
@@ -1650,6 +1646,13 @@ class Soap
                 // Protect against the date format being unreadable
                 $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: '
                     . $fromDt . ', toDt: ' . $toDt . '. E = ' . $e->getMessage());
+                continue;
+            }
+
+            // From date cannot be ahead of to date
+            if ($fromDt > $toDt) {
+                $this->getLog()->debug('Ignoring a Stat record because the fromDt ('
+                    . $fromDt . ') is greater than toDt (' . $toDt . ')');
                 continue;
             }
 
@@ -1748,37 +1751,46 @@ class Soap
             $parentCampaignId = 0;
             $parentCampaign = null;
 
-            if ($scheduleId > 0) {
-                // Lookup this schedule
-                if (!array_key_exists($scheduleId, $schedules)) {
-                    // Look up the campaign.
-                    $schedules[$scheduleId] = $this->scheduleFactory->getById($scheduleId);
+            if ($scheduleId > 0 && !in_array($scheduleId, $deletedScheduleIds)) {
+                try {
+                    // Lookup this schedule
+                    if (!array_key_exists($scheduleId, $schedules)) {
+                        // Look up the campaign.
+                        $schedules[$scheduleId] = $this->scheduleFactory->getById($scheduleId);
+                    }
+                    $parentCampaignId = $schedules[$scheduleId]->parentCampaignId ?? 0;
+                } catch (NotFoundException $notFoundException) {
+                    $this->getLog()->error('Schedule with ID ' . $scheduleId . ' no-longer exists');
+                    $deletedScheduleIds[] = $scheduleId;
                 }
 
                 // Does this event have a parent campaign?
-                if (!empty($schedules[$scheduleId]->parentCampaignId)) {
-                    $parentCampaignId = $schedules[$scheduleId]->parentCampaignId;
+                if (!empty($parentCampaignId) && !in_array($parentCampaignId, $deletedCampaignIds)) {
+                    try {
+                        // Look it up
+                        if (!array_key_exists($parentCampaignId, $campaigns)) {
+                            $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
+                        }
 
-                    // Look it up
-                    if (!array_key_exists($parentCampaignId, $campaigns)) {
-                        $campaigns[$parentCampaignId] = $this->campaignFactory->getById($parentCampaignId);
-                    }
+                        // Set the parent campaign so that it is recorded with the stat record
+                        $parentCampaign = $campaigns[$parentCampaignId];
 
-                    // Set the parent campaign so that it is recorded with the stat record
-                    $parentCampaign = $campaigns[$parentCampaignId];
+                        // For a layout stat we should increment the number of plays on the Campaign
+                        if ($type === 'layout' && $campaigns[$parentCampaignId]->type === 'ad') {
+                            // spend/impressions multiplier for this display
+                            $spend = empty($this->display->costPerPlay)
+                                ? 0
+                                : ($count * $this->display->costPerPlay);
+                            $impressions = empty($this->display->impressionsPerPlay)
+                                ? 0
+                                : ($count * $this->display->impressionsPerPlay);
 
-                    // For a layout stat we should increment the number of plays on the Campaign
-                    if ($type === 'layout' && $campaigns[$parentCampaignId]->type === 'ad') {
-                        // spend/impressions multiplier for this display
-                        $spend = empty($this->display->costPerPlay)
-                            ? 0
-                            : ($count * $this->display->costPerPlay);
-                        $impressions = empty($this->display->impressionsPerPlay)
-                            ? 0
-                            : ($count * $this->display->impressionsPerPlay);
-
-                        // record
-                        $parentCampaign->incrementPlays($count, $spend, $impressions);
+                            // record
+                            $parentCampaign->incrementPlays($count, $spend, $impressions);
+                        }
+                    } catch (NotFoundException $notFoundException) {
+                        $deletedCampaignIds[] = $parentCampaignId;
+                        $this->getLog()->error('Campaign with ID ' . $parentCampaignId . ' no-longer exists');
                     }
                 }
             }

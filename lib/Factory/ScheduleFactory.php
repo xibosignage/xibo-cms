@@ -368,6 +368,11 @@ class ScheduleFactory extends BaseFactory
             $params['parentCampaignId'] = $parsedFilter->getInt('parentCampaignId');
         }
 
+        if ($parsedFilter->getInt('adCampaignsOnly') === 1) {
+            $sql .= ' AND `schedule`.parentCampaignId IS NOT NULL AND `schedule`.eventTypeId = :eventTypeId ';
+            $params['eventTypeId'] = Schedule::$INTERRUPT_EVENT;
+        }
+
         if ($parsedFilter->getInt('ownerId') !== null) {
             $sql .= ' AND `schedule`.userId = :ownerId ';
             $params['ownerId'] = $parsedFilter->getInt('ownerId');
