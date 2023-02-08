@@ -287,6 +287,13 @@ PropertiesPanel.prototype.render = function(
         target: element.widgetId,
       });
 
+    // If the form is a layout
+    // Add imageDownloadUrl and libraryAddUrl to the data
+    if (element.type === 'layout') {
+      dataToRender.imageDownloadUrl = imageDownloadUrl;
+      dataToRender.libraryAddUrl = libraryAddUrl;
+    }
+
     const html = propertiesPanelTemplate({
       header: res.dialogTitle,
       style: element.type,

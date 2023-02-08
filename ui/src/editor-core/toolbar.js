@@ -913,6 +913,11 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
     $(selectorBuild.join(', ')).addClass(
       (customClasses != '') ? customClasses : 'ui-droppable-active');
   }
+
+  // Show layout background overlay if exists
+  lD.propertiesPanel.DOMObject.find('.background-image-add').toggleClass(
+    'ui-droppable-active',
+    (draggableType == 'image'));
 };
 
 /**
@@ -1273,12 +1278,6 @@ Toolbar.prototype.updateQueue = function(menu, mediaQueue) {
   } else {
     this.queueToggleOverlays(menu, false);
   }
-
-  // Show layout background overlay if there's
-  // only one element and it's an image
-  $('.background-image-add').toggleClass(
-    'ui-droppable-active',
-    (mediaQueue.length == 1 && this.menuItems[menu].name == 'image'));
 
   $mediaPane.data('mediaQueue', mediaQueue);
 
