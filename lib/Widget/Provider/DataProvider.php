@@ -162,7 +162,7 @@ class DataProvider implements DataProviderInterface
      */
     public function isPreview(): bool
     {
-        return !empty($this->displayId);
+        return empty($this->displayId);
     }
 
     /**

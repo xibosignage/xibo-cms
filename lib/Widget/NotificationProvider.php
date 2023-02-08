@@ -22,6 +22,7 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Xibo\Event\NotificationDataRequestEvent;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
@@ -50,5 +51,10 @@ class NotificationProvider implements WidgetProviderInterface
     public function getDataCacheKey(DataProviderInterface $dataProvider): ?string
     {
         return $dataProvider->getWidgetId() . '_' . $dataProvider->getDisplayId();
+    }
+
+    public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
+    {
+        return null;
     }
 }
