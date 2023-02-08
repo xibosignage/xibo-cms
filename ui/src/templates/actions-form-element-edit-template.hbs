@@ -6,10 +6,10 @@
         {{> forms/inputs/hidden value=actionType id='actionType' }}
 
         {{> forms/inputs/dropdown id="triggerType" value=triggerType title="Trigger Type" customClass='action-element-form-trigger' options=(arr (obj name='touch' title='Touch/Click') (obj name='webhook' title='Web hook')) optionsTitle="title" optionsValue="name" helpText="How should the Player listen for this Action to be triggered?" }}
-        {{> forms/inputs/text id='triggerCode' value=triggerCode title="Trigger Code" helpText='If this Action is triggered by a Web Hook then this Trigger Code must be present in the URL `trigger=` parameter.' visibility='{ "field": "#triggerType", "type": "eq", "value": "webhook" }' }}
+        {{> forms/inputs/text id='triggerCode' value=triggerCode title="Trigger Code" helpText='If this Action is triggered by a Web Hook then this Trigger Code must be present in the URL `trigger=` parameter.' visibility='{ "field": "triggerType", "type": "eq", "value": "webhook" }' }}
 
         {{> forms/inputs/hidden id="source" value=source }}
-        {{> forms/inputs/dropdown id="sourceId" value=sourceId title="Trigger Target" customClass='action-element-form-trigger' options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name" helpText="Select the target for the Trigger" visibility='{ "field": "#triggerType", "type": "neq", "value": "webhook" }' }}
+        {{> forms/inputs/dropdown id="sourceId" value=sourceId title="Trigger Target" customClass='action-element-form-trigger' options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name" helpText="Select the target for the Trigger" visibility='{ "field": "triggerType", "type": "neq", "value": "webhook" }' }}
 
         {{!-- Set layout name as screen --}}
         {{#eq target "layout"}}
@@ -23,7 +23,7 @@
 
         {{!-- For nav widget only --}}
         {{#eq actionType 'navWidget'}}
-            {{> forms/inputs/dropdown id="widgetId" value=widgetId title="Widget to Load" customClass='action-element-form-target' options=(arr (obj name='' title='') (obj name='create' title='-- Create New --')) optionsTitle="title" optionsValue="name" helpText="Select of create a Widget to be loaded" visibility='{ "field": "#targetId", "type": "neq", "value": "" }' }}
+            {{> forms/inputs/dropdown id="widgetId" value=widgetId title="Widget to Load" customClass='action-element-form-target' options=(arr (obj name='' title='') (obj name='create' title='-- Create New --')) optionsTitle="title" optionsValue="name" helpText="Select of create a Widget to be loaded" visibility='{ "field": "targetId", "type": "neq", "value": "" }' }}
         {{/eq}}
 
         {{!-- For nav layout only --}}
