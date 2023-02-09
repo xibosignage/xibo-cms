@@ -156,9 +156,9 @@
              * Setup the background form.
              */
             function backGroundFormSetup(dialog) {
-                var $backgroundImageId = $('#backgroundImageId');
-                var notFoundIcon = $('#bg_not_found_icon');
-                var backgroundImage = $('#bg_image_image');
+                var $backgroundImageId = $('[name="backgroundImageId"]', dialog);
+                var notFoundIcon = $('#bg_not_found_icon', dialog);
+                var backgroundImage = $('#bg_image_image', dialog);
                 var initialBackgroundImageId = $backgroundImageId.val();
                 var backgroundChanged = false;
 
@@ -242,8 +242,10 @@
 
                 // Handle click to add
                 $('.background-image-drop').on('click', function() {
-                    var selected = lD.toolbar.selectedQueue[0];
-                    backgroundImageHandleDrop(selected, !(typeof selected == 'number'));
+                    var selectedCard = lD.toolbar.selectedCard;
+                    var fromProvider = selectedCard.hasClass('from-provider');
+                    var cardData = (fromProvider) ? selectedCard.data('providerData') : selectedCard.data('mediaId');
+                    backgroundImageHandleDrop(cardData, fromProvider);
                 });
 
                 // Bind to the layout form submit

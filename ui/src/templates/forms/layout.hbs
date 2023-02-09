@@ -20,13 +20,13 @@
                                     <div>No Image set, add from Toolbar or Upload!</div>
                                 </div>
 
-                                <img id="bg_image_image" data-url="{{ libraryDownloadURL }}?preview=1&width=200&height=100" alt="Background thumbnail" />
+                                <img id="bg_image_image" data-url="{{ imageDownloadUrl }}&width=200&height=100" alt="Background thumbnail" />
                                 <div class="background-image-drop">Add background image</div>
                             </div>
 
                             <div class="background-image-actions text-center">
                                 <div class="btn-group">
-                                    <button id="backgroundUploadButton" class="btn btn-outline-secondary" type="button" data-add-new-background-url="{{ libraryAddURL }}">
+                                    <button id="backgroundUploadButton" class="btn btn-outline-secondary" type="button" data-add-new-background-url="{{ libraryAddUrl }}">
                                         <i class="fa fa-upload"></i>
                                         Upload
                                     </button>
@@ -40,7 +40,7 @@
                         </div>
                     </div>
 
-                    {{> inputs/hidden name="backgroundImageId" value=layout.backgroundId }}
+                    {{> inputs/hidden name="backgroundImageId" value=layout.backgroundImageId }}
 
                     {{> inputs/dropdown value=resolution.resolutionId options=resolutions optionsTitle="resolution" optionsValue="resolutionId" id="resolutionId" title="Resolution" helpText="Change the resolution" }}
                     {{> inputs/number value=layout.backgroundzIndex id="backgroundzIndex" title="Layer" helpText="The layering order of the background image (z-index). Advanced use only." }}
