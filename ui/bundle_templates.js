@@ -30,6 +30,7 @@ window.templates = {
       require('./src/templates/forms/inputs/datasetColumnSelector.hbs'),
     fontSelector: require('./src/templates/forms/inputs/fontSelector.hbs'),
     effectSelector: require('./src/templates/forms/inputs/effectSelector.hbs'),
+    worldClock: require('./src/templates/forms/inputs/worldClock.hbs'),
     // More to be added
   },
 };
