@@ -265,12 +265,11 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $this->currentDay->icon = str_replace('-night', '', $this->currentDay->icon);
             $this->currentDay->wicon = str_replace('-night', '', $this->currentDay->wicon);
         }
-
-        $item['Attribution'] = 'Powered by OpenWeather';
+        
         $item['currentDay'] = $this->currentDay;
         $item['forecast'] = $this->forecast;
-
         $dataProvider->addItem($item);
+        $dataProvider->addOrUpdateMeta('Attribution', 'Powered by OpenWeather');
     }
 
     /**
