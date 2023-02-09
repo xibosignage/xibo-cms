@@ -66,9 +66,6 @@ class DataProvider implements DataProviderInterface
     /** @var float the display longitude */
     private $longitude;
 
-    /** @var bool isPreview flag */
-    private $isPreview;
-
     /** @var \GuzzleHttp\Client */
     private $client;
 
