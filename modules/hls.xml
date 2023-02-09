@@ -46,7 +46,7 @@
     <preview></preview>
     <stencil>
         <twig><![CDATA[
-            <video id='video' poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=" {% if mute == 0 %}muted{% endif %}></video>
+            <video id='video' poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=" {% if mute == 1 %}muted{% endif %}></video>
             <style>
                  video {
                     width: 100%;
