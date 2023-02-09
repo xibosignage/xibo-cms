@@ -987,21 +987,16 @@ window.forms = {
       });
     });
 
-    // World clock timezone input
+    // World clock control
     findElements(
-      '.world-clock-timezone',
+      '.world-clock-control',
       target,
     ).each(function(_k, el) {
-      // If there's no clock container
-      // create one and add it to the element
-      let $clocksContainer = $(el).find('.clocksContainer');
-      if ($clocksContainer.length == 0) {
-        $clocksContainer = $('<div class="clocksContainer""></div>');
-        $(el).append($clocksContainer);
-      }
+      // Get clocks container
+      const $clocksContainer = $(el).find('.clocksContainer');
 
       // Get hidden input
-      const $hiddenInput = $(el).find('#worldClocks');
+      const $hiddenInput = $(el).find('.world-clock-value');
 
       /**
        * Configure the multiple world clock form
@@ -1044,7 +1039,6 @@ window.forms = {
             };
             $clocksContainer.append(worldClockTemplate(context));
           });
-          updateClockCountLabel(el);
           initClockRows(el);
         }
 
@@ -1066,22 +1060,7 @@ window.forms = {
             // Remove this row
             $(e.currentTarget).closest('.form-clock').remove();
           }
-
-          updateClockCountLabel(el);
         });
-      }
-
-      /**
-       * Update the clock count label
-       * @param {object} container
-       */
-      function updateClockCountLabel(container) {
-        const clockCount = $(container).find('.form-clock').length;
-        $(container).find('.clockCount')
-          .html((clockCount > 1) ? '(' + clockCount + ')' : '');
-
-        // Update the hidden input
-        updateClocksHiddenInput(container);
       }
 
       /**
@@ -1100,8 +1079,9 @@ window.forms = {
             });
           }
         });
-        $(container).find('#worldClocks')
-          .attr('value', JSON.stringify(worldClocks));
+
+        // Update the hidden input
+        $hiddenInput.attr('value', JSON.stringify(worldClocks));
       }
 
       /**

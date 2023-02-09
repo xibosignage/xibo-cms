@@ -38,9 +38,7 @@
         <property type="header">
             <title>Clocks</title>
         </property>
-        <property id="worldClocks" type="custom">
-            <customClass>world-clock-timezone</customClass>
-        </property>
+        <property id="worldClocks" type="worldClock"></property>
         <property id="numCols" type="number">
             <title>Clock Columns</title>
             <helpText>Number of columns to display</helpText>

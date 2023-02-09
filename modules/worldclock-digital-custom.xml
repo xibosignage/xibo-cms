@@ -38,9 +38,7 @@
         <property type="header">
             <title>Clocks</title>
         </property>
-        <property id="worldClocks" type="custom">
-            <customClass>world-clock-timezone</customClass>
-        </property>
+        <property id="worldClocks" type="worldClock"></property>
         <property id="template_html" type="code" allowLibraryRefs="true" variant="html">
             <title>Template - HTML</title>
             <helpText>Enter text or HTML in the box below. Use squared brackets for elements to be replaced (e.g. [HH:mm] for time, or [label] to show the timezone name</helpText>
