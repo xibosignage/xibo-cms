@@ -105,7 +105,6 @@ class AlphaVantageConnector implements ConnectorInterface
                 if ($dataProvider->getDataSource() === 'stocks') {
                     $this->getStockResults($dataProvider);
                 } else if ($dataProvider->getDataSource() === 'currencies') {
-                    // TODO flags
                     $this->getCurrenciesResults($dataProvider);
                 }
 
@@ -207,6 +206,11 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 $data = json_decode($request->getBody(), true);
 
+                if (!array_key_exists('Time Series (Daily)', $data)) {
+                    $this->getLogger()->debug('getStockQuote Data: ' . var_export($data, true));
+                    throw new InvalidArgumentException(__('Stocks data invalid'), 'Time Series (Daily)');
+                }
+
                 // Cache this and expire in the cache period
                 $cache->set($data);
                 $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
@@ -284,9 +288,6 @@ class AlphaVantageConnector implements ConnectorInterface
         // Does this require a reversed conversion?
         $reverseConversion = ($dataProvider->getProperty('reverseConversion', 0) == 1);
 
-        // Does this require a percentage change calculation?
-        $percentageChangeRequested = ($dataProvider->getProperty('ChangePercentage', 0) == 1);
-
         // Is this paid plan?
         $isPaidPlan = ($this->getSetting('isPaidPlan', 0) == 1);
 
@@ -305,10 +306,10 @@ class AlphaVantageConnector implements ConnectorInterface
                     ? $this->getCurrencyExchangeRate($currency, $base, $isPaidPlan)
                     : $this->getCurrencyExchangeRate($base, $currency, $isPaidPlan);
 
-                 $this->getLogger()->debug(
-                     'AlphaVantage Connector : getCurrenciesResults are: ' .
-                     var_export($result, true)
-                 );
+                $this->getLogger()->debug(
+                    'AlphaVantage Connector : getCurrenciesResults are: ' .
+                    var_export($result, true)
+                );
 
                 if ($isPaidPlan) {
                     $item = [
@@ -337,28 +338,25 @@ class AlphaVantageConnector implements ConnectorInterface
                 // Set the name/currency to be the full name including the base currency
                 $item['Name'] = $item['FromName'] . '/' . $item['ToName'];
                 $currencyName = ($reverseConversion) ? $item['FromName'] : $item['ToName'];
-                $item['NameShort'] =  $currencyName;
+                $item['NameShort'] = $currencyName;
 
                 // work out the change when compared to the previous day
-                if ($percentageChangeRequested) {
-                    // We need to get the prior day for this pair only (reversed)
-                    $priorDay = $reverseConversion
-                        ? $this->getCurrencyPriorDay($currency, $base, $isPaidPlan)
-                        : $this->getCurrencyPriorDay($base, $currency, $isPaidPlan);
 
-                    /*$this->getLog()->debug('Percentage change requested, prior day is '
-                        . var_export($priorDay['Time Series FX (Daily)'], true));*/
+                // We need to get the prior day for this pair only (reversed)
+                $priorDay = $reverseConversion
+                    ? $this->getCurrencyPriorDay($currency, $base, $isPaidPlan)
+                    : $this->getCurrencyPriorDay($base, $currency, $isPaidPlan);
 
-                    $priorDay = count($priorDay['Time Series FX (Daily)']) < 2
-                        ? ['1. open' => 1]
-                        : array_values($priorDay['Time Series FX (Daily)'])[1];
+                /*$this->getLog()->debug('Percentage change requested, prior day is '
+                    . var_export($priorDay['Time Series FX (Daily)'], true));*/
 
-                    $item['YesterdayTradePriceOnly'] = $priorDay['1. open'];
-                    $item['Change'] = $item['RawLastTradePriceOnly'] - $item['YesterdayTradePriceOnly'];
-                } else {
-                    $item['YesterdayTradePriceOnly'] = 0;
-                    $item['Change'] = 0;
-                }
+                $priorDay = count($priorDay['Time Series FX (Daily)']) < 2
+                    ? ['1. open' => 1]
+                    : array_values($priorDay['Time Series FX (Daily)'])[1];
+
+                $item['YesterdayTradePriceOnly'] = $priorDay['1. open'];
+                $item['Change'] = $item['RawLastTradePriceOnly'] - $item['YesterdayTradePriceOnly'];
+
 
                 $item = $this->decorateWithReplacements($item);
 
