@@ -329,15 +329,28 @@
                         // Get the mediaId
                         var mediaId = data.result.files[0].mediaId;
 
-                        // Create a hidden field with the mediaId
-                        $("#layoutEditForm").append($("<input type='hidden' name='backgroundImageId' value='" + mediaId + "'/>"));
+                        // Update the form field with the mediaId
+                        // or add it if it doesn't exist
+                        if ($(dialog).find('[name="backgroundImageId"]').length === 0) {
+                            $('<input>').attr({
+                                type: 'hidden',
+                                name: 'backgroundImageId',
+                                value: mediaId
+                            }).appendTo(dialog);
+                        } else {
+                            $('[name="backgroundImageId"]').val(mediaId);
+                        }
 
+                        // Update the preview image
                         var $bgImagePreview = dialog.find("#bg_image_image");
                         $bgImagePreview
                             .prop("src", $bgImagePreview.data().url.replace(":id", mediaId))
                             .show();
 
                         dialog.find("#bg_not_found_icon").hide();
+
+                        // Enable the remove button
+                        dialog.find("#backgroundRemoveButton").removeClass("disabled");
 
                         XiboDialogClose();
                     }
