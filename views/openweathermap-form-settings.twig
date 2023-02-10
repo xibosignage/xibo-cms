@@ -27,14 +27,14 @@
 {% block connectorFormFields %}
     <h3>Open Weather Map</h3>
 
-    {% set title %}
-        Open Weather Map have added a new "One Call API 3.0" option to their suite of products. Unfortunately a credit
-        card is required to activate this service. Older API keys are not compatible with the new API and therefore
-        users will need to choose which API version is required for their key below.
-    {% endset %}
-    {{ forms.alert(title, "info") }}
-
     {% if not platformProvidesSettings %}
+        {% set title %}
+            Open Weather Map have added a new "One Call API 3.0" option to their suite of products. Unfortunately a credit
+            card is required to activate this service. Older API keys are not compatible with the new API and therefore
+            users will need to choose which API version is required for their key below.
+        {% endset %}
+        {{ forms.alert(title, "info") }}
+        
         {% set title %}{% trans "Open Weather Map API Key" %}{% endset %}
         {% set helpText %}{% trans "Enter your API Key from Open Weather Map." %}{% endset %}
         {{ forms.input("owmApiKey", title, interface.getSetting("owmApiKey"), helpText) }}
