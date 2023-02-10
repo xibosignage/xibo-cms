@@ -40,8 +40,8 @@
             <helpText>Please select a theme for the clock.</helpText>
             <default>1</default>
             <options>
-                <option name="1">Light</option>
-                <option name="2">Dark</option>
+                <option name="1" image="clock_bg_modern_light">Light</option>
+                <option name="2" image="clock_bg_modern_dark">Dark</option>
             </options>
         </property>
         <property id="offset" type="text">

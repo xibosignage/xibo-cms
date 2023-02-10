@@ -14,6 +14,7 @@
         var defaultThumbnailUrl = '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
+        var assetDownloadUrl = "{{ url_for("module.asset.download", {assetId: ':assetId'}) }}";
         var tooltipDelay = {'show': 250, 'hide': 0};
         var playlistEditorUrl = "{{ url_for("playlist.timeline.form", {id:':id'}) }}";
         var timezones = {{ timeZones|json_encode|raw }};

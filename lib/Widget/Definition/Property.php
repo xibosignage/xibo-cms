@@ -103,13 +103,15 @@ class Property implements \JsonSerializable
     /**
      * Add an option
      * @param string $name
+     * @param string $image
      * @param string $title
      * @return $this
      */
-    public function addOption(string $name, string $title): Property
+    public function addOption(string $name, string $image, string $title): Property
     {
         $option = new Option();
         $option->name = $name;
+        $option->image = $image;
         $option->title = $title;
         $this->options[] = $option;
         return $this;

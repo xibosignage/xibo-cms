@@ -29,6 +29,7 @@ namespace Xibo\Widget\Definition;
 class Option implements \JsonSerializable
 {
     public $name;
+    public $image;
     public $title;
     
     /**
@@ -38,6 +39,7 @@ class Option implements \JsonSerializable
     {
         return [
             'name' => $this->name,
+            'image' => $this->image,
             'title' => $this->title
         ];
     }

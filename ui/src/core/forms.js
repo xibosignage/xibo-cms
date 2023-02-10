@@ -167,6 +167,32 @@ window.forms = {
       return $(container).find(selector);
     };
 
+    // Dropdowns
+    findElements(
+      '.dropdown-input-group',
+      target,
+    ).each(function(_k, el) {
+      const $dropdown = $(el).find('select');
+
+      // Check if options have a value with data-content and an image
+      // If so, add the image to the dropdown
+      $dropdown.find('option[data-content]').each(function(_k, option) {
+        const $option = $(option);
+        const $dataContent = $($option.data('content'));
+
+        // Get the image
+        const $image = $dataContent.find('img');
+
+        // Replace src with data-src
+        $image.attr('src',
+          assetDownloadUrl.replace(':assetId', $image.attr('src')),
+        );
+
+        // Add html back to the option
+        $option.data('content', $dataContent.html());
+      });
+    });
+
     // Dataset order clause
     findElements(
       '.dataset-order-clause',

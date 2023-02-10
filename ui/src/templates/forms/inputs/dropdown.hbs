@@ -1,4 +1,4 @@
-<div class="form-group xibo-form-input {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
+<div class="form-group xibo-form-input dropdown-input-group localSelect {{customClass}}" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
     <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
     <select class="form-control" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
@@ -14,8 +14,14 @@
             {{set "optionsTitle" "title"}}
         {{/unless}}
 
+        {{!-- Render options --}}
         {{#each options}}
-            <option value="{{lookup this ../optionsValue}}" {{#eq (lookup this ../optionsValue) ../value}}selected{{/eq}}>{{lookup this ../optionsTitle}}</option>
+            <option value="{{lookup this ../optionsValue}}"
+                {{#eq (lookup this ../optionsValue) ../value}}selected{{/eq}}
+                {{#if image}}
+                    data-content="{{> add-ons/dropdownOptionImage image=image title=(lookup this ../optionsTitle) }}"
+                {{/if}}
+            >{{lookup this ../optionsTitle}}</option>
         {{/each}}
     </select>
 </div>
