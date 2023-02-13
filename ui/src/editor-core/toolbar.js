@@ -917,7 +917,7 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
   // Show layout background overlay if exists
   lD.propertiesPanel.DOMObject.find('.background-image-add').toggleClass(
     'ui-droppable-active',
-    (draggableType == 'image'));
+    (draggableType == 'image' && !draggable.hasClass('upload-card')));
 };
 
 /**
