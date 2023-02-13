@@ -134,6 +134,7 @@ trait ModuleXmlTrait
                             /** @var \DOMElement $optionNode */
                             $property->addOption(
                                 $optionNode->getAttribute('name'),
+                                $optionNode->getAttribute('image'),
                                 $optionNode->textContent
                             );
                         }
