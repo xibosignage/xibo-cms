@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Factory;
-
 
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
@@ -199,8 +197,7 @@ class BaseFactory
         $idColumn,
         $ownerColumn = null,
         $filterBy = [],
-        $permissionFolderIdColumn = null,
-        $isPerformDoohCheck = true
+        $permissionFolderIdColumn = null
     ) {
         $parsedBody = $this->getSanitizer($filterBy);
         $checkUserId = $parsedBody->getInt('userCheckUserId');
@@ -220,18 +217,6 @@ class BaseFactory
 
         // Has the user check been disabled? 0 = no it hasn't
         $performUserCheck = $parsedBody->getCheckbox('disableUserCheck') == 0;
-
-        // Check the whether we need to restrict to the DOOH user.
-        // we only do this for entities which have an owner, and only if the user check hasn't been disabled.
-        if ($ownerColumn !== null && $performUserCheck && $isPerformDoohCheck) {
-            if (($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4) {
-                // DOOH only
-                $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId = 4) ';
-            } elseif ($user->showContentFrom != 3) {
-                // Standard only
-                $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
-            }
-        }
 
         if ($performUserCheck && !$user->isSuperAdmin()) {
             $permissionSql .= '
