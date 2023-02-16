@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -25,7 +25,8 @@
     <description>A module for displaying weather information. Uses the Forecast API</description>
     <class></class>
     <type>forecastio</type>
-    <dataType></dataType>
+    <dataType>forecast</dataType>
+    <dataCacheKey>%useDisplayLocation%_%latitude%_%longitude%_%units%_%lang%</dataCacheKey>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -36,14 +37,14 @@
         <property id="useDisplayLocation" type="checkbox">
             <title>Use the Display Location</title>
             <helpText>Use the location configured on the display</helpText>
-            <default></default>
+            <default>1</default>
         </property>
         <property id="latitude" type="number">
             <title>Latitude</title>
             <helpText>The Latitude for this widget</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
                 </test>
             </visibility>
@@ -53,28 +54,20 @@
             <helpText>The Longitude for this widget</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
-        <property id="units" type="dropdown" mode="single">
+        <property id="units" type="forecastUnitsSelector">
             <title>Units</title>
             <helpText>Select the units you would like to use.</helpText>
-            <default>x1</default>
-            <options>
-                <option name="x1">x1</option>
-                <option name="x2">x2</option>
-            </options>
+            <default>auto</default>
         </property>
-        <property id="lang" type="dropdown" mode="single">
+        <property id="lang" type="languageSelector">
             <title>Language</title>
             <helpText>Select the language you would like to use.</helpText>
-            <default>x1</default>
-            <options>
-                <option name="x1">x1</option>
-                <option name="x2">x2</option>
-            </options>
+            <default>en</default>
         </property>
         <property id="dayConditionsOnly" type="checkbox">
             <title>Only show Daytime weather conditions</title>
@@ -101,31 +94,128 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
-        <property id="templateType" type="dropdown" mode="single">
-            <title>Type</title>
-            <helpText>Choose the type of template</helpText>
-            <default>all</default>
-            <options>
-                <option name="all">All</option>
-                <option name="current">Current</option>
-                <option name="forecast">Forecast</option>
-            </options>
-        </property>
-        <property id="templateOrientation" type="dropdown" mode="single">
-            <title>Orientation</title>
-            <helpText>Choose the orientation of template</helpText>
-            <default>all</default>
-            <options>
-                <option name="all">All</option>
-                <option name="square">Square</option>
-                <option name="landscape">Landscape</option>
-                <option name="portrait">Portrait</option>
-                <option name="scale">Scale</option>
-            </options>
-        </property>
     </properties>
     <preview></preview>
     <stencil>
-        <twig><![CDATA[]]></twig>
+        <twig><![CDATA[
+<link rel="stylesheet" href="[[assetId=weather-icons]]" media="screen">
+<link rel="stylesheet" href="[[assetId=font-awesome]]" media="screen">
+<link rel="stylesheet" href="[[assetId=animate]]" media="screen">
+    ]]></twig>
     </stencil>
+    <onRender><![CDATA[
+// Set moment locale
+moment.locale(globalOptions.locale);
+
+// Make replacements [] with target data
+const makeReplacement = (html, item) => {
+    // Make replacements [] with item data
+    return html.replace(/\[([^\]]+)\]/g, (match, key) => {
+        // If its [time] or [time|format] then return the time
+        if (key === 'time' || key.indexOf('time|') === 0) {
+            // If its [time|format] then return the time with format
+            if (key.indexOf('time|') === 0) {
+                return moment.unix(item.time).format(key.split('|')[1]);
+            }
+            // Else return the time
+            return moment.unix(item.time).format('h:mm a');
+        }
+
+        // If its [icon] or [wicon] and we have properties.dayConditionsOnly then return the day icon
+        if(properties.dayConditionsOnly == 1 && (key === 'icon' || key === 'wicon')) {
+            return item[key].replace('-night', '');
+        }
+
+        // If its [poweredBy] then return the powered by html
+        if (key === 'Attribution') {
+            return meta.Attribution;
+        }
+        return item[key];
+    });
+}
+
+// Get content container
+var $content = $(target).find('#content');
+
+// Clear content container
+$content.empty();
+
+// Get current day (main) template and clone its contents
+var currentContainerHTML = $(target).find('.current-day-template').html();
+
+// Make replacements [] with current day data
+currentContainerHTML = makeReplacement(currentContainerHTML, items[0].currentDay);
+
+// Add current day (main) template to content container
+$content.append(currentContainerHTML);
+
+// Make replacements if we have bg-div
+var bgDivHTML = $(target).find('.bg-div').prop('outerHTML');
+if (bgDivHTML) {
+    // Make replacements [] with current day data
+    bgDivHTML = makeReplacement(bgDivHTML, items[0].currentDay);
+
+    // Replace bg-div with current day data
+    $(target).find('.bg-div').replaceWith(bgDivHTML);
+}
+
+// Get the forecast container from current day template
+var $forecastContainer = $content.find('.forecast-container');
+
+// Get the forecast template
+var forecastTemplateHTML = $(target).find('.forecast-day-template').html();
+
+// If we have a forecast container
+// Get the number of days to show for the forecast
+var daysNum = $forecastContainer.data('days-num');
+
+// Get the offset of days to show for the forecast
+var daysOffset = $forecastContainer.data('days-offset');
+
+// Check if we have forecast days to add
+if (daysNum > 0) {
+    // Empty container
+    $forecastContainer.empty();
+
+    // Add the forecast days
+    items[0].forecast.forEach((day, index) => {
+        // Check if we are within the offset
+        if (index >= daysOffset) {
+            // Check if we are within the number of days
+            if (index < daysOffset + daysNum) {
+                // Make replacements [] with forecast day data
+                var forecastDayHTML = makeReplacement(forecastTemplateHTML, day);
+
+                // Add forecast day to forecast container
+                $forecastContainer.append(forecastDayHTML);
+            }
+        }
+    });
+}
+
+// Handle images and scaling
+$(target).find("img").xiboImageRender(properties);
+$content.xiboLayoutScaler(properties);
+    ]]></onRender>
+    <assets>
+        <asset id="animate" type="path" mimeType="text/css" path="/modules/assets/forecastio/animate.css"></asset>
+        <asset id="font-awesome" type="path" mimeType="text/css" path="/modules/assets/forecastio/font-awesome.min.css"></asset>
+        <asset id="weather-icons" type="path" mimeType="text/css" path="/modules/assets/forecastio/weather-icons.min.css"></asset>
+        <asset id="weathericons-regular-webfont.eot" type="path" mimeType="application/vnd.ms-fontobject" path="/modules/assets/forecastio/weathericons-regular-webfont.eot"></asset>
+        <asset id="weathericons-regular-webfont.svg" type="path" mimeType="image/svg+xml" path="/modules/assets/forecastio/weathericons-regular-webfont.svg"></asset>
+        <asset id="weathericons-regular-webfont.ttf" type="path" mimeType="application/x-font-ttf" path="/modules/assets/forecastio/weathericons-regular-webfont.ttf"></asset>
+        <asset id="weathericons-regular-webfont.woff" type="path" mimeType="application/font-woff" path="/modules/assets/forecastio/weathericons-regular-webfont.woff"></asset>
+        <asset id="weathericons-regular-webfont.woff2" type="path" mimeType="application/font-woff2" path="/modules/assets/forecastio/weathericons-regular-webfont.woff2"></asset>
+        <asset id="WeatherIcons-Regular.otf" type="path" mimeType="application/x-font-opentype" path="/modules/assets/forecastio/WeatherIcons-Regular.otf"></asset>
+        <asset id="wi-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-cloudy.jpg"></asset>
+        <asset id="wi-day-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-day-cloudy.jpg"></asset>
+        <asset id="wi-day-sunny" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-day-sunny.jpg"></asset>
+        <asset id="wi-fog" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-fog.jpg"></asset>
+        <asset id="wi-hail" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-hail.jpg"></asset>
+        <asset id="wi-night-clear" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-night-clear.jpg"></asset>
+        <asset id="wi-night-partly-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-night-partly-cloudy.jpg"></asset>
+        <asset id="wi-rain" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-rain.jpg"></asset>
+        <asset id="wi-snow" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-snow.jpg"></asset>
+        <asset id="wi-windy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-windy.jpg"></asset>
+    </assets>
 </module>

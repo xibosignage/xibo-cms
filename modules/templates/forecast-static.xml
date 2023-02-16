@@ -1,0 +1,6562 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>weather_1</id>
+        <legacyTemplateId>weather-module0-5day</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>none</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">960</width>
+            <height id="height">340</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="main-panel">
+        <div class="container-row">
+            <div class="details-box text-center shadowed">
+                <div class="big-icon"><i class="wi [wicon]"></i></div>
+                <div class="big-day">[time|D]</div>
+                <div class="big-temp">[temperatureRound]&deg;[temperatureUnit]</div>
+            </div>
+            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="container-footer">
+                <div class="powered">[Attribution]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="upcoming-days shadowed">
+        <div class="small-icon"><i class="wi [wicon]"></i></div>
+        <div class="small-temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
+        <div class="small-day">[time|D]</div>
+    </div>
+</div>
+
+<style>
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+:after, :before {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.container {
+  width: 960px !important;
+  height: 340px !important;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.container-row {
+  padding: 30px;
+  padding-top: 50px;
+  display: table;
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+body {
+  width: 960px !important;
+  height: 340px !important;
+  font-family: "Helvetica", "Arial", sans-serif;
+  line-height: 1;
+}
+
+.shadowed {
+  text-shadow: 0px 0px 2px rgba(255, 255, 255, 0.5);
+  filter: dropshadow(color=rgba(255, 255, 255, 0.5), offx=2, offy=2);
+}
+
+.current-temp {
+  font-family: "Helvetica", sans-serif;
+  font-weight: bold;
+  font-size: 100px;
+}
+
+.big-icon {
+  font-size: 90px;
+  padding-bottom: 30px;
+
+}
+
+.big-temp {
+  padding: 10px 0px;
+  font-size: 45px;
+
+}
+
+.small-day {
+  font-size: 20px;
+  font-style: italic;
+  font-weight: lighter;
+
+}
+
+.small-icon {
+  font-size: 30px;
+  padding: 50px 0px 10px 0px;
+
+}
+
+.small-temp {
+  padding: 10px 0px;
+  font-size: 16px;
+
+}
+
+.container-footer {
+  float: left;
+  width: 100%;
+}
+
+.powered {
+  font-size: 14px;
+  text-align: center;
+
+}
+
+.details-box {
+  font-size: 26px;
+  height: 220px;
+  padding-left: 30px;
+  width: 20%;
+  float: left;
+}
+
+.upcoming-days {
+  height: 195px;
+  margin-top: 20px !important;
+  text-align: center;
+  width: 20%;
+  float: left;
+}
+
+.selector-day {
+  font-size: 15px;
+  font-weight: light;
+  margin-top: 25px;
+}
+
+.selector-temp {
+  font-size: 25px;
+  font-weight: bold;
+  font-style: italic;
+}
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_2</id>
+        <legacyTemplateId>weather-module0-singleday</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day, summary</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>none</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">340</width>
+            <height id="height">200</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="main-panel">
+            <div class="container-row">
+                <div class="details-box text-center shadowed">
+                    <div class="big-container">
+                        <div class="big-icon"><i class="wi [wicon]"></i></div>
+                    </div>
+                    <div class="big-container">
+                        <div class="big-temp">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                    </div>
+                    <div class="description-container">
+                        <div class="description">
+                            <div class="big-day">[summary]</div>
+                        </div>
+                    </div>
+                    <div class="powered-container">
+                        <div class="powered">[Attribution]</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.text-center {
+    text-align: center;
+}
+
+body {
+    width: 340px !important;
+    height: 200px !important;
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.description-container {
+    width: 100%;
+    float: left;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 2px rgba(255, 255, 255, 0.5);
+    filter: dropshadow(color=rgba(255, 255, 255, 0.5), offx=2, offy=2);
+}
+
+.container {
+    margin-right: auto;
+    margin-left: auto;
+    background-position: center;
+    width: 340px !important;
+    height: 200px !important;
+}
+
+.main-panel {
+    height: 137px;
+}
+
+.container-row {
+    height: 200px;
+    position: relative;
+
+}
+
+.big-container {
+    float: left;
+    width: 50%;
+}
+
+.big-day {
+    font-size: 30px;
+    font-style: italic;
+    font-weight: lighter;
+}
+
+.big-icon {
+    font-size: 90px;
+}
+
+.big-temp {
+    font-size: 55px;
+    margin-top: 20px;
+}
+
+.big-temp sup {
+    font-size: 25px;
+}
+
+.description {
+    font-size: 45px;
+}
+
+.details-box {
+    display: table;
+    padding-top: 40px;
+    width: 100%;
+}
+
+.powered {
+    position: absolute;
+    left: 0;
+    bottom: 8px;
+    text-align: center;
+    width: 100%;
+}
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_3</id>
+        <legacyTemplateId>weather-module0-singleday2</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>none</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">340</width>
+            <height id="height">200</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="main-panel">
+            <div class="container-row">
+                <div class="details-box text-center shadowed">
+                    <div class="big-container">
+                        <div class="big-icon"><i class="wi [wicon]"></i></div>
+                    </div>
+                    <div class="big-container">
+                        <div class="big-day">[summary]</div>
+                        <div class="big-temp">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                    </div>
+                    <div class="powered-container">
+                        <div class="powered">[Attribution]</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+
+#content {
+    color: #272625;
+}
+
+.container {
+    width: 340px !important;
+    height: 200px !important;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-center {
+    text-align: center;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 2px rgba(255, 255, 255, 0.5);
+    filter: dropshadow(color=rgba(255, 255, 255, 0.5), offx=2, offy=2);
+}
+
+.main-panel {
+    height: 137px;
+}
+
+.current-temp {
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    font-size: 100px;
+}
+
+.powered {
+    position: absolute;
+    left: 0;
+    bottom: 8px;
+    text-align: center;
+    width: 100%;
+}
+
+.container-row {
+    height: 180px;
+    padding-top: 40px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.big-container {
+    float: left;
+    width: 50%;
+}
+
+.big-day {
+    font-size: 30px;
+    font-style: italic;
+    font-weight: lighter;
+}
+
+.big-icon {
+    font-size: 90px;
+}
+
+.big-temp {
+    padding: 5px 0 0px 0;
+    font-size: 25px;
+}
+
+.big-temp sup {
+    font-size: 15px;
+}
+
+.description {
+    padding: 20px 0 0px 0;
+    font-size: 45px;
+}
+
+.details-box {
+    display: table;
+    width: 100%;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_4</id>
+        <legacyTemplateId>weather-module1l</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day detailed, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="footer-color" type="color">
+                <title>Footer Background</title>
+                <helpText>The color of the footer background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="footer-icons-color" type="color">
+                <title>Footer Icons</title>
+                <helpText>The color of the footer icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">1920</width>
+            <height id="height">1080</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="main-container container">
+        <div class="row">
+            <div class="weather-col col-6">
+                <h1 class="date shadowed"> [time|MMM] <br>[time|D]</h1>
+            </div>
+            <div class="weather-col col-5">
+                <div class="row text-right temp shadowed">[temperatureRound]&deg;[temperatureUnit]</div>
+                <div class="row pull-right animated rotateInUpRight main-icon shadowed"><i class="wi [wicon]"></i></div>
+            </div>
+        </div>
+        <div class="bg-footer bottom-bar">
+            <div class="weather-col col-4 text-center">
+                <div class="row forecast-current">[summary]</div>
+                <div class="row forecast-second">||Wind||: [windDirection] [windSpeed] [windSpeedUnit]</div>
+                <div class="row forecast-second">||Humidity||: [humidityPercent]%</div>
+            </div>
+            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="weather-col col-12 powered">[Attribution]</div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="day weather-col col-2">
+        <div class="row text-center day-details">[time|ddd]</div>
+        <div class="row animated Bounce second-icon"><i class="wi [wicon]"></i></div>
+        <div class="row text-center temp-details">[temperatureMaxRound] &deg; [temperatureUnit] </div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+.container {
+    width: 1920px !important;
+    height: 1080px !important;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container-fluid:after, .container-fluid:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container-fluid:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.text-center {
+    text-align: center;
+}
+
+#content {
+    color: white;
+
+    height: inherit;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
+    filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=2, offy=2);
+}
+
+.bg-div {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: left;
+}
+
+.main-container {
+    height: 100%;
+}
+
+.bg-footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    left: 0;
+    text-align: center;
+    background-color: #000;
+    opacity: 0.8;
+}
+
+.date {
+    font-size: 100px;
+    font-weight: 900;
+    margin-left: 40px;
+    text-transform: uppercase;
+}
+
+.temp {
+    font-size: 260px;
+    font-weight: 900;
+}
+
+.city {
+    font-size: 40px;
+    margin-left: 40px;
+}
+
+.day-details {
+    font-size: 40px;
+    font-weight: 200;
+    font-style: italic;
+}
+
+.temp-details {
+    font-size: 35px;
+    padding-bottom: 10px;
+}
+
+.forecast-current {
+    font-weight: 900;
+    font-size: 60px;
+}
+
+.forecast-second {
+    margin-top: 10px;
+    font-weight: 200;
+    font-size: 40px;
+}
+
+.main-icon {
+    font-size: 180px;
+}
+
+.second-icon {
+    font-size: 60px;
+    padding: 25px 0px;
+}
+
+.powered {
+    padding: 15px 0;
+    color: #000;
+    font-size: 24px;
+    background-color: white;
+    background-color: rgba(255, 255, 255, 0.787);
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding: 20px 15px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    attribute(_context, 'footer-color'),
+    attribute(_context, 'footer-text-color'),
+    attribute(_context, 'footer-icons-color'),
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_5</id>
+        <legacyTemplateId>weather-module1p</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Portrait - Current day, 2 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="footer-color" type="color">
+                <title>Footer Background</title>
+                <helpText>The color of the footer background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="footer-icons-color" type="color">
+                <title>Footer Icons</title>
+                <helpText>The color of the footer icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">540</width>
+            <height id="height">960</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row main-cont center-block">
+            <div class="weather-col col-12 upcoming-days">
+                <div class="summary shadowed">[summary]</div>
+                <div class="big-temp shadowed">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                <div class="powered">[Attribution]</div>
+                <div class="small-icon shadowed"><i class="wi [wicon]"></i></div>
+            </div>
+        </div>
+
+        <div class="row row-details bg-footer text-center">
+            <div class="forecast-container" data-days-num="2" data-days-offset="1"></div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col col-12 row-day">
+        <div class="weather-col col-3 day"><strong>[time|ddd]</strong></div>
+        <div class="weather-col col-6 temp">[temperatureMinRound]&deg; - [temperatureMaxRound]&deg; [temperatureUnit]</div>
+        <div class="weather-col col-3 icon-up"><i class="wi [wicon]"></i></div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 540px !important;
+    height: 960px !important;
+}
+
+h1 {
+  margin: 0.67em 0;
+  font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+  display: table;
+  content: " ";
+}
+
+.container:after, .row:after {
+  clear: both;
+}
+
+#content {
+  color: white;
+}
+
+.bg-footer {
+  color: #333;
+}
+
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+:after, :before {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Helvetica", "Arial", sans-serif;
+  line-height: 1;
+}
+
+.container {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+.main-panel {
+  margin-top: 74px;
+  height: 137px;
+}
+
+.big-icon {
+  font-size: 200px;
+}
+
+.date {
+  font-size: 18px;
+  font-family: "Helvetica", sans-serif;
+  font-weight: light;
+  padding-bottom: 1px;
+}
+
+.month {
+  font-size: 15px;
+  font-family: "Helvetica", sans-serif;
+  font-weight: light;
+}
+
+.current-temp {
+  font-family: "Helvetica", sans-serif;
+  font-weight: bold;
+  font-size: 100px;
+}
+
+.main-cont {
+  height: 780px;
+  padding: 0px 50px;
+  position: relative;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.main-icon {
+  font-size: 70px;
+}
+
+.summary {
+  font-weight: bold;
+  font-size: 80px;
+  padding-top: 30px;
+}
+
+.powered {
+  font-weight: light;
+  font-size: 15px;
+  padding-bottom: 40px;
+}
+
+.small-day {
+  padding-top: 50px;
+  font-size: 28px;
+  font-style: italic;
+  font-weight: lighter;
+}
+
+.small-icon {
+  font-size: 180px;
+  padding: 90px 0px;
+}
+
+.big-temp {
+  padding-top: 30px;
+  font-size: 120px;
+  font-weight: bold;
+}
+
+.big-temp sup {
+ font-size: 70px;
+ }
+
+.details-box {
+  height: 290px;
+  padding-left: 30px;
+}
+
+.upcoming-days {
+  height: 365px;
+  text-align: center;
+}
+
+.selector-day {
+  font-size: 15px;
+  font-weight: light;
+  margin-top: 25px;
+}
+
+.selector-temp {
+  font-size: 25px;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 20px solid rgba(0, 0, 0, 0.8);
+  margin-left: 120px;
+}
+
+.row-details {
+  background-color: #fff;
+  height: 180px;
+}
+
+.row-day {
+  padding: 30px 0px;
+}
+
+.day {
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.temp {
+  font-size: 30px;
+  font-weight: light;
+}
+
+.icon-up {
+  font-size: 30px;
+}
+
+.shadowed {
+  text-shadow: 0px 0px 2px #111;
+  filter: dropshadow(color=#111, offx=2, offy=2);
+}
+
+.container, .container {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.pull-right {
+  float: right !important;
+}
+
+.col-2 {
+  width: 16.66666667%;
+}
+
+.col-3 {
+  width: 25%;
+}
+
+.col-4 {
+  width: 33.33333333%;
+}
+
+.col-5 {
+  width: 41.66666667%;
+}
+
+.col-6 {
+  width: 50%;
+}
+
+.col-12 {
+  width: 100%;
+}
+
+.weather-col {
+  text-align: center;
+  float: left;
+  position: relative;
+  min-height: 1px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    attribute(_context, 'footer-color'),
+    attribute(_context, 'footer-text-color'),
+    attribute(_context, 'footer-icons-color'),
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_6</id>
+        <legacyTemplateId>weather-module2l</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day detailed table, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">970</width>
+            <height id="height">493</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row">
+            <div class="weather-col col-9 main-col main-section">
+                <div class="contenedor">
+                    <div class="weather-col col-6 pull-left">
+                        <div class="feels">||Feels Like||</div>
+                        <div class="temp">[apparentTemperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                        <div class="powered">[Attribution]</div>
+                    </div>
+                    <div class="weather-col col-6 main-icon"><i class="wi [wicon]"></i></div>
+                </div>
+                <div class="upcoming top-small">
+                    <div class="weather-col col-12 text-center">
+                        <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="weather-col col-3">
+                <div class="weather-col col-12 rightnow small-border ">
+                    <div class="now">
+                        ||Right now||
+                    </div>
+                    <div class="current-wea">
+                        <strong>||Wind||</strong>
+                    </div>
+                    <div class="extra-info">[windDirection] [windSpeed] [windSpeedUnit]</div>
+                </div>
+                <div class="weather-col col-12 rightnow small-border ">
+                    <div class="current-wea">
+                        <strong>||Humidity||</strong>
+                    </div>
+                    <div class="extra-info">[humidityPercent]%</div>
+                </div>
+                <div class="weather-col col-12 rightnow small-border ">
+                    <div class="current-wea">
+                        <strong>||Pressure||</strong>
+                    </div>
+                    <div class="extra-info">[pressure] mb</div>
+                </div>
+                <div class="weather-col col-12 rightnow">
+                    <div class="current-wea">
+                        <strong>||Visibility||</strong>
+                    </div>
+                    <div class="extra-info">[visibility] [visibilityDistanceUnit]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col col-3 border">
+        <div class="day-title">[time|ddd]</div>
+        <i class="wi [wicon] icon-weather"></i>
+        <div class="temp-small">[temperatureMaxRound] &deg; [temperatureUnit]</div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 970px !important;
+    height: 493px !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container-fluid:after, .container-fluid:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container-fluid:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+    color: #fff;
+}
+
+.container {
+    width: 960px !important;
+    height: 493px !important;
+}
+
+.contenedor {
+    height: 300px;
+    background-color: rgba(0, 0, 0, 0.56);
+    padding: 70px 20px 0 20px;
+}
+
+.upcoming {
+    height: 193px;
+    background-color: rgba(0, 0, 0, 0.56);
+    border-top: 2px solid #fff;
+}
+
+.city {
+    font-size: 50px;
+    font-weight: bold;
+}
+
+.country {
+    font-size: 25px;
+}
+
+.temp {
+    font-size: 120px;
+    font-weight: bold;
+}
+
+.temp sup {
+    font-size: 50px;
+}
+
+.feels {
+    font-size: 30px;
+}
+
+.main-icon {
+    font-size: 200px;
+}
+
+.day-title {
+    font-style: italic;
+    font-size: 30px;
+    font-weight: lighter;
+}
+
+.icon-weather {
+    padding: 25px 0px;
+    font-size: 35px;
+}
+
+.temp-small {
+    font-size: 18px;
+}
+
+.top-small {
+    padding-top: 30px;
+}
+
+.border {
+    border-right: 2px solid #fff;
+}
+
+.rightnow {
+    height: 123.25px;
+    padding-top: 20px;
+    background-color: rgba(0, 0, 0, 0.56);
+}
+
+.now {
+    font-size: 25px;
+}
+
+.current-wea {
+    font-size: 22px;
+    padding: 10px 0px;
+}
+
+.extra-info {
+    font-size: 18px;
+}
+
+.small-border {
+    border-bottom: 2px solid #fff;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    null,
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_7</id>
+        <legacyTemplateId>weather-module2p</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Square - Current day</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">540</width>
+            <height id="height">540</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row main-cont center-block">
+            <div class="weather-col col-12 upcoming-days">
+                <div class="small-icon shadowed"><i class="wi [wicon]"></i></div>
+                <div class="summary shadowed">[summary]</div>
+                <div class="big-temp shadowed">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                <div class="powered">[Attribution]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 540px !important;
+    height: 540px !important;
+}
+
+#content {
+    color: #fff;
+}
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container-fluid:after, .container-fluid:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container-fluid:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.container {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    width: 540px !important;
+    height: 540px !important;
+}
+
+.main-panel {
+    margin-top: 74px;
+    height: 137px;
+}
+
+.big-icon {
+    font-size: 200px;
+
+}
+
+.date {
+
+    font-size: 18px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+    padding-bottom: 1px;
+}
+
+.month {
+    font-size: 15px;
+
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+}
+
+.current-temp {
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    font-size: 100px;
+
+}
+
+.main-cont {
+    width: 400px;
+
+    padding: 90px 50px;
+    position: relative;
+}
+
+.main-icon {
+    font-size: 70px;
+
+}
+
+.summary {
+    font-weight: bold;
+    font-size: 30px;
+    padding-top: 20px;
+}
+
+.powered {
+    font-weight: light;
+    font-size: 15px;
+    padding-bottom: 40px;
+}
+
+.small-day {
+    padding-top: 50px;
+    font-size: 28px;
+    font-style: italic;
+    font-weight: lighter;
+
+}
+
+.small-icon {
+    font-size: 130px;
+    padding: 20px 0px 40px 0px;
+
+}
+
+.big-temp {
+    padding-top: 20px;
+    font-size: 120px;
+
+    font-weight: bold;
+}
+
+.big-temp sup {
+    font-size: 50px;
+}
+
+.even {
+    background-color: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.6);
+
+}
+
+.odd {
+    background-color: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff !important;
+}
+
+.details-box {
+    height: 290px;
+    padding-left: 30px;
+    color: #272625;
+}
+
+.upcoming-days {
+    height: 365px;
+    text-align: center;
+
+}
+
+.selector-day {
+    font-size: 15px;
+    font-weight: light;
+    margin-top: 25px;
+
+}
+
+.selector-temp {
+    font-size: 25px;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 20px solid rgba(0, 0, 0, 0.8);
+    margin-left: 120px;
+}
+
+.row-details {
+    margin-top: 128px;
+    background-color: #fff;
+    height: 182px;
+
+}
+
+.row-day {
+    padding: 30px 0px;
+    border-bottom: #eee solid 1px;
+    color: #000;
+}
+
+.day {
+    font-size: 30px;
+    font-weight: bold;
+    color: #434343;
+}
+
+.temp {
+    font-size: 30px;
+    font-weight: light;
+    color: #434343;
+}
+
+.icon-up {
+    font-size: 30px;
+    color: color: #434343;
+}
+
+.row-time {
+    padding: 20px 0px 10px 0px;
+
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 2px #111;
+    filter: dropshadow(color=#111, offx=2, offy=2);
+}
+
+
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    null,
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_8</id>
+        <legacyTemplateId>weather-module3l</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">970</width>
+            <height id="height">700</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+<div class="container">
+    <div class="row  main-panel">
+        <div class="offset-xs-1 weather-col col-3">
+            <div class="row">
+                <div class="date">[time|ddd] [time|d]</div>
+                <div class="month">[time|MMM]</div>
+                <div class="current-temp">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+            </div>
+        </div>
+        <div class="weather-col col-7 text-right">
+            <div class="main-icon"><i class="wi [wicon]"></i></div>
+</div>
+    </div>
+    <div class="row footer">
+        <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+    </div>
+<div class="month shadowed powered">[Attribution]</div></div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+<div class="weather-col col-3">
+    <div class="small-day">[time|ddd]</div>
+    <div class="small-icon"><i class="wi [wicon]"></i></div>
+    <div class="small-temp">[temperatureMaxRound] &deg; [temperatureUnit] </div>
+</div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+ width: 970px !important;
+ height: 700px !important;
+ }
+
+#content {
+ color: #f9f9f9;
+ }
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-center {
+ text-align: center;
+}
+ h1 {
+ margin: 0.67em 0;
+ font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+.container:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after,:before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+ body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.container {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    width: 970px !important;
+    height: 700px !important;
+    text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
+    filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=2, offy=2);
+}
+
+.main-panel {
+    margin-top: 100px;
+}
+
+.date {
+    text-transform: uppercase;;
+    font-size: 50px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    padding-bottom: 5px;
+}
+
+.month {
+    font-size: 40px;;
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+}
+
+.current-temp {
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    font-size: 130px;
+}
+
+.current-temp sup {
+ font-size: 50px;
+ }
+
+.footer {
+    margin-top: 120px;
+    height: 220px;
+    text-align: center;
+    padding: 30px 0px;
+    position: relative;
+}
+
+.main-icon {
+    font-size: 200px;;
+}
+
+.small-day {
+    font-size: 30px;
+    font-style: italic;
+    font-weight: light;
+}
+
+.small-icon {
+    font-size: 60px;
+    padding: 30px;
+}
+
+.small-temp {
+    font-size: 20px;
+}
+
+.powered {
+  background-color: #fff;
+  color: #545454;
+  font-size: 18px;
+  padding: 6px;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  text-align: center;
+  left: 0;
+  line-height: 18px;
+}
+
+.bg-partly-cloudy-day {
+    background-image: url('[day-cloudy-image]');
+}
+
+.bg-clear-day {
+    background-image: url('[day-sunny-image]');
+}
+
+.bg-fog {
+    background-image: url('[fog-image]');
+}
+
+.bg-sleet {
+    background-image: url('[hail-image]');
+}
+
+.bg-clear-night {
+    background-image: url('[night-clear-image]');
+}
+
+.bg-partly-cloudy-night {
+    background-image: url('[night-partly-cloudy-image]');
+}
+
+.bg-rain {
+    background-image: url('[rain-image]');
+}
+
+.bg-snow {
+    background-image: url('[snow-image]');
+}
+
+.bg-wind {
+    background-image: url('[windy-image]');
+}
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right!important;
+}
+
+.offset-xs-1 {
+    margin-left: 8.33333333%;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33333333%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_9</id>
+        <legacyTemplateId>weather-module3p</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Portrait - Current day, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">540</width>
+            <height id="height">960</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row main-cont center-block">
+            <div class="weather-col col-12 upcoming-days">
+                <div class="weather-col col-6">
+                    <div class="small-icon shadowed"><i class="wi [wicon]"></i></div>
+                </div>
+                <div class="weather-col col-6" style="padding-top: 20px;">
+                    <div class="big-temp shadowed">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                    <div class="summary shadowed">[summary]</div>
+                </div>
+            </div>
+        </div>
+        <div class="row row-details text-center">
+            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="powered">[Attribution]</div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col col-12 row-day">
+        <div class="weather-col col-4 day shadowed">[time|dddd]</div>
+        <div class="weather-col col-4 temp shadowed"><i class="wi [wicon]"></i></div>
+        <div class="weather-col col-4 icon-up shadowed">[temperatureMinRound]&deg; - [temperatureMaxRound]&deg; [temperatureUnit]</div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+ width: 540px !important;
+ height: 960px !important;
+ }
+
+#content {
+ color: #f9f9f9;
+ }
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-center {
+ text-align: center;
+}
+ h1 {
+ margin: 0.67em 0;
+ font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+.container:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after,:before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+ body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.container {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    width: 540px !important;
+    height: 960px !important;
+}
+
+.main-panel {
+    margin-top: 74px;
+    height: 137px;
+}
+
+.big-icon {
+    font-size: 200px;
+
+}
+
+.date {
+    font-size: 18px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+    padding-bottom: 1px;
+}
+
+.month {
+    font-size: 15px;
+
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+}
+
+.current-temp {
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    font-size: 100px;
+
+}
+
+.main-cont {
+    margin-top: 50px;
+    width: 500px;
+    height: 380px;
+
+    padding: 0px 40px;
+    position: relative;
+}
+
+.main-icon {
+    font-size: 70px;
+
+}
+
+.city {
+    font-weight: bold;
+    font-size: 40px;
+    padding-top: 30px;
+}
+
+.country {
+    font-weight: light;
+    font-size: 15px;
+    padding-bottom: 10px;
+}
+
+.small-day {
+    padding-top: 50px;
+    font-size: 28px;
+    font-style: italic;
+    font-weight: lighter;
+
+}
+
+.small-icon {
+    font-size: 120px;
+    padding: 35px 0px;
+
+}
+
+.big-temp {
+    font-size: 90px;
+
+    font-weight: bold;
+    float: right;
+}
+
+.big-temp sup {
+ font-size: 40px;
+ }
+
+.even {
+    background-color: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.6);
+
+}
+
+.odd {
+    background-color: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff !important;
+}
+
+.details-box {
+    height: 290px;
+    padding-left: 30px;
+    padding-top: 40px;
+    color: #272625;
+}
+
+.upcoming-days {
+    height: 365px;
+    text-align: center;
+
+    padding-top: 10px;
+}
+
+.selector-day {
+    font-size: 15px;
+    font-weight: light;
+    margin-top: 25px;
+
+}
+
+.selector-temp {
+    font-size: 25px;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 20px solid rgba(0, 0, 0, 0.8);
+    margin-left: 120px;
+}
+
+.row-details {
+    margin-top: 145px;
+    height: 360px;
+}
+
+.row-day {
+    padding: 30px 0px;
+}
+
+.day {
+    font-size: 25px;
+    font-weight: lighter;
+
+    font-style: italic;
+    text-align: left;
+text-transform: uppercase;
+}
+
+.temp {
+    font-size: 25px;
+    font-weight: light;
+
+}
+
+.icon-up {
+    font-size: 30px;
+    color: color: #fff;
+}
+
+.summary {
+    font-weight: bold;
+    font-size: 20px;
+    padding-top: 10px;
+}
+
+.powered {
+    font-weight: light;
+    font-size: 15px;
+    padding-bottom: 40px;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 2px #111;
+    filter: dropshadow(color=#111, offx=2, offy=2);
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right!important;
+}
+
+.offset-xs-1 {
+    margin-left: 8.33333333%;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33333333%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_10</id>
+        <legacyTemplateId>weather-module4l</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day detailed, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="footer-icons-color" type="color">
+                <title>Footer Icons</title>
+                <helpText>The color of the footer icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">960</width>
+            <height id="height">540</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row  main-panel">
+            <div class="weather-col col-2 offset-xs-6 big-icon">
+                <i class="wi [wicon] shadowed"></i>
+            </div>
+            <div class="weather-col col-3 text-right">
+                <div class="current-temp shadowed">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+
+                <div class="month shadowed">[time|dddd] [time|D] [time|MMMM], [time|YYYY]</div>
+                <div class="month shadowed powered">[Attribution]</div>
+            </div>
+        </div>
+        <div class="row bg-footer footer">
+            <div class="weather-col col-4 main-detail details-box">
+                <h3><strong>||TODAY||</strong></h3>
+                <p class="selector-day">Max</p>
+                <p class="selector-temp">[temperatureMaxRound] &deg; [temperatureUnit]</p>
+                <p class="selector-day">Min</p>
+                <p class="selector-temp">[temperatureMinRound] &deg; [temperatureUnit]</p>
+                <p class="selector-day">Avg</p>
+                <p class="selector-temp">[temperatureMeanRound] &deg; [temperatureUnit]</p>
+            </div>
+            <div class="upcoming">
+                <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col col-2 upcoming-days">
+        <div class="small-day">[time|ddd]</div>
+        <div class="small-icon"><i class="wi [wicon]"></i></div>
+        <div class="small-temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 960px !important;
+    height: 540px !important;
+}
+
+p {
+    margin: 0 0 10px;
+}
+
+.h1, .h2, .h3, h1, h2, h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.h3, h3 {
+    font-size: 24px;
+}
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+#content {
+    color: white;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.container {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    width: 960px !important;
+    height: 540px !important;
+}
+
+.main-panel {
+    margin-top: 74px;
+    height: 137px;
+}
+
+.big-icon {
+    font-size: 120px;
+
+    margin-right: 20px;
+}
+
+.date {
+
+    font-size: 18px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+    padding-bottom: 1px;
+}
+
+.month {
+    font-size: 15px;
+
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+}
+
+.current-temp {
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    font-size: 100px;
+
+}
+
+.current-temp sup {
+    font-size: 50px;
+}
+
+.footer {
+    height: 290px;
+
+    padding: 30px 30px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.main-icon {
+    font-size: 70px;
+
+}
+
+.small-day {
+    padding-top: 54px;
+    font-size: 20px;
+    font-style: italic;
+    font-weight: lighter;
+    text-transform: uppercase;
+}
+
+.small-icon {
+    font-size: 30px;
+    padding: 20px;
+    color: #272625;
+}
+
+.small-temp {
+    font-size: 16px;
+
+}
+
+.powered {
+    font-weight: bold;
+    font-size: 1.4em;
+    padding-top: 5px;
+}
+
+.upcoming-days:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.6);
+
+}
+
+.main-detail, .upcoming-days:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.details-box {
+    height: 290px;
+    padding-left: 30px !important;
+
+}
+
+.upcoming-days {
+    height: 195px;
+    margin-top: 95px !important;
+    text-align: center;
+}
+
+.selector-day {
+    font-size: 15px;
+    font-weight: light;
+    margin-top: 25px;
+}
+
+.selector-temp {
+    font-size: 25px;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.4);
+    filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=2, offy=2);
+}
+
+.container-fluid, .container {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.offset-xs-1 {
+    margin-left: 8.33333333%;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33333333%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+}
+
+.offset-xs-6 {
+    margin-left: 50%;
+}
+
+.bg-footer {
+    color: #272625;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    attribute(_context, 'footer-text-color'),
+    attribute(_context, 'footer-icons-color'),
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_11</id>
+        <legacyTemplateId>weather-module4p</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Portrait - Current day, 3 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The color of the shadow</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="footer-icons-color" type="color">
+                <title>Footer Icons</title>
+                <helpText>The color of the footer icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">540</width>
+            <height id="height">960</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row main-cont center-block">
+            <div class="weather-col col-12 upcoming-days">
+                <div class="circle">
+                    <div class="weather-col col-12">
+                        <div class="small-icon">
+                            <i class="wi [wicon]"></i></div>
+                    </div>
+                    <div class="weather-col col-12" style="padding-top: 10px;">
+                        <div class="big-temp">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                        <div class="summary">[summary]</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row bg-footer row-details text-center">
+            <div class="forecast-container" data-days-num="3" data-days-offset="1"></div>
+            <div class="weather-col col-12 powered">[Attribution]</div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col col-4 row-day odd">
+        <div class="weather-col col-12 day">[time|ddd]</div>
+        <div class="weather-col col-12 icon-up "><i class="wi [wicon]"></i></div>
+        <div class="weather-col col-12 temp ">[temperatureMinRound]&deg; - [temperatureMaxRound]&deg; [temperatureUnit]</div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 540px !important;
+    height: 960px !important;
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+#content {
+    color: white;
+}
+
+.container {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.container {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    width: 540px !important;
+    height: 960px !important;
+}
+
+.main-panel {
+    margin-top: 74px;
+    height: 137px;
+}
+
+.big-icon {
+    font-size: 200px;
+}
+
+.date {
+    font-size: 18px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+    padding-bottom: 1px;
+}
+
+.month {
+    font-size: 15px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+}
+
+.current-temp {
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    font-size: 100px;
+}
+
+.main-cont {
+    width: 400px;
+    height: 400px;
+    margin: 0 auto !important;
+    position: relative;
+}
+
+.main-icon {
+    font-size: 70px;
+}
+
+.city {
+    font-weight: bold;
+    font-size: 40px;
+    padding-top: 30px;
+}
+
+.country {
+    font-weight: light;
+    font-size: 15px;
+    padding-bottom: 30px;
+}
+
+.small-day {
+    padding-top: 50px;
+    font-size: 28px;
+    font-style: italic;
+    font-weight: lighter;
+}
+
+.small-icon {
+    font-size: 120px;
+    padding: 35px 0px;
+}
+
+.big-temp {
+    font-size: 90px;
+    font-weight: bold;
+}
+
+.big-temp sup {
+    font-size: 50px;
+}
+
+.even {
+    background-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.bg-footer {
+    color: #333;
+}
+
+.odd {
+    background-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.details-box {
+    height: 290px;
+    padding-left: 30px;
+    color: #272625;
+}
+
+.upcoming-days {
+    height: 365px;
+    text-align: center;
+    margin-top: 50px;
+}
+
+.selector-day {
+    font-size: 15px;
+    font-weight: light;
+    margin-top: 25px;
+}
+
+.selector-temp {
+    font-size: 25px;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.row-details {
+    margin-top: 280px;
+    height: 230px;
+    padding: 0px 20px;
+}
+
+.row-day {
+    padding: 30px 0px;
+}
+
+.day {
+    font-size: 25px;
+    font-weight: lighter;
+
+    font-style: italic;
+    text-transform: uppercase;
+}
+
+.temp {
+    font-size: 25px;
+    font-weight: light;
+
+}
+
+.icon-up {
+    font-size: 50px;
+
+    padding: 40px;
+}
+
+.circle {
+    border-radius: 50%;
+    width: 380px;
+    height: 380px;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.summary {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.powered {
+    background-color: #444;
+    background-color: rgba(0, 0, 0, 0.63);
+    color: #fff;
+    font-size: 18px;
+    padding: 8px;
+    line-height: 18px;
+    n
+}
+
+.shadowed {
+    text-shadow: 0px 0px 2px #111;
+    filter: dropshadow(color=#111, offx=2, offy=2);
+}
+
+.container-fluid, .container {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.offset-xs-1 {
+    margin-left: 8.33333333%;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33333333%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    attribute(_context, 'footer-text-color'),
+    attribute(_context, 'footer-icons-color'),
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_12</id>
+        <legacyTemplateId>weather-module5l</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day detailed, 3 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="footer-icons-color" type="color">
+                <title>Footer Icons</title>
+                <helpText>The color of the footer icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">960</width>
+            <height id="height">540</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row main-cont ">
+            <div class="weather-col col-3 odd upcoming-days">
+                <div class="small-day">||RIGHT NOW||</div>
+                <div class="small-icon"><i class="wi [wicon]"></i></div>
+                <div class="small-temp">[temperatureRound]&deg;[temperatureUnit]</div>
+            </div>
+            <div class="forecast-container" data-days-num="3" data-days-offset="1"></div>
+        </div>
+        <div class="arrow-down"></div>
+
+        <div class="row bg-footer row-details">
+            <div class="weather-col col-12" style="margin-bottom: 10px; ">[summary]</div>
+            <br/>
+            <div class="weather-col col-3">
+                <strong>||Wind||</strong> [windDirection] [windSpeed] [windSpeedUnit]
+            </div>
+
+            <div class="weather-col col-3">
+                <strong>||Humidity||</strong> [humidityPercent]%
+            </div>
+            <div class="weather-col col-6 text-right">
+                <div class="powered">[Attribution]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col col-3 even upcoming-days">
+        <div class="small-day">[time|ddd]</div>
+        <div class="small-icon"><i class="wi [wicon]"></i></div>
+        <div class="small-temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 960px !important;
+    height: 540px !important;
+}
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+#content {
+    color: #fff;
+}
+
+.container {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    width: 960px !important;
+    height: 540px !important;
+}
+
+.powered {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.main-panel {
+    margin-top: 74px;
+    height: 137px;
+}
+
+.big-icon {
+    font-size: 120px;
+}
+
+.date {
+    font-size: 18px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+    padding-bottom: 1px;
+}
+
+.month {
+    font-size: 15px;
+    font-family: "Helvetica", sans-serif;
+    font-weight: light;
+}
+
+.current-temp {
+    font-family: "Helvetica", sans-serif;
+    font-weight: bold;
+    font-size: 100px;
+}
+
+.main-cont {
+    margin-top: 72px;
+    height: 870px;
+    height: 365px;
+    padding: 0px 50px;
+    position: relative;
+}
+
+.main-icon {
+    font-size: 70px;
+}
+
+.small-day {
+    padding-top: 50px;
+    font-size: 28px;
+    font-style: italic;
+    font-weight: lighter;
+}
+
+.small-icon {
+    font-size: 70px;
+    padding: 70px 0px;
+}
+
+.small-temp {
+    font-size: 20px;
+    font-weight: lighter;
+    font-style: italic;
+}
+
+.even {
+    background-color: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.odd {
+    background-color: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.details-box {
+    height: 290px;
+    padding-left: 30px;
+}
+
+.upcoming-days {
+    height: 365px;
+    text-align: center;
+}
+
+.selector-day {
+    font-size: 15px;
+    font-weight: light;
+    margin-top: 25px;
+}
+
+.selector-temp {
+    font-size: 25px;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 20px solid rgba(0, 0, 0, 0.8);
+    margin-left: 120px;
+}
+
+.row-details {
+    padding: 15px 35px;
+    background-color: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.container-fluid, .container {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.offset-xs-1 {
+    margin-left: 8.33333333%;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33333333%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    attribute(_context, 'footer-text-color'),
+    attribute(_context, 'footer-icons-color'),
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_13</id>
+        <legacyTemplateId>weather-module6h</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Current day details, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>none</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">960</width>
+            <height id="height">180</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row text-center">
+            <div class="weather-col col-4">
+                <div class="current-condition">[summary]</div>
+                <div class="info1">||Wind|| [windDirection] [windSpeed] [windSpeedUnit]</div>
+                <div class="info2">||Humidity|| [humidityPercent]%</div>
+                <div class="powered">[Attribution]</div>
+            </div>
+            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col col-2">
+        <div class="day">[time|ddd]</div>
+        <div class="icon"><i class="wi [wicon]"></i></div>
+        <div class="temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 960px !important;
+    height: 180px !important;
+}
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+#content {
+    color: white;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #000;
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.container {
+    width: 960px !important;
+    height: 180px !important;
+    padding-top: 30px;
+}
+
+.current-condition {
+    font-weight: bold;
+    font-size: 23px;
+}
+
+.info1 {
+    font-size: 14px;
+    padding: 20px 0px;
+}
+
+.day {
+    font-size: 18px;
+    font-weight: lighter;
+    font-style: italic;
+}
+
+.icon {
+    font-size: 50px;
+    padding: 20px 0px;
+}
+
+.temp {
+    font-size: 15px;
+}
+
+.powered {
+    font-weight: bold;
+
+    font-style: italic;
+    padding-top: 26px;
+    font-size: 1.2em;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.offset-xs-1 {
+    margin-left: 8.33333333%;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33333333%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_14</id>
+        <legacyTemplateId>weather-module6v</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Portrait - Current day details, 4 day forecast</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>none</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">189</width>
+            <height id="height">900</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="row text-center">
+            <div class="weather-col cont-main col-12">
+                <div class="current-condition">[summary]</div>
+                <div class="info1">||Wind|| [windDirection] [windSpeed] [windSpeedUnit]</div>
+                <div class="info2">||Humidity|| [humidityPercent]%</div>
+                <div class="powered">[Attribution]</div>
+            </div>
+            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+        </div>
+    </div>
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+    <div class="weather-col cont-day col-12 border">
+        <div class="day">[time|ddd]</div>
+        <div class="icon"><i class="wi [wicon]"></i></div>
+        <div class="temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
+    </div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 189px !important;
+    height: 900px !important;
+}
+
+.center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+#content {
+    color: white;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin: 0.67em 0;
+    font-size: 2em;
+}
+
+.container:after, .container:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+
+.container:after, .row:after {
+    clear: both;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:after, :before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #000;
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+.container {
+    width: 189px !important;
+    height: 900px !important;
+    padding-top: 20px;
+}
+
+.current-condition {
+    font-weight: bold;
+    font-size: 23px;
+    height: 25%;
+}
+
+.info1 {
+    font-size: 14px;
+    padding: 6px 0px;
+}
+
+.info2 {
+    padding-bottom: 6px;
+}
+
+.day {
+    font-size: 18px;
+    font-weight: lighter;
+    font-style: italic;
+}
+
+.icon {
+    font-size: 50px;
+    padding: 20px 0px;
+}
+
+.temp {
+    font-size: 15px;
+}
+
+.border {
+    padding-top: 25px;
+    padding-bottom: 25px;
+    border-top: 3px solid #fff;
+}
+
+.powered {
+    font-weight: bold;
+    font-style: italic;
+    padding: 10px 0 10px 0;
+    font-size: 14px;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.offset-xs-1 {
+    margin-left: 8.33333333%;
+}
+
+.col-2 {
+    width: 16.66666667%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33333333%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.weather-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.cont-main {
+    height: 160px;
+}
+
+.cont-day {
+    height: 180px;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_15</id>
+        <legacyTemplateId>weather-module-7s</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Square - Forecast squared with background</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-color" type="color">
+                <title>Footer Background</title>
+                <helpText>The color of the footer background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="footer-icons-color" type="color">
+                <title>Footer Icons</title>
+                <helpText>The color of the footer icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">250</width>
+            <height id="height">250</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container">
+        <div class="region-top">
+            <div class="row-element-half">
+                <div class="shadowed temp">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+            </div><div class="row-element-half">
+                <div class=" main-icon shadowed"><i class="wi [wicon]"></i></div>
+            </div>
+        </div>
+        <div class="region-middle">
+            <div class="date shadowed"> [time|MMM] [time|D]</div>
+        </div>
+        <div class="region-bottom bg-footer">
+            <div class="forecast-current">[summary]</div>
+            <div class="forecast-second">||Wind||: [windSpeed] [windSpeedUnit] [windDirection]</div>
+            <div class="forecast-second">||Humidity||: [humidityPercent]%</div>
+        </div>
+    </div><div class="weather-col col-12 powered">[Attribution]</div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+#content {
+    color: #f9f9f9;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 8px rgba(0, 0, 0, 0.6);
+    filter: dropshadow(color=rgba(0, 0, 0, 0.6), offx=8, offy=8);
+}
+
+.row-element-half {
+    display: inline-block;
+    width: 50%;
+    vertical-align: top;
+}
+
+.region-top {
+    height: 120px;
+}
+
+.region-bottom {
+    background-color: #111;
+    background-color: #111a;
+    border-radius: 0 12px 0 0;
+    padding: 6px;
+    bottom: 14px;
+    font-size: 14px;
+    width: 90%;
+    height: 70px;
+}
+
+.region-middle {
+    font-size: 24px;
+    line-height: 24px;
+    font-weight: bold;
+    padding: 0 4px;
+}
+
+.main-icon {
+    text-align: right;
+    font-size: 50px;
+    line-height: 78px;
+    padding: 8px;
+}
+
+.temp {
+    font-size: 60px;
+    padding: 8px;
+}
+
+.temp sup {
+    font-size: 30px;
+}
+
+.forecast-current {
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+.forecast-second {
+    font-size: 12px;
+}
+
+.powered {
+    padding: 4px 0;
+    color: #000;
+    font-size: 13px;
+    text-align: center;
+    background-color: white;
+    background-color: rgba(255, 255, 255, 0.787);
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    attribute(_context, 'footer-color'),
+    attribute(_context, 'footer-text-color'),
+    attribute(_context, 'footer-icons-color'),
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_16</id>
+        <legacyTemplateId>weather-module-8s</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Square - Detailed weather</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-color" type="color">
+                <title>Background</title>
+                <helpText>The color of the background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-color" type="color">
+                <title>Footer Background</title>
+                <helpText>The color of the footer background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="footer-icons-color" type="color">
+                <title>Footer Icons</title>
+                <helpText>The color of the footer icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">250</width>
+            <height id="height">250</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="main-container container">
+        <div class="top-content">
+            <div class="row-element-half">
+                <div class="date shadowed"> [time|MMM] [time|D]</div>
+                <div class="shadowed temp">
+                    [temperatureRound]<sup>&deg;[temperatureUnit]</sup>
+                </div>
+            </div>
+            <div class="row-element-half">
+                <div class="main-icon shadowed"><i class="wi [wicon]"></i></div>
+            </div>
+        </div>
+
+        <div class="bottom-content bg-footer">
+            <div class="row-element-full forecast-current"><strong>[summary]</strong></div>
+            <div class="row-element-full forecast-second">||Maximum temperature||:
+                [temperatureMaxRound]&deg;[temperatureUnit]</div>
+            <div class="row-element-full forecast-second">||Minimum temperature||:
+                [temperatureMinRound]&deg;[temperatureUnit]</div>
+            <div class="row-element-full forecast-second">||Humidity||: [humidityPercent]%</div>
+            <div class="row-element-full forecast-second">||Wind||: [windSpeed] [windSpeedUnit] [windDirection]</div>
+        </div>
+    </div>
+    <div class="weather-col col-12 powered">[Attribution]</div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+    width: 250px !important;
+    height: 250px !important;
+}
+
+#content {
+    color: #f9f9f9;
+}
+
+.shadowed {
+    text-shadow: 0px 0px 6px rgba(0, 0, 0, 0.6);
+    filter: dropshadow(color=rgba(0, 0, 0, 0.6), offx=6, offy=6);
+}
+
+.main-container {
+    padding-bottom: 8px;
+}
+
+.top-content {
+    font-size: 0;
+    height: 110px;
+}
+
+.bottom-content {
+    height: 90px;
+}
+
+.row-element-half {
+    display: inline-block;
+    width: 50%;
+    vertical-align: top;
+}
+
+.date {
+    font-weight: 900;
+    font-size: 20px;
+    text-transform: uppercase;
+    padding: 12px 0px 0px 12px;
+}
+
+.temp {
+    font-size: 35px;
+    font-weight: 900;
+    padding: 12px 0px 0px 12px;
+}
+
+.temp sup {
+    font-size: 15px;
+}
+
+.main-icon {
+    line-height: 84px;
+    font-size: 60px;
+    text-align: right;
+    padding: 12px;
+}
+
+.bg-footer {
+    background-color: #111;
+    background-color: #111a;
+    padding: 10px 8px;
+    font-size: 13px;
+}
+
+.forecast-current {
+    margin-bottom: 4px;
+    font-size: 14px;
+    overflow: hidden;
+}
+
+.powered {
+    padding: 4px 0;
+    color: white;
+    font-size: 13px;
+    text-align: center;
+    background-color: #222;
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    attribute(_context, 'footer-color'),
+    attribute(_context, 'footer-text-color'),
+    attribute(_context, 'footer-icons-color'),
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_17</id>
+        <legacyTemplateId>weather-module-9</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Scale - Weather background only</title>
+        <properties>
+            <property id="footer-color" type="color">
+                <title>Footer Background</title>
+                <helpText>The color of the footer background</helpText>
+                <default></default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The color of the footer text</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container main-container"></div>
+    <div class="weather-col col-12 powered bg-footer">[Attribution]</div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+#content, .main-container {
+    width: 100%;
+    height: 100%;
+}
+
+.powered {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 4px 0;
+    color: #000;
+    font-size: 13px;
+    text-align: center;
+    background-color: white;
+    background-color: rgba(255, 255, 255, 0.787);
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    null,
+    null,
+    null,
+    attribute(_context, 'footer-color'),
+    attribute(_context, 'footer-text-color'),
+    null,
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+    <template>
+        <id>weather_18</id>
+        <legacyTemplateId>weather-module-10l</legacyTemplateId>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <title>Landscape - Weather fullscreen</title>
+        <properties>
+            <property id="text-color" type="color">
+                <title>Text</title>
+                <helpText>The color of the text</helpText>
+                <default></default>
+            </property>
+            <property id="icons-color" type="color">
+                <title>Icons</title>
+                <helpText>The color of the icons</helpText>
+                <default></default>
+            </property>
+            <property id="background-image" type="dropdown" mode="single">
+                <title>Background Image</title>
+                <helpText>The background image to use</helpText>
+                <default>fit</default>
+                <options>
+                    <option name="none">None</option>
+                    <option name="fit">Fit</option>
+                    <option name="stretch">Stretch</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="cloudy-image" type="mediaSelector">
+                <title>Cloudy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-cloudy-image" type="mediaSelector">
+                <title>Cloudy day</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="day-sunny-image" type="mediaSelector">
+                <title>Clear</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fog-image" type="mediaSelector">
+                <title>Fog</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="hail-image" type="mediaSelector">
+                <title>Hail</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-clear-image" type="mediaSelector">
+                <title>Clear night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="night-partly-cloudy-image" type="mediaSelector">
+                <title>Cloudy night</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="rain-image" type="mediaSelector">
+                <title>Raining</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="snow-image" type="mediaSelector">
+                <title>Snowing</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="windy-image" type="mediaSelector">
+                <title>Windy</title>
+                <visibility>
+                    <test>
+                        <condition field="background-image" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <width id="width">1920</width>
+            <height id="height">1080</height>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+    <div class="container main-container">
+        <div class="corner-info">
+            <div class="top-container">
+                <div class="row row-up">
+                    <div class="block-container">
+                        <div class="text-right temp shadowed">[temperatureRound]&deg;[temperatureUnit]</div>
+                    </div>
+                    <div class="block-container">
+                        <div class="rotateInUpRight main-icon shadowed"><i class="wi [wicon]"></i></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="block-container-full">
+                        <div class="date shadowed"> [time|MMM] [time|D]</div>
+                    </div>
+                </div>
+
+                <div class="row bg-footer">
+                    <div class="forecast-current">[summary]</div>
+                    <div class="forecast-second">||Wind||: [windDirection] [windSpeed] [windSpeedUnit]</div>
+                    <div class="forecast-second">||Humidity||: [humidityPercent]%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="weather-col col-12 powered">[Attribution]</div>
+</div>
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+<style>
+body {
+ width: 1920px !important;
+ height: 1080px !important;
+ }
+
+#content {
+    color: #fff;
+}
+
+#content, .main-container {
+ width: 100%;
+ height: 100%;
+}
+
+.shadowed {
+text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
+    filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=2, offy=2);
+}
+
+.corner-info {
+    width: 200px;
+    background-color: #000;
+    background-color: #0008;
+    opacity: 0.6;
+    border-radius: 0 0 30px 0;
+    padding: 8px;
+}
+
+.corner-info .top-container .row-up {
+    font-size: 0;
+}
+
+.block-container {
+    display: inline-block;
+    width: 50%;
+    height: 50px;
+    vertical-align: top;
+}
+
+.date {
+      font-weight: 900;
+    font-size: 20px;
+    text-transform: uppercase;
+}
+
+.temp {
+      font-size: 30px;
+    font-weight: 900;
+}
+
+.main-icon {
+ padding: 8px;
+}
+
+.main-icon i {
+    font-size: 50px;
+    padding: 5px;
+}
+
+.powered {
+  position: absolute;
+ bottom: 0;
+ width: 100%;
+ padding: 4px 0;
+  color: #000;
+  font-size: 13px;
+ text-align: center;
+  background-color: white;
+  background-color: rgba(255, 255, 255, 0.787);
+}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    null,
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    null
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+</templates>
