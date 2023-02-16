@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -31,7 +31,25 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>600</defaultDuration>
-    <settings></settings>
+    <settings>
+        <property id="apiKey" type="text">
+            <title>API Key</title>
+            <helpText>Enter your API Key from Google Maps.</helpText>
+            <default></default>
+        </property>
+        <property id="minDuration" type="number">
+            <title>Minimum allowed duration</title>
+            <helpText>Please enter a minimum allowed duration in seconds for this Module. This can be used to prevent run-away charges.</helpText>
+        </property>
+        <property id="resetAllWidgets" type="checkbox">
+            <title>Reset all Widgets to the minimum duration?</title>
+            <default>0</default>
+        </property>
+        <property type="message" variant="danger">
+            <title>This module uses the Google Traffic JavaScript API which is a paid-for API from Google. Charges will apply each time the map is loaded in the CMS preview and on each Player, therefore we recommend setting a high minimum duration.</title>
+            <default></default>
+        </property>
+    </settings>
     <properties>
         <property id="useDisplayLocation" type="checkbox">
             <title>Use the Display Location</title>
@@ -41,9 +59,9 @@
         <property id="latitude" type="number">
             <title>Latitude</title>
             <helpText>The Latitude for this widget</helpText>
-            <default></default>
+            <default>0</default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
                 </test>
             </visibility>
@@ -51,9 +69,9 @@
         <property id="longitude" type="number">
             <title>Longitude</title>
             <helpText>The Longitude for this widget</helpText>
-            <default></default>
+            <default>0</default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
                 </test>
             </visibility>
@@ -61,7 +79,7 @@
         <property id="zoom" type="number">
             <title>Zoom</title>
             <helpText>How far should the map be zoomed in? The higher the number the closer, 1 represents the entire globe.</helpText>
-            <default></default>
+            <default>1</default>
         </property>
         <property type="message">
             <title>This module is rendered on the Player which means the Player must have an internet connection.</title>
@@ -74,6 +92,45 @@
     </properties>
     <preview></preview>
     <stencil>
-        <twig><![CDATA[]]></twig>
+        <hbs><![CDATA[
+
+        ]]></hbs>
+        <twig><![CDATA[
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ apiKey }}&callback=initMap"></script>
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+}
+h1, h2, h3, h4, p {
+    margin-top: 0;
+}
+#iframe {
+    border: 0;
+}
+#map {
+    height: 100%;
+}
+</style>
+
+<script type="text/javascript">
+    function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: {{ zoom }},
+            center: {lat: {{ latitude }}, lng: {{ longitude }}},
+            disableDefaultUI: true
+        });
+
+        var trafficLayer = new google.maps.TrafficLayer();
+        trafficLayer.setMap(map);
+    }
+</script>
+
+ <div id="map"></div>
+        ]]></twig>
     </stencil>
+    <onRender><![CDATA[
+$(target).find('#map').height($(window).height());
+    ]]></onRender>
 </module>

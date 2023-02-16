@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -44,7 +44,6 @@
                 <option name="dp">DP</option>
                 <option name="ops">OPS</option>
             </options>
-            <rule>required</rule>
         </property>
         <property id="showFullScreen" type="checkbox">
             <title>Show Full Screen?</title>
