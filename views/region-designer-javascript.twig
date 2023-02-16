@@ -57,11 +57,11 @@
             });
         });
         
-        form.find('#top, #left, #width, #height').on('change', function(){
+        form.find('[name="top"], [name="left"], [name="width"], [name="height"]').on('change', function(){
             formChangesRegion();
         });
 
-        form.find('#zIndex').on('change', function(){
+        form.find('[name="zIndex"]').on('change', function(){
             formChangesRegionZIndex();
         });
 
@@ -87,7 +87,7 @@
     function formChangesRegionZIndex() {
         var app = lD;
         var form = $(app.propertiesPanel.DOMObject).find('form');
-        var newZIndex = parseInt(form.find('#zIndex').val());
+        var newZIndex = parseInt(form.find('[name="zIndex"]').val());
 
         app.viewer.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
         app.selectedObject.zIndex = newZIndex;

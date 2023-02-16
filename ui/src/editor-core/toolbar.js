@@ -1700,6 +1700,11 @@ Toolbar.prototype.loadSubMenu = function($container, contentType, moduleType) {
         }),
       );
 
+      // Initialise tooltips
+      self.parent.common.reloadTooltips(
+        $container,
+      );
+
       // Handle cards behaviour
       self.handleCardsBehaviour();
     };

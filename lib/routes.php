@@ -612,7 +612,7 @@ $app->get('/module/templates/{dataType}', [
     '\Xibo\Controller\Module', 'templateGrid'
 ])->setName('module.template.search');
 
-$app->get('/module/asset/{assetId}/download', ['\Xibo\Controller\Module', 'assetDownload'])
+$app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
     ->setName('module.asset.download');
 
 $app->group('', function (RouteCollectorProxy $group) {

@@ -31,6 +31,11 @@ window.templates = {
     fontSelector: require('./src/templates/forms/inputs/fontSelector.hbs'),
     effectSelector: require('./src/templates/forms/inputs/effectSelector.hbs'),
     worldClock: require('./src/templates/forms/inputs/worldClock.hbs'),
+    mediaSelector: require('./src/templates/forms/inputs/mediaSelector.hbs'),
+    languageSelector:
+      require('./src/templates/forms/inputs/languageSelector.hbs'),
+    forecastUnitsSelector:
+      require('./src/templates/forms/inputs/forecastUnitsSelector.hbs'),
     // More to be added
   },
 };

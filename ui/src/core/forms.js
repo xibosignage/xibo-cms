@@ -82,6 +82,20 @@ window.forms = {
           }
         }
 
+        // Media selector
+        if (property.type === 'mediaSelector') {
+          property.mediaSearchUrl = urlsForApi.library.get.url;
+
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'mediaId';
+          }
+        }
+
         // Fonts selector
         if (property.type === 'fontSelector') {
           property.fontsSearchUrl = getFontsUrl + '?length=10000';
@@ -660,16 +674,21 @@ window.forms = {
       // Init the colour picker
       $(el).colorpicker();
 
-      // If we have a default value, set it on unfocus
-      if ($(el).data('default') !== undefined) {
-        const defaultValue = $(el).data('default');
-        const $inputElement = $(el).find('input');
-        $inputElement.on('focusout', function() {
-          if ($inputElement.val() == '') {
+      const $inputElement = $(el).find('input');
+      $inputElement.on('focusout', function() {
+        // If the input is empty, set the default value
+        // or clear the color preview
+        if ($inputElement.val() == '') {
+          // If we have a default value
+          if ($(el).data('default') !== undefined) {
+            const defaultValue = $(el).data('default');
             $(el).colorpicker('setValue', defaultValue);
+          } else {
+            // Clear the color preview
+            $(el).find('.input-group-addon').css('background-color', '');
           }
-        });
-      }
+        }
+      });
     });
 
     // Date picker - date only

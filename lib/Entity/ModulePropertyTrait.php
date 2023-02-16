@@ -88,6 +88,10 @@ trait ModulePropertyTrait
                 if ($property->variant === 'dateFormat') {
                     $value = DateFormatHelper::convertPhpToMomentFormat($value);
                 }
+
+                if ($property->type === 'mediaSelector') {
+                    $value = (!$value) ? '' : '[[mediaId=' . $value . ']]';
+                }
             }
             $properties[$property->id] = $value;
         }
