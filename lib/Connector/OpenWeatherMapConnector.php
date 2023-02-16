@@ -29,7 +29,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
-use Xibo\Weather\Forecast;
+use Xibo\Widget\DataType\Forecast;
 use Xibo\Widget\Provider\DataProviderInterface;
 
 /**
@@ -50,10 +50,10 @@ class OpenWeatherMapConnector implements ConnectorInterface
     /** @var string */
     protected $timezone;
 
-    /** @var \Xibo\Weather\Forecast */
+    /** @var \Xibo\Widget\DataType\Forecast */
     protected $currentDay;
 
-    /** @var \Xibo\Weather\Forecast[] */
+    /** @var \Xibo\Widget\DataType\Forecast[] */
     protected $forecast;
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
