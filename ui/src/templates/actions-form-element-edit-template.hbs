@@ -28,7 +28,7 @@
 
         {{!-- For nav layout only --}}
         {{#eq actionType 'navLayout'}}
-            {{> forms/inputs/dropdown id='layoutCode' value=layoutCode title="Layout Code" customClass="pagedSelect"
+            {{> forms/inputs/dropdown id='layoutCode' value=layoutCode title="Layout Code" selectType="pagedSelect"
                 options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name"
                 customData=(arr 
                     (obj name='width' value='100%')

@@ -1,0 +1,13 @@
+{{> dropdown id=id name=name title=title
+    value=value
+    selectType="localSelect"
+    optionsTitle="title" optionsValue="name"
+    options=(arr 
+        (obj name='auto' title='Automatically select based on geographic location')
+        (obj name='ca' title='Canada')
+        (obj name='si' title='Standard International Units')
+        (obj name='uk2' title='United Kingdom')
+        (obj name='us' title='United States')
+    )
+    helpText=helpText
+}}

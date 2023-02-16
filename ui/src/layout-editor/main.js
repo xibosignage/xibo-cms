@@ -1570,6 +1570,10 @@ lD.clearTemporaryData = function() {
   // Hide open tooltips
   lD.editorContainer.find('.tooltip').remove();
 
+  // Destroy select2 opened dropdowns
+  lD.propertiesPanel.DOMObject.find('select[data-select2-id]')
+    .select2('destroy');
+
   // Remove text callback editor structure variables
   formHelpers.destroyCKEditor();
 };

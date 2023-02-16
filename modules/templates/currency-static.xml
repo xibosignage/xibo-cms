@@ -75,6 +75,9 @@ body {
 .container-main {
     height: 420px !important;
     width: 820px !important;
+{% if backgroundColor %}
+    background-color: {{backgroundColor}};
+{% endif %}
 }
 
 .container {
@@ -240,6 +243,9 @@ body {
   width: 820px !important;
   float: left;
   margin-top: 25px;
+{% if backgroundColor %}
+  background-color: {{backgroundColor}};
+{% endif %}
 }
 
 .row-finance {
