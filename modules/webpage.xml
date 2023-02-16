@@ -1,23 +1,23 @@
 <!--
- ~ Copyright (C) 2022 Xibo Signage Ltd
- ~
- ~ Xibo - Digital Signage - http://www.xibo.org.uk
- ~
- ~ This file is part of Xibo.
- ~
- ~ Xibo is free software: you can redistribute it and/or modify
- ~ it under the terms of the GNU Affero General Public License as published by
- ~ the Free Software Foundation, either version 3 of the License, or
- ~ any later version.
- ~
- ~ Xibo is distributed in the hope that it will be useful,
- ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
- ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- ~ GNU Affero General Public License for more details.
- ~
- ~ You should have received a copy of the GNU Affero General Public License
- ~ along with Xibo. If not, see <http://www.gnu.org/licenses/>.
- -->
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
 <module>
     <id>core-webpage</id>
     <name>Webpage</name>
@@ -29,7 +29,7 @@
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
-    <renderAs>native</renderAs>
+    <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
@@ -37,7 +37,6 @@
             <title>Link</title>
             <helpText>The Location (URL) of the webpage</helpText>
             <default></default>
-            <rule>required</rule>
         </property>
         <property id="transparency" type="checkbox">
             <title>Background transparent?</title>
@@ -64,9 +63,8 @@
             <helpText>The width of the page. Leave empty to use the region width.</helpText>
             <default></default>
             <visibility>
-                <test type="or">
-                    <condition field="modeId" type="eq">2</condition>
-                    <condition field="modeId" type="eq">3</condition>
+                <test>
+                    <condition field="modeId" type="neq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -75,9 +73,8 @@
             <helpText>The height of the page. Leave empty to use the region height.</helpText>
             <default></default>
             <visibility>
-                <test type="or">
-                    <condition field="modeId" type="eq">2</condition>
-                    <condition field="modeId" type="eq">3</condition>
+                <test>
+                    <condition field="modeId" type="neq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -86,7 +83,7 @@
             <helpText>The starting point from the top in pixels</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="modeId" type="eq">2</condition>
                 </test>
             </visibility>
@@ -96,7 +93,7 @@
             <helpText>The starting point from the left in pixels</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="modeId" type="eq">2</condition>
                 </test>
             </visibility>
@@ -106,7 +103,7 @@
             <helpText>The Percentage to Scale this Webpage (0 - 100)</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="modeId" type="eq">2</condition>
                 </test>
             </visibility>
@@ -117,11 +114,35 @@
             <default></default>
             <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="modeId" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
     </properties>
     <preview></preview>
+    <stencil>
+        <hbs><![CDATA[
+<iframe id="iframe" scrolling="no" frameborder="0" src=" {{ uri  }}"></iframe>
+         ]]></hbs>
+        <twig><![CDATA[
+<style>
+#iframe { border:0; }
+</style>
+        ]]></twig>
+    </stencil>
+    <onRender><![CDATA[
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Set dimensions based on the properties
+properties.iframeWidth = properties.pageWidth ? properties.pageWidth : $(target).width();
+properties.iframeHeight = properties.pageHeight ? properties.pageHeight : $(target).height();
+properties.iframeTop = properties.offsetTop ? properties.offsetTop : 0;
+properties.iframeLeft = properties.offsetLeft ? properties.offsetLeft : 0;
+properties.scale = properties.scaling ? (properties.scaling/ 100) : 1;
+
+// Scale the iframe
+$(target).find('#iframe').xiboIframeScaler(properties);
+    ]]></onRender>
 </module>
