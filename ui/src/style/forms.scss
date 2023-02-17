@@ -119,3 +119,54 @@
         }
     }
 }
+
+// Command Builder
+.xibo-command-builder {
+    .command-type {
+        display: block;
+        width: 100%;
+    }
+    .command-inputs {
+        border-radius: 0 0 6px 6px;
+        padding: 12px 6px;
+        margin: 0px 1px 4px 1px;
+        background-color: $xibo-color-primary-l10;
+
+        .col-12 {
+            max-width: 100%;
+        }
+
+        .intent-name {
+            width: 100%;
+            margin: 6px 0;
+        }
+
+        .intent-type-container {
+            font-size: 0;
+
+            .intent-type-label {
+                width: 30%;
+                font-size: 14px;
+            }
+    
+            .intent-type {
+                width: 70%
+            }
+        }
+
+        .intent-extra-element {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 2px;
+
+            select {
+                padding: 0;
+                width: 30%;
+            }
+        }
+    }
+    .command-preview {
+        border-radius: 6px;
+        padding: 8px !important;
+    }
+}

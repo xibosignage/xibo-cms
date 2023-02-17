@@ -310,7 +310,13 @@
                     url: "{{ url_for("dataSet.search") }}",
                     type: 'GET'
                 },
-            }
+            },
+            command: {
+                search: {
+                    url: "{{ url_for("command.search") }}",
+                    type: 'GET'
+                },
+            },
         };
 
         {% autoescape "js" %}

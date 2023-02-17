@@ -109,21 +109,33 @@ class WidgetHtmlRenderer
             if ($module->preview !== null) {
                 // Parse out our preview (which is always a stencil)
                 $module->decorateProperties($widget, true);
-                return $this->twig->fetchFromString($module->preview->twig, [
-                    'width' => $width,
-                    'height' => $height,
-                    'params' => $params,
-                    'options' => $module->getPropertyValues(),
-                    'downloadUrl' => $downloadUrl
-                ]);
+                return $this->twig->fetchFromString(
+                    $module->preview->twig,
+                    array_merge(
+                        [
+                            'width' => $width,
+                            'height' => $height,
+                            'params' => $params,
+                            'options' => $module->getPropertyValues(),
+                            'downloadUrl' => $downloadUrl
+                        ],
+                        $module->getPropertyValues()
+                    )
+                );
             } else if ($module->renderAs === 'html') {
                 // Modules without a preview should render out as HTML
-                return $this->twig->fetch('module-html-preview.twig', [
-                    'width' => $width,
-                    'height' => $height,
-                    'regionId' => $region->regionId,
-                    'widgetId' => $widget->widgetId
-                ]);
+                return $this->twig->fetch(
+                    'module-html-preview.twig',
+                    array_merge(
+                        [
+                            'width' => $width,
+                            'height' => $height,
+                            'regionId' => $region->regionId,
+                            'widgetId' => $widget->widgetId
+                        ],
+                        $module->getPropertyValues()
+                    )
+                );
             }
         }
 
