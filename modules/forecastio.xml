@@ -101,9 +101,23 @@
 <link rel="stylesheet" href="[[assetId=weather-icons]]" media="screen">
 <link rel="stylesheet" href="[[assetId=font-awesome]]" media="screen">
 <link rel="stylesheet" href="[[assetId=animate]]" media="screen">
+
+<div class="error-message" style="display: none; padding: 8px;">
+    <strong>{% trans "No results returned, please configure Open Weather Map connector!" %}</strong>
+</div>
     ]]></twig>
     </stencil>
     <onRender><![CDATA[
+// If we don't get any results, then we should show an error message
+if (items.length === 0) {
+    // Set the body dimensions to window dimensions
+    $(target).css('cssText', 'width: 100% !important; height: 100% !important;');
+
+    // Show the error message
+    $(target).find('.error-message').show();
+    return;
+}
+
 // Set moment locale
 moment.locale(globalOptions.locale);
 
