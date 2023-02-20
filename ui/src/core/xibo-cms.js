@@ -408,6 +408,7 @@ function XiboInitialise(scope, options) {
     }
 
     $(scope + ' .XiboCommand').each(function () {
+        // TODO: Move to forms.js eventually
         // Get main container
         var $mainContainer = $(this);
 

@@ -36,6 +36,9 @@ window.templates = {
       require('./src/templates/forms/inputs/languageSelector.hbs'),
     forecastUnitsSelector:
       require('./src/templates/forms/inputs/forecastUnitsSelector.hbs'),
+    commandSelector:
+      require('./src/templates/forms/inputs/commandSelector.hbs'),
+    commandBuilder: require('./src/templates/forms/inputs/commandBuilder.hbs'),
     // More to be added
   },
 };

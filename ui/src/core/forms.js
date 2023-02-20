@@ -101,6 +101,11 @@ window.forms = {
           property.fontsSearchUrl = getFontsUrl + '?length=10000';
         }
 
+        // Stored command selector
+        if (property.type === 'commandSelector') {
+          property.commandSearchUrl = urlsForApi.command.search.url;
+        }
+
         // Change the name of the property to the id
         property.name = property.id;
 

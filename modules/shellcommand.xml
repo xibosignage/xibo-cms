@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -30,7 +30,7 @@
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>native</renderAs>
-    <defaultDuration>3</defaultDuration>
+    <defaultDuration>10</defaultDuration>
     <settings></settings>
     <properties>
         <property id="terminateCommand" type="checkbox">
@@ -38,7 +38,7 @@
             <helpText>Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally.</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="useDuration" type="eq">1</condition>
                 </test>
             </visibility>
@@ -48,8 +48,8 @@
             <helpText>On Windows, should the player use taskkill to terminate commands.</helpText>
             <default></default>
             <visibility>
-                <test type="or">
-                    <condition field="duration" type="eq">3</condition>
+                <test>
+                    <condition field="useDuration" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -62,15 +62,12 @@
                 <option name="createCommand">Create Command</option>
             </options>
         </property>
-        <property id="commandCode" type="dropdown" mode="single">
+        <property id="commandCode" type="commandSelector">
             <title>Stored Command</title>
             <helpText>Pick a stored command</helpText>
-            <default>0</default>
-            <options>
-                <option name="0">X</option>
-            </options>
+            <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="commandType" type="eq">storedCommand</condition>
                 </test>
             </visibility>
@@ -80,68 +77,74 @@
             <helpText>Use a global command to work with all the player types.</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test>
                     <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
         </property>
-        <property id="globalCommand" type="text">
+        <property id="globalCommand" type="commandBuilder">
             <title>Global Command</title>
             <helpText>Enter a global (Android/Linux/Tizen/webOS/Windows) Command Line compatible command</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test type="and">
                     <condition field="commandType" type="eq">createCommand</condition>
+                    <condition field="useGlobalCommand" type="eq">1</condition>
                 </test>
             </visibility>
         </property>
-        <property id="androidCommand" type="text">
+        <property id="androidCommand" type="commandBuilder">
             <title>Android Command</title>
             <helpText>Enter an Android Command Line compatible command</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test type="and">
                     <condition field="commandType" type="eq">createCommand</condition>
+                    <condition field="useGlobalCommand" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
-        <property id="linuxCommand" type="text">
+        <property id="linuxCommand" type="commandBuilder">
             <title>Linux Command</title>
             <helpText>Enter a Linux Command Line compatible command</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test type="and">
                     <condition field="commandType" type="eq">createCommand</condition>
+                    <condition field="useGlobalCommand" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
-        <property id="tizenCommand" type="text">
+        <property id="tizenCommand" type="commandBuilder">
             <title>Tizen Command</title>
             <helpText>Enter a Tizen Command Line compatible command</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test type="and">
                     <condition field="commandType" type="eq">createCommand</condition>
+                    <condition field="useGlobalCommand" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
-        <property id="webosCommand" type="text">
+        <property id="webosCommand" type="commandBuilder">
             <title>webOS Command</title>
             <helpText>Enter a webOS Command Line compatible command</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test type="and">
                     <condition field="commandType" type="eq">createCommand</condition>
+                    <condition field="useGlobalCommand" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
-        <property id="windowsCommand" type="text">
+        <property id="windowsCommand" type="commandBuilder">
             <title>Windows Command</title>
             <helpText>Enter a Windows Command Line compatible command</helpText>
             <default></default>
             <visibility>
-                <test type="or">
+                <test type="and">
                     <condition field="commandType" type="eq">createCommand</condition>
+                    <condition field="useGlobalCommand" type="eq">0</condition>
                 </test>
             </visibility>
         </property>
@@ -149,21 +152,26 @@
             <title>Launch the command via Windows Command Line</title>
             <helpText>On Windows, should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated.</helpText>
             <default>1</default>
+            <visibility>
+                <test>
+                    <condition field="commandType" type="eq">createCommand</condition>
+                </test>
+            </visibility>
         </property>
     </properties>
     <preview>
         <twig><![CDATA[
-         {% if commandType == 'storedCommand' %}
-            <p>{% trans "Stored Command:" %} {{commandCode}}</p>
-         {% elseif useGlobalCommand == 1  and globalCommand != '' %}
-             <p>{% trans "Global Command:" %} {{globalCommand}}</p>
-         {% else %}
-              <p>{% trans "Android Command:" %} {{androidCommand}}</p>
-              <p>{% trans "Windows Command:" %} {{windowsCommand}}</p>
-              <p>{% trans "Linux Command:" %} {{linuxCommand}}</p>
-              <p>{% trans "webOS Command:" %} {{webosCommand}}</p>
-              <p>{% trans "Tizen Command:" %} {{tizenCommand}}</p>
-         {% endif %}
-]]></twig>
+{% if commandType == 'storedCommand' %}
+<p>{% trans "Stored Command:" %} {{commandCode}}</p>
+{% elseif useGlobalCommand == 1  and globalCommand != '' %}
+    <p>{% trans "Global Command:" %} {{globalCommand}}</p>
+{% else %}
+    <p>{% trans "Android Command:" %} {{androidCommand}}</p>
+    <p>{% trans "Windows Command:" %} {{windowsCommand}}</p>
+    <p>{% trans "Linux Command:" %} {{linuxCommand}}</p>
+    <p>{% trans "webOS Command:" %} {{webosCommand}}</p>
+    <p>{% trans "Tizen Command:" %} {{tizenCommand}}</p>
+{% endif %}
+        ]]></twig>
     </preview>
 </module>
