@@ -521,6 +521,17 @@ class ModuleFactory extends BaseFactory
             }
         }
 
+        // Group for non datatype modules
+        $module->group = [];
+        $groupNodes = $xml->getElementsByTagName('group');
+        foreach ($groupNodes as $groupNode) {
+            if ($groupNode instanceof \DOMElement) {
+                $module->group['id'] = $groupNode->getAttribute('id');
+                $module->group['icon'] = $groupNode->getAttribute('icon');
+                $module->group['name'] = $groupNode->textContent;
+            }
+        }
+
         // Parse assets
         try {
             $module->assets = $this->parseAssets($xml->getElementsByTagName('assets'));

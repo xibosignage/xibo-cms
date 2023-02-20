@@ -88,6 +88,12 @@ class Module implements \JsonSerializable
     public $dataType;
 
     /**
+     * @SWG\Property(description="The group details for this module")
+     * @var string[]
+     */
+    public $group;
+
+    /**
      * @SWG\Property(description="The cache key used when requesting data")
      * @var string
      */
