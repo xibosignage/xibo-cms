@@ -1258,6 +1258,28 @@ lD.addModuleToPlaylist = function(
   addToPosition = null,
   drawerWidget = false,
 ) {
+  // Mark new widget as selected
+  // and append it to the viewer
+  const saveNewlyAddedWidget = function(widgetId) {
+    lD.selectedObject.id =
+    'widget_' + regionId + '_' + widgetId;
+    lD.selectedObject.type = 'widget';
+
+    // Append temporary object to the viewer
+    $('<div>', {
+      id: 'widget_' +
+      regionId +
+      '_' +
+      widgetId,
+      data: {
+        type: 'widget',
+        parentType: 'region',
+        widgetRegion: 'region_' + regionId,
+        isInDrawer: drawerWidget,
+      },
+    }).appendTo(lD.viewer.DOMObject);
+  };
+
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     const validExt = moduleData.validExt.replace(/,/g, '|');
     let numUploads = 0;
@@ -1266,7 +1288,7 @@ lD.addModuleToPlaylist = function(
     bootbox.hideAll();
 
     // On hide callback
-    const onHide = function(dialog) {
+    const onHide = function() {
       // If there are no uploads, delete the region
       if (numUploads === 0) {
         lD.layout.deleteElement(
@@ -1276,6 +1298,9 @@ lD.addModuleToPlaylist = function(
           // Reload data ( and viewer )
           lD.reloadData(lD.layout, true);
         });
+      } else {
+        // Reload data ( and viewer )
+        lD.reloadData(lD.layout, true);
       }
     };
 
@@ -1295,7 +1320,6 @@ lD.addModuleToPlaylist = function(
         main: {
           label: translations.done,
           className: 'btn-primary btn-bb-main',
-          callback: onHide,
         },
       },
       onHideCallback: onHide,
@@ -1317,6 +1341,13 @@ lD.addModuleToPlaylist = function(
       uploadDoneEvent: function(data) {
         // If the upload is successful, increase the number of uploads
         numUploads += 1;
+
+        // Get added widget id
+        const widgetId = data.response().result.files[0].widgetId;
+
+        // The new selected object as the id based
+        // on the previous selected region
+        saveNewlyAddedWidget(widgetId);
       },
     }).attr('data-test', 'uploadFormModal');
   } else { // Add widget to a region
@@ -1364,24 +1395,8 @@ lD.addModuleToPlaylist = function(
       // Behavior if successful
       toastr.success(res.message);
 
-      // The new selected object as the id based on the previous selected region
-      lD.selectedObject.id =
-      'widget_' + regionId + '_' + res.data.widgetId;
-      lD.selectedObject.type = 'widget';
-
-      // Append temporary object to the viewer
-      $('<div>', {
-        id: 'widget_' +
-        regionId +
-        '_' +
-        res.data.widgetId,
-        data: {
-          type: 'widget',
-          parentType: 'region',
-          widgetRegion: 'region_' + regionId,
-          isInDrawer: drawerWidget,
-        },
-      }).appendTo(lD.viewer.DOMObject);
+      // Save the new widget as temporary
+      saveNewlyAddedWidget(res.data.widgetId);
 
       if (!drawerWidget) {
         // Reload data ( and viewer )
