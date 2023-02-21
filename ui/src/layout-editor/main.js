@@ -358,7 +358,10 @@ lD.selectObject =
       if (target == null) {
         // Simulate drop item add
         this.dropItemAdd(target, card, clickPosition);
-      } else if (target.data('subType') == 'drawer') {
+      } else if (
+        target.data('subType') == 'drawer' ||
+        target.hasClass('ui-droppable-actions-target')
+      ) {
         // Simulate drop item add
         this.dropItemAdd(target, card);
       }
@@ -2367,6 +2370,9 @@ lD.initDrawer = function(data) {
     $.ajax({
       url: requestPath,
       type: linkToAPI.type,
+      data: {
+        type: 'playlist',
+      },
     }).done(function(res) {
       if (res.success) {
         toastr.success(res.message);
@@ -2614,7 +2620,7 @@ lD.populateDropdownWithLayoutElements = function(
     // If input is target, and widgetId has value
     // then update the widget drawer edit element
     const $widgetIDInput = ($typeInput) ?
-      $typeInput.parents('form').find('#widgetId') : null;
+      $typeInput.parents('form').find('[name=widgetId]') : null;
 
     // If there's no typeInput, stop
     if (!$typeInput) {
@@ -2623,15 +2629,29 @@ lD.populateDropdownWithLayoutElements = function(
 
     let typeInputValue = $dropdown.find(':selected').data('type');
 
+    // Update targetId and target
     if (
-      $typeInput.attr('id') === 'target' &&
-      $widgetIDInput.length > 0 &&
-      $widgetIDInput.val() != ''
+      $typeInput.attr('id') === 'target'
     ) {
       // Update targetId and target
       actionData.targetId = $dropdown.val();
       actionData.target = typeInputValue;
+    }
 
+    // Update sourceId and source
+    if (
+      $typeInput.attr('id') === 'source'
+    ) {
+      // Update sourceId and source
+      actionData.sourceId = $dropdown.val();
+      actionData.source = typeInputValue;
+    }
+
+    // Update widgetId
+    if (
+      $widgetIDInput.length > 0 &&
+      $widgetIDInput.val() != ''
+    ) {
       // Call update widget drawer edit element
       handleEditWidget($widgetIDInput.val());
     }

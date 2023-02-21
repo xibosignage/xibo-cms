@@ -278,6 +278,14 @@ Viewer.prototype.render = function(forceReload = false) {
       // Click on layout or layout wrapper to clear selection
       // or add item to the layout
       if (
+        $(e.target).hasClass('ui-droppable-actions-target')
+      ) {
+        // Add action to the selected object
+        lD.selectObject({
+          target: $(e.target),
+          forceSelect: true,
+        });
+      } else if (
         $(e.target).hasClass('layout-wrapper') ||
         $(e.target).hasClass('layout')
       ) {
@@ -298,11 +306,11 @@ Viewer.prototype.render = function(forceReload = false) {
             // Single click action
             clicks = 0;
 
-            // Edit region if it's a playlist
             if (
               $(e.target).data('subType') === 'playlist' &&
               !$(e.target).hasClass('selected')
             ) {
+              // Edit region if it's a playlist
               // Get region object
               const regionObject =
                 lD.getElementByTypeAndId('region', $(e.target).attr('id'));
@@ -1119,6 +1127,9 @@ Viewer.prototype.addActionEditArea = function(
       );
     });
   }
+
+  // Update viewer
+  this.update();
 };
 
 /**
