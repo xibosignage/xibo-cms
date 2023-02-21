@@ -1178,7 +1178,7 @@ class Playlist extends Base
         $this->getState()->template = 'region-form-timeline';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'help' => $this->getHelp()->link('Media', 'RegionOptions')
+            'help' => $this->getHelp()->link('Media', 'Playlists')
         ]);
 
         return $this->render($request, $response);

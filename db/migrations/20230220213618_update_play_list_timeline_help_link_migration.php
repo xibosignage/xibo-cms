@@ -30,7 +30,7 @@ class UpdatePlayListTimelineHelpLinkMigration extends AbstractMigration
 {
     public function change()
     {
-        $this->execute('UPDATE `help` SET `topic` = \'Media\', `link` = \'media_playlists.html\'
+        $this->execute('UPDATE `help` SET `topic` = \'Media\', `category` = \'Playlists\', `link` = \'media_playlists.html\'
               WHERE `topic` = \'Layout\' AND `category` = \'RegionOptions\' ');
     }
 }
