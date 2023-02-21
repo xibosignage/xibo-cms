@@ -1299,12 +1299,14 @@ div#bg_not_found_icon {
             color: $xibo-color-secondary;
         }
 
-        .action-element-form-trigger .form-control {
+        .action-element-form-trigger .form-control,
+        .action-element-form-trigger span.select2 .select2-selection {
             border-color: $xibo-color-action-trigger;
             background-color: $xibo-color-action-trigger-light;
         }
 
-        .action-element-form-target .form-control {
+        .action-element-form-target .form-control,
+        .action-element-form-target span.select2 .select2-selection {
             border-color: $xibo-color-action-target;
             background-color: $xibo-color-action-target-light;
         }

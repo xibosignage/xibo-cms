@@ -551,6 +551,9 @@ PropertiesPanel.prototype.renderActionTab = function(
   const self = this;
   const app = this.parent;
 
+  // Init drawer
+  lD.initDrawer();
+
   // Remove action tab and content
   if (clearPrevious) {
     self.DOMObject.find('.nav-tabs .actions-tab').remove();
@@ -781,18 +784,18 @@ PropertiesPanel.prototype.openEditAction = function(action) {
 
   // Populate dropdowns with layout elements
   app.populateDropdownWithLayoutElements(
-    $newActionContainer.find('#sourceId'),
+    $newActionContainer.find('[name="sourceId"]'),
     {
-      $typeInput: $newActionContainer.find('#source'),
+      $typeInput: $newActionContainer.find('[name="source"]'),
       value: actionData.sourceId,
     },
     actionData,
   );
 
   app.populateDropdownWithLayoutElements(
-    $newActionContainer.find('#targetId'),
+    $newActionContainer.find('[name="targetId"]'),
     {
-      $typeInput: $newActionContainer.find('#target'),
+      $typeInput: $newActionContainer.find('[name="target"]'),
       value: actionData.targetId,
       filters: ['layout', 'regions'],
     },
@@ -802,7 +805,7 @@ PropertiesPanel.prototype.openEditAction = function(action) {
   if (actionData.actionType == 'navWidget') {
     // Populate dropdowns with drawer elements
     app.populateDropdownWithLayoutElements(
-      $newActionContainer.find('#widgetId'),
+      $newActionContainer.find('[name="widgetId"]'),
       {
         value: actionData.widgetId,
         filters: ['drawerWidgets'],
@@ -815,15 +818,15 @@ PropertiesPanel.prototype.openEditAction = function(action) {
   // set source as "screen"
   const updateSource = function(triggerType) {
     if (triggerType == 'webhook') {
-      $newActionContainer.find('#source').val('layout');
-      $newActionContainer.find('#sourceId').val(app.mainObjectId);
+      $newActionContainer.find('[name="source"]').val('layout');
+      $newActionContainer.find('[name="sourceId"]').val(app.mainObjectId);
     }
   };
 
   updateSource(actionData.triggerType);
 
   // Handle trigger type change
-  $newActionContainer.find('#triggerType').on('change', function(e) {
+  $newActionContainer.find('[name="triggerType"]').on('change', function(e) {
     const triggerType = $(e.currentTarget).val();
 
     updateSource(triggerType);
