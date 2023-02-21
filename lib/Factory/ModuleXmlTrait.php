@@ -180,6 +180,37 @@ trait ModuleXmlTrait
                     }
                 }
 
+                // SetDefault conditions
+                $setDefault = $node->getElementsByTagName('setDefault');
+                foreach ($setDefault as $setDefaultNode) {
+                    if ($setDefaultNode->nodeType === XML_ELEMENT_NODE) {
+                        $setNodes = $node->getElementsByTagName('set');
+                        foreach ($setNodes as $setNode) {
+                            if ($setNode->nodeType === XML_ELEMENT_NODE) {
+                                foreach ($setNode->getElementsByTagName('test') as $setTestNode) {
+                                    /** @var \DOMElement $setNode */
+                                    $conditions = [];
+                                    foreach ($setNode->getElementsByTagName('condition') as $condNode) {
+                                        if ($condNode instanceof \DOMElement) {
+                                            $conditions[] = [
+                                                'type' => $condNode->getAttribute('type'),
+                                                'value' => $condNode->textContent
+                                            ];
+                                        }
+                                    }
+
+                                    $property->addSetDefault(
+                                        $setTestNode->getAttribute('type'),
+                                        $conditions,
+                                        $setNode->getAttribute('field'),
+                                        $this->getFirstValueOrDefaultFromXmlNode($setNode, 'value')
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Player compat
                 $playerCompat = $node->getElementsByTagName('playerCompatibility');
                 if (count($playerCompat) > 0) {

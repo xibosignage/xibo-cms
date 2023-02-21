@@ -47,6 +47,9 @@ class Property implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Test[]  */
     public $visibility = [];
 
+    /** @var \Xibo\Widget\Definition\SetDefault[]  */
+    public $setDefault = [];
+
     /** @var string The element variant */
     public $variant;
 
@@ -93,6 +96,7 @@ class Property implements \JsonSerializable
             'customPopOver' => $this->customPopOver,
             'playerCompatibility' => $this->playerCompatibility,
             'visibility' => $this->visibility,
+            'setDefault' => $this->setDefault,
             'allowLibraryRefs' => $this->allowLibraryRefs,
             'dependsOn' => $this->dependsOn,
             'customClass' => $this->customClass,
@@ -152,6 +156,36 @@ class Property implements \JsonSerializable
         }
 
         $this->visibility[] = $test;
+        return $this;
+    }
+
+    /**
+     * Add a set default set with tests
+     * @param string $testType
+     * @param array $testConditions
+     * @param string $field Set field attribute
+     * @param string $value Set value node text
+     * @return $this
+     */
+    public function addSetDefault(string $testType, array $testConditions, string $field, string $value): Property
+    {
+        // Tests
+        $test = new Test();
+        $test->type = $testType;
+
+        foreach ($testConditions as $item) {
+            $condition = new SetDefaultTestCondition();
+            $condition->type = $item['type'];
+            $condition->value = $item['value'];
+            $test->conditions[] = $condition;
+        }
+
+        // Set Default
+        $set = new SetDefault();
+        $set->test = $test;
+        $set->field = $field;
+        $set->value = $value;
+        $this->setDefault[] = $set;
         return $this;
     }
 
