@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1178,7 +1178,7 @@ class Playlist extends Base
         $this->getState()->template = 'region-form-timeline';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'help' => $this->getHelp()->link('Layout', 'RegionOptions')
+            'help' => $this->getHelp()->link('Media', 'RegionOptions')
         ]);
 
         return $this->render($request, $response);
