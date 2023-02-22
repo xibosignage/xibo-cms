@@ -2133,114 +2133,331 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>
-                <helpText>Select the template colours you would like to apply.</helpText>
-                <default>default</default>
-                <customData>
-                    <data name="templates">
-[
-  {
-    "id": "default",
-    "value": "Colours 1 - Default",
-    "colors": [
-      "#99b433",
-      "#00a300",
-      "#ff0097",
-      "#9f00a7",
-      "#00aba9",
-      "#2b5797",
-      "#da532c",
-      "#b91d47"
-  ],
-    "image": "/playlist/widget/form/templateimage/twittermetro/default",
-    "fileName": "modules/twittermetro/template-thumbs/colours1.png"
-  },
-  {
-      "id": "full",
-      "value": "Colours 2 - Full",
-      "colors": [
-        "#2364aa",
-        "#3da5d9",
-        "#73bfb8",
-        "#fec601",
-        "#ea7317"
-    ],
-      "image": "/playlist/widget/form/templateimage/twittermetro/full",
-      "fileName": "modules/twittermetro/template-thumbs/colours2.png"
-  },
-  {
-      "id": "gray",
-      "value": "Colours 3 - Gray Scale",
-      "colors": [
-        "#757575",
-        "#989898",
-        "#666666",
-        "#404040"
-    ],
-      "image": "/playlist/widget/form/templateimage/twittermetro/gray",
-      "fileName": "modules/twittermetro/template-thumbs/colours3.png"
-  },
-  {
-      "id": "light",
-      "value": "Colours 4 - Light",
-      "colors": [
-        "#fffd98",
-        "#bde4a7",
-        "#b3d2b2",
-        "#9fbbcc",
-        "#7a9cc6"
-    ],
-      "image": "/playlist/widget/form/templateimage/twittermetro/light",
-      "fileName": "modules/twittermetro/template-thumbs/colours4.png"
-  },
-  {
-      "id": "soft",
-      "value": "Colours 5 - Soft",
-      "colors": [
-        "#aa7e7e",
-        "#94c88d",
-        "#a9a7d7",
-        "#dee29c",
-        "#e4c4df"
-    ],
-      "image": "/playlist/widget/form/templateimage/twittermetro/soft",
-      "fileName": "modules/twittermetro/template-thumbs/colours5.png"
-  },
-  {
-      "id": "vivid",
-      "value": "Colours 6 - Vivid",
-      "colors": [
-        "#fa7921",
-        "#fe9920",
-        "#b9a44c",
-        "#566e3d",
-        "#0c4767"
-    ],
-      "image": "/playlist/widget/form/templateimage/twittermetro/vivid",
-      "fileName": "modules/twittermetro/template-thumbs/colours6.png"
-  }
-]</data>
-                </customData>
+                <helpText>Select the template colours you would like to apply values to the colours below.</helpText>
+                <default>custom</default>
                 <options>
                     <option name="custom">Custom</option>
-                    <option name="default">Colours 1 - Default</option>
-                    <option name="full">Colours 2 - Full</option>
-                    <option name="gray">Colours 3 - Gray Scale</option>
-                    <option name="light">Colours 4 - Light</option>
-                    <option name="soft">Colours 5 - Soft</option>
-                    <option name="vivid">Colours 6 - Vivid</option>
+                    <option name="default" image="colors1">Colours 1 - Default</option>
+                    <option name="full" image="colors2">Colours 2 - Full</option>
+                    <option name="gray" image="colors3">Colours 3 - Gray Scale</option>
+                    <option name="light" image="colors4">Colours 4 - Light</option>
+                    <option name="soft" image="colors5">Colours 5 - Soft</option>
+                    <option name="vivid" image="colors6">Colours 6 - Vivid</option>
                 </options>
+                <setDefault>
+                    <set field="color1">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#99b433</value>
+                    </set>
+                    <set field="color2">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#00a300</value>
+                    </set>
+                    <set field="color3">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#ff0097</value>
+                    </set>
+                    <set field="color4">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#9f00a7</value>
+                    </set>
+                    <set field="color5">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#00aba9</value>
+                    </set>
+                    <set field="color6">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#2b5797</value>
+                    </set>
+                    <set field="color7">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#da532c</value>
+                    </set>
+                    <set field="color8">
+                        <test>
+                            <condition type="eq">default</condition>
+                        </test>
+                        <value>#b91d47</value>
+                    </set>
+                    <set field="color1">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value>#2364aa</value>
+                    </set>
+                    <set field="color2">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value>#3da5d9</value>
+                    </set>
+                    <set field="color3">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value>#73bfb8</value>
+                    </set>
+                    <set field="color4">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value>#fec601</value>
+                    </set>
+                    <set field="color5">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value>#ea7317</value>
+                    </set>
+                    <set field="color6">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color7">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color8">
+                        <test>
+                            <condition type="eq">full</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color1">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value>#757575</value>
+                    </set>
+                    <set field="color2">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value>#989898</value>
+                    </set>
+                    <set field="color3">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value>#666666</value>
+                    </set>
+                    <set field="color4">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value>#404040</value>
+                    </set>
+                    <set field="color5">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color6">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color7">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color8">
+                        <test>
+                            <condition type="eq">gray</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color1">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value>#fffd98</value>
+                    </set>
+                    <set field="color2">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value>#bde4a7</value>
+                    </set>
+                    <set field="color3">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value>#b3d2b2</value>
+                    </set>
+                    <set field="color4">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value>#9fbbcc</value>
+                    </set>
+                    <set field="color5">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value>7a9cc6</value>
+                    </set>
+                    <set field="color6">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color7">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color8">
+                        <test>
+                            <condition type="eq">light</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color1">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value>#aa7e7e</value>
+                    </set>
+                    <set field="color2">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value>#94c88d</value>
+                    </set>
+                    <set field="color3">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value>#a9a7d7</value>
+                    </set>
+                    <set field="color4">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value>#dee29c</value>
+                    </set>
+                    <set field="color5">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value>e4c4df</value>
+                    </set>
+                    <set field="color6">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color7">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color8">
+                        <test>
+                            <condition type="eq">soft</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color1">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value>#fa7921</value>
+                    </set>
+                    <set field="color2">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value>#fe9920</value>
+                    </set>
+                    <set field="color3">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value>#b9a44c</value>
+                    </set>
+                    <set field="color4">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value>#566e3d</value>
+                    </set>
+                    <set field="color5">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value>0c4767</value>
+                    </set>
+                    <set field="color6">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color7">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                    <set field="color8">
+                        <test>
+                            <condition type="eq">vivid</condition>
+                        </test>
+                        <value></value>
+                    </set>
+                </setDefault>
             </property>
-            <property id="colors" type="custom">
-                <customClass>color-templates</customClass>
-                <customData>
-                    <data name="template-id">colorTemplateId</data>
-                </customData>
-                <default>#99b433,#00a300,#ff0097,#9f00a7,#00aba9,#2b5797,#da532c,#b91d47</default>
-                <visibility>
-                    <test>
-                        <condition field="colorTemplateId" type="eq">custom</condition>
-                    </test>
-                </visibility>
+            <property id="color1" name="color" type="color">
+                <title>Color 1</title>
+            </property>
+            <property id="color2" name="color" type="color">
+                <title>Color 2</title>
+            </property>
+            <property id="color3" name="color" type="color">
+                <title>Color 3</title>
+            </property>
+            <property id="color4" name="color" type="color">
+                <title>Color 4</title>
+            </property>
+            <property id="color5" name="color" type="color">
+                <title>Color 5</title>
+            </property>
+            <property id="color6" name="color" type="color">
+                <title>Color 6</title>
+            </property>
+            <property id="color7" name="color" type="color">
+                <title>Color 7</title>
+            </property>
+            <property id="color8" name="color" type="color">
+                <title>Color 8</title>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -2508,7 +2725,15 @@ $metroRenderContainer.removeClass('orientation-landscape orientation-portrait').
     addClass('orientation-' + orientation);
 
 // Get colours array
-const colors = properties.colors.split(',');
+const colors = [];
+
+for (let i = 1; i <= 8; i++) {
+    if (properties['color' + i] !== '') {
+        colors.push(properties['color' + i]);
+    }
+}
+
+console.log(colors);
 
 // Render the items with metro render
 $metroRenderContainer.xiboMetroRender(properties, itemsHTML, colors);
@@ -2516,5 +2741,13 @@ $metroRenderContainer.xiboMetroRender(properties, itemsHTML, colors);
 // Render the images
 $metroRenderContainer.find('.cell').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="colors1" type="path" mime="image/png" path="/modules/assets/metro-colors/colors1.png"></asset>
+            <asset id="colors2" type="path" mime="image/png" path="/modules/assets/metro-colors/colors2.png"></asset>
+            <asset id="colors3" type="path" mime="image/png" path="/modules/assets/metro-colors/colors3.png"></asset>
+            <asset id="colors4" type="path" mime="image/png" path="/modules/assets/metro-colors/colors4.png"></asset>
+            <asset id="colors5" type="path" mime="image/png" path="/modules/assets/metro-colors/colors5.png"></asset>
+            <asset id="colors6" type="path" mime="image/png" path="/modules/assets/metro-colors/colors6.png"></asset>
+        </assets>
     </template>
 </templates>
