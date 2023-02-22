@@ -1376,7 +1376,27 @@ window.forms = {
 
           // If the test result is true, set the value
           if (testResult) {
-            $target.val(rule.value);
+            // If it's a color input, update the color picker
+            if ($target.parents('.colorpicker-input').length) {
+              // If the value is empty, clear the color picker
+              if (rule.value === '') {
+                // Clear the color picker value
+                $target.val('');
+                // Also update the background color of the input group
+                $target.parents('.colorpicker-input')
+                  .find('.input-group-addon').css('background-color', '');
+              } else {
+                // Add the color to the color picker
+                $target.colorpicker('setValue', rule.value);
+
+                // Also update the background color of the input group
+                $target.parents('.colorpicker-input').find('.input-group-addon')
+                  .css('background-color', rule.value);
+              }
+            } else {
+              // Otherwise, just set the value
+              $target.val(rule.value);
+            }
           }
         });
       }
