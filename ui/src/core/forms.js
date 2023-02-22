@@ -19,8 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Common funtions/tools
+// Common functions/tools
 const Common = require('../editor-core/common.js');
+
+// Check condition
+const checkCondition = function(type, value, targetValue) {
+  if (type === 'eq' && targetValue == value) {
+    return true;
+  } else if (type === 'neq' && targetValue != value) {
+    return true;
+  } else if (type === 'gt' && targetValue > value) {
+    return true;
+  } else if (type === 'lt' && targetValue < value) {
+    return true;
+  } else if (type === 'egt' && targetValue >= value) {
+    return true;
+  } else if (type === 'elt' && targetValue <= value) {
+    return true;
+  } else {
+    return false;
+  }
+};
 
 window.forms = {
   /**
@@ -149,6 +168,19 @@ window.forms = {
           // Handle depends on property
           if (property.dependsOn) {
             $newField.attr('data-depends-on', property.dependsOn);
+          }
+
+          // Add visibility to the field
+          if (property.visibility.length) {
+            $newField.attr('data-visibility', property.visibility);
+          }
+
+          // Add set default to the field
+          if (property.setDefault.length) {
+            $newField.attr(
+              'data-set-default',
+              JSON.stringify(property.setDefault),
+            );
           }
         } else {
           console.error('Form type not found: ' + property.type);
@@ -878,6 +910,10 @@ window.forms = {
     $(container).find(
       '.color-templates',
     ).each(function(_k, el) {
+      // TODO: remove color-templates
+      console.log('TOREMOVE: color-templates');
+      return;
+
       // Get template
       const twittermetroColorsTemplate =
         formHelpers.getTemplate('twittermetroColorsTemplate');
@@ -1302,6 +1338,49 @@ window.forms = {
           });
       });
     }
+
+    // Handle set default
+    $(container).find(
+      '.xibo-form-input[data-set-default]',
+    ).each(function(_k, el) {
+      const setDefaultRules = $(el).data('set-default');
+      const $trigger = $(el).find('input, select');
+
+      for (const rule of setDefaultRules) {
+        const $target = $('#input_' + targetId + '_' + rule.field);
+        $trigger.on('change', function(ev) {
+          // Test all the conditions
+          let testResult = false;
+
+          for (let i = 0; i < rule.test.conditions.length; i++) {
+            const condition = rule.test.conditions[i];
+            const newTestResult =
+              checkCondition(
+                condition.type,
+                condition.value,
+                $trigger.val(),
+              );
+
+            // If we have multiple conditions, we need
+            // to combine them with the test type
+            if (i > 0) {
+              if (testType === 'and') {
+                testResult = testResult && newTestResult;
+              } else if (testType === 'or') {
+                testResult = testResult || newTestResult;
+              }
+            } else {
+              testResult = newTestResult;
+            }
+          }
+
+          // If the test result is true, set the value
+          if (testResult) {
+            $target.val(rule.value);
+          }
+        });
+      }
+    });
   },
   /**
      * Handle form field replacements
@@ -1378,25 +1457,6 @@ window.forms = {
           let testTargets = '';
           const testType = test.type;
           const testConditions = test.conditions;
-
-          // Check condition
-          const checkCondition = function(type, value, targetValue) {
-            if (type === 'eq' && targetValue == value) {
-              return true;
-            } else if (type === 'neq' && targetValue != value) {
-              return true;
-            } else if (type === 'gt' && targetValue > value) {
-              return true;
-            } else if (type === 'lt' && targetValue < value) {
-              return true;
-            } else if (type === 'egt' && targetValue >= value) {
-              return true;
-            } else if (type === 'elt' && targetValue <= value) {
-              return true;
-            } else {
-              return false;
-            }
-          };
 
           // Check test
           const checkTest = function() {

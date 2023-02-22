@@ -1,5 +1,4 @@
-<div class="xibo-form-input custom-input {{customClass}}"
-    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
+<div class="xibo-form-input custom-input {{customClass}}">
     <input type="hidden" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" value="{{value}}"
     {{#each customData}}
         data-{{this.name}}="{{this.value}}"
