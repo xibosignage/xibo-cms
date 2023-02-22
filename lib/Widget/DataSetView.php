@@ -510,6 +510,10 @@ class DataSetView extends ModuleWidget
             $styleSheet = $this->getRawNode('styleSheet', '');
         }
 
+        // Generate the table
+        // do this before we parse library references https://github.com/xibosignage/xibo/issues/3024
+        $table = $this->dataSetTableHtml($displayId);
+
         // Get the embedded HTML out of RAW
         $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
 
@@ -542,9 +546,6 @@ class DataSetView extends ModuleWidget
         if ($rowsPerPage > 0) {
             $styleSheet .= 'table.DataSetTable {visibility:hidden;}';
         }
-
-        // Generate the table
-        $table = $this->dataSetTableHtml($displayId);
 
         // Work out how many pages we will be showing.
         $pages = ceil($table['countPages']);
