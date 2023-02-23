@@ -203,9 +203,13 @@ PropertiesPanel.prototype.render = function(
   // Hide panel if no element is passed
   if (element == undefined || $.isEmptyObject(element)) {
     this.DOMObject.parent().addClass('closed');
+    this.DOMObject.parents('.editor-modal')
+      .toggleClass('properties-panel-opened', false);
     return;
   } else {
     this.DOMObject.parent().removeClass('closed');
+    this.DOMObject.parents('.editor-modal')
+      .toggleClass('properties-panel-opened', true);
   }
 
   // Show a message if the module is disabled for a widget rendering

@@ -20,6 +20,7 @@ $playlist-editor-playlist-hover-color-color: lighten($xibo-color-primary, 20%);
 $playlist-editor-z-index-background: 1011;
 $playlist-editor-z-index-overlay: 1012;
 $playlist-editor-z-index-select: 1013;
+$playlist-editor-z-index-select-hover: 1014;
 
 $playlist-editor-timeline-fg-color: $xibo-color-primary;
 $playlist-editor-unsuccess-message-bg-color: $xibo-color-semantic-error;
@@ -34,24 +35,56 @@ $timeline-left-margin-width: 100px;
     z-index: $playlist-editor-z-index-background;
     overflow: auto;
     @include set-transparent-color(background, $xibo-color-neutral-900, 0.6);
+    padding-right: 0;
+    padding-left: 60px;
 
     &.toolbar-opened {
-        padding-left: 410px;
+        padding-left: 350px;
+    }
+
+    &.properties-panel-opened {
+        padding-right: 320px;
+    }
+
+    .editor-modal-dialog {
+        max-width: 100%;
+        height: calc(100% - 6rem);
+        margin: 3rem;
     }
 
     .editor-modal-content {
         background: $playlist-editor-main-background-color;
-        margin-bottom: 60px;
+        height: 100%;
     }
 
     .editor-modal-body {
-        padding: 15px 0 0 0;
+        padding: 0;
     }
 
     .editor-modal-title {
         line-height: 1;
         font-weight: bold;
         color: $playlist-editor-main-fb-color;
+    }
+
+    .container-designer {
+        height: calc(100% - 50px);
+    }
+
+    #playlist-editor-container {
+        height: 100%;
+    }
+
+    .loading-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 4rem;
+    }
+
+    .editor-side-bar nav.opened {
+        z-index: $playlist-editor-z-index-select-hover !important;
     }
 }
 
@@ -150,6 +183,16 @@ $timeline-left-margin-width: 100px;
 
     #timeline-container {
         padding: 5px;
+    }
+
+    .properties-panel-playlist-editor {
+        position: fixed;
+        top: 0;
+        right: 0;
+    }
+
+    .playlist-editor-container {
+        height: 100%;
     }
 
     #timeline-overlay-container {
@@ -378,6 +421,10 @@ $timeline-left-margin-width: 100px;
                 @include z-index-set($playlist-editor-z-index-select);
                 background: $xibo-color-primary-l30  !important;
                 min-height: 100%;
+
+                #timeline-container {
+                    display: none;
+                }
             }
 
             &.ui-droppable-hover {
