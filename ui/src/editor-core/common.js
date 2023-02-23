@@ -122,4 +122,35 @@ module.exports = {
   getModuleByType: function(type) {
     return modulesList.find((module) => module.type === type);
   },
+
+  /**
+     * Check if element has specific target in data
+     * @param {object} element - Element to check
+     * @param {string[]} targetType - Target to check
+     * @return {boolean}
+      */
+  hasTarget: function(element, targetType) {
+    // Get target data
+    let targetData = $(element).data('target');
+
+    // If target data is not defined, return false
+    if (targetData == undefined) {
+      return false;
+    }
+
+    // If target type isn't an array, make it one
+    if (!Array.isArray(targetData)) {
+      targetData = targetData.split(' ');
+    }
+
+    // If target is 'all', return true
+    if (targetData.indexOf('all') !== -1) {
+      return true;
+    } else if (
+      targetData.indexOf(targetType) !== -1
+    ) {
+      return true;
+    }
+    return false;
+  },
 };

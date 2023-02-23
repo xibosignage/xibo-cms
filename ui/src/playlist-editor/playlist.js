@@ -144,10 +144,7 @@ Playlist.prototype.addElement = function(
     } else {
       this.addMedia($(draggable).data('mediaId'), addToPosition);
     }
-  } else if (
-    draggableType == 'module' ||
-    draggableType == 'template'
-  ) { // Add widget/module/template
+  } else { // Add widget/module/template
     // Get regionSpecific property
     const regionSpecific = $(draggable).data('regionSpecific');
 

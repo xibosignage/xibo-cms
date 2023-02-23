@@ -184,7 +184,7 @@ Viewer.prototype.render = function(forceReload = false) {
     greedy: true,
     accept: (draggable) => {
       // Check target
-      return lD.hasTarget(draggable, 'layout');
+      return lD.common.hasTarget(draggable, 'layout');
     },
     tolerance: 'pointer',
     drop: _.debounce(function(event, ui) {
@@ -233,7 +233,7 @@ Viewer.prototype.render = function(forceReload = false) {
     greedy: true,
     accept: (draggable) => {
       // Check target
-      return lD.hasTarget(draggable, 'layout');
+      return lD.common.hasTarget(draggable, 'layout');
     },
     tolerance: 'pointer',
     drop: _.debounce(function(event, ui) {
@@ -558,7 +558,7 @@ Viewer.prototype.renderRegion = function(
             $(this).data('type');
 
         // Check target
-        return lD.hasTarget(draggable, dataType);
+        return lD.common.hasTarget(draggable, dataType);
       },
       drop: _.debounce(function(event, ui) {
         lD.dropItemAdd(event.target, ui.draggable[0]);
@@ -1095,7 +1095,7 @@ Viewer.prototype.addActionEditArea = function(
       tolerance: 'pointer',
       accept: function(draggable) {
         // Check target
-        return lD.hasTarget(draggable, 'drawer');
+        return lD.common.hasTarget(draggable, 'drawer');
       },
       drop: _.debounce(function(event, ui) {
         lD.dropItemAdd(event.target, ui.draggable[0]);

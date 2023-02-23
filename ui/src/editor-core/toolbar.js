@@ -328,22 +328,29 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       state: '',
       itemCount: 0,
     },
-    {
-      name: 'actions',
-      iconType: 'actions',
-      itemName: toolbarTrans.menuItems.actionsName,
-      itemIcon: 'paper-plane',
-      itemTitle: toolbarTrans.menuItems.actionsTitle,
-      content: [],
-      filters: {
-        name: {
-          value: '',
-        },
-      },
-      state: '',
-      itemCount: 0,
-    },
   ];
+
+  // Add actions to default menu items
+  // if we are using the layout editor and not the playlist editor
+  if (this.parent.mainObjectType === 'layout') {
+    defaultMenuItems.push(
+      {
+        name: 'actions',
+        iconType: 'actions',
+        itemName: toolbarTrans.menuItems.actionsName,
+        itemIcon: 'paper-plane',
+        itemTitle: toolbarTrans.menuItems.actionsTitle,
+        content: [],
+        filters: {
+          name: {
+            value: '',
+          },
+        },
+        state: '',
+        itemCount: 0,
+      },
+    );
+  }
 
   // Menu items
   this.menuItems = defaultMenuItems;
@@ -873,9 +880,13 @@ Toolbar.prototype.selectCard = function(card) {
 Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
   // Get draggable info
   const draggableType = $(draggable).data('subType');
+  const app = this.parent;
 
   // Set droppable areas as active
-  if (lD.hasTarget(draggable, 'all') && draggableType === 'permissions') {
+  if (
+    app.common.hasTarget(draggable, 'all') &&
+    draggableType === 'permissions'
+  ) {
     $('.droppable.permissionsModifiable').addClass('ui-droppable-active');
   } else {
     let selectorAppend = '';
@@ -886,22 +897,26 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       selectorAppend += ':not([data-widget-type="subplaylist"])';
     }
 
-    if (lD.hasTarget(draggable, 'layout')) {
+    // Layout editor droppables
+    if (app.common.hasTarget(draggable, 'layout')) {
       // Drop to layout wrapper and layout
       selectorBuild.push('.layout-wrapper.droppable');
       selectorBuild.push('.layout.droppable');
-    } else if (lD.hasTarget(draggable, 'widget')) {
+    } else if (app.common.hasTarget(draggable, 'widget')) {
       // Drop to widget
       selectorBuild.push('.designer-widget.droppable');
-    } else if (lD.hasTarget(draggable, 'frame')) {
+    } else if (app.common.hasTarget(draggable, 'frame')) {
       // Drop to region
       selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
-    } else if (lD.hasTarget(draggable, 'playlist')) {
+    }
+
+    // Playlist editor droppables
+    if (app.common.hasTarget(draggable, 'playlist')) {
       // Drop to playlist
       selectorBuild.push('.designer-region-playlist.droppable');
 
       // Drop to playlist timeline
-      selectorBuild.push('#playlist-timeline.droppable');
+      selectorBuild.push('#playlist-timeline.ui-droppable');
     }
 
     // Add droppable class to all selectors
@@ -915,7 +930,7 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
   }
 
   // Show layout background overlay if exists
-  lD.propertiesPanel.DOMObject.find('.background-image-add').toggleClass(
+  app.propertiesPanel.DOMObject.find('.background-image-add').toggleClass(
     'ui-droppable-active',
     (draggableType == 'image' && !draggable.hasClass('upload-card')));
 };

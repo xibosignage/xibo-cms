@@ -27,7 +27,7 @@
 {% block formHtml %}
     {# Playlist editor main div #}
     <div class="modal editor-modal">  
-        <div class="modal-dialog modal-xl editor-modal-dialog">
+        <div class="modal-dialog editor-modal-dialog">
             <div class="modal-content editor-modal-content">
                 <div class="modal-header editor-modal-header">
                     <h4 class="modal-title editor-modal-title">
@@ -45,7 +45,7 @@
                     </div>
                 </div>
 
-                <div class="modal-body editor-modal-body">
+                <div class="modal-body editor-modal-body container-designer">
                     <div id="playlist-editor" playlist-id="{{ playlist.playlistId }}"></div>
                 </div>
             </div>

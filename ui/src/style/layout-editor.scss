@@ -528,7 +528,7 @@
 }
 
 /* Properties Panel */
-#layout-editor #properties-panel {
+.properties-panel-container #properties-panel {
     padding: 0;
     width: $properties-panel-width;
     height: 100%;

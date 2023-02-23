@@ -1,22 +1,54 @@
-<div class="editor-toolbar editor-top-bar">
-    <!--TOPBAR-->
+<div class="editor-toolbar editor-main-toolbar editor-side-bar editor-side-bar-playlist-editor">
+    <!--TOOLBAR-->
 </div>
 
 <div id="playlist-editor-container">
-    <div class="row">
-        <div id="editing-container" class="col-sm-12 row">
-            <div class="col-md-5 playlist-timeline-container">
-                <div id="playlist-timeline"  class="editable">
-                    {{> playlist-editor }}
-                </div>
-            </div>
+    <div class="editor-body">
+        <div class="time-grid">
+            {{!--TIME GRID--}}
+        </div>
+        <div id="playlist-timeline" class="editable">
+            {{!--TIMELINE--}}
+        </div>
+    </div>
 
-            <div class="col-md-7">
-                <div id="playlist-properties-panel" class="col-sm-12 properties-panel">
-                    {{!--PROPERTIES PANEL--}}
-                </div>
+    <div class="editor-footer">
+        <div class="footer-controls">
+            <button class="btn" data-action="zoom-in">
+                <i class="fa fa-search-plus"></i>
+            </button>
+            <button class="btn" data-action="zoom-out">
+                <i class="fa fa-search-minus"></i>
+            </button>
+            <button class="btn" data-action="zoom-reset">
+                <i class="fa fa-search"></i>
+            </button>
+            <button class="btn d-none" data-action="find-selected">
+                <i class="fa fa-map-marker"></i>
+            </button>
+        </div>
+        <div class="footer-info">
+            <div class="selected-info">
+                {{!-- SELECTED INFO --}}
+            </div>
+            <div class="footer-actions">
+                <button class="btn inactive hide-on-multi-select" data-action="undo">
+                    <i class="fa fa-undo"></i>
+                </button>
+                <button class="btn" data-action="multi-select">
+                    <i class="fa fa-object-group"></i>
+                </button>
+                <button class="btn inactive show-on-multi-select" data-action="remove-widget">
+                    <i class="fa fa-trash"></i>
+                </button>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="properties-panel-container properties-panel-playlist-editor">
+    <div id="properties-panel" class="bootbox properties-panel">
+        <!--PROPERTIES PANEL-->
     </div>
 </div>
 
@@ -24,11 +56,4 @@
     {{!--MANAGER--}}
 </div>
 
-<div class="editor-toolbar editor-main-toolbar editor-side-bar editor-side-bar-playlist-editor">
-    <!--TOOLBAR-->
-</div>
-
-
-
-
-
+<div class="custom-overlay"></div>

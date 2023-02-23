@@ -152,7 +152,7 @@ pE.loadEditor = function(inline = false) {
         pE.propertiesPanel = new PropertiesPanel(
           pE,
           pE.editorContainer.parents('.container-designer')
-            .find('#properties-panel'),
+            .find('.properties-panel'),
         );
 
         // Initialize timeline
@@ -206,10 +206,8 @@ pE.loadEditor = function(inline = false) {
         // Load user preferences
         pE.loadAndSavePref('useLibraryDuration', 0);
 
-        // Reload toolbar if inline
-        if (inline) {
-          pE.toolbar.render();
-        }
+        // Reload toolbar
+        pE.toolbar.render();
 
         pE.common.hideLoadingScreen();
       } else {
@@ -236,7 +234,7 @@ pE.loadEditor = function(inline = false) {
  * @param {number=} [positionToAdd = null] - Order position for widget
  */
 pE.selectObject = function({
-  obj = null,
+  target = null,
   forceUnselect = false,
   positionToAdd = null,
 } = {}) {
@@ -247,8 +245,9 @@ pE.selectObject = function({
   // drag&drop simulate to add that item to a object
   if (!$.isEmptyObject(this.toolbar.selectedCard)) {
     if (
-      obj.data('type') == 'playlist'
-      // TODO: merge conflict: if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
+      target.data('type') == 'playlist'
+      // TODO: merge conflict: if([obj.data('type'), 'all']
+      // .indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
     ) {
       // Get card object
       const card = this.toolbar.selectedCard[0];
@@ -257,12 +256,12 @@ pE.selectObject = function({
       this.toolbar.deselectCardsAndDropZones();
 
       // Simulate drop item add
-      this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
+      this.dropItemAdd(target, card, {positionToAdd: positionToAdd});
     }
   } else if (!$.isEmptyObject(this.toolbar.selectedQueue)) {
     // If there's a selected queue, use the drag&drop
     // simulate to add those items to a object
-    if (obj.data('type') == 'region') {
+    if (target.data('type') == 'region') {
       pE.importFromProvider(this.toolbar.selectedQueue).then((res) => {
         // Add media queue to playlist
         this.playlist.addMedia(res, positionToAdd);
@@ -288,7 +287,7 @@ pE.selectObject = function({
 
     // If there's no selected object, select a default one
     // ( or nothing if widgets are empty)
-    if (obj == null || typeof obj.data('type') == 'undefined') {
+    if (target == null || typeof target.data('type') == 'undefined') {
       if ($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
         this.selectedObject = {};
       } else {
@@ -301,8 +300,8 @@ pE.selectObject = function({
       }
     } else {
       // Get object properties from the DOM ( or set to layout if not defined )
-      newSelectedId = obj.attr('id');
-      newSelectedType = obj.data('type');
+      newSelectedId = target.attr('id');
+      newSelectedType = target.data('type');
 
       // Select new object
       if (newSelectedType === 'widget') {
@@ -446,12 +445,11 @@ pE.deleteObject = function(objectType, objectId) {
                 pE.reloadData();
               }).catch((error) => { // Fail/error
                 pE.common.hideLoadingScreen('deleteObject');
-                            // Behavior if successful
-                            toastr.success(res.message);
-                            pE.reloadData();
-                        }).catch((error) => { // Fail/error
-
-                            pE.common.hideLoadingScreen('deleteObject');
+                // Behavior if successful
+                toastr.success(res.message);
+                pE.reloadData();
+              }).catch((error) => { // Fail/error
+                pE.common.hideLoadingScreen('deleteObject');
 
                 // Show error returned or custom message to the user
                 let errorMessage = '';
@@ -1143,6 +1141,10 @@ pE.initElements = function() {
   $playlistTimeline.droppable({
     greedy: true,
     tolerance: 'pointer',
+    accept: (draggable) => {
+      // Check target
+      return pE.common.hasTarget(draggable, 'playlist');
+    },
     drop: function(event, ui) {
       pE.playlist.addElement(event.target, ui.draggable[0]);
     },
