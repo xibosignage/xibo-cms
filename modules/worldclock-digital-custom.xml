@@ -25,7 +25,7 @@
     <description>Custom World Clock</description>
     <class></class>
     <type>worldclock-digital-custom</type>
-    <group>clock</group>
+    <group id="worldclock" icon="world">World Clock</group>
     <legacyType>worldclock</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>

@@ -25,7 +25,7 @@
     <description>Text World Clock</description>
     <class></class>
     <type>worldclock-digital-text</type>
-    <group>clock</group>
+    <group id="worldclock" icon="world">World Clock</group>
     <legacyType condition="templateId == 'worldclock1'">worldclock</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>

@@ -25,7 +25,7 @@
     <description>A module for displaying a Countdown timer with Simple Text</description>
     <class></class>
     <type>countdown-text</type>
-    <group>countdown</group>
+    <group id="countdown" icon="countdown">Countdown</group>
     <legacyType>countdown</legacyType>
     <legacyTemplate>countdown1</legacyTemplate>
     <dataType></dataType>

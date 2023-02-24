@@ -25,7 +25,7 @@
     <description>Analogue Clock</description>
     <class></class>
     <type>clock-analogue</type>
-    <group>clock</group>
+    <group id="clock" icon="clock">Clock</group>
     <legacyType>clock</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
