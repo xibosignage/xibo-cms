@@ -25,9 +25,11 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -987,7 +989,7 @@ class Widget extends Base
         $module = $this->moduleFactory->getByType($widget->type);
 
         // This is always a preview
-        if (!$module->isDataProviderExpected() && !$module->isWidgetProviderAvailable()) {
+        if (!$module->isDataProviderExpected() && !$module->isWidgetProviderAvailable() && $module->type !== 'dashboard') {
             return $response->withJson([]);
         }
 
@@ -997,6 +999,7 @@ class Widget extends Base
 
         $dataProvider = $module->createDataProvider($widget);
         $dataProvider->setMediaFactory($this->mediaFactory);
+        $dataProvider->setRouteParser(RouteContext::fromRequest($request)->getRouteParser());
         $dataProvider->setDisplayProperties(
             $this->getConfig()->getSetting('DEFAULT_LAT'),
             $this->getConfig()->getSetting('DEFAULT_LONG')
@@ -1495,6 +1498,37 @@ class Widget extends Base
             'httpStatus' => 204,
             'message' => __('Saved elements')
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function additionalWidgetEditOptions(Request $request, Response $response, $id)
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $options = [];
+
+        // Load the widget
+        $widget = $this->widgetFactory->loadByWidgetId($id);
+        $event = new WidgetEditOptionRequestEvent($widget);
+        $this->getDispatcher()->dispatch($event, $event::$NAME);
+
+        if ($widget->type === 'dashboard') {
+            $options = $event->getOptions()['serviceType'];
+
+            if ($params->getString('type') != null) {
+                $filteredOptions = [];
+                foreach ($options as $option) {
+                    if ($option['type'] == $params->getString('type')) {
+                        $filteredOptions[] = $option;
+                        $options = $filteredOptions;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($options);
+        $this->getState()->setData($options);
 
         return $this->render($request, $response);
     }

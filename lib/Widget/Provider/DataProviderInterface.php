@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Provider;
 
 use Carbon\Carbon;
+use Slim\Interfaces\RouteParserInterface;
 
 /**
  * Data Provider
@@ -79,6 +80,11 @@ interface DataProviderInterface
      * @return int
      */
     public function getWidgetId() : int;
+
+    /**
+     * @return RouteParserInterface
+     */
+    public function getRouteParser() : \Slim\Interfaces\RouteParserInterface;
 
     /**
      * Get a configured Guzzle client

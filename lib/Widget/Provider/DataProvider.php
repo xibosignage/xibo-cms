@@ -74,6 +74,10 @@ class DataProvider implements DataProviderInterface
 
     /** @var null cached property values. */
     private $properties = null;
+    /**
+     * @var \Slim\Interfaces\RouteParserInterface
+     */
+    private $routeParser;
 
     /**
      * Constructor
@@ -112,6 +116,17 @@ class DataProvider implements DataProviderInterface
     {
         $this->mediaFactory = $mediaFactory;
         return $this;
+    }
+    
+    public function setRouteParser(\Slim\Interfaces\RouteParserInterface $routeParser)
+    {
+        $this->routeParser = $routeParser;
+        return $this;
+    }
+    
+    public function getRouteParser() : \Slim\Interfaces\RouteParserInterface
+    {
+        return $this->routeParser;
     }
 
     /**

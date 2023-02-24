@@ -317,6 +317,12 @@
                     type: 'GET'
                 },
             },
+            dashboard: {
+                search: {
+                    url: "{{ url_for("widget.edit.options", {id: ':id'}) }}",
+                    type: 'GET'
+                }
+            }
         };
 
         {% autoescape "js" %}

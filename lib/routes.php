@@ -226,6 +226,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  *  description="Widgets"
  * )
  */
+$app->get('/widget/{id}/edit/options', ['\Xibo\Controller\Widget', 'additionalWidgetEditOptions'])->setName('widget.edit.options');
 $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->post('/{type}/{id}', ['\Xibo\Controller\Widget','addWidget'])->setName('module.widget.add');
     $group->put('/{id}', ['\Xibo\Controller\Widget','editWidget'])->setName('module.widget.edit');

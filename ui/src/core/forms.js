@@ -125,6 +125,19 @@ window.forms = {
           property.commandSearchUrl = urlsForApi.command.search.url;
         }
 
+        // dashboards available services
+        if (property.type === 'dashboardSelector') {
+          property.dashboardSearchUrl = urlsForApi.dashboard.search.url.replace(':id', targetId)
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'type';
+          }
+        }
+
         // Change the name of the property to the id
         property.name = property.id;
 
