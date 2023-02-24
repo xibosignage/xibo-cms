@@ -24,6 +24,7 @@
         <type>static</type>
         <dataType>currency</dataType>
         <title>Currencies 1</title>
+        <thumbnail>currencies1</thumbnail>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
@@ -183,12 +184,16 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="currencies1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/currencies1.png"></asset>
+        </assets>
     </template>
     <template>
         <id>currencies2</id>
         <type>static</type>
         <dataType>currency</dataType>
         <title>Currencies 2</title>
+        <thumbnail>currencies2</thumbnail>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
@@ -376,5 +381,8 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="currencies2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/currencies2.png"></asset>
+        </assets>
     </template>
 </templates>
