@@ -25,7 +25,7 @@
     <description>Flip Clock</description>
     <class></class>
     <type>clock-flip</type>
-    <group>clock</group>
+    <group id="clock" icon="clock">Clock</group>
     <legacyType>clock</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>

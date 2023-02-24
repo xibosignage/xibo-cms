@@ -25,7 +25,7 @@
     <description>A module for displaying a Countdown timer in a table</description>
     <class></class>
     <type>countdown-table</type>
-    <group>countdown</group>
+    <group id="countdown" icon="countdown">Countdown</group>
     <legacyType>countdown</legacyType>
     <legacyTemplate>countdown3</legacyTemplate>
     <dataType></dataType>

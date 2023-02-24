@@ -1,0 +1,21 @@
+<div class="content-header">
+    <div class="close-submenu close-content" data-toggle="tooltip" data-placement="right" data-title="{{trans.closeTab}}">
+        <i class="fa fa-arrow-left"></i>
+    </div>
+    <div class="content-title">
+        <i class="fa module-icon-{{data.subType}} card-icon"></i>
+        {{!-- <span class="material-icons">{{data.subType}}</span> --}}
+        <span>{{data.title}}</span>
+    </div>
+</div>
+
+<div class="toolbar-pane-container">
+    <div class="toolbar-pane-content">
+        {{#each content}}
+            {{#unless hideElement}}
+                {{!-- Load cards according to type searchItem/Widget --}}
+                {{> toolbar-card contentType="widgets" trans=../trans icon="module"}}
+            {{/unless}}
+        {{/each}}
+    </div>
+</div>

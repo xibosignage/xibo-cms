@@ -1,4 +1,4 @@
-<div class="toolbar-card {{#neq dataType ""}}toolbar-card-menu{{/neq}} {{#if favourited}}favourited{{/if}}" 
+<div class="toolbar-card {{#eq cardType "moduleGroup"}}toolbar-card-group{{/eq}} {{#neq dataType ""}}toolbar-card-menu{{/neq}} {{#if favourited}}favourited{{/if}}" 
     data-toggle="tooltip" 
     data-type="{{contentType}}" 
     data-sub-type="{{type}}"

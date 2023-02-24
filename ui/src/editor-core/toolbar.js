@@ -10,6 +10,8 @@ const ToolbarContentSubmenu =
   require('../templates/toolbar-content-submenu.hbs');
 const ToolbarContentSubmenuElements =
   require('../templates/toolbar-content-submenu-elements.hbs');
+const ToolbarContentGroup =
+  require('../templates/toolbar-content-group.hbs');
 const MediaPlayerTemplate = require('../templates/toolbar-media-preview.hbs');
 const MediaInfoTemplate =
   require('../templates/toolbar-media-preview-info.hbs');
@@ -65,7 +67,7 @@ const Toolbar = function(
  */
 Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Modules to be used in Widgets
-  const moduleListFiltered = [];
+  let moduleListFiltered = [];
 
   // Create user list
   const usersListFiltered = [];
@@ -97,6 +99,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       });
     }
 
+    // Add card type ( to use group cards )
+    el.cardType = 'module';
+
     // Filter out image/audio/video
     if (['image', 'audio', 'video'].indexOf(el.type) == -1) {
       moduleListFiltered.push(el);
@@ -111,8 +116,40 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       type: 'playlist',
       dataType: '',
       regionSpecific: 1,
+      group: [],
     });
   }
+
+  // Group modules by group property
+  const moduleGroups = {};
+  for (let i = 0; i < moduleListFiltered.length; i++) {
+    const element = moduleListFiltered[i];
+
+    // Check if element.group is an object
+    if (typeof element.group == 'object' && !(element.group instanceof Array)) {
+      if (!moduleGroups[element.group.id]) {
+        moduleGroups[element.group.id] = {
+          name: element.group.name,
+          type: element.group.id,
+          icon: element.group.icon,
+          cardType: 'moduleGroup',
+          modules: [],
+        };
+      }
+
+      // Add module to group
+      moduleGroups[element.group.id].modules.push(element);
+
+      // Remove module from moduleListFiltered and decrement i
+      moduleListFiltered.splice(moduleListFiltered.indexOf(element), 1);
+      i--;
+    }
+  }
+
+  // Add module groups to module list
+  moduleListFiltered = moduleListFiltered.concat(
+    Object.values(moduleGroups),
+  );
 
   // Sort modules by name
   moduleListFiltered.sort(function(a, b) {
@@ -378,6 +415,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Filtered module list
   this.customModuleList = moduleListFiltered;
   this.moduleListOtherFiltered = moduleListOtherFiltered;
+  this.moduleGroups = moduleGroups;
 };
 
 /**
@@ -1423,11 +1461,19 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       }
     });
 
-    // Open card menu
-    this.DOMObject.find('.toolbar-card.toolbar-card-menu')
-      .off('click').click((e) => {
-        self.openSubMenu($(e.currentTarget));
-      });
+    // Open card template menu
+    this.DOMObject.find(
+      '.toolbar-card.toolbar-card-menu:not(.toolbar-card-group)',
+    ).off('click').click((e) => {
+      self.openSubMenu($(e.currentTarget));
+    });
+
+    // Open card group menu
+    this.DOMObject.find(
+      '.toolbar-card.toolbar-card-group',
+    ).off('click').click((e) => {
+      self.openGroupMenu($(e.currentTarget));
+    });
 
     // Toggle favourite card
     this.DOMObject.find(
@@ -1645,6 +1691,46 @@ Toolbar.prototype.openSubMenu = function($card) {
 
   // Load content
   self.loadSubMenu($submenuContainer, cardData.dataType, cardData.subType);
+};
+
+/**
+ * Load module group submenu
+ * @param {string} $card - Module card
+ */
+Toolbar.prototype.openGroupMenu = function($card) {
+  const self = this;
+  const openedMenu = self.openedMenu;
+  const $submenuContainer = self.DOMObject.find('#content-' + openedMenu);
+  const cardData = $card.data();
+
+  // Deselect previous selections
+  this.deselectCardsAndDropZones();
+
+  // Load module cards from this group
+  console.log('Load module cards from this group');
+  const content = this.moduleGroups[cardData.subType].modules;
+
+  // Append HTML
+  $submenuContainer.addClass('toolbar-group-pane');
+  $submenuContainer.html(
+    ToolbarContentGroup({
+      data: cardData,
+      content: content,
+      trans: toolbarTrans,
+    }),
+  );
+
+  // Handle back button
+  $submenuContainer.find('.close-submenu').off().on('click', function() {
+    $submenuContainer.removeClass('toolbar-group-pane');
+    self.openMenu(openedMenu, true);
+  });
+
+  // Handle cards behaviour
+  self.handleCardsBehaviour();
+
+  // Clear tooltips
+  this.parent.common.clearTooltips();
 };
 
 /**

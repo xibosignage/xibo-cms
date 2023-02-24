@@ -556,7 +556,8 @@
                 }
             }
 
-            &.toolbar-elements-pane {
+            &.toolbar-elements-pane,
+            &.toolbar-group-pane {
                 .content-header {
                     background-color: $xibo-color-primary-l60;
                     color: $xibo-color-neutral-0;
