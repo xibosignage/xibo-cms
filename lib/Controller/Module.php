@@ -198,7 +198,7 @@ class Module extends Base
 
         // Parse out any settings we ought to expect.
         foreach ($module->settings as $setting) {
-            $setting->setValueByType($sanitizedParams);
+            $setting->setValueByType($sanitizedParams, null, true);
         }
 
         // Save

@@ -202,15 +202,16 @@ class Property implements \JsonSerializable
     }
 
     /**
-     * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
+     * @param SanitizerInterface $params
      * @param string|null $key
-     * @return \Xibo\Widget\Definition\Property
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @param bool $ignoreDefault
+     * @return Property
+     * @throws InvalidArgumentException
      */
-    public function setValueByType(SanitizerInterface $params, string $key = null): Property
+    public function setValueByType(SanitizerInterface $params, string $key = null, bool $ignoreDefault = false): Property
     {
         $value = $this->getByType($params, $key);
-        if ($value !== $this->default) {
+        if ($value !== $this->default || $ignoreDefault) {
             $this->value = $value;
         }
         return $this;
