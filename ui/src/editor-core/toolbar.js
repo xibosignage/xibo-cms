@@ -1778,6 +1778,12 @@ Toolbar.prototype.loadSubMenu = function($container, contentType, moduleType) {
           }
         }
 
+        // Add thumbnail url if thumbail property is present
+        if (el.thumbnail) {
+          el.thumbnail =
+            assetDownloadUrl.replace(':assetId', el.thumbnail);
+        }
+
         if (el.type === 'element') {
           elements.push(el);
         } else if (el.type === 'element-group') {

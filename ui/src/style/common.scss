@@ -328,7 +328,7 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-sitemap;
 }
 
-.module-icon-worldclock {
+.module-icon-worldclock, .module-icon-worldclock-analogue, .module-icon-worldclock-digital, .module-icon-worldclock-flip {
     @extend .fa-globe;
 }
 

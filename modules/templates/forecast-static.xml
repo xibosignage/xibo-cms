@@ -25,6 +25,7 @@
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day, 4 day forecast</title>
+        <thumbnail>weather_1</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -334,6 +335,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_1.png" />
+        </assets>
     </template>
     <template>
         <id>weather_2</id>
@@ -341,6 +345,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day, summary</title>
+        <thumbnail>weather_2</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -626,6 +631,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_2.png" />
+        </assets>
     </template>
     <template>
         <id>weather_3</id>
@@ -633,6 +641,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day</title>
+        <thumbnail>weather_3</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -918,6 +927,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_3" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_3.png" />
+        </assets>
     </template>
     <template>
         <id>weather_4</id>
@@ -925,6 +937,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 4 day forecast</title>
+        <thumbnail>weather_4</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -1296,6 +1309,9 @@ h1 {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_4" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_4.png" />
+        </assets>
     </template>
     <template>
         <id>weather_5</id>
@@ -1303,6 +1319,7 @@ h1 {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 2 day forecast</title>
+        <thumbnail>weather_5</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -1737,6 +1754,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_5" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_5.png" />
+        </assets>
     </template>
     <template>
         <id>weather_6</id>
@@ -1744,6 +1764,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed table, 4 day forecast</title>
+        <thumbnail>weather_6</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -2139,6 +2160,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_6" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_6.png" />
+        </assets>
     </template>
     <template>
         <id>weather_7</id>
@@ -2146,6 +2170,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Square - Current day</title>
+        <thumbnail>weather_7</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -2558,6 +2583,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_7" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_7.png" />
+        </assets>
     </template>
     <template>
         <id>weather_8</id>
@@ -2565,6 +2593,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day, 4 day forecast</title>
+        <thumbnail>weather_8</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -2973,6 +3002,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_8" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_8.png" />
+        </assets>
     </template>
     <template>
         <id>weather_9</id>
@@ -2980,6 +3012,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 4 day forecast</title>
+        <thumbnail>weather_9</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -3454,6 +3487,9 @@ text-transform: uppercase;
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_9" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_9.png" />
+        </assets>
     </template>
     <template>
         <id>weather_10</id>
@@ -3461,6 +3497,7 @@ text-transform: uppercase;
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 4 day forecast</title>
+        <thumbnail>weather_10</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -3925,6 +3962,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_10" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_10.png" />
+        </assets>
     </template>
     <template>
         <id>weather_11</id>
@@ -3932,6 +3972,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 3 day forecast</title>
+        <thumbnail>weather_11</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -4424,6 +4465,9 @@ h1 {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_11" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_11.png" />
+        </assets>
     </template>
     <template>
         <id>weather_12</id>
@@ -4431,6 +4475,7 @@ h1 {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 3 day forecast</title>
+        <thumbnail>weather_12</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -4863,6 +4908,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_12" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_12.png" />
+        </assets>
     </template>
     <template>
         <id>weather_13</id>
@@ -4870,6 +4918,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day details, 4 day forecast</title>
+        <thumbnail>weather_13</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -5196,6 +5245,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_13" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_13.png" />
+        </assets>
     </template>
     <template>
         <id>weather_14</id>
@@ -5203,6 +5255,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day details, 4 day forecast</title>
+        <thumbnail>weather_14</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -5547,6 +5600,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_14" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_14.png" />
+        </assets>
     </template>
     <template>
         <id>weather_15</id>
@@ -5554,6 +5610,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Square - Forecast squared with background</title>
+        <thumbnail>weather_15</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -5822,6 +5879,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_15" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_15.png" />
+        </assets>
     </template>
     <template>
         <id>weather_16</id>
@@ -5829,6 +5889,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Square - Detailed weather</title>
+        <thumbnail>weather_16</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -6111,6 +6172,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_16" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_16.png" />
+        </assets>
     </template>
     <template>
         <id>weather_17</id>
@@ -6118,6 +6182,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Scale - Weather background only</title>
+        <thumbnail>weather_17</thumbnail>
         <properties>
             <property id="footer-color" type="color">
                 <title>Footer Background</title>
@@ -6294,6 +6359,9 @@ body {
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_17" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_17.png" />
+        </assets>
     </template>
     <template>
         <id>weather_18</id>
@@ -6301,6 +6369,7 @@ body {
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Weather fullscreen</title>
+        <thumbnail>weather_18</thumbnail>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -6558,5 +6627,8 @@ text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
 </style>
             ]]></twig>
         </stencil>
+        <assets>
+            <asset id="weather_18" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_18.png" />
+        </assets>
     </template>
 </templates>
