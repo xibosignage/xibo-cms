@@ -2096,6 +2096,13 @@ const formHelpers = function() {
     }
 
     // Add back button
+    buttons.delete = {
+      name: editorsTrans.delete,
+      type: 'btn-danger',
+      action: 'delete',
+    };
+
+    // Add back button
     buttons.back = {
       name: editorsTrans.back,
       type: 'btn-white',

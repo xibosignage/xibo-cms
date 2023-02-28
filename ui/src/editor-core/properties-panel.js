@@ -171,6 +171,14 @@ PropertiesPanel.prototype.back = function(element) {
 };
 
 /**
+ * Delete selected element
+ * @param {object} element - the element that the form relates to
+ */
+PropertiesPanel.prototype.delete = function(element) {
+  lD.deleteSelectedObject();
+};
+
+/**
  * Disable all the form inputs and make it read only
  */
 PropertiesPanel.prototype.makeFormReadOnly = function() {
@@ -412,6 +420,13 @@ PropertiesPanel.prototype.render = function(
         self.DOMObject.find('button#back').removeClass('d-none');
       } else {
         self.DOMObject.find('button#back').addClass('d-none');
+      }
+
+      // Handle delete button
+      if (actionEditMode) {
+        self.DOMObject.find('button#delete').removeClass('d-none');
+      } else {
+        self.DOMObject.find('button#delete').addClass('d-none');
       }
 
       // Handle keyboard keys
