@@ -411,6 +411,11 @@ lD.selectObject =
         }
       };
 
+      // If the object is the drawer, skip the rest
+      if (target && target.hasClass('designer-region-drawer')) {
+        return;
+      }
+
       const oldSelectedId = this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
 
@@ -926,7 +931,9 @@ lD.deleteSelectedObject = function() {
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject[lD.selectedObject.type + 'Id'],
-      lD.layout.regions[lD.selectedObject.regionId].regionId,
+      (lD.selectedObject.drawerWidget) ?
+        lD.layout.drawer.regionId :
+        lD.layout.regions[lD.selectedObject.regionId].regionId,
     );
   }
 };
