@@ -25,6 +25,7 @@
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 1 - text, profile image</title>
+        <thumbnail>fulltime-np</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -202,6 +203,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="fulltime-np" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_2</id>
@@ -209,6 +213,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 2 - text, profile image, photo</title>
+        <thumbnail>fulltime</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>2</default>
@@ -404,6 +409,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="fulltime" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/fulltime.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_3</id>
@@ -411,6 +419,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 3 - text</title>
+        <thumbnail>textonly</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -518,6 +527,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="textonly" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/textonly.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_4</id>
@@ -525,6 +537,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 4 - text, profile image</title>
+        <thumbnail>profileleft</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -650,6 +663,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="profileleft" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/profileleft.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_5</id>
@@ -657,6 +673,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 5 - text, profile image</title>
+        <thumbnail>profileright</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -783,6 +800,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="profileright" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/profileright.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_6</id>
@@ -790,6 +810,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 6 - text, profile image</title>
+        <thumbnail>twitter1</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -964,6 +985,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="twitter1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter1.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_7</id>
@@ -971,6 +995,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 7 - text, profile image</title>
+        <thumbnail>twitter2</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1155,6 +1180,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="twitter2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter2.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_8</id>
@@ -1162,6 +1190,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 8 - text, profile image</title>
+        <thumbnail>twitter4</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1351,6 +1380,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="twitter4" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter4.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_9</id>
@@ -1358,6 +1390,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 9 - text, logo</title>
+        <thumbnail>twitter6np</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1534,6 +1567,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="twitter6np" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter6np.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_10</id>
@@ -1541,6 +1577,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 10 - text, photo, logo</title>
+        <thumbnail>twitter6pl</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>2</default>
@@ -1726,6 +1763,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="twitter6pl" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter6pl.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_11</id>
@@ -1733,6 +1773,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 11 - text, logo</title>
+        <thumbnail>twitter7</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1929,6 +1970,9 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="twitter7" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter7.png" />
+        </assets>
     </template>
     <template>
         <id>social_media_static_12</id>
@@ -1936,6 +1980,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 12 - text, profile image, logo</title>
+        <thumbnail>twitter8</thumbnail>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -2124,12 +2169,16 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <assets>
+            <asset id="twitter8" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter8.png" />
+        </assets>
     </template>
     <template>
         <id>metro_social</id>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Metro Social</title>
+        <thumbnail>colors1</thumbnail>
         <properties>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>

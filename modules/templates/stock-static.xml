@@ -24,6 +24,7 @@
         <type>static</type>
         <dataType>stock</dataType>
         <title>Stocks 1</title>
+        <thumbnail>stocks1</thumbnail>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
@@ -251,12 +252,16 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="stocks1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/stocks1.png" />
+        </assets>
     </template>
     <template>
         <id>stocks2</id>
         <type>static</type>
         <dataType>stock</dataType>
         <title>Stocks 2</title>
+        <thumbnail>stocks2</thumbnail>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
@@ -498,5 +503,8 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="stocks2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/stocks2.png" />
+        </assets>
     </template>
 </templates>

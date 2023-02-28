@@ -197,6 +197,7 @@ $(target).xiboTextRender(
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Plain Table (Customisable)</title>
+        <thumbnail>empty</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -455,6 +456,9 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="empty" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/0-empty.png" />
+        </assets>
     </template>
     <template>
         <id>dataset_table_2</id>
@@ -462,6 +466,7 @@ $datasetTableContainer.dataSetRender(properties);
         <type>static</type>
         <dataType>dataset</dataType>
         <title>A light green background with darker green borders. White heading text.</title>
+        <thumbnail>light-green</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -710,6 +715,9 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="light-green" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/1-light-green.png" />
+        </assets>
     </template>
     <template>
         <id>dataset_table_3</id>
@@ -717,6 +725,7 @@ $datasetTableContainer.dataSetRender(properties);
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Simple white table with rounded rows.</title>
+        <thumbnail>simple-round-table</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -956,6 +965,9 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="simple-round-table" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/2-simple-round-table.png" />
+        </assets>
     </template>
     <template>
         <id>dataset_table_4</id>
@@ -963,6 +975,7 @@ $datasetTableContainer.dataSetRender(properties);
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Striped blue table with darker blue header.</title>
+        <thumbnail>transparent-blue</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1200,6 +1213,9 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="transparent-blue" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/3-transparent-blue.png" />
+        </assets>
     </template>
     <template>
         <id>dataset_table_5</id>
@@ -1207,6 +1223,7 @@ $datasetTableContainer.dataSetRender(properties);
         <type>static</type>
         <dataType>dataset</dataType>
         <title>White striped table with orange header.</title>
+        <thumbnail>orange-grey-striped</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1442,6 +1459,9 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="orange-grey-striped" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/4-orange-grey-striped.png" />
+        </assets>
     </template>
     <template>
         <id>dataset_table_6</id>
@@ -1449,6 +1469,7 @@ $datasetTableContainer.dataSetRender(properties);
         <type>static</type>
         <dataType>dataset</dataType>
         <title>White and grey table with split rows.</title>
+        <thumbnail>split-rows-</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1682,6 +1703,9 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="split-rows-" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/5-split-rows-.png" />
+        </assets>
     </template>
     <template>
         <id>dataset_table_7</id>
@@ -1689,6 +1713,7 @@ $datasetTableContainer.dataSetRender(properties);
         <type>static</type>
         <dataType>dataset</dataType>
         <title>A dark table with round borders and yellow heading text.</title>
+        <thumbnail>dark-round</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1917,6 +1942,9 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="dark-round" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/6-dark-round.png" />
+        </assets>
     </template>
     <template>
         <id>dataset_table_8</id>
@@ -1924,6 +1952,7 @@ $datasetTableContainer.dataSetRender(properties);
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Round cells with multi colours and a full coloured header.</title>
+        <thumbnail>pill-colored</thumbnail>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -2193,5 +2222,8 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 // Call render
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
+        <assets>
+            <asset id="pill-colored" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
+        </assets>
     </template>
 </templates>

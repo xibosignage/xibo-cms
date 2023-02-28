@@ -1,13 +1,17 @@
-<div class="toolbar-card toolbar-card-template tooltip-always-on" 
-    data-toggle="tooltip" 
+<div class="toolbar-card toolbar-card-template {{#if thumbnail}}has-thumb{{/if}}" 
     data-type="template" 
     data-sub-type="{{subType}}"
     data-target="{{#if target}}{{target}}{{else}}layout playlist drawer{{/if}}"
     data-template-type="{{dataType}}"
-    data-template-id="{{templateId}}"
-    data-title="{{title}}">
+    data-template-id="{{templateId}}">
 
-    <div class="toolbar-content">
+{{#if thumbnail}}
+    <div class="toolbar-card-thumb">
+        <img src="{{thumbnail}}" />
+    </div>
+{{/if}}
+
+    <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
         <span class="card-title">{{title}}</span>
     </div>
 </div>
