@@ -1562,7 +1562,7 @@ class Library extends Base
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
                     $params,
-                    $media->mediaId . '_videocover',
+                    $media->mediaId . '_videocover.png',
                     $response,
                     $this->getConfig()->uri('img/1x1.png', true)
                 );

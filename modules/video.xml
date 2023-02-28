@@ -94,10 +94,8 @@
 <div style="display:table; width:100%; height: {{ height }}px">
     <div style="display: table-cell;">
         <div style="text-align:center;">
-            <i class="fa module-preview-icon module-icon-video" style="position:fixed;"></i>
-        </div>
-        <div style="text-align:center;">
-            <img src="{{ downloadUrl }}&width={{ width }}&height={{ height }}&proportional=1" />
+            <i class="fa module-preview-icon module-icon-video" style="position:relative;color:#ececec;text-shadow: 0 0 2px black;z-index: 1;"></i>
+            <img style="position: absolute;left:0;top:0;width:100%;max-height: 100%;object-fit: contain;" src="{{ downloadUrl }}&width={{ width }}&height={{ height }}&proportional=1" />
         </div>
     </div>
 </div>
