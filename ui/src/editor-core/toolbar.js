@@ -32,6 +32,7 @@ const Toolbar = function(
   this.parent = parent;
   this.DOMObject = container;
   this.openedMenu = -1;
+  this.openedSubMenu = {};
 
   this.widgetMenuIndex = 0;
   this.libraryMenuIndex = 4;
@@ -436,8 +437,14 @@ Toolbar.prototype.loadPrefs = function() {
     if (res.success) {
       const loadedData = JSON.parse(res.data.value);
 
+      // Load opened menu
       self.openedMenu =
         (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
+
+      // Load opened submenu
+      self.openedSubMenu =
+        (loadedData.openedSubMenu != undefined) ?
+          loadedData.openedSubMenu : [];
 
       // Load favourites
       self.menuItems[self.widgetMenuIndex].favouriteModules =
@@ -498,12 +505,14 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
 
   // Save only some of the tab menu data
   let openedMenu = this.openedMenu;
+  let openedSubMenu = this.openedSubMenu;
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
   let favouriteModules = [];
   const filters = [];
 
   if (clearPrefs) {
     openedMenu = -1;
+    openedSubMenu = {};
     displayTooltips = 1;
   } else {
     // Save favourite
@@ -530,6 +539,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
         value: JSON.stringify({
           filters: filters,
           openedMenu: openedMenu,
+          openedSubMenu: openedSubMenu,
           displayTooltips: displayTooltips,
           favouriteModules: favouriteModules,
         }),
@@ -648,7 +658,10 @@ Toolbar.prototype.render = function() {
 
   // If there was a opened menu in the toolbar, open that tab
   if (this.openedMenu != undefined && this.openedMenu != -1) {
-    this.openMenu(this.openedMenu, true);
+    // Do we have opened sub menu?
+    const openedSubMenu = !$.isEmptyObject(this.openedSubMenu);
+
+    this.openMenu(this.openedMenu, true, openedSubMenu);
   }
 };
 
@@ -814,8 +827,13 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
  * Open menu
  * @param {number} menu - menu to open index, -1 by default and to toggle
  * @param {bool} forceOpen - force tab open ( even if opened before )
+ * @param {bool} openSubMenu - open sub menu
  */
-Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
+Toolbar.prototype.openMenu = function(
+  menu = -1,
+  forceOpen = false,
+  openSubMenu = false,
+) {
   let active = false;
   const oldStatusOpened = this.opened;
   const app = this.parent;
@@ -870,6 +888,15 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
   if (!this.opened) {
     // Save user preferences
     this.savePrefs();
+  }
+
+  // If we have a sub menu, open it
+  if (openSubMenu) {
+    if (this.openedSubMenu.type == 'groupMenu') {
+      this.openGroupMenu(null, this.openedSubMenu.data);
+    } else if (this.openedSubMenu.type == 'subMenu') {
+      this.openSubMenu(null, this.openedSubMenu.data);
+    }
   }
 
   // Clear rogue tooltips
@@ -1664,12 +1691,19 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
 /**
  * Open sub menu
  * @param  {string} $card - Module card
+ * @param  {object} data  - Module data
  */
-Toolbar.prototype.openSubMenu = function($card) {
+Toolbar.prototype.openSubMenu = function($card, data = null) {
   const self = this;
   const openedMenu = self.openedMenu;
   const $submenuContainer = self.DOMObject.find('#content-' + openedMenu);
-  const cardData = $card.data();
+  const cardData = data ? data : $card.data();
+
+  // Save card data
+  self.openedSubMenu = {
+    type: 'subMenu',
+    data: cardData,
+  };
 
   // Append HTML
   $submenuContainer.addClass('toolbar-elements-pane');
@@ -1683,7 +1717,15 @@ Toolbar.prototype.openSubMenu = function($card) {
   // Handle back button
   $submenuContainer.find('.close-submenu').off().on('click', function() {
     $submenuContainer.removeClass('toolbar-elements-pane');
+
+    // Clear submenu
+    self.openedSubMenu = {};
+
+    // Open menu
     self.openMenu(openedMenu, true);
+
+    // Save user preferences
+    self.savePrefs();
   });
 
   // Clear tooltips
@@ -1691,20 +1733,30 @@ Toolbar.prototype.openSubMenu = function($card) {
 
   // Load content
   self.loadSubMenu($submenuContainer, cardData.dataType, cardData.subType);
+
+  // Save user preferences
+  self.savePrefs();
 };
 
 /**
  * Load module group submenu
  * @param {string} $card - Module card
+ * @param {object} data  - Module data
  */
-Toolbar.prototype.openGroupMenu = function($card) {
+Toolbar.prototype.openGroupMenu = function($card, data = null) {
   const self = this;
   const openedMenu = self.openedMenu;
   const $submenuContainer = self.DOMObject.find('#content-' + openedMenu);
-  const cardData = $card.data();
+  const cardData = data ? data : $card.data();
 
   // Deselect previous selections
   this.deselectCardsAndDropZones();
+
+  // Save card data
+  self.openedSubMenu = {
+    type: 'groupMenu',
+    data: cardData,
+  };
 
   // Load module cards from this group
   console.log('Load module cards from this group');
@@ -1723,7 +1775,15 @@ Toolbar.prototype.openGroupMenu = function($card) {
   // Handle back button
   $submenuContainer.find('.close-submenu').off().on('click', function() {
     $submenuContainer.removeClass('toolbar-group-pane');
+
+    // Clear submenu
+    self.openedSubMenu = {};
+
+    // Open menu
     self.openMenu(openedMenu, true);
+
+    // Save user preferences
+    self.savePrefs();
   });
 
   // Handle cards behaviour
@@ -1731,6 +1791,9 @@ Toolbar.prototype.openGroupMenu = function($card) {
 
   // Clear tooltips
   this.parent.common.clearTooltips();
+
+  // Save user preferences
+  self.savePrefs();
 };
 
 /**
