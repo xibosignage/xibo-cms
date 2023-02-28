@@ -7,11 +7,11 @@
     data-download="{{download}}">
 
     {{#neq thumbnail null}}
-        {{#eq type "video"}}
+        {{#if videoThumbnail}}
             <video class="thumb" src="{{thumbnail}}" alt="" muted="muted"></video>
         {{else}}
             <img class="thumb" src="{{thumbnail}}" alt="">
-        {{/eq}}
+        {{/if}}
     {{/neq}}
 
     {{#neq download null}}
