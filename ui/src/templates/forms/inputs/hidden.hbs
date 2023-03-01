@@ -2,4 +2,6 @@
     {{#each customData}}
         data-{{this.name}}="{{this.value}}"
     {{/each}}
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+    {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}
 />

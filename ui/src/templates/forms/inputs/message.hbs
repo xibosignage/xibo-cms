@@ -1,3 +1,5 @@
-<div class="xibo-form-input {{customClass}}">
+<div class="xibo-form-input {{customClass}}"
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+>
     <div id="input_{{id}}" class="alert {{#if variant}}alert-{{variant}}{{else}}alert-info{{/if}}" >{{title}}</div>
 </div>

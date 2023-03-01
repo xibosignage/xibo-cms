@@ -1,5 +1,7 @@
 <div class="xibo-form-input world-clock-control"
     data-order-id="{{id}}"
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+    {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}
 >
     <div class="clocksContainer"></div>
     {{> hidden id=id name=name value=value customClass="world-clock-value" }}
