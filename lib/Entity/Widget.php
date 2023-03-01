@@ -22,6 +22,8 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use Xibo\Event\SubPlaylistDurationEvent;
+use Xibo\Event\WidgetDeleteEvent;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\WidgetAudioFactory;
@@ -704,6 +706,12 @@ class Widget implements \JsonSerializable
                 $this->calculatedDuration = $durationProvider->getDuration();
                 $durationProvided = true;
             }
+        } else if ($module->type === 'sub-playlist') {
+            // Sub Playlists are a special case and provide their own duration.
+            $event = new SubPlaylistDurationEvent($this);
+            $this->getDispatcher()->dispatch($event);
+            $durationProvided = true;
+            $this->calculatedDuration = $event->getDuration();
         }
 
         if (!$durationProvided) {
@@ -944,16 +952,16 @@ class Widget implements \JsonSerializable
         // We must ensure everything is loaded before we delete
         $this->load();
 
+        // Widget Delete Event
+        $this->getDispatcher()->dispatch(new WidgetDeleteEvent($this), WidgetDeleteEvent::$NAME);
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
-            /* @var Permission $permission */
             $permission->deleteAll();
         }
 
         // Delete all Options
         foreach ($this->widgetOptions as $widgetOption) {
-            /* @var \Xibo\Entity\WidgetOption $widgetOption */
-
             // Assert the widgetId
             $widgetOption->widgetId = $this->widgetId;
             $widgetOption->delete();
@@ -961,8 +969,6 @@ class Widget implements \JsonSerializable
 
         // Delete the widget audio
         foreach ($this->audio as $audio) {
-            /* @var \Xibo\Entity\WidgetAudio $audio */
-
             // Assert the widgetId
             $audio->widgetId = $this->widgetId;
             $audio->delete();
@@ -1125,7 +1131,6 @@ class Widget implements \JsonSerializable
         $sql = 'INSERT INTO `lkwidgetmedia` (widgetId, mediaId) VALUES (:widgetId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = :mediaId2';
 
         foreach ($mediaToLink as $mediaId) {
-
             $this->getStore()->insert($sql, array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
@@ -1144,8 +1149,9 @@ class Widget implements \JsonSerializable
 
         $this->getLog()->debug('Unlinking %d old media from Widget %d', count($mediaToUnlink), $this->widgetId);
 
-        if (count($mediaToUnlink) <= 0)
+        if (count($mediaToUnlink) <= 0) {
             return;
+        }
 
         // Unlink any media in the collection
         $params = ['widgetId' => $this->widgetId];

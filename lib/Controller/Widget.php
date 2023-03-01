@@ -519,16 +519,6 @@ class Widget extends Base
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        try {
-            $module = $this->moduleFactory->getByType($widget->type);
-        } catch (NotFoundException $notFoundException) {
-            // This module doesn't exist, so we just delete the widget.
-            $widget->delete();
-            $this->getState()->hydrate([
-                'message' => __('Deleted Widget')
-            ]);
-            return $this->render($request, $response);
-        }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
         $playlist = $this->playlistFactory->getById($widget->playlistId);
@@ -554,15 +544,21 @@ class Widget extends Base
                     throw new AccessDeniedException();
                 }
 
-                $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+                $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
                 $media->delete();
             }
         }
 
+        // Module name for the message
+        try {
+            $module = $this->moduleFactory->getByType($widget->type);
+            $message = sprintf(__('Deleted %s'), $module->name);
+        } catch (NotFoundException $notFoundException) {
+            $message = __('Deleted Widget');
+        }
+
         // Successful
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Deleted %s'), $module->name)
-        ]);
+        $this->getState()->hydrate(['message' => $message]);
 
         return $this->render($request, $response);
     }

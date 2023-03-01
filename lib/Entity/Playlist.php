@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,6 +22,8 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use Xibo\Event\SubPlaylistDurationEvent;
+use Xibo\Event\SubPlaylistWidgetsEvent;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -882,10 +884,9 @@ class Playlist implements \JsonSerializable
                         . ', parentWidgetId is ' . $parentWidgetId);
 
                     // Get the sub-playlist widgets
-                    $module = $this->moduleFactory->getByType($widget->type);
-                    $subPlaylistWidgets = $module
-                        ->getWidgetProviderOrNull()
-                        ->getSubPlaylistResolvedWidgets($widget->tempId);
+                    $event = new SubPlaylistWidgetsEvent($widget, $widget->tempId);
+                    $this->getDispatcher()->dispatch($event);
+                    $subPlaylistWidgets = $event->getWidgets();
 
                     // Are we the top level sub-playlist, and do we have cycle playback enabled?
                     if ($parentWidgetId === 0 && $widget->getOptionValue('cyclePlaybackEnabled', 0) === 1) {
@@ -957,7 +958,6 @@ class Playlist implements \JsonSerializable
         foreach ($this->widgets as $widget) {
             // Is this widget expired?
             if ($widget->isExpired()) {
-
                 // Remove this widget.
                 if ($widget->getOptionValue('deleteOnExpiry', 0) == 1) {
                     // Don't notify at all because we're going to do that when we finish updating our duration.
@@ -986,7 +986,9 @@ class Playlist implements \JsonSerializable
                 }
             } else {
                 // Add the sub playlist duration
-                // TODO: sub-playlists are handled as a special case.
+                $event = new SubPlaylistDurationEvent($widget);
+                $this->getDispatcher()->dispatch($event);
+                $duration += $event->getDuration();
             }
         }
 
@@ -1044,7 +1046,8 @@ class Playlist implements \JsonSerializable
      * Recursive function, that goes through all widgets on nested Playlists.
      *
      * generates nestedPlaylistDefinitions with Playlist ID as the key - later saved as nestedPlaylist.json on export
-     * generates playlistMappings which contains all relations between playlists (parent/child) - later saved as playlistMappings.json on export
+     * generates playlistMappings which contains all relations between playlists (parent/child) -
+     * later saved as playlistMappings.json on export
      * Adds dataSets data to $dataSets parameter - later saved as dataSet.json on export
      *
      * playlistMappings, nestedPLaylistDefinitions, dataSets and dataSetIds are passed by reference.

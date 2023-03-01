@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Render;
 
 use Carbon\Carbon;
+use FilesystemIterator;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -328,6 +329,7 @@ class WidgetHtmlRenderer
      * @throws \Twig\Error\SyntaxError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\LoaderError
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function render(
         Module $module,
@@ -496,5 +498,35 @@ class WidgetHtmlRenderer
         }
 
         return $content;
+    }
+
+    /**
+     * @param \Xibo\Entity\Widget $widget
+     * @return void
+     */
+    public function clearWidgetCache(Widget $widget)
+    {
+        $cachePath = $this->cachePath
+            . DIRECTORY_SEPARATOR
+            . $widget->widgetId
+            . DIRECTORY_SEPARATOR;
+
+        // Drop the cache
+        // there is a chance this may not yet exist
+        try {
+            $it = new \RecursiveDirectoryIterator($cachePath, FilesystemIterator::SKIP_DOTS);
+            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
+            }
+            rmdir($cachePath);
+        } catch (\UnexpectedValueException $unexpectedValueException) {
+            $this->logger->debug('HTML cache doesn\'t exist yet or cannot be deleted. '
+                . $unexpectedValueException->getMessage());
+        }
     }
 }

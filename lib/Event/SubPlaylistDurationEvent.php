@@ -26,12 +26,15 @@ use Xibo\Entity\Widget;
 /**
  * Widget Edit Event
  */
-class WidgetEditEvent extends Event
+class SubPlaylistDurationEvent extends Event
 {
-    public static $NAME = 'widget.edit';
+    public static $NAME = 'widget.sub-playlist.duration';
 
     /** @var \Xibo\Entity\Widget */
     protected $widget;
+
+    /** @var int */
+    private $duration;
 
     /**
      * constructor.
@@ -40,6 +43,7 @@ class WidgetEditEvent extends Event
     public function __construct(\Xibo\Entity\Widget $widget)
     {
         $this->widget = $widget;
+        $this->duration = 0;
     }
 
     /**
@@ -48,5 +52,24 @@ class WidgetEditEvent extends Event
     public function getWidget(): Widget
     {
         return $this->widget;
+    }
+
+    /**
+     * Get the duration
+     * @return int
+     */
+    public function getDuration(): int
+    {
+        return $this->duration;
+    }
+
+    /**
+     * @param int $duration
+     * @return $this
+     */
+    public function appendDuration(int $duration): SubPlaylistDurationEvent
+    {
+        $this->duration += $duration;
+        return $this;
     }
 }
