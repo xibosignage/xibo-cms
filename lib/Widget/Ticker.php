@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -269,6 +269,13 @@ class Ticker extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="userAgent",
+     *      in="formData",
+     *      description="Custom user Agent value",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="decodeHtml",
      *      in="formData",
      *      description="Should we decode the HTML entities in this feed before parsing it?",
@@ -376,6 +383,7 @@ class Ticker extends ModuleWidget
         $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('allowedAttributes', $sanitizedParams->getString('allowedAttributes'));
         $this->setOption('stripTags', $sanitizedParams->getString('stripTags'));
+        $this->setOption('userAgent', $sanitizedParams->getString('userAgent'));
         $this->setOption('decodeHtml', $sanitizedParams->getCheckbox('decodeHtml'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('disableDateSort', $sanitizedParams->getCheckbox('disableDateSort'));
@@ -672,14 +680,21 @@ class Ticker extends ModuleWidget
             $cache->lock(120);
 
             try {
-                // Create a Guzzle Client to get the Feed XML
-                $client = new Client();
-                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy([
+                $httpOptions = [
                     'headers' => [
                         'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4, text/html;q=0.2, text/*;q=0.1'
                     ],
-                    'timeout' => 20 // wait no more than 20 seconds: https://github.com/xibosignage/xibo/issues/1401
-                ]));
+                    'timeout' => 20, // wait no more than 20 seconds: https://github.com/xibosignage/xibo/issues/1401
+                ];
+
+                if (!empty($this->getOption('userAgent'))) {
+                    $httpOptions['User-Agent'] = $this->getOption('userAgent');
+                }
+
+                // Create a Guzzle Client to get the Feed XML
+                $client = new Client();
+                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy($httpOptions));
+
 
                 // Pull out the content type
                 $contentType = $response->getHeaderLine('Content-Type');
