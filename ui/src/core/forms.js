@@ -165,13 +165,19 @@ window.forms = {
             );
           }
 
-          // Handle depends on property
-          if (property.dependsOn) {
+          // Handle depends on property if not already set
+          if (
+            property.dependsOn &&
+            !$newField.attr('data-depends-on')
+          ) {
             $newField.attr('data-depends-on', property.dependsOn);
           }
 
-          // Add visibility to the field
-          if (property.visibility.length) {
+          // Add visibility to the field if not already set
+          if (
+            property.visibility.length &&
+            !$newField.attr('data-visibility')
+          ) {
             $newField.attr('data-visibility', property.visibility);
           }
 

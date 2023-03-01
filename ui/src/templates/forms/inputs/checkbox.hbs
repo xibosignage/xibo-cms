@@ -1,4 +1,7 @@
-<div class="form-check pb-3 xibo-form-input {{customClass}}">
+<div class="form-check pb-3 xibo-form-input {{customClass}}"
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+    {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}
+>
     <input type="checkbox" class="form-check-input" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" {{#eq (number value) 1}}checked="checked"{{/eq}}
         {{#each customData}}
             data-{{this.name}}="{{this.value}}"
