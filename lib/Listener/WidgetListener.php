@@ -25,6 +25,7 @@ namespace Xibo\Listener;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Widget;
 use Xibo\Event\SubPlaylistDurationEvent;
+use Xibo\Event\SubPlaylistWidgetsEvent;
 use Xibo\Event\WidgetDeleteEvent;
 use Xibo\Event\WidgetEditEvent;
 use Xibo\Factory\ModuleFactory;
@@ -88,6 +89,7 @@ class WidgetListener
         $dispatcher->addListener(WidgetEditEvent::$NAME, [$this, 'onWidgetEdit']);
         $dispatcher->addListener(WidgetDeleteEvent::$NAME, [$this, 'onWidgetDelete']);
         $dispatcher->addListener(SubPlaylistDurationEvent::$NAME, [$this, 'onDuration']);
+        $dispatcher->addListener(SubPlaylistWidgetsEvent::$NAME, [$this, 'onWidgets']);
         return $this;
     }
 
@@ -100,7 +102,7 @@ class WidgetListener
     public function onWidgetEdit(WidgetEditEvent $event)
     {
         $widget = $event->getWidget();
-        if ($widget->type !== 'sub-playlist') {
+        if ($widget->type !== 'subplaylist') {
             return;
         }
 
@@ -248,7 +250,7 @@ class WidgetListener
         $renderer->clearWidgetCache($widget);
 
         // Everything else relates to sub-playlists
-        if ($widget->type !== 'sub-playlist') {
+        if ($widget->type !== 'subplaylist') {
             return;
         }
 
@@ -277,13 +279,29 @@ class WidgetListener
     public function onDuration(SubPlaylistDurationEvent $event)
     {
         $widget = $event->getWidget();
-        if ($widget->type !== 'sub-playlist') {
+        if ($widget->type !== 'subplaylist') {
             return;
         }
 
         foreach ($this->getSubPlaylistResolvedWidgets($widget) as $widget) {
             $event->appendDuration($widget->calculatedDuration);
         }
+    }
+
+    /**
+     * @param \Xibo\Event\SubPlaylistWidgetsEvent $event
+     * @return void
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function onWidgets(SubPlaylistWidgetsEvent $event)
+    {
+        $widget = $event->getWidget();
+        if ($widget->type !== 'subplaylist') {
+            return;
+        }
+
+        $event->setWidgets($this->getSubPlaylistResolvedWidgets($widget));
     }
 
     /**
@@ -331,6 +349,8 @@ class WidgetListener
      */
     private function getSubPlaylistResolvedWidgets(Widget $widget, int $parentWidgetId = 0): array
     {
+        $this->getLogger()->debug('getSubPlaylistResolvedWidgets: widgetId is ' . $widget->widgetId);
+
         $arrangement = $widget->getOptionValue('arrangement', 'none');
         $remainder = $widget->getOptionValue('remainder', 'none');
         $cyclePlayback = $widget->getOptionValue('cyclePlaybackEnabled', 0);

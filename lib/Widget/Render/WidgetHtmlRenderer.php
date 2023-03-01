@@ -91,6 +91,7 @@ class WidgetHtmlRenderer
      * @param \Xibo\Entity\Widget $widget
      * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
      * @param string $downloadUrl
+     * @param array $additionalContexts An array of additional key/value contexts for the templates
      * @return string
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
@@ -101,7 +102,8 @@ class WidgetHtmlRenderer
         Region $region,
         Widget $widget,
         SanitizerInterface $params,
-        string $downloadUrl
+        string $downloadUrl,
+        array $additionalContexts = []
     ): string {
         if ($module->previewEnabled == 1) {
             $width = $params->getDouble('width', ['default' => 0]);
@@ -118,9 +120,11 @@ class WidgetHtmlRenderer
                             'height' => $height,
                             'params' => $params,
                             'options' => $module->getPropertyValues(),
-                            'downloadUrl' => $downloadUrl
+                            'downloadUrl' => $downloadUrl,
+                            'calculatedDuration' => $widget->calculatedDuration,
                         ],
-                        $module->getPropertyValues()
+                        $module->getPropertyValues(),
+                        $additionalContexts
                     )
                 );
             } else if ($module->renderAs === 'html') {
@@ -132,9 +136,11 @@ class WidgetHtmlRenderer
                             'width' => $width,
                             'height' => $height,
                             'regionId' => $region->regionId,
-                            'widgetId' => $widget->widgetId
+                            'widgetId' => $widget->widgetId,
+                            'calculatedDuration' => $widget->calculatedDuration,
                         ],
-                        $module->getPropertyValues()
+                        $module->getPropertyValues(),
+                        $additionalContexts
                     )
                 );
             }

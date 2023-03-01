@@ -706,10 +706,10 @@ class Widget implements \JsonSerializable
                 $this->calculatedDuration = $durationProvider->getDuration();
                 $durationProvided = true;
             }
-        } else if ($module->type === 'sub-playlist') {
+        } else if ($module->type === 'subplaylist') {
             // Sub Playlists are a special case and provide their own duration.
             $event = new SubPlaylistDurationEvent($this);
-            $this->getDispatcher()->dispatch($event);
+            $this->getDispatcher()->dispatch($event, SubPlaylistDurationEvent::$NAME);
             $durationProvided = true;
             $this->calculatedDuration = $event->getDuration();
         }

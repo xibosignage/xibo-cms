@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,7 +27,7 @@ namespace Xibo\Event;
  */
 class XmdsDependencyRequestEvent extends Event
 {
-    private static $NAME = 'xmds.dependency.request';
+    public static $NAME = 'xmds.dependency.request';
 
     private $fileType;
     private $id;

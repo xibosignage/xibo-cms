@@ -885,7 +885,7 @@ class Playlist implements \JsonSerializable
 
                     // Get the sub-playlist widgets
                     $event = new SubPlaylistWidgetsEvent($widget, $widget->tempId);
-                    $this->getDispatcher()->dispatch($event);
+                    $this->getDispatcher()->dispatch($event, SubPlaylistWidgetsEvent::$NAME);
                     $subPlaylistWidgets = $event->getWidgets();
 
                     // Are we the top level sub-playlist, and do we have cycle playback enabled?
@@ -987,7 +987,7 @@ class Playlist implements \JsonSerializable
             } else {
                 // Add the sub playlist duration
                 $event = new SubPlaylistDurationEvent($widget);
-                $this->getDispatcher()->dispatch($event);
+                $this->getDispatcher()->dispatch($event, SubPlaylistDurationEvent::$NAME);
                 $duration += $event->getDuration();
             }
         }
