@@ -989,7 +989,7 @@ class Widget extends Base
         $module = $this->moduleFactory->getByType($widget->type);
 
         // This is always a preview
-        if (!$module->isDataProviderExpected() && !$module->isWidgetProviderAvailable() && $module->type !== 'dashboard') {
+        if (!$module->isDataProviderExpected() && !$module->isWidgetProviderAvailable()) {
             return $response->withJson([]);
         }
 
