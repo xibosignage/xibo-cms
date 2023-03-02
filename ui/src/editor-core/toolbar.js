@@ -32,7 +32,7 @@ const Toolbar = function(
   this.parent = parent;
   this.DOMObject = container;
   this.openedMenu = -1;
-  this.openedSubMenu = {};
+  this.openedSubMenu = null;
 
   this.widgetMenuIndex = 0;
   this.libraryMenuIndex = 4;
@@ -444,7 +444,7 @@ Toolbar.prototype.loadPrefs = function() {
       // Load opened submenu
       self.openedSubMenu =
         (loadedData.openedSubMenu != undefined) ?
-          loadedData.openedSubMenu : [];
+          loadedData.openedSubMenu : null;
 
       // Load favourites
       self.menuItems[self.widgetMenuIndex].favouriteModules =
@@ -512,7 +512,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
 
   if (clearPrefs) {
     openedMenu = -1;
-    openedSubMenu = {};
+    openedSubMenu = null;
     displayTooltips = 1;
   } else {
     // Save favourite
@@ -659,7 +659,9 @@ Toolbar.prototype.render = function() {
   // If there was a opened menu in the toolbar, open that tab
   if (this.openedMenu != undefined && this.openedMenu != -1) {
     // Do we have opened sub menu?
-    const openedSubMenu = !$.isEmptyObject(this.openedSubMenu);
+    const openedSubMenu =
+      this.openedSubMenu &&
+      this.openedSubMenu.parent == this.openedMenu;
 
     this.openMenu(this.openedMenu, true, openedSubMenu);
   }
@@ -893,10 +895,12 @@ Toolbar.prototype.openMenu = function(
   // If we have a sub menu, open it
   if (openSubMenu) {
     if (this.openedSubMenu.type == 'groupMenu') {
-      this.openGroupMenu(null, this.openedSubMenu.data);
+      this.openGroupMenu(null, this.openedSubMenu.data, menu);
     } else if (this.openedSubMenu.type == 'subMenu') {
-      this.openSubMenu(null, this.openedSubMenu.data);
+      this.openSubMenu(null, this.openedSubMenu.data, menu);
     }
+  } else {
+    this.openedSubMenu = null;
   }
 
   // Clear rogue tooltips
@@ -1698,15 +1702,23 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
  * Open sub menu
  * @param  {string} $card - Module card
  * @param  {object} data  - Module data
+ * @param {number} parentMenu - Parent menu
  */
-Toolbar.prototype.openSubMenu = function($card, data = null) {
+Toolbar.prototype.openSubMenu = function(
+  $card, data = null,
+  parentMenu = null,
+) {
   const self = this;
   const openedMenu = self.openedMenu;
   const $submenuContainer = self.DOMObject.find('#content-' + openedMenu);
   const cardData = data ? data : $card.data();
+  const parent = parentMenu !== null ?
+    parentMenu :
+    $card.parents('.toolbar-pane').data('menu-index');
 
   // Save card data
   self.openedSubMenu = {
+    parent: parent,
     type: 'subMenu',
     data: cardData,
   };
@@ -1725,7 +1737,7 @@ Toolbar.prototype.openSubMenu = function($card, data = null) {
     $submenuContainer.removeClass('toolbar-elements-pane');
 
     // Clear submenu
-    self.openedSubMenu = {};
+    self.openedSubMenu = null;
 
     // Open menu
     self.openMenu(openedMenu, true);
@@ -1748,24 +1760,32 @@ Toolbar.prototype.openSubMenu = function($card, data = null) {
  * Load module group submenu
  * @param {string} $card - Module card
  * @param {object} data  - Module data
+ * @param {number} parentMenu - Parent menu
  */
-Toolbar.prototype.openGroupMenu = function($card, data = null) {
+Toolbar.prototype.openGroupMenu = function(
+  $card,
+  data = null,
+  parentMenu = null,
+) {
   const self = this;
   const openedMenu = self.openedMenu;
   const $submenuContainer = self.DOMObject.find('#content-' + openedMenu);
   const cardData = data ? data : $card.data();
+  const parent = parentMenu !== null ?
+    parentMenu :
+    $card.parents('.toolbar-pane').data('menu-index');
 
   // Deselect previous selections
   this.deselectCardsAndDropZones();
 
   // Save card data
   self.openedSubMenu = {
+    parent: parent,
     type: 'groupMenu',
     data: cardData,
   };
 
   // Load module cards from this group
-  console.log('Load module cards from this group');
   const content = this.moduleGroups[cardData.subType].modules;
 
   // Append HTML
@@ -1783,7 +1803,7 @@ Toolbar.prototype.openGroupMenu = function($card, data = null) {
     $submenuContainer.removeClass('toolbar-group-pane');
 
     // Clear submenu
-    self.openedSubMenu = {};
+    self.openedSubMenu = null;
 
     // Open menu
     self.openMenu(openedMenu, true);
