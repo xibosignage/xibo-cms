@@ -69,7 +69,7 @@ class RssProvider implements WidgetProviderInterface
             ];
 
             if (!empty($dataProvider->getProperty('userAgent'))) {
-                $httpOptions['User-Agent'] = $dataProvider->getProperty('userAgent');
+                $httpOptions['headers']['User-Agent'] = trim($dataProvider->getProperty('userAgent'));
             }
 
             $response = $dataProvider
