@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -36,10 +36,10 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Profiler;
+use Xibo\Helper\Status;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Widget\ModuleWidget;
 
 /**
  * Class MaintenanceRegularTask
@@ -430,7 +430,7 @@ class MaintenanceRegularTask implements TaskInterface
                         $layout = $this->layoutFactory->concurrentRequestLock($layout, true);
                         try {
                             $draft = $this->layoutFactory->getByParentId($layout->layoutId);
-                            if ($draft->status === ModuleWidget::$STATUS_INVALID
+                            if ($draft->status === Status::$STATUS_INVALID
                                 && isset($draft->statusMessage)
                                 && (count($draft->getStatusMessage()) > 1 || count($draft->getStatusMessage()) === 1 && !$draft->checkForEmptyRegion())
                             ) {

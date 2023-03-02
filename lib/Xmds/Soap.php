@@ -55,6 +55,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Status;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -63,7 +64,6 @@ use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\DeadlockException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\ModuleWidget;
 use Xibo\Xmds\Entity\Dependency;
 
 /**
@@ -736,7 +736,7 @@ class Soap
                 }
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
-                if ($layout->status === ModuleWidget::$STATUS_INVALID) {
+                if ($layout->status === Status::$STATUS_INVALID) {
                     $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
                     continue;
                 }
@@ -1325,14 +1325,14 @@ class Soap
             // is it valid?
             $defaultLayout = $this->layoutFactory->getById($defaultLayoutId);
 
-            if ($defaultLayout->status >= ModuleWidget::$STATUS_INVALID) {
+            if ($defaultLayout->status >= Status::$STATUS_INVALID) {
                 $this->getLog()->error(sprintf('Player has invalid default Layout. Display = %s, LayoutId = %d',
                     $this->display->display,
                     $defaultLayout->layoutId));
             }
 
             // Are we interleaving the default? And is the default valid?
-            if ($this->display->incSchedule == 1 && $defaultLayout->status < ModuleWidget::$STATUS_INVALID) {
+            if ($this->display->incSchedule == 1 && $defaultLayout->status < Status::$STATUS_INVALID) {
                 // Add as a node at the end of the schedule.
                 $layout = $scheduleXml->createElement("layout");
 
