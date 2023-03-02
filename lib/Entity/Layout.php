@@ -1661,10 +1661,9 @@ class Layout implements \JsonSerializable
                 // If we do not have an update interval, should we set a default one?
                 // https://github.com/xibosignage/xibo/issues/2319
                 if (!$hasUpdatedInterval && $module->regionSpecific == 1) {
-                    // TODO: dataProvider: how do we do module cache duration?
-                    //  for the moment assume 30 days
+                    // Modules/Widgets without an update interval update very infrequently
                     $optionsNode->appendChild(
-                        $document->createElement('updateInterval', 86400 * 30)
+                        $document->createElement('updateInterval', 1440 * 30)
                     );
                 }
 
