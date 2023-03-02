@@ -39,6 +39,7 @@ window.templates = {
     commandSelector:
       require('./src/templates/forms/inputs/commandSelector.hbs'),
     commandBuilder: require('./src/templates/forms/inputs/commandBuilder.hbs'),
+    connectorProperties: require('./src/templates/forms/inputs/connectorProperties.hbs'),
     // More to be added
   },
 };

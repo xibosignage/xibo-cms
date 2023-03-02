@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -118,6 +118,7 @@ $(function() {
       }
 
       // For each data item, parse it and add it to the content
+      let templateAlreadyAdded = false;
       $.each(dataItems, function(_key, item) {
         // Parse the data if there is a parser function
         if (typeof window['onParseData_' + widget.widgetId] === 'function') {
@@ -131,11 +132,14 @@ $(function() {
 
         // Add items to the widget object
         (item) && widget.items.push(item);
+
+        // IF we added item template
+        templateAlreadyAdded = true;
       });
 
       // If we don't have dataType, or we have a module template
       // add it to the content with widget properties and global options
-      if (moduleTemplate && hbs) {
+      if (moduleTemplate && hbs  && !templateAlreadyAdded) {
         $content.append(hbs(
           Object.assign(widget.properties, globalOptions),
         ));

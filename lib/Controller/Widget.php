@@ -25,9 +25,11 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -1070,10 +1072,9 @@ class Widget extends Base
         // Decorate for output.
         $data = $widgetDataProviderCache->decorateForPreview(
             $dataProvider->getData(),
-            $this->urlFor($request, 'library.download', [
-                'id' => ':id',
-                'type' => 'image'
-            ])
+            function (string $route, array $data, array $params = []) use ($request) {
+                return $this->urlFor($request, $route, $data, $params);
+            }
         );
 
         return $response->withJson([
@@ -1160,8 +1161,8 @@ class Widget extends Base
                 $resource = $renderer->decorateForPreview(
                     $region,
                     $resource,
-                    function (string $route, array $params) use ($request) {
-                        return $this->urlFor($request, $route, $params);
+                    function (string $route, array $data, array $params = []) use ($request) {
+                        return $this->urlFor($request, $route, $data, $params);
                     }
                 );
 
@@ -1495,6 +1496,37 @@ class Widget extends Base
             'httpStatus' => 204,
             'message' => __('Saved elements')
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function additionalWidgetEditOptions(Request $request, Response $response, $id)
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $options = [];
+
+        // Load the widget
+        $widget = $this->widgetFactory->loadByWidgetId($id);
+        $event = new WidgetEditOptionRequestEvent($widget);
+        $this->getDispatcher()->dispatch($event, $event::$NAME);
+
+        if ($widget->type === 'dashboard') {
+            $options = $event->getOptions()['serviceType'];
+
+            if ($params->getString('type') != null) {
+                $filteredOptions = [];
+                foreach ($options as $option) {
+                    if ($option['type'] == $params->getString('type')) {
+                        $filteredOptions[] = $option;
+                        $options = $filteredOptions;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($options);
+        $this->getState()->setData($options);
 
         return $this->render($request, $response);
     }

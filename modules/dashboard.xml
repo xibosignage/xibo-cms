@@ -1,0 +1,120 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-dashboard</id>
+    <name>Dashboards</name>
+    <author>Core</author>
+    <description>Securely connect to services like Microsoft PowerBI and display dashboards</description>
+    <class>\Xibo\Widget\DashboardProvider</class>
+    <dataCacheKey>%widgetId%_%displayId%</dataCacheKey>
+    <type>dashboard</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="type" type="connectorProperties">
+            <title>Type</title>
+            <helpText>Select the dashboards type below</helpText>
+        </property>
+        <property id="url" type="text" variant="uri">
+            <title>Link</title>
+            <helpText>The Location (URL) of the dashboard webpage</helpText>
+            <default></default>
+        </property>
+        <property id="updateInterval" type="number">
+            <title>Update Interval (mins)</title>
+            <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default>60</default>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <hbs><![CDATA[
+                <img id="loader" alt="Loading..." src="{{spinner}}"/>
+                <div id="dashboard"></div>
+                <!-- TOKEN= {{token}} -->
+     ]]></hbs>
+        <twig><![CDATA[
+            <style>
+                #loader {
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                    margin-top: 50px;
+                }
+                #dashboard {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                }
+                #dashboard img {
+                    margin: auto;
+                    width: 100%;
+                    height: 100%;
+                }
+            </style>
+       ]]></twig>
+    </stencil>
+    <onRender>
+        <![CDATA[
+            var item = items[0];
+            var interval;
+
+            $(function() {
+                if (properties.url && properties.type) {
+                    loadImage();
+                }
+            });
+
+            function loadImage() {
+                var image = new Image();
+                image.onload = function() {
+                    $("#dashboard").html("");
+                    $("#dashboard").append($("<img src=\"" + this.src + "\" >"));
+                    $("#loader").hide();
+
+                    if (interval) {
+                        clearInterval(interval)
+                    }
+                    interval = setInterval(loadImage, properties.updateInterval * 60 * 1000);
+                }
+
+                image.onerror = function() {
+                    $("#loader").show();
+                    if (interval) {
+                        clearInterval(interval)
+                    }
+                    interval = setInterval(loadImage, 60 * 1000);
+                }
+
+                if (item.url) {
+                    image.src = item.url;
+                }
+            }
+        ]]>
+    </onRender>
+</module>
