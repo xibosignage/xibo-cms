@@ -999,7 +999,6 @@ class Widget extends Base
 
         $dataProvider = $module->createDataProvider($widget);
         $dataProvider->setMediaFactory($this->mediaFactory);
-        $dataProvider->setRouteParser(RouteContext::fromRequest($request)->getRouteParser());
         $dataProvider->setDisplayProperties(
             $this->getConfig()->getSetting('DEFAULT_LAT'),
             $this->getConfig()->getSetting('DEFAULT_LONG')
@@ -1073,10 +1072,9 @@ class Widget extends Base
         // Decorate for output.
         $data = $widgetDataProviderCache->decorateForPreview(
             $dataProvider->getData(),
-            $this->urlFor($request, 'library.download', [
-                'id' => ':id',
-                'type' => 'image'
-            ])
+            function (string $route, array $data, array $params = []) use ($request) {
+                return $this->urlFor($request, $route, $data, $params);
+            }
         );
 
         return $response->withJson([
@@ -1163,8 +1161,8 @@ class Widget extends Base
                 $resource = $renderer->decorateForPreview(
                     $region,
                     $resource,
-                    function (string $route, array $params) use ($request) {
-                        return $this->urlFor($request, $route, $params);
+                    function (string $route, array $data, array $params = []) use ($request) {
+                        return $this->urlFor($request, $route, $data, $params);
                     }
                 );
 

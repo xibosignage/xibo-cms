@@ -24,8 +24,8 @@ namespace Xibo\Connector;
 use GuzzleHttp\Exception\RequestException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\DashboardDataRequestEvent;
 use Xibo\Event\MaintenanceRegularEvent;
-use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Event\XmdsConnectorFileEvent;
 use Xibo\Event\XmdsConnectorTokenEvent;
@@ -62,7 +62,7 @@ class XiboDashboardConnector implements ConnectorInterface
         $dispatcher->addListener(XmdsConnectorFileEvent::$NAME, [$this, 'onXmdsFile']);
         $dispatcher->addListener(XmdsConnectorTokenEvent::$NAME, [$this, 'onXmdsToken']);
         $dispatcher->addListener(WidgetEditOptionRequestEvent::$NAME, [$this, 'onWidgetEditOption']);
-        $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(DashboardDataRequestEvent::$NAME, [$this, 'onDataRequest']);
         return $this;
     }
 
@@ -488,36 +488,34 @@ class XiboDashboardConnector implements ConnectorInterface
         }
     }
 
-    public function onDataRequest(WidgetDataRequestEvent $event, $eventName, EventDispatcherInterface $dispatcher)
+    public function onDataRequest(DashboardDataRequestEvent $event, $eventName, EventDispatcherInterface $dispatcher)
     {
-        if ($event->getDataProvider()->getDataSource() === 'dashboard') {
-            // Always generate a token
-            $tokenEvent = new XmdsConnectorTokenEvent();
-            $tokenEvent->setTargets($event->getDataProvider()->getDisplayId(), $event->getDataProvider()->getWidgetId());
-            $tokenEvent->setTtl(3600 * 24 * 2);
-            $dispatcher->dispatch($tokenEvent, XmdsConnectorTokenEvent::$NAME);
-            $token = $tokenEvent->getToken();
+        // Always generate a token
+        $tokenEvent = new XmdsConnectorTokenEvent();
+        $tokenEvent->setTargets($event->getDataProvider()->getDisplayId(), $event->getDataProvider()->getWidgetId());
+        $tokenEvent->setTtl(3600 * 24 * 2);
+        $dispatcher->dispatch($tokenEvent, XmdsConnectorTokenEvent::$NAME);
+        $token = $tokenEvent->getToken();
 
-            if (empty($token)) {
-                throw new ConfigurationException(__('No token returned'));
-            }
-
-            if ($event->getDataProvider()->isPreview()) {
-                $url = $event->getDataProvider()->getRouteParser()->urlFor('layout.preview.connector', [], ['token' => $token]);
-            } else {
-                // This is fallback HTML for the player.
-                // so output a link to the XMDS file request.
-                $url = Wsdl::getRoot() . '?connector=true&token=' . $token;
-            }
-
-            $item = [];
-            $item['url'] = $url;
-            $item['token'] = $token;
-            $item['isPreview'] = $event->getDataProvider()->isPreview();
-            $item['spinner'] = $this->getSpinner();
-
-            $event->getDataProvider()->addItem($item);
+        if (empty($token)) {
+            throw new ConfigurationException(__('No token returned'));
         }
+
+        if ($event->getDataProvider()->isPreview()) {
+            $url = $this->getLayoutPreviewUrl($token);
+        } else {
+            // This is fallback HTML for the player.
+            // so output a link to the XMDS file request.
+            $url = Wsdl::getRoot() . '?connector=true&token=' . $token;
+        }
+
+        $item = [];
+        $item['url'] = $url;
+        $item['token'] = $token;
+        $item['isPreview'] = $event->getDataProvider()->isPreview();
+        $item['spinner'] = $this->getSpinner();
+
+        $event->getDataProvider()->addItem($item);
     }
 
     private function getSpinner(): string

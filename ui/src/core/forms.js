@@ -126,8 +126,8 @@ window.forms = {
         }
 
         // dashboards available services
-        if (property.type === 'dashboardSelector') {
-          property.dashboardSearchUrl = urlsForApi.dashboard.search.url.replace(':id', targetId)
+        if (property.type === 'connectorProperties') {
+          property.connectorPropertiesUrl = urlsForApi.connectorProperties.search.url.replace(':id', targetId)
           // If we don't have a value, set value key pair to null
           if (property.value == '') {
             property.initialValue = null;

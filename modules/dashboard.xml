@@ -23,7 +23,7 @@
     <name>Dashboards</name>
     <author>Core</author>
     <description>Securely connect to services like Microsoft PowerBI and display dashboards</description>
-    <class></class>
+    <class>\Xibo\Widget\DashboardProvider</class>
     <dataCacheKey>%widgetId%_%displayId%</dataCacheKey>
     <type>dashboard</type>
     <dataType></dataType>
@@ -34,7 +34,7 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="type" type="dashboardSelector">
+        <property id="type" type="connectorProperties">
             <title>Type</title>
             <helpText>Select the dashboards type below</helpText>
         </property>
@@ -50,7 +50,6 @@
         </property>
     </properties>
     <preview></preview>
-<onInitialize></onInitialize>
     <stencil>
         <hbs><![CDATA[
                 <img id="loader" alt="Loading..." src="{{spinner}}"/>
@@ -86,13 +85,15 @@
             var interval;
 
             $(function() {
-                loadImage();
+                if (properties.url && properties.type) {
+                    loadImage();
+                }
             });
 
             function loadImage() {
-                $("#dashboard").html("");
                 var image = new Image();
                 image.onload = function() {
+                    $("#dashboard").html("");
                     $("#dashboard").append($("<img src=\"" + this.src + "\" >"));
                     $("#loader").hide();
 
@@ -103,7 +104,6 @@
                 }
 
                 image.onerror = function() {
-                    console.log('error')
                     $("#loader").show();
                     if (interval) {
                         clearInterval(interval)
@@ -112,10 +112,6 @@
                 }
 
                 if (item.url) {
-                    if (item.isPreview) {
-                        item.url = item.url.concat("&isDebug=1")
-                    }
-
                     image.src = item.url;
                 }
             }

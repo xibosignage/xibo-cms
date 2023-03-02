@@ -157,23 +157,23 @@ class WidgetDataProviderCache
     /**
      * Decorate for a preview
      * @param array $data The data
-     * @param string $libraryUrl
+     * @param callable $urlFor
      * @return array
      */
-    public function decorateForPreview(array $data, string $libraryUrl): array
+    public function decorateForPreview(array $data, callable $urlFor): array
     {
         foreach ($data as $row => $item) {
             // This is either an object or an array
             if (is_array($item)) {
                 foreach ($item as $key => $value) {
                     if (is_string($value)) {
-                        $data[$row][$key] = $this->decorateMediaForPreview($libraryUrl, $value);
+                        $data[$row][$key] = $this->decorateMediaForPreview($urlFor, $value);
                     }
                 }
             } else if (is_object($item)) {
                 foreach (ObjectVars::getObjectVars($item) as $key => $value) {
                     if (is_string($value)) {
-                        $item->{$key} = $this->decorateMediaForPreview($libraryUrl, $value);
+                        $item->{$key} = $this->decorateMediaForPreview($urlFor, $value);
                     }
                 }
             }
@@ -182,11 +182,11 @@ class WidgetDataProviderCache
     }
 
     /**
-     * @param string $libraryLocation
+     * @param callable $urlFor
      * @param string|null $data
      * @return string
      */
-    private function decorateMediaForPreview(string $libraryLocation, ?string $data): ?string
+    private function decorateMediaForPreview(callable $urlFor, ?string $data): ?string
     {
         if ($data === null) {
             return null;
@@ -198,7 +198,14 @@ class WidgetDataProviderCache
                 $value = explode('=', $match);
                 $data = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $libraryLocation),
+                    $urlFor('library.download', ['id' => $value[1], 'type' => 'image']),
+                    $data
+                );
+            } else if (Str::startsWith($match, 'connector')) {
+                $value = explode('=', $match);
+                $data = str_replace(
+                    '[[' . $match . ']]',
+                    $urlFor('layout.preview.connector', [], ['token' => $value[1], 'isDebug' => 1]),
                     $data
                 );
             }
