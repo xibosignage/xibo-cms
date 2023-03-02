@@ -48,7 +48,9 @@
             <hbs><![CDATA[
 <div class="row-finance template-item">
   <div class="flags">
-    <img class="img-circle center-block " src="{{CurrencyFlag}}">
+    <div class="img-circle center-block flag-icon-container">
+      <img src="[[assetId=flags]]" class="flag-icon flag-icon-{{NameShort}}">
+    </div>
   </div>
   <div class="name value">{{NameShort}}</div>
   <div class="price text-center value">{{RawLastTradePriceOnly}}</div>
@@ -64,6 +66,8 @@
         </div>
     </div>
 </div>
+
+<link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen">
 
 <style>
 body {
@@ -186,6 +190,8 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
         <assets>
             <asset id="currencies1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/currencies1.png"></asset>
+            <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>
+            <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css"></asset>
         </assets>
     </template>
     <template>

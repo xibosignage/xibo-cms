@@ -1,0 +1,458 @@
+.flag-icon-container {
+    overflow: hidden;
+    position: relative;
+}
+.flag-icon {
+    position: relative;
+    width: 1000%;
+    top: -1100%;
+    left: -100%;
+}
+.flag-icon-AFN {
+    top: 0;
+    left: 0;
+}
+.flag-icon-ALL {
+    top: 0;
+    left: -100%;
+}
+.flag-icon-ANG {
+    top: 0;
+    left: -200%
+}
+.flag-icon-ARS {
+    top: 0;
+    left: -300%;
+}
+.flag-icon-AUD {
+    top: 0;
+    left: -400%;
+}
+.flag-icon-AWG {
+    top: 0;
+    left: -500%;
+}
+.flag-icon-AZN {
+    top: 0;
+    left: -600%;
+}
+.flag-icon-BAM {
+    top: 0;
+    left: -700%;
+}
+.flag-icon-BBD {
+    top: 0;
+    left: -800%;
+}
+.flag-icon-BGN {
+    top: 0;
+    left: -900%;
+}
+.flag-icon-BMD {
+    top: -100%;
+    left: 0%;
+}
+.flag-icon-BND {
+    top: -100%;
+    left: -100%;
+}
+.flag-icon-BOB {
+    top: -100%;
+    left: -200%;
+}
+.flag-icon-BRL {
+    top: -100%;
+    left: -300%;
+}
+.flag-icon-BWP {
+    top: -100%;
+    left: -400%;
+}
+.flag-icon-BYR {
+    top: -100%;
+    left: -500%;
+}
+.flag-icon-BZD {
+    top: -100%;
+    left: -600%;
+}
+.flag-icon-CAD {
+    top: -100%;
+    left: -700%;
+}
+.flag-icon-CHF {
+    top: -100%;
+    left: -800%;
+}
+.flag-icon-CLP {
+    top: -100%;
+    left: -900%;
+}
+.flag-icon-CNY {
+    top: -200%;
+    left: 0;
+}
+.flag-icon-COP {
+    top: -200%;
+    left: -100%;
+}
+.flag-icon-CRC {
+    top: -200%;
+    left: -200%;
+}
+.flag-icon-CUP {
+    top: -200%;
+    left: -300%;
+}
+.flag-icon-CZK {
+    top: -200%;
+    left: -400%;
+}
+.flag-icon-default {
+    top: -1100%;
+    left: -100%;
+}
+.flag-icon-DKK {
+    top: -200%;
+    left: -500%;
+}
+.flag-icon-DOP {
+    top: -200%;
+    left: -600%;
+}
+.flag-icon-EEK {
+    top: -200%;
+    left: -700%;
+}
+.flag-icon-EGP {
+    top: -200%;
+    left: -800%;
+}
+.flag-icon-EUR {
+    top: -200%;
+    left: -900%;
+}
+.flag-icon-FJD {
+    top: -300%;
+    left: 0;
+}
+.flag-icon-FKP {
+    top: -300%;
+    left: -100%;
+}
+.flag-icon-GBP {
+    top: -300%;
+    left: -200%;
+}
+.flag-icon-GEL {
+    top: -300%;
+    left: -300%;
+}
+.flag-icon-GGP {
+    top: -300%;
+    left: -400%;
+}
+.flag-icon-GHC {
+    top: -300%;
+    left: -500%;
+}
+.flag-icon-GIP {
+    top: -300%;
+    left: -600%;
+}
+.flag-icon-GTQ {
+    top: -300%;
+    left: -700%;
+}
+.flag-icon-GYD {
+    top: -300%;
+    left: -800%;
+}
+.flag-icon-HKD {
+    top: -300%;
+    left: -900%;
+}
+.flag-icon-HNL {
+    top: -400%;
+    left: 0;
+}
+.flag-icon-HRK {
+    top: -400%;
+    left: -100%;
+}
+.flag-icon-HUF {
+    top: -400%;
+    left: -200%;
+}
+.flag-icon-IDR {
+    top: -400%;
+    left: -300%;
+}
+.flag-icon-ILS {
+    top: -400%;
+    left: -400%;
+}
+.flag-icon-IMP {
+    top: -400%;
+    left: -500%;
+}
+.flag-icon-INR {
+    top: -400%;
+    left: -600%;
+}
+.flag-icon-IRR {
+    top: -400%;
+    left: -700%;
+}
+.flag-icon-ISK {
+    top: -400%;
+    left: -800%;
+}
+.flag-icon-JEP {
+    top: -400%;
+    left: -900%;
+}
+.flag-icon-JMD {
+    top: -500%;
+    left: 0;
+}
+.flag-icon-JPY {
+    top: -500%;
+    left: -100%;
+}
+.flag-icon-KGS {
+    top: -500%;
+    left: -200%;
+}
+.flag-icon-KHR {
+    top: -500%;
+    left: -300%;
+}
+.flag-icon-KPW {
+    top: -500%;
+    left: -400%;
+}
+.flag-icon-KRW {
+    top: -500%;
+    left: -500%;
+}
+.flag-icon-KYD {
+    top: -500%;
+    left: -600%;
+}
+.flag-icon-KZT {
+    top: -500%;
+    left: -700%;
+}
+.flag-icon-LAK {
+    top: -500%;
+    left: -800%;
+}
+.flag-icon-LBP {
+    top: -500%;
+    left: -900%;
+}
+.flag-icon-LKR {
+    top: -600%;
+    left: 0;
+}
+.flag-icon-LRD {
+    top: -600%;
+    left: -100%;
+}
+.flag-icon-LTL {
+    top: -600%;
+    left: -200%;
+}
+.flag-icon-LVL {
+    top: -600%;
+    left: -300%;
+}
+.flag-icon-MKD {
+    top: -600%;
+    left: -400%;
+}
+.flag-icon-MNT {
+    top: -600%;
+    left: -500%;
+}
+.flag-icon-MUR {
+    top: -600%;
+    left: -600%;
+}
+.flag-icon-MXN {
+    top: -600%;
+    left: -700%;
+}
+.flag-icon-MYR {
+    top: -600%;
+    left: -800%;
+}
+.flag-icon-MZN {
+    top: -600%;
+    left: -900%;
+}
+.flag-icon-NAD {
+    top: -700%;
+    left: 0;
+}
+.flag-icon-NGN {
+    top: -700%;
+    left: -100%;
+}
+.flag-icon-NIO {
+    top: -700%;
+    left: -200%;
+}
+.flag-icon-NOK {
+    top: -700%;
+    left: -300%;
+}
+.flag-icon-NPR {
+    top: -700%;
+    left: -400%;
+}
+.flag-icon-NZD {
+    top: -700%;
+    left: -500%;
+}
+.flag-icon-OMR {
+    top: -700%;
+    left: -600%;
+}
+.flag-icon-PAB {
+    top: -700%;
+    left: -700%;
+}
+.flag-icon-PEN {
+    top: -700%;
+    left: -800%;
+}
+.flag-icon-PHP {
+    top: -700%;
+    left: -900%;
+}
+.flag-icon-PKR {
+    top: -800%;
+    left: 0;
+}
+.flag-icon-PLN {
+    top: -800%;
+    left: -100%;
+}
+.flag-icon-PYG {
+    top: -800%;
+    left: -200%;
+}
+.flag-icon-QAR {
+    top: -800%;
+    left: -300%;
+}
+.flag-icon-RON {
+    top: -800%;
+    left: -400%;
+}
+.flag-icon-RSD {
+    top: -800%;
+    left: -500%;
+}
+.flag-icon-RUB {
+    top: -800%;
+    left: -600%;
+}
+.flag-icon-SAR {
+    top: -800%;
+    left: -700%;
+}
+.flag-icon-SBD {
+    top: -800%;
+    left: -800%;
+}
+.flag-icon-SCR {
+    top: -800%;
+    left: -900%;
+}
+.flag-icon-SEK {
+    top: -900%;
+    left: 0;
+}
+.flag-icon-SGD {
+    top: -900%;
+    left: -100%;
+}
+.flag-icon-SHP {
+    top: -900%;
+    left: -200%;
+}
+.flag-icon-SOS {
+    top: -900%;
+    left: -300%;
+}
+.flag-icon-SRD {
+    top: -900%;
+    left: -400%;
+}
+.flag-icon-SVC {
+    top: -900%;
+    left: -500%;
+}
+.flag-icon-SYP {
+    top: -900%;
+    left: -600%;
+}
+.flag-icon-THB {
+    top: -900%;
+    left: -700%;
+}
+.flag-icon-TRL {
+    top: -900%;
+    left: -800%;
+}
+.flag-icon-TTD {
+    top: -900%;
+    left: -900%;
+}
+.flag-icon-TVD {
+    top: -1000%;
+    left: 0;
+}
+.flag-icon-TWD {
+    top: -1000%;
+    left: -100%;
+}
+.flag-icon-UAH {
+    top: -1000%;
+    left: -200%;
+}
+.flag-icon-USD {
+    top: -1000%;
+    left: -300%;
+}
+.flag-icon-UYU {
+    top: -1000%;
+    left: -400%;
+}
+.flag-icon-UZS {
+    top: -1000%;
+    left: -500%;
+}
+.flag-icon-VEF {
+    top: -1000%;
+    left: -600%;
+}
+.flag-icon-VND {
+    top: -1000%;
+    left: -700%;
+}
+.flag-icon-YER {
+    top: -1000%;
+    left: -800%;
+}
+.flag-icon-ZAR {
+    top: -1000%;
+    left: -900%;
+}
+.flag-icon-ZWD {
+    top: -1100%;
+    left: 0;
+}
