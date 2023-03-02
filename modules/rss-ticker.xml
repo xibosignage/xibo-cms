@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -84,6 +84,11 @@
         <property id="stripTags" type="text">
             <title>Strip Tags</title>
             <helpText>A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.</helpText>
+            <default></default>
+        </property>
+        <property id="userAgent" type="text">
+            <title>User Agent</title>
+            <helpText>Optionally set specific User Agent for this request, provide only the value, relevant header will be added automatically.</helpText>
             <default></default>
         </property>
         <property id="decodeHtml" type="checkbox">

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -376,6 +376,7 @@ class Ticker extends ModuleWidget
         $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('allowedAttributes', $sanitizedParams->getString('allowedAttributes'));
         $this->setOption('stripTags', $sanitizedParams->getString('stripTags'));
+        $this->setOption('userAgent', $sanitizedParams->getString('userAgent'));
         $this->setOption('decodeHtml', $sanitizedParams->getCheckbox('decodeHtml'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('disableDateSort', $sanitizedParams->getCheckbox('disableDateSort'));

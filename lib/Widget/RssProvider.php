@@ -60,14 +60,20 @@ class RssProvider implements WidgetProviderInterface
             ->format('U');
 
         try {
+            $httpOptions = [
+                'headers' => [
+                    'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6,'
+                        . 'application/xml;q=0.4, text/xml;q=0.4, text/html;q=0.2, text/*;q=0.1'
+                ],
+                'timeout' => 20, // wait no more than 20 seconds
+            ];
+
+            if (!empty($dataProvider->getProperty('userAgent'))) {
+                $httpOptions['headers']['User-Agent'] = trim($dataProvider->getProperty('userAgent'));
+            }
+
             $response = $dataProvider
-                ->getGuzzleClient([
-                    'headers' => [
-                        'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6,'
-                            . 'application/xml;q=0.4, text/xml;q=0.4, text/html;q=0.2, text/*;q=0.1'
-                    ],
-                    'timeout' => 20, // wait no more than 20 seconds
-                ])
+                ->getGuzzleClient($httpOptions)
                 ->get($uri);
 
             // Pull out the content type
