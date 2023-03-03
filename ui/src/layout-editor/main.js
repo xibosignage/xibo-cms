@@ -77,7 +77,9 @@ window.lD = {
   editorContainer: $('#layout-editor'),
 
   // Selected object
+  // and previous selected object
   selectedObject: {},
+  previousSelectedObject: {},
 
   // Bottom toolbar
   toolbar: {},
@@ -1268,6 +1270,10 @@ lD.addModuleToPlaylist = function(
   // Mark new widget as selected
   // and append it to the viewer
   const saveNewlyAddedWidget = function(widgetId) {
+    if (drawerWidget) {
+      return;
+    }
+
     lD.selectedObject.id =
     'widget_' + regionId + '_' + widgetId;
     lD.selectedObject.type = 'widget';
@@ -1282,7 +1288,6 @@ lD.addModuleToPlaylist = function(
         type: 'widget',
         parentType: 'region',
         widgetRegion: 'region_' + regionId,
-        isInDrawer: drawerWidget,
       },
     }).appendTo(lD.viewer.DOMObject);
   };
@@ -1420,7 +1425,7 @@ lD.addModuleToPlaylist = function(
               lD.propertiesPanel.DOMObject.find('.action-element-form');
 
             lD.populateDropdownWithLayoutElements(
-              $actionForm.find('#widgetId'),
+              $actionForm.find('[name=widgetId]'),
               {
                 value: newWidgetId,
                 filters: ['drawerWidgets'],
@@ -1514,25 +1519,25 @@ lD.addMediaToPlaylist = function(
     // Behavior if successful
     toastr.success(res.message);
 
-    // The new selected object as the id based on the previous selected region
-    lD.selectedObject.id =
-    'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
-    lD.selectedObject.type = 'widget';
-
-    // Append temporary object to the viewer
-    $('<div>', {
-      id: 'widget_' +
-        res.data.regionId + '_' +
-        res.data.newWidgets[0].widgetId,
-      data: {
-        type: 'widget',
-        parentType: 'region',
-        widgetRegion: 'region_' + res.data.regionId,
-        isInDrawer: drawerWidget,
-      },
-    }).appendTo(lD.viewer.DOMObject);
-
     if (!drawerWidget) {
+      // The new selected object as the id based on the previous selected region
+      lD.selectedObject.id =
+      'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
+      lD.selectedObject.type = 'widget';
+
+      // Append temporary object to the viewer
+      $('<div>', {
+        id: 'widget_' +
+          res.data.regionId + '_' +
+          res.data.newWidgets[0].widgetId,
+        data: {
+          type: 'widget',
+          parentType: 'region',
+          widgetRegion: 'region_' + res.data.regionId,
+          isInDrawer: drawerWidget,
+        },
+      }).appendTo(lD.viewer.DOMObject);
+
       // Reload data ( and viewer )
       lD.reloadData(lD.layout, true);
     } else {
@@ -1547,7 +1552,7 @@ lD.addMediaToPlaylist = function(
             lD.propertiesPanel.DOMObject.find('.action-element-form');
 
           lD.populateDropdownWithLayoutElements(
-            $actionForm.find('#widgetId'),
+            $actionForm.find('[name=widgetId]'),
             {
               value: newWidgetId,
               filters: ['drawerWidgets'],
@@ -1601,6 +1606,12 @@ lD.clearTemporaryData = function() {
 
   // Remove text callback editor structure variables
   formHelpers.destroyCKEditor();
+
+  // Clear action highlights on the viewer
+  // if we don't have an action form open
+  if (lD.propertiesPanel.DOMObject.find('.action-element-form').length == 0) {
+    lD.viewer.clearActionHighlights();
+  }
 };
 
 /**
@@ -2802,6 +2813,9 @@ lD.editDrawerWidget = function(actionData) {
   const $widgetInViewer = lD.viewer.DOMObject
     .find('#widget_' + lD.layout.drawer.regionId + '_' + actionData.widgetId);
 
+  // Save previous selected object
+  lD.previousSelectedObject = lD.selectedObject;
+
   lD.selectObject({
     target: $widgetInViewer,
     forceSelect: true,
@@ -2812,4 +2826,26 @@ lD.editDrawerWidget = function(actionData) {
 
   // 4. Open property panel with drawer widget
   lD.propertiesPanel.render(widget, undefined, true);
+};
+
+/**
+ * Close drawer widget
+ */
+lD.closeDrawerWidget = function() {
+  // If previous selected object exists and current selected is a drawer widget
+  if (
+    $.isEmptyObject(lD.previousSelectedObject) === false &&
+    lD.selectedObject.drawerWidget
+  ) {
+    // Select object with previous selected object
+    const selectObjectId = lD.previousSelectedObject.id;
+    lD.selectObject({
+      target: $('#' + selectObjectId),
+      forceSelect: true,
+      reloadViewer: true,
+    });
+  }
+
+  // Clear previous selected object
+  lD.previousSelectedObject = {};
 };

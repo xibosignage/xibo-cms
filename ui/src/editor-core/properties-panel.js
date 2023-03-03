@@ -919,6 +919,10 @@ PropertiesPanel.prototype.closeEditAction = function(
 
   // Show original action
   $originalAction.removeClass('hidden');
+
+  // Call close drawer widget
+  // if selected element is a drawer widget
+  lD.closeDrawerWidget();
 };
 
 /**
