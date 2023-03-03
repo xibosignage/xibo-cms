@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -40,6 +40,7 @@ use Xibo\Factory\TagFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Profiler;
+use Xibo\Helper\Status;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -47,7 +48,6 @@ use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Layout
@@ -1217,19 +1217,27 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('enableStat', $layoutEnableStat);
 
         // Only set the z-index if present
-        if ($this->backgroundzIndex != 0)
+        if ($this->backgroundzIndex != 0) {
             $layoutNode->setAttribute('zindex', $this->backgroundzIndex);
+        }
 
         if ($this->backgroundImageId != 0) {
             // Get stored as
             $media = $this->mediaFactory->getById($this->backgroundImageId);
             if ($media->released === 1) {
-                $this->pushStatusMessage(__('%s set as the Layout background image is pending conversion', $media->name));
-                $this->status = ModuleWidget::$STATUS_PLAYER;
+                $this->pushStatusMessage(sprintf(
+                    __('%s set as the Layout background image is pending conversion'),
+                    $media->name
+                ));
+                $this->status = Status::$STATUS_PLAYER;
             } else if ($media->released === 2) {
                 $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
-                $this->status = ModuleWidget::$STATUS_INVALID;
-                throw new InvalidArgumentException(__('%s set as the Layout background image is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $media->name, $resizeLimit), 'backgroundImageId');
+                $this->status = Status::$STATUS_INVALID;
+                throw new InvalidArgumentException(sprintf(
+                    __('%s set as the Layout background image is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings'),//@phpcs:ignore
+                    $media->name,
+                    $resizeLimit
+                ), 'backgroundImageId');
             }
             $layoutNode->setAttribute('background', $media->storedAs);
         }
@@ -1343,7 +1351,7 @@ class Layout implements \JsonSerializable
                 $module = $this->moduleFactory->getByType($widget->type);
 
                 // Set the Layout Status
-                $moduleStatus = ModuleWidget::$STATUS_VALID;
+                $moduleStatus = Status::$STATUS_VALID;
                 try {
                     $module
                         ->decorateProperties($widget)
@@ -1353,13 +1361,19 @@ class Layout implements \JsonSerializable
                     if ($module->regionSpecific == 0 && $widget->getPrimaryMediaId() != 0) {
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         if ($media->released == 0) {
-                            throw new GeneralException(__('%s is pending conversion', $media->name));
+                            throw new GeneralException(sprintf(
+                                __('%s is pending conversion'),
+                                $media->name
+                            ));
                         } else if ($media->released == 2) {
-                            throw new GeneralException(__('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.', $media->name));
+                            throw new GeneralException(sprintf(
+                                __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
+                                $media->name
+                            ));
                         }
                     }
                 } catch (GeneralException $xiboException) {
-                    $moduleStatus = ModuleWidget::$STATUS_INVALID;
+                    $moduleStatus = Status::$STATUS_INVALID;
 
                     // Include the exception on
                     $this->pushStatusMessage($xiboException->getMessage());
@@ -1647,10 +1661,9 @@ class Layout implements \JsonSerializable
                 // If we do not have an update interval, should we set a default one?
                 // https://github.com/xibosignage/xibo/issues/2319
                 if (!$hasUpdatedInterval && $module->regionSpecific == 1) {
-                    // TODO: dataProvider: how do we do module cache duration?
-                    //  for the moment assume 30 days
+                    // Modules/Widgets without an update interval update very infrequently
                     $optionsNode->appendChild(
-                        $document->createElement('updateInterval', 86400 * 30)
+                        $document->createElement('updateInterval', 1440 * 30)
                     );
                 }
 
@@ -2003,7 +2016,7 @@ class Layout implements \JsonSerializable
             }
 
             // Assume error
-            $this->status = ModuleWidget::$STATUS_INVALID;
+            $this->status = Status::$STATUS_INVALID;
 
             // Reset duration
             $this->duration = 0;
@@ -2015,7 +2028,7 @@ class Layout implements \JsonSerializable
                 $this->getLog()->error('Cannot build Layout ' . $this->layoutId . '. error: ' . $e->getMessage());
 
                 // Will continue and save the status as 4
-                $this->status = ModuleWidget::$STATUS_INVALID;
+                $this->status = Status::$STATUS_INVALID;
 
                 if ($e->getMessage() != '') {
                     $this->pushStatusMessage($e->getMessage());
@@ -2028,7 +2041,7 @@ class Layout implements \JsonSerializable
 
             if ($options['exceptionOnError']) {
                 // Handle exception cases
-                if ($this->status === ModuleWidget::$STATUS_INVALID
+                if ($this->status === Status::$STATUS_INVALID
                     || ($options['exceptionOnEmptyRegion'] && $this->hasEmptyRegion())
                 ) {
                     $this->getLog()->debug('xlfToDisk: publish failed for layoutId ' . $this->layoutId
@@ -2048,7 +2061,7 @@ class Layout implements \JsonSerializable
 
             // If we have an empty region, and we've not exceptioned, then we need to record that in our status
             if ($this->hasEmptyRegion()) {
-                $this->status = ModuleWidget::$STATUS_INVALID;
+                $this->status = Status::$STATUS_INVALID;
                 $this->pushStatusMessage(__('Empty Region'));
             }
 

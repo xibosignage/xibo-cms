@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\SubPlaylistWidgetsEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
@@ -605,10 +606,13 @@ class Region extends Base
         try {
             $region = $this->regionFactory->getById($id);
             $region->load();
-            
+
             // What type of region are we?
             $widget = null;
+            $additionalContexts = [];
             if ($region->type === 'canvas' || $region->type === 'playlist') {
+                $this->getLog()->debug('preview: canvas or playlist region');
+
                 // Get the first playlist we can find
                 $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
 
@@ -629,9 +633,18 @@ class Region extends Base
                     ]);
                 }
             } else {
+                $this->getLog()->debug('preview: single widget');
+
                 // Assume we're a frame, single Widget Requested
                 $widget = $this->widgetFactory->getById($widgetId);
                 $widget->load();
+
+                if ($widget->type === 'subplaylist') {
+                    // Get the sub-playlist widgets
+                    $event = new SubPlaylistWidgetsEvent($widget, $widget->tempId);
+                    $this->getDispatcher()->dispatch($event, SubPlaylistWidgetsEvent::$NAME);
+                    $additionalContexts['countSubPlaylistWidgets'] = count($event->getWidgets());
+                }
 
                 $countWidgets = 1;
             }
@@ -655,7 +668,8 @@ class Region extends Base
                                 'regionId' => $region->regionId,
                                 'id' => $widget->getPrimaryMedia()[0] ?? null
                             ]
-                        ) . '?preview=1'
+                        ) . '?preview=1',
+                        $additionalContexts
                     );
 
                 $this->getState()->extra['type'] = $widget->type;

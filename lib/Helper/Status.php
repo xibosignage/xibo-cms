@@ -19,34 +19,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Event;
 
-use Xibo\Entity\Widget;
+namespace Xibo\Helper;
 
 /**
- * Widget Edit Event
+ * Static class to reference statuses.
  */
-class WidgetEditEvent extends Event
+class Status
 {
-    public static $NAME = 'widget.edit';
-
-    /** @var \Xibo\Entity\Widget */
-    protected $widget;
-
-    /**
-     * constructor.
-     * @param \Xibo\Entity\Widget $widget
-     */
-    public function __construct(\Xibo\Entity\Widget $widget)
-    {
-        $this->widget = $widget;
-    }
-
-    /**
-     * @return \Xibo\Entity\Widget
-     */
-    public function getWidget(): Widget
-    {
-        return $this->widget;
-    }
+    // Widget statuses.
+    public static $STATUS_VALID = 1;
+    public static $STATUS_PLAYER = 2;
+    public static $STATUS_NOT_BUILT = 3;
+    public static $STATUS_INVALID = 4;
 }

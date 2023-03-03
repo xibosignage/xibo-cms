@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Render;
 
 use Carbon\Carbon;
+use FilesystemIterator;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -90,6 +91,7 @@ class WidgetHtmlRenderer
      * @param \Xibo\Entity\Widget $widget
      * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
      * @param string $downloadUrl
+     * @param array $additionalContexts An array of additional key/value contexts for the templates
      * @return string
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
@@ -100,7 +102,8 @@ class WidgetHtmlRenderer
         Region $region,
         Widget $widget,
         SanitizerInterface $params,
-        string $downloadUrl
+        string $downloadUrl,
+        array $additionalContexts = []
     ): string {
         if ($module->previewEnabled == 1) {
             $width = $params->getDouble('width', ['default' => 0]);
@@ -117,9 +120,11 @@ class WidgetHtmlRenderer
                             'height' => $height,
                             'params' => $params,
                             'options' => $module->getPropertyValues(),
-                            'downloadUrl' => $downloadUrl
+                            'downloadUrl' => $downloadUrl,
+                            'calculatedDuration' => $widget->calculatedDuration,
                         ],
-                        $module->getPropertyValues()
+                        $module->getPropertyValues(),
+                        $additionalContexts
                     )
                 );
             } else if ($module->renderAs === 'html') {
@@ -131,9 +136,11 @@ class WidgetHtmlRenderer
                             'width' => $width,
                             'height' => $height,
                             'regionId' => $region->regionId,
-                            'widgetId' => $widget->widgetId
+                            'widgetId' => $widget->widgetId,
+                            'calculatedDuration' => $widget->calculatedDuration,
                         ],
-                        $module->getPropertyValues()
+                        $module->getPropertyValues(),
+                        $additionalContexts
                     )
                 );
             }
@@ -328,6 +335,7 @@ class WidgetHtmlRenderer
      * @throws \Twig\Error\SyntaxError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\LoaderError
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function render(
         Module $module,
@@ -496,5 +504,35 @@ class WidgetHtmlRenderer
         }
 
         return $content;
+    }
+
+    /**
+     * @param \Xibo\Entity\Widget $widget
+     * @return void
+     */
+    public function clearWidgetCache(Widget $widget)
+    {
+        $cachePath = $this->cachePath
+            . DIRECTORY_SEPARATOR
+            . $widget->widgetId
+            . DIRECTORY_SEPARATOR;
+
+        // Drop the cache
+        // there is a chance this may not yet exist
+        try {
+            $it = new \RecursiveDirectoryIterator($cachePath, FilesystemIterator::SKIP_DOTS);
+            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
+            }
+            rmdir($cachePath);
+        } catch (\UnexpectedValueException $unexpectedValueException) {
+            $this->logger->debug('HTML cache doesn\'t exist yet or cannot be deleted. '
+                . $unexpectedValueException->getMessage());
+        }
     }
 }

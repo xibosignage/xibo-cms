@@ -109,18 +109,6 @@ interface DataProviderInterface
     public function getSetting(string $setting, $default = null);
 
     /**
-     * Set the provider to use an event instead of providing its own data
-     * @return \Xibo\Widget\Provider\DataProviderInterface
-     */
-    public function setIsUseEvent(): DataProviderInterface;
-
-    /**
-     * Should the data provider try to find its data via an event?
-     * @return bool
-     */
-    public function isUseEvent(): bool;
-
-    /**
      * Get data already added to this provider
      * @return array
      */

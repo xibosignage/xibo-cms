@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,14 +20,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Entity;
+
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Session
  * @package Xibo\Entity
+ * @property $refreshExpiry bool should we refresh the expiry date?
  */
 class Session implements \JsonSerializable
 {
@@ -53,12 +54,18 @@ class Session implements \JsonSerializable
         $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
-    public function getId()
+    /**
+     * @return int the userId
+     */
+    public function getId(): int
     {
         return $this->userId;
     }
 
-    public function getOwnerId()
+    /**
+     * @return int the owner UserId (always 1)
+     */
+    public function getOwnerId(): int
     {
         return 1;
     }

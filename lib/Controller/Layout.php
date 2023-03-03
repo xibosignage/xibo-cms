@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -44,17 +44,17 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
+use Xibo\Helper\Status;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\ModuleWidget;
 use Xibo\Widget\Render\WidgetDownloader;
 
 /**
@@ -1587,15 +1587,15 @@ class Layout extends Base
             }
 
             switch ($layout->status) {
-                case ModuleWidget::$STATUS_VALID:
+                case Status::$STATUS_VALID:
                     $layout->statusDescription = __('This Layout is ready to play');
                     break;
 
-                case ModuleWidget::$STATUS_PLAYER:
-                    $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');
+                case Status::$STATUS_PLAYER:
+                    $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');// @phpcs:ignore
                     break;
 
-                case 3:
+                case Status::$STATUS_NOT_BUILT:
                     $layout->statusDescription = __('This Layout has not been built yet');
                     break;
 
@@ -2369,15 +2369,15 @@ class Layout extends Base
         }
 
         switch ($layout->status) {
-            case ModuleWidget::$STATUS_VALID:
+            case Status::$STATUS_VALID:
                 $status = __('This Layout is ready to play');
                 break;
 
-            case ModuleWidget::$STATUS_PLAYER:
+            case Status::$STATUS_PLAYER:
                 $status = __('There are items on this Layout that can only be assessed by the Display');
                 break;
 
-            case 3:
+            case Status::$STATUS_NOT_BUILT:
                 $status = __('This Layout has not been built yet');
                 break;
 

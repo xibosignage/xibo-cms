@@ -24,11 +24,11 @@ namespace Xibo\Event;
 use Xibo\Entity\Widget;
 
 /**
- * Widget Edit Event
+ * Widget Delete Event
  */
-class WidgetEditEvent extends Event
+class WidgetDeleteEvent extends Event
 {
-    public static $NAME = 'widget.edit';
+    public static $NAME = 'widget.delete';
 
     /** @var \Xibo\Entity\Widget */
     protected $widget;
