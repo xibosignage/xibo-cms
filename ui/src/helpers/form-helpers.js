@@ -9,6 +9,8 @@ const templates = {
     require('../templates/form-helpers-data-set-filter-clause.hbs'),
   subPlaylistFormTemplate:
     require('../templates/form-helpers-sub-playlist-form.hbs'),
+  subPlaylistHeaderTemplate:
+    require('../templates/form-helpers-sub-playlist-header.hbs'),
   twittermetroColorsTemplate:
     require('../templates/form-helpers-twitter-metro-colors.hbs'),
   chartColorsTemplate:

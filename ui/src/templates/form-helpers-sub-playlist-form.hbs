@@ -1,28 +1,21 @@
-<div class="row row-special">
-    <label class="col-sm-1 control-label" for="subPlaylistId[]">{{ title }}</label>
-    <div class="col-sm-3">
-        <select class="form-control subPlaylistSelect" name="subPlaylistId[]" data-field-id="{{subPlaylistId}}">
+<div class="subplaylist-item-row form-inline flex-nowrap p-1">
+    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
+    <div class="form-group subplaylist-id-container">
+        <select class="form-control subplaylist-id" name="subPlaylistId[]" data-field-id="{{subPlaylistId}}">
             <option value=""></option>
         </select>
     </div>
-    <div class="col-sm-2">
-        <label for="subPlaylistIdSpots[]">
-            <input class="form-control" name="subPlaylistIdSpots[]" type="number" value="{{ subPlaylistIdSpots }}" />
-        </label>
+    <div class="form-group subplaylist-spots-container">
+        <input class="form-control subplaylist-spots" name="subPlaylistIdSpots[]" type="number" value="{{ subPlaylistIdSpots }}" />
     </div>
-    <div class="col-sm-2">
-        <label for="subPlaylistIdSpotLength[]">
-            <input class="form-control" name="subPlaylistIdSpotLength[]" type="number" value="{{ subPlaylistIdSpotLength }}" />
-        </label>
+    <div class="form-group subplaylist-spots-length-container">
+        <input class="form-control subplaylist-spots-length" name="subPlaylistIdSpotLength[]" type="number" value="{{ subPlaylistIdSpotLength }}" />
     </div>
-    <div class="col-sm-3">
-        <select class="form-control" name="subPlaylistIdSpotFill[]">
+    <div class="form-group subplaylist-spots-fill-container">
+        <select class="form-control subplaylist-spots-fill" name="subPlaylistIdSpotFill[]">
             <option value="repeat" {{#eq "repeat" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ repeatHelpText }}">{{ repeatTitle }}</option>
             <option value="fill" {{#eq "fill" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ fillHelpText }}">{{ fillTitle }}</option>
             <option value="pad" {{#eq "pad" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ padHelpText }}">{{ padTitle }}</option>
         </select>
-    </div>
-    <div class="col-sm-1">
-        <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
     </div>
 </div>

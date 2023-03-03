@@ -56,6 +56,9 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   // widget media
   this.mediaIds = data.mediaIds;
 
+  // playlist id
+  this.playlistId = data.playlistId;
+
   // check if audio can be attached to it
   const typesThatCantHaveAudio = ['subplaylist'];
   this.canAttachAudio = !typesThatCantHaveAudio.includes(this.subType);

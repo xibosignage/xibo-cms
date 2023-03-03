@@ -272,7 +272,7 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-file-pdf-o;
 }
 
-.module-icon-playlist {
+.module-icon-playlist, .module-icon-subplaylist {
     @extend .fa-list-ol;
 }
 
@@ -290,10 +290,6 @@ $fa-font-path: "~font-awesome/fonts";
 
 .module-icon-stocks {
     @extend .fa-bar-chart;
-}
-
-.module-icon-subplaylist {
-    @extend .fa-play-circle-o;
 }
 
 .module-icon-text {

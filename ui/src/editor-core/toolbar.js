@@ -78,6 +78,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
+    // If module is core-subplaylist and
+    // we aren't in playlist editor, skip it
+    if (el.type == 'subplaylist' && !isPlaylist) {
+      return;
+    }
+
     // Check if we have valid extension on settings
     for (let index = 0; index < el.settings.length; index++) {
       const setting = el.settings[index];

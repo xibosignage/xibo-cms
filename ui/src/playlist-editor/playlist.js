@@ -15,6 +15,8 @@ const Playlist = function(id, data) {
   this.folderId = data.folderId;
   this.isEmpty = true;
 
+  this.regionId = data.regionId;
+  this.isTopLevel = (data.regionId != 0);
   this.widgets = {};
   this.duration = null;
   this.folderId = data.folderId;
@@ -50,7 +52,11 @@ Playlist.prototype.createDataStructure = function(data) {
           imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]);
       }
 
+      // Save designer object for later use
       newWidget.designerObject = pE;
+
+      // Save parent region
+      newWidget.parent = this;
 
       // calculate expire status
       newWidget.calculateExpireStatus();

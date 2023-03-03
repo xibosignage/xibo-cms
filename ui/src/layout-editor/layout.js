@@ -126,6 +126,8 @@ Layout.prototype.createDataStructure = function(data) {
 
           newWidget.designerObject = lD;
 
+          newWidget.parent = newRegion;
+
           // calculate expire status
           newWidget.calculateExpireStatus();
 
@@ -699,6 +701,8 @@ Layout.prototype.createDrawer = function(drawerData) {
       newWidget.index = parseInt(widget) + 1;
 
       newWidget.designerObject = lD;
+
+      newWidget.parent = newDrawer;
 
       newWidget.drawerWidget = true;
 

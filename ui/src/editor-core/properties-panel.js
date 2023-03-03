@@ -342,6 +342,7 @@ PropertiesPanel.prototype.render = function(
           res.data.module.properties,
           self.DOMObject.find('#configureTab'),
           element.widgetId,
+          element.playlistId,
         );
       } else {
         // Remove configure tab
@@ -360,6 +361,7 @@ PropertiesPanel.prototype.render = function(
           res.data.template.properties,
           self.DOMObject.find('#appearanceTab'),
           element.widgetId,
+          element.playlistId,
         );
 
         // Show the appearance tab
@@ -374,6 +376,8 @@ PropertiesPanel.prototype.render = function(
       self.DOMObject.find('form'),
       res.data,
       element.widgetId,
+      (element.parent && element.parent.isTopLevel) ?
+        element.parent.isTopLevel : true,
     );
 
     // Run form open module optional function

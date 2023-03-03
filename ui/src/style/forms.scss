@@ -170,3 +170,37 @@
         padding: 8px !important;
     }
 }
+
+// Playlist mixer
+.playlist-mixer {
+    .subplaylist-item-row, .subplaylist-item-row-header {
+        & > * {
+            margin-right: 4px;
+        }
+
+        .subplaylist-id-container-header {
+            margin-left: 40px;
+        }
+
+        .subplaylist-spots-container, .subplaylist-spots-length-container {
+            width: 100px;
+            input {
+                width: 100%;
+            }
+        }
+        
+        .subplaylist-id-container {
+            width: 100px;
+            .select2-container {
+                min-width: 100% !important;
+            }
+        }
+
+        .subplaylist-spots-fill-container {
+            width: 120px;
+            .select2-container {
+                min-width: 100% !important;
+            }
+        }
+    }
+}
