@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0fd6d08d684ddceda26dd5645f4633ab",
+    "content-hash": "01e55d659b68c3df188b28349407b522",
     "packages": [
         {
             "name": "akrabat/ip-address-middleware",
@@ -443,57 +443,6 @@
                 "source": "https://github.com/igorw/evenement/tree/master"
             },
             "time": "2017-07-17T17:39:19+00:00"
-        },
-        {
-            "name": "ezyang/htmlpurifier",
-            "version": "v4.14.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ezyang/htmlpurifier.git",
-                "reference": "12ab42bd6e742c70c0a52f7b82477fcd44e64b75"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/12ab42bd6e742c70c0a52f7b82477fcd44e64b75",
-                "reference": "12ab42bd6e742c70c0a52f7b82477fcd44e64b75",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.2"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "library/HTMLPurifier.composer.php"
-                ],
-                "psr-0": {
-                    "HTMLPurifier": "library/"
-                },
-                "exclude-from-classmap": [
-                    "/library/HTMLPurifier/Language/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Edward Z. Yang",
-                    "email": "admin@htmlpurifier.org",
-                    "homepage": "http://ezyang.com"
-                }
-            ],
-            "description": "Standards compliant HTML filter written in PHP",
-            "homepage": "http://htmlpurifier.org/",
-            "keywords": [
-                "html"
-            ],
-            "support": {
-                "issues": "https://github.com/ezyang/htmlpurifier/issues",
-                "source": "https://github.com/ezyang/htmlpurifier/tree/v4.14.0"
-            },
-            "time": "2021-12-25T01:21:49+00:00"
         },
         {
             "name": "flynsarmy/slim-monolog",
@@ -8610,7 +8559,8 @@
         "ext-pdo": "*",
         "ext-json": "*",
         "ext-soap": "*",
-        "ext-zip": "*"
+        "ext-zip": "*",
+        "ext-openssl": "*"
     },
     "platform-dev": [],
     "platform-overrides": {
