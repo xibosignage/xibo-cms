@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\Factory;
 
@@ -171,15 +170,6 @@ class UserFactory extends BaseFactory
     }
 
     /**
-     * Get Dooh user
-     * @return User[]
-     */
-    public function getDoohUsers()
-    {
-        return $this->query(null, array('disableUserCheck' => 1, 'userTypeId' => 4));
-    }
-
-    /**
      * Get system user
      * @return User
      * @throws NotFoundException
@@ -244,8 +234,7 @@ class UserFactory extends BaseFactory
                 `user`.isPasswordChangeRequired,
                 `user`.twoFactorTypeId,
                 `user`.twoFactorSecret,
-                `user`.twoFactorRecoveryCodes,
-                `user`.showContentFrom
+                `user`.twoFactorRecoveryCodes
             ';
 
         $body = '

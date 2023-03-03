@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -127,12 +127,6 @@ class Login extends Base
                 try {
                     $user = $this->userFactory->getById($validated['userId']);
 
-                    // Dooh user
-                    if ($user->userTypeId === 4) {
-                        $this->getLog()->error('Cannot log in as this User type');
-                        $this->getFlash()->addMessageNow('login_message', __('Invalid User Type'));
-                    }
-
                     // Log in this user
                     $user->touch(true);
 
@@ -211,8 +205,8 @@ class Login extends Base
             try {
                 $user = $this->userFactory->getByName($username);
 
-                // DOOH user/Retired user
-                if ($user->userTypeId === 4 || $user->retired === 1) {
+                // Retired user
+                if ($user->retired === 1) {
                     throw new AccessDeniedException(__('Sorry this account does not exist or does not have permission to access the web portal.'));
                 }
 
@@ -237,13 +231,7 @@ class Login extends Base
         }
         catch (AccessDeniedException $e) {
             $this->getLog()->warning($e->getMessage());
-            // Modify our return message depending on whether we're a DOOH user or not
-            // we do this because a DOOH user is not allowed to log into the web UI directly and is API only.
-            if ($user === null || $user->userTypeId != 4) {
-               $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
-            } else {
-                $this->getFlash()->addMessage('login_message', __($e->getMessage()));
-            }
+            $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
         catch (ExpiredException $e) {

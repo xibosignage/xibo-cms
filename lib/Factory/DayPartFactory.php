@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\Factory;
 
@@ -149,11 +148,6 @@ class DayPartFactory extends BaseFactory
         $body = ' FROM `daypart` ';
 
         $body .= ' WHERE 1 = 1 ';
-
-        // Always include Custom and Always Daypart for DOOH user.
-        if ($sanitizedFilter->getInt('disableUserCheck') == 0 && ($this->getUser()->userTypeId == 4 || ($this->getUser()->isSuperAdmin() && $this->getUser()->showContentFrom == 2))) {
-            $body .= ' OR `daypart`.isCustom = 1 OR `daypart`.isAlways = 1 ';
-        }
 
         if ($sanitizedFilter->getInt('dayPartId') !== null) {
             $body .= ' AND `daypart`.dayPartId = :dayPartId ';

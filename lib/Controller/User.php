@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1065,7 +1065,7 @@ class User extends Base
                 }
             ]);
 
-            if ($userTypeId == 1 || $userTypeId == 4) {
+            if ($userTypeId == 1) {
                 $homepages = $this->userGroupFactory->getHomepages();
             } else {
                 $groupId = $params->getInt('groupId', [
@@ -2428,15 +2428,6 @@ class User extends Base
         $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
         $this->getUser()->setOptionValue('isAlwaysUseManualAddUserForm', $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm'));
         $this->getUser()->setOptionValue('rememberFolderTreeStateGlobally', $parsedParams->getCheckbox('rememberFolderTreeStateGlobally'));
-
-        if ($this->getUser()->isSuperAdmin()) {
-            $this->getUser()->showContentFrom = $parsedParams->getInt('showContentFrom');
-        }
-
-        // if we are not a super admin do not allow anything else than standard view.
-        if (!$this->getUser()->isSuperAdmin() && ($parsedParams->getInt('showContentFrom') == 2 || $parsedParams->getInt('showContentFrom') == 3)) {
-            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
-        }
 
         // Clear auto submits?
         if ($parsedParams->getCheckbox('autoSubmitClearAll', ['checkboxReturnInteger' => false])) {

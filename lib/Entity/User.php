@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Entity;
 
 use League\OAuth2\Server\Entities\UserEntityInterface;
@@ -277,12 +276,6 @@ class User implements \JsonSerializable, UserEntityInterface
      * @var array
      */
     public $twoFactorRecoveryCodes = [];
-
-    /**
-     * @SWG\Property(description="Should we show content added by standard users in relevant grids (1) or content added by the DOOH user? (2). Super admins have an option to change this in their User profile. ")
-     * @var int
-     */
-    public $showContentFrom = 1;
 
     /**
      * @var UserOption[]
@@ -882,7 +875,6 @@ class User implements \JsonSerializable, UserEntityInterface
                   `twoFactorTypeId` = :twoFactorTypeId,
                   `twoFactorSecret` = :twoFactorSecret,
                   `twoFactorRecoveryCodes` = :twoFactorRecoveryCodes,
-                  `showContentFrom` = :showContentFrom,
                   `firstName` = :firstName,
                   `lastName` = :lastName,
                   `phone` = :phone,
@@ -907,7 +899,6 @@ class User implements \JsonSerializable, UserEntityInterface
             'twoFactorTypeId' => $this->twoFactorTypeId,
             'twoFactorSecret' => $this->twoFactorSecret,
             'twoFactorRecoveryCodes' => ($this->twoFactorRecoveryCodes == '') ? null : json_encode($this->twoFactorRecoveryCodes),
-            'showContentFrom' => $this->showContentFrom,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'phone' => $this->phone,
@@ -1127,7 +1118,7 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->isSuperAdmin() || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
+        if ($this->isSuperAdmin() || $this->userId == $object->getOwnerId())
             return true;
 
         // Group Admins
@@ -1168,7 +1159,7 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->isSuperAdmin() || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
+        if ($this->isSuperAdmin() || $this->userId == $object->getOwnerId())
             return true;
 
         // Group Admins
@@ -1201,7 +1192,6 @@ class User implements \JsonSerializable, UserEntityInterface
         // Check that this object has the necessary methods
         $this->checkObjectCompatibility($object);
         // Admin users
-        // Note here that the DOOH user isn't allowed to outright delete other users things
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId()) {
             return true;
         }
@@ -1238,7 +1228,6 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        // Note here that the DOOH user isn't allowed to outright delete other users things
         if ($this->userTypeId == 1 || ($this->userId == $object->getOwnerId() && $this->featureEnabled('user.sharing')))
             return true;
         // Group Admins
@@ -1264,7 +1253,7 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     public function isSuperAdmin()
     {
-        return ($this->userTypeId == 1 || $this->userTypeId == 4);
+        return ($this->userTypeId == 1);
     }
 
     /**
