@@ -688,7 +688,7 @@ class Ticker extends ModuleWidget
                 ];
 
                 if (!empty($this->getOption('userAgent'))) {
-                    $httpOptions['User-Agent'] = $this->getOption('userAgent');
+                    $httpOptions['headers']['User-Agent'] = trim($this->getOption('userAgent'));
                 }
 
                 // Create a Guzzle Client to get the Feed XML
