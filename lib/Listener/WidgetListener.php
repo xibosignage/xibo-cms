@@ -333,9 +333,14 @@ class WidgetListener
         // Expand or Shrink each of our assigned lists according to the Spot options (if any)
         // Expand all widgets from sub-playlists
         foreach ($this->getAssignedPlaylists($widget) as $playlistItem) {
-            // Get the Playlist and expand its widgets
-            $playlist = $this->playlistFactory->getById($playlistItem->playlistId)
-                ->setModuleFactory($this->moduleFactory);
+            try {
+                $playlist = $this->playlistFactory->getById($playlistItem->playlistId)
+                    ->setModuleFactory($this->moduleFactory);
+            } catch (NotFoundException $notFoundException) {
+                $this->logger->error('getSubPlaylistResolvedWidgets: widget references a playlist which no longer exists. widgetId: '//phpcs:ignore
+                    . $widget->widgetId . ', playlistId: ' . $playlistItem->playlistId);
+                continue;
+            }
             $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
 
