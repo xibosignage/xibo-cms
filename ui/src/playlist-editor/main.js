@@ -766,7 +766,7 @@ pE.reloadData = function() {
                 pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
                 // folder Id
                 pE.folderId = pE.playlist.folderId;
-                pE.refreshDesigner();
+                pE.refreshDesigner(true);
             } else {
                 if(res.login) {
                     window.location.href = window.location.href;

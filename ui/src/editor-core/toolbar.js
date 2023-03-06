@@ -1175,7 +1175,8 @@ Toolbar.prototype.handleCardsBehaviour = function() {
     const self = this;
 
     // If in edit mode
-    if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
+    // and we have app initialised
+    if (app && (app.readOnlyMode === undefined || app.readOnlyMode === false)) {
         this.DOMObject.find('.toolbar-card').each(function() {
             $(this).draggable({
                 cursor: 'crosshair',
