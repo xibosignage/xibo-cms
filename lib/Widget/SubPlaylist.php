@@ -486,8 +486,14 @@ class SubPlaylist extends ModuleWidget
         // Expand all widgets from sub-playlists
         foreach ($this->getAssignedPlaylists() as $playlistItem) {
             // Get the Playlist and expand its widgets
-            $playlist = $this->playlistFactory->getById($playlistItem->playlistId)
-                ->setModuleFactory($this->moduleFactory);
+            try {
+                $playlist = $this->playlistFactory->getById($playlistItem->playlistId)
+                    ->setModuleFactory($this->moduleFactory);
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->error('getSubPlaylistResolvedWidgets: widget references a playlist which no longer exists. widgetId: '//phpcs:ignore
+                    . $this->getWidgetId() . ', playlistId: ' . $playlistItem->playlistId);
+                continue;
+            }
             $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
 
