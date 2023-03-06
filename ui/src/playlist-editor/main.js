@@ -185,7 +185,9 @@ pE.loadEditor = function() {
                 pE.toolbar.parent = pE;
 
                 // Default selected
-                pE.selectObject();
+                pE.selectObject(null, false, {
+                    refreshToolbar: true,
+                });
 
                 // Setup helpers
                 formHelpers.setup(pE, pE.playlist);
@@ -234,8 +236,9 @@ window.getXiboApp = function() {
  * @param {bool=} forceUnselect - Clean selected object
  * @param {object =} [options] - selectObject options
  * @param {number=} [options.positionToAdd = null] - Order position for widget
+ * @param {bool=} [options.refreshToolbar = false] - Also refresh the toolbar
  */
-pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
+pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null, refreshToolbar = false} = {}) {
     // Clear rogue tooltips
     pE.common.clearTooltips();
 
@@ -307,7 +310,7 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
         }
 
         // Refresh the designer containers
-        pE.refreshDesigner(true);
+        pE.refreshDesigner(refreshToolbar);
     }
 };
 
@@ -697,11 +700,6 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
     // Render containers
     (renderToolbar) && this.renderContainer(this.toolbar);
     this.renderContainer(this.manager);
-
-    // If there was a opened menu in the toolbar, open that tab
-    if(this.toolbar.openedMenu != -1) {
-        this.toolbar.openMenu(this.toolbar.openedMenu, true);
-    }
 
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
     if(!$.isEmptyObject(pE.playlist.widgets)) {
