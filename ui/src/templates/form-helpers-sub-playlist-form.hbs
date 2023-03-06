@@ -1,21 +1,21 @@
 <div class="subplaylist-item-row form-inline flex-nowrap p-1">
     <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
     <div class="form-group subplaylist-id-container">
-        <select class="form-control subplaylist-id" name="subPlaylistId[]" data-field-id="{{subPlaylistId}}">
+        <select class="form-control subplaylist-id" name="playlistId[]" data-field-id="{{playlistId}}">
             <option value=""></option>
         </select>
     </div>
     <div class="form-group subplaylist-spots-container">
-        <input class="form-control subplaylist-spots" name="subPlaylistIdSpots[]" type="number" value="{{ subPlaylistIdSpots }}" />
+        <input class="form-control subplaylist-spots" name="spots[]" type="number" value="{{ spots }}" />
     </div>
     <div class="form-group subplaylist-spots-length-container">
-        <input class="form-control subplaylist-spots-length" name="subPlaylistIdSpotLength[]" type="number" value="{{ subPlaylistIdSpotLength }}" />
+        <input class="form-control subplaylist-spots-length" name="spotLength[]" type="number" value="{{ spotLength }}" />
     </div>
     <div class="form-group subplaylist-spots-fill-container">
-        <select class="form-control subplaylist-spots-fill" name="subPlaylistIdSpotFill[]">
-            <option value="repeat" {{#eq "repeat" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ repeatHelpText }}">{{ repeatTitle }}</option>
-            <option value="fill" {{#eq "fill" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ fillHelpText }}">{{ fillTitle }}</option>
-            <option value="pad" {{#eq "pad" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ padHelpText }}">{{ padTitle }}</option>
+        <select class="form-control subplaylist-spots-fill" name="spotFill[]">
+            <option value="repeat" {{#eq "repeat" spotFill}}selected{{/eq}} data-template-result="{{ repeatHelpText }}">{{ repeatTitle }}</option>
+            <option value="fill" {{#eq "fill" spotFill}}selected{{/eq}} data-template-result="{{ fillHelpText }}">{{ fillTitle }}</option>
+            <option value="pad" {{#eq "pad" spotFill}}selected{{/eq}} data-template-result="{{ padHelpText }}">{{ padTitle }}</option>
         </select>
     </div>
 </div>

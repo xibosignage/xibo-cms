@@ -97,7 +97,6 @@ class WidgetListener
      * Widget Edit
      * @param \Xibo\Event\WidgetEditEvent $event
      * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function onWidgetEdit(WidgetEditEvent $event)
     {
@@ -106,55 +105,39 @@ class WidgetListener
             return;
         }
 
-        // Playlist setting arrays
-        $spots = $widget->getOptionValue('subPlaylistIdSpots', []);
-        $spotLength = $widget->getOptionValue('subPlaylistIdSpotLength', []);
-        $spotFill = $widget->getOptionValue('subPlaylistIdSpotFill', []);
+        $this->getLogger()->debug('onWidgetEdit: processing subplaylist for widgetId ' . $widget->widgetId);
 
-        // Get our existing IDs
+        // Get the IDs we had before the edit and work out the difference between then and now.
         $existingSubPlaylistIds = [];
-        foreach ($this->getAssignedPlaylists($widget) as $assignedPlaylist) {
+        foreach ($this->getAssignedPlaylists($widget, true) as $assignedPlaylist) {
             if (!in_array($assignedPlaylist->playlistId, $existingSubPlaylistIds)) {
                 $existingSubPlaylistIds[] = $assignedPlaylist->playlistId;
             }
         }
 
+        $this->getLogger()->debug('onWidgetEdit: there are ' . count($existingSubPlaylistIds) . ' existing playlists');
+
         // Make up a companion setting which maps the playlistIds to the options
-        $subPlaylists = [];
+        $subPlaylists = $this->getAssignedPlaylists($widget);
         $subPlaylistIds = [];
-        $i = -1;
 
-        foreach ($widget->getOptionValue('subPlaylistId', []) as $playlistId) {
-            $i++;
-
-            if ($playlistId == '') {
-                continue;
-            }
-
-            if ($spots[$i] < 0) {
+        foreach ($subPlaylists as $playlist) {
+            if ($playlist->spots < 0) {
                 throw new InvalidArgumentException(
                     __('Number of spots must be empty, 0 or a positive number'),
                     'subPlaylistIdSpots'
                 );
             }
 
-            if ($spotLength[$i] < 0) {
+            if ($playlist->spotLength < 0) {
                 throw new InvalidArgumentException(
                     __('Spot length must be empty, 0 or a positive number'),
                     'subPlaylistIdSpotLength'
                 );
             }
 
-            $item = new SubPlaylistItem();
-            $item->playlistId = $playlistId;
-            $item->rowNo = $i + 1;
-            $item->spots = $spots[$i] ?? '';
-            $item->spotLength = $spotLength[$i] ?? '';
-            $item->spotFill = $spotFill[$i] ?? null;
-            $subPlaylists[] = $item;
-
-            if (!in_array($playlistId, $subPlaylistIds)) {
-                $subPlaylistIds[] = $playlistId;
+            if (!in_array($playlist->playlistId, $subPlaylistIds)) {
+                $subPlaylistIds[] = $playlist->playlistId;
             }
         }
 
@@ -162,9 +145,6 @@ class WidgetListener
         if (count($subPlaylists) < 1) {
             throw new InvalidArgumentException(__('Please select at least 1 Playlist to embed'), 'subPlaylistId');
         }
-
-        // Set this new option
-        $widget->setOptionValue('subPlaylists', 'attrib', json_encode($subPlaylists));
 
         // Work out whether we've added/removed
         $addedEntries = array_diff($subPlaylistIds, $existingSubPlaylistIds);
@@ -229,12 +209,6 @@ class WidgetListener
                 'subPlaylistId'
             );
         }
-
-        // Tidy up any old options
-        if ($widget->getOptionValue('subPlaylistIds', null) !== null) {
-            $widget->setOptionValue('subPlaylistIds', 'attrib', null);
-            $widget->setOptionValue('subPlaylistOptions', 'attrib', null);
-        }
     }
 
     /**
@@ -244,6 +218,8 @@ class WidgetListener
     public function onWidgetDelete(WidgetDeleteEvent $event)
     {
         $widget = $event->getWidget();
+
+        $this->getLogger()->debug('onWidgetDelete: processing widgetId ' . $widget->widgetId);
 
         // Clear cache
         $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
@@ -307,28 +283,12 @@ class WidgetListener
     /**
      * @return \Xibo\Widget\SubPlaylistItem[]
      */
-    private function getAssignedPlaylists(Widget $widget): array
+    private function getAssignedPlaylists(Widget $widget, bool $originalValue = false): array
     {
-        $playlists = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
-        if (count($playlists) <= 0) {
-            // Try and load them the old way.
-            $playlistIds = json_decode($widget->getOptionValue('subPlaylistIds', '[]'), true);
-            $subPlaylistOptions = json_decode($widget->getOptionValue('subPlaylistOptions', '[]'), true);
-            $i = 0;
-            foreach ($playlistIds as $playlistId) {
-                $i++;
-                $playlists[] = [
-                    'rowNo' => $i,
-                    'playlistId' => $playlistId,
-                    'spotFill' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpotFill'] ?? null,
-                    'spotLength' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpotLength'] ?? null,
-                    'spots' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpots'] ?? null,
-                ];
-            }
-        }
+        $this->getLogger()->debug('getAssignedPlaylists: original value: ' . var_export($originalValue, true));
 
         $playlistItems = [];
-        foreach ($playlists as $playlist) {
+        foreach (json_decode($widget->getOptionValue('subPlaylists', '[]', $originalValue), true) as $playlist) {
             $item = new SubPlaylistItem();
             $item->rowNo = intval($playlist['rowNo']);
             $item->playlistId = $playlist['playlistId'];
@@ -657,5 +617,43 @@ class WidgetListener
         $this->logger->debug($log);
 
         return $resolvedWidgets;
+    }
+
+    /**
+     * TODO: we will need a way to upgrade from early v3 to late v3
+     *  (this can replace convertOldPlaylistOptions in Layout Factory)
+     * @return void
+     */
+    private function toDoUpgrade(Widget $widget)
+    {
+        $playlists = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
+        if (count($playlists) <= 0) {
+            // Try and load them the old way.
+            $this->getLogger()->debug('getAssignedPlaylists: playlists not found in subPlaylists option, loading the old way.');//@phpcs:ignore
+
+            $playlistIds = json_decode($widget->getOptionValue('subPlaylistIds', '[]'), true);
+            $subPlaylistOptions = json_decode($widget->getOptionValue('subPlaylistOptions', '[]'), true);
+            $i = 0;
+            foreach ($playlistIds as $playlistId) {
+                $i++;
+                $playlists[] = [
+                    'rowNo' => $i,
+                    'playlistId' => $playlistId,
+                    'spotFill' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpotFill'] ?? null,
+                    'spotLength' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpotLength'] ?? null,
+                    'spots' => $subPlaylistOptions[$playlistId]['subPlaylistIdSpots'] ?? null,
+                ];
+            }
+        } else {
+            $this->getLogger()->debug('getAssignedPlaylists: playlists found in subPlaylists option.');
+        }
+
+
+
+        // Tidy up any old options
+        if ($widget->getOptionValue('subPlaylistIds', null) !== null) {
+            $widget->setOptionValue('subPlaylistIds', 'attrib', null);
+            $widget->setOptionValue('subPlaylistOptions', 'attrib', null);
+        }
     }
 }
