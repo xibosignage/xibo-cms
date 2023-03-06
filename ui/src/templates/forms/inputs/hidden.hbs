@@ -1,4 +1,4 @@
-<input name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" class="{{customClass}}" type="hidden" id="{{ id }}" value="{{ value }}"
+<input name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" class="{{customClass}}" type="hidden" id="input_{{ id }}" value="{{ value }}"
     {{#each customData}}
         data-{{this.name}}="{{this.value}}"
     {{/each}}

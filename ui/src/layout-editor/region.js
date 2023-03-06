@@ -15,6 +15,7 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   this.name = data.name;
 
   this.playlists = data.regionPlaylist;
+  this.isTopLevel = true;
 
   this.backgroundColor = backgroundColor;
   this.selected = false;

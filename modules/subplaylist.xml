@@ -20,7 +20,7 @@
   -->
 <module>
     <id>core-subplaylist</id>
-    <name>Sub Playlist</name>
+    <name>Playlist</name>
     <author>Core</author>
     <description>Display widgets from one or more Playlists</description>
     <class></class>
@@ -33,7 +33,72 @@
     <renderAs>html</renderAs>
     <defaultDuration>0</defaultDuration>
     <settings></settings>
-    <properties></properties>
+    <properties>
+        <property type="message">
+            <title>Please select one or more Playlists to embed. If selecting more than one use the Configuration tab to adjust how each Playlist is combined.</title>
+        </property>
+        <property type="message">
+            <title>Optionally set Spot options to expand or shrink each Playlist to a particular size or duration. Leave the Spot options empty to use the count of Widgets in each Playlist.</title>
+        </property>
+        <property type="message">
+            <title>Setting Spots to 0 will omit the first Playlist from the play order, and will be used as a Spot Fill option.</title>
+        </property>
+        <property id="playlists" type="playlistMixer">
+            <default>[]</default>
+        </property>
+        <property id="arrangement" type="dropdown" mode="single">
+            <title>Playlist Ordering</title>
+            <helpText>How would you like the Widgets on these Playlists to be ordered?</helpText>
+            <default>none</default>
+            <options>
+                <option name="none">Play all - Playlists will play in their entirety one after the other in the order they appear on the General tab</option>
+                <option name="roundrobin">Round Robin - take one Widget from each Playlist in the order they appear on the General tab and repeat</option>
+                <option name="even">Auto - ensure Widgets are played evenly from each Playlist using the total count of Widgets on all Playlists</option>
+            </options>
+        </property>
+        <property id="remainder" type="dropdown" mode="single">
+            <title>Remaining Widgets</title>
+            <helpText>If there are Widgets left unordered at the end, what should be done with these Widgets?</helpText>
+            <default>none</default>
+            <options>
+                <option name="none">Add - After ordering any remaining Widgets are to be added to the end</option>
+                <option name="drop">Discard - Uses the Playlist with the least Widgets and ignores remaining Widgets on the longer Playlists</option>
+                <option name="repeat">Repeat - Uses the Playlist with the most Widgets and repeats remaining Widgets on the shorter Playlists</option>
+            </options>
+        </property>
+        <property id="cyclePlaybackEnabled" type="checkbox">
+            <title>Enable cycle based playback?</title>
+            <helpText>When cycle based playback is enabled only 1 Widget from this Sub-Playlist will be played each time the Layout is shown. The same Widget will be shown until the 'Play count' is achieved.</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition type="isTopLevel">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="playCount" type="number">
+            <title>Play count</title>
+            <helpText>In cycle based playback, how many plays should each Widget have before moving on?</helpText>
+            <default>1</default>
+            <visibility>
+                <test type="and">
+                    <condition type="isTopLevel">1</condition>
+                    <condition field="cyclePlaybackEnabled" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="cycleRandomWidget" type="checkbox">
+            <title>Random Widget each cycle?</title>
+            <helpText>When enabled the next Widget to play will be chosen at random from the available Widgets.</helpText>
+            <default>0</default>
+            <visibility>
+                <test type="and">
+                    <condition type="isTopLevel">1</condition>
+                    <condition field="cyclePlaybackEnabled" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+    </properties>
     <preview>
         <twig><![CDATA[
 <div style="text-align:center;">

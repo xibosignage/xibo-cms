@@ -23,7 +23,7 @@
 const Common = require('../editor-core/common.js');
 
 // Check condition
-const checkCondition = function(type, value, targetValue) {
+const checkCondition = function(type, value, targetValue, isTopLevel = true) {
   if (type === 'eq' && targetValue == value) {
     return true;
   } else if (type === 'neq' && targetValue != value) {
@@ -36,6 +36,8 @@ const checkCondition = function(type, value, targetValue) {
     return true;
   } else if (type === 'elt' && targetValue <= value) {
     return true;
+  } else if (type === 'isTopLevel' && value == isTopLevel) {
+    return true;
   } else {
     return false;
   }
@@ -47,8 +49,9 @@ window.forms = {
      * @param {object} properties - The properties to set on the form
      * @param {object} targetContainer - The container to add the properties to
      * @param {string} [targetId] - Target Id ( widget, element, etc.)
+     * @param {boolean} [playlistId] - If widget, the playlistId
      */
-  createFields: function(properties, targetContainer, targetId) {
+  createFields: function(properties, targetContainer, targetId, playlistId) {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
         const property = properties[key];
@@ -125,9 +128,15 @@ window.forms = {
           property.commandSearchUrl = urlsForApi.command.search.url;
         }
 
+        // Playlist Mixer
+        if (property.type === 'playlistMixer') {
+          property.playlistId = playlistId;
+        }
+
         // dashboards available services
         if (property.type === 'connectorProperties') {
-          property.connectorPropertiesUrl = urlsForApi.connectorProperties.search.url.replace(':id', targetId)
+          property.connectorPropertiesUrl =
+            urlsForApi.connectorProperties.search.url.replace(':id', targetId);
           // If we don't have a value, set value key pair to null
           if (property.value == '') {
             property.initialValue = null;
@@ -291,7 +300,8 @@ window.forms = {
             return;
           }
 
-          const $orderClauseHiddenInput = $el.find('#' + $el.data('order-id'));
+          const $orderClauseHiddenInput =
+            $el.find('#input_' + $el.data('order-id'));
           const orderClauseValues = $orderClauseHiddenInput.val() ?
             JSON.parse(
               $orderClauseHiddenInput.val(),
@@ -434,7 +444,8 @@ window.forms = {
             return;
           }
 
-          const $selectHiddenInput = $el.find('#' + $el.data('select-id'));
+          const $selectHiddenInput =
+            $el.find('#input_' + $el.data('select-id'));
           const selectedValue = $selectHiddenInput.val() ?
             JSON.parse(
               $selectHiddenInput.val(),
@@ -540,7 +551,6 @@ window.forms = {
       }
     });
 
-
     // Dataset filter clause
     findElements(
       '.dataset-filter-clause',
@@ -570,7 +580,7 @@ window.forms = {
           }
 
           const $filterClauseHiddenInput =
-            $el.find('#' + $el.data('filter-id'));
+            $el.find('#input_' + $el.data('filter-id'));
           const filterClauseValues = $filterClauseHiddenInput.val() ?
             JSON.parse(
               $filterClauseHiddenInput.val(),
@@ -689,6 +699,265 @@ window.forms = {
           console.error(jqXHR, textStatus, errorThrown);
         });
       }
+    });
+
+    // Playlist mixer
+    findElements(
+      '.playlist-mixer',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+
+      /**
+       * Initialise a new row
+       * @param {object} $form
+       * @param {object} $row
+       */
+      function subplaylistInitRow($form, $row) {
+        const $select = $row.find('.subplaylist-id');
+
+        // Get the initial value.
+        if ($select.data('fieldId')) {
+          $.ajax({
+            method: 'GET',
+            url: urlsForApi.playlist.get.url +
+              '?playlistId=' + $select.data('fieldId'),
+            success: function(response) {
+              if (response.data && response.data.length > 0) {
+                // Append our initial option
+                $select.append('<option value="' + response.data[0].playlistId +
+                  '" data-tags="' + response.data[0].tags +
+                  '" selected>' + response.data[0].name + '</option>');
+
+                subplaylistInitSelect2($form, $select);
+              } else {
+                // No permissions.
+                $select.parent().append(
+                  '<input type="hidden" value="' +
+                  $select.data('fieldId') +
+                  '" name="subPlaylistId[]">' +
+                  '<span title="' +
+                    playlistMixerTranslations.noPermission +
+                  '">' +
+                  '<i class="fa fa-lock"></i>&nbsp;' +
+                    playlistMixerTranslations.playlistId + ' ' +
+                  $select.data('fieldId') + '</span>');
+                $select.remove();
+              }
+            },
+            error: function() {
+              $select.parent().append(
+                '{% trans "An unknown error has occurred. Please refresh" %}',
+              );
+            },
+          });
+        } else {
+          subplaylistInitSelect2($form, $select);
+        }
+
+        $row.find('select[name="subPlaylistIdSpotFill[]"]').select2({
+          templateResult: function(state) {
+            if (!state.id) {
+              return state.text;
+            }
+            return $(state.element).data().templateResult;
+          },
+          dropdownAutoWidth: true,
+          minimumResultsForSearch: -1,
+        });
+      }
+
+      /**
+       * Initialise the select2
+       * @param {object} $form
+       * @param {object} $el
+       */
+      function subplaylistInitSelect2($form, $el) {
+        $el.select2({
+          dropdownAutoWidth: true,
+          ajax: {
+            url: urlsForApi.playlist.get.url +
+              '?notPlaylistId=' + $form.data('playlistId'),
+            dataType: 'json',
+            data: function(params) {
+              const query = {
+                start: 0,
+                length: 10,
+                name: params.term,
+              };
+              if (params.page != null) {
+                query.start = (params.page - 1) * 10;
+              }
+              return query;
+            },
+            processResults: function(data, params) {
+              const results = [];
+
+              $.each(data.data, function(index, el) {
+                results.push({
+                  id: el.playlistId,
+                  text: el.name,
+                });
+              });
+
+              let page = params.page || 1;
+              page = (page > 1) ? page - 1 : page;
+
+              if (page === 1 && results.length <= 0) {
+                $form.find('.sub-playlist-no-playlists-message')
+                  .removeClass('d-none');
+              }
+
+              return {
+                results: results,
+                pagination: {
+                  more: (page * 10 < data.recordsTotal),
+                },
+              };
+            },
+          },
+        });
+      }
+
+      const $mixerHiddenInput =
+        $el.find('#input_' + $el.data('mixer-id'));
+
+      const mixerValues = $mixerHiddenInput.val() ?
+        JSON.parse(
+          $mixerHiddenInput.val(),
+        ) : [];
+
+      // Filter Clause
+      const $playlistItemsContainer = $el.find('.mixer-playlist-container');
+      if ($playlistItemsContainer.length == 0) {
+        return;
+      }
+
+      // Update the hidden field with a JSON string
+      // of the filter clauses
+      const updateHiddenField = function() {
+        const mixerItems = [];
+        $playlistItemsContainer.find('.subplaylist-item-row').each(function(
+          _index,
+          el,
+        ) {
+          const $el = $(el);
+          const subPlaylistId = $el.find('.subplaylist-id').val();
+          const subPlaylistIdSpots =
+            $el.find('.subplaylist-spots').val();
+          const subPlaylistIdSpotLength =
+            $el.find('.subplaylist-spots-length').val();
+          const subPlaylistIdSpotFill =
+            $el.find('.subplaylist-spots-fill').val();
+
+          if (subPlaylistId) {
+            mixerItems.push({
+              subPlaylistId: subPlaylistId,
+              subPlaylistIdSpots: subPlaylistIdSpots,
+              subPlaylistIdSpotLength: subPlaylistIdSpotLength,
+              subPlaylistIdSpotFill: subPlaylistIdSpotFill,
+            });
+          }
+        });
+
+        // Update the hidden field with a JSON string
+        $mixerHiddenInput.val(JSON.stringify(mixerItems));
+      };
+
+      // Clear existing fields
+      $playlistItemsContainer.empty();
+
+      // Add header template
+      const headerTemplate =
+        formHelpers.getTemplate('subPlaylistHeaderTemplate');
+      $playlistItemsContainer.append(headerTemplate({
+        trans: playlistMixerTranslations,
+      }));
+
+      // Get template
+      const subPlaylistFormTemplate =
+        formHelpers.getTemplate('subPlaylistFormTemplate');
+
+      if (mixerValues.length == 0) {
+        // Add a template row
+        const context = {
+          subPlaylistId: '',
+          subPlaylistIdSpots: '',
+          subPlaylistIdSpotLength: '',
+          subPlaylistIdSpotFill: '',
+          buttonGlyph: 'fa-plus',
+          fillTitle: playlistMixerTranslations.fillTitle,
+          padTitle: playlistMixerTranslations.padTitle,
+          repeatTitle: playlistMixerTranslations.repeatTitle,
+          fillHelpText: playlistMixerTranslations.fillHelpText,
+          padHelpText: playlistMixerTranslations.padHelpText,
+          repeatHelpText: playlistMixerTranslations.repeatHelpText,
+        };
+        $playlistItemsContainer.append(subPlaylistFormTemplate(context));
+      } else {
+        // For each of the existing codes, create form components
+        $.each(mixerValues, function(_index, field) {
+          const context = {
+            subPlaylistId: field.subPlaylistId,
+            subPlaylistIdSpots: field.subPlaylistIdSpots,
+            subPlaylistIdSpotLength: field.subPlaylistIdSpotLength,
+            subPlaylistIdSpotFill: field.subPlaylistIdSpotFill,
+            buttonGlyph: ((_index === 0) ? 'fa-plus' : 'fa-minus'),
+            fillTitle: playlistMixerTranslations.fillTitle,
+            padTitle: playlistMixerTranslations.padTitle,
+            repeatTitle: playlistMixerTranslations.repeatTitle,
+            fillHelpText: playlistMixerTranslations.fillHelpText,
+            padHelpText: playlistMixerTranslations.padHelpText,
+            repeatHelpText: playlistMixerTranslations.repeatHelpText,
+          };
+
+          $playlistItemsContainer.append(subPlaylistFormTemplate(context));
+        });
+      }
+
+      // Add or remove playlist item
+      $playlistItemsContainer.on('click', 'button', function(e) {
+        e.preventDefault();
+
+        // find the gylph
+        if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
+          const context = {
+            subPlaylistId: '',
+            subPlaylistIdSpots: '',
+            subPlaylistIdSpotLength: '',
+            subPlaylistIdSpotFill: '',
+            buttonGlyph: 'fa-minus',
+            fillTitle: playlistMixerTranslations.fillTitle,
+            padTitle: playlistMixerTranslations.padTitle,
+            repeatTitle: playlistMixerTranslations.repeatTitle,
+            fillHelpText: playlistMixerTranslations.fillHelpText,
+            padHelpText: playlistMixerTranslations.padHelpText,
+            repeatHelpText: playlistMixerTranslations.repeatHelpText,
+          };
+
+          const $newRow = $(subPlaylistFormTemplate(context))
+            .appendTo($playlistItemsContainer);
+
+          // Initialise row
+          subplaylistInitRow($el, $newRow);
+        } else {
+          // Remove this row
+          $(e.currentTarget).closest('.subplaylist-item-row').remove();
+        }
+
+        updateHiddenField();
+      });
+
+      // Initialise all rows
+      $playlistItemsContainer.find('.subplaylist-item-row')
+        .each(function(_index, element) {
+          subplaylistInitRow($el, $(element));
+        });
+
+      // Update the hidden field when the item changes
+      $el.on('change', 'select, input', function() {
+        updateHiddenField();
+      });
     });
 
     // Code editor
@@ -1310,8 +1579,9 @@ window.forms = {
      * @param {object} container - The form container
      * @param {object} baseObject - The base object
      * @param {string} targetId - The target id
+     * @param {boolean} isTopLevel - Is the target parent top level
      */
-  setConditions: function(container, baseObject, targetId) {
+  setConditions: function(container, baseObject, targetId, isTopLevel = true) {
     $(container).find('.xibo-form-input[data-visibility]')
       .each(function(_idx, el) {
         let visibility = $(el).data('visibility');
@@ -1352,6 +1622,7 @@ window.forms = {
                 condition.type,
                 condition.value,
                 conditionTargetValue,
+                isTopLevel,
               );
 
               // If there are multiple conditions
