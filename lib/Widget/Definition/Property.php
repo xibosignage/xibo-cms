@@ -24,6 +24,7 @@ namespace Xibo\Widget\Definition;
 
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\ValueTooLargeException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -124,7 +125,7 @@ class Property implements \JsonSerializable
     /**
      * Add a data pair
      * @param string $name
-     * @param string $title
+     * @param string $value
      * @return $this
      */
     public function addData(string $name, string $value): Property
@@ -220,9 +221,14 @@ class Property implements \JsonSerializable
     /**
      * @return \Xibo\Widget\Definition\Property
      * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ValueTooLargeException
      */
     public function validate(): Property
     {
+        if (strlen($this->value) > 67108864) {
+            throw new ValueTooLargeException(__('Value too large for %s', $this->id), $this->id);
+        }
+
         foreach ($this->validation as $validation) {
             switch ($validation) {
                 case 'required':
@@ -293,7 +299,6 @@ class Property implements \JsonSerializable
                 }
 
             case 'code':
-                return $params->getParam($key);
             case 'richText':
                 return $params->getParam($key);
             case 'input':

@@ -43,7 +43,7 @@
         <property type="message">
             <title>Setting Spots to 0 will omit the first Playlist from the play order, and will be used as a Spot Fill option.</title>
         </property>
-        <property id="playlists" type="playlistMixer">
+        <property id="subPlaylists" type="playlistMixer">
             <default>[]</default>
         </property>
         <property id="arrangement" type="dropdown" mode="single">

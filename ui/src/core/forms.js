@@ -1,7 +1,7 @@
-/* eslint-disable new-cap */
-/**
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/* eslint-disable new-cap */
 // Common functions/tools
 const Common = require('../editor-core/common.js');
 
@@ -755,7 +755,7 @@ window.forms = {
           subplaylistInitSelect2($form, $select);
         }
 
-        $row.find('select[name="subPlaylistIdSpotFill[]"]').select2({
+        $row.find('select[name="spotFill[]"]').select2({
           templateResult: function(state) {
             if (!state.id) {
               return state.text;
@@ -842,20 +842,21 @@ window.forms = {
           el,
         ) {
           const $el = $(el);
-          const subPlaylistId = $el.find('.subplaylist-id').val();
-          const subPlaylistIdSpots =
+          const playlistId = $el.find('.subplaylist-id').val();
+          const spots =
             $el.find('.subplaylist-spots').val();
-          const subPlaylistIdSpotLength =
+          const spotLength =
             $el.find('.subplaylist-spots-length').val();
-          const subPlaylistIdSpotFill =
+          const spotFill =
             $el.find('.subplaylist-spots-fill').val();
 
-          if (subPlaylistId) {
+          if (playlistId) {
             mixerItems.push({
-              subPlaylistId: subPlaylistId,
-              subPlaylistIdSpots: subPlaylistIdSpots,
-              subPlaylistIdSpotLength: subPlaylistIdSpotLength,
-              subPlaylistIdSpotFill: subPlaylistIdSpotFill,
+              rowNo: _index + 1,
+              playlistId: playlistId,
+              spots: spots,
+              spotLength: spotLength,
+              spotFill: spotFill,
             });
           }
         });
@@ -881,10 +882,10 @@ window.forms = {
       if (mixerValues.length == 0) {
         // Add a template row
         const context = {
-          subPlaylistId: '',
-          subPlaylistIdSpots: '',
-          subPlaylistIdSpotLength: '',
-          subPlaylistIdSpotFill: '',
+          playlistId: '',
+          spots: '',
+          spotLength: '',
+          spotFill: '',
           buttonGlyph: 'fa-plus',
           fillTitle: playlistMixerTranslations.fillTitle,
           padTitle: playlistMixerTranslations.padTitle,
@@ -898,10 +899,10 @@ window.forms = {
         // For each of the existing codes, create form components
         $.each(mixerValues, function(_index, field) {
           const context = {
-            subPlaylistId: field.subPlaylistId,
-            subPlaylistIdSpots: field.subPlaylistIdSpots,
-            subPlaylistIdSpotLength: field.subPlaylistIdSpotLength,
-            subPlaylistIdSpotFill: field.subPlaylistIdSpotFill,
+            playlistId: field.playlistId,
+            spots: field.spots,
+            spotLength: field.spotLength,
+            spotFill: field.spotFill,
             buttonGlyph: ((_index === 0) ? 'fa-plus' : 'fa-minus'),
             fillTitle: playlistMixerTranslations.fillTitle,
             padTitle: playlistMixerTranslations.padTitle,
@@ -922,9 +923,9 @@ window.forms = {
         // find the gylph
         if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
           const context = {
-            subPlaylistId: '',
-            subPlaylistIdSpots: '',
-            subPlaylistIdSpotLength: '',
+            playlistId: '',
+            spots: '',
+            spotLength: '',
             subPlaylistIdSpotFill: '',
             buttonGlyph: 'fa-minus',
             fillTitle: playlistMixerTranslations.fillTitle,
