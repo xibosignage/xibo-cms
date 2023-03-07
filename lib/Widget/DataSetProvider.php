@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget;
@@ -25,6 +26,7 @@ namespace Xibo\Widget;
 use Carbon\Carbon;
 use Xibo\Event\DataSetDataRequestEvent;
 use Xibo\Event\DataSetModifiedDtRequestEvent;
+use Xibo\Event\DataSetSnippetsRequestEvent;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -69,6 +71,22 @@ class DataSetProvider implements WidgetProviderInterface
             return max($event->getModifiedDt(), $dataProvider->getWidgetModifiedDt());
         } else {
             return null;
+        }
+    }
+
+    public function getSnippets(DataProviderInterface $dataProvider): array
+    {
+        $dataSetId = $dataProvider->getProperty('dataSetId');
+
+        $this->getLog()->debug('getSnippets: DataSetProvider with dataSetId: ' . $dataSetId);
+
+        if ($dataSetId !== null) {
+            // Raise an event to get the modifiedDt of this dataSet
+            $event = new DataSetSnippetsRequestEvent($dataProvider);
+            $this->getDispatcher()->dispatch($event, DataSetSnippetsRequestEvent::$NAME);
+            return $event->getSnippets();
+        } else {
+            return [];
         }
     }
 }

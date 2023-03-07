@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget\Provider;
@@ -94,4 +95,11 @@ interface WidgetProviderInterface
      * @return \Carbon\Carbon|null
      */
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon;
+
+    /**
+     * Get Snippets for use in templates
+     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @return array a string array of snippets
+     */
+    public function getSnippets(DataProviderInterface $dataProvider): array;
 }

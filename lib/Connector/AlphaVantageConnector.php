@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Connector;
@@ -27,6 +28,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Event\WidgetSnippetsRequestEvent;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -43,6 +45,7 @@ class AlphaVantageConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(WidgetSnippetsRequestEvent::$NAME, [$this, 'onSnippetsRequest']);
         return $this;
     }
 
@@ -113,6 +116,44 @@ class AlphaVantageConnector implements ConnectorInterface
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
             }
+        }
+    }
+
+    /**
+     * @param \Xibo\Event\WidgetSnippetsRequestEvent $event
+     * @return void
+     */
+    public function onSnippetsRequest(WidgetSnippetsRequestEvent $event)
+    {
+        if ($event->getDataType() === 'stock') {
+            $event->addSnippets([
+                'Name',
+                'Symbol',
+                'time',
+                'LastTradePriceOnly',
+                'RawLastTradePriceOnly',
+                'YesterdayTradePriceOnly',
+                'RawYesterdayTradePriceOnly',
+                'TimeZone',
+                'Currency',
+                'Change',
+                'SymbolTrimmed',
+            ]);
+        } else if ($event->getDataType() === 'currency') {
+            $event->addSnippets([
+                'time',
+                'ToName',
+                'FromName',
+                'Bid',
+                'Ask',
+                'LastTradePriceOnly',
+                'RawLastTradePriceOnly',
+                'TimeZone',
+                'Name',
+                'NameShort',
+                'YesterdayTradePriceOnly',
+                'Change',
+            ]);
         }
     }
 
