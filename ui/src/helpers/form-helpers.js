@@ -9,8 +9,8 @@ const templates = {
     require('../templates/form-helpers-data-set-filter-clause.hbs'),
   subPlaylistFormTemplate:
     require('../templates/form-helpers-sub-playlist-form.hbs'),
-  subPlaylistHeaderTemplate:
-    require('../templates/form-helpers-sub-playlist-header.hbs'),
+  subPlaylistContainerTemplate:
+    require('../templates/form-helpers-sub-playlist-container.hbs'),
   twittermetroColorsTemplate:
     require('../templates/form-helpers-twitter-metro-colors.hbs'),
   chartColorsTemplate:
@@ -261,6 +261,14 @@ const formHelpers = function() {
       // Append message to the form
       $(form).append(html);
     }
+  };
+
+  /**
+   * Clear all error messages from form
+   * @param {object} form
+   */
+  this.clearErrorMessage = function(form) {
+    $(form).find('#errorMessage').remove();
   };
 
   /**
