@@ -1570,6 +1570,7 @@ class Widget extends Base
 
         // Does this widget have a data type?
         $module = $this->moduleFactory->getByType($widget->type);
+        $module->decorateProperties($widget, true);
 
         // Does this module have a data type?
         if ($module->isWidgetProviderAvailable() || $module->isDataProviderExpected()) {

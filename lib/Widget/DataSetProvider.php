@@ -26,6 +26,7 @@ namespace Xibo\Widget;
 use Carbon\Carbon;
 use Xibo\Event\DataSetDataRequestEvent;
 use Xibo\Event\DataSetModifiedDtRequestEvent;
+use Xibo\Event\DataSetSnippetsRequestEvent;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -75,10 +76,15 @@ class DataSetProvider implements WidgetProviderInterface
 
     public function getSnippets(DataProviderInterface $dataProvider): array
     {
-        $this->getLog()->debug('getSnippets: DataSetProvider');
         $dataSetId = $dataProvider->getProperty('dataSetId');
-        if ($dataSetId !== null) {
 
+        $this->getLog()->debug('getSnippets: DataSetProvider with dataSetId: ' . $dataSetId);
+
+        if ($dataSetId !== null) {
+            // Raise an event to get the modifiedDt of this dataSet
+            $event = new DataSetSnippetsRequestEvent($dataProvider);
+            $this->getDispatcher()->dispatch($event, DataSetSnippetsRequestEvent::$NAME);
+            return $event->getSnippets();
         } else {
             return [];
         }
