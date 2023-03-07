@@ -181,12 +181,19 @@ $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Get items
-var items = $(target).find(".template-item");
+var templateItems = $(target).find(".template-item");
 
 // Get body
 var body = $(target).find(".template-container");
 
-$(target).find("#content").xiboFinanceRender(properties, items, body);
+// Run only if there are items
+if (templateItems.length > 0) {
+    // Render items
+    $(target).find("#content").xiboFinanceRender(properties, templateItems, body);
+} else {
+    // Hide container
+    $(body).hide();
+}
         ]]></onTemplateRender>
         <assets>
             <asset id="currencies1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/currencies1.png"></asset>
@@ -222,8 +229,10 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
             <height id="height">420</height>
             <hbs><![CDATA[
 <div class="row-finance template-item">
-     <div class="flags">
-        <img class="img-circle center-block" src="{{CurrencyFlag}}">
+    <div class="flags">
+      <div class="img-circle center-block flag-icon-container">
+        <img src="[[assetId=flags]]" class="flag-icon flag-icon-{{NameShort}}">
+      </div>
     </div>
     <div class="name value">{{NameShort}}</div>
     <div class="price value">{{RawLastTradePriceOnly}}</div>
@@ -237,6 +246,8 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
   </div>
 </div>
 
+<link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen">
+
 <style>
 body {
   width: 820px !important;
@@ -246,7 +257,9 @@ body {
 }
 
 .img-circle {
-  width: 52px;
+    border-radius: 50%;
+    vertical-align: middle;
+    border: 0;
 }
 
 .container-main {
@@ -379,16 +392,18 @@ body {
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
-// Get items
-var items = $(target).find(".template-item");
+// Get template items
+var templateItems = $(target).find(".template-item");
 
 // Get body
 var body = $(target).find(".template-container");
 
-$(target).find("#content").xiboFinanceRender(properties, items, body);
+$(target).find("#content").xiboFinanceRender(properties, templateItems, body);
         ]]></onTemplateRender>
         <assets>
             <asset id="currencies2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/currencies2.png"></asset>
+            <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>
+            <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css"></asset>
         </assets>
     </template>
 </templates>
