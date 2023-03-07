@@ -869,9 +869,9 @@ window.forms = {
       $playlistItemsContainer.empty();
 
       // Add header template
-      const headerTemplate =
-        formHelpers.getTemplate('subPlaylistHeaderTemplate');
-      $playlistItemsContainer.append(headerTemplate({
+      const containerTemplate =
+        formHelpers.getTemplate('subPlaylistContainerTemplate');
+      $playlistItemsContainer.append(containerTemplate({
         trans: playlistMixerTranslations,
       }));
 
@@ -886,7 +886,6 @@ window.forms = {
           spots: '',
           spotLength: '',
           spotFill: '',
-          buttonGlyph: 'fa-plus',
           fillTitle: playlistMixerTranslations.fillTitle,
           padTitle: playlistMixerTranslations.padTitle,
           repeatTitle: playlistMixerTranslations.repeatTitle,
@@ -894,7 +893,8 @@ window.forms = {
           padHelpText: playlistMixerTranslations.padHelpText,
           repeatHelpText: playlistMixerTranslations.repeatHelpText,
         };
-        $playlistItemsContainer.append(subPlaylistFormTemplate(context));
+        $playlistItemsContainer.find('.subplaylist-items-content')
+          .append(subPlaylistFormTemplate(context));
       } else {
         // For each of the existing codes, create form components
         $.each(mixerValues, function(_index, field) {
@@ -903,7 +903,6 @@ window.forms = {
             spots: field.spots,
             spotLength: field.spotLength,
             spotFill: field.spotFill,
-            buttonGlyph: ((_index === 0) ? 'fa-plus' : 'fa-minus'),
             fillTitle: playlistMixerTranslations.fillTitle,
             padTitle: playlistMixerTranslations.padTitle,
             repeatTitle: playlistMixerTranslations.repeatTitle,
@@ -912,12 +911,13 @@ window.forms = {
             repeatHelpText: playlistMixerTranslations.repeatHelpText,
           };
 
-          $playlistItemsContainer.append(subPlaylistFormTemplate(context));
+          $playlistItemsContainer.find('.subplaylist-items-content')
+            .append(subPlaylistFormTemplate(context));
         });
       }
 
       // Add or remove playlist item
-      $playlistItemsContainer.on('click', 'button', function(e) {
+      $playlistItemsContainer.on('click', '.subplaylist-item-btn', function(e) {
         e.preventDefault();
 
         // find the gylph
@@ -927,7 +927,6 @@ window.forms = {
             spots: '',
             spotLength: '',
             subPlaylistIdSpotFill: '',
-            buttonGlyph: 'fa-minus',
             fillTitle: playlistMixerTranslations.fillTitle,
             padTitle: playlistMixerTranslations.padTitle,
             repeatTitle: playlistMixerTranslations.repeatTitle,
@@ -937,7 +936,9 @@ window.forms = {
           };
 
           const $newRow = $(subPlaylistFormTemplate(context))
-            .appendTo($playlistItemsContainer);
+            .appendTo(
+              $playlistItemsContainer.find('.subplaylist-items-content'),
+            );
 
           // Initialise row
           subplaylistInitRow($el, $newRow);
@@ -958,6 +959,17 @@ window.forms = {
       // Update the hidden field when the item changes
       $el.on('change', 'select, input', function() {
         updateHiddenField();
+      });
+
+      // Make the playlist items sortable
+      $playlistItemsContainer.sortable({
+        axis: 'y',
+        items: '.subplaylist-item-row',
+        handle: '.subplaylist-item-sort',
+        containment: 'parent',
+        update: function() {
+          updateHiddenField();
+        },
       });
     });
 

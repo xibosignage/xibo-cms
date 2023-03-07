@@ -173,13 +173,17 @@
 
 // Playlist mixer
 .playlist-mixer {
-    .subplaylist-item-row, .subplaylist-item-row-header {
+    .mixer-playlist-container {
+        padding: 0.4rem 0.2rem 0 0.2rem !important;
+    }
+
+    .subplaylist-item-row, .subplaylist-items-header {
         & > * {
-            margin-right: 4px;
+            margin-right: 2px;
         }
 
         .subplaylist-id-container-header {
-            margin-left: 40px;
+            margin-left: 70px;
         }
 
         .subplaylist-spots-container, .subplaylist-spots-length-container {
@@ -202,5 +206,14 @@
                 min-width: 100% !important;
             }
         }
+    }
+
+    .subplaylist-items-footer {
+        position: sticky;
+        left: 0;
+        bottom: 0;
+        padding: 10px;
+        width: 100%;
+        text-align: center !important;
     }
 }
