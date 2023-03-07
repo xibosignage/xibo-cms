@@ -97,6 +97,9 @@ PropertiesPanel.prototype.save = function(element) {
       // Success
       app.common.hideLoadingScreen();
 
+      // Clear error message
+      formHelpers.clearErrorMessage(form);
+
       const resultMessage = res.message;
 
       const reloadData = function() {
@@ -530,7 +533,8 @@ PropertiesPanel.prototype.saveRegion = function() {
         upload: true, // options.upload
       },
     ).then((res) => { // Success
-      toastr.success(res.message);
+      // Clear error message
+      formHelpers.clearErrorMessage(form);
     }).catch((error) => { // Fail/error
       // Show error returned or custom message to the user
       let errorMessage = '';
