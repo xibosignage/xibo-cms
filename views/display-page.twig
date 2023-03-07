@@ -462,7 +462,7 @@
                                 return data.thumbnail;
 
                             if (data.thumbnail != "") {
-                                return '<a class="display-screenshot-container" data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
+                                return '<a class="display-screenshot-container" data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" data-client-code="'+ data.clientCode +'" /></a>';
                             }
                             else {
                                 return "";
@@ -1538,6 +1538,7 @@
         $('body').on('click', '.display-screenshot', function(el) {
             var displayId = el.target.dataset.displayId;
             var displayType = el.target.dataset.type;
+            var clientCode = el.target.dataset.clientCode;
 
             var statusWindowData = {};
 
@@ -1548,7 +1549,7 @@
                 success: function (data) {
                     if (data != null) {
                         // do some processing on data received from webOS and Tizen Players.
-                        if (displayType === 'webOS' || displayType === 'sssp') {
+                        if (clientCode < 400 && (displayType === 'webOS' || displayType === 'sssp')) {
                             data.logMessagesArray = JSON.stringify(data.logMessagesArray);
                             data.allLayouts = JSON.stringify(data.allLayouts);
                             data.scheduledLayouts = JSON.stringify(data.scheduledLayouts);
