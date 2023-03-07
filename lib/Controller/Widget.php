@@ -1552,12 +1552,12 @@ class Widget extends Base
      * )
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
-     * @param string $id the widgetId
+     * @param int $id the widgetId
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getSnippets(Request $request, Response $response, string $id): Response
+    public function getSnippets(Request $request, Response $response, int $id): Response
     {
         if (empty($id)) {
             throw new InvalidArgumentException(__('Please provide a widgetId'), 'id');

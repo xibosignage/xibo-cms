@@ -77,7 +77,7 @@ class DataSetDataProviderListener
 
     public function onDataRequest(DataSetDataRequestEvent $event)
     {
-        $this->getLogger()->error('onDataRequest: data source is ' . $event->getDataProvider()->getDataSource());
+        $this->getLogger()->debug('onDataRequest: data source is ' . $event->getDataProvider()->getDataSource());
 
         $dataProvider = $event->getDataProvider();
 
@@ -117,7 +117,7 @@ class DataSetDataProviderListener
             return;
         }
 
-        $this->getLogger()->error('onSnippetsRequest: with dataSetId: ' . $dataSetId);
+        $this->getLogger()->debug('onSnippetsRequest: with dataSetId: ' . $dataSetId);
 
         // Get this dataset
         try {
@@ -135,7 +135,7 @@ class DataSetDataProviderListener
 
     public function onModifiedDtRequest(DataSetModifiedDtRequestEvent $event)
     {
-        $this->getLogger()->error('onModifiedDtRequest: get modifiedDt with dataSetId: ' . $event->getDataSetId());
+        $this->getLogger()->debug('onModifiedDtRequest: get modifiedDt with dataSetId: ' . $event->getDataSetId());
 
         try {
             $dataSet = $this->dataSetFactory->getById($event->getDataSetId());
