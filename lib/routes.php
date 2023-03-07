@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 use Slim\Routing\RouteCollectorProxy;
@@ -236,6 +237,7 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->delete('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudioDelete']);
     $group->put('/{id}/expiry', ['\Xibo\Controller\Widget','widgetExpiry'])->setName('module.widget.expiry');
     $group->put('/{id}/elements', ['\Xibo\Controller\Widget','saveElements'])->setName('module.widget.elements');
+    $group->get('/{id}/snippets', ['\Xibo\Controller\Widget','getSnippets'])->setName('module.widget.snippets');
 
     // Drawer widgets Region
     $group->put('/{id}/target', ['\Xibo\Controller\Widget','widgetSetRegion'])->setName('module.widget.set.region');
@@ -613,8 +615,10 @@ $app->get('/module/templates/{dataType}', [
     '\Xibo\Controller\Module', 'templateGrid'
 ])->setName('module.template.search');
 
-$app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
-    ->setName('module.asset.download');
+$app->get('/module/asset/{assetId}', [
+    '\Xibo\Controller\Module',
+    'assetDownload',
+])->setName('module.asset.download');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/module/settings/{id}', ['\Xibo\Controller\Module','settings'])->setName('module.settings');

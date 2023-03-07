@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget\DataType;
@@ -107,5 +108,10 @@ class Forecast implements \JsonSerializable
             'windSpeedUnit' => $this->windSpeedUnit,
             'visibilityDistanceUnit' => $this->visibilityDistanceUnit
         ];
+    }
+
+    public static function getSnippets(): array
+    {
+        return array_keys((new Forecast())->jsonSerialize());
     }
 }

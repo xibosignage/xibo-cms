@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Controller;
@@ -25,11 +26,11 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
+use Xibo\Event\WidgetSnippetsRequestEvent;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -1525,5 +1526,74 @@ class Widget extends Base
         $this->getState()->setData($options);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}/snippets",
+     *  operationId="widgetGetSnippets",
+     *  tags={"widget"},
+     *  summary="Get Snippets for a Widget",
+     *  description="Get an array of snippets for a Widget",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="Id of the Widget",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\RequestBody(
+     *      description="JSON array of snippet strings"
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @param string $id the widgetId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getSnippets(Request $request, Response $response, string $id): Response
+    {
+        if (empty($id)) {
+            throw new InvalidArgumentException(__('Please provide a widgetId'), 'id');
+        }
+
+        $snippets = [];
+
+        // Load the widget
+        $widget = $this->widgetFactory->loadByWidgetId($id);
+
+        // Does this widget have a data type?
+        $module = $this->moduleFactory->getByType($widget->type);
+
+        // Does this module have a data type?
+        if ($module->isWidgetProviderAvailable() || $module->isDataProviderExpected()) {
+            $this->getLog()->debug('getSnippets: using widget system to get snippets for widgetId: '. $widget->widgetId);
+
+            $dataProvider = $module->createDataProvider($widget);
+            $dataProvider->setMediaFactory($this->mediaFactory);
+            $dataProvider->setDisplayProperties(
+                $this->getConfig()->getSetting('DEFAULT_LAT'),
+                $this->getConfig()->getSetting('DEFAULT_LONG')
+            );
+
+            $widgetInterface = $module->getWidgetProviderOrNull();
+            if ($widgetInterface !== null) {
+                $snippets = $widgetInterface->getSnippets($dataProvider);
+            } else {
+                // Use an event
+                $widgetSnippetsEvent = new WidgetSnippetsRequestEvent($dataProvider);
+                $this->getDispatcher()->dispatch($widgetSnippetsEvent, WidgetSnippetsRequestEvent::$NAME);
+                $snippets = $widgetSnippetsEvent->getSnippets();
+            }
+        }
+
+        // The asset can serve itself.
+        return $response->withJson($snippets);
     }
 }

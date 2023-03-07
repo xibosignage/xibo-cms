@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget;
@@ -56,5 +57,10 @@ class DashboardProvider implements WidgetProviderInterface
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
     {
         return null;
+    }
+
+    public function getSnippets(DataProviderInterface $dataProvider): array
+    {
+        return [];
     }
 }
