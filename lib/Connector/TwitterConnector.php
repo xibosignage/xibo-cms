@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Connector;
@@ -28,7 +27,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\WidgetDataRequestEvent;
-use Xibo\Event\WidgetSnippetsRequestEvent;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\DataType\SocialMedia;
@@ -44,7 +42,6 @@ class TwitterConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
-        $dispatcher->addListener(WidgetSnippetsRequestEvent::$NAME, [$this, 'onSnippetsRequest']);
         return $this;
     }
 
@@ -179,13 +176,6 @@ class TwitterConnector implements ConnectorInterface
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onDataRequest: Failed to get feed. e = ' . $exception->getMessage());
             }
-        }
-    }
-
-    public function onSnippetsRequest(WidgetSnippetsRequestEvent $event)
-    {
-        if ($event->getDataType() === 'social-media') {
-            $event->addSnippets(SocialMedia::getSnippets());
         }
     }
 

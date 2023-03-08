@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Listener;
@@ -27,13 +26,14 @@ use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Event\DataSetDataRequestEvent;
+use Xibo\Event\DataSetDataTypeRequestEvent;
 use Xibo\Event\DataSetModifiedDtRequestEvent;
-use Xibo\Event\DataSetSnippetsRequestEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\DataType;
 use Xibo\Widget\Provider\DataProviderInterface;
 
 /**
@@ -70,7 +70,7 @@ class DataSetDataProviderListener
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): DataSetDataProviderListener
     {
         $dispatcher->addListener(DataSetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
-        $dispatcher->addListener(DataSetSnippetsRequestEvent::$NAME, [$this, 'onSnippetsRequest']);
+        $dispatcher->addListener(DataSetDataTypeRequestEvent::$NAME, [$this, 'onDataTypeRequest']);
         $dispatcher->addListener(DataSetModifiedDtRequestEvent::$NAME, [$this, 'onModifiedDtRequest']);
         return $this;
     }
@@ -103,32 +103,41 @@ class DataSetDataProviderListener
     }
 
     /**
-     * @param \Xibo\Event\DataSetSnippetsRequestEvent $event
+     * @param \Xibo\Event\DataSetDataTypeRequestEvent $event
      * @return void
      */
-    public function onSnippetsRequest(DataSetSnippetsRequestEvent $event)
+    public function onDataTypeRequest(DataSetDataTypeRequestEvent $event)
     {
-        $dataProvider = $event->getDataProvider();
-
         // We must have a dataSetId configured.
-        $dataSetId = $dataProvider->getProperty('dataSetId', 0);
+        $dataSetId = $event->getDataSetId();
         if (empty($dataSetId)) {
-            $this->getLogger()->debug('onSnippetsRequest: no dataSetId.');
+            $this->getLogger()->debug('onDataTypeRequest: no dataSetId.');
             return;
         }
 
-        $this->getLogger()->debug('onSnippetsRequest: with dataSetId: ' . $dataSetId);
+        $this->getLogger()->debug('onDataTypeRequest: with dataSetId: ' . $dataSetId);
 
         // Get this dataset
         try {
             $dataSet = $this->dataSetFactory->getById($dataSetId);
 
+            // Create a new DataType for this DataSet
+            $dataType = new DataType();
+            $dataType->id = 'dataset';
+            $dataType->name = $dataSet->dataSet;
+
             // Get the columns for this dataset and return a list of them
             foreach ($dataSet->getColumn() as $column) {
-                $event->addSnippet($column->heading . '|' . $column->dataSetColumnId);
+                $dataType->addField(
+                    $column->heading . '|' . $column->dataSetColumnId,
+                    $column->dataType,
+                    $column->heading
+                );
             }
+
+            $event->setDataType($dataType);
         } catch (NotFoundException $notFoundException) {
-            $this->getLogger()->error('onSnippetsRequest: dataSetId ' . $dataSetId . ' not found.');
+            $this->getLogger()->error('onDataTypeRequest: dataSetId ' . $dataSetId . ' not found.');
             return;
         }
     }

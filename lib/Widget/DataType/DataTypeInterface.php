@@ -20,25 +20,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget\Definition;
+namespace Xibo\Widget\DataType;
+
+use Xibo\Widget\Definition\DataType;
 
 /**
- * Data
- * used to add metadata to an input field
+ * A class representation of a data type.
  */
-class Data implements \JsonSerializable
+interface DataTypeInterface
 {
-    public $name;
-    public $value;
-
     /**
-     * @inheritDoc
+     * Return the definition
+     * @return \Xibo\Widget\Definition\DataType
      */
-    public function jsonSerialize()
-    {
-        return [
-            'name' => $this->name,
-            'value' => $this->value
-        ];
-    }
+    public function getDefinition(): DataType;
 }

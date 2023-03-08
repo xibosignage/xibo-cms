@@ -1,0 +1,70 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<datatypes>
+    <datatype>
+        <id>stock</id>
+        <name>Stock Quote</name>
+        <fields>
+            <field id="Name" type="text">
+                <title>Name of the Widget</title>
+            </field>
+            <field id="Symbol" type="text">
+                <title>Stock Symbol</title>
+            </field>
+            <field id="time" type="datetime">
+                <title>The time this quote was last refreshed</title>
+            </field>
+            <field id="LastTradePriceOnly" type="number">
+                <title>Closing rate (4dp)</title>
+            </field>
+            <field id="RawLastTradePriceOnly" type="number">
+                <title>Closing rate (4dp)</title>
+            </field>
+            <field id="YesterdayTradePriceOnly" type="number">
+                <title>Opening rate</title>
+            </field>
+            <field id="RawYesterdayTradePriceOnly" type="number">
+                <title>Opening rate</title>
+            </field>
+            <field id="TimeZone" type="text">
+                <title>The timezone the stock is listed in</title>
+            </field>
+            <field id="Currency" type="text">
+                <title>The currency the stock is listed in</title>
+            </field>
+            <field id="Change" type="number">
+                <title>The value change between the current and prior value</title>
+            </field>
+            <field id="ChangePercentage" type="number">
+                <title>The percentage change between the current and prior value</title>
+            </field>
+            <field id="ChangeIcon" type="text">
+                <title>Icon representing the direction of change, up-arrow or down-arrow</title>
+            </field>
+            <field id="ChangeStyle" type="text">
+                <title>Style representing the direction of change, value-down or value-up</title>
+            </field>
+            <field id="SymbolTrimmed" type="text">
+                <title>If the symbol has a . return the first part before the .</title>
+            </field>
+        </fields>
+    </datatype>
+</datatypes>

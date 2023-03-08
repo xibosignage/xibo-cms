@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,15 +18,16 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\DataType;
 
+use Xibo\Widget\Definition\DataType;
+
 /**
  * An article, usually from a blog or news feed.
  */
-class Article implements \JsonSerializable
+class Article implements \JsonSerializable, DataTypeInterface
 {
     public static $NAME = 'article';
     public $title;
@@ -59,8 +60,21 @@ class Article implements \JsonSerializable
         ];
     }
 
-    public static function getSnippets(): array
+    public function getDefinition(): DataType
     {
-        return ['title', 'summary', 'content', 'author', 'permalink', 'link', 'date', 'publishedDate', 'image'];
+        $dataType = new DataType();
+        $dataType->id = self::$NAME;
+        $dataType->name = __('Article');
+        $dataType
+            ->addField('title', __('Title'), 'text')
+            ->addField('summary', __('Summary'), 'text')
+            ->addField('content', __('Content'), 'text')
+            ->addField('author', __('Author'), 'text')
+            ->addField('permalink', __('Permalink'), 'text')
+            ->addField('link', __('Link'), 'text')
+            ->addField('date', __('Created Date'), 'datetime')
+            ->addField('publishedDate', __('Published Date'), 'datetime')
+            ->addField('image', __('Image'), 'text');
+        return $dataType;
     }
 }

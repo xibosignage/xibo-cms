@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,15 +18,16 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\DataType;
 
+use Xibo\Widget\Definition\DataType;
+
 /**
  * Social Media DataType
  */
-class SocialMedia implements \JsonSerializable
+class SocialMedia implements \JsonSerializable, DataTypeInterface
 {
     public static $NAME = 'social-media';
     public $text;
@@ -55,18 +56,21 @@ class SocialMedia implements \JsonSerializable
         ];
     }
 
-    public static function getSnippets(): array
+    public function getDefinition(): DataType
     {
-        return [
-            'text',
-            'user',
-            'userProfileImage',
-            'userProfileImageMini',
-            'userProfileImageBigger',
-            'location',
-            'screenName',
-            'date',
-            'photo',
-        ];
+        $dataType = new DataType();
+        $dataType->id = self::$NAME;
+        $dataType->name = __('Social Media');
+        $dataType
+            ->addField('text', __('Text'), 'text')
+            ->addField('user', __('User'), 'text')
+            ->addField('userProfileImage', __('Profile Image'), 'image')
+            ->addField('userProfileImageMini', __('Mini Profile Image'), 'image')
+            ->addField('userProfileImageBigger', __('Bigger Profile Image'), 'image')
+            ->addField('location', __('Location'), 'text')
+            ->addField('screenName', __('Screen Name'), 'text')
+            ->addField('date', __('Date'), 'datetime')
+            ->addField('photo', __('Photo'), 'image');
+        return $dataType;
     }
 }

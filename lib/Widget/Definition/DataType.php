@@ -23,22 +23,33 @@
 namespace Xibo\Widget\Definition;
 
 /**
- * Data
- * used to add metadata to an input field
+ * A module data type
  */
-class Data implements \JsonSerializable
+class DataType implements \JsonSerializable
 {
+    public $id;
     public $name;
-    public $value;
 
-    /**
-     * @inheritDoc
-     */
+    /** @var \Xibo\Widget\Definition\Field[] */
+    public $fields = [];
+
+    public function addField(string $id, string $type, string $title): DataType
+    {
+        $field = new Field();
+        $field->id = $id;
+        $field->type = $type;
+        $field->title = $title;
+        $this->fields[] = $field;
+        return $this;
+    }
+
+    /** @inheritDoc */
     public function jsonSerialize()
     {
         return [
+            'id' => $this->id,
             'name' => $this->name,
-            'value' => $this->value
+            'fields' => $this->fields,
         ];
     }
 }
