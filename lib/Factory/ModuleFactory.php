@@ -29,7 +29,9 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\DataType\DataTypeInterface;
 use Xibo\Widget\Definition\Asset;
+use Xibo\Widget\Definition\DataType;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProvider;
@@ -48,6 +50,9 @@ class ModuleFactory extends BaseFactory
 
     /** @var Module[] all modules */
     private $modules = null;
+
+    /** @var \Xibo\Widget\Definition\DataType[] */
+    private $dataTypes = null;
 
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
@@ -330,6 +335,32 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
+     * @param string $dataTypeId
+     * @return \Xibo\Widget\Definition\DataType
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getDataTypeById(string $dataTypeId): DataType
+    {
+        // Rely on a class if we have one.
+        $className = '\\Xibo\\Widget\\DataType\\' . ucfirst($dataTypeId);
+        if (class_exists($className)) {
+            $class = new $className();
+            if ($class instanceof DataTypeInterface) {
+                return ($class->getDefinition());
+            }
+        }
+
+        // Otherwise look in our XML definitions
+        foreach ($this->loadDataTypes() as $dataType) {
+            if ($dataType->id === $dataTypeId) {
+                return $dataType;
+            }
+        }
+
+        throw new NotFoundException(__('DataType not found'));
+    }
+
+    /**
      * @param string $assetId
      * @return \Xibo\Widget\Definition\Asset
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -400,7 +431,7 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * Load all modules into an array for use throughout this quest
+     * Load all modules into an array for use throughout this request
      * @return \Xibo\Entity\Module[]
      */
     private function load(): array
@@ -454,6 +485,26 @@ class ModuleFactory extends BaseFactory
         }
 
         return $this->modules;
+    }
+
+    /**
+     * Load all data types into an array for use throughout this request
+     * @return \Xibo\Widget\Definition\DataType[]
+     */
+    private function loadDataTypes(): array
+    {
+        if ($this->dataTypes === null) {
+            $files = array_merge(
+                glob(PROJECT_ROOT . '/modules/datatypes/*.xml'),
+                glob(PROJECT_ROOT . '/custom/modules/datatypes/*.xml')
+            );
+
+            foreach ($files as $file) {
+                $this->dataTypes[] = $this->createDataTypeFromXml($file);
+            }
+        }
+
+        return $this->dataTypes ?? [];
     }
 
     /**
@@ -596,5 +647,33 @@ class ModuleFactory extends BaseFactory
         }
 
         return $module;
+    }
+
+    /**
+     * Create DataType from XML
+     * @param string $file
+     * @return \Xibo\Widget\Definition\DataType
+     */
+    private function createDataTypeFromXml(string $file): DataType
+    {
+        $xml = new \DOMDocument();
+        $xml->load($file);
+
+        $dataType = new DataType();
+        $dataType->id = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
+        $dataType->name = $this->getFirstValueOrDefaultFromXmlNode($xml, 'name');
+
+        // Fields.
+        foreach ($xml->getElementsByTagName('field') as $field) {
+            if ($field instanceof \DOMElement) {
+                $dataType->addField(
+                    $field->getAttribute('id'),
+                    $field->getAttribute('type'),
+                    trim($field->textContent)
+                );
+            }
+        }
+
+        return $dataType;
     }
 }

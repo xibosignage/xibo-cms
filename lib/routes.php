@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 use Slim\Routing\RouteCollectorProxy;
@@ -237,7 +236,7 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->delete('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudioDelete']);
     $group->put('/{id}/expiry', ['\Xibo\Controller\Widget','widgetExpiry'])->setName('module.widget.expiry');
     $group->put('/{id}/elements', ['\Xibo\Controller\Widget','saveElements'])->setName('module.widget.elements');
-    $group->get('/{id}/snippets', ['\Xibo\Controller\Widget','getSnippets'])->setName('module.widget.snippets');
+    $group->get('/{id}/dataType', ['\Xibo\Controller\Widget','getDataType'])->setName('module.widget.dataType');
 
     // Drawer widgets Region
     $group->put('/{id}/target', ['\Xibo\Controller\Widget','widgetSetRegion'])->setName('module.widget.set.region');

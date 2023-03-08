@@ -1,0 +1,73 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<datatypes>
+    <datatype>
+        <id>currency</id>
+        <name>Exchange Rate</name>
+        <fields>
+            <field id="time" type="datetime">
+                <title>The time this quote was last refreshed</title>
+            </field>
+            <field id="FromName" type="text">
+                <title>Currency code from</title>
+            </field>
+            <field id="ToName" type="text">
+                <title>Currency code to</title>
+            </field>
+            <field id="Bid" type="text">
+                <title>The Exchange Rate (if real time trading then this is the Bid)</title>
+            </field>
+            <field id="Ask" type="text">
+                <title>The Exchange Rate (if real time trading then this is the Ask)</title>
+            </field>
+            <field id="LastTradePriceOnly" type="text">
+                <title>Current Rate (4dp)</title>
+            </field>
+            <field id="RawLastTradePriceOnly" type="text">
+                <title>Current Rate</title>
+            </field>
+            <field id="TimeZone" type="text">
+                <title>Time zone for the rate</title>
+            </field>
+            <field id="Name" type="text">
+                <title>From Name / To Name</title>
+            </field>
+            <field id="NameShort" type="text">
+                <title>To Name</title>
+            </field>
+            <field id="YesterdayTradePriceOnly" type="text">
+                <title>Prior Day Rate</title>
+            </field>
+            <field id="Change" type="text">
+                <title>Difference between today and prior day</title>
+            </field>
+            <field id="ChangePercentage" type="number">
+                <title>The percentage change between the current and prior value</title>
+            </field>
+            <field id="ChangeIcon" type="text">
+                <title>Icon representing the direction of change, up-arrow or down-arrow</title>
+            </field>
+            <field id="ChangeStyle" type="text">
+                <title>Style representing the direction of change, value-down or value-up</title>
+            </field>
+        </fields>
+    </datatype>
+</datatypes>

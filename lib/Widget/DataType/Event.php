@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,27 +18,28 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\DataType;
 
+use Xibo\Widget\Definition\DataType;
+
 /**
  * Event data type
  */
-class Event implements \JsonSerializable
+class Event implements \JsonSerializable, DataTypeInterface
 {
     public static $NAME = 'event';
     public $summary;
     public $description;
     public $location;
-    
+
     /** @var \Carbon\Carbon */
     public $startDate;
-    
+
     /** @var \Carbon\Carbon */
     public $endDate;
-    
+
     /** @inheritDoc */
     public function jsonSerialize()
     {
@@ -51,8 +52,17 @@ class Event implements \JsonSerializable
         ];
     }
 
-    public static function getSnippets(): array
+    public function getDefinition(): DataType
     {
-        return ['summary', 'description', 'location', 'startDate', 'endDate'];
+        $dataType = new DataType();
+        $dataType->id = self::$NAME;
+        $dataType->name = __('Event');
+        $dataType
+            ->addField('summary', __('Summary'), 'text')
+            ->addField('description', __('Description'), 'text')
+            ->addField('location', __('Location'), 'text')
+            ->addField('startDate', __('Start Date'), 'datetime')
+            ->addField('endDate', __('End Date'), 'datetime');
+        return $dataType;
     }
 }

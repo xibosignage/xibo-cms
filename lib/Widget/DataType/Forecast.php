@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,15 +18,16 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\DataType;
 
+use Xibo\Widget\Definition\DataType;
+
 /**
  * Forecast DataType
  */
-class Forecast implements \JsonSerializable
+class Forecast implements \JsonSerializable, DataTypeInterface
 {
     public static $NAME = 'forecast';
     public $time;
@@ -110,8 +111,48 @@ class Forecast implements \JsonSerializable
         ];
     }
 
-    public static function getSnippets(): array
+    public function getDefinition(): DataType
     {
-        return array_keys((new Forecast())->jsonSerialize());
+        $dataType = new DataType();
+        $dataType->id = self::$NAME;
+        $dataType->name = __('Forecast');
+        $dataType
+            ->addField('time', 'Time', 'datetime')
+            ->addField('sunSet', 'Sun Set', 'datetime')
+            ->addField('sunRise', 'Sun Rise', 'datetime')
+            ->addField('summary', 'Summary', 'text')
+            ->addField('icon', 'Icon', 'text')
+            ->addField('wicon', 'Weather Icon', 'text')
+            ->addField('temperature', 'Temperature', 'number')
+            ->addField('temperatureRound', 'Temperature Round', 'number')
+            ->addField('temperatureNight', 'Temperature Night', 'number')
+            ->addField('temperatureNightRound', 'Temperature Night Round', 'number')
+            ->addField('temperatureMorning', 'Temperature Morning', 'number')
+            ->addField('temperatureMorningRound', 'Temperature Morning Round', 'number')
+            ->addField('temperatureEvening', 'Temperature Evening', 'number')
+            ->addField('temperatureEveningRound', 'Temperature Evening Round', 'number')
+            ->addField('temperatureHigh', 'Temperature High', 'number')
+            ->addField('temperatureMaxRound', 'Temperature Max Round', 'number')
+            ->addField('temperatureLow', 'Temperature Low', 'number')
+            ->addField('temperatureMinRound', 'Temperature Min Round', 'number')
+            ->addField('temperatureMean', 'Temperature Mean', 'number')
+            ->addField('temperatureMeanRound', 'Temperature Mean Round', 'number')
+            ->addField('apparentTemperature', 'Apparent Temperature', 'number')
+            ->addField('apparentTemperatureRound', 'Apparent Temperature Round', 'number')
+            ->addField('dewPoint', 'Dew Point', 'number')
+            ->addField('humidity', 'Humidity', 'number')
+            ->addField('humidityPercent', 'Humidity Percent', 'number')
+            ->addField('pressure', 'Pressure', 'number')
+            ->addField('windSpeed', 'Wind Speed', 'number')
+            ->addField('windBearing', 'Wind Bearing', 'number')
+            ->addField('windDirection', 'Wind Direction', 'text')
+            ->addField('cloudCover', 'Cloud Cover', 'number')
+            ->addField('uvIndex', 'Uv Index', 'number')
+            ->addField('visibility', 'Visibility', 'number')
+            ->addField('ozone', 'Ozone', 'number')
+            ->addField('temperatureUnit', 'Temperature Unit', 'text')
+            ->addField('windSpeedUnit', 'WindSpeed Unit', 'text')
+            ->addField('visibilityDistanceUnit', 'VisibilityDistance Unit', 'text');
+        return $dataType;
     }
 }
