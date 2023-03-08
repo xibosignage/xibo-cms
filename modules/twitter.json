@@ -1,7 +1,0 @@
-{
-  "title": "Twitter Module",
-  "author": "Xibo Signage Ltd",
-  "description": "A module for displaying Tweets. Uses the Twitter API",
-  "name": "twitter",
-  "class": "Xibo\\Widget\\Twitter"
-}

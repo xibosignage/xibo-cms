@@ -1,7 +1,0 @@
-{
-  "title": "Stocks Module",
-  "author": "Xibo Signage Ltd",
-  "description": "A module for displaying Stocks information.",
-  "name": "stocks",
-  "class": "Xibo\\Widget\\Stocks"
-}

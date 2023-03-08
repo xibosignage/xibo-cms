@@ -26,6 +26,11 @@
         <dataType>event</dataType>
         <title>Events shown with custom HTML</title>
         <properties>
+          <property id="customInterval" type="text">
+              <title>Interval</title>
+              <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
+              <default></default>
+          </property>
           <property id="effect" type="effectSelector" variant="all">
               <title>Effect</title>
               <helpText>Please select the effect that will be used to transition between items.</helpText>
@@ -35,6 +40,15 @@
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
+            </property>
+            <property id="numItems" type="number">
+                <title>Number of Items</title>
+                <helpText>The Number of items you want to display</helpText>
+                <default></default>
+            </property>
+            <property id="durationIsPerItem" type="checkbox">
+                <title>Duration is per page</title>
+                <helpText>The duration specified is per item otherwise it is per feed.</helpText>
             </property>
             <property id="itemsSideBySide" type="checkbox">
                 <title>Show items side by side?</title>
