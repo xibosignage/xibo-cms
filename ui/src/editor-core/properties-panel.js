@@ -379,7 +379,7 @@ PropertiesPanel.prototype.render = function(
       self.DOMObject.find('form'),
       res.data,
       element.widgetId,
-      (element.parent && element.parent.isTopLevel) ?
+      (element.parent && element.parent.isTopLevel != undefined) ?
         element.parent.isTopLevel : true,
     );
 
