@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -173,7 +173,7 @@ class Region extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="formData",
-     *      description="The type of region this should be, frame, playlist or canvas. Default = frame.",
+     *      description="The type of region this should be, placehold, frame, playlist or canvas. Default = frame.",
      *      type="string",
      *      required=false
      *   ),
@@ -239,7 +239,7 @@ class Region extends Base
 
         // Add a new region
         $region = $this->regionFactory->create(
-            $sanitizedParams->getString('type'),
+            $sanitizedParams->getString('type', ['default' => 'frame']),
             $this->getUser()->userId,
             $layout->layout . '-' . (count($layout->regions) + 1),
             $sanitizedParams->getInt('width', ['default' => 250]),

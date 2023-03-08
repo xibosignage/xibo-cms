@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -66,7 +66,7 @@ class Region implements \JsonSerializable
     public $ownerId;
 
     /**
-     * @SWG\Property(description="Region Type, playlist, frame or canvas")
+     * @SWG\Property(description="Region Type, placehold, playlist, frame or canvas")
      * @var string
      */
     public $type;
@@ -428,9 +428,18 @@ class Region implements \JsonSerializable
         if ($options['audit']) {
             // get the layout specific campaignId
             $campaignId = 0;
-            $sql = 'SELECT campaign.campaignId FROM layout INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND layout.layoutId = :layoutId';
-            $params = ['layoutId' => $this->layoutId];
-            $results = $this->store->select($sql, $params);
+            $results = $this->store->select('
+                SELECT campaign.campaignId
+                  FROM layout
+                    INNER JOIN lkcampaignlayout
+                    ON layout.layoutId = lkcampaignlayout.layoutId
+                    INNER JOIN campaign
+                    ON campaign.campaignId = lkcampaignlayout.campaignId
+                 WHERE campaign.isLayoutSpecific = 1
+                   AND layout.layoutId = :layoutId
+            ', [
+                'layoutId' => $this->layoutId
+            ]);
             foreach ($results as $row) {
                 $campaignId = $row['campaignId'];
             }
@@ -459,10 +468,17 @@ class Region implements \JsonSerializable
 
             // Audit
             if ($options['audit']) {
-                $this->audit($this->regionId, 'Added', ['regionId' => $this->regionId, 'campaignId' => $campaignId, 'details' => (string)$this]);
+                $this->audit(
+                    $this->regionId,
+                    'Added',
+                    [
+                        'regionId' => $this->regionId,
+                        'campaignId' => $campaignId,
+                        'details' => (string)$this,
+                    ]
+                );
             }
-        }
-        else if ($this->hash != $this->hash()) {
+        } else if ($this->hash != $this->hash()) {
             $this->update();
 
             // There are 3 cases that we need to consider

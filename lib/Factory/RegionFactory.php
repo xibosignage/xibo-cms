@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -105,7 +105,7 @@ class RegionFactory extends BaseFactory
      */
     public function create(string $type, $ownerId, $name, $width, $height, $top, $left, $zIndex = 0, $isDrawer = 0)
     {
-        if (!in_array($type, ['playlist', 'canvas', 'frame', 'drawer'])) {
+        if (!in_array($type, ['playlist', 'canvas', 'frame', 'drawer', 'placehold'])) {
             throw new InvalidArgumentException(__('Incorrect type'), 'type');
         }
 
