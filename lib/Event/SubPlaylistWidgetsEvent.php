@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -36,15 +36,15 @@ class SubPlaylistWidgetsEvent extends Event
     /** @var Widget[] */
     private $widgets = [];
 
-    /** @var null|string */
+    /** @var int */
     private $tempId;
 
     /**
      * constructor.
      * @param \Xibo\Entity\Widget $widget
-     * @param null|string $tempId
+     * @param int $tempId
      */
-    public function __construct(\Xibo\Entity\Widget $widget, ?string $tempId)
+    public function __construct(\Xibo\Entity\Widget $widget, int $tempId)
     {
         $this->widget = $widget;
         $this->tempId = $tempId;
@@ -59,9 +59,9 @@ class SubPlaylistWidgetsEvent extends Event
     }
 
     /**
-     * @return string|null
+     * @return int
      */
-    public function getTempId(): ?string
+    public function getTempId(): int
     {
         return $this->tempId;
     }

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -715,6 +715,8 @@ class Widget implements \JsonSerializable
             }
         } else if ($module->type === 'subplaylist') {
             // Sub Playlists are a special case and provide their own duration.
+            $this->getLog()->debug('calculateDuration: subplaylist using SubPlaylistDurationEvent');
+
             $event = new SubPlaylistDurationEvent($this);
             $this->getDispatcher()->dispatch($event, SubPlaylistDurationEvent::$NAME);
             $durationProvided = true;

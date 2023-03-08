@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -255,13 +255,29 @@ class WidgetListener
     public function onDuration(SubPlaylistDurationEvent $event)
     {
         $widget = $event->getWidget();
+        $this->getLogger()->debug('onDuration: for ' . $widget->type);
+
         if ($widget->type !== 'subplaylist') {
             return;
         }
 
-        foreach ($this->getSubPlaylistResolvedWidgets($widget) as $widget) {
-            $event->appendDuration($widget->calculatedDuration);
+        // We give our widgetId to the resolve method so that it resolves us as if we're a child.
+        // we only resolve top-level sub-playlists when we build the layout XLF
+        $duration = 0;
+        $countWidgets = 0;
+        foreach ($this->getSubPlaylistResolvedWidgets($widget, $widget->widgetId ?? 0) as $resolvedWidget) {
+            $duration += $resolvedWidget->calculatedDuration;
+            $countWidgets++;
         }
+
+        if ($widget->getOptionValue('cyclePlaybackEnabled', 0) === 1 && $countWidgets > 0) {
+            $this->getLogger()->debug('onDuration: cycle playback is enabled and there are ' . $countWidgets
+                . ' widgets with a total of ' . $duration . ' seconds');
+
+            $duration = intval(ceil($duration / $countWidgets));
+        }
+
+        $event->appendDuration($duration);
     }
 
     /**
@@ -277,7 +293,7 @@ class WidgetListener
             return;
         }
 
-        $event->setWidgets($this->getSubPlaylistResolvedWidgets($widget));
+        $event->setWidgets($this->getSubPlaylistResolvedWidgets($widget, $event->getTempId()));
     }
 
     /**
@@ -309,7 +325,8 @@ class WidgetListener
      */
     private function getSubPlaylistResolvedWidgets(Widget $widget, int $parentWidgetId = 0): array
     {
-        $this->getLogger()->debug('getSubPlaylistResolvedWidgets: widgetId is ' . $widget->widgetId);
+        $this->getLogger()->debug('getSubPlaylistResolvedWidgets: widgetId is ' . $widget->widgetId
+            . ', parentWidgetId is ' . $parentWidgetId);
 
         $arrangement = $widget->getOptionValue('arrangement', 'none');
         $remainder = $widget->getOptionValue('remainder', 'none');
