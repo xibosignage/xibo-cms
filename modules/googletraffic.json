@@ -1,7 +1,0 @@
-{
-  "title": "Google Traffic Map",
-  "author": "Xibo Signage Ltd",
-  "description": "A module for displaying traffic information using Google Maps",
-  "name": "googletraffic",
-  "class": "Xibo\\Widget\\GoogleTraffic"
-}

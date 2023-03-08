@@ -1,7 +1,0 @@
-{
-    "title": "World Clock Module",
-    "author": "Xibo Signage Ltd",
-    "description": "A module for displaying World Clocks.",
-    "name": "worldclock",
-    "class": "Xibo\\Widget\\WorldClock"
-}

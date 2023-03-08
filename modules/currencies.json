@@ -1,7 +1,0 @@
-{
-    "title": "Currencies Module",
-    "author": "Xibo Signage Ltd",
-    "description": "A module for displaying Currencies information.",
-    "name": "currencies",
-    "class": "Xibo\\Widget\\Currencies"
-}
