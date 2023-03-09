@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -873,8 +873,13 @@ class Soap
                         // Add any assets from this widget/template (unless assetId already added)
                         if (!in_array('module_' . $widget->type, $resourcesAdded)) {
                             foreach ($modules[$widget->type]->getAssets() as $asset) {
+                                // Do not send assets if they are CMS only
+                                if (!$asset->isSendToPlayer()) {
+                                    continue;
+                                }
+
+                                // Add a new required file for this.
                                 try {
-                                    // Add a new required file for this.
                                     $newRfIds[] = $this->addDependency(
                                         $requiredFilesXml,
                                         $fileElements,
@@ -903,8 +908,13 @@ class Soap
 
                                 foreach ($templates as $template) {
                                     foreach ($template->getAssets() as $asset) {
+                                        // Do not send assets if they are CMS only
+                                        if (!$asset->isSendToPlayer()) {
+                                            continue;
+                                        }
+
+                                        // Add a new required file for this.
                                         try {
-                                            // Add a new required file for this.
                                             $newRfIds[] = $this->addDependency(
                                                 $requiredFilesXml,
                                                 $fileElements,

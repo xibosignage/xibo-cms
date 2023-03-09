@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -457,7 +457,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="empty" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/0-empty.png" />
+            <asset id="empty" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/0-empty.png" />
         </assets>
     </template>
     <template>
@@ -716,7 +716,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="light-green" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/1-light-green.png" />
+            <asset id="light-green" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/1-light-green.png" />
         </assets>
     </template>
     <template>
@@ -966,7 +966,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="simple-round-table" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/2-simple-round-table.png" />
+            <asset id="simple-round-table" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/2-simple-round-table.png" />
         </assets>
     </template>
     <template>
@@ -1214,7 +1214,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="transparent-blue" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/3-transparent-blue.png" />
+            <asset id="transparent-blue" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/3-transparent-blue.png" />
         </assets>
     </template>
     <template>
@@ -1460,7 +1460,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="orange-grey-striped" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/4-orange-grey-striped.png" />
+            <asset id="orange-grey-striped" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/4-orange-grey-striped.png" />
         </assets>
     </template>
     <template>
@@ -1704,7 +1704,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="split-rows-" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/5-split-rows-.png" />
+            <asset id="split-rows-" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/5-split-rows-.png" />
         </assets>
     </template>
     <template>
@@ -1943,7 +1943,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="dark-round" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/6-dark-round.png" />
+            <asset id="dark-round" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/6-dark-round.png" />
         </assets>
     </template>
     <template>
@@ -2223,7 +2223,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 $datasetTableContainer.dataSetRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="pill-colored" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
+            <asset id="pill-colored" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
         </assets>
     </template>
 </templates>

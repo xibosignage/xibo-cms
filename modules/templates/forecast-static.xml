@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -336,7 +336,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_1.png" />
+            <asset id="weather_1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_1.png" />
         </assets>
     </template>
     <template>
@@ -632,7 +632,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_2.png" />
+            <asset id="weather_2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_2.png" />
         </assets>
     </template>
     <template>
@@ -928,7 +928,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_3" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_3.png" />
+            <asset id="weather_3" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_3.png" />
         </assets>
     </template>
     <template>
@@ -1310,7 +1310,7 @@ h1 {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_4" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_4.png" />
+            <asset id="weather_4" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_4.png" />
         </assets>
     </template>
     <template>
@@ -1755,7 +1755,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_5" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_5.png" />
+            <asset id="weather_5" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_5.png" />
         </assets>
     </template>
     <template>
@@ -2161,7 +2161,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_6" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_6.png" />
+            <asset id="weather_6" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_6.png" />
         </assets>
     </template>
     <template>
@@ -2584,7 +2584,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_7" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_7.png" />
+            <asset id="weather_7" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_7.png" />
         </assets>
     </template>
     <template>
@@ -3003,7 +3003,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_8" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_8.png" />
+            <asset id="weather_8" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_8.png" />
         </assets>
     </template>
     <template>
@@ -3488,7 +3488,7 @@ text-transform: uppercase;
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_9" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_9.png" />
+            <asset id="weather_9" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_9.png" />
         </assets>
     </template>
     <template>
@@ -3963,7 +3963,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_10" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_10.png" />
+            <asset id="weather_10" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_10.png" />
         </assets>
     </template>
     <template>
@@ -4466,7 +4466,7 @@ h1 {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_11" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_11.png" />
+            <asset id="weather_11" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_11.png" />
         </assets>
     </template>
     <template>
@@ -4909,7 +4909,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_12" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_12.png" />
+            <asset id="weather_12" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_12.png" />
         </assets>
     </template>
     <template>
@@ -5246,7 +5246,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_13" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_13.png" />
+            <asset id="weather_13" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_13.png" />
         </assets>
     </template>
     <template>
@@ -5601,7 +5601,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_14" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_14.png" />
+            <asset id="weather_14" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_14.png" />
         </assets>
     </template>
     <template>
@@ -5880,7 +5880,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_15" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_15.png" />
+            <asset id="weather_15" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_15.png" />
         </assets>
     </template>
     <template>
@@ -6173,7 +6173,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_16" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_16.png" />
+            <asset id="weather_16" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_16.png" />
         </assets>
     </template>
     <template>
@@ -6360,7 +6360,7 @@ body {
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_17" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_17.png" />
+            <asset id="weather_17" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_17.png" />
         </assets>
     </template>
     <template>
@@ -6628,7 +6628,7 @@ text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
             ]]></twig>
         </stencil>
         <assets>
-            <asset id="weather_18" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/weather_18.png" />
+            <asset id="weather_18" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_18.png" />
         </assets>
     </template>
 </templates>

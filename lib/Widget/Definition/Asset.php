@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -41,6 +41,9 @@ class Asset implements \JsonSerializable
     public $path;
     public $mimeType;
 
+    /** @var bool */
+    public $cmsOnly;
+
     /** @inheritDoc */
     public function jsonSerialize()
     {
@@ -49,7 +52,17 @@ class Asset implements \JsonSerializable
             'type' => $this->type,
             'path' => $this->path,
             'mimeType' => $this->mimeType,
+            'cmsOnly' => $this->cmsOnly,
         ];
+    }
+
+    /**
+     * Should this asset be sent to the player?
+     * @return bool
+     */
+    public function isSendToPlayer(): bool
+    {
+        return !($this->cmsOnly ?? false);
     }
 
     /**

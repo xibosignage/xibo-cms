@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -568,7 +568,7 @@ properties.calendarType = 2;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="daily_light" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/daily_light.png" />
+            <asset id="daily_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/daily_light.png" />
         </assets>
     </template>
     <template>
@@ -1016,7 +1016,7 @@ properties.calendarType = 2;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="daily_dark" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/daily_dark.png" />
+            <asset id="daily_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/daily_dark.png" />
         </assets>
     </template>
     <!-- End of Daily Calendar -->
@@ -1488,7 +1488,7 @@ properties.calendarType = 3;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="weekly_light" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/weekly_light.png" />
+            <asset id="weekly_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/weekly_light.png" />
         </assets>
     </template>
     <template>
@@ -1957,7 +1957,7 @@ properties.calendarType = 3;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="weekly_dark" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/weekly_dark.png" />
+            <asset id="weekly_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/weekly_dark.png" />
         </assets>
     </template>
     <!-- End of Weekly Calendar -->
@@ -2354,7 +2354,7 @@ properties.calendarType = 4;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="monthly_light" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/monthly_light.png" />
+            <asset id="monthly_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/monthly_light.png" />
         </assets>
     </template>
     <template>
@@ -2748,7 +2748,7 @@ properties.calendarType = 4;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="monthly_dark" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/monthly_dark.png" />
+            <asset id="monthly_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/monthly_dark.png" />
         </assets>
     </template>
     <!-- End of Monthly Calendar -->
@@ -3084,7 +3084,7 @@ properties.calendarType = 1;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="schedule_light" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/schedule_light.png" />
+            <asset id="schedule_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/schedule_light.png" />
         </assets>
     </template>
     <template>
@@ -3417,7 +3417,7 @@ properties.calendarType = 1;
 $(target).xiboCalendarRender(properties, items);
         ]]></onTemplateRender>
         <assets>
-            <asset id="schedule_dark" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/schedule_dark.png" />
+            <asset id="schedule_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/schedule_dark.png" />
         </assets>
     </template>
     <!-- End of Schedule View -->

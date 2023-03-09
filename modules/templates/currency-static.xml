@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -196,7 +196,7 @@ if (templateItems.length > 0) {
 }
         ]]></onTemplateRender>
         <assets>
-            <asset id="currencies1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/currencies1.png"></asset>
+            <asset id="currencies1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/currency/currencies1.png"></asset>
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>
             <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css"></asset>
         </assets>
@@ -238,7 +238,7 @@ if (templateItems.length > 0) {
     <div class="price value">{{RawLastTradePriceOnly}}</div>
     <div class="perc value {{ChangeStyle}}">{{ChangePercentage}}%</div>
     <div class="arrow"><div class="{{ChangeIcon}}"></div></div>
-</div> 
+</div>
         ]]></hbs>
             <twig><![CDATA[
 <div class="container-main template-container">
@@ -401,7 +401,7 @@ var body = $(target).find(".template-container");
 $(target).find("#content").xiboFinanceRender(properties, templateItems, body);
         ]]></onTemplateRender>
         <assets>
-            <asset id="currencies2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/currencies2.png"></asset>
+            <asset id="currencies2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/currency/currencies2.png"></asset>
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>
             <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css"></asset>
         </assets>

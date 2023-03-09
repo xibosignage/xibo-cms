@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -58,13 +58,17 @@ class XmdsAssetsListener
         if ($event->getFileType() === 'asset') {
             // Get the asset using only the assetId.
             try {
-                $this->moduleFactory->getAssetsFromAnywhereById($event->getId(), $this->moduleTemplateFactory);
+                $asset = $this->moduleFactory->getAssetsFromAnywhereById($event->getId(), $this->moduleTemplateFactory);
 
-                // Return the full path to this asset
-                $event->setFullPath(PROJECT_ROOT . '/modules/bundle.min.js');
-                $event->stopPropagation();
+                if ($asset->isSendToPlayer()) {
+                    // Return the full path to this asset
+                    $event->setFullPath(PROJECT_ROOT . $asset->path);
+                    $event->stopPropagation();
+                } else {
+                    $this->getLogger()->debug('onDependencyRequest: asset found but is cms only');
+                }
             } catch (NotFoundException $notFoundException) {
-                $this->getLogger()->info('No asset found for assetId: ' . $event->getId());
+                $this->getLogger()->info('onDependencyRequest: No asset found for assetId: ' . $event->getId());
             }
         }
     }
