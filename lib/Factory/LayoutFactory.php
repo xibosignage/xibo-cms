@@ -245,7 +245,7 @@ class LayoutFactory extends BaseFactory
         // Add a blank, full screen region
         if ($addRegion) {
             $layout->regions[] = $this->regionFactory->create(
-                'placehold',
+                'zone',
                 $ownerId,
                 $name . '-1',
                 $layout->width,
@@ -767,11 +767,11 @@ class LayoutFactory extends BaseFactory
                 $playlist->assignWidget($widget);
             }
 
-            // See if this region can be converted to a frame or placehold (it is already a playlist)
+            // See if this region can be converted to a frame or zone (it is already a playlist)
             if (count($playlist->widgets) === 1) {
                 $region->type = 'frame';
             } else if (count($playlist->widgets) === 0) {
-                $region->type = 'placehold';
+                $region->type = 'zone';
             }
 
             // Assign Playlist to the Region
@@ -917,7 +917,7 @@ class LayoutFactory extends BaseFactory
             } else if (count($regionWidgets) === 0) {
                 $regionType = 'playlist';
             } else {
-                $regionType = 'placehold';
+                $regionType = 'zone';
             }
 
             // Create the region
