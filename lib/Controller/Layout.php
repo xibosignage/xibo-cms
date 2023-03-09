@@ -458,7 +458,7 @@ class Layout extends Base
                         $mainHeight = $layout->height * 0.8;
                         $this->layoutFactory->addRegion(
                             $layout,
-                            'placehold',
+                            'zone',
                             $mainWidth,
                             $mainHeight,
                             0,
@@ -468,7 +468,7 @@ class Layout extends Base
                         // Bottom bar
                         $this->layoutFactory->addRegion(
                             $layout,
-                            'placehold',
+                            'zone',
                             $layout->width,
                             $layout->height - $mainHeight,
                             $mainHeight,
@@ -478,7 +478,7 @@ class Layout extends Base
                         // Left bar
                         $this->layoutFactory->addRegion(
                             $layout,
-                            'placehold',
+                            'zone',
                             $layout->width - $mainWidth,
                             $mainHeight,
                             0,
@@ -490,12 +490,12 @@ class Layout extends Base
                         // Main window - 80%
                         $mainWidth = $layout->width * 0.8;
                         $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion($layout, 'placehold', $mainWidth, $mainHeight, 0, 0);
+                        $this->layoutFactory->addRegion($layout, 'zone', $mainWidth, $mainHeight, 0, 0);
 
                         // Bottom bar
                         $this->layoutFactory->addRegion(
                             $layout,
-                            'placehold',
+                            'zone',
                             $layout->width,
                             $layout->height - $mainHeight,
                             $mainHeight,
@@ -505,7 +505,7 @@ class Layout extends Base
                         // Right bar
                         $this->layoutFactory->addRegion(
                             $layout,
-                            'placehold',
+                            'zone',
                             $layout->width - $mainWidth,
                             $mainHeight,
                             0,
@@ -518,7 +518,7 @@ class Layout extends Base
                         // Maintain backwards compatibility by creating an empty full screen region
                         $this->layoutFactory->addRegion(
                             $layout,
-                            'placehold',
+                            'zone',
                             $layout->width,
                             $layout->height,
                             0,

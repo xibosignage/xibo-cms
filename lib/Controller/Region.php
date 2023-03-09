@@ -173,7 +173,7 @@ class Region extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="formData",
-     *      description="The type of region this should be, placehold, frame, playlist or canvas. Default = frame.",
+     *      description="The type of region this should be, zone, frame, playlist or canvas. Default = frame.",
      *      type="string",
      *      required=false
      *   ),

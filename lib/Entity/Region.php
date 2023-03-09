@@ -66,7 +66,7 @@ class Region implements \JsonSerializable
     public $ownerId;
 
     /**
-     * @SWG\Property(description="Region Type, placehold, playlist, frame or canvas")
+     * @SWG\Property(description="Region Type, zone, playlist, frame or canvas")
      * @var string
      */
     public $type;
