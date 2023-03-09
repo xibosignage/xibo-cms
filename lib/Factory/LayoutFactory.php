@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -245,7 +245,7 @@ class LayoutFactory extends BaseFactory
         // Add a blank, full screen region
         if ($addRegion) {
             $layout->regions[] = $this->regionFactory->create(
-                'playlist',
+                'placehold',
                 $ownerId,
                 $name . '-1',
                 $layout->width,
@@ -586,6 +586,7 @@ class LayoutFactory extends BaseFactory
 
             // Create the region
             //  we only import from XLF for older layouts which only had playlist type regions.
+            //  we start assuming this will be a playlist and update it later if necessary
             $region = $this->regionFactory->create(
                 'playlist',
                 $regionOwnerId,
@@ -637,8 +638,12 @@ class LayoutFactory extends BaseFactory
                 $widgetId = $mediaNode->getAttribute('id');
 
                 // Widget from/to dates.
-                $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
-                $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
+                $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '')
+                    ? Widget::$DATE_MIN
+                    : $mediaNode->getAttribute('fromDt');
+                $widget->toDt = ($mediaNode->getAttribute('toDt') === '')
+                    ? Widget::$DATE_MAX
+                    : $mediaNode->getAttribute('toDt');
 
                 $this->setWidgetExpiryDatesOrDefault($widget);
 
@@ -646,7 +651,11 @@ class LayoutFactory extends BaseFactory
 
                 // Does this module type exist?
                 if (!array_key_exists($widget->type, $modules)) {
-                    $this->getLog()->error('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
+                    $this->getLog()->error(sprintf(
+                        'Module Type [%s] in imported Layout does not exist. Allowable types: %s',
+                        $widget->type,
+                        json_encode(array_keys($modules))
+                    ));
                     continue;
                 }
 
@@ -669,14 +678,21 @@ class LayoutFactory extends BaseFactory
                         $widget->widgetOptions[] = $widgetOption;
 
                         // Convert the module type of known legacy widgets
-                        if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
+                        if ($widget->type == 'ticker'
+                            && $widgetOption->option == 'sourceId'
+                            && $widgetOption->value == '2'
+                        ) {
                             $widget->type = 'datasetticker';
                             $module = $modules[$widget->type];
                         }
                     }
                 }
 
-                $this->getLog()->debug('Added %d options with xPath query: %s', count($widget->widgetOptions), $xpathQuery);
+                $this->getLog()->debug(sprintf(
+                    'Added %d options with xPath query: %s',
+                    count($widget->widgetOptions),
+                    $xpathQuery
+                ));
 
                 //
                 // Get the MediaId associated with this widget (using the URI)
@@ -685,7 +701,10 @@ class LayoutFactory extends BaseFactory
                     $this->getLog()->debug('Library Widget, getting mediaId');
 
                     if (empty($widget->tempId)) {
-                        $this->getLog()->debug('FileId node is empty, setting tempId from uri option. Options: %s', json_encode($widget->widgetOptions));
+                        $this->getLog()->debug(sprintf(
+                            'FileId node is empty, setting tempId from uri option. Options: %s',
+                            json_encode($widget->widgetOptions)
+                        ));
                         $mediaId = explode('.', $widget->getOptionValue('uri', '0.*'));
                         $widget->tempId = $mediaId[0];
                     }
@@ -697,7 +716,8 @@ class LayoutFactory extends BaseFactory
                 //
                 // Get all widget raw content
                 //
-                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/raw') as $rawNode) {
+                $rawNodes = $xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/raw');
+                foreach ($rawNodes as $rawNode) {
                     /* @var \DOMElement $rawNode */
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
@@ -717,7 +737,9 @@ class LayoutFactory extends BaseFactory
                 //
                 // Audio
                 //
-                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/audio') as $rawNode) {
+                $rawNodes = $xpath
+                    ->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/audio');
+                foreach ($rawNodes as $rawNode) {
                     /* @var \DOMElement $rawNode */
                     // Get children
                     foreach ($rawNode->childNodes as $audioNode) {
@@ -745,9 +767,11 @@ class LayoutFactory extends BaseFactory
                 $playlist->assignWidget($widget);
             }
 
-            // See if this region can be converted to a frame
+            // See if this region can be converted to a frame or placehold (it is already a playlist)
             if (count($playlist->widgets) === 1) {
                 $region->type = 'frame';
+            } else if (count($playlist->widgets) === 0) {
+                $region->type = 'placehold';
             }
 
             // Assign Playlist to the Region
@@ -883,10 +907,17 @@ class LayoutFactory extends BaseFactory
             }
 
             $regionIsDrawer = isset($regionJson['isDrawer']) ? (int)$regionJson['isDrawer'] : 0;
-            $regionType = $regionJson['type'] ?? 'playlist';
             $regionWidgets = $regionJson['regionPlaylist']['widgets'] ?? [];
-            if ($regionIsDrawer === 1 && $regionType === 'playlist' && count($regionWidgets) === 1) {
+
+            // Determine the region type based on how many widgets we have and whether we're the drawer
+            if ($regionIsDrawer === 1) {
+                $regionType = 'drawer';
+            } else if (count($regionWidgets) === 1) {
                 $regionType = 'frame';
+            } else if (count($regionWidgets) === 0) {
+                $regionType = 'playlist';
+            } else {
+                $regionType = 'placehold';
             }
 
             // Create the region
