@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -204,7 +204,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="fulltime-np" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
+            <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
         </assets>
     </template>
     <template>
@@ -410,7 +410,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="fulltime" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/fulltime.png" />
+            <asset id="fulltime" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime.png" />
         </assets>
     </template>
     <template>
@@ -518,7 +518,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
 
 .item {
     float: left;
-}   
+}
 </style>
             ]]></twig>
         </stencil>
@@ -528,7 +528,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="textonly" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/textonly.png" />
+            <asset id="textonly" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/textonly.png" />
         </assets>
     </template>
     <template>
@@ -664,7 +664,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="profileleft" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/profileleft.png" />
+            <asset id="profileleft" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/profileleft.png" />
         </assets>
     </template>
     <template>
@@ -801,7 +801,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="profileright" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/profileright.png" />
+            <asset id="profileright" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/profileright.png" />
         </assets>
     </template>
     <template>
@@ -986,7 +986,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="twitter1" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter1.png" />
+            <asset id="twitter1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter1.png" />
         </assets>
     </template>
     <template>
@@ -1181,7 +1181,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="twitter2" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter2.png" />
+            <asset id="twitter2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter2.png" />
         </assets>
     </template>
     <template>
@@ -1381,7 +1381,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="twitter4" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter4.png" />
+            <asset id="twitter4" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter4.png" />
         </assets>
     </template>
     <template>
@@ -1568,7 +1568,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="twitter6np" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter6np.png" />
+            <asset id="twitter6np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter6np.png" />
         </assets>
     </template>
     <template>
@@ -1764,7 +1764,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="twitter6pl" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter6pl.png" />
+            <asset id="twitter6pl" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter6pl.png" />
         </assets>
     </template>
     <template>
@@ -1971,7 +1971,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="twitter7" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter7.png" />
+            <asset id="twitter7" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter7.png" />
         </assets>
     </template>
     <template>
@@ -2170,7 +2170,7 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="twitter8" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/twitter8.png" />
+            <asset id="twitter8" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter8.png" />
         </assets>
     </template>
     <template>
