@@ -139,7 +139,7 @@ $(function() {
 
       // If we don't have dataType, or we have a module template
       // add it to the content with widget properties and global options
-      if (moduleTemplate && hbs  && !templateAlreadyAdded) {
+      if (moduleTemplate && hbs && !templateAlreadyAdded) {
         $content.append(hbs(
           Object.assign(widget.properties, globalOptions),
         ));
