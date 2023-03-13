@@ -137,6 +137,7 @@ class RssProvider implements WidgetProviderInterface
                 });
             }
 
+            $countItems = 0;
             // Parse each item into an article
             foreach ($feedItems as $item) {
                 /* @var Item $item */
@@ -183,6 +184,13 @@ class RssProvider implements WidgetProviderInterface
                     }
                     $article->content = $doc->saveHTML();
                 }
+
+                // Return articles based on the value of numItems
+                if ($dataProvider->getProperty('numItems') === $countItems) {
+                   break;
+                }
+
+                $countItems++;
 
                 // Add the article.
                 $dataProvider->addItem($article);
