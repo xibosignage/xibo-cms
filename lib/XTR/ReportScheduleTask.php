@@ -165,10 +165,10 @@ class ReportScheduleTask implements TaskInterface
                     fwrite($out, json_encode($result));
                     fclose($out);
 
-                    $runDateTimestamp = Carbon::now()->format('U');
+                    $savedReportFileName = 'rs_'.$reportSchedule->reportScheduleId. '_'. Carbon::now()->format('U');
 
                     // Create a ZIP file and add our temporary file
-                    $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'savedreport/reportschedule_'.$runDateTimestamp.'.json.zip' ;// random numb
+                    $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'savedreport/'.$savedReportFileName.'.zip';
                     $zip = new \ZipArchive();
                     $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
@@ -187,13 +187,13 @@ class ReportScheduleTask implements TaskInterface
                         $reportSchedule->reportScheduleId,
                         Carbon::now()->format('U'),
                         $reportSchedule->userId,
-                        'reportschedule_'.$runDateTimestamp.'.json.zip',
+                        $savedReportFileName.'.zip',
                         filesize($zipName),
                         md5_file($zipName)
                     );
                     $savedReport->save();
 
-                    $this->createPdfAndNotification($reportSchedule, $savedReport, $runDateTimestamp);
+                    $this->createPdfAndNotification($reportSchedule, $savedReport);
 
                     // Add the last savedreport in Report Schedule
                     $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
@@ -215,13 +215,12 @@ class ReportScheduleTask implements TaskInterface
      * Create the PDF and save a notification
      * @param $reportSchedule
      * @param $savedReport
-     * @param $media
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function createPdfAndNotification($reportSchedule, $savedReport, $runDateTimestamp)
+    private function createPdfAndNotification($reportSchedule, $savedReport)
     {
         /* @var ReportResult $savedReportData */
         $savedReportData = $this->reportService->getSavedReportResults(
@@ -300,7 +299,7 @@ class ReportScheduleTask implements TaskInterface
                 $mpdf->WriteHTML($stylesheet, 1);
                 $mpdf->WriteHTML($body);
                 $mpdf->Output(
-                    $this->config->getSetting('LIBRARY_LOCATION') . 'attachment/filename-'.$runDateTimestamp.'.pdf',
+                    $this->config->getSetting('LIBRARY_LOCATION') . 'attachment/filename-'.$savedReport->savedReportId.'.pdf',
                     Destination::FILE
                 );
 
@@ -317,7 +316,7 @@ class ReportScheduleTask implements TaskInterface
                     $notification->isEmail = 1;
                     $notification->isInterrupt = 0;
                     $notification->userId = $savedReport->userId; // event owner
-                    $notification->filename = 'filename-'.$runDateTimestamp.'.pdf';
+                    $notification->filename = 'filename-'.$savedReport->savedReportId.'.pdf';
                     $notification->originalFileName = 'saved_report.pdf';
                     $notification->nonusers = $nonusers;
 
