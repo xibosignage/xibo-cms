@@ -671,7 +671,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
             <hbs><![CDATA[
 <div class="article">
     <div><div class="name">{{author}}</div></div>
-    <div><div class="title"><strong>Title</strong></div></div>
+    <div><div class="title"><strong>{{title}}</strong></div></div>
     <div><div class="description">{{{content}}}</div></div>
 </div>
             ]]></hbs>
@@ -825,7 +825,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .article, #conte
         <stencil>
             <hbs><![CDATA[
 <div class="article">
-    <div><div class="title"><strong>Title</strong></div></div>
+    <div><div class="title"><strong>{{title}}</strong></div></div>
 </div>
             ]]></hbs>
             <twig><![CDATA[
