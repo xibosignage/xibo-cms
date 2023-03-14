@@ -78,6 +78,12 @@ class Property implements \JsonSerializable
     /** @var string HTML selector of the element that this property depends on */
     public $dependsOn;
 
+    /** @var string ID of the target element */
+    public $target;
+
+    /** @var string The mode of the property */
+    public $mode;
+
     public $value;
 
     /** @inheritDoc */
@@ -90,6 +96,8 @@ class Property implements \JsonSerializable
             'variant' => $this->variant,
             'format' => $this->format,
             'title' => $this->title,
+            'mode' => $this->mode,
+            'target' => $this->target,
             'helpText' => $this->helpText,
             'validation' => $this->validation,
             'default' => $this->default,

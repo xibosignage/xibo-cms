@@ -20,6 +20,8 @@
 .text-area-buttons {
     display: flex;
     justify-content: flex-end;
+    background-color: $xibo-color-primary-l10;
+    border-radius: 0.25rem 0.25rem 0 0;
 }
 
 /* Code input */
@@ -29,7 +31,7 @@
         padding: 6px;
         height: 250px;
         border: 2px solid $xibo-color-neutral-700;
-        border-radius: 3px;
+        border-radius: 0.25rem;
 
         .code-input-editor {
             width: 100%;
@@ -215,5 +217,19 @@
         padding: 10px;
         width: 100%;
         text-align: center !important;
+    }
+}
+
+// Snippets
+.snippet-selector {
+    margin-top: -10px;
+
+    .select2-selection {
+        background-color: $xibo-color-primary-l10 !important;
+    }
+
+    .select2-selection__placeholder {
+        color: $xibo-color-secondary !important;
+        font-weight: bold;
     }
 }

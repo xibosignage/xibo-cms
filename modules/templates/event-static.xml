@@ -74,6 +74,10 @@
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
+            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="ta_text">
+                <title>Snippets</title>
+                <helpText>Choose data type snippet</helpText>
+            </property>
             <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>

@@ -38,6 +38,14 @@
             <title>Main Template</title>
             <helpText>The template for formatting your notifications. Enter [Subject] and [Body] with your desired formatting. Enter text or HTML in the box below.</helpText>
         </property>
+        <property id="dateFormatSnippets" type="snippet" mode="options" target="template">
+            <title>Snippets</title>
+            <helpText>Choose element to add to template</helpText>
+            <options>
+                <option name="Subject">Subject</option>
+                <option name="Body">Body</option>
+            </options>
+        </property>
         <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
             <title>Custom Style Sheets</title>
         </property>

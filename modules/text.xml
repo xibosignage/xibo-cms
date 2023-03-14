@@ -37,6 +37,10 @@
             <title>Enter text or HTML in the box below.</title>
             <helpText>Enter the text to display. The red rectangle reflects the size of the region you are editing. Shift+Enter will drop a single line. Enter alone starts a new paragraph.</helpText>
         </property>
+        <property id="mediaSnippets" type="snippet" mode="media" target="ta_text">
+            <title>Media</title>
+            <helpText>Choose media</helpText>
+        </property>
         <property id="javaScript" type="code" variant="javascript">
             <title>Optional JavaScript</title>
         </property>
