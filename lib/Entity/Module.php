@@ -124,6 +124,12 @@ class Module implements \JsonSerializable
     public $hasThumbnail;
 
     /**
+     * @SWG\Property(description="This is the location to a module's thumbnail")
+     * @var string
+     */
+    public $thumbnail;
+
+    /**
      * @SWG\Property(description="Should be rendered natively by the Player or via the CMS (native|html)")
      * @var string
      */
