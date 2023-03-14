@@ -42,6 +42,14 @@
 <span style="font-size: 48px; color:#1c1c1c;">[HH:mm:ss]</span>
             ]]></default>
         </property>
+        <property id="dateFormatSnippets" type="snippet" mode="options" target="ta_text">
+            <title>Date Formats</title>
+            <helpText>Choose from a preset date format</helpText>
+            <options>
+                <option name="HH:mm">Time only</option>
+                <option name="DD/MM/YYYY">Day/Month/Year</option>
+            </options>
+        </property>
         <property id="offset" type="text">
             <title>Offset</title>
             <helpText>The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s.</helpText>

@@ -223,7 +223,11 @@
                 setRegion: {
                     url: "{{ url_for("module.widget.set.region", {id: ':id'}) }}",
                     type: 'PUT'
-                }
+                },
+                getDataType: {
+                    url: "{{ url_for("module.widget.dataType", {id: ':id'}) }}",
+                    type: 'GET'
+                },
             },
             library: {
                 get: {
@@ -233,6 +237,10 @@
                 connectorImport: {
                     url: "{{ url_for("library.connector.import") }}",
                     type: 'POST'
+                },
+                download: {
+                    url: "{{ url_for("library.download", {id: ':id'}) }}",
+                    type: 'GET'
                 },
             },
             playlist: {

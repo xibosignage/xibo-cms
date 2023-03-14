@@ -231,6 +231,10 @@ window.forms = {
    * @param {string} [targetId] - Target Id ( widget, element, etc.)
    */
   initFields: function(container, target, targetId) {
+    // Clear previous element
+    // Clear code editors
+    window.codeEditors = {};
+
     // Find elements, either they match
     // the children of the container or they are the target
     const findElements = function(selector, target) {
@@ -982,7 +986,13 @@ window.forms = {
       const inputValue = $textArea.val();
       const codeType = $textArea.data('codeType');
 
+      // Create code editor object if it doesn't exist
+      if (window.codeEditors === undefined) {
+        window.codeEditors = {};
+      }
+
       const newEditor =
+      window.codeEditors[$textArea.attr('id')] =
         monaco.editor.create($(el).find('.code-input-editor')[0], {
           value: inputValue,
           fontSize: 12,
@@ -999,8 +1009,14 @@ window.forms = {
           },
         });
 
+      // Update the textarea when the editor changes
       newEditor.onDidChangeModelContent(() => {
         $textArea.val(newEditor.getValue());
+      });
+
+      // Update the editor when the textarea changes
+      $textArea.on('change', function() {
+        newEditor.setValue($textArea.val());
       });
     });
 
@@ -1365,6 +1381,164 @@ window.forms = {
           }
         },
       });
+    });
+
+    // Snippet selector
+    findElements(
+      '.snippet-selector',
+      target,
+    ).each(function(_k, el) {
+      // Get select element
+      const $select = $(el).find('select');
+
+      // Get target field
+      const targetFieldId = $select.data('target');
+      const $targetField = $('[name=' + targetFieldId + ']');
+
+      // Snippet mode
+      const snippetMode = $select.data('mode');
+
+      // Set normal snippet
+      const setupSnippets = function($select) {
+        formHelpers.setupSnippetsSelector(
+          $select,
+          function(e) {
+            const value = $(e.currentTarget).val();
+
+            // If there is no value, or target field is not found, do nothing
+            if (value == undefined || value == '' || $targetField.length == 0) {
+              return;
+            }
+
+            // Text to be inserted
+            const text = '[' + value + ']';
+
+            // Check if there is a CKEditor instance
+            const ckeditorInstance =
+              CKEDITOR.instances['input_' + targetId + '_' + targetFieldId];
+
+            if (ckeditorInstance) {
+              // CKEditor
+              ckeditorInstance.insertText(text);
+            } else if ($targetField.hasClass('code-input')) {
+              // Monaco editor
+              const editor =
+                window.codeEditors['input_' + targetId + '_' + targetFieldId];
+
+              const selection = editor.getSelection();
+              const id = {
+                major: 1,
+                minor: 1,
+              };
+              const op = {
+                identifier: id,
+                range: selection,
+                text: text,
+                forceMoveMarkers: true,
+              };
+              editor.executeEdits('custom-code', [op]);
+            } else {
+              // Text area
+              const cursorPosition = $targetField[0].selectionStart;
+              const previousText = $targetField.val();
+
+              // Insert text to the cursor position
+              $targetField.val(
+                previousText.substring(0, cursorPosition) +
+                text +
+                previousText.substring(cursorPosition));
+
+              // Trigger change event
+              $targetField.trigger('change');
+            }
+          },
+        );
+      };
+
+      // Setup media snippet selector
+      const setupMediaSnippets = function($select) {
+        // Add URL to the select element
+        $select.data('searchUrl', urlsForApi.library.get.url);
+
+        // Add library download URL to the select element
+        $select.data('imageUrl', urlsForApi.library.download.url);
+
+        formHelpers.setupMediaSelector(
+          $select,
+          function(e) {
+            const value = $(e.currentTarget).val();
+
+            // If there is no value, do nothing
+            if (value == undefined || value == '') {
+              return;
+            }
+
+            // Text to be inserted
+            const textURL = urlsForApi.library.download.url.replace(
+              ':id',
+              value,
+            );
+            const text = '<img alt="" src="' + textURL + '?preview=1" />';
+
+            // Check if there is a CKEditor instance
+            const ckeditorInstance =
+              CKEDITOR.instances['input_' + targetId + '_' + targetFieldId];
+
+            if (ckeditorInstance) {
+              // CKEditor
+              ckeditorInstance.insertHtml(text);
+            } else if ($targetField.length > 0) {
+              // Text area
+              const cursorPosition = $targetField[0].selectionStart;
+              const previousText = $targetField.val();
+
+              $targetField.val(
+                previousText.substring(0, cursorPosition) +
+                text +
+                previousText.substring(cursorPosition));
+            }
+          },
+        );
+      };
+
+      if (snippetMode == 'dataType') {
+        // Get request path
+        const requestPath =
+          urlsForApi.widget.getDataType.url.replace(':id', targetId);
+
+        // Get the data type snippets
+        $.ajax({
+          method: 'GET',
+          url: requestPath,
+          success: function(response) {
+            if (response.fields && response.fields.length > 0) {
+              // Add data to the select options
+              $.each(response.fields, function(_index, element) {
+                $select.append(
+                  $('<option value="' +
+                    element.id +
+                    '">' +
+                    element.type +
+                    '</option>'));
+              });
+
+              // Setup the snippet selector
+              setupSnippets($select);
+            }
+          },
+          error: function() {
+            $select.parent().append(
+              '{% trans "An unknown error has occurred. Please refresh" %}',
+            );
+          },
+        });
+      } else if (snippetMode == 'options') {
+        // Setup the snippet selector
+        setupSnippets($select);
+      } else if (snippetMode == 'media') {
+        // Setup the media snippet selector
+        setupMediaSnippets($select);
+      }
     });
 
     // Effect selector

@@ -1,0 +1,13 @@
+<div class="form-group xibo-form-input dropdown-input-group localSelect snippet-selector" 
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+    title="{{helpText}}">
+    <select class="form-control" id="input_{{id}}"
+        data-mode="{{mode}}"
+        data-target="{{target}}"
+        data-placeholder="{{title}}">
+        <option></option>
+        {{#each options}}
+            <option value="{{name}}">{{title}}</option>
+        {{/each}}
+    </select>
+</div>

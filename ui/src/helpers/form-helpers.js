@@ -561,6 +561,17 @@ const formHelpers = function() {
         },
         delay: 250,
       },
+      templateResult: function(state) {
+        if (!state.id) {
+          return state.text;
+        }
+        const template = window.templates.forms.addOns.dropdownOptionImage({
+          title: state.text,
+          image: state.imageUrl,
+        });
+
+        return $(template);
+      },
     }).off().on('select2:select', function(e) {
       callback(e);
 

@@ -99,6 +99,8 @@ trait ModuleXmlTrait
                 $property->type = $node->getAttribute('type');
                 $property->variant = $node->getAttribute('variant');
                 $property->format = $node->getAttribute('format');
+                $property->mode = $node->getAttribute('mode');
+                $property->target = $node->getAttribute('target');
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));

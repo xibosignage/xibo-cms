@@ -7,6 +7,8 @@ window.templates = {
         require('./src/templates/forms/inputs/add-ons/playerCompatibility.hbs'),
       customPopOver:
         require('./src/templates/forms/inputs/add-ons/customPopOver.hbs'),
+      dropdownOptionImage:
+        require('./src/templates/forms/inputs/add-ons/dropdownOptionImage.hbs'),
     },
     button: require('./src/templates/forms/button.hbs'),
     text: require('./src/templates/forms/inputs/text.hbs'),
@@ -42,6 +44,6 @@ window.templates = {
     connectorProperties:
       require('./src/templates/forms/inputs/connectorProperties.hbs'),
     playlistMixer: require('./src/templates/forms/inputs/playlistMixer.hbs'),
-    // More to be added
+    snippet: require('./src/templates/forms/inputs/snippet.hbs'),
   },
 };
