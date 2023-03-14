@@ -527,6 +527,8 @@ class ModuleFactory extends BaseFactory
         $module->class = $this->getFirstValueOrDefaultFromXmlNode($xml, 'class');
         $module->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $module->thumbnail = $this->getFirstValueOrDefaultFromXmlNode($xml, 'thumbnail');
+        $module->startWidth = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startWidth'));
+        $module->startHeight = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startHeight'));
         $module->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $module->dataCacheKey = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataCacheKey');
         $module->schemaVersion = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'schemaVersion'));

@@ -129,6 +129,12 @@ class Module implements \JsonSerializable
      */
     public $thumbnail;
 
+    /** @var int The width of the zone */
+    public $startWidth;
+
+    /** @var int The height of the zone */
+    public $startHeight;
+
     /**
      * @SWG\Property(description="Should be rendered natively by the Player or via the CMS (native|html)")
      * @var string

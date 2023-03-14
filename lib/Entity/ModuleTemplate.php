@@ -57,6 +57,12 @@ class ModuleTemplate implements \JsonSerializable
      */
     public $thumbnail;
 
+    /** @var int The width of the zone */
+    public $startWidth;
+
+    /** @var int The height of the zone */
+    public $startHeight;
+
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;
 
