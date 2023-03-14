@@ -186,7 +186,7 @@ class RssProvider implements WidgetProviderInterface
                 }
 
                 // Return articles based on the value of numItems
-                if ($dataProvider->getProperty('numItems') === $countItems) {
+                if ($dataProvider->getProperty('numItems') == $countItems) {
                    break;
                 }
 
