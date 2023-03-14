@@ -130,8 +130,8 @@ class DataSetDataProviderListener
             foreach ($dataSet->getColumn() as $column) {
                 $dataType->addField(
                     $column->heading . '|' . $column->dataSetColumnId,
-                    $column->dataType,
-                    $column->heading
+                    $column->heading,
+                    $column->dataType
                 );
             }
 

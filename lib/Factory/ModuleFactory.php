@@ -671,8 +671,8 @@ class ModuleFactory extends BaseFactory
             if ($field instanceof \DOMElement) {
                 $dataType->addField(
                     $field->getAttribute('id'),
-                    $field->getAttribute('type'),
-                    trim($field->textContent)
+                    trim($field->textContent),
+                    $field->getAttribute('type')
                 );
             }
         }
