@@ -231,10 +231,6 @@ window.forms = {
    * @param {string} [targetId] - Target Id ( widget, element, etc.)
    */
   initFields: function(container, target, targetId) {
-    // Clear previous element
-    // Clear code editors
-    window.codeEditors = {};
-
     // Find elements, either they match
     // the children of the container or they are the target
     const findElements = function(selector, target) {
@@ -1511,19 +1507,28 @@ window.forms = {
           method: 'GET',
           url: requestPath,
           success: function(response) {
-            if (response.fields && response.fields.length > 0) {
+            if (response && response.fields && response.fields.length > 0) {
               // Add data to the select options
               $.each(response.fields, function(_index, element) {
                 $select.append(
-                  $('<option value="' +
+                  $('<option data-snippet-type="' +
+                    element.type +
+                    '" value="' +
                     element.id +
                     '">' +
-                    element.type +
+                    element.title +
                     '</option>'));
               });
 
-              // Setup the snippet selector
-              setupSnippets($select);
+              // If there are no options, hide
+              if (response.fields.length == 0) {
+                $select.parent().hide();
+              } else {
+                // Setup the snippet selector
+                setupSnippets($select);
+              }
+            } else {
+              $select.parent().hide();
             }
           },
           error: function() {

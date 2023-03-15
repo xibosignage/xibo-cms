@@ -42,6 +42,16 @@
                     </test>
                 </visibility>
             </property>
+            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="template">
+                <title>Snippets</title>
+                <helpText>Choose data type snippet</helpText>
+                <dependsOn>dataSetId</dependsOn>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
                 <title>Optional Stylesheet Template</title>
                 <visibility>
@@ -98,6 +108,7 @@
                     <test type="and">
                         <condition field="effect" type="neq">none</condition>
                         <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -112,6 +123,7 @@
                         <condition field="effect" type="neq">marqueeRight</condition>
                         <condition field="effect" type="neq">marqueeUp</condition>
                         <condition field="effect" type="neq">marqueeDown</condition>
+                        <condition field="dataSetId" type="neq"></condition>
                     </test>
                 </visibility>
             </property>
@@ -171,7 +183,8 @@ for (var i = 0; i < items.length; i++) {
 
     // Replace the template with the item content
     var content = properties.template.replace(/\[(.*?)\]/g, function (match, column) {
-        return item[column] ? item[column] : '';
+        var itemId = column.split('|')[0];
+        return item[itemId] ? item[itemId] : '';
     });
 
     // Add the content to the target

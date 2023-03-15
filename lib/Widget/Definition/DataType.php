@@ -33,7 +33,7 @@ class DataType implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Field[] */
     public $fields = [];
 
-    public function addField(string $id, string $type, string $title): DataType
+    public function addField(string $id, string $title, string $type): DataType
     {
         $field = new Field();
         $field->id = $id;
