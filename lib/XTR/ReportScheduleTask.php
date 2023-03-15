@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -103,7 +103,11 @@ class ReportScheduleTask implements TaskInterface
      */
     private function runReportSchedule()
     {
-        MediaService::ensureLibraryExists($this->config->getSetting('LIBRARY_LOCATION'));
+
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        MediaService::ensureLibraryExists($libraryFolder);
         $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1, 'disableUserCheck' => 1]);
 
         // Get list of ReportSchedule
@@ -161,8 +165,10 @@ class ReportScheduleTask implements TaskInterface
                     fwrite($out, json_encode($result));
                     fclose($out);
 
+                    $savedReportFileName = 'rs_'.$reportSchedule->reportScheduleId. '_'. Carbon::now()->format('U');
+
                     // Create a ZIP file and add our temporary file
-                    $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/reportschedule.json.zip';
+                    $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'savedreport/'.$savedReportFileName.'.zip';
                     $zip = new \ZipArchive();
                     $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
@@ -175,18 +181,19 @@ class ReportScheduleTask implements TaskInterface
 
                     // Remove the JSON file
                     unlink($fileName);
-
-                    $runDateTimestamp = Carbon::now()->format('U');
-
-                    // Upload to the library
-                    $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
-                    $media->save();
-
                     // Save Saved report
-                    $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, Carbon::now()->format('U'), $reportSchedule->userId);
+                    $savedReport = $this->savedReportFactory->create(
+                        $saveAs,
+                        $reportSchedule->reportScheduleId,
+                        Carbon::now()->format('U'),
+                        $reportSchedule->userId,
+                        $savedReportFileName.'.zip',
+                        filesize($zipName),
+                        md5_file($zipName)
+                    );
                     $savedReport->save();
 
-                    $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
+                    $this->createPdfAndNotification($reportSchedule, $savedReport);
 
                     // Add the last savedreport in Report Schedule
                     $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
@@ -208,13 +215,12 @@ class ReportScheduleTask implements TaskInterface
      * Create the PDF and save a notification
      * @param $reportSchedule
      * @param $savedReport
-     * @param $media
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function createPdfAndNotification($reportSchedule, $savedReport, $media)
+    private function createPdfAndNotification($reportSchedule, $savedReport)
     {
         /* @var ReportResult $savedReportData */
         $savedReportData = $this->reportService->getSavedReportResults(
@@ -293,7 +299,7 @@ class ReportScheduleTask implements TaskInterface
                 $mpdf->WriteHTML($stylesheet, 1);
                 $mpdf->WriteHTML($body);
                 $mpdf->Output(
-                    $this->config->getSetting('LIBRARY_LOCATION') . 'attachment/filename-'.$media->mediaId.'.pdf',
+                    $this->config->getSetting('LIBRARY_LOCATION') . 'attachment/filename-'.$savedReport->savedReportId.'.pdf',
                     Destination::FILE
                 );
 
@@ -310,7 +316,7 @@ class ReportScheduleTask implements TaskInterface
                     $notification->isEmail = 1;
                     $notification->isInterrupt = 0;
                     $notification->userId = $savedReport->userId; // event owner
-                    $notification->filename = 'filename-'.$media->mediaId.'.pdf';
+                    $notification->filename = 'filename-'.$savedReport->savedReportId.'.pdf';
                     $notification->originalFileName = 'saved_report.pdf';
                     $notification->nonusers = $nonusers;
 

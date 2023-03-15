@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -78,19 +78,27 @@ class SavedReportFactory extends BaseFactory
      * Populate Saved Report table
      * @param string $saveAs
      * @param int $reportScheduleId
-     * @param int $mediaId
      * @param int $generatedOn
      * @param int $userId
      * @return SavedReport
      */
-    public function create($saveAs, $reportScheduleId, $mediaId, $generatedOn, $userId)
+    public function create(
+        $saveAs,
+        $reportScheduleId,
+        $generatedOn,
+        $userId,
+        $fileName,
+        $size,
+        $md5)
     {
         $savedReport = $this->createEmpty();
         $savedReport->saveAs = $saveAs;
         $savedReport->reportScheduleId = $reportScheduleId;
-        $savedReport->mediaId = $mediaId;
         $savedReport->generatedOn = $generatedOn;
         $savedReport->userId = $userId;
+        $savedReport->fileName = $fileName;
+        $savedReport->size = $size;
+        $savedReport->md5 = $md5;
         $savedReport->save();
 
         return $savedReport;
@@ -146,18 +154,16 @@ class SavedReportFactory extends BaseFactory
                saved_report.saveAs,
                saved_report.userId,
                saved_report.schemaVersion,
+               saved_report.fileName,
+               saved_report.size,
+               saved_report.md5,
                reportschedule.name AS reportScheduleName,
                reportschedule.reportName,
                saved_report.generatedOn,
-               media.mediaId,
-               media.originalFileName,
-               media.storedAs,
                `user`.UserName AS owner
             ';
 
-        $body = ' FROM saved_report 
-                    INNER JOIN media
-                    ON saved_report.mediaId = media.mediaId
+        $body = ' FROM saved_report                    
                     INNER JOIN reportschedule
                     ON  saved_report.reportScheduleId = reportschedule.reportScheduleId
         ';
@@ -215,12 +221,6 @@ class SavedReportFactory extends BaseFactory
             $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]);
         }
 
-        // by media ID
-        if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
-            $body .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
-        }
-
         if ($sanitizedFilter->getCheckbox('onlyMyReport') == 1) {
             $body .= ' AND `saved_report`.userId = :currentUserId ';
             $params['currentUserId'] = $this->getUser()->userId;
@@ -246,7 +246,7 @@ class SavedReportFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $version = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'mediaId', 'reportScheduleId', 'generatedOn', 'schemaVersion'
+                    'reportScheduleId', 'generatedOn', 'schemaVersion', 'size'
                 ]
             ]);
         }
@@ -258,5 +258,13 @@ class SavedReportFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Calculate the sum of the size column for all rows and count the total number of rows in the table.
+     */
+    public function getSizeAndCount()
+    {
+        return $this->getStore()->select('SELECT IFNULL(SUM(size), 0) AS SumSize, COUNT(*) AS totalCount FROM `saved_report`', [])[0];
     }
 }

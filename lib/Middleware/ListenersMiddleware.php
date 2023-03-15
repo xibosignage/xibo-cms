@@ -313,6 +313,10 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('playerVersionFactory')
         )));
 
+        $dispatcher->addListener(DependencyFileSizeEvent::$NAME, (new \Xibo\Listener\OnGettingDependencyFileSize\SavedReportListener(
+            $c->get('savedReportFactory')
+        )));
+
         // Widget related listeners for getting core data
         (new DataSetDataProviderListener(
             $c->get('store'),

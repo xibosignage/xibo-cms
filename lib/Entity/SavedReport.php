@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,7 +21,6 @@
  */
 
 namespace Xibo\Entity;
-
 
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
@@ -88,12 +87,6 @@ class SavedReport implements \JsonSerializable
     public $userId;
 
     /**
-     * @SWG\Property(description="Media Id")
-     * @var int
-     */
-    public $mediaId;
-
-    /**
      * @SWG\Property(description="Original name of the saved report media file")
      * @var string
      */
@@ -110,6 +103,24 @@ class SavedReport implements \JsonSerializable
      * @var int
      */
     public $schemaVersion = 2;
+
+    /**
+     * @SWG\Property(description="The Saved Report file name")
+     * @var string
+     */
+    public $fileName;
+
+    /**
+     * @SWG\Property(description="The Saved Report file size in bytes")
+     * @var int
+     */
+    public $size;
+
+    /**
+     * @SWG\Property(description="A MD5 checksum of the stored Saved Report file")
+     * @var string
+     */
+    public $md5;
 
     /**
      * @var ConfigServiceInterface
@@ -150,15 +161,17 @@ class SavedReport implements \JsonSerializable
     private function add()
     {
         $this->savedReportId = $this->getStore()->insert('
-            INSERT INTO `saved_report` (`saveAs`, `reportScheduleId`, `mediaId`, `generatedOn`, `userId`, `schemaVersion`)
-              VALUES (:saveAs, :reportScheduleId, :mediaId, :generatedOn, :userId, :schemaVersion)
+            INSERT INTO `saved_report` (`saveAs`, `reportScheduleId`, `generatedOn`, `userId`, `schemaVersion`, `fileName`, `size`, `md5`)
+              VALUES (:saveAs, :reportScheduleId, :generatedOn, :userId, :schemaVersion, :fileName, :size, :md5)
         ', [
             'saveAs' => $this->saveAs,
             'reportScheduleId' => $this->reportScheduleId,
-            'mediaId' => $this->mediaId,
             'generatedOn' => $this->generatedOn,
             'userId' => $this->userId,
-            'schemaVersion' => $this->schemaVersion
+            'schemaVersion' => $this->schemaVersion,
+            'fileName' => $this->fileName,
+            'size' => $this->size,
+            'md5' => $this->md5
         ]);
     }
 
@@ -171,7 +184,6 @@ class SavedReport implements \JsonSerializable
           UPDATE `saved_report`
             SET `saveAs` = :saveAs,
                 `reportScheduleId` = :reportScheduleId,
-                `mediaId` = :mediaId,
                 `generatedOn` = :generatedOn,
                 `userId` = :userId,
                 `schemaVersion` = :schemaVersion
@@ -181,7 +193,6 @@ class SavedReport implements \JsonSerializable
         $params = [
             'saveAs' => $this->saveAs,
             'reportScheduleId' => $this->reportScheduleId,
-            'mediaId' => $this->mediaId,
             'generatedOn' => $this->generatedOn,
             'userId' => $this->userId,
             'schemaVersion' => $this->schemaVersion,
@@ -212,6 +223,14 @@ class SavedReport implements \JsonSerializable
             [
             'reportScheduleId' => $this->reportScheduleId
             ]);
+
+        // Library location
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+
+        // delete file
+        if (file_exists($libraryLocation . 'savedreport/'. $this->fileName)) {
+            unlink($libraryLocation  . 'savedreport/'. $this->fileName);
+        }
     }
 
     /**

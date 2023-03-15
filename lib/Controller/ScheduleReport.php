@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -503,15 +503,10 @@ class ScheduleReport extends Base
 
         foreach ($savedReports as $savedreport) {
             try {
-                /** @var Media $media */
-                $media = $this->mediaFactory->getById($savedreport->mediaId);
-
                 $savedreport->load();
-                $media->load();
 
                 // Delete
                 $savedreport->delete();
-                $media->delete();
             } catch (\RuntimeException $e) {
                 throw new InvalidArgumentException(__('Saved report cannot be deleted'), 'savedReportId');
             }
