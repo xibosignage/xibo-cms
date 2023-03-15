@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -155,9 +155,8 @@ class ProofOfPlay implements ReportInterface
         $filterCriteria = [
             'filter' => $filter,
             'displayId' => $sanitizedParams->getInt('displayId'),
-            'displayIds' => $sanitizedParams->getIntArray('displayIds'),
-            'layoutIds' => $sanitizedParams->getIntArray('layoutId'),
-            'mediaIds' => $sanitizedParams->getIntArray('mediaId'),
+            'layoutId' => $sanitizedParams->getIntArray('layoutId'),
+            'mediaId' => $sanitizedParams->getIntArray('mediaId'),
             'type' => $sanitizedParams->getString('type'),
             'sortBy' => $sanitizedParams->getString('sortBy'),
             'tagsType' => $sanitizedParams->getString('tagsType'),
