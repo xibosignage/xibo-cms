@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -294,7 +294,7 @@ class WidgetHtmlRenderer
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
             if ($match === 'PlayerBundle') {
-                $output = str_replace('[[PlayerBundle]]', '-1.js', $output);
+                $output = str_replace('[[PlayerBundle]]', 'bundle.min.js', $output);
             } else if ($match === 'FontBundle') {
                 $output = str_replace('[[FontBundle]]', 'fonts.css', $output);
             } else if ($match === 'ViewPortWidth') {
@@ -304,11 +304,11 @@ class WidgetHtmlRenderer
                 $output = str_replace('[[Data]]', json_encode($data), $output);
             } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
-                $replace = $isSupportsDataUrl ? $value[1] . '.json' : $value[1] . '.html';
+                $replace = $isSupportsDataUrl ? $value[1] . '.json' : $value[1] . '.htm';
                 $output = str_replace('[[' . $match . ']]', $replace, $output);
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
-                $output = str_replace('[[' . $match . ']]', $data[$value[1]] ?? [], $output);
+                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]]) ? json_encode($data[$value[1]]) : [], $output);
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {

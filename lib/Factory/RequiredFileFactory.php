@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -63,7 +63,7 @@ class RequiredFileFactory extends BaseFactory
         $this->statement->execute($params);
 
         foreach ($this->statement->fetchAll(\PDO::FETCH_ASSOC) as $item) {
-            $files[] = $this->createEmpty()->hydrate($item);
+            $files[] = $this->createEmpty()->hydrate($item, ['stringProperties' => ['realId']]);
         }
 
         return $files;
@@ -91,9 +91,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public function getByDisplayAndMedia($displayId, $mediaId)
+    public function getByDisplayAndMedia($displayId, $mediaId, $type = 'M')
     {
-        $result = $this->query(['displayId' => $displayId, 'type' => 'M', 'itemId' => $mediaId]);
+        $result = $this->query(['displayId' => $displayId, 'type' => $type, 'itemId' => $mediaId]);
 
         if (count($result) <= 0)
             throw new NotFoundException(__('Required file not found for Display and Media Combination'));
@@ -134,7 +134,7 @@ class RequiredFileFactory extends BaseFactory
              WHERE `displayId` = :displayId
                 AND `type` = :type 
                 AND `fileType` = :fileType
-                AND `itemId` = :itemId
+                AND `realId` = :itemId
         ', [
             'displayId' => $displayId,
             'type' => 'P',
@@ -146,7 +146,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Dependency'));
         }
 
-        return $this->createEmpty()->hydrate($result[0]);
+        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
     }
 
     /**
@@ -173,7 +173,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Path'));
         }
 
-        return $this->createEmpty()->hydrate($result[0]);
+        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
     }
 
     /**
@@ -200,7 +200,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Dependency ID'));
         }
 
-        return $this->createEmpty()->hydrate($result[0]);
+        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
     }
 
     /**

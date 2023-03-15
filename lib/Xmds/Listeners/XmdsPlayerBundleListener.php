@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -57,7 +57,7 @@ class XmdsPlayerBundleListener
     public function onDependencyRequest(XmdsDependencyRequestEvent $event)
     {
         // Can we return this type of file?
-        if ($event->getFileType() === 'bundle' && $event->getId() === 1) {
+        if ($event->getFileType() === 'bundle' && $event->getRealId() == 1) {
             // Yes!
             // we only set a full path as this file not available over HTTP (it can't be because it isn't stored
             // under the library folder).

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -72,13 +72,32 @@ $(function() {
     }
 
     const $content = $('#content');
-    widget.items = [];
-    $.ajax({
-      method: 'GET',
-      url: widget.url,
-    }).done(function(data) {
+
+    // if we have data on the widget (for older players),
+    // or if we are not in preview and have empty data on Widget (like text)
+    // do not run ajax use that data instead
+    if ((widget.data.data !== undefined && widget.data.data.length > 0)
+      || (widget.data.length == 0 && !isPreview)
+    ) {
+      initPlayer(widget.data)
+    } else {
+      // else get data from widget.url,
+      // this will be either getData for preview
+      // or new json file for v4 players
+      $.ajax({
+        method: 'GET',
+        url: widget.url,
+      }).done(function(data) {
+        initPlayer(data)
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.log(jqXHR, textStatus, errorThrown);
+      });
+    }
+
+    function initPlayer(data) {
       const $target = $('body');
       let dataItems = [];
+      widget.items = [];
       const isArray = Array.isArray(data);
 
       // If the request failed, and we're in preview, show the error message
@@ -89,6 +108,7 @@ $(function() {
           '</div>');
       } else if (
         !isArray &&
+        data.data !== undefined &&
         data.data.length === 0 &&
         widget.sample &&
         isPreview
@@ -97,7 +117,11 @@ $(function() {
         // Add single element or array of elements
         dataItems = (Array.isArray(widget.sample)) ?
           widget.sample.slice(0) : [widget.sample];
-      } else if (!isArray && data.data.length > 0) {
+      } else if (
+        !isArray &&
+        data.data !== undefined &&
+        data.data.length > 0
+      ) {
         // Add items to the widget
         dataItems = data.data;
       }
@@ -228,8 +252,6 @@ $(function() {
 
       // Lock all interactions
       xiboIC.lockAllInteractions();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-      console.log(jqXHR, textStatus, errorThrown);
-    });
+    }
   });
 });
