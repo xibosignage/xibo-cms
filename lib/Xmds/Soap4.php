@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -83,12 +83,14 @@ class Soap4 extends Soap
         $clientAddress = $this->getIp();
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+        }
 
         // Check the Length of the hardwareKey
-        if (strlen($hardwareKey) > 40)
+        if (strlen($hardwareKey) > 40) {
             throw new \SoapFault('Sender', 'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).');
+        }
 
         // Return an XML formatted string
         $return = new \DOMDocument('1.0');
@@ -118,7 +120,6 @@ class Soap4 extends Soap
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
                 $displayElement->setAttribute('message', 'Display is awaiting licensing approval from an Administrator.');
-
             } else {
                 // It is licensed
                 $displayElement->setAttribute('status', 0);
@@ -228,9 +229,7 @@ class Soap4 extends Soap
                     $displayElement->setAttribute('localDate', $dateNow->format(DateFormatHelper::getSystemFormat()));
                 }
             }
-
         } catch (NotFoundException $e) {
-
             // Add a new display
             try {
                 $display = $this->displayFactory->createEmpty();
@@ -246,17 +245,17 @@ class Soap4 extends Soap
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;
                 }
-            }
-            catch (\InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException $e) {
                 throw new \SoapFault('Sender', $e->getMessage());
             }
 
             $displayElement->setAttribute('status', 1);
             $displayElement->setAttribute('code', 'ADDED');
-            if ($display->licensed == 0)
+            if ($display->licensed == 0) {
                 $displayElement->setAttribute('message', 'Display added and is awaiting licensing approval from an Administrator.');
-            else
+            } else {
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
+            }
         }
 
         // Send Notification if required
@@ -387,10 +386,11 @@ class Soap4 extends Soap
                     );
 
                     // use the path we saved in required files to work out which type of dependency we are.
-                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->realId);
+                    $event = new XmdsDependencyRequestEvent($requiredFile->fileType, $requiredFile->itemId, $requiredFile->realId);
                     $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
                     $path = $event->getFullPath();
+
                     if (empty($path)) {
                         throw new NotFoundException(__('File not found'));
                     }
@@ -585,7 +585,7 @@ class Soap4 extends Soap
         $this->display->lastCommandSuccess = $sanitizedStatus->getCheckbox('lastCommandSuccess');
         $this->display->deviceName = $sanitizedStatus->getString('deviceName', ['default' => $this->display->deviceName]);
         $this->display->lanIpAddress = $sanitizedStatus->getString('lanIpAddress', ['default' => $this->display->lanIpAddress]);
-        $commercialLicenceString = $sanitizedStatus->getString('licenceResult',['default' => null]);
+        $commercialLicenceString = $sanitizedStatus->getString('licenceResult', ['default' => null]);
 
         // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
         if (!empty($commercialLicenceString)) {
@@ -674,8 +674,9 @@ class Soap4 extends Soap
 
         // Touch the display record
         try {
-            if (count($this->display->getChangedProperties()) > 0)
+            if (count($this->display->getChangedProperties()) > 0) {
                 $this->display->save(Display::$saveOptionsMinimum);
+            }
         } catch (GeneralException $xiboException) {
             $this->getLog()->error($xiboException->getMessage());
             throw new \SoapFault('Receiver', 'Unable to save status update');
@@ -735,34 +736,38 @@ class Soap4 extends Soap
         // Open this displays screen shot file and save this.
         $location = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
-        foreach(array('imagick', 'gd') as $imgDriver) {
+        foreach (array('imagick', 'gd') as $imgDriver) {
             Img::configure(array('driver' => $imgDriver));
             try {
                 $screenShotImg = Img::make($screenShot);
             } catch (\Exception $e) {
-                if ($this->display->isAuditing())
+                if ($this->display->isAuditing()) {
                     $this->getLog()->debug($imgDriver . " - " . $e->getMessage());
+                }
             }
-            if($screenShotImg !== false) {
-                if ($this->display->isAuditing())
+            if ($screenShotImg !== false) {
+                if ($this->display->isAuditing()) {
                     $this->getLog()->debug("Use " . $imgDriver);
+                }
                 break;
             }
         }
 
         if ($screenShotImg !== false) {
-            $imgMime = $screenShotImg->mime(); 
+            $imgMime = $screenShotImg->mime();
 
-            if($imgMime != $screenShotMime) {
+            if ($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
-                    if ($this->display->isAuditing())
+                    if ($this->display->isAuditing()) {
                         $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
+                    }
                     $screenShot = (string) $screenShotImg->encode($screenShotFmt);
                     $converted = true;
                 } catch (\Exception $e) {
-                    if ($this->display->isAuditing())
+                    if ($this->display->isAuditing()) {
                         $this->getLog()->debug($e->getMessage());
+                    }
                 }
             }
         }

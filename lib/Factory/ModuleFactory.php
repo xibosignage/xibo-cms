@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -153,6 +153,7 @@ class ModuleFactory extends BaseFactory
                 $cacheKey = $module->dataCacheKey;
 
                 // Properties
+                $module->decorateProperties($widget, true);
                 $properties = $module->getPropertyValues(false);
 
                 // Parse the cache key for variables.
