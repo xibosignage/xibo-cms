@@ -33,6 +33,7 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
+    <thumbnail>clock-digital-thumb</thumbnail>
     <settings></settings>
     <properties>
         <property id="ta_text" type="richText" allowLibraryRefs="true">
@@ -97,4 +98,7 @@ if (typeof updateClock === 'function') {
     setInterval(updateClock, 1000);
 }
     ]]></onVisible>
+    <assets>
+        <asset id="clock-digital-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-digital-thumb.png" />
+    </assets>
 </module>

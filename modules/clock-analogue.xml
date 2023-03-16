@@ -33,6 +33,7 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
+    <thumbnail>clock-analogue-thumb</thumbnail>
     <settings></settings>
     <properties>
         <property id="themeId" type="dropdown" mode="single">
@@ -205,6 +206,7 @@ if (typeof updateClock === 'function') {
 }
     ]]></onVisible>
     <assets>
+        <asset id="clock-analogue-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-analogue-thumb.png" />
         <asset id="clock_bg_modern_dark" type="path" mime="image/png" path="/modules/assets/clock_bg_modern_dark.png"></asset>
         <asset id="clock_bg_modern_light" type="path" mime="image/png" path="/modules/assets/clock_bg_modern_light.png"></asset>
     </assets>

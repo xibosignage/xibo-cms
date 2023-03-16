@@ -34,6 +34,7 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
+    <thumbnail>countdown-days-thumb</thumbnail>
     <settings></settings>
     <properties>
         <property id="countdownType" type="dropdown" mode="single">
@@ -248,4 +249,7 @@ $contentContainer.xiboCountdownRender(
     $contentContainer.html(),
 );
     ]]></onRender>
+    <assets>
+        <asset id="countdown-days-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/countdown/countdown-days-thumb.png" />
+    </assets>
 </module>

@@ -33,6 +33,7 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
+    <thumbnail>worldclock-custom-thumb</thumbnail>
     <settings></settings>
     <properties>
         <property type="header">
@@ -145,4 +146,7 @@ if (typeof $(target).data('customClockRendered') === 'undefined') {
 // Scale the element every time
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
+    <assets>
+        <asset id="worldclock-custom-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-custom-thumb.png" />
+    </assets>
 </module>

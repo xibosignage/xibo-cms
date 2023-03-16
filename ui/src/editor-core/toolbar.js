@@ -106,6 +106,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       });
     }
 
+    // If we have thumbnail, add proper path
+    if (el.thumbnail) {
+      el.thumbnail =
+        assetDownloadUrl.replace(':assetId', el.thumbnail);
+    }
+
     // Add card type ( to use group cards )
     el.cardType = 'module';
 
@@ -1336,7 +1342,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 Toolbar.prototype.toggleFavourite = function(target) {
   const favouriteModulesArray =
     this.menuItems[this.widgetMenuIndex].favouriteModules;
-  let markAsFav = false;
 
   const $card = $(target).parent('.toolbar-card');
   const cardType = $card.data().subType;
@@ -1348,17 +1353,8 @@ Toolbar.prototype.toggleFavourite = function(target) {
     favouriteModulesArray.splice(positionInArray, 1);
   } else {
     // Add to favourites
-    markAsFav = true;
     favouriteModulesArray.push(cardType);
   }
-
-  // Show notification
-  toastr.success(
-    (markAsFav) ?
-      toolbarTrans.addedToFavourites :
-      toolbarTrans.removedFromFavourites,
-    '',
-    {positionClass: 'toast-bottom-right'});
 
   // Reload toolbar widget content with reload
   this.loadContent(0, true);
