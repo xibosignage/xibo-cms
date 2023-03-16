@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -260,7 +260,7 @@ class WidgetDataProviderCache
             if (Str::startsWith($match, 'mediaId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
-                    $data = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $data);
+                    $data = str_replace('[[' . $match . ']]', $storedAs[$value[1]], $data);
                 } else {
                     $data = str_replace('[[' . $match . ']]', '', $data);
                 }

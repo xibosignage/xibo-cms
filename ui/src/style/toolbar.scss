@@ -190,7 +190,7 @@
                     }
                 }
 
-                &.toolbar-card-template.has-thumb {
+                &.has-thumb {
                     padding: 0 !important;
                     flex-direction: column;
                     background: none;
@@ -624,6 +624,10 @@
                             padding-right: 0.75rem;
                         }
                     }
+                }
+
+                .btn-favourite {
+                    display: none !important;
                 }
             }
         }

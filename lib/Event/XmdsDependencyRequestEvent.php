@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -33,15 +33,21 @@ class XmdsDependencyRequestEvent extends Event
     private $id;
     private $path;
     private $fullPath;
+    /**
+     * @var string|null
+     */
+    private $realId;
 
     /**
      * @param $fileType
      * @param $id
+     * @param string|null $realId
      */
-    public function __construct($fileType, $id)
+    public function __construct($fileType, $id, string $realId = null)
     {
         $this->fileType = $fileType;
         $this->id = $id;
+        $this->realId = $realId;
     }
 
     /**
@@ -84,5 +90,10 @@ class XmdsDependencyRequestEvent extends Event
     public function getId(): int
     {
         return $this->id;
+    }
+
+    public function getRealId() : string
+    {
+        return $this->realId;
     }
 }

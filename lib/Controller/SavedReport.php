@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -270,19 +270,14 @@ class SavedReport extends Base
 
         $savedReport = $this->savedReportFactory->getById($id);
 
-        /** @var Media $media */
-        $media = $this->mediaFactory->getById($savedReport->mediaId);
-
         if (!$this->getUser()->checkDeleteable($savedReport)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
         }
 
         $savedReport->load();
-        $media->load();
 
         // Delete
         $savedReport->delete();
-        $media->delete();
 
         // Return
         $this->getState()->hydrate([

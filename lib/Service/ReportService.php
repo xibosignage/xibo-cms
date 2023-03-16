@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -292,7 +292,7 @@ class ReportService implements ReportServiceInterface
         $savedReport = $this->savedReportFactory->getById($savedreportId);
 
         // Open a zipfile and read the json
-        $zipFile = $this->config->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
+        $zipFile = $this->config->getSetting('LIBRARY_LOCATION') .'savedreport/'. $savedReport->fileName;
 
         // Do some pre-checks on the arguments we have been provided
         if (!file_exists($zipFile)) {

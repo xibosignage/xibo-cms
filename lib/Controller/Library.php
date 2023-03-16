@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -296,7 +296,7 @@ class Library extends Base
                 'users' => $this->userFactory->query(),
                 'modules' => $this->moduleFactory->getLibraryModules(),
                 'groups' => $this->userGroupFactory->query(),
-                'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
+                'validExt' => implode('|', $this->moduleFactory->getValidExtensions([]))
             ]);
         }
 
@@ -530,8 +530,6 @@ class Library extends Base
             'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
             'assignable' => $parsedQueryParams->getInt('assignable'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
-            'notPlayerSoftware' => 1,
-            'notSavedReport' => 1,
             'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed'),
             'layoutId' => $parsedQueryParams->getInt('layoutId'),
             'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0,
@@ -777,8 +775,6 @@ class Library extends Base
                 'tags' => $parsedQueryParams->getString('tags'),
                 'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
                 'ownerId' => $parsedQueryParams->getInt('ownerId'),
-                'notPlayerSoftware' => 1,
-                'notSavedReport' => 1,
                 'assignable' => 1,
                 'retired' => 0,
                 'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])

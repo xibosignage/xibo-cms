@@ -58,7 +58,7 @@ class XmdsAssetsListener
         if ($event->getFileType() === 'asset') {
             // Get the asset using only the assetId.
             try {
-                $asset = $this->moduleFactory->getAssetsFromAnywhereById($event->getId(), $this->moduleTemplateFactory);
+                $asset = $this->moduleFactory->getAssetsFromAnywhereById($event->getRealId(), $this->moduleTemplateFactory);
 
                 if ($asset->isSendToPlayer()) {
                     // Return the full path to this asset

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -615,14 +615,6 @@ class MediaFactory extends BaseFactory
         }
 
         $body .= " WHERE 1 = 1 ";
-
-        if ($sanitizedFilter->getInt('notPlayerSoftware') == 1) {
-            $body .= ' AND media.type <> \'playersoftware\' ';
-        }
-
-        if ($sanitizedFilter->getInt('notSavedReport') == 1) {
-            $body .= ' AND media.type <> \'savedreport\' ';
-        }
 
         if ($sanitizedFilter->getInt('allModules') == 0) {
             $body .= ' AND media.type <> \'module\' ';

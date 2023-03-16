@@ -2022,7 +2022,8 @@ class Soap
                     case 'media':
                         $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
                             $this->display->displayId,
-                            $node->getAttribute('id')
+                            $node->getAttribute('id'),
+                            $node->getAttribute('id') < 0 ? 'P' : 'M'
                         );
                         break;
 
@@ -2197,13 +2198,13 @@ class Soap
             }, $widgets));
 
             $sql = '
-                SELECT mediaId, storedAs 
+                SELECT `media`.mediaId, `media`.storedAs 
                   FROM `media` 
                     INNER JOIN `lkwidgetmedia`
                     ON `lkwidgetmedia`.mediaId = `media`.mediaId
                  WHERE `lkwidgetmedia`.widgetId IN (' . $widgetIds . ')
                 UNION ALL
-                SELECT mediaId, storedAs
+                SELECT `media`.mediaId, `media`.storedAs 
                   FROM `media`
                     INNER JOIN `display_media`
                     ON `display_media`.mediaId = `media`.mediaId

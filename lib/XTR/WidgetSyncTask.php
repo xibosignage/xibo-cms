@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -76,10 +76,10 @@ class WidgetSyncTask implements TaskInterface
         // TODO: decide if this is soon enough to do this work (none of these widgets will have any data until
         //  this runs).
         $sql = '
-          SELECT DISTINCT `requiredfile`.itemId 
+          SELECT DISTINCT `requiredfile`.itemId, `requiredfile`.complete 
             FROM `requiredfile` 
-              INNER JOIN `layout`
-              ON `layout`.layoutId = `requiredfile`.itemId
+              INNER JOIN `widget`
+              ON `widget`.widgetId = `requiredfile`.itemId
               INNER JOIN `display`
               ON `display`.displayId = `requiredfile`.displayId
            WHERE `requiredfile`.type = \'W\' 
@@ -94,61 +94,64 @@ class WidgetSyncTask implements TaskInterface
         while ($row) {
             $row = $smt->fetch(\PDO::FETCH_ASSOC);
             try {
-                $widgetId = (int)$row['itemId'];
-                $widget = $this->widgetFactory->getById($widgetId);
-                $widget->load();
+                if ($row !== false) {
+                    $widgetId = (int)$row['itemId'];
+                    $widget = $this->widgetFactory->getById($widgetId);
+                    $widget->load();
 
-                $module = $this->moduleFactory->getByType($widget->type);
+                    $module = $this->moduleFactory->getByType($widget->type);
 
-                // If this widget's module expects data to be provided (i.e. has a datatype) then make sure that
-                // data is cached ahead of time here.
-                // This also refreshes any library or external images referenced by the data so that they aren't
-                // considered for removal.
-                if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
-                    // Record start time
-                    $countWidgets++;
-                    $startTime = microtime(true);
+                    // If this widget's module expects data to be provided (i.e. has a datatype) then make sure that
+                    // data is cached ahead of time here.
+                    // This also refreshes any library or external images referenced by the data so that they aren't
+                    // considered for removal.
+                    if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+                        // Record start time
+                        $countWidgets++;
+                        $startTime = microtime(true);
 
-                    // Grab a widget interface, if there is one
-                    $widgetInterface = $module->getWidgetProviderOrNull();
+                        // Grab a widget interface, if there is one
+                        $widgetInterface = $module->getWidgetProviderOrNull();
 
-                    // Is the cache key display specific?
-                    $cacheKey = null;
-                    if ($widgetInterface !== null) {
-                        $cacheKey = $widgetInterface->getDataCacheKey(
-                            $module->createDataProvider($widget)
-                        );
-                    }
-                    if ($cacheKey === null) {
-                        $cacheKey = $module->dataCacheKey;
-                    }
-
-                    // Refresh the cache if needed.
-                    $isDisplaySpecific = str_contains($cacheKey, '%displayId%');
-
-                    // We're either assigning all media to all displays, or we're assigning then one by one
-                    if ($isDisplaySpecific) {
-                        // We need to run the cache for every display this widget is assigned to.
-                        foreach ($this->getDisplays($widget) as $display) {
-                            $mediaIds = $this->cache($module, $widget, $widgetInterface, intval($display['displayId']));
-                            $this->linkDisplays([$display], $mediaIds);
+                        // Is the cache key display specific?
+                        $cacheKey = null;
+                        if ($widgetInterface !== null) {
+                            $cacheKey = $widgetInterface->getDataCacheKey(
+                                $module->createDataProvider($widget)
+                            );
                         }
-                    } else {
-                        // Just a single run will do it.
-                        $mediaIds = $this->cache($module, $widget, $widgetInterface, null);
-                        $this->linkDisplays($this->getDisplays($widget), $mediaIds);
+                        if ($cacheKey === null) {
+                            $cacheKey = $module->dataCacheKey;
+                        }
+
+                        // Refresh the cache if needed.
+                        $isDisplaySpecific = str_contains($cacheKey, '%displayId%');
+
+                        // We're either assigning all media to all displays, or we're assigning then one by one
+                        if ($isDisplaySpecific) {
+                            // We need to run the cache for every display this widget is assigned to.
+                            foreach ($this->getDisplays($widget) as $display) {
+                                $mediaIds = $this->cache($module, $widget, $widgetInterface,
+                                    intval($display['displayId']));
+                                $this->linkDisplays([$display], $mediaIds);
+                            }
+                        } else {
+                            // Just a single run will do it.
+                            $mediaIds = $this->cache($module, $widget, $widgetInterface, null);
+                            $this->linkDisplays($this->getDisplays($widget), $mediaIds);
+                        }
+
+                        // Record end time and aggregate for final total
+                        $duration = (microtime(true) - $startTime);
+                        $timeCaching = $timeCaching + $duration;
+                        $this->log->debug('Took ' . $duration
+                            . ' seconds to check and/or cache widgetId ' . $widget->widgetId);
+
+                        // Commit so that any images we've downloaded have their cache times updated for the
+                        // next request, this makes sense because we've got a file cache that is already written
+                        // out.
+                        $this->store->commitIfNecessary();
                     }
-
-                    // Record end time and aggregate for final total
-                    $duration = (microtime(true) - $startTime);
-                    $timeCaching = $timeCaching + $duration;
-                    $this->log->debug('Took ' . $duration
-                        . ' seconds to check and/or cache widgetId ' . $widget->widgetId);
-
-                    // Commit so that any images we've downloaded have their cache times updated for the
-                    // next request, this makes sense because we've got a file cache that is already written
-                    // out.
-                    $this->store->commitIfNecessary();
                 }
             } catch (GeneralException $xiboException) {
                 // Log and skip to the next layout
