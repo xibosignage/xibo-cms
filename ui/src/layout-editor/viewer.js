@@ -29,6 +29,9 @@ const Viewer = function(parent, container) {
   // If the viewer is currently playing the preview
   this.previewPlaying = false;
 
+  // Theme ( light / dark)
+  this.theme = 'light';
+
   // Moveable object
   this.moveable = null;
 
@@ -98,6 +101,21 @@ Viewer.prototype.scaleElement = function(element, container) {
 Viewer.prototype.render = function(forceReload = false) {
   const self = this;
 
+  // Check background colour and set theme
+  // eslint-disable-next-line new-cap
+  const hsvColor = Color(this.parent.selectedObject.backgroundColor);
+  if (
+    (
+      hsvColor.values.hsv[2] > 75 &&
+      hsvColor.values.hsv[1] < 50
+    ) ||
+    hsvColor.values.hsv[2] > 90
+  ) {
+    this.theme = 'dark';
+  } else {
+    this.theme = 'light';
+  }
+
   // Refresh if it's not the reload
   if (!forceReload && !this.reload) {
     this.update();
@@ -124,7 +142,9 @@ Viewer.prototype.render = function(forceReload = false) {
   this.previewPlaying = false;
 
   // Reset container properties
-  $viewerContainer.css('background', '#111');
+  $viewerContainer.css('background',
+    (this.theme == 'dark') ? '#2c2d2e' : '#d8dce1',
+  );
   $viewerContainer.css('border', 'none');
 
   // Apply viewer scale to the layout
@@ -141,6 +161,7 @@ Viewer.prototype.render = function(forceReload = false) {
     dimensions: this.containerElementDimensions,
     layout: scaledLayout,
     trans: viewerTrans,
+    theme: this.theme,
   });
 
   // Replace container html
@@ -247,6 +268,36 @@ Viewer.prototype.render = function(forceReload = false) {
     },
   });
 
+  // Handle droppable empty regions ( zones )
+  this.DOMObject.find(
+    '.designer-region.designer-region-zone',
+  ).droppable({
+    greedy: true,
+    tolerance: 'pointer',
+    accept: (draggable) => {
+      // Check target
+      return lD.common.hasTarget(draggable, 'zone');
+    },
+    drop: _.debounce(function(event, ui) {
+      lD.dropItemAdd(event.target, ui.draggable[0]);
+    }, 200),
+  });
+
+  // Handle droppable empty regions ( playlist )
+  this.DOMObject.find(
+    '.designer-region.designer-region-playlist',
+  ).droppable({
+    greedy: true,
+    tolerance: 'pointer',
+    accept: (draggable) => {
+      // Check target
+      return lD.common.hasTarget(draggable, 'playlist');
+    },
+    drop: _.debounce(function(event, ui) {
+      lD.dropItemAdd(event.target, ui.draggable[0]);
+    }, 200),
+  });
+
   // Handle click and double click
   let clicks = 0;
   let timer = null;
@@ -281,6 +332,18 @@ Viewer.prototype.render = function(forceReload = false) {
         $(e.target).hasClass('ui-droppable-actions-target')
       ) {
         // Add action to the selected object
+        lD.selectObject({
+          target: $(e.target),
+          forceSelect: true,
+        });
+      } else if (
+        (
+          $(e.target).hasClass('designer-region-zone') ||
+          $(e.target).hasClass('designer-region-playlist')
+        ) &&
+        $(e.target).hasClass('ui-droppable-active')
+      ) {
+        // Add item to the selected region
         lD.selectObject({
           target: $(e.target),
           forceSelect: true,
@@ -738,8 +801,26 @@ Viewer.prototype.initMoveable = function() {
 
   /* draggable */
   this.moveable.on('drag', (e) => {
-    e.target.style.left = `${e.left}px`;
-    e.target.style.top = `${e.top}px`;
+    // Margin to prevent dragging outside of the container
+    const remainingMargin = 20;
+
+    // Update horizontal position
+    // if not outside of the container
+    if (
+      e.left > -e.width + remainingMargin &&
+      e.left + remainingMargin < this.containerElementDimensions.width
+    ) {
+      e.target.style.left = `${e.left}px`;
+    }
+
+    // Update vertical position
+    // if not outside of the container
+    if (
+      e.top > -e.height + remainingMargin &&
+      e.top + remainingMargin < this.containerElementDimensions.height
+    ) {
+      e.target.style.top = `${e.top}px`;
+    }
   }).on('dragEnd', (e) => {
     (e.isDrag) && saveRegionProperties(e.target, false, true);
   });

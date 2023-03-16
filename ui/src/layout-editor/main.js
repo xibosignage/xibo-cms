@@ -361,7 +361,7 @@ lD.selectObject =
         // Simulate drop item add
         this.dropItemAdd(target, card, clickPosition);
       } else if (
-        target.data('subType') == 'drawer' ||
+        ['drawer', 'zone', 'playlist'].includes(target.data('subType')) ||
         target.hasClass('ui-droppable-actions-target')
       ) {
         // Simulate drop item add
@@ -1097,6 +1097,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const draggableData = $(draggable).data();
   const draggableDataType = $(draggable).data('dataType');
   const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
+  const droppableIsZone = ($(droppable).data('subType') === 'zone');
+  const droppableIsPlaylist =($(droppable).data('subType') === 'playlist');
 
   /**
    * Import from provider or add media from library
@@ -1146,7 +1148,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     // Deselect cards and drop zones
     lD.toolbar.deselectCardsAndDropZones();
 
-    // If droppable is a drawer, add the media to the playlist
+    // If droppable is a drawer
     if (droppableIsDrawer) {
       importOrAddMedia(
         lD.layout.drawer.playlists.playlistId,
@@ -1154,6 +1156,38 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         mediaId,
         true,
       );
+    } else if (droppableIsZone || droppableIsPlaylist) {
+      // Get region
+      const region =
+        lD.getElementByTypeAndId(
+          'region',
+          'region_' + $(droppable).data('regionId'),
+        );
+
+      importOrAddMedia(
+        region.playlists.playlistId,
+        draggable,
+        mediaId,
+        false,
+      ).then((_res) => {
+        // Open playlist editor if it's a playlist
+        if (droppableIsPlaylist) {
+          lD.openPlaylistEditor(region.playlists.playlistId, region);
+        }
+      });
+    } else if (droppableIsPlaylist) {
+      // Get playlist id
+      const playlistId = $(droppable).data('playlistId');
+
+      importOrAddMedia(
+        playlistId,
+        draggable,
+        mediaId,
+        false,
+      ).then((res) => {
+        // Open playlist editor
+        lD.openPlaylistEditor(res.data.regionPlaylist.playlistId);
+      });
     } else {
       // Add to layout, but create a new region
       lD.addRegion(dropPosition, 'frame').then((res) => {
@@ -1163,7 +1197,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           draggable,
           mediaId,
         ).catch((_error) => {
-          // Delete new region if import failed
+          // Delete new region
           lD.layout.deleteElement('region', res.data.regionPlaylist.regionId);
         });
       });
@@ -1212,6 +1246,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     // Deselect cards and drop zones
     lD.toolbar.deselectCardsAndDropZones();
 
+    // If droppable is a drawer
     if (droppableIsDrawer) {
       lD.addModuleToPlaylist(
         lD.layout.drawer.regionId,
@@ -1221,6 +1256,29 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         null,
         true,
       );
+    } if (droppableIsZone || droppableIsPlaylist) {
+      // Get zone region
+      const region =
+      lD.getElementByTypeAndId(
+        'region',
+        'region_' + $(droppable).data('regionId'),
+      );
+
+      // Add module to zone
+      lD.addModuleToPlaylist(
+        region.regionId,
+        region.playlists.playlistId,
+        draggableSubType,
+        draggableData,
+        null,
+        false,
+        true,
+      ).then((_res) => {
+        // Open playlist editor if it's a playlist
+        if (droppableIsPlaylist) {
+          lD.openPlaylistEditor(region.playlists.playlistId, region);
+        }
+      });
     } else {
       // Add module to layout, but create a region first
       lD.addRegion(dropPosition, regionType).then((res) => {
@@ -1257,6 +1315,7 @@ lD.getUploadDialogClassName = function() {
  * @param {object} moduleData
  * @param {number=} addToPosition
  * @param {boolean} drawerWidget If the widget is in the drawer
+ * @param {boolean} zoneWidget If the widget is in a zone
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
@@ -1266,6 +1325,7 @@ lD.addModuleToPlaylist = function(
   moduleData,
   addToPosition = null,
   drawerWidget = false,
+  zoneWidget = false,
 ) {
   // Mark new widget as selected
   // and append it to the viewer
@@ -1301,8 +1361,8 @@ lD.addModuleToPlaylist = function(
 
     // On hide callback
     const onHide = function() {
-      // If there are no uploads, delete the region
-      if (numUploads === 0) {
+      // If there are no uploads, and it's not a zone, delete the region
+      if (numUploads === 0 && !zoneWidget) {
         lD.layout.deleteElement(
           'region',
           regionId,

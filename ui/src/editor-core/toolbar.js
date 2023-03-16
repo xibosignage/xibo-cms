@@ -990,11 +990,14 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       // Drop to region
       selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
     }
-
     // Playlist editor droppables
+    // and layout editor droppables
     if (app.common.hasTarget(draggable, 'playlist')) {
       // Drop to playlist
       selectorBuild.push('.designer-region-playlist.droppable');
+
+      // Drop to zone region
+      selectorBuild.push('.designer-region-zone.droppable');
 
       // Drop to playlist timeline
       selectorBuild.push('#playlist-timeline.ui-droppable');
