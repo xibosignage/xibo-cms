@@ -1,4 +1,4 @@
-<div class="toolbar-card tooltip-always-on {{#eq cardType "moduleGroup"}}toolbar-card-group{{/eq}} {{#neq dataType ""}}toolbar-card-menu{{/neq}} {{#if favourited}}favourited{{/if}}" 
+<div class="toolbar-card tooltip-always-on {{#eq cardType "moduleGroup"}}toolbar-card-group{{/eq}} {{#neq dataType ""}}toolbar-card-menu{{/neq}} {{#if favourited}}favourited{{/if}} {{#if thumbnail}}has-thumb{{/if}}" 
     data-toggle="tooltip" 
     data-type="{{contentType}}" 
     data-sub-type="{{type}}"
@@ -26,8 +26,16 @@
             </div>
         {{/neq}}
     {{/eq}}
+
+    {{#if thumbnail}}
+        <div class="toolbar-card-thumb">
+            <img src="{{thumbnail}}" />
+        </div>
+    {{else}}
+        <i class="fa {{icon}}-icon-{{type}} card-icon"></i>
+    {{/if}}
     
-    <i class="fa {{icon}}-icon-{{type}} card-icon"></i>
-    
-    <span class="card-title">{{name}}</span>
+    <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
+        <span class="card-title">{{name}}</span>
+    </div>
 </div>

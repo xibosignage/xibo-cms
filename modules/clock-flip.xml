@@ -33,6 +33,7 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
+    <thumbnail>clock-flip-thumb</thumbnail>
     <settings></settings>
     <properties>
         <property id="clockFace" type="dropdown" mode="single">
@@ -183,4 +184,7 @@ if (properties.clockFace === "TwelveHourClock" || properties.clockFace === "Twen
 // Scale the element
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
+    <assets>
+        <asset id="clock-flip-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-flip-thumb.png" />
+    </assets>
 </module>

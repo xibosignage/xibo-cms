@@ -33,6 +33,7 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
+    <thumbnail>worldclock-analogue-thumb</thumbnail>
     <settings></settings>
     <properties>
         <property type="header">
@@ -536,4 +537,7 @@ if (typeof $(target).data('analogueClockRendered') === 'undefined') {
 // Scale the element every time
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
+    <assets>
+        <asset id="worldclock-analogue-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-analogue-thumb.png" />
+    </assets>
 </module>
