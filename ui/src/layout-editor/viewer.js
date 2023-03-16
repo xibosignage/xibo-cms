@@ -103,7 +103,7 @@ Viewer.prototype.render = function(forceReload = false) {
 
   // Check background colour and set theme
   // eslint-disable-next-line new-cap
-  const hsvColor = Color(this.parent.selectedObject.backgroundColor);
+  const hsvColor = Color(this.parent.layout.backgroundColor);
   if (
     (
       hsvColor.values.hsv[2] > 75 &&
