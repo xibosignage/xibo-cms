@@ -184,8 +184,6 @@ for (var i = 0; i < meta.mapping.length; i++) {
     };
 }
 
-console.log(columnTypes);
-
 // Add content for each item
 // make replacements
 // and wrap it in a div with the item class
