@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
   ~ This file is part of Xibo.
   ~
@@ -25,6 +25,8 @@
         <dataType>currency</dataType>
         <title>Currencies 1</title>
         <thumbnail>currencies1</thumbnail>
+        <startWidth>500</startWidth>
+        <startHeight>300</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
@@ -207,6 +209,8 @@ if (templateItems.length > 0) {
         <dataType>currency</dataType>
         <title>Currencies 2</title>
         <thumbnail>currencies2</thumbnail>
+        <startWidth>500</startWidth>
+        <startHeight>300</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>

@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
   ~ This file is part of Xibo.
   ~
@@ -26,6 +26,8 @@
         <dataType>forecast</dataType>
         <title>Landscape - Current day, 4 day forecast</title>
         <thumbnail>weather_1</thumbnail>
+        <startWidth>960</startWidth>
+        <startHeight>340</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -346,6 +348,8 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Current day, summary</title>
         <thumbnail>weather_2</thumbnail>
+        <startWidth>340</startWidth>
+        <startHeight>200</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -642,6 +646,8 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Current day</title>
         <thumbnail>weather_3</thumbnail>
+        <startWidth>340</startWidth>
+        <startHeight>200</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -938,6 +944,8 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 4 day forecast</title>
         <thumbnail>weather_4</thumbnail>
+        <startWidth>1200</startWidth>
+        <startHeight>750</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -1320,6 +1328,8 @@ h1 {
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 2 day forecast</title>
         <thumbnail>weather_5</thumbnail>
+        <startWidth>540</startWidth>
+        <startHeight>960</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -1765,6 +1775,8 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed table, 4 day forecast</title>
         <thumbnail>weather_6</thumbnail>
+        <startWidth>950</startWidth>
+        <startHeight>520</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -2171,6 +2183,8 @@ body {
         <dataType>forecast</dataType>
         <title>Square - Current day</title>
         <thumbnail>weather_7</thumbnail>
+        <startWidth>540</startWidth>
+        <startHeight>540</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -2594,6 +2608,8 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Current day, 4 day forecast</title>
         <thumbnail>weather_8</thumbnail>
+        <startWidth>970</startWidth>
+        <startHeight>700</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -3013,6 +3029,8 @@ body {
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 4 day forecast</title>
         <thumbnail>weather_9</thumbnail>
+        <startWidth>540</startWidth>
+        <startHeight>960</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -3498,6 +3516,8 @@ text-transform: uppercase;
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 4 day forecast</title>
         <thumbnail>weather_10</thumbnail>
+        <startWidth>960</startWidth>
+        <startHeight>540</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -3973,6 +3993,8 @@ body {
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 3 day forecast</title>
         <thumbnail>weather_11</thumbnail>
+        <startWidth>540</startWidth>
+        <startHeight>960</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -4476,6 +4498,8 @@ h1 {
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 3 day forecast</title>
         <thumbnail>weather_12</thumbnail>
+        <startWidth>960</startWidth>
+        <startHeight>540</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -4919,6 +4943,8 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Current day details, 4 day forecast</title>
         <thumbnail>weather_13</thumbnail>
+        <startWidth>960</startWidth>
+        <startHeight>180</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -5256,6 +5282,8 @@ body {
         <dataType>forecast</dataType>
         <title>Portrait - Current day details, 4 day forecast</title>
         <thumbnail>weather_14</thumbnail>
+        <startWidth>189</startWidth>
+        <startHeight>900</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -5611,6 +5639,8 @@ body {
         <dataType>forecast</dataType>
         <title>Square - Forecast squared with background</title>
         <thumbnail>weather_15</thumbnail>
+        <startWidth>500</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -5890,6 +5920,8 @@ body {
         <dataType>forecast</dataType>
         <title>Square - Detailed weather</title>
         <thumbnail>weather_16</thumbnail>
+        <startWidth>500</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
@@ -6183,6 +6215,8 @@ body {
         <dataType>forecast</dataType>
         <title>Scale - Weather background only</title>
         <thumbnail>weather_17</thumbnail>
+        <startWidth>1200</startWidth>
+        <startHeight>800</startHeight>
         <properties>
             <property id="footer-color" type="color">
                 <title>Footer Background</title>
@@ -6370,6 +6404,8 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Weather fullscreen</title>
         <thumbnail>weather_18</thumbnail>
+        <startWidth>1200</startWidth>
+        <startHeight>800</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>

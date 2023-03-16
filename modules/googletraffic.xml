@@ -31,6 +31,8 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>600</defaultDuration>
+    <startWidth>600</startWidth>
+    <startHeight>400</startHeight>
     <settings>
         <property id="apiKey" type="text">
             <title>API Key</title>

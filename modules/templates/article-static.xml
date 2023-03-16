@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
   ~ This file is part of Xibo.
   ~
@@ -139,6 +139,8 @@ $(target).xiboTextRender(properties, items);
         <dataType>article</dataType>
         <title>Image only</title>
         <thumbnail>article_image_only</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>400</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background</title>
@@ -251,6 +253,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
         <dataType>article</dataType>
         <title>Image overlaid with the Feed Content on the Left</title>
         <thumbnail>article_with_left_hand_text</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>400</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background</title>
@@ -449,6 +453,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
         <dataType>article</dataType>
         <title>Image overlaid with the Title</title>
         <thumbnail>article_with_title</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>400</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background</title>
@@ -631,6 +637,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
         <dataType>article</dataType>
         <title>Prominent title with description and name separator</title>
         <thumbnail>article_with_desc_and_name_separator</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>600</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background</title>
@@ -794,6 +802,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .article, #conte
         <dataType>article</dataType>
         <title>Title Only</title>
         <thumbnail>article_title_only</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>200</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background</title>

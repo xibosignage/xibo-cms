@@ -1189,8 +1189,20 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         lD.openPlaylistEditor(res.data.regionPlaylist.playlistId);
       });
     } else {
+      // Get dimensions of the draggable
+      const startWidth = $(draggable).data('startWidth');
+      const startHeight = $(draggable).data('startHeight');
+
+      // If both dimensions exist and are not 0
+      // add them to options
+      const dimensions = {};
+      if (startWidth && startHeight) {
+        dimensions.width = startWidth;
+        dimensions.height = startHeight;
+      }
+
       // Add to layout, but create a new region
-      lD.addRegion(dropPosition, 'frame').then((res) => {
+      lD.addRegion(dropPosition, 'frame', dimensions).then((res) => {
         // Add media to new region
         importOrAddMedia(
           res.data.regionPlaylist.playlistId,
@@ -1280,8 +1292,19 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         }
       });
     } else {
+      // Get dimensions of the draggable
+      const startWidth = $(draggable).data('startWidth');
+      const startHeight = $(draggable).data('startHeight');
+
+      // If both dimensions exist and are not 0
+      // add them to options
+      const dimensions = {};
+      if (startWidth && startHeight) {
+        dimensions.width = startWidth;
+        dimensions.height = startHeight;
+      }
       // Add module to layout, but create a region first
-      lD.addRegion(dropPosition, regionType).then((res) => {
+      lD.addRegion(dropPosition, regionType, dimensions).then((res) => {
         // Add module to new region if it's not a playlist
         if (regionType !== 'playlist') {
           lD.addModuleToPlaylist(
@@ -2259,9 +2282,10 @@ lD.uploadThumbnail = function(targetToAttach) {
  * Add a new region to the layout
  * @param {object} positionToAdd - Position to add the region to
  * @param {object} regionType - Region type (frame, playlist or canvas)
+ * @param {object =} dimensions - Dimensions of the region
  * @return {Promise} - Promise object
  */
-lD.addRegion = function(positionToAdd, regionType) {
+lD.addRegion = function(positionToAdd, regionType, dimensions) {
   lD.common.showLoadingScreen();
 
   if (lD.selectedObject.type == 'region') {
@@ -2279,6 +2303,7 @@ lD.addRegion = function(positionToAdd, regionType) {
     {
       positionToAdd: positionToAdd,
       elementSubtype: regionType,
+      dimensions: dimensions,
     },
   ).catch((error) => {
     // Show error returned or custom message to the user

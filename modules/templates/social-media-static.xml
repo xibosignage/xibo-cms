@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
   ~ This file is part of Xibo.
   ~
@@ -26,6 +26,8 @@
         <dataType>social-media</dataType>
         <title>Template 1 - text, profile image</title>
         <thumbnail>fulltime-np</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -214,6 +216,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 2 - text, profile image, photo</title>
         <thumbnail>fulltime</thumbnail>
+        <startWidth>1200</startWidth>
+        <startHeight>300</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>2</default>
@@ -420,6 +424,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 3 - text</title>
         <thumbnail>textonly</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -538,6 +544,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 4 - text, profile image</title>
         <thumbnail>profileleft</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -674,6 +682,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 5 - text, profile image</title>
         <thumbnail>profileright</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -811,6 +821,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 6 - text, profile image</title>
         <thumbnail>twitter1</thumbnail>
+        <startWidth>300</startWidth>
+        <startHeight>550</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -996,6 +1008,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 7 - text, profile image</title>
         <thumbnail>twitter2</thumbnail>
+        <startWidth>200</startWidth>
+        <startHeight>700</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1191,6 +1205,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 8 - text, profile image</title>
         <thumbnail>twitter4</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>750</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1391,6 +1407,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 9 - text, logo</title>
         <thumbnail>twitter6np</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>800</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1578,6 +1596,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 10 - text, photo, logo</title>
         <thumbnail>twitter6pl</thumbnail>
+        <startWidth>1100</startWidth>
+        <startHeight>250</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>2</default>
@@ -1774,6 +1794,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 11 - text, logo</title>
         <thumbnail>twitter7</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>800</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -1981,6 +2003,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Template 12 - text, profile image, logo</title>
         <thumbnail>twitter8</thumbnail>
+        <startWidth>1000</startWidth>
+        <startHeight>400</startHeight>
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
@@ -2179,6 +2203,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <dataType>social-media</dataType>
         <title>Metro Social</title>
         <thumbnail>colors1</thumbnail>
+        <startWidth>1150</startWidth>
+        <startHeight>650</startHeight>
         <properties>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>
@@ -2781,8 +2807,6 @@ for (let i = 1; i <= 8; i++) {
         colors.push(properties['color' + i]);
     }
 }
-
-console.log(colors);
 
 // Render the items with metro render
 $metroRenderContainer.xiboMetroRender(properties, itemsHTML, colors);

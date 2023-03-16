@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
@@ -34,6 +34,8 @@
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
     <thumbnail>clock-digital-thumb</thumbnail>
+    <startWidth>300</startWidth>
+    <startHeight>150</startHeight>
     <settings></settings>
     <properties>
         <property id="ta_text" type="richText" allowLibraryRefs="true">

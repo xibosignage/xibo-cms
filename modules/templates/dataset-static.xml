@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
   ~
   ~ This file is part of Xibo.
   ~
@@ -229,6 +229,8 @@ $(target).xiboTextRender(
         <dataType>dataset</dataType>
         <title>Plain Table (Customisable)</title>
         <thumbnail>empty</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -498,6 +500,8 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <title>A light green background with darker green borders. White heading text.</title>
         <thumbnail>light-green</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -757,6 +761,8 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <title>Simple white table with rounded rows.</title>
         <thumbnail>simple-round-table</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1007,6 +1013,8 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <title>Striped blue table with darker blue header.</title>
         <thumbnail>transparent-blue</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1255,6 +1263,8 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <title>White striped table with orange header.</title>
         <thumbnail>orange-grey-striped</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1501,6 +1511,8 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <title>White and grey table with split rows.</title>
         <thumbnail>split-rows-</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1745,6 +1757,8 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <title>A dark table with round borders and yellow heading text.</title>
         <thumbnail>dark-round</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -1984,6 +1998,8 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <title>Round cells with multi colours and a full coloured header.</title>
         <thumbnail>pill-colored</thumbnail>
+        <startWidth>600</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
