@@ -175,6 +175,17 @@ if (properties.randomiseItems) {
     });
 }
 
+// Get dataset columns from meta.mapping
+var columnTypes = {};
+for (var i = 0; i < meta.mapping.length; i++) {
+    var column = meta.mapping[i];
+    columnTypes[column.dataSetColumnId] = {
+        type: column.dataTypeId
+    };
+}
+
+console.log(columnTypes);
+
 // Add content for each item
 // make replacements
 // and wrap it in a div with the item class
@@ -184,7 +195,16 @@ for (var i = 0; i < items.length; i++) {
     // Replace the template with the item content
     var content = properties.template.replace(/\[(.*?)\]/g, function (match, column) {
         var itemId = column.split('|')[0];
-        return item[itemId] ? item[itemId] : '';
+        var itemCol = column.split('|')[1];
+        var itemType = columnTypes[itemCol].type;
+        var itemValue = item[itemId];
+
+        // If this is an image column, wrap it in an image tag
+        if (itemType === 4 || itemType === 5) {
+            itemValue = itemValue ? '<img src="' + itemValue + '" />' : '';
+        }
+
+        return itemValue ? itemValue : '';
     });
 
     // Add the content to the target

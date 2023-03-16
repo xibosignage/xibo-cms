@@ -148,7 +148,17 @@ jQuery.fn.extend({
 
       if (options.takeItemsFrom === 'end') {
         // console.log("[Xibo] Reversing items");
-        items.reverse();
+        // If it's an array, reverse it
+        if (Array.isArray(items)) {
+          items.reverse();
+        } else {
+          // If it's an object, reverse the keys
+          const newItems = {};
+          Object.keys(items).reverse().forEach(function(key) {
+            newItems[key] = items[key];
+          });
+          items = $(newItems);
+        }
       }
 
       // Make sure the num items is not greater than the actual number of items
@@ -169,7 +179,17 @@ jQuery.fn.extend({
         (options.takeItemsFrom === 'start' && options.reverseOrder === 1)
       ) {
         // console.log("[Xibo] Reversing items");
-        items.reverse();
+        // If it's an array, reverse it
+        if (Array.isArray(items)) {
+          items.reverse();
+        } else {
+          // If it's an object, reverse the keys
+          const newItems = {};
+          Object.keys(items).reverse().forEach(function(key) {
+            newItems[key] = items[key];
+          });
+          items = $(newItems);
+        }
       }
 
       // 2nd objective - put the items on the page
