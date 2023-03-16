@@ -221,6 +221,16 @@ class Module implements \JsonSerializable
      */
     public $settings = [];
 
+    /**
+     * @SWG\Property(
+     *     description="An array of additional module specific group properties",
+     *     type="array",
+     *     @SWG\Items(type="string")
+     * )
+     * @var \Xibo\Widget\Definition\GroupProperty[]
+     */
+    public $propertyGroups = [];
+
     // </editor-fold>
 
     /** @var ModuleFactory */

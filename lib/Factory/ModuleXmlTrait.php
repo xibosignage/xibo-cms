@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use Xibo\Entity\Module;
 use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Definition\Element;
+use Xibo\Widget\Definition\GroupProperty;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
 use Xibo\Widget\Definition\Stencil;
@@ -101,6 +102,7 @@ trait ModuleXmlTrait
                 $property->format = $node->getAttribute('format');
                 $property->mode = $node->getAttribute('mode');
                 $property->target = $node->getAttribute('target');
+                $property->propertyGroupId = $node->getAttribute('propertyGroupId');
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
@@ -244,6 +246,34 @@ trait ModuleXmlTrait
         }
 
         return $properties;
+    }
+
+    /**
+     * @param \DOMNode[]|\DOMNodeList $groupPropertyNodes
+     * @return array
+     */
+    private function parseGroupProperties($groupPropertyNodes): array
+    {
+        if ($groupPropertyNodes instanceof \DOMNodeList) {
+            // Property nodes are the parent node
+            if (count($groupPropertyNodes) <= 0) {
+                return [];
+            }
+            $groupPropertyNodes = $groupPropertyNodes->item(0)->childNodes;
+        }
+
+        $groupProperties = [];
+        foreach ($groupPropertyNodes as $groupPropertyNode) {
+            /** @var \DOMNode $groupPropertyNode */
+            if ($groupPropertyNode instanceof \DOMElement) {
+                $groupProperty = new GroupProperty();
+                $groupProperty->id = $groupPropertyNode->getAttribute('id');
+                $groupProperty->title = $groupPropertyNode->textContent;
+                $groupProperties[] = $groupProperty;
+            }
+        }
+
+        return $groupProperties;
     }
 
     /**

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -639,6 +639,14 @@ class ModuleFactory extends BaseFactory
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid properties');
             $this->getLog()->error('Module ' . $module->moduleId . ' has invalid properties. e: ' .  $e->getMessage());
+        }
+
+        // Parse group property definitions.
+        try {
+            $module->propertyGroups = $this->parseGroupProperties($xml->getElementsByTagName('propertyGroups'));
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid property groups');
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid property groups. e: ' .  $e->getMessage());
         }
 
         // Parse stencils
