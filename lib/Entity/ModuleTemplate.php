@@ -66,6 +66,16 @@ class ModuleTemplate implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;
 
+    /**
+     * @SWG\Property(
+     *     description="An array of additional module specific group properties",
+     *     type="array",
+     *     @SWG\Items(type="string")
+     * )
+     * @var \Xibo\Widget\Definition\PropertyGroup[]
+     */
+    public $propertyGroups = [];
+
     /** @var \Xibo\Widget\Definition\Stencil|null */
     public $stencil;
 
