@@ -189,7 +189,7 @@ class ModuleTemplateFactory extends BaseFactory
 
         // Parse group property definitions.
         try {
-            $template->propertyGroups = $this->parseGroupProperties($xml->getElementsByTagName('propertyGroups'));
+            $template->propertyGroups = $this->parsePropertyGroups($xml->getElementsByTagName('propertyGroups'));
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid property groups');
             $this->getLog()->error('Module Template ' . $template->templateId . ' has invalid property groups. e: ' .  $e->getMessage());

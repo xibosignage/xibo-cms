@@ -249,33 +249,33 @@ trait ModuleXmlTrait
     }
 
     /**
-     * @param \DOMNode[]|\DOMNodeList $groupPropertyNodes
+     * @param \DOMNode[]|\DOMNodeList $propertyGroupNodes
      * @return array
      */
-    private function parseGroupProperties($groupPropertyNodes): array
+    private function parsePropertyGroups($propertyGroupNodes): array
     {
-        if ($groupPropertyNodes instanceof \DOMNodeList) {
+        if ($propertyGroupNodes instanceof \DOMNodeList) {
             // Property nodes are the parent node
-            if (count($groupPropertyNodes) <= 0) {
+            if (count($propertyGroupNodes) <= 0) {
                 return [];
             }
-            $groupPropertyNodes = $groupPropertyNodes->item(0)->childNodes;
+            $propertyGroupNodes = $propertyGroupNodes->item(0)->childNodes;
         }
 
-        $groupProperties = [];
-        foreach ($groupPropertyNodes as $groupPropertyNode) {
-            /** @var \DOMNode $groupPropertyNode */
-            if ($groupPropertyNode instanceof \DOMElement) {
-                $groupProperty = new PropertyGroup();
-                $groupProperty->id = $groupPropertyNode->getAttribute('id');
-                $groupProperty->expanded = $groupPropertyNode->getAttribute('expanded') === 'true';
-                $groupProperty->title = __($this->getFirstValueOrDefaultFromXmlNode($groupPropertyNode, 'title'));
-                $groupProperty->helpText = __($this->getFirstValueOrDefaultFromXmlNode($groupPropertyNode, 'helpText'));
-                $groupProperties[] = $groupProperty;
+        $propertyGroups = [];
+        foreach ($propertyGroupNodes as $propertyGroupNode) {
+            /** @var \DOMNode $propertyGroupNode */
+            if ($propertyGroupNode instanceof \DOMElement) {
+                $propertyGroup = new PropertyGroup();
+                $propertyGroup->id = $propertyGroupNode->getAttribute('id');
+                $propertyGroup->expanded = $propertyGroupNode->getAttribute('expanded') === 'true';
+                $propertyGroup->title = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'title'));
+                $propertyGroup->helpText = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'helpText'));
+                $propertyGroups[] = $propertyGroup;
             }
         }
 
-        return $groupProperties;
+        return $propertyGroups;
     }
 
     /**
