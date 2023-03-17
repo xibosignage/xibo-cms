@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -84,6 +84,9 @@ class Property implements \JsonSerializable
     /** @var string The mode of the property */
     public $mode;
 
+    /** @var string The group ID of the property */
+    public $propertyGroupId;
+
     public $value;
 
     /** @inheritDoc */
@@ -98,6 +101,7 @@ class Property implements \JsonSerializable
             'title' => $this->title,
             'mode' => $this->mode,
             'target' => $this->target,
+            'propertyGroupId' => $this->propertyGroupId,
             'helpText' => $this->helpText,
             'validation' => $this->validation,
             'default' => $this->default,

@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use Xibo\Entity\Module;
 use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Definition\Element;
+use Xibo\Widget\Definition\PropertyGroup;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
 use Xibo\Widget\Definition\Stencil;
@@ -101,6 +102,7 @@ trait ModuleXmlTrait
                 $property->format = $node->getAttribute('format');
                 $property->mode = $node->getAttribute('mode');
                 $property->target = $node->getAttribute('target');
+                $property->propertyGroupId = $node->getAttribute('propertyGroupId');
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
@@ -244,6 +246,36 @@ trait ModuleXmlTrait
         }
 
         return $properties;
+    }
+
+    /**
+     * @param \DOMNode[]|\DOMNodeList $propertyGroupNodes
+     * @return array
+     */
+    private function parsePropertyGroups($propertyGroupNodes): array
+    {
+        if ($propertyGroupNodes instanceof \DOMNodeList) {
+            // Property nodes are the parent node
+            if (count($propertyGroupNodes) <= 0) {
+                return [];
+            }
+            $propertyGroupNodes = $propertyGroupNodes->item(0)->childNodes;
+        }
+
+        $propertyGroups = [];
+        foreach ($propertyGroupNodes as $propertyGroupNode) {
+            /** @var \DOMNode $propertyGroupNode */
+            if ($propertyGroupNode instanceof \DOMElement) {
+                $propertyGroup = new PropertyGroup();
+                $propertyGroup->id = $propertyGroupNode->getAttribute('id');
+                $propertyGroup->expanded = $propertyGroupNode->getAttribute('expanded') === 'true';
+                $propertyGroup->title = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'title'));
+                $propertyGroup->helpText = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'helpText'));
+                $propertyGroups[] = $propertyGroup;
+            }
+        }
+
+        return $propertyGroups;
     }
 
     /**

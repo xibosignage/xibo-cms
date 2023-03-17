@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -183,8 +183,16 @@ class ModuleTemplateFactory extends BaseFactory
             $template->properties = $this->parseProperties($xml->getElementsByTagName('properties'));
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid properties');
-            $this->getLog()->error('Module ' . $template->templateId
+            $this->getLog()->error('Module Template ' . $template->templateId
                 . ' has invalid properties. e: ' .  $e->getMessage());
+        }
+
+        // Parse group property definitions.
+        try {
+            $template->propertyGroups = $this->parsePropertyGroups($xml->getElementsByTagName('propertyGroups'));
+        } catch (\Exception $e) {
+            $template->errors[] = __('Invalid property groups');
+            $this->getLog()->error('Module Template ' . $template->templateId . ' has invalid property groups. e: ' .  $e->getMessage());
         }
 
         // Parse stencil
@@ -192,7 +200,7 @@ class ModuleTemplateFactory extends BaseFactory
             $template->stencil = $this->getStencils($xml->getElementsByTagName('stencil'))[0] ?? null;
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid stencils');
-            $this->getLog()->error('Module ' . $template->templateId
+            $this->getLog()->error('Module Template ' . $template->templateId
                 . ' has invalid stencils. e: ' .  $e->getMessage());
         }
 
@@ -201,7 +209,7 @@ class ModuleTemplateFactory extends BaseFactory
             $template->assets = $this->parseAssets($xml->getElementsByTagName('assets'));
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid assets');
-            $this->getLog()->error('Module ' . $template->templateId
+            $this->getLog()->error('Module Template ' . $template->templateId
                 . ' has invalid assets. e: ' .  $e->getMessage());
         }
 

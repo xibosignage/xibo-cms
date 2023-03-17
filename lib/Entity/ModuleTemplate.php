@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -65,6 +65,16 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;
+
+    /**
+     * @SWG\Property(
+     *     description="An array of additional module specific group properties",
+     *     type="array",
+     *     @SWG\Items(type="string")
+     * )
+     * @var \Xibo\Widget\Definition\PropertyGroup[]
+     */
+    public $propertyGroups = [];
 
     /** @var \Xibo\Widget\Definition\Stencil|null */
     public $stencil;
