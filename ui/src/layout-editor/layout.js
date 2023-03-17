@@ -436,6 +436,7 @@ Layout.prototype.delete = function() {
  * @param {object} options - Position to add the element to
  * @param {object} [options.positionToAdd] - Position to add the element to
  * @param {object} [options.elementSubtype] - Element subtype
+ * @param {object} [options.dimensions] - Element dimensions
  * @return {object} - Manager change
  */
 Layout.prototype.addElement = function(
@@ -443,6 +444,7 @@ Layout.prototype.addElement = function(
   {
     positionToAdd = null,
     elementSubtype = null,
+    dimensions = null,
   } = {},
 ) {
   let newValues = {};
@@ -457,6 +459,11 @@ Layout.prototype.addElement = function(
     newValues = Object.assign(newValues, {
       type: elementSubtype,
     });
+  }
+
+  // Set dimensions if they exist
+  if (dimensions !== null) {
+    newValues = Object.assign(newValues, dimensions);
   }
 
   // Add a create change to the history array, and

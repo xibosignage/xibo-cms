@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -31,6 +31,8 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
+    <startWidth>600</startWidth>
+    <startHeight>400</startHeight>
     <settings></settings>
     <properties>
         <property id="ta_text" type="richText" allowLibraryRefs="true">

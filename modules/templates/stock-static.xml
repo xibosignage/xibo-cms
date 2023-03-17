@@ -25,6 +25,8 @@
         <dataType>stock</dataType>
         <title>Stocks 1</title>
         <thumbnail>stocks1</thumbnail>
+        <startWidth>800</startWidth>
+        <startHeight>450</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
@@ -262,6 +264,8 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
         <dataType>stock</dataType>
         <title>Stocks 2</title>
         <thumbnail>stocks2</thumbnail>
+        <startWidth>550</startWidth>
+        <startHeight>350</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>

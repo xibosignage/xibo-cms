@@ -133,6 +133,8 @@ $(target).xiboTextRender(properties, items);
         <dataType>event</dataType>
         <title>Daily Calendar - Light</title>
         <thumbnail>daily_light</thumbnail>
+        <startWidth>800</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="startTime" type="date" variant="time">
                 <title>Start Time</title>
@@ -581,6 +583,8 @@ $(target).xiboCalendarRender(properties, items);
         <dataType>event</dataType>
         <title>Daily Calendar - Dark</title>
         <thumbnail>daily_dark</thumbnail>
+        <startWidth>800</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="startTime" type="date" variant="time">
                 <title>Start Time</title>
@@ -1032,6 +1036,8 @@ $(target).xiboCalendarRender(properties, items);
         <dataType>event</dataType>
         <title>Weekly Calendar - Light</title>
         <thumbnail>weekly_light</thumbnail>
+        <startWidth>800</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="startTime" type="date" variant="time">
                 <title>Start Time</title>
@@ -1501,6 +1507,8 @@ $(target).xiboCalendarRender(properties, items);
         <dataType>event</dataType>
         <title>Weekly Calendar - Dark</title>
         <thumbnail>weekly_dark</thumbnail>
+        <startWidth>800</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="startTime" type="date" variant="time">
                 <title>Start Time</title>
@@ -1973,6 +1981,8 @@ $(target).xiboCalendarRender(properties, items);
         <dataType>event</dataType>
         <title>Monthly Calendar - Light</title>
         <thumbnail>monthly_light</thumbnail>
+        <startWidth>800</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
@@ -2367,6 +2377,8 @@ $(target).xiboCalendarRender(properties, items);
         <dataType>event</dataType>
         <title>Monthly Calendar - Dark</title>
         <thumbnail>monthly_dark</thumbnail>
+        <startWidth>800</startWidth>
+        <startHeight>500</startHeight>
         <properties>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
@@ -2764,6 +2776,8 @@ $(target).xiboCalendarRender(properties, items);
         <dataType>event</dataType>
         <title>Schedule Calendar - Light</title>
         <thumbnail>schedule_light</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>800</startHeight>
         <properties>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>
@@ -3097,6 +3111,8 @@ $(target).xiboCalendarRender(properties, items);
         <dataType>event</dataType>
         <title>Schedule Calendar - Dark</title>
         <thumbnail>schedule_dark</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>800</startHeight>
         <properties>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>
