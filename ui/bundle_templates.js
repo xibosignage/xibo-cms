@@ -10,6 +10,7 @@ window.templates = {
       dropdownOptionImage:
         require('./src/templates/forms/inputs/add-ons/dropdownOptionImage.hbs'),
     },
+    group: require('./src/templates/forms/group.hbs'),
     button: require('./src/templates/forms/button.hbs'),
     text: require('./src/templates/forms/inputs/text.hbs'),
     checkbox: require('./src/templates/forms/inputs/checkbox.hbs'),

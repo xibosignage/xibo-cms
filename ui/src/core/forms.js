@@ -50,8 +50,15 @@ window.forms = {
      * @param {object} targetContainer - The container to add the properties to
      * @param {string} [targetId] - Target Id ( widget, element, etc.)
      * @param {boolean} [playlistId] - If widget, the playlistId
+     * @param {object[]} [propertyGroups] - Groups to add the properties to
      */
-  createFields: function(properties, targetContainer, targetId, playlistId) {
+  createFields: function(
+    properties,
+    targetContainer,
+    targetId,
+    playlistId,
+    propertyGroups = [],
+  ) {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
         const property = properties[key];
@@ -157,8 +164,49 @@ window.forms = {
 
         // Append the property to the target container
         if (templates.forms.hasOwnProperty(property.type)) {
-          const $newField = $(templates.forms[property.type](property))
-            .appendTo($(targetContainer));
+          // New field
+          const $newField = $(templates.forms[property.type](property));
+
+          // Target to append to
+          let $targetContainer = $(targetContainer);
+
+          // Check if the property has a group
+          if (property.propertyGroupId) {
+            // Get group object from propertyGroups
+            const group = propertyGroups.find(
+              (group) => group.id === property.propertyGroupId,
+            );
+
+            // Only add to group if it exists
+            if (group) {
+              // Check if the group already exists in the DOM, if not create it
+              if (
+                $(targetContainer).find('#' + property.propertyGroupId).length
+              ) {
+                // Set target container to be the group
+                $targetContainer = $(targetContainer)
+                  .find('#' + property.propertyGroupId + ' .field-container');
+              } else {
+                // Create the group and add it to the target container
+                $targetContainer.append(
+                  $(templates.forms.group({
+                    id: group.id,
+                    title: group.title,
+                    helpText: group.helpText,
+                    expanded: group.expanded,
+                  })),
+                );
+
+                // Set target container to be the group field container
+                $targetContainer = $(
+                  $(targetContainer).find('#' + property.propertyGroupId),
+                ).find('.field-container');
+              }
+            }
+          }
+
+          // Append the new field to the target container
+          $targetContainer.append($newField);
 
           // Handle help text
           if (property.helpText) {

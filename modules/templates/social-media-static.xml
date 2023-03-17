@@ -2205,6 +2205,12 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <thumbnail>colors1</thumbnail>
         <startWidth>1150</startWidth>
         <startHeight>650</startHeight>
+        <propertyGroups>
+            <propertyGroup id="colors" expanded="true">
+                <title>Colors</title>
+                <helpText>Select colors to be randomly applied to the metro cells</helpText>
+            </propertyGroup>
+        </propertyGroups>
         <properties>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>
@@ -2510,28 +2516,28 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                     </set>
                 </setDefault>
             </property>
-            <property id="color1" name="color" type="color">
+            <property id="color1" name="color" type="color" propertyGroupId="colors">
                 <title>Color 1</title>
             </property>
-            <property id="color2" name="color" type="color">
+            <property id="color2" name="color" type="color" propertyGroupId="colors">
                 <title>Color 2</title>
             </property>
-            <property id="color3" name="color" type="color">
+            <property id="color3" name="color" type="color" propertyGroupId="colors">
                 <title>Color 3</title>
             </property>
-            <property id="color4" name="color" type="color">
+            <property id="color4" name="color" type="color" propertyGroupId="colors">
                 <title>Color 4</title>
             </property>
-            <property id="color5" name="color" type="color">
+            <property id="color5" name="color" type="color" propertyGroupId="colors">
                 <title>Color 5</title>
             </property>
-            <property id="color6" name="color" type="color">
+            <property id="color6" name="color" type="color" propertyGroupId="colors">
                 <title>Color 6</title>
             </property>
-            <property id="color7" name="color" type="color">
+            <property id="color7" name="color" type="color" propertyGroupId="colors">
                 <title>Color 7</title>
             </property>
-            <property id="color8" name="color" type="color">
+            <property id="color8" name="color" type="color" propertyGroupId="colors">
                 <title>Color 8</title>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">

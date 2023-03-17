@@ -1,0 +1,18 @@
+<div id="{{id}}" class="panel-group" data-group="{{id}}">
+    <div class="panel-heading" data-toggle="collapse" href="#{{id}}-collapse" aria-expanded="{{#if expanded}}true{{else}}false{{/if}}" aria-controls="{{id}}-collapse">
+        <h4 class="panel-title">
+            <i class="fa fa-chevron-down"></i>
+            <i class="fa fa-chevron-up"></i>
+            <span>{{title}}</span>
+        </h4>
+        {{#if helpText}}
+            <div class="help-block text-muted">{{helpText}}</div>
+        {{/if}}
+    </div>
+    <div id="{{id}}-collapse" class="panel-collapse collapse {{#if expanded}}show{{/if}}">
+        <div class="panel-body field-container">
+            <!-- Fields -->
+        </div>
+    </div>
+</div>
+

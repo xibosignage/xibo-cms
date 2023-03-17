@@ -346,6 +346,7 @@ PropertiesPanel.prototype.render = function(
           self.DOMObject.find('#configureTab'),
           element.widgetId,
           element.playlistId,
+          res.data.module.propertyGroups,
         );
       } else {
         // Remove configure tab
@@ -365,6 +366,7 @@ PropertiesPanel.prototype.render = function(
           self.DOMObject.find('#appearanceTab'),
           element.widgetId,
           element.playlistId,
+          res.data.template.propertyGroups,
         );
 
         // Show the appearance tab
