@@ -26,7 +26,7 @@ use Illuminate\Support\Str;
 use Xibo\Entity\Module;
 use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Definition\Element;
-use Xibo\Widget\Definition\GroupProperty;
+use Xibo\Widget\Definition\PropertyGroup;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
 use Xibo\Widget\Definition\Stencil;
@@ -266,9 +266,11 @@ trait ModuleXmlTrait
         foreach ($groupPropertyNodes as $groupPropertyNode) {
             /** @var \DOMNode $groupPropertyNode */
             if ($groupPropertyNode instanceof \DOMElement) {
-                $groupProperty = new GroupProperty();
+                $groupProperty = new PropertyGroup();
                 $groupProperty->id = $groupPropertyNode->getAttribute('id');
-                $groupProperty->title = $groupPropertyNode->textContent;
+                $groupProperty->expanded = $groupPropertyNode->getAttribute('expanded') === 'true';
+                $groupProperty->title = __($this->getFirstValueOrDefaultFromXmlNode($groupPropertyNode, 'title'));
+                $groupProperty->helpText = __($this->getFirstValueOrDefaultFromXmlNode($groupPropertyNode, 'helpText'));
                 $groupProperties[] = $groupProperty;
             }
         }

@@ -25,17 +25,21 @@ namespace Xibo\Widget\Definition;
 /**
  * A class representing an instance of a group property to put a property in assigned Tab
  */
-class GroupProperty implements \JsonSerializable
+class PropertyGroup implements \JsonSerializable
 {
     public $id;
+    public $expanded;
     public $title;
+    public $helpText;
 
     /** @inheritDoc */
     public function jsonSerialize()
     {
         return [
             'id' => $this->id,
-            'title' => $this->title
+            'expanded' => $this->expanded,
+            'title' => $this->title,
+            'helpText' => $this->helpText
         ];
     }
 }

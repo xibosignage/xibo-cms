@@ -227,7 +227,7 @@ class Module implements \JsonSerializable
      *     type="array",
      *     @SWG\Items(type="string")
      * )
-     * @var \Xibo\Widget\Definition\GroupProperty[]
+     * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
     public $propertyGroups = [];
 
