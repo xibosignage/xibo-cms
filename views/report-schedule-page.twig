@@ -55,7 +55,7 @@
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
                             ] %}
-                            {{ inline.dropdown("userId", "single", title, null, users, "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+                            {{ inline.dropdown("userId", "single", title, null, [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set helpText %}{% trans "Show items belong to a report." %}{% endset %}
@@ -64,7 +64,7 @@
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
                             ] %}
-                            {{ inline.dropdown("reportName", "single", title, null, availableReports, "name", "description", helpText, "selectPicker", "", "", "", attributes) }}
+                            {{ inline.dropdown("reportName", "single", title, null, [{name:null, description:""}]|merge(availableReports) , "name", "description", helpText, "selectPicker", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Only my schedules?" %}{% endset %}
                             {{ inline.checkbox("onlyMySchedules", title, 1) }}
