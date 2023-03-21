@@ -23,31 +23,21 @@
 namespace Xibo\Widget\Definition;
 
 /**
- * A class representing an instance of an element template
+ * A class representing one template extending another
  */
-class Element implements \JsonSerializable
+class Extend implements \JsonSerializable
 {
-    public $id;
-    public $top;
-    public $left;
-    public $width;
-    public $height;
-    public $rotation;
-    public $layer;
-    public $properties = [];
+    public $template;
+    public $override;
+    public $with;
 
     /** @inheritDoc */
     public function jsonSerialize()
     {
         return [
-            'id' => $this->id,
-            'top' => $this->top,
-            'left' => $this->left,
-            'width' => $this->width,
-            'height' => $this->height,
-            'rotation' => $this->rotation,
-            'layer' => $this->layer,
-            'properties' => $this->properties
+            'template' => $this->template,
+            'override' => $this->override,
+            'with' => $this->with,
         ];
     }
 }

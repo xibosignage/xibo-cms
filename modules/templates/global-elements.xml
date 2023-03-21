@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -19,16 +19,17 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <templates>
-    <element>
+    <template>
         <id>text</id>
         <title>Text</title>
         <type>element</type>
         <dataType>global</dataType>
+        <canRotate>true</canRotate>
         <properties>
             <property></property>
         </properties>
-    </element>
-    <element>
+    </template>
+    <template>
         <id>rectangle</id>
         <title>Rectangle</title>
         <type>element</type>
@@ -36,8 +37,8 @@
         <properties>
             <property></property>
         </properties>
-    </element>
-    <element>
+    </template>
+    <template>
         <id>star</id>
         <title>Star</title>
         <type>element</type>
@@ -45,5 +46,5 @@
         <properties>
             <property></property>
         </properties>
-    </element>
+    </template>
 </templates>

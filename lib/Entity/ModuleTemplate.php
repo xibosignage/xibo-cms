@@ -43,6 +43,9 @@ class ModuleTemplate implements \JsonSerializable
     /** @var string Type of template (static|element|stencil) */
     public $type;
 
+    /** @var \Xibo\Widget\Definition\Extend|null If this template extends another */
+    public $extends;
+
     /** @var string The datatype of this template */
     public $dataType;
 
@@ -62,6 +65,12 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var int The height of the zone */
     public $startHeight;
+
+    /** @var bool Does this template have dimensions? */
+    public $hasDimensions;
+
+    /** @var bool Can this template be rotated? */
+    public $canRotate;
 
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;

@@ -170,6 +170,8 @@ class ModuleTemplateFactory extends BaseFactory
         $template->thumbnail = $this->getFirstValueOrDefaultFromXmlNode($xml, 'thumbnail');
         $template->startWidth = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startWidth'));
         $template->startHeight = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startHeight'));
+        $template->hasDimensions = $this->getFirstValueOrDefaultFromXmlNode($xml, 'hasDimensions', 'true') === 'true';
+        $template->canRotate = $this->getFirstValueOrDefaultFromXmlNode($xml, 'canRotate', 'false') === 'true';
         $template->onTemplateRender = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onTemplateRender');
         if (!empty($template->onTemplateRender)) {
             $template->onTemplateRender = trim($template->onTemplateRender);
@@ -177,6 +179,15 @@ class ModuleTemplateFactory extends BaseFactory
 
         $template->isError = false;
         $template->errors = [];
+
+        // Parse extends definition
+        try {
+            $template->extends = $this->getExtends($xml->getElementsByTagName('extends'))[0] ?? null;
+        } catch (\Exception $e) {
+            $template->errors[] = __('Invalid Extends');
+            $this->getLog()->error('Module Template ' . $template->templateId
+                . ' has invalid extends definition. e: ' .  $e->getMessage());
+        }
 
         // Parse property definitions.
         try {
@@ -192,7 +203,8 @@ class ModuleTemplateFactory extends BaseFactory
             $template->propertyGroups = $this->parsePropertyGroups($xml->getElementsByTagName('propertyGroups'));
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid property groups');
-            $this->getLog()->error('Module Template ' . $template->templateId . ' has invalid property groups. e: ' .  $e->getMessage());
+            $this->getLog()->error('Module Template ' . $template->templateId . ' has invalid property groups. e: '
+                .  $e->getMessage());
         }
 
         // Parse stencil

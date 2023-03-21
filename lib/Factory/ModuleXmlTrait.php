@@ -26,9 +26,10 @@ use Illuminate\Support\Str;
 use Xibo\Entity\Module;
 use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Definition\Element;
-use Xibo\Widget\Definition\PropertyGroup;
+use Xibo\Widget\Definition\Extend;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
+use Xibo\Widget\Definition\PropertyGroup;
 use Xibo\Widget\Definition\Stencil;
 
 /**
@@ -296,6 +297,14 @@ trait ModuleXmlTrait
                             $element->top = doubleval($childNode->textContent);
                         } else if ($childNode->nodeName === 'left') {
                             $element->left = doubleval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'width') {
+                            $element->width = doubleval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'height') {
+                            $element->height = doubleval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'layer') {
+                            $element->layer = intval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'rotation') {
+                            $element->rotation = intval($childNode->textContent);
                         } else if ($childNode->nodeName === 'defaultProperties') {
                             $element->properties[] = [
                                 'id' => $childNode->getAttribute('id'),
@@ -341,6 +350,28 @@ trait ModuleXmlTrait
         }
 
         return $assets;
+    }
+
+    /**
+     * Parse extends
+     * @param \DOMNodeList $nodes
+     * @return \Xibo\Widget\Definition\Asset[]
+     */
+    private function getExtends(\DOMNodeList $nodes): array
+    {
+        $extends = [];
+        foreach ($nodes as $node) {
+            if ($node->nodeType === XML_ELEMENT_NODE) {
+                /** @var \DOMElement $node */
+                $extend = new Extend();
+                $extend->template = trim($node->textContent);
+                $extend->override = $node->getAttribute('override');
+                $extend->with = $node->getAttribute('with');
+                $extends[] = $extend;
+            }
+        }
+
+        return $extends;
     }
 
     /**
