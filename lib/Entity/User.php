@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1172,9 +1172,18 @@ class User implements \JsonSerializable, UserEntityInterface
             return true;
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))))
-            // Group Admin and in the same group as the owner.
-            return true;
+        if ($object->permissionsClass() === 'Xibo\Entity\UserGroup') {
+            // userGroup does not have an owner (getOwnerId() returns 0 ), we need to handle it in a different way.
+            if ($this->userTypeId == 2 && count(array_intersect($this->groups, [$object]))) {
+                // Group Admin and group object in the user array of groups
+                return true;
+            }
+        } else {
+            if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId())))) {
+                // Group Admin and in the same group as the owner.
+                return true;
+            }
+        }
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
