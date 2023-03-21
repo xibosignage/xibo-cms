@@ -147,6 +147,7 @@
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
                                 </a>
+                                <span id="imageLoader" class=""></span>
                                 <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
                             </div>
                         </form>
@@ -173,7 +174,6 @@
                         <div class="tab-pane active" id="chartTab" role="tabpanel" aria-labelledby="chart-tab">
                             <div class="chart-container" style="height:550px;">
                                 <canvas id="canvas" style="clear:both; margin-top:25px;" height="70%"></canvas>
-                                <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
                             </div>
                         </div>
 
@@ -260,6 +260,7 @@
                     success: function success(data) {
                         result = data;
                         $applyBtn.removeClass('disabled');
+                        imageLoader.removeClass('fa fa-spinner fa-spin loading-icon');
 
                         // Based on tab load data
                         if ($('.nav-tabs .nav-item a.active').attr("href") === '#tabularTab') {
@@ -288,13 +289,11 @@
             }
 
             function setChartData(data) {
-                imageLoader.show();
 
                 setTimeout(function() {
                     $applyBtn.removeClass('disabled');
                 }, 300);
 
-                imageLoader.hide();
                 if (chart !== undefined && chart !== null) {
                     chart.destroy();
                 }
@@ -322,6 +321,7 @@
             // Apply
             $applyBtn.click(function () {
                 $(this).addClass('disabled');
+                imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
                 getData($dataTable.data().url);
             });
 
@@ -396,10 +396,8 @@
 
             };
 
-            imageLoader.hide();
             checkReportFilter(reportFilter);
             checkFilterAndApply();
-
 
             var $campaignSelect = $('#parentCampaignId');
             $campaignSelect.select2({

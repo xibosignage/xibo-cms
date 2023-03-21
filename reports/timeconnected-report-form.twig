@@ -131,6 +131,7 @@
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
                                 </a>
+                                <span id="imageLoader" class=""></span>
                                 <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
                             </div>
                         </form>
@@ -138,7 +139,6 @@
                 </div>
                 <div class="XiboData card pt-3">
                     <table id="records_table"></table>
-                    <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
                 </div>
             </div>
         </div>
@@ -153,11 +153,9 @@
             $('[data-toggle="popover"]').popover();
         });
 
-        var imageLoader = $("#imageLoader");
+        let imageLoader = $("#imageLoader");
 
         function setReport() {
-
-            imageLoader.show();
             $("#records_table").empty();
             $.ajax({
                 type: "get",
@@ -169,9 +167,9 @@
 
                     setTimeout(function() {
                         $("#applyBtn").removeClass('disabled');
+                        imageLoader.removeClass('fa fa-spinner fa-spin loading-icon');
                     }, 300);
 
-                    imageLoader.hide();
 
                     $('.XiboData').find(".form-error").remove();
                     if (response.success === false) {
@@ -180,7 +178,6 @@
                     }
 
                     $.each(response.table.timeConnected, function(index, displayStat) {
-
                         var $displayHeader = $('<tr>');
                         $.each(response.table.displays[index], function(i, displayName) {
                             $displayHeader.append($('<th colspan="2">').text(displayName));
@@ -205,17 +202,11 @@
 
                                 $tr.append($label);
                                 $tr.append($percentage);
-
-
                             });
-
 
                             $tr.appendTo('#records_table').html();
                         });
-
-
                     });
-
                 }
             });
         }
@@ -257,8 +248,6 @@
                 });
             };
 
-            imageLoader.hide();
-
             checkReportFilter(reportFilter);
             checkFilterAndApply();
 
@@ -271,6 +260,8 @@
 
             // Apply
             applyBtn.click(function () {
+                $(this).addClass('disabled');
+                imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
                 checkFilterAndApply();
                 setReport();
             });
