@@ -23,29 +23,23 @@
 namespace Xibo\Widget\Provider;
 
 use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Widget;
 
 /**
- * The Widget Compatibility Interface
+ * Widget Compatibility Interface should be implemented by custom widget upgrade classes.
+ * Takes necessary actions to make the existing widgets from v3 compatible with v4.
+ *
+ * The schema from and the schema to (currently set to 1 and 2, respectively).
+ * It also provides a method to save a template to the library in a sub-folder named templates/. This method
+ * is called whenever a widget is loaded with a different schema version.
+ *
+ * @package MyNamespace
  */
 interface WidgetCompatibilityInterface
 {
     public function getLog(): LoggerInterface;
+
     public function setLog(LoggerInterface $logger): WidgetCompatibilityInterface;
-
-    /**
-     * Get the event dispatcher
-     * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
-     */
-    public function getDispatcher(): EventDispatcherInterface;
-
-    /**
-     * Set the event dispatcher
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $logger
-     * @return \Xibo\Widget\Provider\WidgetProviderInterface
-     */
-    public function setDispatcher(EventDispatcherInterface $logger): WidgetCompatibilityInterface;
 
     /**
      * Upgrade the given widget to be compatible with the specified schema version.

@@ -418,7 +418,7 @@ class WidgetFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => [
-                'duration', 'useDuration', 'calculatedDuration', 'fromDt', 'toDt', 'createdDt', 'modifiedDt']
+                'duration', 'useDuration', 'schemaVersion', 'calculatedDuration', 'fromDt', 'toDt', 'createdDt', 'modifiedDt']
             ]);
         }
 
