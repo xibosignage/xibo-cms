@@ -109,7 +109,6 @@ trait ModuleXmlTrait
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
                 $property->value = $this->getFirstValueOrDefaultFromXmlNode($node, 'value');
                 $property->dependsOn = $this->getFirstValueOrDefaultFromXmlNode($node, 'dependsOn');
-                $property->customClass = __($this->getFirstValueOrDefaultFromXmlNode($node, 'customClass'));
 
                 // Default value
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
@@ -140,20 +139,6 @@ trait ModuleXmlTrait
                                 $optionNode->getAttribute('name'),
                                 $optionNode->getAttribute('image'),
                                 $optionNode->textContent
-                            );
-                        }
-                    }
-                }
-
-                // Custom Data
-                $customData = $node->getElementsByTagName('customData');
-                if (count($customData) > 0) {
-                    foreach ($customData->item(0)->childNodes as $dataNode) {
-                        if ($dataNode->nodeType === XML_ELEMENT_NODE) {
-                            /** @var \DOMElement $dataNode */
-                            $property->addData(
-                                $dataNode->getAttribute('name'),
-                                $dataNode->textContent
                             );
                         }
                     }
