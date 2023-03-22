@@ -18,6 +18,6 @@ jobs:
 
       - name: Build Cypress
         run: |
-          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
-          docker build . -f Dockerfile.cypress -t xibosignage/xibo-cms:cypress
-          docker push xibosignage/xibo-cms:cypress
+          docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+          docker build . -f Dockerfile.cypress -t ghcr.io/xibosignage/xibo-cms:cypress
+          docker push ghcr.io/xibosignage/xibo-cms:cypress
