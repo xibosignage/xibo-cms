@@ -33,7 +33,6 @@ use Xibo\Entity\Widget;
  * It also provides a method to save a template to the library in a sub-folder named templates/. This method
  * is called whenever a widget is loaded with a different schema version.
  *
- * @package MyNamespace
  */
 interface WidgetCompatibilityInterface
 {
