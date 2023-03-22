@@ -161,6 +161,7 @@ class WidgetHtmlRenderer
      * @throws \Twig\Error\SyntaxError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\LoaderError
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function renderOrCache(
         Module $module,
@@ -458,15 +459,46 @@ class WidgetHtmlRenderer
             $twig['elements'][] = $widget->getOptionValue('elements', null);
         }
 
+        // Grab and global elements in our templates
+        $globalElements = [];
+        foreach ($moduleTemplates as $moduleTemplate) {
+            if ($moduleTemplate->type === 'element') {
+                $globalElements[$moduleTemplate->templateId] = $moduleTemplate;
+            }
+        }
+
         // Render out HBS from templates
         foreach ($moduleTemplates as $moduleTemplate) {
+            // Handle extends.
+            $extension = null;
+            if (!empty($moduleTemplate->extends)
+                && array_key_exists($moduleTemplate->extends->template, $globalElements)
+            ) {
+                // Pull the template we're extending
+                $extension = $globalElements[$moduleTemplate->extends->template];
+            }
+
             // Render out any hbs
             if ($moduleTemplate->stencil !== null && $moduleTemplate->stencil->hbs !== null) {
+                // If we have an extension then look for %parent% and insert it.
+                if ($extension !== null && Str::contains('%parent%', $module->stencil->hbs)) {
+                    $module->stencil->hbs = str_replace('%parent%', $extension->stencil->hbs, $module->stencil->hbs);
+                }
+
+                // Output the hbs
                 $twig['hbs'][$moduleTemplate->templateId] = [
                     'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
                     'width' => $moduleTemplate->stencil->width,
                     'height' => $moduleTemplate->stencil->height,
                     'gapBetweenHbs' => $moduleTemplate->stencil->gapBetweenHbs,
+                ];
+            } else if ($extension !== null) {
+                // Output the extension HBS instead
+                $twig['hbs'][$moduleTemplate->templateId] = [
+                    'content' => $this->decorateTranslations($extension->stencil->hbs),
+                    'width' => $extension->stencil->width,
+                    'height' => $extension->stencil->height,
+                    'gapBetweenHbs' => $extension->stencil->gapBetweenHbs,
                 ];
             }
 
