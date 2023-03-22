@@ -38,7 +38,7 @@
     <properties>
         <property id="dataSetId" type="datasetSelector">
             <title>DataSet</title>
-            <helpText>Please select the DataSet to use as a source of data for this ticker.</helpText>
+            <helpText>Please select the DataSet to use as a source of data for this template.</helpText>
         </property>
         <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
             <title>No data message</title>

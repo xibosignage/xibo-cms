@@ -91,12 +91,15 @@
     </properties>
     <preview>
         <twig><![CDATA[
-<div style="display:table; width:100%; height: {{ height }}px">
-    <div style="display: table-cell;">
-        <div style="text-align:center;">
-            <i class="fa module-preview-icon module-icon-video" style="position:relative;color:#ececec;text-shadow: 0 0 2px black;z-index: 1;"></i>
-            <img style="position: absolute;left:0;top:0;width:100%;max-height: 100%;object-fit: contain;" src="{{ downloadUrl }}&width={{ width }}&height={{ height }}&proportional=1" />
-        </div>
+{% if options.scaleTypeId == "stretch" %}
+    {% set proportional = 0 %}
+{% else %}
+    {% set proportional = 1 %}
+{% endif %}
+<div class="img-container" style="display:table; width:100%; height: {{ height }}px">
+    <i class="fa module-preview-icon module-icon-video" style="position:absolute; color:#ececec;text-shadow: 0 0 2px black;z-index: 1;left:50%;top:50%;transform:translate(-50%,-50%);font-size: 3rem;"></i>
+    <div style="display: table-cell;vertical-align: middle;text-align: center;">
+        <img src="{{ downloadUrl }}&width={{ width }}&height={{ height }}&proportional={{ proportional }}&fit=0"/>
     </div>
 </div>
 		]]></twig>

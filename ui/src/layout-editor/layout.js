@@ -231,7 +231,7 @@ Layout.prototype.checkout = function() {
   lD.common.showLoadingScreen();
 
   // replace id if necessary/exists
-  requestPath = requestPath.replace(':id', this.layoutId);
+  requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
   // Deselect previous selected object
   lD.selectObject();

@@ -20,7 +20,7 @@
   -->
 <module>
     <id>core-text</id>
-    <name>Text</name>
+    <name>Rich Text</name>
     <author>Core</author>
     <description>Add Text directly to a Layout</description>
     <class></class>

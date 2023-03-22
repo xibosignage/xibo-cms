@@ -169,24 +169,38 @@
             .toolbar-card {
                 position: relative;
                 overflow: hidden;
-                background: $xibo-color-primary;
-                color: $xibo-color-primary-l5;
+                background: $xibo-color-primary-l20;
+                color: $xibo-color-primary-d60;
                 font-size: 0.95rem;
                 width: calc(50% - 4px);
 
-                &:hover {
-                    background: lighten($xibo-color-primary, 10%);
+                .card-icon {
+                    color: $xibo-color-primary;
+
+                    /* Special case for Twitter */
+                    &.fa-twitter {
+                        color: #1d9bf0;
+                    }
                 }
 
-                &.toolbar-card-template:not(.has-thumb) {
-                    padding: 0.5rem;
-                    height: 80px;
+                &:not(.has-thumb) {
+                    border: 1px solid $xibo-color-primary-l30;
 
-                    .toolbar-content {
-                        width: 100%;
-                        height: 100%;
-                        overflow: hidden;
-                        display: flex;
+                    &:hover {
+                        border-color: $xibo-color-primary-l60;
+                        background: $xibo-color-primary-l5;
+                    }
+
+                    &.toolbar-card-template {
+                        padding: 0.5rem;
+                        height: 80px;
+    
+                        .toolbar-content {
+                            width: 100%;
+                            height: 100%;
+                            overflow: hidden;
+                            display: flex;
+                        }
                     }
                 }
 
@@ -225,12 +239,6 @@
 
                     &:hover .toolbar-card-thumb {
                         background: lighten($xibo-color-primary-l60, 10%);
-                    }
-
-                    &.card-selected, &.ui-draggable-dragging {
-                        .card-title {
-                            color: $xibo-color-primary-l10;
-                        }
                     }
                 }
 
@@ -346,6 +354,7 @@
                     background: none;
                     margin-bottom: 8px;
                     height: auto;
+                    border: none;
 
                     .thumb {
                         width: 100%;
@@ -418,6 +427,7 @@
                         bottom: 0;
                         left: 0;
                         background: $xibo-color-primary-d60;
+                        color: $xibo-color-primary-l10;
                         padding: 0px 4px;
                         @include border-radius(0 4px 0 0);
                         opacity: 0.9;
@@ -461,6 +471,10 @@
                     &.card-selected, &.ui-draggable-dragging{
                         z-index: $toolbar-card-z-index;
 
+                        &.no-thumnail {
+                            border-radius: 4px;
+                        }
+
                         .toolbar-card-preview {
                             border-color: $xibo-color-accent;
                         }
@@ -491,26 +505,6 @@
                     padding: 8px;
                     align-items: center;
                     @include border-radius(4px);
-
-                    &.toolbar-card-menu {
-                        background: $xibo-color-primary-l10;
-                        color: $xibo-color-primary-d60;
-                        border: 1px solid $xibo-color-primary-l30;
-
-                        &:hover {
-                            background: $xibo-color-primary-l30;
-                            border-color: $xibo-color-primary-l60;
-                        }
-
-                        .card-icon {
-                            color: $xibo-color-primary;
-
-                            /* Special case for Twitter */
-                            &.fa-twitter {
-                                color: #1d9bf0;
-                            }
-                        }
-                    }
     
                     .card-title {
                         line-height: 15px;
@@ -567,8 +561,9 @@
                     }
 
                     &.card-selected, &.ui-draggable-dragging {
-                        background-color: $xibo-color-primary-d60;
                         z-index: $toolbar-card-z-index;
+                        border: none;
+
                         .select-button {
                             display: none; // hide for now
                             background-color: $xibo-color-selected !important;
@@ -583,7 +578,7 @@
                             display: block;
                         }
     
-                        &::after {
+                        &:not(.has-thumb)::after {
                             content: '';
                             position: absolute;
                             top: 0;
@@ -591,6 +586,12 @@
                             width: 100%;
                             height: 100%;
                             @include box-shadow(inset 0px 0px 0px 3px $xibo-color-selected);
+                        }
+
+                        &.has-thumb {
+                            .toolbar-card-thumb {
+                                background: $xibo-color-selected !important;
+                            }
                         }
                     }
                 }
