@@ -2212,38 +2212,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             </propertyGroup>
         </propertyGroups>
         <properties>
-            <property id="color1" name="color" type="color">
-                <title>Color 1</title>
-                <dependsOn>colorTemplateId[0]</dependsOn>
-            </property>
-            <property id="color2" name="color" type="color">
-                <title>Color 2</title>
-                <dependsOn>colorTemplateId[1]</dependsOn>
-            </property>
-            <property id="color3" name="color" type="color">
-                <title>Color 3</title>
-                <dependsOn>colorTemplateId[2]</dependsOn>
-            </property>
-            <property id="color4" name="color" type="color">
-                <title>Color 4</title>
-                <dependsOn>colorTemplateId[3]</dependsOn>
-            </property>
-            <property id="color5" name="color" type="color">
-                <title>Color 5</title>
-                <dependsOn>colorTemplateId[4]</dependsOn>
-            </property>
-            <property id="color6" name="color" type="color">
-                <title>Color 6</title>
-                <dependsOn>colorTemplateId[5]</dependsOn>
-            </property>
-            <property id="color7" name="color" type="color">
-                <title>Color 7</title>
-                <dependsOn>colorTemplateId[6]</dependsOn>
-            </property>
-            <property id="color8" name="color" type="color">
-                <title>Color 8</title>
-                <dependsOn>colorTemplateId[7]</dependsOn>
-            </property>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>
                 <helpText>Select the template colours you would like to apply values to the colours below.</helpText>
@@ -2260,27 +2228,35 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             </property>
             <property id="color1" name="color" type="color" propertyGroupId="colors">
                 <title>Color 1</title>
+                <dependsOn>colorTemplateId[0]</dependsOn>
             </property>
             <property id="color2" name="color" type="color" propertyGroupId="colors">
                 <title>Color 2</title>
+                <dependsOn>colorTemplateId[1]</dependsOn>
             </property>
             <property id="color3" name="color" type="color" propertyGroupId="colors">
                 <title>Color 3</title>
+                <dependsOn>colorTemplateId[2]</dependsOn>
             </property>
             <property id="color4" name="color" type="color" propertyGroupId="colors">
                 <title>Color 4</title>
+                <dependsOn>colorTemplateId[3]</dependsOn>
             </property>
             <property id="color5" name="color" type="color" propertyGroupId="colors">
                 <title>Color 5</title>
+                <dependsOn>colorTemplateId[4]</dependsOn>
             </property>
             <property id="color6" name="color" type="color" propertyGroupId="colors">
                 <title>Color 6</title>
+                <dependsOn>colorTemplateId[5]</dependsOn>
             </property>
             <property id="color7" name="color" type="color" propertyGroupId="colors">
                 <title>Color 7</title>
+                <dependsOn>colorTemplateId[6]</dependsOn>
             </property>
             <property id="color8" name="color" type="color" propertyGroupId="colors">
                 <title>Color 8</title>
+                <dependsOn>colorTemplateId[7]</dependsOn>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
