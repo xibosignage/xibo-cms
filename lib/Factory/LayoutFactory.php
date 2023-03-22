@@ -635,6 +635,7 @@ class LayoutFactory extends BaseFactory
                 // Additional check for importing layouts from 1.7 series, where the useDuration did not exist
                 $widget->useDuration = ($widget->useDuration === '') ? 1 : $widget->useDuration;
                 $widget->tempId = $mediaNode->getAttribute('fileId');
+                $widget->schemaVersion = (int)$mediaNode->getAttribute('schemaVersion');
                 $widgetId = $mediaNode->getAttribute('id');
 
                 // Widget from/to dates.
@@ -982,6 +983,7 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode['useDuration'];
                 $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
+                $widget->schemaVersion = (int)$mediaNode['schemaVersion'];
 
                 // Widget from/to dates.
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];

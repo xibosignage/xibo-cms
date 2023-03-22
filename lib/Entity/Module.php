@@ -112,6 +112,12 @@ class Module implements \JsonSerializable
     public $schemaVersion;
 
     /**
+     * @SWG\Property(description="The compatibility class of the module")
+     * @var string
+     */
+    public $compatibilityClass = null;
+
+    /**
      * @SWG\Property(description="A flag indicating whether the module is assignable to a Layout")
      * @var int
      */

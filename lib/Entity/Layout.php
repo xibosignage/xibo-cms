@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1426,6 +1426,7 @@ class Layout implements \JsonSerializable
                 $renderAs = $module->renderAs;
                 $mediaNode = $document->createElement('media');
                 $mediaNode->setAttribute('id', $widget->widgetId);
+                $mediaNode->setAttribute('schemaVersion', $widget->schemaVersion);
                 $mediaNode->setAttribute('type', $widget->type);
                 $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
 

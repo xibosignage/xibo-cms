@@ -129,6 +129,12 @@ class Widget implements \JsonSerializable
     public $toDt;
 
     /**
+     * @SWG\Property(description="Widget Schema Version")
+     * @var int
+     */
+    public $schemaVersion;
+
+    /**
      * @SWG\Property(description="Transition Type In")
      * @var int
      */
