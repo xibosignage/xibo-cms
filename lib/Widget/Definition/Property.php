@@ -57,12 +57,6 @@ class Property implements \JsonSerializable
     /** @var string The data format */
     public $format;
 
-    /** @var string Custom CSS class to apply to the input */
-    public $customClass;
-
-    /** @var string Custom data to apply to the input */
-    public $customData;
-
     /** @var bool Should library refs be permitted in the value? */
     public $allowLibraryRefs = false;
 
@@ -112,8 +106,6 @@ class Property implements \JsonSerializable
             'setDefault' => $this->setDefault,
             'allowLibraryRefs' => $this->allowLibraryRefs,
             'dependsOn' => $this->dependsOn,
-            'customClass' => $this->customClass,
-            'customData' => $this->customData,
         ];
     }
 
@@ -131,21 +123,6 @@ class Property implements \JsonSerializable
         $option->image = $image;
         $option->title = $title;
         $this->options[] = $option;
-        return $this;
-    }
-
-    /**
-     * Add a data pair
-     * @param string $name
-     * @param string $value
-     * @return $this
-     */
-    public function addData(string $name, string $value): Property
-    {
-        $data = new Data();
-        $data->name = $name;
-        $data->value = $value;
-        $this->customData[] = $data;
         return $this;
     }
 
