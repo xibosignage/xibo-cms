@@ -134,11 +134,16 @@ trait ModuleXmlTrait
                 if (count($options) > 0) {
                     foreach ($options->item(0)->childNodes as $optionNode) {
                         if ($optionNode->nodeType === XML_ELEMENT_NODE) {
+                            $set = [];
+                            if (!empty($optionNode->getAttribute('set'))) {
+                                $set = explode(',', $optionNode->getAttribute('set'));
+                            }
+
                             /** @var \DOMElement $optionNode */
                             $property->addOption(
                                 $optionNode->getAttribute('name'),
                                 $optionNode->getAttribute('image'),
-                                $optionNode->getAttribute('set') ? explode(',', $optionNode->getAttribute('set')): [],
+                                $set,
                                 $optionNode->textContent
                             );
                         }

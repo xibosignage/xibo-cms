@@ -2212,309 +2212,51 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             </propertyGroup>
         </propertyGroups>
         <properties>
+            <property id="color1" name="color" type="color">
+                <title>Color 1</title>
+                <dependsOn>colorTemplateId[0]</dependsOn>
+            </property>
+            <property id="color2" name="color" type="color">
+                <title>Color 2</title>
+                <dependsOn>colorTemplateId[1]</dependsOn>
+            </property>
+            <property id="color3" name="color" type="color">
+                <title>Color 3</title>
+                <dependsOn>colorTemplateId[2]</dependsOn>
+            </property>
+            <property id="color4" name="color" type="color">
+                <title>Color 4</title>
+                <dependsOn>colorTemplateId[3]</dependsOn>
+            </property>
+            <property id="color5" name="color" type="color">
+                <title>Color 5</title>
+                <dependsOn>colorTemplateId[4]</dependsOn>
+            </property>
+            <property id="color6" name="color" type="color">
+                <title>Color 6</title>
+                <dependsOn>colorTemplateId[5]</dependsOn>
+            </property>
+            <property id="color7" name="color" type="color">
+                <title>Color 7</title>
+                <dependsOn>colorTemplateId[6]</dependsOn>
+            </property>
+            <property id="color8" name="color" type="color">
+                <title>Color 8</title>
+                <dependsOn>colorTemplateId[7]</dependsOn>
+            </property>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>
                 <helpText>Select the template colours you would like to apply values to the colours below.</helpText>
                 <default>custom</default>
                 <options>
                     <option name="custom">Custom</option>
-                    <option name="default" image="colors1">Colours 1 - Default</option>
-                    <option name="full" image="colors2">Colours 2 - Full</option>
-                    <option name="gray" image="colors3">Colours 3 - Gray Scale</option>
-                    <option name="light" image="colors4">Colours 4 - Light</option>
-                    <option name="soft" image="colors5">Colours 5 - Soft</option>
-                    <option name="vivid" image="colors6">Colours 6 - Vivid</option>
+                    <option name="default" image="colors1" set="#99b433,#00a300,#ff0097,#9f00a7,#00aba9,#2b5797,#da532c,#b91d47">Colours 1 - Default</option>
+                    <option name="full" image="colors2" set="#2364aa,#3da5d9,#73bfb8,#fec601,#ea7317">Colours 2 - Full</option>
+                    <option name="gray" image="colors3" set="#757575,#989898,#666666,#404040">Colours 3 - Gray Scale</option>
+                    <option name="light" image="colors4" set="#fffd98,#bde4a7,#b3d2b2,#9fbbcc,#7a9cc6">Colours 4 - Light</option>
+                    <option name="soft" image="colors5" set="#aa7e7e,#94c88d,#a9a7d7,#dee29c,#e4c4df">Colours 5 - Soft</option>
+                    <option name="vivid" image="colors6" set="#fa7921,#fe9920,#b9a44c,#566e3d,#0c4767">Colours 6 - Vivid</option>
                 </options>
-                <setDefault>
-                    <set field="color1">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#99b433</value>
-                    </set>
-                    <set field="color2">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#00a300</value>
-                    </set>
-                    <set field="color3">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#ff0097</value>
-                    </set>
-                    <set field="color4">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#9f00a7</value>
-                    </set>
-                    <set field="color5">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#00aba9</value>
-                    </set>
-                    <set field="color6">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#2b5797</value>
-                    </set>
-                    <set field="color7">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#da532c</value>
-                    </set>
-                    <set field="color8">
-                        <test>
-                            <condition type="eq">default</condition>
-                        </test>
-                        <value>#b91d47</value>
-                    </set>
-                    <set field="color1">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value>#2364aa</value>
-                    </set>
-                    <set field="color2">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value>#3da5d9</value>
-                    </set>
-                    <set field="color3">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value>#73bfb8</value>
-                    </set>
-                    <set field="color4">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value>#fec601</value>
-                    </set>
-                    <set field="color5">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value>#ea7317</value>
-                    </set>
-                    <set field="color6">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color7">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color8">
-                        <test>
-                            <condition type="eq">full</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color1">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value>#757575</value>
-                    </set>
-                    <set field="color2">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value>#989898</value>
-                    </set>
-                    <set field="color3">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value>#666666</value>
-                    </set>
-                    <set field="color4">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value>#404040</value>
-                    </set>
-                    <set field="color5">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color6">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color7">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color8">
-                        <test>
-                            <condition type="eq">gray</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color1">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value>#fffd98</value>
-                    </set>
-                    <set field="color2">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value>#bde4a7</value>
-                    </set>
-                    <set field="color3">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value>#b3d2b2</value>
-                    </set>
-                    <set field="color4">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value>#9fbbcc</value>
-                    </set>
-                    <set field="color5">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value>7a9cc6</value>
-                    </set>
-                    <set field="color6">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color7">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color8">
-                        <test>
-                            <condition type="eq">light</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color1">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value>#aa7e7e</value>
-                    </set>
-                    <set field="color2">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value>#94c88d</value>
-                    </set>
-                    <set field="color3">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value>#a9a7d7</value>
-                    </set>
-                    <set field="color4">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value>#dee29c</value>
-                    </set>
-                    <set field="color5">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value>e4c4df</value>
-                    </set>
-                    <set field="color6">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color7">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color8">
-                        <test>
-                            <condition type="eq">soft</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color1">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value>#fa7921</value>
-                    </set>
-                    <set field="color2">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value>#fe9920</value>
-                    </set>
-                    <set field="color3">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value>#b9a44c</value>
-                    </set>
-                    <set field="color4">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value>#566e3d</value>
-                    </set>
-                    <set field="color5">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value>0c4767</value>
-                    </set>
-                    <set field="color6">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color7">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                    <set field="color8">
-                        <test>
-                            <condition type="eq">vivid</condition>
-                        </test>
-                        <value></value>
-                    </set>
-                </setDefault>
             </property>
             <property id="color1" name="color" type="color" propertyGroupId="colors">
                 <title>Color 1</title>
