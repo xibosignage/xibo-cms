@@ -519,6 +519,10 @@ $timeline-left-margin-width: 100px;
                         margin: 0 auto;
                     }
 
+                    &.multiselect-active {
+                        background-color: $xibo-color-accent !important;
+                    }
+
                     &.inactive {
                         opacity: 0.6;
                         cursor: auto;

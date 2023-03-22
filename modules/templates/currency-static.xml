@@ -267,10 +267,10 @@ body {
 }
 
 .container-main {
-  height: 420px !important;
+  height: 370px !important;
   width: 820px !important;
   float: left;
-  margin-top: 25px;
+  padding: 25px 0;
 {% if backgroundColor %}
   background-color: {{backgroundColor}};
 {% endif %}

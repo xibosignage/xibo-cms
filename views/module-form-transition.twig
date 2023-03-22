@@ -79,13 +79,13 @@
                     {% set transitionsWithEmpty = [{code: "", transition: ""}]|merge(transitions.in) %}
                     {% set trans = widget.getOptionValue("transIn", null) %}
                     {% set transDuration = widget.getOptionValue("transInDuration", null) %}
-                    {% set transDirection = widget.getOptionValue("transInDirection") %}
+                    {% set transDirection = widget.getOptionValue("transInDirection", null) %}
                     {% set helpText %}{% trans "What transition should be applied when this item starts?" %}{% endset %}
                 {% elseif type == "out" %}
                     {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.out) %}
                     {% set trans = widget.getOptionValue("transOut", null) %}
                     {% set transDuration = widget.getOptionValue("transOutDuration", null) %}
-                    {% set transDirection = widget.getOptionValue("transOutDirection") %}
+                    {% set transDirection = widget.getOptionValue("transOutDirection", null) %}
                     {% set helpText %}{% trans "What transition should be applied when this item finishes?" %}{% endset %}
                 {% else %}
                     {% set message %}{% trans "Unknown Transition Type Requested" %}{% endset %}

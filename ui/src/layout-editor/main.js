@@ -704,7 +704,7 @@ lD.showPublishScreen = function() {
     `formHelpers.setupCheckboxInputFields(
       $("#layoutPublishForm"),
       "#publishNow",
-      ",
+      "",
       ".publish-date-control"
     );
     lD.uploadThumbnail($("#layoutPublishForm #publishPreview"));`,
@@ -925,17 +925,18 @@ lD.undoLastAction = function() {
  * Delete selected object
  */
 lD.deleteSelectedObject = function() {
+  // For now, we always delete the region
   if (lD.selectedObject.type === 'region') {
     lD.deleteObject(
       lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id'],
     );
   } else if (lD.selectedObject.type === 'widget') {
+    // Delete widget's region
+    const regionId =
+      lD.getElementByTypeAndId('region', lD.selectedObject.regionId).regionId;
     lD.deleteObject(
-      lD.selectedObject.type,
-      lD.selectedObject[lD.selectedObject.type + 'Id'],
-      (lD.selectedObject.drawerWidget) ?
-        lD.layout.drawer.regionId :
-        lD.layout.regions[lD.selectedObject.regionId].regionId,
+      'region',
+      regionId,
     );
   }
 };
@@ -1831,6 +1832,9 @@ lD.openPlaylistEditor = function(playlistId, region) {
   lD.editorContainer.find('.back-button #backBtn').addClass('hidden');
   lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
     .removeClass('hidden');
+
+  // Deselect viewer element
+  lD.viewer.selectElement();
 
   // Show playlist editor
   $playlistEditorPanel.removeClass('hidden');

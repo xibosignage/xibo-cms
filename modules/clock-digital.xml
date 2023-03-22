@@ -38,9 +38,11 @@
     <startHeight>150</startHeight>
     <settings></settings>
     <properties>
+        <property type="message">
+            <title>Enter a format for the Digital Clock e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information.</title>
+        </property>
         <property id="ta_text" type="richText" allowLibraryRefs="true">
             <title>Enter text or HTML in the box below.</title>
-            <helpText>Enter a format for the Digital Clock e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information.</helpText>
             <default><![CDATA[
 <span style="font-size: 48px; color:#1c1c1c;">[HH:mm:ss]</span>
             ]]></default>

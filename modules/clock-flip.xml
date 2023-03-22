@@ -54,6 +54,13 @@
             <title>Show Seconds?</title>
             <helpText>Should the clock show seconds or not?</helpText>
             <default></default>
+            <visibility>
+                <test type="or">
+                    <condition field="clockFace" type="eq">TwelveHourClock</condition>
+                    <condition field="clockFace" type="eq">TwentyFourHourClock</condition>
+                    <condition field="clockFace" type="eq">DailyCounter</condition>
+                </test>
+            </visibility>
         </property>
         <property id="offset" type="text">
             <title>Offset</title>
@@ -63,8 +70,6 @@
     </properties>
     <preview></preview>
     <stencil>
-        <width id="width">250</width>
-        <height id="height">250</height>
         <hbs><![CDATA[
 <div id="clock"></div>
         ]]></hbs>
@@ -120,16 +125,30 @@ if (width == 0 || height == 0) {
     height = $(window).height();
 }
 
-var clock_width = 460;
+var clock_width = 300;
+var clock_seconds_width = 160;
 
-// Flip clock is always the same size
-if (properties.clockFace === "DailyCounter") {
-    clock_width = 620;
+switch(properties.clockFace) {
+    case "DailyCounter":
+        clock_width = 460;
+        break;
+    case "HourlyCounter":
+        clock_width = 460;
+        break;
+    case "MinuteCounter":
+        clock_width = 300;
+        break;
+    case "TwelveHourClock":
+        clock_width = 380;
+        break;
+    case "TwentyFourHourClock":
+        clock_width = 300;
+        break;
 }
 
-// If we are a clock, then reduce the width to fit without the seconds if appropriate
-if (properties.showSeconds === 0 && (properties.clockFace === "TwelveHourClock" || properties.clockFace === 'TwentyFourHourClock')) {
-    clock_width = 300;
+// If we show seconds, then we need to increase the width
+if (parseInt(properties.showSeconds) === 1 && (properties.clockFace === "TwelveHourClock" || properties.clockFace === "TwentyFourHourClock" || properties.clockFace === "DailyCounter")) {
+    clock_width += clock_seconds_width;
 }
 
 // Calculate the width ratio between the actual width and the clock_width

@@ -134,7 +134,7 @@ Bottombar.prototype.render = function(element) {
   });
 
   this.DOMObject.find('.properties-btn').click(function(e) {
-    const buttonData = $(e.target).data();
+    const buttonData = $(e.currentTarget).data();
     element.editPropertyForm(
       buttonData['property'],
       buttonData['propertyType'],

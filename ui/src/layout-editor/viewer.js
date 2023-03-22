@@ -664,12 +664,22 @@ Viewer.prototype.renderRegion = function(
   return this.renderRequest;
 };
 
+/** Render region with debounce */
+Viewer.prototype.renderRegionDebounced = _.debounce(
+  function(region, widgetToLoad = null) {
+    lD.viewer.renderRegion(region, widgetToLoad);
+  },
+  500,
+);
+
 /**
  * Update Region
  * @param {object} region - region object
+ * @param {boolean} changed - if region was changed
  */
 Viewer.prototype.updateRegion = function(
   region,
+  changed = false,
 ) {
   const $container = this.DOMObject.find(`#${region.id}`);
 
@@ -705,7 +715,7 @@ Viewer.prototype.updateRegion = function(
   }
 
   // Update region content
-  this.updateRegionContent(region);
+  this.updateRegionContent(region, changed);
 
   // Update moveable
   this.updateMoveable();
@@ -846,7 +856,7 @@ Viewer.prototype.initMoveable = function() {
     }, false);
 
     // Update region
-    self.updateRegion(lD.selectedObject);
+    self.updateRegion(lD.selectedObject, true);
   }).on('resizeEnd', (e) => {
     // Change transform translate to the new position
     const transformSplit = (e.target.style.transform).split(/[(),]+/);
@@ -911,8 +921,12 @@ Viewer.prototype.updateMoveable = function() {
 /**
  * Update region content
  * @param {object} region - Region object
+ * @param {boolean} changed - Has region changed
  */
-Viewer.prototype.updateRegionContent = function(region) {
+Viewer.prototype.updateRegionContent = function(
+  region,
+  changed = false,
+) {
   const $container = this.DOMObject.find(`#${region.id}`);
 
   // Update iframe
@@ -963,7 +977,8 @@ Viewer.prototype.updateRegionContent = function(region) {
   }
 
   // Process image
-  const $imageContainer = $container.find('[data-type="widget_image"]');
+  const $imageContainer = $container
+    .find('[data-type="widget_image"], [data-type="widget_video"]');
   if ($imageContainer.length) {
     const $image = $imageContainer.find('img');
     const $imageParent = $image.parent();
@@ -1027,6 +1042,11 @@ Viewer.prototype.updateRegionContent = function(region) {
       width: region.scaledDimensions.width,
       height: region.scaledDimensions.height,
     });
+
+    // If dimensions changed, render region
+    if (changed) {
+      this.renderRegionDebounced(region);
+    }
   }
 };
 
