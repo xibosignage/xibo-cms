@@ -138,6 +138,7 @@ trait ModuleXmlTrait
                             $property->addOption(
                                 $optionNode->getAttribute('name'),
                                 $optionNode->getAttribute('image'),
+                                $optionNode->getAttribute('set') ? explode(',', $optionNode->getAttribute('set')): [],
                                 $optionNode->textContent
                             );
                         }
@@ -165,37 +166,6 @@ trait ModuleXmlTrait
                                 $testNode->getAttribute('type'),
                                 $conditions
                             );
-                        }
-                    }
-                }
-
-                // SetDefault conditions
-                $setDefault = $node->getElementsByTagName('setDefault');
-                foreach ($setDefault as $setDefaultNode) {
-                    if ($setDefaultNode->nodeType === XML_ELEMENT_NODE) {
-                        $setNodes = $node->getElementsByTagName('set');
-                        foreach ($setNodes as $setNode) {
-                            if ($setNode->nodeType === XML_ELEMENT_NODE) {
-                                foreach ($setNode->getElementsByTagName('test') as $setTestNode) {
-                                    /** @var \DOMElement $setNode */
-                                    $conditions = [];
-                                    foreach ($setNode->getElementsByTagName('condition') as $condNode) {
-                                        if ($condNode instanceof \DOMElement) {
-                                            $conditions[] = [
-                                                'type' => $condNode->getAttribute('type'),
-                                                'value' => $condNode->textContent
-                                            ];
-                                        }
-                                    }
-
-                                    $property->addSetDefault(
-                                        $setTestNode->getAttribute('type'),
-                                        $conditions,
-                                        $setNode->getAttribute('field'),
-                                        $this->getFirstValueOrDefaultFromXmlNode($setNode, 'value')
-                                    );
-                                }
-                            }
                         }
                     }
                 }
