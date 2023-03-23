@@ -24,20 +24,20 @@ jobs:
       - name: Build Latest
         if: github.ref == 'refs/heads/master'
         run: |
-          docker build . -t xibosignage/xibo-cms:latest --build-arg GIT_COMMIT=${GITHUB_SHA}
+          docker build . -t ghcr.io/xibosignage/xibo-cms:latest --build-arg GIT_COMMIT=${GITHUB_SHA}
       - name: Push Latest
         if: github.ref == 'refs/heads/master'
         run: |
-          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
-          docker push xibosignage/xibo-cms:latest
+          docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+          docker push ghcr.io/xibosignage/xibo-cms:latest
 
       # Release branch
       - name: Build Branch
         if: github.ref != 'refs/heads/master'
         run: |
-          docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/} --build-arg GIT_COMMIT=${GITHUB_SHA}
+          docker build . -t ghcr.io/xibosignage/xibo-cms:${GITHUB_REF##*/} --build-arg GIT_COMMIT=${GITHUB_SHA}
       - name: Push Branch
         if: github.ref != 'refs/heads/master'
         run: |
-          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
-          docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
+          docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+          docker push ghcr.io/xibosignage/xibo-cms:${GITHUB_REF##*/}
