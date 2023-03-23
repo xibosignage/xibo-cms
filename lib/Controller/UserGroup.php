@@ -139,17 +139,18 @@ class UserGroup extends Base
 
             $group->libraryQuotaFormatted = ByteFormatter::format($group->libraryQuota * 1024);
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 continue;
+            }
 
             // we only want to show certain buttons, depending on the user logged in
             if ($this->getUser()->featureEnabled('usergroup.modify')
-                && $this->getUser->checkEditable($group)
+                && $this->getUser()->checkEditable($group)
             ) {
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
-                    'url' => $this->urlFor($request,'group.edit.form', ['id' => $group->groupId]),
+                    'url' => $this->urlFor($request, 'group.edit.form', ['id' => $group->groupId]),
                     'text' => __('Edit')
                 );
 
@@ -157,7 +158,7 @@ class UserGroup extends Base
                     // Delete
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_delete',
-                        'url' => $this->urlFor($request,'group.delete.form', ['id' => $group->groupId]),
+                        'url' => $this->urlFor($request, 'group.delete.form', ['id' => $group->groupId]),
                         'text' => __('Delete')
                     );
 
@@ -166,7 +167,7 @@ class UserGroup extends Base
                     // Copy
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_copy',
-                        'url' => $this->urlFor($request,'group.copy.form', ['id' => $group->groupId]),
+                        'url' => $this->urlFor($request, 'group.copy.form', ['id' => $group->groupId]),
                         'text' => __('Copy')
                     );
 
@@ -176,7 +177,7 @@ class UserGroup extends Base
                 // Members
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_members',
-                    'url' => $this->urlFor($request,'group.members.form', ['id' => $group->groupId]),
+                    'url' => $this->urlFor($request, 'group.members.form', ['id' => $group->groupId]),
                     'text' => __('Members')
                 );
 
@@ -185,7 +186,7 @@ class UserGroup extends Base
                     $group->buttons[] = ['divider' => true];
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_page_security',
-                        'url' => $this->urlFor($request,'group.acl.form', ['id' => $group->groupId]),
+                        'url' => $this->urlFor($request, 'group.acl.form', ['id' => $group->groupId]),
                         'text' => __('Features'),
                         'title' => __('Turn Features on/off for this User')
                     );
@@ -235,7 +236,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -265,7 +266,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -491,7 +492,7 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -568,7 +569,7 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -682,7 +683,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -777,7 +778,7 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -881,7 +882,7 @@ class UserGroup extends Base
         $group = $this->userGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -917,7 +918,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -993,7 +994,7 @@ class UserGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check we have permission to view this group
-        if (!$this->getuser()->checkEditable($group)) {
+        if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
 
