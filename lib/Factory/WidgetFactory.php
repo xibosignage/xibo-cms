@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -448,10 +448,25 @@ class WidgetFactory extends BaseFactory
                 // Do we have a static one?
                 $templateId = $widget->getOptionValue('templateId', null);
                 if ($templateId !== null && $templateId !== 'elements') {
-                    $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
+                    $template = $this->moduleTemplateFactory->getByDataTypeAndId(
                         $module->dataType,
                         $templateId
                     );
+
+                    // Does this template extend a global template
+                    if (!empty($template->extends)) {
+                        try {
+                            $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
+                                'global',
+                                $template->extends->template
+                            );
+                        } catch (\Exception $e) {
+                            $this->getLog()->error('getTemplatesForWidgets: ' . $templateId
+                                . ' extends another template which does not exist.');
+                        }
+                    }
+
+                    $templates[] = $template;
                 }
 
                 // Does this widget have elements?
