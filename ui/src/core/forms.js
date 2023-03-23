@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -17,6 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 /* eslint-disable new-cap */
 // Common functions/tools
@@ -143,14 +144,16 @@ window.forms = {
         // dashboards available services
         if (property.type === 'connectorProperties') {
           property.connectorPropertiesUrl =
-            urlsForApi.connectorProperties.search.url.replace(':id', targetId);
+            urlsForApi.connectorProperties.search.url.replace(':id', targetId) +
+              '?propertyId=' + property.id;
+
           // If we don't have a value, set value key pair to null
           if (property.value == '') {
             property.initialValue = null;
             property.initialKey = null;
           } else {
             property.initialValue = property.value;
-            property.initialKey = 'type';
+            property.initialKey = property.id;
           }
         }
 

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Controller;
@@ -1496,30 +1497,36 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
     public function additionalWidgetEditOptions(Request $request, Response $response, $id)
     {
         $params = $this->getSanitizer($request->getParams());
-        $options = [];
 
         // Load the widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
-        $event = new WidgetEditOptionRequestEvent($widget);
+
+        // Which property is this for?
+        $property = $params->getString('propertyId', [
+            'throw' => function () {
+                throw new InvalidArgumentException(__('Please supply a propertyId'), 'propertyId');
+            },
+            'rules' => ['notEmpty'],
+        ]);
+
+        // Dispatch an event to service this widget.
+        $event = new WidgetEditOptionRequestEvent($widget, $property, $params->getString($property));
         $this->getDispatcher()->dispatch($event, $event::$NAME);
 
-        if ($widget->type === 'dashboard') {
-            $options = $event->getOptions()['serviceType'];
-
-            if ($params->getString('type') != null) {
-                $filteredOptions = [];
-                foreach ($options as $option) {
-                    if ($option['type'] == $params->getString('type')) {
-                        $filteredOptions[] = $option;
-                        $options = $filteredOptions;
-                    }
-                }
-            }
-        }
-
+        // Return the options.
+        $options = $event->getOptions();
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = count($options);
         $this->getState()->setData($options);

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Event;
@@ -27,19 +28,28 @@ use Xibo\Entity\Widget;
 /**
  * An event fired by a widget when presenting its properties
  * should be used by a connector to provide additional options to a dropdown
- *
- * TODO: this is pulled in from 3.2.0, but the code to fire the event doesn't exist in the new widget system
- *  this will need some thought
  */
 class WidgetEditOptionRequestEvent extends Event
 {
     public static $NAME = 'widget.edit.option.event';
+
+    /** @var \Xibo\Entity\Widget  */
     private $widget;
+
+    /** @var string  */
+    private $propertyId;
+
+    /** @var mixed  */
+    private $propertyValue;
+
+    /** @var array|null */
     private $options;
 
-    public function __construct($widget)
+    public function __construct(Widget $widget, string $propertyId, $propertyValue)
     {
         $this->widget = $widget;
+        $this->propertyId = $propertyId;
+        $this->propertyValue = $propertyValue;
     }
 
     /**
@@ -51,6 +61,24 @@ class WidgetEditOptionRequestEvent extends Event
     }
 
     /**
+     * Which property is making this request?
+     * @return string|null The ID of the property `id=""`
+     */
+    public function getPropertyId(): ?string
+    {
+        return $this->propertyId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPropertyValue()
+    {
+        return $this->propertyValue;
+    }
+
+    /**
+     * Get the options array
      */
     public function getOptions(): array
     {
@@ -62,6 +90,7 @@ class WidgetEditOptionRequestEvent extends Event
     }
 
     /**
+     * Set a new options array
      * @return $this
      */
     public function setOptions(array $options): WidgetEditOptionRequestEvent
