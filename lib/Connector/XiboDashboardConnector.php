@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 namespace Xibo\Connector;
 
@@ -469,21 +470,31 @@ class XiboDashboardConnector implements ConnectorInterface
     public function onWidgetEditOption(WidgetEditOptionRequestEvent $event)
     {
         $this->getLogger()->debug('onWidgetEditOption');
-        $widget = $event->getWidget();
-        // get any options we have in this event
-        $options = $event->getOptions();
 
+        // Pull the widget we're working with.
+        $widget = $event->getWidget();
         if ($widget === null) {
             throw new NotFoundException();
         }
 
-        // only care about dashboard type Widgets here
-        if ($widget->type === 'dashboard') {
+        // Pull in existing information
+        $existingType = $event->getPropertyValue();
+        $options = $event->getOptions();
+
+        // We handle the dashboard widget and the property with id="type"
+        if ($widget->type === 'dashboard' && $event->getPropertyId() === 'type') {
             // get available services
             $services = $this->getAvailableServices(true, $this->getSetting('apiKey'));
+            $services = $services['serviceType'] ?? [];
 
-            // add services to our options array and set options on the event.
-            $options['serviceType'] = $services;
+            foreach ($services as $option) {
+                // If we have already selected a type of dashboard, do not let it be changed.
+                if (empty($existingType) || $option['type'] === $existingType) {
+                    $options[] = $option;
+                }
+            }
+
+            // Set these options on the event.
             $event->setOptions($options);
         }
     }
