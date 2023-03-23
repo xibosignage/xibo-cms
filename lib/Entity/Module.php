@@ -118,6 +118,12 @@ class Module implements \JsonSerializable
     public $compatibilityClass = null;
 
     /**
+     * @SWG\Property(description="A flag indicating whether the module should be excluded from the Layout Editor")
+     * @var string
+     */
+    public $showIn = 'both';
+
+    /**
      * @SWG\Property(description="A flag indicating whether the module is assignable to a Layout")
      * @var int
      */
