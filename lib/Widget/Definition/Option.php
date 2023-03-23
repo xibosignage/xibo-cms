@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -30,8 +30,9 @@ class Option implements \JsonSerializable
 {
     public $name;
     public $image;
+    public $set = [];
     public $title;
-    
+
     /**
      * @inheritDoc
      */
@@ -40,6 +41,7 @@ class Option implements \JsonSerializable
         return [
             'name' => $this->name,
             'image' => $this->image,
+            'set' => $this->set,
             'title' => $this->title
         ];
     }
