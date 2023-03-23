@@ -488,7 +488,7 @@ class XiboDashboardConnector implements ConnectorInterface
             $services = $services['serviceType'] ?? [];
 
             foreach ($services as $option) {
-                // If we have already selected a type of dashboard, do not let it be changed.
+                // Filter the list of options by the property value provided (if there is one).
                 if (empty($existingType) || $option['type'] === $existingType) {
                     $options[] = $option;
                 }
