@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,7 +23,6 @@
 
 namespace Xibo\Xmds;
 
-
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Stash\Invalidation;
@@ -37,6 +36,8 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Soap5
  * @package Xibo\Xmds
+ *
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
  */
 class Soap5 extends Soap4
 {
@@ -52,13 +53,25 @@ class Soap5 extends Soap4
      * @param string $macAddress
      * @param string $xmrChannel
      * @param string $xmrPubKey
+     * @param string $licenceCheck
      * @return string
      * @throws NotFoundException
      * @throws \SoapFault
      * @throws GeneralException
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
-    {
+    public function RegisterDisplay(
+        $serverKey,
+        $hardwareKey,
+        $displayName,
+        $clientType,
+        $clientVersion,
+        $clientCode,
+        $operatingSystem,
+        $macAddress,
+        $xmrChannel = null,
+        $xmrPubKey = null,
+        $licenceResult = null
+    ) {
         $this->logProcessor->setRoute('RegisterDisplay');
 
         $sanitized = $this->getSanitizer([
@@ -71,7 +84,8 @@ class Soap5 extends Soap4
             'operatingSystem' => $operatingSystem,
             'macAddress' => $macAddress,
             'xmrChannel' => $xmrChannel,
-            'xmrPubKey' => $xmrPubKey
+            'xmrPubKey' => $xmrPubKey,
+            'licenceResult' => $licenceResult
         ]);
 
         // Sanitize
@@ -85,6 +99,8 @@ class Soap5 extends Soap4
         $clientAddress = $this->getIp();
         $xmrChannel = $sanitized->getString('xmrChannel');
         $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
+        // this is only sent from xmds v7
+        $commercialLicenceString = $sanitized->getString('licenceResult');
 
         if ($xmrPubKey != '' && !Str::contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
@@ -131,7 +147,6 @@ class Soap5 extends Soap4
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
                 $displayElement->setAttribute('message', 'Display is Registered and awaiting Authorisation from an Administrator in the CMS');
-
             } else {
                 // It is licensed
                 $displayElement->setAttribute('status', 0);
@@ -346,12 +361,11 @@ class Soap5 extends Soap4
                 // Update the Channel
                 $display->xmrChannel = $xmrChannel;
                 // Update the PUB Key only if it has been cleared
-                if ($display->xmrPubKey == '')
+                if ($display->xmrPubKey == '') {
                     $display->xmrPubKey = $xmrPubKey;
+                }
             }
-
         } catch (NotFoundException $e) {
-
             // Add a new display
             try {
                 $display = $this->displayFactory->createEmpty();
@@ -369,17 +383,20 @@ class Soap5 extends Soap4
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;
                 }
-            }
-            catch (\InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException $e) {
                 throw new \SoapFault('Sender', $e->getMessage());
             }
 
             $displayElement->setAttribute('status', 1);
             $displayElement->setAttribute('code', 'ADDED');
-            if ($display->licensed == 0)
-                $displayElement->setAttribute('message', 'Display is now Registered and awaiting Authorisation from an Administrator in the CMS');
-            else
+            if ($display->licensed == 0) {
+                $displayElement->setAttribute(
+                    'message',
+                    'Display is now Registered and awaiting Authorisation from an Administrator in the CMS'
+                );
+            } else {
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
+            }
         }
 
         // Send Notification if required
@@ -393,6 +410,27 @@ class Soap5 extends Soap4
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
         //$display->operatingSystem = $operatingSystem;
+
+        // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
+        // only sent by xmds v7
+        if (!empty($commercialLicenceString) && !in_array($display->clientType, ['windows', 'linux'])) {
+            $commercialLicenceString = strtolower($commercialLicenceString);
+            if ($commercialLicenceString === 'licensed') {
+                $commercialLicence = 1;
+            } elseif ($commercialLicenceString === 'trial') {
+                $commercialLicence = 2;
+            } else {
+                $commercialLicence = 0;
+            }
+
+            $display->commercialLicence = $commercialLicence;
+        }
+
+        // commercial licence not applicable for Windows and Linux players.
+        if (in_array($display->clientType, ['windows', 'linux'])) {
+            $display->commercialLicence = 3;
+        }
+
         $display->save(Display::$saveOptionsMinimum);
 
         // cache checks
@@ -425,7 +463,7 @@ class Soap5 extends Soap4
      * @throws NotFoundException
      * @throws \SoapFault
      */
-    function Schedule($serverKey, $hardwareKey)
+    public function Schedule($serverKey, $hardwareKey)
     {
         return $this->doSchedule($serverKey, $hardwareKey, ['dependentsAsNodes' => true, 'includeOverlays' => true]);
     }
