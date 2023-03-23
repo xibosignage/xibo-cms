@@ -432,6 +432,36 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Change an option
+     * @param string $option
+     * @param string $newOption
+     * @return $this
+     */
+    public function changeOption(string $option, string $newOption): Widget
+    {
+        try {
+            $widgetOption = $this->getOption($option);
+
+            $this->getLog()->debug('changeOption: ' . $option);
+
+            // Unassign
+            foreach ($this->widgetOptions as $key => $value) {
+                if ($value->option === $option) {
+                    unset($this->widgetOptions[$key]);
+                }
+            }
+
+            // Change now
+            $widgetOption->delete();
+            $this->widgetOptions[] = $this->widgetOptionFactory->create($this->widgetId, $widgetOption->type, $newOption, $widgetOption->value);
+
+        } catch (NotFoundException $exception) {
+            // This is good, nothing to do.
+        }
+        return $this;
+    }
+
+    /**
      * Get Widget Option Value
      * @param string $option
      * @param mixed $default
