@@ -533,6 +533,7 @@ class ModuleFactory extends BaseFactory
         $module->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $module->dataCacheKey = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataCacheKey');
         $module->schemaVersion = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'schemaVersion'));
+        $module->compatibilityClass = $this->getFirstValueOrDefaultFromXmlNode($xml, 'compatibilityClass');
         $module->assignable = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'assignable'));
         $module->regionSpecific = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'regionSpecific'));
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');

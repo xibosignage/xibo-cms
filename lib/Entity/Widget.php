@@ -129,6 +129,12 @@ class Widget implements \JsonSerializable
     public $toDt;
 
     /**
+     * @SWG\Property(description="Widget Schema Version")
+     * @var int
+     */
+    public $schemaVersion;
+
+    /**
      * @SWG\Property(description="Transition Type In")
      * @var int
      */
@@ -421,6 +427,36 @@ class Widget implements \JsonSerializable
             $widgetOption->delete();
         } catch (NotFoundException $exception) {
             // This is good, notihng to do.
+        }
+        return $this;
+    }
+
+    /**
+     * Change an option
+     * @param string $option
+     * @param string $newOption
+     * @return $this
+     */
+    public function changeOption(string $option, string $newOption): Widget
+    {
+        try {
+            $widgetOption = $this->getOption($option);
+
+            $this->getLog()->debug('changeOption: ' . $option);
+
+            // Unassign
+            foreach ($this->widgetOptions as $key => $value) {
+                if ($value->option === $option) {
+                    unset($this->widgetOptions[$key]);
+                }
+            }
+
+            // Change now
+            $widgetOption->delete();
+            $this->widgetOptions[] = $this->widgetOptionFactory->create($this->widgetId, $widgetOption->type, $newOption, $widgetOption->value);
+
+        } catch (NotFoundException $exception) {
+            // This is good, nothing to do.
         }
         return $this;
     }

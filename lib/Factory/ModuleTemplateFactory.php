@@ -168,6 +168,7 @@ class ModuleTemplateFactory extends BaseFactory
         $template->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $template->title = $this->getFirstValueOrDefaultFromXmlNode($xml, 'title');
         $template->thumbnail = $this->getFirstValueOrDefaultFromXmlNode($xml, 'thumbnail');
+        $template->isVisible = $this->getFirstValueOrDefaultFromXmlNode($xml, 'isVisible') !== 'false';
         $template->startWidth = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startWidth'));
         $template->startHeight = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startHeight'));
         $template->hasDimensions = $this->getFirstValueOrDefaultFromXmlNode($xml, 'hasDimensions', 'true') === 'true';
