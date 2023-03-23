@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 // VIEWER Module
 
 // Load templates
@@ -102,14 +103,22 @@ Viewer.prototype.render = function(forceReload = false) {
   const self = this;
 
   // Check background colour and set theme
-  // eslint-disable-next-line new-cap
-  const hsvColor = Color(this.parent.layout.backgroundColor);
+  const hsvColor =
+    (this.parent.layout.backgroundColor) ?
+      Color(this.parent.layout.backgroundColor) : null;
+
+  // If we don't have a background colour, set the theme to light
+  // or if the background colour is too light or saturated
+  // set the theme to dark
   if (
+    hsvColor &&
     (
-      hsvColor.values.hsv[2] > 75 &&
-      hsvColor.values.hsv[1] < 50
-    ) ||
-    hsvColor.values.hsv[2] > 90
+      (
+        hsvColor.values.hsv[2] > 75 &&
+        hsvColor.values.hsv[1] < 50
+      ) ||
+      hsvColor.values.hsv[2] > 90
+    )
   ) {
     this.theme = 'dark';
   } else {
