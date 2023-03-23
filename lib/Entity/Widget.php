@@ -786,7 +786,7 @@ class Widget implements \JsonSerializable
             if ($property->value === null) {
                 $this->removeOption($property->id);
             } else {
-                $type = ($property->type === 'code') ? 'cdata' : 'attrib';
+                $type = ($property->type === 'code' || $property->type === 'richText') ? 'cdata' : 'attrib';
 
                 // Apply any filters on the data.
                 if ($property->type === 'input' && $property->variant === 'uri') {
