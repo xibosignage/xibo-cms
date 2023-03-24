@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,9 +18,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Event;
+
+use Xibo\Entity\RequiredFile;
 
 /**
  * Event raised when XMDS receives a request for a file.
@@ -39,15 +42,13 @@ class XmdsDependencyRequestEvent extends Event
     private $realId;
 
     /**
-     * @param $fileType
-     * @param $id
-     * @param string|null $realId
+     * @param RequiredFile $file
      */
-    public function __construct($fileType, $id, string $realId = null)
+    public function __construct(RequiredFile $file)
     {
-        $this->fileType = $fileType;
-        $this->id = $id;
-        $this->realId = $realId;
+        $this->fileType = $file->fileType;
+        $this->id = $file->itemId;
+        $this->realId = $file->realId;
     }
 
     /**
