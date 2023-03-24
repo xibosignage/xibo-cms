@@ -19,3 +19,6 @@ modules/bundle*.js*
 # The OpenOOH specification
 openooh/
 openooh/specification.json
+
+# PHPStorm config
+tests/http-client.private.env.json
