@@ -24,12 +24,14 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\Region;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
@@ -79,6 +81,9 @@ class Playlist extends Base
     /** @var FolderFactory */
     private $folderFactory;
 
+    /** @var RegionFactory */
+    private $regionFactory;
+
     /**
      * Set common dependencies.
      * @param PlaylistFactory $playlistFactory
@@ -92,6 +97,7 @@ class Playlist extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param FolderFactory $folderFactory
+     * @param RegionFactory $regionFactory
      */
     public function __construct(
         $playlistFactory,
@@ -104,7 +110,8 @@ class Playlist extends Base
         $layoutFactory,
         $displayFactory,
         $scheduleFactory,
-        $folderFactory
+        $folderFactory,
+        $regionFactory
     ) {
         $this->playlistFactory = $playlistFactory;
         $this->mediaFactory = $mediaFactory;
@@ -117,6 +124,7 @@ class Playlist extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->folderFactory = $folderFactory;
+        $this->regionFactory = $regionFactory;
     }
 
     /**
@@ -1321,6 +1329,27 @@ class Playlist extends Base
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget, $displayOrder);
+
+            // Get the widget region and Layout
+            $widgetRegion = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
+            $layout = $this->layoutFactory->getById($widgetRegion->layoutId);
+            $layout->load();
+
+            // When a second media item added to a zone in Regions,
+            // it should automatically be transformed into a playlist.
+            $allRegions = array_merge($layout->regions, $layout->drawers);
+            foreach ($allRegions as $layoutRegion) {
+                /* @var Region $layoutRegion */
+                $region = $this->regionFactory->getById($layoutRegion->regionId);
+                if ($layoutRegion->type === 'zone') {
+                    if (count($layoutRegion->getPlaylist()->widgets) >= 1) {
+
+                        // Make the region a playlist
+                        $region->type = 'playlist';
+                        $region->save();
+                    }
+                }
+            }
 
             // If we have one provided we should bump the display order by 1 so that if we have more than one
             // media to assign, we don't put the second one in the same place as the first one.

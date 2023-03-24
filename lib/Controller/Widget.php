@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Controller;
@@ -26,11 +25,13 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\Region;
 use Xibo\Event\DataSetDataTypeRequestEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -79,6 +80,9 @@ class Widget extends Base
     /** @var WidgetAudioFactory */
     protected $widgetAudioFactory;
 
+    /** @var LayoutFactory */
+    protected $layoutFactory;
+
     /**
      * Set common dependencies.
      * @param ModuleFactory $moduleFactory
@@ -90,6 +94,7 @@ class Widget extends Base
      * @param TransitionFactory $transitionFactory
      * @param RegionFactory $regionFactory
      * @param WidgetAudioFactory $widgetAudioFactory
+     * @param LayoutFactory $layoutFactory
      */
     public function __construct(
         $moduleFactory,
@@ -100,7 +105,8 @@ class Widget extends Base
         $widgetFactory,
         $transitionFactory,
         $regionFactory,
-        $widgetAudioFactory
+        $widgetAudioFactory,
+        $layoutFactory
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -111,6 +117,7 @@ class Widget extends Base
         $this->transitionFactory = $transitionFactory;
         $this->regionFactory = $regionFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
+        $this->layoutFactory = $layoutFactory;
     }
 
     /**
@@ -240,6 +247,27 @@ class Widget extends Base
         // Assign this module to this Playlist in the appropriate place (which could be null)
         $displayOrder = $params->getInt('displayOrder');
         $playlist->assignWidget($widget, $displayOrder);
+
+        // Get the widget region and Layout
+        $widgetRegion = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
+        $layout = $this->layoutFactory->getById($widgetRegion->layoutId);
+        $layout->load();
+
+        // When a second widget item added to a zone in Regions,
+        // it should automatically be transformed into a playlist.
+        $allRegions = array_merge($layout->regions, $layout->drawers);
+        foreach ($allRegions as $layoutRegion) {
+            /* @var Region $layoutRegion */
+            $region = $this->regionFactory->getById($layoutRegion->regionId);
+            if ($layoutRegion->type === 'zone') {
+                if (count($layoutRegion->getPlaylist()->widgets) >= 1) {
+
+                    // Make the region a playlist
+                    $region->type = 'playlist';
+                    $region->save();
+                }
+            }
+        }
 
         // Dispatch the Edit Event
         $this->getDispatcher()->dispatch(new WidgetAddEvent($module, $widget));
