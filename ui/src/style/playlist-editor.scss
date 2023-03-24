@@ -623,4 +623,33 @@ $timeline-left-margin-width: 100px;
     .custom-overlay {
         z-index: $playlist-editor-z-index-overlay;
     }
+
+    .back-button {
+        position: fixed;
+        text-transform: uppercase;
+        left: 0;
+        top: 0;
+        z-index: 1;
+        background-color: $xibo-color-neutral-0;
+        height: 50px;
+        width: 348px;
+
+        a {
+            width: 100px;
+            padding: 0.5rem;
+            color: $xibo-color-secondary;
+            margin-top: 4px;
+            margin-left: 6px;
+
+            &:hover {
+                background-color: $xibo-color-primary-l10;
+            }
+        }
+
+        span {
+            margin-left: 6px;
+            font-weight: bold;
+        }
+    }
+
 }

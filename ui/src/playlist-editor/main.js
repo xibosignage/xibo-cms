@@ -139,7 +139,11 @@ pE.loadEditor = function(inline = false) {
         pE.editorContainer.html(
           inline ?
             playlistEditorTemplate() :
-            playlistEditorExternalContainerTemplate(),
+            playlistEditorExternalContainerTemplate(
+                {
+                  trans: editorsTrans,
+                },
+            ),
         );
 
         // Initialize timeline and create data structure
@@ -210,6 +214,11 @@ pE.loadEditor = function(inline = false) {
         pE.toolbar.render();
 
         pE.common.hideLoadingScreen();
+
+        // Handle editor close button
+        pE.editorContainer.find('#closePlaylistEditorBtn').on('click', function() {
+          pE.close();
+        });
       } else {
         // Login Form needed?
         if (res.login) {
