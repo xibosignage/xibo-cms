@@ -27,6 +27,9 @@
                 {{#if image}}
                     data-content="{{> add-ons/dropdownOptionImage image=image title=(lookup this ../optionsTitle) }}"
                 {{/if}}
+                {{#if set}}
+                    data-set="{{#each set}}{{this}}{{#unless @last}},{{/unless}}{{/each}}"
+                {{/if}}
             >{{lookup this ../optionsTitle}}</option>
         {{/each}}
     </select>
