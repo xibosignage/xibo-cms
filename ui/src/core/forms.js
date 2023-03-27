@@ -63,7 +63,6 @@ window.forms = {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
         const property = properties[key];
-        property.setDefault = undefined;
 
         // Handle default value
         if (property.value === null && property.default !== undefined) {
@@ -254,7 +253,6 @@ window.forms = {
           ) {
             $newField.attr('data-visibility', property.visibility);
           }
-
         } else {
           console.error('Form type not found: ' + property.type);
         }
