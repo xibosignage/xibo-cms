@@ -108,9 +108,6 @@ class TwitterConnector implements ConnectorInterface
                 return;
             }
 
-            // Handle this event.
-            $event->stopPropagation();
-
             try {
                 $twitterLanguages = $this->getLanguages();
 
