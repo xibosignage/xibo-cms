@@ -63,6 +63,7 @@ window.forms = {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
         const property = properties[key];
+        property.setDefault = undefined;
 
         // Handle default value
         if (property.value === null && property.default !== undefined) {
@@ -255,7 +256,7 @@ window.forms = {
           }
 
           // Add set default to the field
-          if (property.setDefault.length) {
+          if (property.setDefault?.length) {
             $newField.attr(
               'data-set-default',
               JSON.stringify(property.setDefault),
