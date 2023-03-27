@@ -783,7 +783,7 @@
 /* Playlist Editor side bar */
 .editor-toolbar.editor-side-bar-playlist-editor nav {
     position: fixed;
-    top: 0;
+    top: 50px;
     left: 0;
     bottom: 0;
     
@@ -803,6 +803,14 @@
         &:hover {
             color: $xibo-color-primary;
             background: $xibo-color-primary-l5;
+        }
+    }
+
+    .toolbar-menu-content {
+        .toolbar-pane {
+            .toolbar-pane-container {
+                height: calc(100% - 138px);
+            }
         }
     }
 }

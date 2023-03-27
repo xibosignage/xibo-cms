@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Xmds;
@@ -2263,7 +2264,7 @@ class Soap
             $resource = $renderer->decorateForPlayer(
                 $resource,
                 $media,
-                false,
+                $isSupportsDataUrl,
                 $data,
                 $this->moduleFactory->getAssetsFromTemplates($templates)
             );

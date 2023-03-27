@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Widget\Render;
@@ -309,7 +310,7 @@ class WidgetHtmlRenderer
                 $output = str_replace('[[' . $match . ']]', $replace, $output);
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
-                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]]) ? json_encode($data[$value[1]]) : [], $output);
+                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]]) ? json_encode($data[$value[1]]) : '{"data":[], "meta":[]}', $output);
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {

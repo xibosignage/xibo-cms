@@ -2219,11 +2219,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <options>
                     <option name="custom">Custom</option>
                     <option name="default" image="colors1" set="#99b433,#00a300,#ff0097,#9f00a7,#00aba9,#2b5797,#da532c,#b91d47">Colours 1 - Default</option>
-                    <option name="full" image="colors2" set="#2364aa,#3da5d9,#73bfb8,#fec601,#ea7317">Colours 2 - Full</option>
-                    <option name="gray" image="colors3" set="#757575,#989898,#666666,#404040">Colours 3 - Gray Scale</option>
-                    <option name="light" image="colors4" set="#fffd98,#bde4a7,#b3d2b2,#9fbbcc,#7a9cc6">Colours 4 - Light</option>
-                    <option name="soft" image="colors5" set="#aa7e7e,#94c88d,#a9a7d7,#dee29c,#e4c4df">Colours 5 - Soft</option>
-                    <option name="vivid" image="colors6" set="#fa7921,#fe9920,#b9a44c,#566e3d,#0c4767">Colours 6 - Vivid</option>
+                    <option name="full" image="colors2" set="#2364aa,#3da5d9,#73bfb8,#fec601,#ea7317,,,">Colours 2 - Full</option>
+                    <option name="gray" image="colors3" set="#757575,#989898,#666666,#404040,,,,">Colours 3 - Gray Scale</option>
+                    <option name="light" image="colors4" set="#fffd98,#bde4a7,#b3d2b2,#9fbbcc,#7a9cc6,,,">Colours 4 - Light</option>
+                    <option name="soft" image="colors5" set="#aa7e7e,#94c88d,#a9a7d7,#dee29c,#e4c4df,,,">Colours 5 - Soft</option>
+                    <option name="vivid" image="colors6" set="#fa7921,#fe9920,#b9a44c,#566e3d,#0c4767,,,">Colours 6 - Vivid</option>
                 </options>
             </property>
             <property id="color1" name="color" type="color" propertyGroupId="colors">

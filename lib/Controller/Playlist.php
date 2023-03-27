@@ -30,6 +30,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
@@ -79,6 +80,9 @@ class Playlist extends Base
     /** @var FolderFactory */
     private $folderFactory;
 
+    /** @var RegionFactory */
+    private $regionFactory;
+
     /**
      * Set common dependencies.
      * @param PlaylistFactory $playlistFactory
@@ -92,6 +96,7 @@ class Playlist extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param FolderFactory $folderFactory
+     * @param RegionFactory $regionFactory
      */
     public function __construct(
         $playlistFactory,
@@ -104,7 +109,8 @@ class Playlist extends Base
         $layoutFactory,
         $displayFactory,
         $scheduleFactory,
-        $folderFactory
+        $folderFactory,
+        $regionFactory
     ) {
         $this->playlistFactory = $playlistFactory;
         $this->mediaFactory = $mediaFactory;
@@ -117,6 +123,7 @@ class Playlist extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->folderFactory = $folderFactory;
+        $this->regionFactory = $regionFactory;
     }
 
     /**
@@ -1321,6 +1328,15 @@ class Playlist extends Base
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget, $displayOrder);
+
+            if ($playlist->isRegionPlaylist() && count($playlist->widgets) >= 2) {
+                // Convert this region to a `playlist` (if it is a zone)
+                $widgetRegion = $this->regionFactory->getById($playlist->regionId);
+                if ($widgetRegion->type === 'zone') {
+                    $widgetRegion->type = 'playlist';
+                    $widgetRegion->save();
+                }
+            }
 
             // If we have one provided we should bump the display order by 1 so that if we have more than one
             // media to assign, we don't put the second one in the same place as the first one.
