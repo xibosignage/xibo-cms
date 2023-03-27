@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Region;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -1330,7 +1329,6 @@ class Playlist extends Base
             // Assign the widget to the playlist
             $playlist->assignWidget($widget, $displayOrder);
 
-            $playlist->load();
             if ($playlist->isRegionPlaylist() && count($playlist->widgets) >= 2) {
                 // Convert this region to a `playlist` (if it is a zone)
                 $widgetRegion = $this->regionFactory->getById($playlist->regionId);

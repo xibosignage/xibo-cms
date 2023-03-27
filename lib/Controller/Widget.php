@@ -25,7 +25,6 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Region;
 use Xibo\Event\DataSetDataTypeRequestEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
@@ -80,9 +79,6 @@ class Widget extends Base
     /** @var WidgetAudioFactory */
     protected $widgetAudioFactory;
 
-    /** @var LayoutFactory */
-    protected $layoutFactory;
-
     /**
      * Set common dependencies.
      * @param ModuleFactory $moduleFactory
@@ -94,7 +90,6 @@ class Widget extends Base
      * @param TransitionFactory $transitionFactory
      * @param RegionFactory $regionFactory
      * @param WidgetAudioFactory $widgetAudioFactory
-     * @param LayoutFactory $layoutFactory
      */
     public function __construct(
         $moduleFactory,
@@ -105,8 +100,7 @@ class Widget extends Base
         $widgetFactory,
         $transitionFactory,
         $regionFactory,
-        $widgetAudioFactory,
-        $layoutFactory
+        $widgetAudioFactory
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -117,7 +111,6 @@ class Widget extends Base
         $this->transitionFactory = $transitionFactory;
         $this->regionFactory = $regionFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
-        $this->layoutFactory = $layoutFactory;
     }
 
     /**
@@ -248,7 +241,6 @@ class Widget extends Base
         $displayOrder = $params->getInt('displayOrder');
         $playlist->assignWidget($widget, $displayOrder);
 
-        $playlist->load();
         if ($playlist->isRegionPlaylist() && count($playlist->widgets) >= 2) {
             // Convert this region to a `playlist` (if it is a zone)
             $widgetRegion = $this->regionFactory->getById($playlist->regionId);
