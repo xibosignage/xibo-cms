@@ -248,24 +248,13 @@ class Widget extends Base
         $displayOrder = $params->getInt('displayOrder');
         $playlist->assignWidget($widget, $displayOrder);
 
-        // Get the widget region and Layout
-        $widgetRegion = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-        $layout = $this->layoutFactory->getById($widgetRegion->layoutId);
-        $layout->load();
-
-        // When a second widget item added to a zone in Regions,
-        // it should automatically be transformed into a playlist.
-        $allRegions = array_merge($layout->regions, $layout->drawers);
-        foreach ($allRegions as $layoutRegion) {
-            /* @var Region $layoutRegion */
-            $region = $this->regionFactory->getById($layoutRegion->regionId);
-            if ($layoutRegion->type === 'zone') {
-                if (count($layoutRegion->getPlaylist()->widgets) >= 1) {
-
-                    // Make the region a playlist
-                    $region->type = 'playlist';
-                    $region->save();
-                }
+        $playlist->load();
+        if ($playlist->isRegionPlaylist() && count($playlist->widgets) >= 2) {
+            // Convert this region to a `playlist` (if it is a zone)
+            $widgetRegion = $this->regionFactory->getById($playlist->regionId);
+            if ($widgetRegion->type === 'zone') {
+                $widgetRegion->type = 'playlist';
+                $widgetRegion->save();
             }
         }
 
