@@ -60,6 +60,13 @@ $fa-font-path: "~font-awesome/fonts";
         background-color: $xibo-color-primary;
         min-height: 80px;
     }
+
+    .form-check {
+        display: flex;
+    }
+    .form-check-label {
+        flex-grow: 1;
+    }
 }
 
 /* Layout Manager */
