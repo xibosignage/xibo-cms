@@ -282,13 +282,19 @@ PlaylistTimeline.prototype.updateInfo = function() {
       playlist: pE.playlist,
       widget: pE.selectedObject,
     }, {trans: toolbarTrans}),
-  )
+  );
   const widgets = pE.playlist?.widgets || {};
   const headerHtml = timelineHeaderInfoTemplate(
     $.extend({}, {
       playlist: pE.playlist,
       widgetsCount: Object.keys(widgets).length,
-    }, {trans: toolbarTrans}),
+    }, {trans: {
+      ...playlistEditorTrans,
+      editPlaylistTitle: playlistEditorTrans.editPlaylistTitle.replace(
+        '%playlistName%',
+        pE.playlist.name,
+      ),
+    }}),
   );
 
   // Inject HTML into container
