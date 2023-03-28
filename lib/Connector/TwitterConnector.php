@@ -27,7 +27,10 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\DataType\SocialMedia;
 use Xibo\Widget\Provider\DataProviderInterface;
@@ -42,6 +45,7 @@ class TwitterConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(WidgetEditOptionRequestEvent::$NAME, [$this, 'onWidgetEditOption']);
         return $this;
     }
 
@@ -78,6 +82,73 @@ class TwitterConnector implements ConnectorInterface
         $settings['cachePeriod'] = $params->getInt('cachePeriod');
         $settings['cachePeriodImages'] = $params->getInt('cachePeriodImages');
         return $settings;
+    }
+
+    public function onWidgetEditOption(WidgetEditOptionRequestEvent $event)
+    {
+        $this->getLogger()->debug('onWidgetEditOption');
+
+        // Pull the widget we're working with.
+        $widget = $event->getWidget();
+        if ($widget === null) {
+            throw new NotFoundException();
+        }
+
+        // We handle the twitter widget and the property with id="type"
+        if ($widget->type === 'twitter' && $event->getPropertyId() === 'language') {
+
+            if (empty($this->getSetting('apiKey')) || empty($this->getSetting('apiSecret'))) {
+                $this->getLogger()->debug('onWidgetEditOption: twitter not configured.');
+                return;
+            }
+
+            $delegated = $this->getSetting('delegated');
+            if ($delegated && empty($this->getSetting('oAuthToken'))) {
+                $this->getLogger()->debug('onWidgetEditOption: twitter not configured.');
+                return;
+            }
+
+            try {
+                $twitterLanguages = $this->getLanguages();
+
+                if (count($twitterLanguages) === 0) {
+                    $twitterLanguages[] = ['name' => 'English', 'type' => 'en', 'id' => 'language'];
+                }
+
+                $event->setOptions($twitterLanguages);
+
+            } catch (\Exception $exception) {
+                $this->getLogger()->error('onWidgetEditOption: Failed to get twitter languages. e = ' . $exception->getMessage());
+            }
+        }
+    }
+
+    public function getLanguages(): array
+    {
+        try {
+            $request = $this->getClient()->request('GET', 'https://api.twitter.com/1.1/help/languages.json', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->getToken(
+                            $this->getSetting('apiKey'),
+                            $this->getSetting('apiSecret')
+                        )
+                ],
+            ]);
+
+            $body = $request->getBody()->getContents();
+            $this->getLogger()->debug($body);
+            $body = json_decode($body, true);
+
+            if (is_array($body)) {
+                return $body;
+            }
+        } catch (RequestException $requestException) {
+            $this->getLogger()->error('Unable to reach twitter api. ' . $requestException->getMessage());
+        } catch (GuzzleException $exception) {
+            $this->getLogger()->error('Unable to reach twitter api. ' . $exception->getMessage());
+        }
+
+        return [];
     }
 
     public function onDataRequest(WidgetDataRequestEvent $event)
