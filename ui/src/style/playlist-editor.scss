@@ -96,6 +96,22 @@ $timeline-left-margin-width: 100px;
         height: 100%;
     }
 
+    .editor-modal-header {
+        .modal-header {
+            &--left {
+                display: flex;
+                column-gap: 10px;
+
+                .playlist-info-widgets,
+                .playlist-info-duration {
+                    font-size: 1.5rem;
+                    line-height: 1;
+                    font-weight: bold;
+                }
+            }
+        }
+    }
+
     .editor-modal-body {
         padding: 0;
     }
