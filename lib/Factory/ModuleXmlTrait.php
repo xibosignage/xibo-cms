@@ -27,6 +27,7 @@ use Xibo\Entity\Module;
 use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Definition\Element;
 use Xibo\Widget\Definition\Extend;
+use Xibo\Widget\Definition\LegacyType;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
 use Xibo\Widget\Definition\PropertyGroup;
@@ -278,6 +279,27 @@ trait ModuleXmlTrait
         }
 
         return $elements;
+    }
+
+    /**
+     * @param \DOMNodeList $legacyTypeNodes
+     * @return \Xibo\Widget\Definition\Property[]
+     */
+    private function parseLegacyTypes(\DOMNodeList $legacyTypeNodes): array
+    {
+        $legacyTypes = [];
+        foreach ($legacyTypeNodes as $node) {
+            /** @var \DOMNode $node */
+            if ($node instanceof \DOMElement) {
+                $legacyType = new LegacyType();
+                $legacyType->name = $node->textContent;
+                $legacyType->condition = $node->getAttribute('condition');
+
+                $legacyTypes[] = $legacyType;
+            }
+        }
+
+        return $legacyTypes;
     }
 
     /**

@@ -569,12 +569,11 @@ class ModuleFactory extends BaseFactory
         }
 
         // Legacy types.
-        $module->legacyTypes = [];
-        $legacyTypeNodes = $xml->getElementsByTagName('legacyType');
-        foreach ($legacyTypeNodes as $legacyTypeNode) {
-            if ($legacyTypeNode instanceof \DOMElement) {
-                $module->legacyTypes[] = $legacyTypeNode->textContent;
-            }
+        try {
+            $module->legacyTypes = $this->parseLegacyTypes($xml->getElementsByTagName('legacyType'));
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid legacyType');
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid legacyType. e: ' .  $e->getMessage());
         }
 
         // Group for non datatype modules
