@@ -356,7 +356,7 @@ class UserFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($parsedFilter->hasParam('start') && $parsedFilter->hasParam('length')) {
-            $limit = ' LIMIT ' . $parsedFilter->getInt('start')
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0])
                 . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 

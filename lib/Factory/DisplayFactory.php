@@ -606,7 +606,7 @@ class DisplayFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($parsedBody->hasParam('start') && $parsedBody->hasParam('length')) {
-            $limit = ' LIMIT ' . $parsedBody->getInt('start')
+            $limit = ' LIMIT ' . $parsedBody->getInt('start', ['default' => 0])
                 . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
