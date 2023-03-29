@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1766,39 +1766,13 @@ class Display extends Base
         // Groups we are assigned to
         $groupsAssigned = $this->displayGroupFactory->getByDisplayId($display->displayId);
 
-        // All Groups
-        $allGroups = $this->displayGroupFactory->getByIsDynamic(0);
-
-        // The available users are all users except users already in assigned users
-        $checkboxes = [];
-
-        foreach ($allGroups as $group) {
-            /* @var \Xibo\Entity\DisplayGroup $group */
-            // Check to see if it exists in $usersAssigned
-            $exists = false;
-            foreach ($groupsAssigned as $groupAssigned) {
-                /* @var \Xibo\Entity\DisplayGroup $groupAssigned */
-                if ($groupAssigned->displayGroupId == $group->displayGroupId) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            // Store this checkbox
-            $checkbox = array(
-                'id' => $group->displayGroupId,
-                'name' => $group->displayGroup,
-                'value_checked' => (($exists) ? 'checked' : '')
-            );
-
-            $checkboxes[] = $checkbox;
-        }
-
         $this->getState()->template = 'display-form-membership';
         $this->getState()->setData([
             'display' => $display,
-            'checkboxes' => $checkboxes,
-            'help' =>  $this->getHelp()->link('Display', 'Members')
+            'extra' => [
+                'displayGroupsAssigned' => $groupsAssigned
+            ],
+            'help' => $this->getHelp()->link('Display', 'Members')
         ]);
 
         return $this->render($request, $response);
@@ -1930,7 +1904,7 @@ class Display extends Base
         foreach ($sanitizedParams->getIntArray('displayGroupId', ['default' => []]) as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->load();
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
             if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -1944,7 +1918,7 @@ class Display extends Base
         foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId', ['default' => []]) as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->load();
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
             if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));

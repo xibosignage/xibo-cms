@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -2219,38 +2219,12 @@ class User extends Base
         // Groups we are assigned to
         $groupsAssigned = $this->userGroupFactory->getByUserId($user->userId);
 
-        // All Groups
-        $allGroups = $this->userGroupFactory->query();
-
-        // The available users are all users except users already in assigned users
-        $checkboxes = array();
-
-        foreach ($allGroups as $group) {
-            /* @var \Xibo\Entity\UserGroup $group */
-            // Check to see if it exists in $usersAssigned
-            $exists = false;
-            foreach ($groupsAssigned as $groupAssigned) {
-                /* @var \Xibo\Entity\UserGroup $groupAssigned */
-                if ($groupAssigned->groupId == $group->groupId) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            // Store this checkbox
-            $checkbox = array(
-                'id' => $group->groupId,
-                'name' => $group->group,
-                'value_checked' => (($exists) ? 'checked' : '')
-            );
-
-            $checkboxes[] = $checkbox;
-        }
-
         $this->getState()->template = 'user-form-membership';
         $this->getState()->setData([
             'user' => $user,
-            'checkboxes' => $checkboxes,
+            'extra' => [
+                'userGroupsAssigned' => $groupsAssigned
+            ],
             'help' =>  $this->getHelp()->link('User', 'Members')
         ]);
 

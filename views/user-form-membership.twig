@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2020-2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,9 +24,11 @@
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
 
 {% block formTitle %}
-    {% trans "Manage Membership" %}
+    {% set userName = user.userName %}
+    {% trans %}Manage Membership for {{ userName }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}
@@ -37,28 +39,41 @@
 
 {% block callBack %}membersFormOpen{% endblock %}
 
+{% block extra %}{{ extra|json_encode|raw }}{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <div id="{{ randomId }}" class="div-horizontal"
-                     data-param="userGroupId"
-                     data-param-unassign="unassignUserGroupId"
-                     data-url="{{ url_for("user.assign.userGroup", {id: user.userId}) }}"
-                    >
-                {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member or not.{% endtrans %}{% endset %}
+            <div id="{{ randomId }}" class="div-horizontal controlDiv"
+                 data-user-groups="true"
+                 data-user-groups-get-url="{{ url_for("group.search") }}"
+                 data-user-groups-param="userGroupId"
+                 data-user-groups-param-unassign="unassignUserGroupId"
+                 data-user-groups-url="{{ url_for("user.assign.userGroup", {id: user.userId}) }}"
+            >
+                {% set helpText %}{% trans %}Check or un-check the options against each display group to control whether they are a member or not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
-                <table class="table table-bordered membersTable">
-                    <tr>
-                        <th>{{ user.user }}</th>
-                        <th>{% trans "Member" %}</th>
-                    </tr>
-                    {% for item in checkboxes %}
+                <div class="XiboGrid" id="{{ random() }}" data-grid-name="userGroupMembershipView">
+                    <div class="XiboFilter card mb-3 bg-light">
+                        <div class="FilterDiv card-body" id="Filter">
+                            <form class="form-inline" id="userGroupMembersFilter">
+                                {% set title %}{% trans "Name" %}{% endset %}
+                                {{ inline.input("group", title) }}
+                            </form>
+                        </div>
+                    </div>
+                    <table id="userGroupMembersTable" class="table table-bordered membersTable" style="width: 100%">
+                        <thead>
                         <tr>
-                            <td>{{ item.name }}</td>
-                            <td><input type="checkbox" data-member-id="{{ item.id }}" {{ item.value_checked }}></td>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "User Groups" %}</th>
+                            <th>{% trans "Member" %}</th>
                         </tr>
-                    {% endfor %}
-                </table>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
