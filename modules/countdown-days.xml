@@ -27,7 +27,6 @@
     <type>countdown-days</type>
     <group id="countdown" icon="countdown">Countdown</group>
     <legacyType>countdown</legacyType>
-    <legacyTemplate>countdown4</legacyTemplate>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>

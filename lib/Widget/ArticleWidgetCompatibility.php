@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\Widget;
+
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetCompatibilityTrait;

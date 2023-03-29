@@ -284,7 +284,12 @@ class ModuleFactory extends BaseFactory
 
         // Match on legacy type
         foreach ($modules as $module) {
-            if (in_array($type, $module->legacyTypes)) {
+            // get the name of the legacytypes
+            $legacyTypes = [];
+            if (count($module->legacyTypes) > 0) {
+                $legacyTypes = array_column($module->legacyTypes, 'name');
+            }
+            if (in_array($type, $legacyTypes)) {
                 return $module;
             }
         }

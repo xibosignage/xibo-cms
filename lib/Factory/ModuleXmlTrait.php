@@ -292,7 +292,7 @@ trait ModuleXmlTrait
             /** @var \DOMNode $node */
             if ($node instanceof \DOMElement) {
                 $legacyType = new LegacyType();
-                $legacyType->name = $node->textContent;
+                $legacyType->name = trim($node->textContent);
                 $legacyType->condition = $node->getAttribute('condition');
 
                 $legacyTypes[] = $legacyType;

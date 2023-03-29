@@ -29,7 +29,7 @@ use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 /**
  * Convert widget from an old schema to a new schema
  */
-class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
+class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -40,40 +40,24 @@ class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
-            $templateId = $widget->getOptionValue('templateId', '');
+            $countdownType = $widget->getOptionValue('countdownType', 1);
 
-            if ($option->option === 'templateId') {
-                switch ($templateId) {
-                    case 'empty':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_1');
+            if ($option->option === 'countdownType') {
+                switch ($countdownType) {
+                    case 1:
+                        $widget->type = 'countdown-text';
                         break;
 
-                    case 'light-green':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_2');
+                    case 2:
+                        $widget->type = 'countdown-clock';
                         break;
 
-                    case 'simple-round':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_3');
+                    case 3:
+                        $widget->type = 'countdown-table';
                         break;
 
-                    case 'transparent-blue':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_4');
-                        break;
-
-                    case 'orange-grey-striped':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_5');
-                        break;
-
-                    case 'split-rows':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_6');
-                        break;
-
-                    case 'dark-round':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_7');
-                        break;
-
-                    case 'pill-colored':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_8');
+                    case 4:
+                        $widget->type = 'countdown-days';
                         break;
 
                     default:

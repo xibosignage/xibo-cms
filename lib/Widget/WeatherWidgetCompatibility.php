@@ -21,12 +21,13 @@
  */
 
 namespace Xibo\Widget;
+
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 
 /**
- * Convert weather old templateId to new templateId
+ * Convert widget from an old schema to a new schema
  */
 class WeatherWidgetCompatibility implements WidgetCompatibilityInterface
 {
