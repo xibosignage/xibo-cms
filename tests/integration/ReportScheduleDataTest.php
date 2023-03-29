@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -169,7 +169,7 @@ class ReportScheduleDataTest extends LocalWebTestCase
     public function testSummaryReport()
     {
         $response = $this->sendRequest('GET', '/report/data/summaryReport', [
-            'statsFromDt' => Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()),
+            'statsFromDt' => Carbon::now()->startOfDay()->subDays(4)->format(DateFormatHelper::getSystemFormat()),
             'statsToDt' => Carbon::now()->startOfDay()->format(DateFormatHelper::getSystemFormat()),
             'groupByFilter' => 'byday',
             'displayId' => $this->display->displayId,
@@ -181,6 +181,8 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('chart', $object, $response->getBody());
-        $this->assertSame(86400, $object->chart->data->datasets[0]->data[0]);
+        $expectedSeconds =  Carbon::now()->startOfDay()->subDays(3)->format('U') -
+            Carbon::now()->startOfDay()->subDays(4)->format('U');
+        $this->assertSame($expectedSeconds, $object->chart->data->datasets[0]->data[0]);
     }
 }
