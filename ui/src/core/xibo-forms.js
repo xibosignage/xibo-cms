@@ -500,30 +500,216 @@ function permissionsMultiFormSubmit(id) {
     });
 }
 
+function createDisplayGroupMembersTable(dialog) {
+    var control = $(dialog).find(".controlDiv");
+    let context = {
+        'tableName' : '#displaysGroupsMembersTable',
+        'columns' : [
+            {"data": "displayGroupId", responsivePriority: 2},
+            {"data": "displayGroup", responsivePriority: 2},
+        ],
+        'members' : control.data().members.displayGroups,
+        'extra' : dialog.data().extra.displayGroupsAssigned,
+        'id' : 'displayGroupId',
+        'type': 'displayGroup',
+        'getUrl': control.data().displayGroupsGetUrl
+    }
+
+    createTableFromContext(dialog, context)
+}
+
+function createDisplayMembersTable(dialog) {
+    var control = $(dialog).find(".controlDiv");
+    let context = {
+        'tableName': '#displaysMembersTable',
+        'columns': [
+            {"data": "displayId", responsivePriority: 2},
+            {"data": "display", responsivePriority: 2},
+            {
+                "data": "mediaInventoryStatus",
+                responsivePriority: 2,
+                "render": function (data, type, row) {
+                    if (type != "display")
+                        return data;
+
+                    var icon = "";
+                    if (data == 1)
+                        icon = "fa-check";
+                    else if (data == 0)
+                        icon = "fa-times";
+                    else
+                        icon = "fa-cloud-download";
+
+                    return "<span class='fa " + icon + "'></span>";
+                }
+            },
+            {"data": "loggedIn", "render": dataTableTickCrossColumn, responsivePriority: 3},
+            {
+                "name": "clientSort",
+                responsivePriority: 3,
+                "data": function (data) {
+                    return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                },
+                "visible": false
+            },
+        ],
+        'members': control.data().members.displays,
+        'extra': dialog.data().extra.displaysAssigned,
+        'id': 'displayId',
+        'type': 'display',
+        'getUrl': control.data().displayGetUrl
+    }
+
+    createTableFromContext(dialog, context)
+}
+
+function createUserMembersTable(dialog) {
+    var control = $(dialog).find(".controlDiv");
+    let context = {
+        'tableName' : '#userMembersTable',
+        'columns' : [
+            { "data": "userId", responsivePriority: 2},
+            { "data": "userName", responsivePriority: 2 },
+        ],
+        'members' : control.data().members.users,
+        'extra' : dialog.data().extra.usersAssigned,
+        'id' : 'userId',
+        'type': 'user',
+        'getUrl': control.data().userGetUrl
+    }
+
+    createTableFromContext(dialog, context)
+}
+
+function createUserGroupMembersTable(dialog) {
+    var control = $(dialog).find(".controlDiv");
+    let context = {
+        'tableName' : '#userGroupMembersTable',
+        'columns' : [
+            { "data": "groupId", responsivePriority: 2},
+            { "data": "group", responsivePriority: 2 },
+        ],
+        'members' : control.data().members.userGroups,
+        'extra' : dialog.data().extra.userGroupsAssigned,
+        'id' : 'groupId',
+        'type': 'userGroup',
+        'getUrl': control.data().userGroupsGetUrl
+    }
+
+    createTableFromContext(dialog, context)
+}
+
+function createTableFromContext(dialog, context) {
+    var control = $(dialog).find(".controlDiv");
+    var columns = context.columns;
+
+    columns.push({
+        "name": "member",
+        responsivePriority: 2,
+        "data": function (data, type, row) {
+            if (type != "display")
+                return data;
+
+            var checked = '';
+
+            // Check if the element is already been checked/unchecked
+            if( typeof control.data().members != "undefined" && context.members[data[context.id]] != undefined) {
+                checked = (context.members[data[context.id]]) ? 'checked' : '';
+            } else {
+                // If its not been altered, check for the original state
+                if( dialog.data().extra ){
+                    context.extra.forEach(function(extraElement) {
+                        if( extraElement[context.id] == data[context.id] ){
+                            checked = 'checked';
+                        }
+                    });
+                }
+            }
+
+            var checkBox = '<input type="checkbox" class="checkbox" data-member-id=' + data[context.id]
+              + ' data-member-type="'+ context.type+'" '
+              + checked + '>';
+
+            // Create checkbox
+            return checkBox;
+        }
+    })
+
+    var table = $(context.tableName).DataTable({
+        "language": dataTablesLanguage,
+        serverSide: true,
+        stateSave: true, stateDuration: 0,
+        filter: false,
+        responsive: true,
+        searchDelay: 3000,
+        "order": [[1, "asc"]],
+        ajax: {
+            "url": context.getUrl ?? control.data().getUrl,
+            "data": function(data) {
+                $.extend(data, $(context.tableName).closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                return data;
+            }
+        },
+        "columns": columns
+    });
+
+    table.on('draw', dataTableDraw);
+    table.on('processing.dt', dataTableProcessing);
+}
+
 function membersFormOpen(dialog) {
 
-    // Get our table
-    var table = $(dialog).find(".membersTable");
+    var control = $(dialog).find(".controlDiv");
 
-    if (table.data().members == undefined)
-        table.data().members = {};
+    // This contains the changes made since the form open
+    if (control.data().members == undefined)
+        control.data().members = {
+            displays: {},
+            displayGroups: {},
+            users: {},
+            userGroups: {}
+        };
+
+    if (control.data().displayGroups) {
+        createDisplayGroupMembersTable(dialog);
+    }
+
+    if (control.data().display) {
+        createDisplayMembersTable(dialog);
+    }
+
+    if (control.data().userGroups) {
+        createUserGroupMembersTable(dialog);
+    }
+
+    if (control.data().user) {
+        createUserMembersTable(dialog);
+    }
 
     // Bind to the checkboxes change event
-    table.find("input[type=checkbox]").change(function() {
+    control.on("change", ".checkbox", function() {
+
         // Update our global members data with this
         var memberId = $(this).data().memberId;
+        var memberType = $(this).data().memberType;
         var value = $(this).is(":checked");
 
-        //console.log("Setting memberId: " + memberId + ". Value: " + value);
-
-        table.data().members[memberId] = (value) ? 1 : 0;
+        if (memberType == "display") {
+            control.data().members.displays[memberId] = (value) ? 1 : 0;
+        } else if (memberType == "displayGroup") {
+            control.data().members.displayGroups[memberId] = (value) ? 1 : 0;
+        } else if (memberType == "user") {
+            control.data().members.users[memberId] = (value) ? 1 : 0;
+        } else if (memberType == "userGroup") {
+            control.data().members.userGroups[memberId] = (value) ? 1 : 0;
+        }
     });
 }
 
 function membersFormSubmit(id) {
 
     var form = $("#" + id);
-    var members = form.find(".membersTable").data().members;
+    var members = form.data().members;
 
     // There may not have been any changes
     if (members == undefined) {
@@ -532,35 +718,177 @@ function membersFormSubmit(id) {
         return;
     }
 
+    // Create a new queue.
+    window.queue = $.jqmq({
+
+        // Next item will be processed only when queue.next() is called in callback.
+        delay: -1,
+
+        // Process queue items one-at-a-time.
+        batch: 1,
+
+        // For each queue item, execute this function, making an AJAX request. Only
+        // continue processing the queue once the AJAX request's callback executes.
+        callback: function( data ) {
+
+            // Make an AJAX call
+            $.ajax({
+                type: "POST",
+                url: data.url,
+                cache: false,
+                dataType: "json",
+                data: $.param(data.data),
+                success: function(response, textStatus, error) {
+
+                    if (response.success) {
+
+                        // Success - what do we do now?
+                        if (response.message != '')
+                            SystemMessage(response.message, true);
+
+                        // Process the next item
+                        queue.next();
+                    }
+                    else {
+                        // Why did we fail?
+                        if (response.login) {
+                            // We were logged out
+                            LoginBox(response.message);
+                        }
+                        else {
+                            // Likely just an error that we want to report on
+                            form.find(".saving").remove();
+                            SystemMessageInline(response.message, form.closest(".modal"));
+                        }
+                    }
+                },
+                error: function(responseText) {
+                    SystemMessage(responseText, false);
+                }
+            });
+        },
+        // When the queue completes naturally, execute this function.
+        complete: function() {
+            // Remove the save button
+            form.find(".saving").parent().remove();
+
+            // Refresh the grids
+            // (this is a global refresh)
+            XiboRefreshAllGrids();
+
+            // Close the dialog
+            XiboDialogClose();
+        }
+    });
+
+    var addedToQueue = false;
+
     // Build an array of id's to assign and an array to unassign
     var assign = [];
     var unassign = [];
 
-    $.each(members, function(name, value) {
+    $.each(members.displays, function(name, value) {
         if (value == 1)
             assign.push(name);
         else
             unassign.push(name);
     });
 
-    var error = false;
-    var data = {};
-    data[form.data().param] = assign;
-    data[form.data().paramUnassign] = unassign;
+    if (assign.length > 0 || unassign.length > 0) {
+        var dataDisplays = {
+            data: {},
+            url: form.data().displayUrl
+        };
+        dataDisplays.data[form.data().displayParam] = assign;
+        dataDisplays.data[form.data().displayParamUnassign] = unassign;
 
-    $.ajax({
-        type: "POST",
-        url: form.data().url,
-        cache: false,
-        dataType: "json",
-        data: $.param(data),
-        success: function(xhr, textStatus, error) {
-            XiboSubmitResponse(xhr, form);
-        },
-        error: function(xhr, textStatus, errorThrown) {
-            SystemMessage(xhr.responseText, false);
-        }
+        // Queue
+        queue.add(dataDisplays);
+
+        addedToQueue = true;
+    }
+
+    // Build an array of id's to assign and an array to unassign
+    var assignDisplayGroup = [];
+    var unassignDisplayGroup = [];
+
+    $.each(members.displayGroups, function(name, value) {
+        if (value == 1)
+            assignDisplayGroup.push(name);
+        else
+            unassignDisplayGroup.push(name);
     });
+
+    if (assignDisplayGroup.length > 0 || unassignDisplayGroup.length > 0) {
+        var dataDisplayGroups = {
+            data: {},
+            url: form.data().displayGroupsUrl
+        };
+        dataDisplayGroups.data[form.data().displayGroupsParam] = assignDisplayGroup;
+        dataDisplayGroups.data[form.data().displayGroupsParamUnassign] = unassignDisplayGroup;
+
+        // Queue
+        queue.add(dataDisplayGroups);
+
+        addedToQueue = true;
+    }
+
+    // Build an array of id's to assign and an array to unassign
+    var assignUser = [];
+    var unassignUser = [];
+
+    $.each(members.users, function(name, value) {
+        if (value == 1)
+            assignUser.push(name);
+        else
+            unassignUser.push(name);
+    });
+
+    if (assignUser.length > 0 || unassignUser.length > 0) {
+        var dataUsers = {
+            data: {},
+            url: form.data().userUrl
+        };
+        dataUsers.data[form.data().userParam] = assignUser;
+        dataUsers.data[form.data().userParamUnassign] = unassignUser;
+
+        // Queue
+        queue.add(dataUsers);
+
+        addedToQueue = true;
+    }
+
+    // Build an array of id's to assign and an array to unassign
+    var assignUserGroup = [];
+    var unassignUserGroup = [];
+
+    $.each(members.userGroups, function(name, value) {
+        if (value == 1)
+            assignUserGroup.push(name);
+        else
+            unassignUserGroup.push(name);
+    });
+
+    if (assignUserGroup.length > 0 || unassignUserGroup.length > 0) {
+        var dataUserGroups = {
+            data: {},
+            url: form.data().userGroupsUrl
+        };
+        dataUserGroups.data[form.data().userGroupsParam] = assignUserGroup;
+        dataUserGroups.data[form.data().userGroupsParamUnassign] = unassignUserGroup;
+
+        // Queue
+        queue.add(dataUserGroups);
+
+        addedToQueue = true;
+    }
+
+    if (!addedToQueue) {
+        XiboDialogClose();
+    } else {
+        // Start the queue
+        queue.start();
+    }
 }
 
 // Callback for the media form

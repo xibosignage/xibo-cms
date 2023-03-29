@@ -690,38 +690,12 @@ class UserGroup extends Base
         // Users in group
         $usersAssigned = $this->userFactory->query(null, ['groupIds' => [$id]]);
 
-        // Users not in group
-        $allUsers = $this->userFactory->query();
-
-        // The available users are all users except users already in assigned users
-        $checkboxes = [];
-
-        foreach ($allUsers as $user) {
-            /* @var User $user */
-            // Check to see if it exists in $usersAssigned
-            $exists = false;
-            foreach ($usersAssigned as $userAssigned) {
-                /* @var User $userAssigned */
-                if ($userAssigned->userId == $user->userId) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            // Store this checkbox
-            $checkbox = array(
-                'id' => $user->userId,
-                'name' => $user->userName,
-                'value_checked' => (($exists) ? 'checked' : '')
-            );
-
-            $checkboxes[] = $checkbox;
-        }
-
         $this->getState()->template = 'usergroup-form-members';
         $this->getState()->setData([
             'group' => $group,
-            'checkboxes' => $checkboxes,
+            'extra' => [
+                'usersAssigned' => $usersAssigned
+            ],
             'help' =>  $this->getHelp()->link('UserGroup', 'Members')
         ]);
 
