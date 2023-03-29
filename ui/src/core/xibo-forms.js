@@ -548,7 +548,7 @@ function createDisplayMembersTable(dialog) {
           } else {
             icon = 'fa-cloud-download';
           }
-          return '<span class=fa ' + icon + '></span>';
+          return '<span class=\'fa ' + icon + '\'></span>';
         },
       },
       {
