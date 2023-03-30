@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -69,7 +69,7 @@ class ApiAuthorization implements Middleware
         $user = null;
 
         /** @var \Xibo\Service\LogServiceInterface $logger */
-        $logger = $this->app->getContainer()->get('logger');
+        $logger = $this->app->getContainer()->get('logService');
 
         // Setup the authorization server
         $this->app->getContainer()->set('server', function (ContainerInterface $container) use ($logger) {
@@ -163,6 +163,7 @@ class ApiAuthorization implements Middleware
             $validatedRequest = $validatedRequest->withAttribute('public', true);
         }
 
+        $logger->setUserId($user->userId);
         $this->app->getContainer()->set('user', $user);
 
         return $handler->handle($validatedRequest->withAttribute('name', 'API'));
