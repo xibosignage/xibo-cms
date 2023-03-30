@@ -27,7 +27,6 @@
     <type>countdown-clock</type>
     <group id="countdown" icon="countdown">Countdown</group>
     <legacyType>countdown</legacyType>
-    <legacyTemplate>countdown2</legacyTemplate>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
