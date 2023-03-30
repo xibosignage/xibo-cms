@@ -64,7 +64,7 @@
                     <option name="rtl">Right to Left (RTL)</option>
                 </options>
             </property>
-            <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
+            <property id="ta_text" type="richText" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
@@ -72,7 +72,7 @@
                 <title>Snippets</title>
                 <helpText>Choose element to add to template</helpText>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -166,7 +166,7 @@ $(target).xiboTextRender(properties, items);
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -296,7 +296,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -492,7 +492,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -670,7 +670,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -827,7 +827,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .article, #conte
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
