@@ -33,7 +33,7 @@
                     </test>
                 </visibility>
             </property>
-            <property id="template" type="code" allowLibraryRefs="true" variant="html">
+            <property id="template" type="richText" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
