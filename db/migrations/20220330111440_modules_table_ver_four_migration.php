@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -77,6 +77,29 @@ class ModulesTableVerFourMigration extends AbstractMigration
 
             // Drop the old table
             $this->dropTable('module_old');
+
+            // Add more v4 modules
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-clock-analogue\', 1, 1, 10, \'[]\'),
+              (\'core-clock-digital\', 1, 1, 10, \'[]\'),
+              (\'core-clock-flip\', 1, 1, 10, \'[]\'),       
+              (\'core-countdown-clock\', 1, 1, 60, \'[]\'),       
+              (\'core-countdown-days\', 1, 1, 60, \'[]\'),       
+              (\'core-countdown-table\', 1, 1, 60, \'[]\'),       
+              (\'core-countdown-text\', 1, 1, 60, \'[]\'),       
+              (\'core-currencies\', 1, 1, 30, \'[]\'),       
+              (\'core-dashboard\', 1, 1, 60, \'[]\'),       
+              (\'core-dataset\', 1, 1, 10, \'[]\'), 
+              (\'core-flash\', 1, 1, 10, \'[]\'), 
+              (\'core-forecastio\', 1, 1, 60, \'[]\'), 
+              (\'core-googletraffic\', 1, 1, 600, \'[]\'), 
+              (\'core-worldclock-analogue\', 1, 1, 10, \'[]\'), 
+              (\'core-worldclock-custom\', 1, 1, 10, \'[]\'), 
+              (\'core-worldclock-digital-date\', 1, 1, 10, \'[]\'), 
+              (\'core-worldclock-digital-text\', 1, 1, 10, \'[]\');        
+        ');
+
         } catch (Exception $e) {
             // Keep the old module table around for diagnosis and just continue on.
         }

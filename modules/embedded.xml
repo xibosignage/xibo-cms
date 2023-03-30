@@ -22,7 +22,7 @@
     <id>core-embedded</id>
     <name>Embedded</name>
     <author>Core</author>
-    <description>Embedded HTML</description>
+    <description>Embed HTML and JavaScript</description>
     <class></class>
     <type>embedded</type>
     <dataType></dataType>
