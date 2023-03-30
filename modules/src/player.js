@@ -106,25 +106,31 @@ $(function() {
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
-      } else if (
-        !isArray &&
-        data.data !== undefined &&
-        data.data.length === 0 &&
-        widget.sample &&
-        isPreview
-      ) {
-        // If data is empty, use sample data instead
-        // Add single element or array of elements
-        dataItems = (Array.isArray(widget.sample)) ?
-          widget.sample.slice(0) : [widget.sample];
-      } else if (
+      }
+
+      // if (
+      //   !isArray &&
+      //   data.data !== undefined &&
+      //   data.data.length === 0 &&
+      //   widget.sample &&
+      //   isPreview
+      // ) {
+      // }
+      if (
         !isArray &&
         data.data !== undefined &&
         data.data.length > 0
       ) {
         // Add items to the widget
         dataItems = data.data;
+      } else if (widget.sample && isPreview) {
+        // If data is empty, use sample data instead
+        // Add single element or array of elements
+        dataItems = (Array.isArray(widget.sample)) ?
+          widget.sample.slice(0) : [widget.sample];
       }
+
+      console.log({dataItems});
 
       // Add meta to the widget if it exists
       if (!isArray && data.meta) {
