@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,6 +22,8 @@
 
 
 namespace Xibo\Factory;
+
+use Xibo\Support\Exception\NotFoundException;
 
 class WidgetMediaFactory extends BaseFactory
 {
@@ -43,6 +45,24 @@ class WidgetMediaFactory extends BaseFactory
     public function getModuleOnlyByWidgetId($widgetId)
     {
         return $this->query(null, ['widgetId' => $widgetId, 'moduleOnly' => 1]);
+    }
+
+    /**
+     * @param int $mediaId
+     * @return int
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getDurationForMediaId(int $mediaId): int
+    {
+        $results = $this->getStore()->select('SELECT `duration` FROM `media` WHERE `mediaId` = :mediaId', [
+            'mediaId' => $mediaId
+        ]);
+
+        if (count($results) <= 0) {
+            throw new NotFoundException();
+        }
+
+        return intval($results[0]['duration'] ?? 0);
     }
 
     /**

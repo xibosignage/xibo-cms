@@ -29,7 +29,6 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\Provider\DataProvider;
-use Xibo\Widget\Provider\DurationProvider;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 
 /**
@@ -316,16 +315,6 @@ class Module implements \JsonSerializable
     }
 
     /**
-     * @param int $duration
-     * @param array $properties
-     * @return DurationProvider
-     */
-    public function createDurationProvider(int $duration, array $properties): DurationProvider
-    {
-        return $this->moduleFactory->createDurationProvider($duration, $properties);
-    }
-
-    /**
      * Fetch duration of a file.
      * @param string $file
      * @return int
@@ -335,7 +324,7 @@ class Module implements \JsonSerializable
         if ($this->widgetProvider === null) {
             return $this->defaultDuration;
         }
-        $durationProvider = $this->createDurationProvider(0, ['file' => $file]);
+        $durationProvider = $this->moduleFactory->createDurationProvider($file);
         $this->widgetProvider->fetchDuration($durationProvider);
 
         return $durationProvider->getDuration();
