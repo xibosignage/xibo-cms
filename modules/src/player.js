@@ -101,36 +101,25 @@ $(function() {
       const isArray = Array.isArray(data);
 
       // If the request failed, and we're in preview, show the error message
-      if (!isArray && data.success === false && isPreview) {
+      if ((!widget.isValid ||
+          (!isArray && data.success === false)
+      ) && isPreview) {
         $target.append(
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
+
+        if (widget.sample) {
+          // If data is empty, use sample data instead
+          // Add single element or array of elements
+          dataItems = (Array.isArray(widget.sample)) ?
+            widget.sample.slice(0) : [widget.sample];
+        }
+      } else {
+        dataItems = data?.data || [];
       }
 
-      // if (
-      //   !isArray &&
-      //   data.data !== undefined &&
-      //   data.data.length === 0 &&
-      //   widget.sample &&
-      //   isPreview
-      // ) {
-      // }
-      if (
-        !isArray &&
-        data.data !== undefined &&
-        data.data.length > 0
-      ) {
-        // Add items to the widget
-        dataItems = data.data;
-      } else if (widget.sample && isPreview) {
-        // If data is empty, use sample data instead
-        // Add single element or array of elements
-        dataItems = (Array.isArray(widget.sample)) ?
-          widget.sample.slice(0) : [widget.sample];
-      }
-
-      console.log({dataItems});
+      console.log({dataItems, widget});
 
       // Add meta to the widget if it exists
       if (!isArray && data.meta) {
