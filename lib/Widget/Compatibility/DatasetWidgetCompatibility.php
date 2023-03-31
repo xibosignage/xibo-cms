@@ -20,7 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
+namespace Xibo\Widget\Compatibility;
 
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
@@ -29,7 +29,7 @@ use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 /**
  * Convert widget from an old schema to a new schema
  */
-class SocialMediaWidgetCompatibility implements WidgetCompatibilityInterface
+class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -44,52 +44,36 @@ class SocialMediaWidgetCompatibility implements WidgetCompatibilityInterface
 
             if ($option->option === 'templateId') {
                 switch ($templateId) {
-                    case 'full-timeline-np':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_1');
+                    case 'empty':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_1');
                         break;
 
-                    case 'full-timeline':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_2');
+                    case 'light-green':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_2');
                         break;
 
-                    case 'tweet-only':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_3');
+                    case 'simple-round':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_3');
                         break;
 
-                    case 'tweet-with-profileimage-left':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_4');
+                    case 'transparent-blue':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_4');
                         break;
 
-                    case 'tweet-with-profileimage-right':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_5');
+                    case 'orange-grey-striped':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_5');
                         break;
 
-                    case 'tweet-1':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_6');
+                    case 'split-rows':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_6');
                         break;
 
-                    case 'tweet-2':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_7');
+                    case 'dark-round':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_7');
                         break;
 
-                    case 'tweet-4':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_8');
-                        break;
-
-                    case 'tweet-6NP':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_9');
-                        break;
-
-                    case 'tweet-6PL':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_10');
-                        break;
-
-                    case 'tweet-7':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_11');
-                        break;
-
-                    case 'tweet-8':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_12');
+                    case 'pill-colored':
+                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_8');
                         break;
 
                     default:

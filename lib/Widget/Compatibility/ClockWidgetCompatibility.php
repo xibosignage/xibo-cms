@@ -20,7 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
+namespace Xibo\Widget\Compatibility;
 
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
@@ -29,7 +29,7 @@ use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 /**
  * Convert widget from an old schema to a new schema
  */
-class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
+class ClockWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -40,24 +40,20 @@ class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
-            $countdownType = $widget->getOptionValue('countdownType', 1);
+            $clockTypeId = $widget->getOptionValue('clockTypeId', 1);
 
-            if ($option->option === 'countdownType') {
-                switch ($countdownType) {
+            if ($option->option === 'clockTypeId') {
+                switch ($clockTypeId) {
                     case 1:
-                        $widget->type = 'countdown-text';
+                        $widget->type = 'clock-analogue';
                         break;
 
                     case 2:
-                        $widget->type = 'countdown-clock';
+                        $widget->type = 'clock-digital';
                         break;
 
                     case 3:
-                        $widget->type = 'countdown-table';
-                        break;
-
-                    case 4:
-                        $widget->type = 'countdown-days';
+                        $widget->type = 'clock-flip';
                         break;
 
                     default:

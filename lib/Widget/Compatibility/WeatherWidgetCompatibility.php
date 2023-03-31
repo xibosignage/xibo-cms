@@ -20,7 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
+namespace Xibo\Widget\Compatibility;
 
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;

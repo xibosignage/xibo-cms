@@ -20,7 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
+namespace Xibo\Widget\Compatibility;
 
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
@@ -29,7 +29,7 @@ use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 /**
  * Convert widget from an old schema to a new schema
  */
-class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
+class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -40,40 +40,23 @@ class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
+            $clockType = $widget->getOptionValue('clockType', 1);
             $templateId = $widget->getOptionValue('templateId', '');
 
-            if ($option->option === 'templateId') {
-                switch ($templateId) {
-                    case 'empty':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_1');
+            if ($option->option === 'clockType') {
+                switch ($clockType) {
+                    case 1:
+                        if ($templateId === 'worldclock1') {
+                            $widget->type = 'worldclock-digital-text';
+                        } elseif ($templateId === 'worldclock2') {
+                            $widget->type = 'worldclock-digital-date';
+                        } else {
+                            $widget->type = 'worldclock-digital-custom';
+                        }
                         break;
 
-                    case 'light-green':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_2');
-                        break;
-
-                    case 'simple-round':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_3');
-                        break;
-
-                    case 'transparent-blue':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_4');
-                        break;
-
-                    case 'orange-grey-striped':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_5');
-                        break;
-
-                    case 'split-rows':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_6');
-                        break;
-
-                    case 'dark-round':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_7');
-                        break;
-
-                    case 'pill-colored':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_8');
+                    case 2:
+                        $widget->type = 'worldclock-analogue';
                         break;
 
                     default:

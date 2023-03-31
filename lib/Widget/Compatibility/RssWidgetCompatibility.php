@@ -20,16 +20,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
-
+namespace Xibo\Widget\Compatibility;
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 
 /**
- * Convert article old templateId to new templateId
+ * Convert RSS old kebab-case properties to camelCase
  */
-class ArticleWidgetCompatibility implements WidgetCompatibilityInterface
+class RssWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -40,33 +39,33 @@ class ArticleWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
-            $templateId = $widget->getOptionValue('templateId', '');
+            switch ($option->option) {
+                case 'background-color':
+                    $widget->changeOption($option->option, 'itemBackgroundColor');
+                    break;
 
-            if ($option->option === 'templateId') {
-                switch ($templateId) {
-                    case 'media-rss-image-only':
-                        $widget->setOptionValue('templateId', 'attrib', 'article_image_only');
-                        break;
+                case 'title-color':
+                    $widget->changeOption($option->option, 'itemTitleColor');
+                    break;
 
-                    case 'media-rss-with-left-hand-text':
-                        $widget->setOptionValue('templateId', 'attrib', 'article_with_left_hand_text');
-                        break;
+                case 'name-color':
+                    $widget->changeOption($option->option, 'itemNameColor');
+                    break;
 
-                    case 'media-rss-with-title':
-                        $widget->setOptionValue('templateId', 'attrib', 'article_with_title');
-                        break;
+                case 'description-color':
+                    $widget->changeOption($option->option, 'itemDescriptionColor');
+                    break;
 
-                    case 'prominent-title-with-desc-and-name-separator':
-                        $widget->setOptionValue('templateId', 'attrib', 'article_with_desc_and_name_separator');
-                        break;
+                case 'font-size':
+                    $widget->changeOption($option->option, 'itemFontSize');
+                    break;
 
-                    case 'title-only':
-                        $widget->setOptionValue('templateId', 'attrib', 'article_title_only');
-                        break;
+                case 'image-fit':
+                    $widget->changeOption($option->option, 'itemImageFit');
+                    break;
 
-                    default:
-                        break;
-                }
+                default:
+                    break;
             }
         }
     }
