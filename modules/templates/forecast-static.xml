@@ -21,7 +21,6 @@
 <templates>
     <template>
         <id>weather_1</id>
-        <legacyTemplateId>weather-module0-5day</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day, 4 day forecast</title>
@@ -343,7 +342,6 @@ body {
     </template>
     <template>
         <id>weather_2</id>
-        <legacyTemplateId>weather-module0-singleday</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day, summary</title>
@@ -641,7 +639,6 @@ body {
     </template>
     <template>
         <id>weather_3</id>
-        <legacyTemplateId>weather-module0-singleday2</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day</title>
@@ -939,7 +936,6 @@ body {
     </template>
     <template>
         <id>weather_4</id>
-        <legacyTemplateId>weather-module1l</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 4 day forecast</title>
@@ -1323,7 +1319,6 @@ h1 {
     </template>
     <template>
         <id>weather_5</id>
-        <legacyTemplateId>weather-module1p</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 2 day forecast</title>
@@ -1770,7 +1765,6 @@ body {
     </template>
     <template>
         <id>weather_6</id>
-        <legacyTemplateId>weather-module2l</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed table, 4 day forecast</title>
@@ -2178,7 +2172,6 @@ body {
     </template>
     <template>
         <id>weather_7</id>
-        <legacyTemplateId>weather-module2p</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Square - Current day</title>
@@ -2603,7 +2596,6 @@ body {
     </template>
     <template>
         <id>weather_8</id>
-        <legacyTemplateId>weather-module3l</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day, 4 day forecast</title>
@@ -3024,7 +3016,6 @@ body {
     </template>
     <template>
         <id>weather_9</id>
-        <legacyTemplateId>weather-module3p</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 4 day forecast</title>
@@ -3511,7 +3502,6 @@ text-transform: uppercase;
     </template>
     <template>
         <id>weather_10</id>
-        <legacyTemplateId>weather-module4l</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 4 day forecast</title>
@@ -3988,7 +3978,6 @@ body {
     </template>
     <template>
         <id>weather_11</id>
-        <legacyTemplateId>weather-module4p</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day, 3 day forecast</title>
@@ -4493,7 +4482,6 @@ h1 {
     </template>
     <template>
         <id>weather_12</id>
-        <legacyTemplateId>weather-module5l</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day detailed, 3 day forecast</title>
@@ -4938,7 +4926,6 @@ body {
     </template>
     <template>
         <id>weather_13</id>
-        <legacyTemplateId>weather-module6h</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Current day details, 4 day forecast</title>
@@ -5277,7 +5264,6 @@ body {
     </template>
     <template>
         <id>weather_14</id>
-        <legacyTemplateId>weather-module6v</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Portrait - Current day details, 4 day forecast</title>
@@ -5634,7 +5620,6 @@ body {
     </template>
     <template>
         <id>weather_15</id>
-        <legacyTemplateId>weather-module-7s</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Square - Forecast squared with background</title>
@@ -5915,7 +5900,6 @@ body {
     </template>
     <template>
         <id>weather_16</id>
-        <legacyTemplateId>weather-module-8s</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Square - Detailed weather</title>
@@ -6210,7 +6194,6 @@ body {
     </template>
     <template>
         <id>weather_17</id>
-        <legacyTemplateId>weather-module-9</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Scale - Weather background only</title>
@@ -6399,7 +6382,6 @@ body {
     </template>
     <template>
         <id>weather_18</id>
-        <legacyTemplateId>weather-module-10l</legacyTemplateId>
         <type>static</type>
         <dataType>forecast</dataType>
         <title>Landscape - Weather fullscreen</title>

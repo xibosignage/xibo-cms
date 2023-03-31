@@ -70,7 +70,7 @@
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
-            <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
+            <property id="ta_text" type="richText" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
@@ -78,7 +78,7 @@
                 <title>Snippets</title>
                 <helpText>Choose data type snippet</helpText>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>

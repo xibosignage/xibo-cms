@@ -21,7 +21,6 @@
 <templates>
     <template>
         <id>social_media_static_1</id>
-        <legacyTemplateId>full-timeline-np</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 1 - text, profile image</title>
@@ -211,7 +210,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_2</id>
-        <legacyTemplateId>full-timeline</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 2 - text, profile image, photo</title>
@@ -419,7 +417,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_3</id>
-        <legacyTemplateId>tweet-only</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 3 - text</title>
@@ -539,7 +536,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_4</id>
-        <legacyTemplateId>tweet-with-profileimage-left</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 4 - text, profile image</title>
@@ -677,7 +673,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_5</id>
-        <legacyTemplateId>tweet-with-profileimage-right</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 5 - text, profile image</title>
@@ -816,7 +811,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_6</id>
-        <legacyTemplateId>tweet-1</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 6 - text, profile image</title>
@@ -1003,7 +997,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_7</id>
-        <legacyTemplateId>tweet-2</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 7 - text, profile image</title>
@@ -1200,7 +1193,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_8</id>
-        <legacyTemplateId>tweet-4</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 8 - text, profile image</title>
@@ -1402,7 +1394,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_9</id>
-        <legacyTemplateId>tweet-6NP</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 9 - text, logo</title>
@@ -1591,7 +1582,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_10</id>
-        <legacyTemplateId>tweet-6PL</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 10 - text, photo, logo</title>
@@ -1789,7 +1779,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_11</id>
-        <legacyTemplateId>tweet-7</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 11 - text, logo</title>
@@ -1998,7 +1987,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </template>
     <template>
         <id>social_media_static_12</id>
-        <legacyTemplateId>tweet-8</legacyTemplateId>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 12 - text, profile image, logo</title>

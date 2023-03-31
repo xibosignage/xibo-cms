@@ -34,7 +34,7 @@
     <defaultDuration>10</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="template" type="code" allowLibraryRefs="true" variant="html">
+        <property id="template" type="richText" allowLibraryRefs="true" variant="html">
             <title>Main Template</title>
             <helpText>The template for formatting your notifications. Enter [Subject] and [Body] with your desired formatting. Enter text or HTML in the box below.</helpText>
         </property>
@@ -49,7 +49,7 @@
         <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
             <title>Custom Style Sheets</title>
         </property>
-        <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+        <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
             <title>No data message</title>
             <helpText>A message to display when there are no notifications to show. Enter text or HTML in the box below.</helpText>
         </property>
