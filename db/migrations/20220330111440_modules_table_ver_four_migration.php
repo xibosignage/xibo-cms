@@ -79,26 +79,59 @@ class ModulesTableVerFourMigration extends AbstractMigration
             $this->dropTable('module_old');
 
             // Add more v4 modules
+
+            // Check clock and update/add v4 modules
+            $clock = $this->fetchRow('SELECT * FROM `module` WHERE `moduleId` = \'core-clock\'');
+            $enabled = $clock['enabled'];
+            $previewEnabled = $clock['previewEnabled'];
+            $defaultDuration = $clock['defaultDuration'];
+            $settings = $clock['settings'];
+
+            $this->execute('UPDATE `module` SET `moduleId` = \'core-clock-analogue\',
+                    enabled = ' .$enabled. ', previewEnabled = ' .$previewEnabled. ',
+                defaultDuration = ' .$defaultDuration. '  WHERE `moduleId` = \'core-clock\';');
+
             $this->execute('
             INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
-              (\'core-clock-analogue\', 1, 1, 10, \'[]\'),
-              (\'core-clock-digital\', 1, 1, 10, \'[]\'),
-              (\'core-clock-flip\', 1, 1, 10, \'[]\'),       
-              (\'core-countdown-clock\', 1, 1, 60, \'[]\'),       
-              (\'core-countdown-days\', 1, 1, 60, \'[]\'),       
-              (\'core-countdown-table\', 1, 1, 60, \'[]\'),       
-              (\'core-countdown-text\', 1, 1, 60, \'[]\'),       
-              (\'core-currencies\', 0, 0, 30, \'[]\'),       
-              (\'core-dashboard\', 0, 0, 60, \'[]\'),       
-              (\'core-dataset\', 1, 1, 10, \'[]\'), 
-              (\'core-flash\', 1, 1, 10, \'[]\'), 
-              (\'core-forecastio\', 0, 0, 60, \'[]\'), 
-              (\'core-googletraffic\', 0, 0, 600, \'[]\'), 
-              (\'core-worldclock-analogue\', 1, 1, 10, \'[]\'), 
-              (\'core-worldclock-custom\', 1, 1, 10, \'[]\'), 
-              (\'core-worldclock-digital-date\', 1, 1, 10, \'[]\'), 
-              (\'core-worldclock-digital-text\', 1, 1, 10, \'[]\');        
-        ');
+              (\'core-clock-digital\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-clock-flip\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
+            ');
+
+            // Check countdown and update/add v4 modules
+            $countdown = $this->fetchRow('SELECT * FROM `module` WHERE `moduleId` = \'core-countdown\'');
+            $enabled = $countdown['enabled'];
+            $previewEnabled = $countdown['previewEnabled'];
+            $defaultDuration = $countdown['defaultDuration'];
+            $settings = $countdown['settings'];
+
+            $this->execute('UPDATE `module` SET `moduleId` = \'core-countdown-clock\',
+                    enabled = ' .$enabled. ', previewEnabled = ' .$previewEnabled. ',
+                defaultDuration = ' .$defaultDuration. '  WHERE `moduleId` = \'core-countdown\';');
+
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-countdown-days\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-countdown-table\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-countdown-text\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
+            ');
+
+            // Check worldclock and update/add v4 modules
+            $worldclock = $this->fetchRow('SELECT * FROM `module` WHERE `moduleId` = \'core-worldclock\'');
+            $enabled = $worldclock['enabled'];
+            $previewEnabled = $worldclock['previewEnabled'];
+            $defaultDuration = $worldclock['defaultDuration'];
+            $settings = $worldclock['settings'];
+
+            $this->execute('UPDATE `module` SET `moduleId` = \'core-worldclock-analogue\',
+                    enabled = ' .$enabled. ', previewEnabled = ' .$previewEnabled. ',
+                defaultDuration = ' .$defaultDuration. '  WHERE `moduleId` = \'core-worldclock\';');
+
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-worldclock-custom\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-worldclock-digital-date\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-worldclock-digital-text\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
+            ');
 
         } catch (Exception $e) {
             // Keep the old module table around for diagnosis and just continue on.
