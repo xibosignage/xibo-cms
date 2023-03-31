@@ -133,29 +133,29 @@ $(target).xiboLayoutAnimate(properties);
     "summary": "Sample 1",
     "description": "Something here",
     "location": null,
-    "startDate": "2023-03-30T00:00:00+01:00",
-    "endDate": "2023-03-31T00:00:00+01:00"
+    "startDate": "%+1h%",
+    "endDate": "%+12h%"
 },
 {
     "summary": "Sample 2",
     "description": null,
     "location": null,
-    "startDate": "2023-03-30T00:00:00+01:00",
-    "endDate": "2023-03-30T00:00:00+01:00"
+    "startDate": "%+0d%",
+    "endDate": "%+1d%"
 },
 {
     "summary": "Sample 3",
     "description": null,
     "location": null,
-    "startDate": "2023-03-30T00:00:00+01:00",
-    "endDate": "2023-03-30T00:00:00+01:00"
+    "startDate": "%+2h%",
+    "endDate": "%+4h%"
 },
 {
     "summary": "Sample 4",
     "description": null,
     "location": null,
-    "startDate": "2023-03-30T15:00:00+00:00",
-    "endDate": "2023-03-30T20:00:00+00:00"
+    "startDate": "%+5m%",
+    "endDate": "%+30m%"
 }]
 ]]></sampleData>
     <preview></preview>

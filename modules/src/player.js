@@ -49,6 +49,35 @@ $(function() {
     }
   };
 
+  const macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
+
+  const composeUTCDateFromMacro = (macroStr) => {
+    const utcFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+    const dateNow = moment().utc();
+    // Check if input has the correct format
+    const dateStr = String(macroStr);
+
+    if (dateStr.length === 0 ||
+        dateStr.match(macroRegex) === null
+    ) {
+      return dateNow.format(utcFormat);
+    }
+
+    // Trim the macro date string
+    const dateOffsetStr = dateStr.replaceAll('%', '');
+    const params = (op) => dateOffsetStr.replace(op, '')
+      .split(/(\d+)/).filter(Boolean);
+    const addRegex = /^\+/g;
+    const subtractRegex = /^\-/g;
+
+    // Check if it's add or subtract offset and return composed date
+    if (dateOffsetStr.match(addRegex) !== null) {
+      return dateNow.add(...params(addRegex)).format(utcFormat);
+    } else if (dateOffsetStr.match(subtractRegex) !== null) {
+      return dateNow.subtract(...params(subtractRegex)).format(utcFormat);
+    }
+  };
+
   // Call the data url and parse out the template.
   $.each(widgetData, function(_key, widget) {
     // Check if we have template from templateId or module
@@ -114,12 +143,20 @@ $(function() {
           // Add single element or array of elements
           dataItems = (Array.isArray(widget.sample)) ?
             widget.sample.slice(0) : [widget.sample];
+
+          dataItems = dataItems.reduce((data, item) => {
+            Object.keys(item).forEach((itemKey) => {
+              if (String(item[itemKey]).match(macroRegex) !== null) {
+                item[itemKey] = composeUTCDateFromMacro(item[itemKey]);
+              }
+            });
+
+            return [...data, {...item}];
+          }, []);
         }
       } else {
         dataItems = data?.data || [];
       }
-
-      console.log({dataItems, widget});
 
       // Add meta to the widget if it exists
       if (!isArray && data.meta) {
