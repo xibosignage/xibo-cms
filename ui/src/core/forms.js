@@ -256,6 +256,19 @@ window.forms = {
           ) {
             $newField.attr('data-visibility', property.visibility);
           }
+
+          // Add set default to the field
+          if (property.setDefault.length) {
+            $newField.attr(
+              'data-set-default',
+              JSON.stringify(property.setDefault),
+            );
+          }
+
+          // Mark property as an element property only
+          if (elementProperties) {
+            $newField.find('[name]').addClass('element-property');
+          }
         } else {
           console.error('Form type not found: ' + property.type);
         }
