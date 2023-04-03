@@ -42,7 +42,7 @@
     <properties>
         <property id="loop" type="checkbox">
             <title>Loop?</title>
-            <helpText>Should the video loop if it finishes before the provided duration?</helpText>
+            <helpText>Should the audio loop if it finishes before the provided duration?</helpText>
             <default>0</default>
         </property>
     </properties>

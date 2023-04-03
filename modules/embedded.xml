@@ -62,6 +62,10 @@
             <title>JavaScript to embed</title>
             <helpText>Please include script tags.</helpText>
         </property>
+        <property id="embedHead" type="richText" variant="html">
+            <title>HEAD content to embed</title>
+            <helpText>Please include script tags.</helpText>
+        </property>
     </properties>
     <preview></preview>
     <stencil>

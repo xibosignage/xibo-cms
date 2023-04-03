@@ -55,7 +55,7 @@
     </settings>
     <properties>
         <property id="message-duration" type="message">
-            <title>This video will play for %media.duration% seconds. Cut the video short by setting a shorter duration below. Wait on the last frame or set to Loop by setting a higher duration below.</title>
+            <title>This video will play for %media.duration% seconds. Cut the video short by setting a shorter duration in the Advanced tab. Wait on the last frame or set to Loop by setting a higher duration in the Advanced tab.</title>
         </property>
         <property id="loop" type="checkbox">
             <title>Loop?</title>
