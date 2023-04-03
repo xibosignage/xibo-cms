@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2020-2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -35,10 +35,10 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, displayGroupMembersFormSubmit("{{ randomId }}")
+    {% trans "Save" %}, membersFormSubmit("{{ randomId }}")
 {% endblock %}
 
-{% block callBack %}displayGroupMembersFormOpen{% endblock %}
+{% block callBack %}membersFormOpen{% endblock %}
 
 {% block extra %}{{ extra|json_encode|raw }}{% endblock %}
 
@@ -46,12 +46,16 @@
     <div class="row">
         <div class="col-md-12">
             <div id="{{ randomId }}" class="div-horizontal controlDiv"
-                 data-param="displayId"
-                 data-param-unassign="unassignDisplayId"
-                 data-url="{{ url_for("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
-                 data-groups-param="displayGroupId"
-                 data-groups-param-unassign="unassignDisplayGroupId"
-                 data-groups-url="{{ url_for("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
+                 data-display="true"
+                 data-display-get-url="{{ url_for("display.search") }}"
+                 data-display-param="displayId"
+                 data-display-param-unassign="unassignDisplayId"
+                 data-display-url="{{ url_for("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
+                 data-display-groups="true"
+                 data-display-groups-get-url="{{ url_for("displayGroup.search") }}"
+                 data-display-groups-param="displayGroupId"
+                 data-display-groups-param-unassign="unassignDisplayGroupId"
+                 data-display-groups-url="{{ url_for("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
             >
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item"><a class="nav-link active" href="#displayTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
@@ -108,7 +112,7 @@
                                     </form>
                                 </div>
                             </div>
-                            <table id="displaysGroupsMembersTable" class="table table-bordered membersTable">
+                            <table id="displaysGroupsMembersTable" class="table table-bordered membersTable" style="width: 100%">
                                 <thead>
                                     <tr>
                                         <th>{% trans "ID" %}</th>

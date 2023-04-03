@@ -253,14 +253,6 @@ window.forms = {
           ) {
             $newField.attr('data-visibility', property.visibility);
           }
-
-          // Add set default to the field
-          if (property.setDefault.length) {
-            $newField.attr(
-              'data-set-default',
-              JSON.stringify(property.setDefault),
-            );
-          }
         } else {
           console.error('Form type not found: ' + property.type);
         }
@@ -1678,7 +1670,7 @@ window.forms = {
         '.xibo-form-input[data-depends-on]',
       ).each(function(_k, el) {
         const $target = $(el);
-        const dependency = $target.data('depends-on');
+        let dependency = $target.data('depends-on');
 
         // If the dependency has already been added, skip
         if ($target.data('depends-on-added')) {
@@ -1688,83 +1680,90 @@ window.forms = {
         // Mark dependency as added to the target
         $target.data('depends-on-added', true);
 
+        // Check if the dependency value comes as an array value ( value[1])
+        let dependencyArrayIndex = null;
+        if (dependency.indexOf('[') !== -1 && dependency.indexOf(']') !== -1) {
+          const dependencyArray = dependency.split('[');
+          dependency = dependencyArray[0];
+          dependencyArrayIndex = dependencyArray[1].replace(']', '');
+        }
+
         // Add event listener to the dependency
-        const elementId = (targetId) ?
+        const base = (targetId) ?
           '#input_' + targetId + '_' + dependency :
           '#input_' + dependency;
-        $(container).find(elementId)
-          .on('change', function(ev) {
-            // Set dependency value to the target as a data attribute
-            $target.data('depends-on-value', $(ev.currentTarget).val());
+
+        // Add event listener to the $base element
+        $(container).find(base).on('change', function(ev) {
+          let valueToSet = null;
+          const $base = $(ev.currentTarget);
+
+          // If $base is a dropdown
+          if ($base.is('select')) {
+            // Get selected option
+            const $selectedOption = $base.find(
+              'option:selected',
+            );
+
+            // Check if the selected option has a data-set value
+            // if not, use the value of the dropdown
+            if ($selectedOption.data('set')) {
+              valueToSet = $selectedOption.data('set');
+            } else {
+              valueToSet = $selectedOption.val();
+            }
+          } else if ($base.is('input[type="checkbox"]')) {
+            // If $base is a checkbox
+            valueToSet = $base.is(':checked');
+          } else {
+            valueToSet = $base.val();
+          }
+
+          // Check if value to set is a string or an array of values
+          if (dependencyArrayIndex !== null && valueToSet !== null) {
+            valueToSet = valueToSet.split(',')[dependencyArrayIndex];
+          }
+
+          // If the target is a checkbox, set the checked property
+          if ($target.children('input[type="checkbox"]').length > 0) {
+            // Set checked property value
+            $target.children('input[type="checkbox"]')
+              .prop('checked', valueToSet);
+          } else if ($target.hasClass('colorpicker-input')) {
+            // If the value is empty, clear the color picker
+            if (valueToSet === '') {
+              // Clear the color picker value
+              $target.find('input').val('');
+
+              // Also update the background color of the input group
+              $target.find('.input-group-addon').css('background-color', '');
+            } else if (
+              valueToSet !== null &&
+              valueToSet !== undefined &&
+              Color(valueToSet).valid
+            ) {
+              // Add the color to the color picker
+              $target.find('input')
+                .colorpicker('setValue', valueToSet);
+
+              // Also update the background color of the input group
+              $target.find('.input-group-addon')
+                .css('background-color', valueToSet);
+            }
+          } else if ($target.children('input[type="text"]').length > 0) {
+            // If the target is a text input, set the value
+            $target.children('input[type="text"]').val(valueToSet);
+          } else {
+            // For the remaining cases, set the
+            // value of the dependency to the target data attribute
+            $target.data('depends-on-value', valueToSet);
 
             // Reset the target form field
             forms.initFields(container, $target, targetId);
-          });
-      });
-    }
-
-    // Handle set default
-    $(container).find(
-      '.xibo-form-input[data-set-default]',
-    ).each(function(_k, el) {
-      const setDefaultRules = $(el).data('set-default');
-      const $trigger = $(el).find('input, select');
-
-      for (const rule of setDefaultRules) {
-        const $target = $('#input_' + targetId + '_' + rule.field);
-        $trigger.on('change', function(ev) {
-          // Test all the conditions
-          let testResult = false;
-
-          for (let i = 0; i < rule.test.conditions.length; i++) {
-            const condition = rule.test.conditions[i];
-            const newTestResult =
-              checkCondition(
-                condition.type,
-                condition.value,
-                $trigger.val(),
-              );
-
-            // If we have multiple conditions, we need
-            // to combine them with the test type
-            if (i > 0) {
-              if (testType === 'and') {
-                testResult = testResult && newTestResult;
-              } else if (testType === 'or') {
-                testResult = testResult || newTestResult;
-              }
-            } else {
-              testResult = newTestResult;
-            }
-          }
-
-          // If the test result is true, set the value
-          if (testResult) {
-            // If it's a color input, update the color picker
-            if ($target.parents('.colorpicker-input').length) {
-              // If the value is empty, clear the color picker
-              if (rule.value === '') {
-                // Clear the color picker value
-                $target.val('');
-                // Also update the background color of the input group
-                $target.parents('.colorpicker-input')
-                  .find('.input-group-addon').css('background-color', '');
-              } else {
-                // Add the color to the color picker
-                $target.colorpicker('setValue', rule.value);
-
-                // Also update the background color of the input group
-                $target.parents('.colorpicker-input').find('.input-group-addon')
-                  .css('background-color', rule.value);
-              }
-            } else {
-              // Otherwise, just set the value
-              $target.val(rule.value);
-            }
           }
         });
-      }
-    });
+      });
+    }
   },
   /**
      * Handle form field replacements

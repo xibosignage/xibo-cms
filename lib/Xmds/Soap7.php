@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (c) 2023  Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace Xibo\Xmds;
@@ -103,7 +104,7 @@ class Soap7 extends Soap6
         );
 
         // File is valid, see if we can return it.
-        $event = new XmdsDependencyRequestEvent($fileType, $id);
+        $event = new XmdsDependencyRequestEvent($requiredFile);
         $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
         $path = $event->getFullPath();

@@ -38,8 +38,47 @@ $timeline-left-margin-width: 100px;
     padding-right: 0;
     padding-left: 60px;
 
+    .back-button {
+        position: fixed;
+        text-transform: uppercase;
+        left: 0;
+        top: 0;
+        z-index: 1;
+        background-color: $xibo-color-neutral-0;
+        height: 50px;
+        width: 60px;
+
+        a {
+            width: 48px;
+            padding: 0.5rem;
+            color: $xibo-color-secondary;
+            margin-top: 4px;
+            margin-left: 6px;
+
+            &:hover {
+                background-color: $xibo-color-primary-l10;
+            }
+        }
+
+        span {
+            margin-left: 6px;
+            font-weight: bold;
+            display: none;
+        }
+    }
+
     &.toolbar-opened {
         padding-left: 350px;
+
+        .back-button {
+            width: 348px;
+            a {
+                width: 100px;
+            }
+            span {
+                display: inline;
+            }
+        }
     }
 
     &.properties-panel-opened {
@@ -55,6 +94,22 @@ $timeline-left-margin-width: 100px;
     .editor-modal-content {
         background: $playlist-editor-main-background-color;
         height: 100%;
+    }
+
+    .editor-modal-header {
+        .modal-header {
+            &--left {
+                display: flex;
+                column-gap: 10px;
+
+                .playlist-info-widgets,
+                .playlist-info-duration {
+                    font-size: 1.5rem;
+                    line-height: 1;
+                    font-weight: bold;
+                }
+            }
+        }
     }
 
     .editor-modal-body {

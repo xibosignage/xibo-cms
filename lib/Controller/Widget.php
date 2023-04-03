@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Controller;
@@ -240,6 +239,15 @@ class Widget extends Base
         // Assign this module to this Playlist in the appropriate place (which could be null)
         $displayOrder = $params->getInt('displayOrder');
         $playlist->assignWidget($widget, $displayOrder);
+
+        if ($playlist->isRegionPlaylist() && count($playlist->widgets) >= 2) {
+            // Convert this region to a `playlist` (if it is a zone)
+            $widgetRegion = $this->regionFactory->getById($playlist->regionId);
+            if ($widgetRegion->type === 'zone') {
+                $widgetRegion->type = 'playlist';
+                $widgetRegion->save();
+            }
+        }
 
         // Dispatch the Edit Event
         $this->getDispatcher()->dispatch(new WidgetAddEvent($module, $widget));

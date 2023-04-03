@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #
-# Copyright (C) 2022 Xibo Signage Ltd
+# Copyright (C) 2023 Xibo Signage Ltd
 #
-# Xibo - Digital Signage - http://www.xibo.org.uk
+# Xibo - Digital Signage - https://xibosignage.com
 #
 # This file is part of Xibo.
 #
@@ -199,6 +199,12 @@ then
 
   # Set CMS Key
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$CMS_KEY' WHERE \`setting\`='SERVER_KEY' LIMIT 1"
+
+  if [ "$CMS_DEV_MODE" == "true" ]
+  then
+    echo "Setting up library location"
+    mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=1, \`userSee\`=1 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
+  fi
 
   # Configure Maintenance
   echo "Setting up Maintenance"

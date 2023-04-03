@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,22 +23,19 @@
 namespace Xibo\Widget\Definition;
 
 /**
- * Represents a set default test condition
+ * A Legacy Type
  */
-class SetDefaultTestCondition implements \JsonSerializable
+class LegacyType implements \JsonSerializable
 {
-    /** @var string */
-    public $type;
-
-    /** @var string */
-    public $value;
+    public $name;
+    public $condition;
 
     /** @inheritDoc */
     public function jsonSerialize()
     {
         return [
-            'type' => $this->type,
-            'value' => $this->value
+            'name' => $this->name,
+            'condition' => $this->condition,
         ];
     }
 }

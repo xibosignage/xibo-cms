@@ -39,10 +39,9 @@
             <helpText>Search term. You can test your search term in the twitter.com search box first.</helpText>
             <default></default>
         </property>
-        <property id="language" type="text">
+        <property id="language" type="connectorProperties">
             <title>Language</title>
             <helpText>Language in which tweets should be returned</helpText>
-            <default></default>
         </property>
         <property id="numItems" type="number">
             <title>Count</title>

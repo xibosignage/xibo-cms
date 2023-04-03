@@ -3,6 +3,7 @@
 // Load templates
 const timelineTemplate = require('../templates/playlist-timeline.hbs');
 const timelineInfoTemplate = require('../templates/playlist-timeline-info.hbs');
+const timelineHeaderInfoTemplate = require('../templates/playlist-timeline-header-info.hbs');
 
 const defaultStepHeight = 20;
 const zoomLevelChangeStep = 5;
@@ -282,10 +283,25 @@ PlaylistTimeline.prototype.updateInfo = function() {
       widget: pE.selectedObject,
     }, {trans: toolbarTrans}),
   );
+  const widgets = pE.playlist?.widgets || {};
+  const headerHtml = timelineHeaderInfoTemplate(
+    $.extend({}, {
+      playlist: pE.playlist,
+      widgetsCount: Object.keys(widgets).length,
+    }, {trans: {
+      ...playlistEditorTrans,
+      editPlaylistTitle: playlistEditorTrans.editPlaylistTitle.replace(
+        '%playlistName%',
+        pE.playlist.name,
+      ),
+    }}),
+  );
 
   // Inject HTML into container
   this.DOMObject.parents('#playlist-editor')
     .find('.selected-info').html(html);
+  this.DOMObject.parents('.editor-modal')
+    .find('.modal-header--left').html(headerHtml);
 };
 
 module.exports = PlaylistTimeline;

@@ -1,0 +1,81 @@
+POST {{url}}/xmds.php?v=7
+Content-Type: application/xml
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <tns:RegisterDisplay>
+      <serverKey xsi:type="xsd:string">{{serverKey}}</serverKey>
+      <hardwareKey xsi:type="xsd:string">{{hardwareKey}}</hardwareKey>
+      <displayName xsi:type="xsd:string">{{displayName}}</displayName>
+      <clientType xsi:type="xsd:string">{{clientType}}</clientType>
+      <clientVersion xsi:type="xsd:string">4</clientVersion>
+      <clientCode xsi:type="xsd:int">400</clientCode>
+      <macAddress xsi:type="xsd:string">{{macAddress}}</macAddress>
+      <licenceResult xsi:type="xsd:string">trial</licenceResult>
+    </tns:RegisterDisplay>
+  </soap:Body>
+</soap:Envelope>
+
+###
+
+POST {{url}}/xmds.php?v=7
+Content-Type: application/xml
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <tns:RequiredFiles>
+      <serverKey xsi:type="xsd:string">{{serverKey}}</serverKey>
+      <hardwareKey xsi:type="xsd:string">{{hardwareKey}}</hardwareKey>
+    </tns:RequiredFiles>
+  </soap:Body>
+</soap:Envelope>
+
+###
+
+POST {{url}}/xmds.php?v=7
+Content-Type: application/xml
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <tns:Schedule>
+      <serverKey xsi:type="xsd:string">{{serverKey}}</serverKey>
+      <hardwareKey xsi:type="xsd:string">{{hardwareKey}}</hardwareKey>
+    </tns:Schedule>
+  </soap:Body>
+</soap:Envelope>
+
+###
+
+POST {{url}}/xmds.php?v=7
+Content-Type: application/xml
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <tns:GetDependency>
+      <serverKey xsi:type="xsd:string">{{serverKey}}</serverKey>
+      <hardwareKey xsi:type="xsd:string">{{hardwareKey}}</hardwareKey>
+      <fileType xsi:type="xsd:string">bundle</fileType>
+      <id xsi:type="xsd:int">1</id>
+    </tns:GetDependency>
+  </soap:Body>
+</soap:Envelope>
+
+###
+
+
