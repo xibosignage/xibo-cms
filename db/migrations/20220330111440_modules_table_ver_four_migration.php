@@ -135,6 +135,10 @@ class ModulesTableVerFourMigration extends AbstractMigration
               (\'core-worldclock-digital-text\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
             ');
 
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-canvas\', \'1\', \'1\', \'60\', \'[]\');
+            ');
         } catch (Exception $e) {
             // Keep the old module table around for diagnosis and just continue on.
         }
