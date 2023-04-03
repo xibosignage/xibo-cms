@@ -47,7 +47,7 @@
 <span style="font-size: 48px; color:#1c1c1c;">[HH:mm:ss]</span>
             ]]></default>
         </property>
-        <property id="dateFormatSnippets" type="snippet" mode="options" target="text">
+        <property id="dateFormatSnippets" type="snippet" mode="options" target="format">
             <title>Date Formats</title>
             <helpText>Choose from a preset date format</helpText>
             <options>

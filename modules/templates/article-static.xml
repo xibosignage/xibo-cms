@@ -68,7 +68,7 @@
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
-            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="text">
+            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="template">
                 <title>Snippets</title>
                 <helpText>Choose element to add to template</helpText>
             </property>
