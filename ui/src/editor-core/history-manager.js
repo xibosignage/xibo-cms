@@ -5,7 +5,7 @@
  */
 
 const Change = require('../editor-core/change.js');
-const managerTemplate = require('../templates/manager.hbs');
+const managerTemplate = require('../templates/history-manager.hbs');
 
 // Map from a operation to its inverse, and
 // detail if the operation is done on the element or the layout
@@ -37,7 +37,7 @@ const inverseChangeMap = {
  * @param {object} container - Container to append the manager to
  * @param {bool} visible - Show the manager
  */
-const Manager = function(parent, container, visible) {
+const HistoryManager = function(parent, container, visible) {
   this.parent = parent;
 
   this.DOMObject = container;
@@ -92,7 +92,7 @@ const Manager = function(parent, container, visible) {
  *  - Custom Request replace ( tag and replace )
  * @return {Promise} - Promise that resolves when the change is uploaded
 */
-Manager.prototype.addChange = function(
+HistoryManager.prototype.addChange = function(
   changeType, targetType, targetId, oldValues, newValues,
   {
     upload = true,
@@ -146,7 +146,7 @@ Manager.prototype.addChange = function(
  * @param {object=} customRequestReplace
  * @return {Promise} - Promise that resolves when the change is uploaded
  */
-Manager.prototype.uploadChange = function(
+HistoryManager.prototype.uploadChange = function(
   change,
   updateId,
   updateType,
@@ -256,7 +256,7 @@ Manager.prototype.uploadChange = function(
  * Revert change by ID or the last one in the history array
  * @return {Promise} - Promise that resolves when the change is reverted
 */
-Manager.prototype.revertChange = function() {
+HistoryManager.prototype.revertChange = function() {
   // Prevent trying to revert if there are no changes in history
   if (this.changeHistory.length <= 0) {
     return Promise.reject('There are no changes in history!');
@@ -391,7 +391,7 @@ Manager.prototype.revertChange = function() {
 /**
  * Save all the changes in the history array
 */
-Manager.prototype.saveAllChanges = async function() {
+HistoryManager.prototype.saveAllChanges = async function() {
   const self = this;
 
   // stop method if there are no changes to be saved
@@ -427,7 +427,7 @@ Manager.prototype.saveAllChanges = async function() {
  * @param  {string} targetId - Target object ID
  * @return {Promise} - Promise that resolves when the changes are removed
 */
-Manager.prototype.removeAllChanges = function(targetType, targetId) {
+HistoryManager.prototype.removeAllChanges = function(targetType, targetId) {
   const self = this;
 
   return new Promise(function(resolve, reject) {
@@ -460,7 +460,7 @@ Manager.prototype.removeAllChanges = function(targetType, targetId) {
 /**
  * Remove last change
 */
-Manager.prototype.removeLastChange = function() {
+HistoryManager.prototype.removeLastChange = function() {
   this.changeHistory.pop();
   this.render();
 };
@@ -468,7 +468,7 @@ Manager.prototype.removeLastChange = function() {
 /**
  * Render Manager
  */
-Manager.prototype.render = function() {
+HistoryManager.prototype.render = function() {
   if (this.visible == false) {
     return;
   }
@@ -486,4 +486,4 @@ Manager.prototype.render = function() {
     .click(this.toggleExtended.bind(this));
 };
 
-module.exports = Manager;
+module.exports = HistoryManager;

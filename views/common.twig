@@ -228,6 +228,10 @@
                     url: "{{ url_for("module.widget.dataType", {id: ':id'}) }}",
                     type: 'GET'
                 },
+                saveElements: {
+                    url: "{{ url_for("module.widget.elements", {id: ':id'}) }}",
+                    type: 'PUT'
+                },
             },
             library: {
                 get: {
@@ -511,6 +515,8 @@
                 menuItems: {
                     widgetsName: "{{ "Widgets" |trans }}",
                     widgetsTitle: "{{ "Layout Designer widgets" |trans }}",
+                    globalElementsName: "{{ "Global" |trans }}",
+                    globalElementsTitle: "{{ "Global Elements" |trans }}",
                     imageName: "{{ "Image" |trans }}",
                     imageTitle: "{{ "Library image search"|trans }}",
                     audioName: "{{ "Audio" |trans }}",

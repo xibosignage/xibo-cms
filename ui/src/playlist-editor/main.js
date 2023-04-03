@@ -39,7 +39,7 @@ const Playlist = require('../playlist-editor/playlist.js');
 const PlaylistTimeline = require('../playlist-editor/playlist-timeline.js');
 const Toolbar = require('../editor-core/toolbar.js');
 const PropertiesPanel = require('../editor-core/properties-panel.js');
-const Manager = require('../editor-core/manager.js');
+const HistoryManager = require('../editor-core/history-manager.js');
 const topbarTemplatePlaylistEditor =
   require('../templates/topbar-playlist-editor.hbs');
 
@@ -79,8 +79,8 @@ window.pE = {
   // Properties Panel
   propertiesPanel: {},
 
-  // Manager
-  manager: {},
+  // History Manager
+  historyManager: {},
 
   // Selected object
   selectedObject: {},
@@ -169,9 +169,9 @@ pE.loadEditor = function(inline = false) {
 
         // Initialize manager
         if (typeof lD != 'undefined') {
-          pE.manager = lD.manager;
+          pE.historyManager = lD.historyManager;
         } else {
-          pE.manager = new Manager(
+          pE.historyManager = new HistoryManager(
             pE,
             $('#playlist-editor').find('#layout-manager'),
             false, // (serverMode == 'Test') Turn of manager visibility for now
@@ -344,7 +344,7 @@ pE.dropItemAdd = function(droppable, card, {positionToAdd = null} = {}) {
 pE.undoLastAction = function() {
   pE.common.showLoadingScreen();
 
-  pE.manager.revertChange().then((res) => { // Success
+  pE.historyManager.revertChange().then((res) => { // Success
     pE.common.hideLoadingScreen();
 
     toastr.success(res.message);
@@ -722,7 +722,7 @@ pE.refreshEditor = function(updateToolbar = false) {
 
   // Render containers
   (updateToolbar) && this.toolbar.render();
-  this.manager.render();
+  this.historyManager.render();
 
   // Render timeline
   this.timeline.render();
@@ -868,7 +868,7 @@ pE.close = function() {
 
   // Make sure all remaining objects are pure empty JS objects
   this.playlist = this.editorContainer = this.timeline =
-    this.propertiesPanel = this.manager =
+    this.propertiesPanel = this.historyManager =
     this.selectedObject = this.toolbar = {};
 
   // Restore toastr positioning
@@ -1031,13 +1031,14 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
  */
 pE.checkHistory = function() {
   // Check if there are some changes
-  const undoActive = pE.manager.changeHistory.length > 0;
+  const undoActive = pE.historyManager.changeHistory.length > 0;
   let undoActiveTitle = '';
 
   // Get last action text for popup
   if (undoActive) {
     const lastAction =
-      pE.manager.changeHistory[pE.manager.changeHistory.length - 1];
+      pE.historyManager
+        .changeHistory[pE.historyManager.changeHistory.length - 1];
 
     if (
       typeof historyManagerTrans != 'undefined' &&

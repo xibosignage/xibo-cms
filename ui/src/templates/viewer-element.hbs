@@ -1,0 +1,43 @@
+<div id="{{element.elementId}}" 
+    class="designer-element viewer-element-select {{#if element.selected}}selected{{/if}} deletable"
+    data-type="element"
+    data-widget-id="{{element.widgetId}}"
+    data-region-id="{{element.regionId}}"
+    style="
+        position: absolute;
+        width: {{dimensions.width}}px;
+        height: {{dimensions.height}}px;
+        top: {{dimensions.top}}px;
+        left: {{dimensions.left}}px;
+
+        {{#if dimensions.rotation}}
+            transform: rotate({{dimensions.rotation}}deg);
+            -webkit-transform: rotate({{dimensions.rotation}}deg);
+            -ms-transform: rotate({{dimensions.rotation}}deg);
+            -o-transform: rotate({{dimensions.rotation}}deg);
+            -moz-transform: rotate({{dimensions.rotation}}deg);
+        {{/if}}
+        z-index: {{dimensions.zIndex}};">
+
+    <div class="element-content"
+        style="width: 100%; height: 100%;
+        {{#if dimensions.scale}}
+            transform: scale({{dimensions.scale}});
+            -webkit-transform: scale({{dimensions.scale}});
+            -ms-transform: scale({{dimensions.scale}});
+            -o-transform: scale({{dimensions.scale}});
+            -moz-transform: scale({{dimensions.scale}});
+        {{/if}}">
+
+    {{#with template}}
+        {{#if onTemplateRender}}
+            <script type="text/javascript">
+                function onTemplateRender_{{ ../element.elementId }}(properties) {
+                    {{{onTemplateRender}}}
+                }
+            </script>
+        {{/if}}
+        
+        {{{stencil.twig}}}
+    {{/with}}
+</div>

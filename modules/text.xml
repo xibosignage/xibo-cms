@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Add Text directly to a Layout</description>
     <class></class>
+    <showIn>playlist</showIn>
     <type>text</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>

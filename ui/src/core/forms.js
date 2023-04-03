@@ -52,6 +52,8 @@ window.forms = {
      * @param {string} [targetId] - Target Id ( widget, element, etc.)
      * @param {boolean} [playlistId] - If widget, the playlistId
      * @param {object[]} [propertyGroups] - Groups to add the properties to
+     * @param {boolean} [elementProperties]
+     *  - If the properties are for an element
      */
   createFields: function(
     properties,
@@ -59,6 +61,7 @@ window.forms = {
     targetId,
     playlistId,
     propertyGroups = [],
+    elementProperties = false,
   ) {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
@@ -253,6 +256,11 @@ window.forms = {
           ) {
             $newField.attr('data-visibility', property.visibility);
           }
+
+          // Mark property as an element property only
+          if (elementProperties) {
+            $newField.find('[name]').addClass('element-property');
+          }
         } else {
           console.error('Form type not found: ' + property.type);
         }
@@ -272,6 +280,7 @@ window.forms = {
    * @param {string} container - Main container Jquery selector
    * @param {object} target - Target Jquery selector or object
    * @param {string} [targetId] - Target Id ( widget, element, etc.)
+   * - If the properties are element properties
    */
   initFields: function(container, target, targetId) {
     // Find elements, either they match
@@ -1408,6 +1417,9 @@ window.forms = {
                     '" selected>' +
                     element.name +
                     '</option>'));
+
+                // Trigger change event
+                $el.trigger('change');
               } else {
                 $el.append(
                   $('<option value="' +
@@ -1823,7 +1835,12 @@ window.forms = {
      * @param {string} targetId - The target id
      * @param {boolean} isTopLevel - Is the target parent top level
      */
-  setConditions: function(container, baseObject, targetId, isTopLevel = true) {
+  setConditions: function(
+    container,
+    baseObject,
+    targetId,
+    isTopLevel = true,
+  ) {
     $(container).find('.xibo-form-input[data-visibility]')
       .each(function(_idx, el) {
         let visibility = $(el).data('visibility');

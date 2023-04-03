@@ -39,11 +39,13 @@ const PropertiesPanel = function(parent, container) {
 
 /**
  * Save properties from the panel form
- * @param {object} element - the element that the form relates to
+ * @param {object} target - the element that the form relates to
  */
-PropertiesPanel.prototype.save = function(element) {
+PropertiesPanel.prototype.save = function(target) {
   const app = this.parent;
   const self = this;
+  const form = $(this.DOMObject).find('form');
+  let savingElement = false;
 
   // If main container has inline editing class, remove it
   app.editorContainer.removeClass('inline-edit-mode');
@@ -53,12 +55,27 @@ PropertiesPanel.prototype.save = function(element) {
     app.viewer.hideInlineEditor();
   }
 
-  // Run form submit module optional function
-  if (element.type === 'widget') {
-    formHelpers.widgetFormEditBeforeSubmit(this.DOMObject, element.subType);
+  // If target is element, call saveElement function
+  // and switch the target to be the widget of that element
+  if (target.type === 'element') {
+    this.saveElement(
+      target,
+      form.find('[name].element-property'),
+    );
+
+    target = app.getElementByTypeAndId(
+      'widget',
+      'widget_' + target.regionId + '_' + target.widgetId,
+      'canvas',
+    );
+
+    savingElement = true;
   }
 
-  const form = $(this.DOMObject).find('form');
+  // Run form submit module optional function
+  if (target.type === 'widget') {
+    formHelpers.widgetFormEditBeforeSubmit(this.DOMObject, target.subType);
+  }
 
   let requestPath;
   if (form.attr('action') != undefined && form.attr('method') != undefined) {
@@ -69,9 +86,16 @@ PropertiesPanel.prototype.save = function(element) {
     };
   }
 
+  // Get form data to save based on the target type
+  const formFieldsToSave = (savingElement) ?
+    form.find('[name]:not(.element-property)') :
+    form.find('[name]');
+
   // If form is valid, submit it ( add change )
-  if (form.valid()) {
-    const formNewData = form.serialize();
+  if (formFieldsToSave.valid()) {
+    // Get form data
+    // if we're saving an element, don't include the element properties
+    const formNewData = formFieldsToSave.serialize();
 
     app.common.showLoadingScreen();
 
@@ -84,10 +108,10 @@ PropertiesPanel.prototype.save = function(element) {
 
     // Add a save form change to the history array
     // with previous form state and the new state
-    app.manager.addChange(
+    app.historyManager.addChange(
       'saveForm',
-      element.type, // targetType
-      element[element.type + 'Id'], // targetId
+      target.type, // targetType
+      target[target.type + 'Id'], // targetId
       this.formSerializedLoadData, // oldValues
       formNewData, // newValues
       {
@@ -109,27 +133,37 @@ PropertiesPanel.prototype.save = function(element) {
           app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
 
         // If we're saving a widget, reload region on the viewer
-        if (element.type === 'widget' && app.viewer) {
+        if (
+          target.type === 'widget' &&
+          app.viewer
+        ) {
           // Reload data, but only render the region that the widget is in
           app.reloadData(mainObject).done(() => {
-            if (!element.drawerWidget) {
+            if (!target.drawerWidget) {
               app.viewer.renderRegion(
-                app.getElementByTypeAndId('region', element.regionId),
+                app.getElementByTypeAndId('region', target.regionId),
               );
             } else {
               app.viewer.renderRegion(
                 app.layout.drawer,
-                element,
+                target,
               );
             }
           });
         } else {
           // Reload data, and refresh viewer if layout
-          app.reloadData(mainObject, (element.type === 'layout'));
+          // or if we're saving an element
+          app.reloadData(
+            mainObject,
+            (target.type === 'layout'),
+          );
         }
       };
 
-      reloadData();
+      // Reload data if we're not saving an element
+      if (!savingElement) {
+        reloadData();
+      }
     }).catch((error) => { // Fail/error
       app.common.hideLoadingScreen();
 
@@ -142,7 +176,7 @@ PropertiesPanel.prototype.save = function(element) {
         errorMessage += error.errorThrown;
       }
       // Remove added change from the history manager
-      app.manager.removeLastChange();
+      app.historyManager.removeLastChange();
 
       // Display message in form
       formHelpers.displayErrorMessage(form, errorMessage, 'danger');
@@ -159,6 +193,49 @@ PropertiesPanel.prototype.save = function(element) {
       toastr.error(errorMessage);
     });
   }
+};
+
+PropertiesPanel.prototype.saveElement = function(
+  target,
+  properties,
+) {
+  const app = this.parent;
+
+  // Get parent widget
+  const parentWidget = app.getElementByTypeAndId(
+    'widget',
+    'widget_' + target.regionId + '_' + target.widgetId,
+    'canvas',
+  );
+
+  // Form properties to the target element if they exist
+  if (typeof properties != 'undefined') {
+    const elementProperties =
+      properties.map((i, property) => {
+        const propertyObject = {
+          id: $(property).attr('name'),
+          value: $(property).val(),
+        };
+
+        // If property is a checkbox
+        if ($(property).attr('type') === 'checkbox') {
+          propertyObject.value = $(property).is(':checked');
+        }
+
+        return propertyObject;
+      }).get();
+
+    // Add to the element properties
+    if (parentWidget.elements[target.elementId]) {
+      parentWidget.elements[target.elementId].properties = elementProperties;
+    }
+  }
+
+  // Save elements to the widget
+  parentWidget.saveElements().then((_res) => {
+    // Render element content
+    app.viewer.renderElementContent(target);
+  });
 };
 
 /**
@@ -199,20 +276,23 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
 
 /**
  * Render panel
- * @param {Object} element - the element object to be rendered
+ * @param {Object} target - the element object to be rendered
  * @param {number} step - the step to render
  * @param {boolean} actionEditMode - render while editing an action
  * @return {boolean} - result status
  */
 PropertiesPanel.prototype.render = function(
-  element,
+  target,
   step,
   actionEditMode = false,
 ) {
   const self = this;
+  const app = this.parent;
+  let targetAux;
+  let renderElements = false;
 
-  // Hide panel if no element is passed
-  if (element == undefined || $.isEmptyObject(element)) {
+  // Hide panel if no target element is passed
+  if (target == undefined || $.isEmptyObject(target)) {
     this.DOMObject.parent().addClass('closed');
     this.DOMObject.parents('.editor-modal')
       .toggleClass('properties-panel-opened', false);
@@ -223,10 +303,29 @@ PropertiesPanel.prototype.render = function(
       .toggleClass('properties-panel-opened', true);
   }
 
+  // If target is an element, change it to the widget
+  // and save the element in a new variable
+  if (target.type === 'element') {
+    const elementId = target.elementId;
+
+    // Get widget and change target
+    target = app.getElementByTypeAndId(
+      'widget',
+      'widget_' + target.regionId + '_' + target.widgetId,
+      'canvas',
+    );
+
+    // Get element from the widget
+    targetAux = target.elements[elementId];
+
+    // Set renderElements to true
+    renderElements = true;
+  }
+
   // Show a message if the module is disabled for a widget rendering
   if (
-    element.type === 'widget' &&
-    !element.enabled
+    target.type === 'widget' &&
+    !target.enabled
   ) {
     // Show invalid module message
     this.DOMObject.html(messageTemplate({
@@ -243,8 +342,8 @@ PropertiesPanel.prototype.render = function(
   this.DOMObject.html(loadingTemplate());
 
   // Build request path
-  let requestPath = urlsForApi[element.type].getForm.url;
-  requestPath = requestPath.replace(':id', element[element.type + 'Id']);
+  let requestPath = urlsForApi[target.type].getForm.url;
+  requestPath = requestPath.replace(':id', target[target.type + 'Id']);
 
   // If we have a step to render, append it to the request path
   if (step !== undefined && typeof step == 'number') {
@@ -274,7 +373,7 @@ PropertiesPanel.prototype.render = function(
     }
 
     // Render template
-    const htmlTemplate = formTemplates[element.type];
+    const htmlTemplate = formTemplates[target.type];
 
     // Extend element with translation
     $.extend(res.data, {
@@ -296,22 +395,22 @@ PropertiesPanel.prototype.render = function(
     }
 
     // If we have a widget, add the widgetId to the data
-    const dataToRender = (element.type != 'widget') ?
+    const dataToRender = (target.type != 'widget') ?
       res.data :
       Object.assign(res.data, {
-        target: element.widgetId,
+        target: target.widgetId,
       });
 
     // If the form is a layout
     // Add imageDownloadUrl and libraryAddUrl to the data
-    if (element.type === 'layout') {
+    if (target.type === 'layout') {
       dataToRender.imageDownloadUrl = imageDownloadUrl;
       dataToRender.libraryAddUrl = libraryAddUrl;
     }
 
     const html = propertiesPanelTemplate({
       header: res.dialogTitle,
-      style: element.type,
+      style: target.type,
       form: htmlTemplate(dataToRender),
       buttons: buttons,
       trans: propertiesPanelTrans,
@@ -337,15 +436,15 @@ PropertiesPanel.prototype.render = function(
 
     // Create the dynamic form fields
     // ( for now just for widget )
-    if (element.type === 'widget') {
+    if (target.type === 'widget') {
       // Create configure tab if we have properties
       if (res.data.module.properties.length > 0) {
         // Configure tab
         forms.createFields(
           res.data.module.properties,
           self.DOMObject.find('#configureTab'),
-          element.widgetId,
-          element.playlistId,
+          target.widgetId,
+          target.playlistId,
           res.data.module.propertyGroups,
         );
       } else {
@@ -356,7 +455,22 @@ PropertiesPanel.prototype.render = function(
         self.DOMObject.find('[href="#advancedTab"]').tab('show');
       }
 
-      // Appearance tab ( if template exists and we have properties )
+      // Appearance tab
+      const showAppearanceTab = (selectTab = false) => {
+        // Show appearance tab
+        self.DOMObject.find('.nav-link[href="#appearanceTab"]')
+          .parent().removeClass('d-none');
+
+        if (selectTab) {
+          // Deselect active tab
+          self.DOMObject.find('.nav-link.active').removeClass('active');
+
+          // Select appearance tab
+          self.DOMObject.find('[href="#appearanceTab"]').tab('show');
+        }
+      };
+
+      // If we have a template for the widget, create the fields
       if (
         res.data.template != undefined &&
         res.data.template.properties.length > 0
@@ -364,130 +478,56 @@ PropertiesPanel.prototype.render = function(
         forms.createFields(
           res.data.template.properties,
           self.DOMObject.find('#appearanceTab'),
-          element.widgetId,
-          element.playlistId,
+          target.widgetId,
+          target.playlistId,
           res.data.template.propertyGroups,
         );
 
         // Show the appearance tab
-        self.DOMObject.find('.nav-link[href="#appearanceTab"]')
-          .parent().removeClass('d-none');
-      }
-    }
-
-    // Set condition and handle replacements
-    forms.handleFormReplacements(self.DOMObject.find('form'), res.data);
-    forms.setConditions(
-      self.DOMObject.find('form'),
-      res.data,
-      element.widgetId,
-      (element.parent && element.parent.isTopLevel != undefined) ?
-        element.parent.isTopLevel : true,
-    );
-
-    // Run form open module optional function
-    if (element.type === 'widget') {
-      // Pass widget options to the form as data
-      if (element.getOptions != undefined) {
-        self.DOMObject.find('form').data(
-          'elementOptions',
-          element.getOptions(),
-        );
+        showAppearanceTab();
       }
 
-      formHelpers.widgetFormEditAfterOpen(self.DOMObject, element.subType);
-    } else if (
-      element.type === 'region' &&
-      typeof window.regionFormEditOpen === 'function'
-    ) {
-      window.regionFormEditOpen.bind(self.DOMObject)();
-    }
-
-    // Check for spacing issues on text fields
-    forms.checkForSpacingIssues(self.DOMObject);
-
-    // Save form data
-    self.formSerializedLoadData = self.DOMObject.find('form').serialize();
-
-    // If we're not in read only mode
-    if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
-      // Handle buttons
-      self.DOMObject.find('.properties-panel-btn').click(function(e) {
-        if ($(e.target).data('action')) {
-          self[$(e.target).data('action')](
-            element,
-            $(e.target).data('subAction'),
-          );
-        }
-      });
-
-      // Handle back button based on form page
+      // If we need to render the element properties
       if (
-        self.DOMObject.find('form').data('formStep') != undefined &&
-        self.DOMObject.find('form').data('formStep') > 1
+        renderElements
       ) {
-        self.DOMObject.find('button#back').removeClass('d-none');
-      } else {
-        self.DOMObject.find('button#back').addClass('d-none');
-      }
+        // Get element properties
+        targetAux.getProperties().then((properties) => {
+          // Create a clone of properties
+          // so we don't modify the original object
+          properties = JSON.parse(JSON.stringify(properties));
 
-      // Handle delete button
-      if (actionEditMode) {
-        self.DOMObject.find('button#delete').removeClass('d-none');
-      } else {
-        self.DOMObject.find('button#delete').addClass('d-none');
-      }
+          forms.createFields(
+            properties,
+            self.DOMObject.find('#appearanceTab'),
+            targetAux.elementId,
+            null,
+            null,
+            true,
+          );
 
-      // Handle keyboard keys
-      self.DOMObject.off('keydown').keydown(function(handler) {
-        if (handler.key == 'Enter' && !$(handler.target).is('textarea')) {
-          self.save(element, $(handler.target).data('subAction'));
-        }
-      });
+          // Show the appearance tab
+          showAppearanceTab(true);
 
-      // Render action tab
-      if (app.mainObjectType === 'layout') {
-        self.renderActionTab(element, {
-          reattach: actionEditMode,
+          // Also Init fields for the element
+          self.initFields(targetAux, res.data, actionEditMode, true);
+
+          // When we change the element fields, save them
+          self.DOMObject.find('[name].element-property').on(
+            'change',
+            function() {
+              self.saveElement(
+                targetAux,
+                self.DOMObject.find('[name].element-property'),
+              );
+            },
+          );
         });
       }
     }
 
-    // Call Xibo Init for this form
-    XiboInitialise(
-      '#' + self.DOMObject.attr('id'),
-      (element.type == 'widget') ?
-        {targetId: element.widgetId} :
-        null,
-    );
-
-    // For the layout properties, call background Setup
-    // TODO Move method to a common JS file
-    if (element.type == 'layout') {
-      backGroundFormSetup(self.DOMObject);
-    }
-
-    // Make form read only
-    if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
-      self.makeFormReadOnly();
-    }
-
-    // if a tab was previously selected, select it again
-    if (self.openTabOnRender != '') {
-      // Open tab
-      self.DOMObject.find(self.openTabOnRender).tab('show');
-
-      // Reset flag
-      self.openTabOnRender = '';
-    }
-
-    // Initialise tooltips
-    app.common.reloadTooltips(
-      self.DOMObject,
-      {
-        position: 'left',
-      },
-    );
+    // Init fields
+    self.initFields(target, res.data, actionEditMode);
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -496,6 +536,156 @@ PropertiesPanel.prototype.render = function(
       toastr.error(errorMessagesTrans.getFormFailed, errorMessagesTrans.error);
     }
   });
+};
+
+/**
+ * Initialise the form fields
+ * @param {*} target The target object
+ * @param {*} data The data to be used
+ * @param {boolean} actionEditMode - render while editing an action
+ * @param {boolean} elementProperties - render element properties
+ */
+PropertiesPanel.prototype.initFields = function(
+  target,
+  data,
+  actionEditMode = false,
+  elementProperties = false,
+) {
+  const self = this;
+  const app = this.parent;
+  const targetIsElement = (target.type === 'element');
+
+  // Set condition and handle replacements
+  forms.handleFormReplacements(self.DOMObject.find('form'), data);
+  forms.setConditions(
+    self.DOMObject.find('form'),
+    data,
+    (elementProperties) ? target.elementId : target.widgetId,
+    (target.parent && target.parent.isTopLevel != undefined) ?
+      target.parent.isTopLevel : true,
+  );
+
+  // Run form open module optional function
+  if (target.type === 'widget') {
+    // Pass widget options to the form as data
+    if (target.getOptions != undefined) {
+      self.DOMObject.find('form').data(
+        'elementOptions',
+        target.getOptions(),
+      );
+    }
+
+    formHelpers.widgetFormEditAfterOpen(self.DOMObject, target.subType);
+  } else if (
+    target.type === 'region' &&
+    typeof window.regionFormEditOpen === 'function'
+  ) {
+    window.regionFormEditOpen.bind(self.DOMObject)();
+  }
+
+  // Check for spacing issues on text fields
+  forms.checkForSpacingIssues(self.DOMObject);
+
+  // Save form data if not a element
+  // and avoid saving element specific inputs
+  if (!targetIsElement) {
+    self.formSerializedLoadData =
+      self.DOMObject.find('form [name]:not(.element-property)').serialize();
+  }
+
+  // If we're not in read only mode
+  if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
+    // Handle buttons
+    self.DOMObject.find('.properties-panel-btn').off().click(function(e) {
+      if ($(e.target).data('action')) {
+        self[$(e.target).data('action')](
+          target,
+          $(e.target).data('subAction'),
+        );
+      }
+    });
+
+    // Handle back button based on form page
+    if (
+      self.DOMObject.find('form').data('formStep') != undefined &&
+      self.DOMObject.find('form').data('formStep') > 1
+    ) {
+      self.DOMObject.find('button#back').removeClass('d-none');
+    } else {
+      self.DOMObject.find('button#back').addClass('d-none');
+    }
+
+    // Handle delete button
+    if (actionEditMode) {
+      self.DOMObject.find('button#delete').removeClass('d-none');
+    } else {
+      self.DOMObject.find('button#delete').addClass('d-none');
+    }
+
+    // Handle keyboard keys
+    self.DOMObject.off('keydown').keydown(function(handler) {
+      if (handler.key == 'Enter' && !$(handler.target).is('textarea')) {
+        self.save(target, $(handler.target).data('subAction'));
+      }
+    });
+
+    // Render action tab
+    if (
+      app.mainObjectType === 'layout' &&
+      !targetIsElement
+    ) {
+      self.renderActionTab(target, {
+        reattach: actionEditMode,
+      });
+    }
+  }
+
+  // Xibo Init options
+  let xiboInitOptions = null;
+  if (target.type == 'widget') {
+    xiboInitOptions = {
+      targetId: target.widgetId,
+    };
+  } else if (elementProperties) {
+    xiboInitOptions = {
+      targetId: target.elementId,
+      elementProperties: true,
+    };
+  }
+
+  // Call Xibo Init for this form
+  XiboInitialise(
+    '#' + self.DOMObject.attr('id'),
+    xiboInitOptions,
+  );
+
+  // For the layout properties, call background Setup
+  // TODO Move method to a common JS file
+  if (target.type == 'layout') {
+    backGroundFormSetup(self.DOMObject);
+  }
+
+  // Make form read only
+  if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
+    self.makeFormReadOnly();
+  }
+
+  // if a tab was previously selected, select it again
+  if (self.openTabOnRender != '') {
+    // Open tab
+    self.DOMObject.find(self.openTabOnRender).tab('show');
+
+    // Reset flag
+    self.openTabOnRender = '';
+  }
+
+  // Initialise tooltips
+  app.common.reloadTooltips(
+    self.DOMObject,
+    {
+      position: 'left',
+    },
+  );
 };
 
 /**
@@ -521,7 +711,7 @@ PropertiesPanel.prototype.saveRegion = function() {
   if (form.valid() && self.formSerializedLoadData != formNewData) {
     // Add a save form change to the history array
     // with previous form state and the new state
-    app.manager.addChange(
+    app.historyManager.addChange(
       'saveForm',
       element.type, // targetType
       element[element.type + 'Id'], // targetId
@@ -547,7 +737,7 @@ PropertiesPanel.prototype.saveRegion = function() {
         errorMessage += error.errorThrown;
       }
       // Remove added change from the history manager
-      app.manager.removeLastChange();
+      app.historyManager.removeLastChange();
 
       // Display message in form
       formHelpers.displayErrorMessage(form, errorMessage, 'danger');

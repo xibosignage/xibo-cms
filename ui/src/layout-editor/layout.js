@@ -2,6 +2,7 @@
 const Region = require('../layout-editor/region.js');
 const Canvas = require('../layout-editor/canvas.js');
 const Widget = require('../editor-core/widget.js');
+const Element = require('../editor-core/element.js');
 
 /**
  * Layout contructor
@@ -37,6 +38,8 @@ const Layout = function(id, data) {
   this.duration = null;
 
   this.drawer = {};
+
+  this.canvas = {};
 
   this.width = data.width;
   this.height = data.height;
@@ -98,6 +101,10 @@ Layout.prototype.createDataStructure = function(data) {
         new Canvas(
           data.regions[region].regionId,
           data.regions[region],
+          {
+            width: this.width,
+            height: this.height,
+          },
         );
 
       // Save index
@@ -106,6 +113,7 @@ Layout.prototype.createDataStructure = function(data) {
       // Widgets
       const widgets = newRegion.playlists.widgets;
 
+      // Set number of widgets
       newRegion.numWidgets = widgets.length;
 
       // Create widgets for this region
@@ -124,7 +132,7 @@ Layout.prototype.createDataStructure = function(data) {
           // Mark the widget as sortable if region can be sorted/edited
           newWidget.isSortable = newRegion.isEditable;
 
-          newWidget.designerObject = lD;
+          newWidget.editorObject = lD;
 
           newWidget.parent = newRegion;
 
@@ -133,6 +141,32 @@ Layout.prototype.createDataStructure = function(data) {
 
           // Check if widget is enabled
           newWidget.checkIfEnabled();
+
+          // If region is a canvas, check if widget has elements
+          if (isCanvas) {
+            const widgetOptions = newWidget.getOptions();
+            const widgetElements =
+              (widgetOptions && widgetOptions.elements) ?
+                newWidget.getOptions().elements[0].elements :
+                [];
+
+            for (let index = 0; index < widgetElements.length; index++) {
+              const element = widgetElements[index];
+
+              // Generate temporary ID
+              element.elementId =
+                'element_' + Math.floor(Math.random() * 1000000);
+
+              // Save element type from widget sub type
+              element.elementType = newWidget.subType;
+
+              newWidget.elements[element.elementId] = new Element(
+                element,
+                newWidget.widgetId,
+                data.regions[region].regionId,
+              );
+            }
+          }
 
           // Add newWidget to the Region widget object
           newRegion.widgets[newWidget.id] = newWidget;
@@ -148,12 +182,12 @@ Layout.prototype.createDataStructure = function(data) {
       // Set region duration
       newRegion.duration = regionDuration;
 
-      // Push Region to the Layout region array
-      this.regions[newRegion.id] = newRegion;
-
-      // If it's a canvas, save region also to the layout
+      // If it's a canvas, save region as a canvas
       if (isCanvas) {
-        this.canvas = this.regions[newRegion.id];
+        this.canvas = newRegion;
+      } else {
+        // Push Region to the Layout region array
+        this.regions[newRegion.id] = newRegion;
       }
 
       // update layoutDuration if the current regions is the longest one
@@ -468,7 +502,7 @@ Layout.prototype.addElement = function(
 
   // Add a create change to the history array, and
   // an option to update the Id on the change to the newly created object
-  return lD.manager.addChange(
+  return lD.historyManager.addChange(
     'create',
     elementType, // targetType
     null, // targetId
@@ -492,9 +526,12 @@ Layout.prototype.deleteElement =
     lD.common.showLoadingScreen('deleteElement');
 
     // Save all changes first
-    return lD.manager.saveAllChanges().then((res) => {
+    return lD.historyManager.saveAllChanges().then((res) => {
     // Remove changes from the history array
-      return lD.manager.removeAllChanges(elementType, elementId).then((res) => {
+      return lD.historyManager.removeAllChanges(
+        elementType,
+        elementId,
+      ).then((res) => {
       // Unselect selected object before deleting
         lD.selectObject();
 
@@ -502,7 +539,7 @@ Layout.prototype.deleteElement =
 
         // Create a delete type change, upload it
         // but don't add it to the history array
-        return lD.manager.addChange(
+        return lD.historyManager.addChange(
           'delete',
           elementType, // targetType
           elementId, // targetId
@@ -560,7 +597,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
     });
   }
 
-  return lD.manager.addChange(
+  return lD.historyManager.addChange(
     'order',
     'playlist',
     playlist.playlistId,
@@ -707,7 +744,7 @@ Layout.prototype.createDrawer = function(drawerData) {
       // Save index
       newWidget.index = parseInt(widget) + 1;
 
-      newWidget.designerObject = lD;
+      newWidget.editorObject = lD;
 
       newWidget.parent = newDrawer;
 
@@ -748,6 +785,53 @@ Layout.prototype.createDrawer = function(drawerData) {
 
   // Push Region to the Layout region array
   this.drawer = newDrawer;
+};
+
+/**
+ * Create or get canvas region
+ * @param {object} canvasData - Canvas data
+ * @return {Promise} Promise with the canvas region
+ */
+Layout.prototype.getCanvas = function() {
+  const self = this;
+  // If we have a canvas already, return it
+  if (!$.isEmptyObject(this.canvas)) {
+    return Promise.resolve(this.canvas);
+  }
+
+  // Create canvas as a region
+  // return promise
+  return new Promise(function(resolve, reject) {
+    // Create canvas as a region
+    // always add to the top left
+    // and with the same dimensions as the layout
+    self.addElement(
+      'region',
+      {
+        elementSubtype: 'canvas',
+        positionToAdd: {
+          top: 0,
+          left: 0,
+        },
+        dimensions: {
+          width: self.width,
+          height: self.height,
+        },
+      }).then((res) => {
+      // Push Region to the Layout region array
+      self.canvas = new Canvas(
+        res.id,
+        res.data,
+        {
+          width: self.width,
+          height: self.height,
+        },
+      );
+
+      // Return the canvas
+      resolve(self.canvas);
+    });
+  });
 };
 
 /**

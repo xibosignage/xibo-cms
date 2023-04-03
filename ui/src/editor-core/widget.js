@@ -21,7 +21,6 @@
 
 /* eslint-disable new-cap */
 // WIDGET Module
-
 const EXPIRE_STATUS_MSG_MAP = [
   '',
   widgetStatusTrans.setToStart,
@@ -37,6 +36,8 @@ const EXPIRE_STATUS_ICON_MAP = [
   'fa-calendar-check-o',
   'fa-calendar-times-o',
 ];
+
+const Element = require('../editor-core/element.js');
 
 /**
  * Widget contructor
@@ -54,6 +55,9 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   } else {
     this.id = 'widget_' + id; // widget_widgetID
   }
+
+  // Widget elements
+  this.elements = {};
 
   this.widgetName = data.name;
 
@@ -199,6 +203,13 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
 
         if (currOption.type === 'attrib') {
           options[currOption.option] = currOption.value;
+        } else if (currOption.type === 'raw') {
+          try {
+            options[currOption.option] = JSON.parse(currOption.value);
+          } catch (e) {
+            // If we can't parse the JSON, just set the value as a string
+            options[currOption.option] = currOption.value;
+          }
         }
       }
     }
@@ -315,7 +326,7 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
      */
   this.checkIfEnabled = function() {
     // Check if module is enabled
-    const module = this.designerObject.common.getModuleByType(this.subType);
+    const module = this.editorObject.common.getModuleByType(this.subType);
     this.enabled = !$.isEmptyObject(module);
 
     // Override properties if not enabled
@@ -359,7 +370,7 @@ Widget.prototype.createClone = function() {
 Widget.prototype.editPropertyForm = function(property, type) {
   const self = this;
 
-  const app = this.designerObject;
+  const app = this.editorObject;
 
   // Load form the API
   const linkToAPI = urlsForApi.widget['get' + property];
@@ -422,7 +433,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
             };
           }
 
-          app.manager.addChange(
+          app.historyManager.addChange(
             'save' + property,
             'widget', // targetType
             self.widgetId, // targetId
@@ -547,7 +558,7 @@ Widget.prototype.editPermissions = function() {
  */
 Widget.prototype.getNextWidget = function(reverse = false) {
   // Get main app
-  const app = this.designerObject;
+  const app = this.editorObject;
 
   // Get region widgets
   const region = app.getElementByTypeAndId('region', this.regionId);
@@ -566,6 +577,105 @@ Widget.prototype.getNextWidget = function(reverse = false) {
   }
 
   return false;
+};
+
+
+/**
+ * Save elements to widget
+ * @param {object} elements - elements to save
+ * @return {Promise} - Promise
+ */
+Widget.prototype.saveElements = function(
+  elements,
+) {
+  const widgetId = this.widgetId;
+  const linkToAPI = urlsForApi.widget.saveElements;
+  const requestPath = linkToAPI.url.replace(':id', widgetId);
+
+  let elementsToSave = (elements) ? elements : this.elements;
+
+  // Convert element to the correct type
+  elementsToSave = Object.values(elementsToSave).map((element) => {
+    const elementObject = {
+      id: element.id,
+      left: element.left,
+      top: element.top,
+      width: element.width,
+      height: element.height,
+      layer: element.layer,
+      rotation: element.rotation,
+      properties: element.properties,
+    };
+    return elementObject;
+  });
+
+  // check if it's valid JSON
+  try {
+    JSON.parse(JSON.stringify(elementsToSave));
+  } catch (e) {
+    console.error('saveElementsToWidget', e);
+    return;
+  }
+
+  return $.ajax({
+    url: requestPath,
+    type: linkToAPI.type,
+    dataType: 'json',
+    data: JSON.stringify([
+      {
+        widgetId: widgetId,
+        elements: elementsToSave,
+      },
+    ]),
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.error('saveElementsToWidget', jqXHR, textStatus, errorThrown);
+  });
+};
+
+/**
+ * Add element to widget
+ * @param {object} element - element to add
+ * @param {boolean} save - if true, save changes to widget
+ */
+Widget.prototype.addElement = function(
+  element,
+  save = true,
+) {
+  // Add element to object
+  this.elements[element.elementId] = new Element(
+    element,
+    this.widgetId,
+    this.regionId,
+  );
+
+  // Save changes to widget
+  (save) && this.saveElements();
+};
+
+/**
+ * Remove element
+ * @param {string} elementId - id of the element to remove
+ * @param {boolean} save - if true, save changes to widget
+ */
+Widget.prototype.removeElement = function(
+  elementId,
+  save,
+) {
+  // Remove element from DOM
+  $(`#${elementId}`).remove();
+
+  // Remove element from object
+  delete this.elements[elementId];
+
+  // Save changes to widget
+  (save) && this.saveElements();
+
+  // If object is selected, remove it from selection
+  if (this.editorObject.selectedObject.elementId == elementId) {
+    this.editorObject.selectObject({
+      reloadViewer: true,
+    });
+  }
 };
 
 module.exports = Widget;
