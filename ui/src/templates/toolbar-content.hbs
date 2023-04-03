@@ -1,5 +1,5 @@
 <div id="content-{{menuIndex}}"
-    class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}toolbar-library-pane{{/if}}"
+    class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#eq contentType 'media'}}toolbar-library-pane{{/eq}}"
     data-menu-index="{{menuIndex}}"
 >
     
@@ -9,45 +9,42 @@
         </div>
         <div class="content-title">{{title}}</div>
     </div>
-    {{#if search}}
-        {{!-- Show search container --}}
-        <div id="media-container-{{menuIndex}}" class="toolbar-pane-container"></div>
-    {{else if content}}
-        <form id="module-search-form" class="module-search-form">
-            <div class="form-group">
-                <input id="module-name" placeholder="{{trans.searchFilters.search}}" name="module-name" type="text" class="form-control input-name" value="{{ filters.name.value }}">
-            </div>
-        </form>
+
+    {{#if content}}
+        {{> toolbar-search-form trans=trans filters=filters class="module-search-form" autocomplete="off"}}
 
         <div class="toolbar-pane-container">
             <div class="toolbar-pane-content">
-                {{!-- Show content elements if not marked as hidden --}}
-                {{#if content.elementsFavs}}
+                {{!-- Show content cards if not marked as hidden --}}
+                {{#if content.favourites}}
                     <div class="toolbar-header">{{trans.favourites}}</div>
                 {{/if}}
-                {{#each content.elementsFavs}}
-                    {{#unless hideElement}}
+                {{#each content.favourites}}
+                    {{#unless hideCard}}
                         {{!-- Load cards according to type searchItem/Widget --}}
                         {{> toolbar-card contentType=../name trans=../trans icon=../iconType}}
                     {{/unless}}
                 {{/each}}
 
-                {{#if content.elements}}
+                {{#if content.cards}}
                     <div class="toolbar-header">{{content.contentHeader}}</div>
                 {{/if}}
-                {{#each content.elements}}
-                    {{#unless hideElement}}
+                {{#each content.cards}}
+                    {{#unless hideCard}}
                         {{!-- Load cards according to type searchItem/Widget --}}
                         {{> toolbar-card contentType=../name trans=../trans icon=../iconType}}
                     {{/unless}}
                 {{/each}}
 
-                {{#unless content.elementsFavs}}
-                    {{#unless content.elements}}
-                        <div class="no-results-message">{{ content.noElementsToShow }}</div>
+                {{#unless content.favourites}}
+                    {{#unless content.cards}}
+                        <div class="no-results-message">{{ content.noCardsToShow }}</div>
                     {{/unless}}
                 {{/unless}}
             </div>
         </div>
+    {{else}}
+        {{!-- Show generic container --}}
+        <div id="{{contentType}}-container-{{menuIndex}}" class="toolbar-pane-container"></div>
     {{/if}}
 </div>

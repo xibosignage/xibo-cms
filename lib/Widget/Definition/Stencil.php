@@ -55,6 +55,7 @@ class Stencil implements \JsonSerializable
         return [
             'hbsId' => $this->hbsId,
             'hbs' => $this->hbs,
+            'twig' => $this->twig,
             'width' => $this->width,
             'height' => $this->height,
             'gapBetweenHbs' => $this->gapBetweenHbs,

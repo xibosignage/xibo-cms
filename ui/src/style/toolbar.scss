@@ -46,9 +46,12 @@
 
             &.media-search-form {
                 padding: 0;
+                padding-bottom: 1rem;
                 display: flex;
                 flex-direction: row;
                 flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
 
                 .form-group {
                     width: calc(50% - 4px);
@@ -494,7 +497,7 @@
                 }
             }
 
-            &.toolbar-widgets-pane, &.toolbar-actions-pane {
+            &.toolbar-widgets-pane, &.toolbar-actions-pane, &.toolbar-global-pane {
                 .toolbar-card {
                     cursor: pointer;
                     min-height: $toolbar-widgets-card-height;
@@ -597,7 +600,7 @@
                 }
             }
 
-            &.toolbar-elements-pane,
+            &.toolbar-cards-pane,
             &.toolbar-group-pane {
                 .content-header {
                     background-color: $xibo-color-primary-l60;

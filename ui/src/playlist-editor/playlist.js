@@ -53,7 +53,7 @@ Playlist.prototype.createDataStructure = function(data) {
       }
 
       // Save designer object for later use
-      newWidget.designerObject = pE;
+      newWidget.editorObject = pE;
 
       // Save parent region
       newWidget.parent = this;
@@ -223,7 +223,7 @@ Playlist.prototype.addElement = function(
         addOptions.templateId = draggableData.templateId;
       }
 
-      pE.manager.addChange(
+      pE.historyManager.addChange(
         'addWidget',
         'playlist', // targetType
         playlistId, // targetId
@@ -261,7 +261,7 @@ Playlist.prototype.addElement = function(
         }
 
         // Remove added change from the history manager
-        pE.manager.removeLastChange();
+        pE.historyManager.removeLastChange();
 
         // Show toast message
         toastr.error(errorMessage);
@@ -310,7 +310,7 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
   }
 
   // Create change to be uploaded
-  pE.manager.addChange(
+  pE.historyManager.addChange(
     'addMedia',
     'playlist', // targetType
     playlistId, // targetId
@@ -363,12 +363,15 @@ Playlist.prototype.deleteElement = function(
   pE.common.showLoadingScreen();
 
   // Remove changes from the history array
-  return pE.manager.removeAllChanges(elementType, elementId).then((res) => {
+  return pE.historyManager.removeAllChanges(
+    elementType,
+    elementId,
+  ).then((res) => {
     pE.common.hideLoadingScreen();
 
     // Create a delete type change
     // upload it but don't add it to the history array
-    return pE.manager.addChange(
+    return pE.historyManager.addChange(
       'delete',
       elementType, // targetType
       elementId, // targetId
@@ -425,7 +428,7 @@ Playlist.prototype.saveOrder = function(widgets) {
     });
   }
 
-  return pE.manager.addChange(
+  return pE.historyManager.addChange(
     'order',
     'playlist',
     this.playlistId,

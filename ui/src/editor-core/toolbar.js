@@ -5,12 +5,15 @@ const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
-const ToolbarContentMedia = require('../templates/toolbar-content-media.hbs');
-const ToolbarContentSubmenu =
+const ToolbarSearchFormTemplate =
+  require('../templates/toolbar-search-form.hbs');
+const ToolbarContentMediaTemplate =
+  require('../templates/toolbar-content-media.hbs');
+const ToolbarContentSubmenuTemplate =
   require('../templates/toolbar-content-submenu.hbs');
-const ToolbarContentSubmenuElements =
+const ToolbarContentSubmenuCardsTemplate =
   require('../templates/toolbar-content-submenu-elements.hbs');
-const ToolbarContentGroup =
+const ToolbarContentGroupTemplate =
   require('../templates/toolbar-content-group.hbs');
 const MediaPlayerTemplate = require('../templates/toolbar-media-preview.hbs');
 const MediaInfoTemplate =
@@ -35,8 +38,7 @@ const Toolbar = function(
   this.openedSubMenu = null;
 
   this.widgetMenuIndex = 0;
-  this.libraryMenuIndex = 4;
-  this.actionMenuIndex = 5;
+  this.libraryMenuIndex = 5;
 
   this.selectedCard = {};
 
@@ -78,9 +80,11 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
-    // If module is core-subplaylist and
-    // we aren't in playlist editor, skip it
-    if (el.type == 'subplaylist' && !isPlaylist) {
+    // Show/hide modules based on showIn property
+    if (
+      el.showIn == 'playlist' && !isPlaylist ||
+      el.showIn == 'layout' && isPlaylist
+    ) {
       return;
     }
 
@@ -107,9 +111,10 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     }
 
     // If we have thumbnail, add proper path
-    if (el.thumbnail) {
+    if (el.thumbnail && !el.thumbnailLoaded) {
       el.thumbnail =
         assetDownloadUrl.replace(':assetId', el.thumbnail);
+      el.thumbnailLoaded = true;
     }
 
     // Add card type ( to use group cards )
@@ -251,9 +256,11 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemTitle: toolbarTrans.menuItems.widgetsTitle,
       itemIcon: 'th-large',
       content: [],
+      contentType: 'modules',
       filters: {
         name: {
           value: '',
+          title: toolbarTrans.searchFilters.search,
         },
       },
       state: '',
@@ -261,17 +268,36 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       favouriteModules: [],
     },
     {
+      name: 'global',
+      disabled: isPlaylist ? true : false,
+      itemName: toolbarTrans.menuItems.globalElementsName,
+      itemIcon: 'font',
+      itemTitle: toolbarTrans.menuItems.globalElementsTitle,
+      contentType: 'elements',
+      filters: {
+        name: {
+          value: '',
+          title: toolbarTrans.searchFilters.search,
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+    {
       name: 'image',
       itemName: toolbarTrans.menuItems.imageName,
       itemIcon: 'image',
       itemTitle: toolbarTrans.menuItems.imageTitle,
-      search: true,
+      contentType: 'media',
       filters: {
         name: {
           value: '',
+          key: 'media',
         },
         tag: {
           value: '',
+          key: 'tags',
+          dataRole: 'tagsinput',
         },
         type: {
           value: 'image',
@@ -296,13 +322,16 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemName: toolbarTrans.menuItems.audioName,
       itemIcon: 'volume-up',
       itemTitle: toolbarTrans.menuItems.audioTitle,
-      search: true,
+      contentType: 'media',
       filters: {
         name: {
           value: '',
+          key: 'media',
         },
         tag: {
           value: '',
+          key: 'tags',
+          dataRole: 'tagsinput',
         },
         type: {
           value: 'audio',
@@ -324,13 +353,16 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemName: toolbarTrans.menuItems.videoName,
       itemIcon: 'video',
       itemTitle: toolbarTrans.menuItems.videoTitle,
-      search: true,
+      contentType: 'media',
       filters: {
         name: {
           value: '',
+          key: 'media',
         },
         tag: {
           value: '',
+          key: 'tags',
+          dataRole: 'tagsinput',
         },
         type: {
           value: 'video',
@@ -355,13 +387,16 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemName: toolbarTrans.menuItems.libraryName,
       itemIcon: 'archive',
       itemTitle: toolbarTrans.menuItems.libraryTitle,
-      search: true,
+      contentType: 'media',
       filters: {
         name: {
           value: '',
+          key: 'media',
         },
         tag: {
           value: '',
+          key: 'tags',
+          dataRole: 'tagsinput',
         },
         type: {
           value: '',
@@ -378,29 +413,25 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       state: '',
       itemCount: 0,
     },
-  ];
-
-  // Add actions to default menu items
-  // if we are using the layout editor and not the playlist editor
-  if (this.parent.mainObjectType === 'layout') {
-    defaultMenuItems.push(
-      {
-        name: 'actions',
-        iconType: 'actions',
-        itemName: toolbarTrans.menuItems.actionsName,
-        itemIcon: 'paper-plane',
-        itemTitle: toolbarTrans.menuItems.actionsTitle,
-        content: [],
-        filters: {
-          name: {
-            value: '',
-          },
+    {
+      name: 'actions',
+      disabled: isPlaylist ? true : false,
+      iconType: 'actions',
+      itemName: toolbarTrans.menuItems.actionsName,
+      itemIcon: 'paper-plane',
+      itemTitle: toolbarTrans.menuItems.actionsTitle,
+      contentType: 'actions',
+      content: [],
+      filters: {
+        name: {
+          value: '',
+          title: toolbarTrans.searchFilters.search,
         },
-        state: '',
-        itemCount: 0,
       },
-    );
-  }
+      state: '',
+      itemCount: 0,
+    },
+  ];
 
   // Menu items
   this.menuItems = defaultMenuItems;
@@ -408,7 +439,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Check if menu items based on modules are disabled
   const getModuleByTypeFunc = this.parent.common.getModuleByType;
   this.menuItems.forEach(function(el) {
-    if (el.search) { // validate only media menu options
+    if (el.contentType == 'media') { // validate only media menu options
       if (el.name == 'library') { // library needs its filters to be validated
         el.disabled = true;
         el.filters.type.values.forEach(function(el2) {
@@ -670,12 +701,24 @@ Toolbar.prototype.render = function() {
 
   // If there was a opened menu in the toolbar, open that tab
   if (this.openedMenu != undefined && this.openedMenu != -1) {
-    // Do we have opened sub menu?
-    const openedSubMenu =
-      this.openedSubMenu &&
-      this.openedSubMenu.parent == this.openedMenu;
+    // If menu is disabled, mark toolbar as closed
+    // and do not open the menu
+    if (this.menuItems[this.openedMenu].disabled === true) {
+      this.openedMenu = -1;
+      this.openedSubMenu = null;
 
-    this.openMenu(this.openedMenu, true, openedSubMenu);
+      // Close toolbar
+      this.DOMObject.find('nav').removeClass('opened');
+
+      return;
+    } else {
+      // Do we have opened sub menu?
+      const openedSubMenu =
+        this.openedSubMenu &&
+        this.openedSubMenu.parent == this.openedMenu;
+
+      this.openMenu(this.openedMenu, true, openedSubMenu);
+    }
   }
 };
 
@@ -688,42 +731,42 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
   // Make menu state to be active
   this.menuItems[menu].state = 'active';
 
-  if (this.menuItems[menu].name === 'widgets') {
+  if (this.menuItems[menu].contentType === 'modules') {
     // Sort by favourites
     const favouriteModules = [];
     const otherModules = [];
 
     for (let index = 0; index < this.customModuleList.length; index++) {
-      const element = this.customModuleList[index];
+      const card = this.customModuleList[index];
 
-      element.maxSize = libraryUpload.maxSize;
-      element.maxSizeMessage = libraryUpload.maxSizeMessage;
+      card.maxSize = libraryUpload.maxSize;
+      card.maxSizeMessage = libraryUpload.maxSizeMessage;
 
       // Filter elements
       if (
         this.menuItems[menu].filters.name.value &&
-        !element.name.toLowerCase().includes(
+        !card.name.toLowerCase().includes(
           this.menuItems[menu].filters.name.value.toLowerCase(),
         )
       ) {
         continue;
       }
 
-      if ($.inArray(element.type, this.menuItems[menu].favouriteModules) > -1) {
-        element.favourited = true;
-        favouriteModules.push(element);
+      if ($.inArray(card.type, this.menuItems[menu].favouriteModules) > -1) {
+        card.favourited = true;
+        favouriteModules.push(card);
       } else {
-        element.favourited = false;
-        otherModules.push(element);
+        card.favourited = false;
+        otherModules.push(card);
       }
     }
 
     // Add elements to menu content
     this.menuItems[menu].content = {
-      elementsFavs: favouriteModules,
-      elements: otherModules,
+      favourites: favouriteModules,
+      cards: otherModules,
       contentHeader: toolbarTrans.widgets,
-      noElementsToShow: toolbarTrans.noWidgetsToShow,
+      noCardsToShow: toolbarTrans.noWidgetsToShow,
     };
   } else if (this.menuItems[menu].name === 'actions') {
     const actionsFiltered = [];
@@ -744,13 +787,14 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
       actionsFiltered.push(element);
     }
 
-    // Add elements to menu content
+    // Add card to menu content
     this.menuItems[menu].content = {
-      elements: actionsFiltered,
+      cards: actionsFiltered,
       contentHeader: toolbarTrans.actions,
-      noElementsToShow: toolbarTrans.noActionsToShow,
+      noCardsToShow: toolbarTrans.noActionsToShow,
     };
   }
+
 
   this.DOMObject.find('#content-' + menu + ', #btn-menu-' + menu)
     .addClass('active');
@@ -783,8 +827,8 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
   // ( if force reload is true, skip this step)
   if (
     !forceReload &&
-    menu != self.widgetMenuIndex &&
-    menu != self.actionMenuIndex &&
+    this.menuItems[menu].contentType != 'modules' &&
+    this.menuItems[menu].contentType != 'actions' &&
     self.DOMObject
       .find(
         '#content-' +
@@ -792,7 +836,7 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
         ' .toolbar-pane-container .toolbar-card',
       ).length > 0
   ) {
-    // Recalculate masonry layout to refresh the elements positions
+    // Recalculate masonry layout to refresh the card positions
     self.DOMObject.find('#media-content-' + menu).masonry('layout');
 
     // Adapt card behaviour to current tab
@@ -807,13 +851,15 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
   // Append template to the search main div
   this.DOMObject.find('#content-' + menu).replaceWith(html);
 
-  if (content.search) {
+  if (content.contentType == 'media') {
     this.mediaContentCreateWindow(menu);
+  } else if (content.contentType == 'elements') {
+    this.elementsContentCreateWindow(menu);
   } else {
     this.handleCardsBehaviour();
 
     // Bind search action to refresh the results
-    this.DOMObject.find('#module-search-form input[type="text"]')
+    this.DOMObject.find('.module-search-form input[type="text"]')
       .on('input', _.debounce(function(e) {
         // eslint-disable-next-line no-invalid-this
         self.menuItems[menu].filters.name.value = $(this).val();
@@ -825,8 +871,8 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
     // Focus with cursor position
     const focusPosition = self.menuItems[menu].focus;
     if (focusPosition != undefined) {
-      $('#module-search-form input[type="text"]').focus();
-      $('#module-search-form input[type="text"]')[0]
+      $('.module-search-form input[type="text"]').focus();
+      $('.module-search-form input[type="text"]')[0]
         .setSelectionRange(focusPosition, focusPosition);
     }
   }
@@ -1059,7 +1105,7 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 };
 
 /**
- * Media form callback
+ * Create media content
  * @param {number} menu - menu index
  */
 Toolbar.prototype.mediaContentCreateWindow = function(menu) {
@@ -1069,7 +1115,7 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
   self.deselectCardsAndDropZones();
 
   // Render template
-  const html = ToolbarContentMedia({
+  const html = ToolbarContentMediaTemplate({
     menuIndex: menu,
     filters: this.menuItems[menu].filters,
     trans: toolbarTrans,
@@ -1337,6 +1383,33 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
   // Load data
   loadData();
 };
+
+/**
+ * Create elements content
+ * @param {number} menu - menu index
+ */
+Toolbar.prototype.elementsContentCreateWindow = function(menu) {
+  const self = this;
+  const $elementsContainer =
+    self.DOMObject.find('#elements-container-' + menu);
+
+  // Deselect previous selections
+  self.deselectCardsAndDropZones();
+
+  // Add search form before the elements container
+  const $searchForm = $(ToolbarSearchFormTemplate({
+    trans: toolbarTrans,
+    filters: this.menuItems[menu].filters,
+  }));
+  $elementsContainer.before($searchForm);
+
+  // Load content
+  self.loadTemplates(
+    $elementsContainer.parent(),
+    'global',
+  );
+};
+
 
 /**
  * Mark/Unmark as favourite
@@ -1729,17 +1802,23 @@ Toolbar.prototype.openSubMenu = function(
   };
 
   // Append HTML
-  $submenuContainer.addClass('toolbar-elements-pane');
+  $submenuContainer.addClass('toolbar-cards-pane');
   $submenuContainer.html(
-    ToolbarContentSubmenu({
+    ToolbarContentSubmenuTemplate({
       data: cardData,
       trans: toolbarTrans,
+      filters: {
+        name: {
+          value: '',
+          title: toolbarTrans.searchFilters.search,
+        },
+      },
     }),
   );
 
   // Handle back button
   $submenuContainer.find('.close-submenu').off().on('click', function() {
-    $submenuContainer.removeClass('toolbar-elements-pane');
+    $submenuContainer.removeClass('toolbar-cards-pane');
 
     // Clear submenu
     self.openedSubMenu = null;
@@ -1755,7 +1834,7 @@ Toolbar.prototype.openSubMenu = function(
   this.parent.common.clearTooltips();
 
   // Load content
-  self.loadSubMenu($submenuContainer, cardData.dataType, cardData.subType);
+  self.loadTemplates($submenuContainer, cardData.dataType, cardData.subType);
 
   // Save user preferences
   self.savePrefs();
@@ -1796,7 +1875,7 @@ Toolbar.prototype.openGroupMenu = function(
   // Append HTML
   $submenuContainer.addClass('toolbar-group-pane');
   $submenuContainer.html(
-    ToolbarContentGroup({
+    ToolbarContentGroupTemplate({
       data: cardData,
       content: content,
       trans: toolbarTrans,
@@ -1828,17 +1907,17 @@ Toolbar.prototype.openGroupMenu = function(
 };
 
 /**
- * Load content for submenu
- * @param {object} $container - Submenu container
+ * Load content for templates
+ * @param {object} $container - Templates container
  * @param  {object} contentType - Content type
  * @param  {object} moduleType - Module type
  */
-Toolbar.prototype.loadSubMenu = function($container, contentType, moduleType) {
+Toolbar.prototype.loadTemplates = function(
+  $container,
+  contentType,
+  moduleType,
+) {
   const self = this;
-  // Get request path
-  let requestPath = urlsForApi.module.getTemplates.url;
-  requestPath = requestPath.replace(':dataType', contentType);
-
   // Show loading
   $container.find('.toolbar-pane-container').before(
     `<div class="loading-container-toolbar w-100 text-center">
@@ -1846,80 +1925,84 @@ Toolbar.prototype.loadSubMenu = function($container, contentType, moduleType) {
     </div>`);
 
   // Get templates data
-  $.ajax({
-    url: requestPath,
-    type: urlsForApi.module.getTemplates.type,
-  }).done(function(res) {
-    const populateSubMenu = function() {
-      const elements = [];
-      const stencils = [];
-      const templates = [];
+  lD.templateManager.getTemplateByDataType(contentType)
+    .then(function(templatesData) {
+      const populateContent = function() {
+        const elements = [];
+        const stencils = [];
+        const templates = [];
 
-      // Get filter value
-      const filterValue = $container.find('#template-name').val();
+        // Get filter value
+        const filterValue = $container.find('#input-name').val();
 
-      // Tidy content
-      for (let i = 0; i < res.data.length; i++) {
-        const el = res.data[i];
-
-        // Add module type to the elements
-        el.subType = moduleType;
-
-        // Filter elements
-        if (filterValue && filterValue.length > 0) {
-          if (el.title.toLowerCase().indexOf(filterValue.toLowerCase()) == -1) {
+        // Loop through templates data object
+        for (const key in templatesData) {
+          if (!templatesData.hasOwnProperty(key)) {
             continue;
+          }
+
+          const el = templatesData[key];
+
+          // Add module type to the elements
+          el.subType = moduleType;
+
+          // Filter elements
+          if (filterValue && filterValue.length > 0) {
+            if (
+              el.title.toLowerCase().indexOf(filterValue.toLowerCase()) == -1
+            ) {
+              continue;
+            }
+          }
+
+          // Add thumbnail url if thumbail property is present
+          if (el.thumbnail && !el.thumbnailLoaded) {
+            el.thumbnail =
+              assetDownloadUrl.replace(':assetId', el.thumbnail);
+            el.thumbnailLoaded = true;
+          }
+
+          if (el.type === 'element') {
+            elements.push(el);
+          } else if (el.type === 'element-group') {
+            stencils.push(el);
+          } else if (el.type === 'static') {
+            templates.push(el);
           }
         }
 
-        // Add thumbnail url if thumbail property is present
-        if (el.thumbnail) {
-          el.thumbnail =
-            assetDownloadUrl.replace(':assetId', el.thumbnail);
-        }
+        // Remove loading
+        $container.find('.loading-container-toolbar')
+          .remove();
 
-        if (el.type === 'element') {
-          elements.push(el);
-        } else if (el.type === 'element-group') {
-          stencils.push(el);
-        } else if (el.type === 'static') {
-          templates.push(el);
-        }
-      }
+        $container.find('.toolbar-pane-container').html(
+          ToolbarContentSubmenuCardsTemplate({
+            elements: elements,
+            stencils: stencils,
+            templates: templates,
+            trans: toolbarTrans,
+          }),
+        );
 
-      // Remove loading
-      $container.find('.loading-container-toolbar')
-        .remove();
+        // Initialise tooltips
+        self.parent.common.reloadTooltips(
+          $container,
+        );
 
-      $container.find('.toolbar-pane-container').html(
-        // TODO: Don't send elements and stencils for now
-        ToolbarContentSubmenuElements({
-          elements: [], // elements,
-          stencils: [], // stencils,
-          templates: templates,
-          trans: toolbarTrans,
-        }),
-      );
+        // Handle cards behaviour
+        self.handleCardsBehaviour();
 
-      // Initialise tooltips
-      self.parent.common.reloadTooltips(
-        $container,
-      );
+        // Save user preferences
+        self.savePrefs();
+      };
 
-      // Handle cards behaviour
-      self.handleCardsBehaviour();
-    };
+      // Handle name filter change
+      $container.find('#input-name').off()
+        .on('input', _.debounce(populateContent, 500));
 
-    // Handle name filter change
-    $container.find('#template-name').off()
-      .on('input', _.debounce(populateSubMenu, 500));
-
-    // Call populate content on load
-    populateSubMenu();
-  }).catch(function(jqXHR, textStatus, errorThrown) {
-    console.error(jqXHR, textStatus, errorThrown);
-    toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
-  });
+      // Call populate content on load
+      populateContent();
+    });
 };
 
 module.exports = Toolbar;

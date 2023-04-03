@@ -25,26 +25,182 @@
         <type>element</type>
         <dataType>global</dataType>
         <canRotate>true</canRotate>
+        <thumbnail>text-thumb</thumbnail>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
         <properties>
-            <property></property>
+            <property id="text" type="text">
+                <title>Text</title>
+                <default>Text</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>40</default>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+            <property id="background" type="checkbox">
+                <title>Show Background Color</title>
+                <default>0</default>
+                <helpText>Should the widget have a background color?</helpText>
+            </property>
+            <property id="backgroundColor" type="color">
+                <title>Background Color</title>
+                <visibility>
+                    <test>
+                        <condition field="background" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Color</title>
+                <default>#555</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
         </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="text-render-container"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if background}}background-color: {{backgroundColor}};{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}white-space: normal;{{else}}white-space: nowrap;{{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+{{text}}
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="text-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/text.png" />
+        </assets>
     </template>
     <template>
         <id>rectangle</id>
         <title>Rectangle</title>
         <type>element</type>
         <dataType>global</dataType>
+        <thumbnail>square-thumb</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
         <properties>
-            <property></property>
+            <property id="backgroundColor" type="color">
+                <title>Background Color</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the square have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Color</title>
+                <default>#e5de41</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>4</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
         </properties>
-    </template>
-    <template>
-        <id>star</id>
-        <title>Star</title>
-        <type>element</type>
-        <dataType>global</dataType>
-        <properties>
-            <property></property>
-        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="rectangle-container"
+    style="background-color: {{backgroundColor}};
+    {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="square-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/square.png" />
+        </assets>
     </template>
 </templates>

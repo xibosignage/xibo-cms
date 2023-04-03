@@ -1,14 +1,19 @@
-<div class="toolbar-card toolbar-card-stencil" 
+<div class="toolbar-card toolbar-card-stencil {{#if thumbnail}}has-thumb{{/if}}" 
     data-toggle="tooltip" 
     data-type="element" 
     data-sub-type="{{type}}"
     data-data-type="{{dataType}}"
+    data-target="{{#if target}}{{target}}{{else}}layout{{/if}}"
     data-template-id="{{templateId}}"
     data-title="{{title}}">
 
-    <div class="select-button">
-        <i class="fa fa-check selectedShow"></i>
+{{#if thumbnail}}
+    <div class="toolbar-card-thumb">
+        <img src="{{thumbnail}}" />
     </div>
+{{/if}}
     
-    <span class="card-title">{{title}}</span>
+    <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
+        <span class="card-title">{{title}}</span>
+    </div>
 </div>

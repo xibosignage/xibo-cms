@@ -1728,6 +1728,8 @@ const formHelpers = function() {
 
               if (currOption.type === 'attrib') {
                 widgetOptions[currOption.option] = currOption.value;
+              } else if (currOption.type === 'raw') {
+                widgetOptions[currOption.option] = JSON.parse(currOption.value);
               }
             }
           }

@@ -46,5 +46,6 @@ window.templates = {
       require('./src/templates/forms/inputs/connectorProperties.hbs'),
     playlistMixer: require('./src/templates/forms/inputs/playlistMixer.hbs'),
     snippet: require('./src/templates/forms/inputs/snippet.hbs'),
+    textArea: require('./src/templates/forms/inputs/textArea.hbs'),
   },
 };

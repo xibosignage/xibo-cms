@@ -85,6 +85,12 @@
                     </span>
                 {{/ifCond}}
             </div>
+        {{else eq element.type "element"}}
+            <div class="info d-inline">
+                <span class="label-name align-middle" title="{{element.name}}">
+                    {{element.elementType}} - {{element.id}} ({{element.type}})
+                </span>
+            </div>
         {{else}}
             <div class="info d-inline">
                 <span class="label-name align-middle" title="{{element.name}}">

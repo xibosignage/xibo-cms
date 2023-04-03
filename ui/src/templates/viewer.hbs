@@ -11,6 +11,9 @@
 >
     {{!-- Render Layout --}}
     <div class="layout-live-preview">
+        {{#with layout.canvas}}
+            <div id="{{id}}" class="designer-region-canvas"></div>
+        {{/with}}
         <div id="regions">
             {{#each layout.regions}}
                 {{> viewer-region}}

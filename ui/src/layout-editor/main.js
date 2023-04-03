@@ -37,10 +37,12 @@ const confirmationModalTemplate =
 const Layout = require('../layout-editor/layout.js');
 const Viewer = require('../layout-editor/viewer.js');
 const PropertiesPanel = require('../editor-core/properties-panel.js');
-const Manager = require('../editor-core/manager.js');
+const HistoryManager = require('../editor-core/history-manager.js');
+const TemplateManager = require('../layout-editor/template-manager.js');
 const Toolbar = require('../editor-core/toolbar.js');
 const Topbar = require('../editor-core/topbar.js');
 const Bottombar = require('../editor-core/bottombar.js');
+const Widget = require('../editor-core/widget.js');
 
 // Common funtions/tools
 const Common = require('../editor-core/common.js');
@@ -67,8 +69,11 @@ window.lD = {
   // Layout
   layout: {},
 
-  // Manager
-  manager: {},
+  // History Manager
+  historyManager: {},
+
+  // Template manager
+  templateManager: {},
 
   // Viewer
   viewer: {},
@@ -122,6 +127,11 @@ $(() => {
         ),
       );
 
+      // Initialize template manager
+      lD.templateManager = new TemplateManager(
+        lD,
+      );
+
       // Create layout
       lD.layout = new Layout(layoutId, res.data[0]);
 
@@ -132,7 +142,7 @@ $(() => {
       lD.folderId = lD.layout.folderId;
 
       // Initialize manager
-      lD.manager = new Manager(
+      lD.historyManager = new HistoryManager(
         lD,
         lD.editorContainer.find('#layout-manager'),
         false, // (serverMode == 'Test') Turn of manager visibility for now
@@ -440,6 +450,7 @@ lD.selectObject =
             }
           } else {
             if (
+              this.layout.regions[this.selectedObject.regionId] &&
               this.layout.regions[this.selectedObject.regionId]
                 .widgets[this.selectedObject.id]
             ) {
@@ -451,6 +462,17 @@ lD.selectObject =
 
           break;
 
+        case 'element':
+          const parentRegion = this.selectedObject.regionId;
+          const parentWidget = this.selectedObject.widgetId;
+
+          const element = this.layout.canvas.widgets[
+            'widget_' + parentRegion + '_' + parentWidget
+          ].elements[this.selectedObject.elementId];
+
+          if (element) {
+            element.selected = false;
+          }
         default:
           break;
         }
@@ -484,6 +506,16 @@ lD.selectObject =
                 this.layout.regions[target.data('widgetRegion')]
                   .widgets[newSelectedId];
           }
+        } else if (newSelectedType === 'element') {
+          const parentRegion = target.data('regionId');
+          const parentWidget = target.data('widgetId');
+
+          const element = this.layout.canvas.widgets[
+            'widget_' + parentRegion + '_' + parentWidget
+          ].elements[newSelectedId];
+
+          element.selected = true;
+          this.selectedObject = element;
         }
 
         this.selectedObject.type = newSelectedType;
@@ -512,7 +544,7 @@ lD.refreshEditor = function(
   this.bottombar.render(this.selectedObject);
 
   // Manager ( hidden )
-  this.manager.render();
+  this.historyManager.render();
 
   // Properties panel and viewer
   this.propertiesPanel.render(this.selectedObject);
@@ -891,7 +923,7 @@ lD.loadFormFromAPI = function(
 lD.undoLastAction = function() {
   lD.common.showLoadingScreen('undoLastAction');
 
-  lD.manager.revertChange().then((res) => { // Success
+  lD.historyManager.revertChange().then((res) => { // Success
     toastr.success(res.message);
 
     // Refresh designer according to local or API revert
@@ -923,12 +955,18 @@ lD.undoLastAction = function() {
 
 /**
  * Delete selected object
+ * @param {boolean} showConfirmModal - Show confirm modal
  */
-lD.deleteSelectedObject = function() {
+lD.deleteSelectedObject = function(
+  showConfirmModal = true,
+) {
   // For now, we always delete the region
   if (lD.selectedObject.type === 'region') {
     lD.deleteObject(
-      lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id'],
+      lD.selectedObject.type,
+      lD.selectedObject[lD.selectedObject.type + 'Id'],
+      null,
+      showConfirmModal,
     );
   } else if (lD.selectedObject.type === 'widget') {
     // Delete widget's region
@@ -937,10 +975,22 @@ lD.deleteSelectedObject = function() {
     lD.deleteObject(
       'region',
       regionId,
+      null,
+      showConfirmModal,
+    );
+  } else if (lD.selectedObject.type === 'element') {
+    // Delete element
+    lD.deleteObject(
+      lD.selectedObject.type,
+      lD.selectedObject[lD.selectedObject.type + 'Id'],
+      'widget_' + lD.selectedObject.regionId + '_' + lD.selectedObject.widgetId,
+      showConfirmModal,
     );
   }
 };
 
+
+// TODO: can we remove this?
 /**
  * Delete dragged object
  * @param {object} draggable - "jqueryui droppable" ui draggable object
@@ -966,8 +1016,79 @@ lD.deleteDraggedObject = function(draggable) {
  * @param {string} objectType - Object type (widget, region)
  * @param {string} objectId - Object id
  * @param {*} objectAuxId - Auxiliary object id (f.e.region for a widget)
+ * @param {boolean} showConfirmModal - Show confirm modal
  */
-lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
+lD.deleteObject = function(
+  objectType,
+  objectId,
+  objectAuxId = null,
+  showConfirmModal = true,
+) {
+  /**
+   * Delete element from layout
+   * @param {*} objectType - Object type (widget, region, element)
+   * @param {*} objectId - Object id
+   * @param {*} options - Options
+   */
+  const deleteElement = function(
+    objectType,
+    objectId,
+    options,
+  ) {
+    // For elements, we just delete from the widget
+    if (objectType === 'element') {
+      // Get parent widget
+      const widget = lD.getElementByTypeAndId(
+        'widget',
+        objectAuxId,
+        'canvas',
+      );
+
+      // Delete element from widget
+      widget.removeElement(
+        objectId,
+        true,
+      );
+    } else {
+      lD.common.showLoadingScreen('deleteObject');
+
+      lD.layout.deleteElement(
+        objectType,
+        objectId,
+        options,
+      ).then((res) => { // Success
+        // Behavior if successful
+        toastr.success(res.message);
+        lD.reloadData(lD.layout, true);
+
+        lD.common.hideLoadingScreen('deleteObject');
+      }).catch((error) => { // Fail/error
+        lD.common.hideLoadingScreen('deleteObject');
+
+        // Show error returned or custom message to the user
+        let errorMessage = '';
+
+        if (typeof error == 'string') {
+          errorMessage = error;
+        } else {
+          errorMessage = error.errorThrown;
+        }
+
+        toastr.error(
+          errorMessagesTrans.deleteFailed
+            .replace('%error%', errorMessage),
+        );
+      });
+    }
+  };
+
+  /**
+   * Create modal before delete element
+   * @param {*} objectType - Object type (widget, region, element)
+   * @param {*} objectId - Object id
+   * @param {*} hasMedia - Object has media
+   * @param {*} showDeleteFromLibrary - Show delete from library option
+   */
   const createDeleteModal = function(
     objectType,
     objectId,
@@ -1006,36 +1127,12 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
               };
             }
 
-            lD.common.showLoadingScreen('deleteObject');
-
             // Delete element from the layout
-            lD.layout.deleteElement(
+            deleteElement(
               objectType,
               objectId,
               options,
-            ).then((res) => { // Success
-              // Behavior if successful
-              toastr.success(res.message);
-              lD.reloadData(lD.layout, true);
-
-              lD.common.hideLoadingScreen('deleteObject');
-            }).catch((error) => { // Fail/error
-              lD.common.hideLoadingScreen('deleteObject');
-
-              // Show error returned or custom message to the user
-              let errorMessage = '';
-
-              if (typeof error == 'string') {
-                errorMessage = error;
-              } else {
-                errorMessage = error.errorThrown;
-              }
-
-              toastr.error(
-                errorMessagesTrans.deleteFailed
-                  .replace('%error%', errorMessage),
-              );
-            });
+            );
           },
         },
       },
@@ -1043,7 +1140,18 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
   };
 
   if (objectType === 'region') {
-    createDeleteModal(objectType, objectId);
+    if (showConfirmModal) {
+      createDeleteModal(
+        objectType,
+        objectId,
+      );
+    } else {
+      // Delete element from the layout
+      deleteElement(
+        objectType,
+        objectId,
+      );
+    }
   } else if (objectType === 'widget') {
     const widgetToDelete =
       lD.getElementByTypeAndId(
@@ -1053,7 +1161,15 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
       );
 
     if (widgetToDelete.isRegionSpecific()) {
-      createDeleteModal(objectType, objectId);
+      if (showConfirmModal) {
+        createDeleteModal(objectType, objectId);
+      } else {
+        // Delete element from the layout
+        deleteElement(
+          objectType,
+          objectId,
+        );
+      }
     } else {
       lD.common.showLoadingScreen('checkMediaIsUsed');
 
@@ -1065,7 +1181,18 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
       $.get(requestPath + '?count=1')
         .done(function(res) {
           if (res.success) {
-            createDeleteModal(objectType, objectId, true, !res.data.isUsed);
+            if (showConfirmModal) {
+              createDeleteModal(objectType, objectId, true, !res.data.isUsed);
+            } else {
+              // Delete element from the layout
+              deleteElement(
+                objectType,
+                objectId,
+                {
+                  deleteMedia: 1,
+                },
+              );
+            }
           } else {
             if (res.login) {
               window.location.href = window.location.href;
@@ -1083,6 +1210,16 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
           console.error(jqXHR, textStatus, errorThrown);
         });
     }
+  } else if (objectType === 'element') {
+    if (showConfirmModal) {
+      createDeleteModal(objectType, objectId);
+    } else {
+      // Delete element from the layout
+      deleteElement(
+        objectType,
+        objectId,
+      );
+    }
   }
 };
 
@@ -1096,7 +1233,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const draggableType = $(draggable).data('type');
   const draggableSubType = $(draggable).data('subType');
   const draggableData = $(draggable).data();
-  const draggableDataType = $(draggable).data('dataType');
   const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
   const droppableIsZone = ($(droppable).data('subType') === 'zone');
   const droppableIsPlaylist =($(droppable).data('subType') === 'playlist');
@@ -1247,14 +1383,82 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       target: targetType,
       targetId: targetId,
     });
+  } else if (draggableType == 'element') {
+    // Get canvas
+    this.layout.getCanvas().then((canvas) => {
+      // Add element to widget
+      const addElementToWidget = function(
+        element,
+        widget,
+      ) {
+        // Add element to the widget
+        widget.addElement(element, false);
+
+        // Save JSON with new element into the widget
+        widget.saveElements().then((_res) => {
+          // TODO: Select element when data reloads
+          lD.reloadData(lD.layout, true, true);
+        });
+      };
+
+
+      // Create element object
+      const element =
+      {
+        id: draggableData.templateId,
+        left: dropPosition.left,
+        top: dropPosition.top,
+        width: draggableData.templateStartWidth,
+        height: draggableData.templateStartHeight,
+        layer: 0,
+        rotation: 0,
+      };
+
+      // Check if we have a canvas widget with
+      // subtype equal to the draggableSubType
+      // If we do, add the element to that widget
+      // If we don't, create a new widget
+      const currentWidget = Object.values(canvas.widgets).find((w) => {
+        return w.subType === draggableSubType;
+      });
+
+      // If we don't have a widget, create a new one
+      if (!currentWidget) {
+        lD.addModuleToPlaylist(
+          canvas.regionId,
+          canvas.playlists.playlistId,
+          draggableSubType,
+          draggableData,
+        ).then((res) => {
+          // Create new temporary widget for the elements
+          newWidget = new Widget(
+            res.data.widgetId,
+            res.data,
+            canvas.regionId,
+            this,
+          );
+
+          // Add element to the new widget
+          addElementToWidget(
+            element,
+            newWidget,
+          );
+        });
+      } else {
+        // Add element to the current widget
+        addElementToWidget(
+          element,
+          currentWidget,
+        );
+      }
+    });
   } else {
     // Adding a module
     // Check if the module has data type, if not
     // create a frame region
     // or playlist
     const regionType = (draggableSubType === 'playlist') ?
-      'playlist' :
-      ((draggableDataType) ? 'canvas' : 'frame');
+      'playlist' : 'frame';
 
     // Deselect cards and drop zones
     lD.toolbar.deselectCardsAndDropZones();
@@ -1473,7 +1677,7 @@ lD.addModuleToPlaylist = function(
       addOptions.templateId = moduleData.templateId;
     }
 
-    return lD.manager.addChange(
+    return lD.historyManager.addChange(
       'addWidget',
       'playlist', // targetType
       playlistId, // targetId
@@ -1488,10 +1692,20 @@ lD.addModuleToPlaylist = function(
         },
       },
     ).then((res) => { // Success
+      // Check if we added a element ( global widget )
+      if (res.data.type === 'global') {
+        // Hide loading screen
+        lD.common.hideLoadingScreen('addModuleToPlaylist');
+
+        // Return the promise with the data
+        return res;
+      }
+
       // Behavior if successful
       toastr.success(res.message);
 
       // Save the new widget as temporary
+      // if widget isn't a global widget
       saveNewlyAddedWidget(res.data.widgetId);
 
       if (!drawerWidget) {
@@ -1534,7 +1748,7 @@ lD.addModuleToPlaylist = function(
       }
 
       // Remove added change from the history manager
-      lD.manager.removeLastChange();
+      lD.historyManager.removeLastChange();
 
       // Show toast message
       toastr.error(
@@ -1589,7 +1803,7 @@ lD.addMediaToPlaylist = function(
   }
 
   // Create change to be uploaded
-  return lD.manager.addChange(
+  return lD.historyManager.addChange(
     'addMedia',
     'playlist', // targetType
     playlistId, // targetId
@@ -1714,12 +1928,21 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
     element = lD.layout.regions[id];
   } else if (type === 'drawer') {
     element = lD.layout.drawer;
+  } else if (type === 'canvas') {
+    element = lD.layout.canvas;
+  } else if (type === 'element') {
+    element = lD.layout.canvas.widgets[auxId].elements[id];
   } else if (type === 'widget') {
     if (
       lD.layout.drawer.id != undefined &&
       (lD.layout.drawer.id == auxId || auxId == 'drawer')
     ) {
       element = lD.layout.drawer.widgets[id];
+    } else if (
+      lD.layout.canvas.id != undefined &&
+      (lD.layout.canvas.id == auxId || auxId == 'canvas')
+    ) {
+      element = lD.layout.canvas.widgets[id];
     } else {
       element = lD.layout.regions[auxId].widgets[id];
     }
@@ -1881,14 +2104,17 @@ lD.openPlaylistEditor = function(playlistId, region) {
 lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   const objId = $(obj).attr('id');
   const objType = $(obj).data('type');
-  let objRegionId = null;
+  let objAuxId = null;
 
   if (objType == 'widget') {
-    objRegionId = $(obj).data('widgetRegion');
+    objAuxId = $(obj).data('widgetRegion');
+  } else if (objType == 'element') {
+    objAuxId =
+      'widget_' + $(obj).data('regionId') + '_' + $(obj).data('widgetId');
   }
 
   // Get object
-  const layoutObject = lD.getElementByTypeAndId(objType, objId, objRegionId);
+  const layoutObject = lD.getElementByTypeAndId(objType, objId, objAuxId);
 
   // Create menu and append to the designer div
   // ( using the object extended with translations )
@@ -1918,6 +2144,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   lD.editorContainer.find('.context-menu-overlay').click((ev) => {
     if ($(ev.target).hasClass('context-menu-overlay')) {
       lD.editorContainer.find('.context-menu-overlay').remove();
+
+      // Unmark selected object as context menu is open
+      $(obj).removeClass('contextMenuOpen');
     }
   });
 
@@ -1926,12 +2155,23 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     const target = $(ev.currentTarget);
 
     if (target.data('action') == 'Delete') {
-      let regionIdAux = '';
-      if (objRegionId != null) {
-        regionIdAux = objRegionId.split('region_')[1];
+      let auxId = null;
+
+      // Delete element
+      if (objType == 'element') {
+        auxId = objAuxId;
+      } else {
+        if (objAuxId != null) {
+          auxId = objAuxId.split('region_')[1];
+        }
       }
 
-      lD.deleteObject(objType, layoutObject[objType + 'Id'], regionIdAux);
+      lD.deleteObject(
+        objType,
+        layoutObject[objType + 'Id'],
+        auxId,
+        (objType != 'element'), // don't show confirm modal for elements
+      );
     } else if (target.data('action') == 'Move') {
       // Move widget in the timeline
       lD.layout.moveWidgetInRegion(
@@ -1948,6 +2188,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
     // Remove context menu
     lD.editorContainer.find('.context-menu-overlay').remove();
+
+    // Unmark selected object as context menu is open
+    $(obj).removeClass('contextMenuOpen');
   });
 };
 
@@ -2131,13 +2374,14 @@ lD.unlockLayout = function() {
  */
 lD.checkHistory = function() {
   // Check if there are some changes
-  const undoActive = lD.manager.changeHistory.length > 0;
+  const undoActive = lD.historyManager.changeHistory.length > 0;
   let undoActiveTitle = '';
 
   // Get last action text for popup
   if (undoActive) {
     const lastAction =
-      lD.manager.changeHistory[lD.manager.changeHistory.length - 1];
+      lD.historyManager
+        .changeHistory[lD.historyManager.changeHistory.length - 1];
 
     if (
       typeof historyManagerTrans != 'undefined' &&

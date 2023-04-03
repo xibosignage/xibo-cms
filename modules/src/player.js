@@ -76,10 +76,11 @@ $(function() {
     // if we have data on the widget (for older players),
     // or if we are not in preview and have empty data on Widget (like text)
     // do not run ajax use that data instead
-    if ((widget.data.data !== undefined && widget.data.data.length > 0)
-      || (widget.data.length == 0 && !isPreview)
+    if (
+      (widget.data.data !== undefined && widget.data.data.length > 0) ||
+      (widget.data.length == 0 && !isPreview)
     ) {
-      initPlayer(widget.data)
+      initPlayer(widget.data);
     } else {
       // else get data from widget.url,
       // this will be either getData for preview
@@ -88,12 +89,16 @@ $(function() {
         method: 'GET',
         url: widget.url,
       }).done(function(data) {
-        initPlayer(data)
+        initPlayer(data);
       }).fail(function(jqXHR, textStatus, errorThrown) {
         console.log(jqXHR, textStatus, errorThrown);
       });
     }
 
+    /**
+     * Initialize the player
+     * @param {*} data
+     */
     function initPlayer(data) {
       const $target = $('body');
       let dataItems = [];
