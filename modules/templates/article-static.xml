@@ -64,11 +64,11 @@
                     <option name="rtl">Right to Left (RTL)</option>
                 </options>
             </property>
-            <property id="ta_text" type="richText" allowLibraryRefs="true" variant="html">
+            <property id="template" type="richText" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
-            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="ta_text">
+            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="template">
                 <title>Snippets</title>
                 <helpText>Choose element to add to template</helpText>
             </property>
@@ -76,7 +76,7 @@
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
-            <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
+            <property id="css" type="code" allowLibraryRefs="true" variant="css">
                 <title>Optional Stylesheet Template</title>
             </property>
             <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
@@ -90,12 +90,12 @@
         <stencil>
             <twig><![CDATA[
 {% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
-{% if ta_css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
+{% if css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
 <style>
 {% if itemsSideBySide %}.text-render-item, .page { float: left; }{% endif %}
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
-{{ta_css}}
+{{css}}
 </style>
 {% endif %}
             ]]></twig>
@@ -107,7 +107,7 @@
 // properties: The properties for the widget
 // -------------------------------------------
 if (items.length > 0) {
-    items = $(items).xiboSubstitutesParser(properties.ta_text, properties.dateFormat, ['date', 'publishedDate'], {
+    items = $(items).xiboSubstitutesParser(properties.template, properties.dateFormat, ['date', 'publishedDate'], {
         description: 'summary',
         copyright: 'author',
     });
