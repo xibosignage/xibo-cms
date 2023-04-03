@@ -379,6 +379,14 @@ class WidgetHtmlRenderer
             // templateId or "elements"
             $templateId = $widget->getOptionValue('templateId', null);
 
+            // Validate this modules properties.
+            try {
+                $module->validateProperties();
+                $widget->isValid = 1;
+            } catch (GeneralException $xiboException) {
+                $widget->isValid = 0;
+            }
+
             // Output some sample data and a data url.
             $widgetData = [
                 'widgetId' => $widget->widgetId,
@@ -387,6 +395,7 @@ class WidgetHtmlRenderer
                 'templateId' => $templateId,
                 'sample' => $module->sampleData, //TODO decorate for player/preview [[sampleData=]]
                 'properties' => $module->getPropertyValues(),
+                'isValid' => $widget->isValid === 1,
             ];
 
             // Do we have a library file with this module?
