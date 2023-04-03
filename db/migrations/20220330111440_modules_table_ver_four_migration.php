@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -74,9 +74,67 @@ class ModulesTableVerFourMigration extends AbstractMigration
 
             // Handle any specific renames
             $this->execute('UPDATE `module` SET moduleId = \'core-rss-ticker\' WHERE moduleId = \'core-ticker\'');
+            $this->execute('UPDATE `module` SET moduleId = \'core-dataset\' WHERE moduleId = \'core-datasetticker\'');
+            $this->execute('DELETE FROM `module` WHERE moduleId = \'core-datasetview\'');
 
             // Drop the old table
             $this->dropTable('module_old');
+
+            // Add more v4 modules
+
+            // Check clock and update/add v4 modules
+            $clock = $this->fetchRow('SELECT * FROM `module` WHERE `moduleId` = \'core-clock\'');
+            $enabled = $clock['enabled'];
+            $previewEnabled = $clock['previewEnabled'];
+            $defaultDuration = $clock['defaultDuration'];
+            $settings = $clock['settings'];
+
+            $this->execute('UPDATE `module` SET `moduleId` = \'core-clock-analogue\',
+                    enabled = ' .$enabled. ', previewEnabled = ' .$previewEnabled. ',
+                defaultDuration = ' .$defaultDuration. '  WHERE `moduleId` = \'core-clock\';');
+
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-clock-digital\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-clock-flip\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
+            ');
+
+            // Check countdown and update/add v4 modules
+            $countdown = $this->fetchRow('SELECT * FROM `module` WHERE `moduleId` = \'core-countdown\'');
+            $enabled = $countdown['enabled'];
+            $previewEnabled = $countdown['previewEnabled'];
+            $defaultDuration = $countdown['defaultDuration'];
+            $settings = $countdown['settings'];
+
+            $this->execute('UPDATE `module` SET `moduleId` = \'core-countdown-clock\',
+                    enabled = ' .$enabled. ', previewEnabled = ' .$previewEnabled. ',
+                defaultDuration = ' .$defaultDuration. '  WHERE `moduleId` = \'core-countdown\';');
+
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-countdown-days\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-countdown-table\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-countdown-text\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
+            ');
+
+            // Check worldclock and update/add v4 modules
+            $worldclock = $this->fetchRow('SELECT * FROM `module` WHERE `moduleId` = \'core-worldclock\'');
+            $enabled = $worldclock['enabled'];
+            $previewEnabled = $worldclock['previewEnabled'];
+            $defaultDuration = $worldclock['defaultDuration'];
+            $settings = $worldclock['settings'];
+
+            $this->execute('UPDATE `module` SET `moduleId` = \'core-worldclock-analogue\',
+                    enabled = ' .$enabled. ', previewEnabled = ' .$previewEnabled. ',
+                defaultDuration = ' .$defaultDuration. '  WHERE `moduleId` = \'core-worldclock\';');
+
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-worldclock-custom\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-worldclock-digital-date\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\'),
+              (\'core-worldclock-digital-text\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
+            ');
+
         } catch (Exception $e) {
             // Keep the old module table around for diagnosis and just continue on.
         }

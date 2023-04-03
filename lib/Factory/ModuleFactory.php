@@ -92,13 +92,13 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param int $duration
-     * @param array $properties
+     * @param string $path
+     * @param int|null $duration
      * @return DurationProviderInterface
      */
-    public function createDurationProvider(int $duration, array $properties): DurationProviderInterface
+    public function createDurationProvider(string $path, ?int $duration): DurationProviderInterface
     {
-        return new DurationProvider($duration, $properties);
+        return new DurationProvider($path, $duration);
     }
 
     /**
@@ -284,7 +284,12 @@ class ModuleFactory extends BaseFactory
 
         // Match on legacy type
         foreach ($modules as $module) {
-            if (in_array($type, $module->legacyTypes)) {
+            // get the name of the legacytypes
+            $legacyTypes = [];
+            if (count($module->legacyTypes) > 0) {
+                $legacyTypes = array_column($module->legacyTypes, 'name');
+            }
+            if (in_array($type, $legacyTypes)) {
                 return $module;
             }
         }
@@ -569,12 +574,11 @@ class ModuleFactory extends BaseFactory
         }
 
         // Legacy types.
-        $module->legacyTypes = [];
-        $legacyTypeNodes = $xml->getElementsByTagName('legacyType');
-        foreach ($legacyTypeNodes as $legacyTypeNode) {
-            if ($legacyTypeNode instanceof \DOMElement) {
-                $module->legacyTypes[] = $legacyTypeNode->textContent;
-            }
+        try {
+            $module->legacyTypes = $this->parseLegacyTypes($xml->getElementsByTagName('legacyType'));
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid legacyType');
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid legacyType. e: ' .  $e->getMessage());
         }
 
         // Group for non datatype modules

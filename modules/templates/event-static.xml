@@ -70,15 +70,15 @@
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
-            <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
+            <property id="text" type="richText" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
-            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="ta_text">
+            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="text">
                 <title>Snippets</title>
                 <helpText>Choose data type snippet</helpText>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -109,7 +109,7 @@
 // properties: The properties for the widget
 // -------------------------------------------
 if (items.length > 0) {
-    items = $(items).xiboSubstitutesParser(properties.ta_text, properties.dateFormat, ['startDate', 'endDate']);
+    items = $(items).xiboSubstitutesParser(properties.text, properties.dateFormat, ['startDate', 'endDate']);
 }
 
 // No data message

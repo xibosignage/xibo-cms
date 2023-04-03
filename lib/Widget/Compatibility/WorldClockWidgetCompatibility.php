@@ -20,15 +20,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
+namespace Xibo\Widget\Compatibility;
+
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 
 /**
- * Convert RSS old kebab-case properties to camelCase
+ * Convert widget from an old schema to a new schema
  */
-class RssWidgetCompatibility implements WidgetCompatibilityInterface
+class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -39,33 +40,28 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
-            switch ($option->option) {
-                case 'background-color':
-                    $widget->changeOption($option->option, 'itemBackgroundColor');
-                    break;
+            $clockType = $widget->getOptionValue('clockType', 1);
+            $templateId = $widget->getOptionValue('templateId', '');
 
-                case 'title-color':
-                    $widget->changeOption($option->option, 'itemTitleColor');
-                    break;
+            if ($option->option === 'clockType') {
+                switch ($clockType) {
+                    case 1:
+                        if ($templateId === 'worldclock1') {
+                            $widget->type = 'worldclock-digital-text';
+                        } elseif ($templateId === 'worldclock2') {
+                            $widget->type = 'worldclock-digital-date';
+                        } else {
+                            $widget->type = 'worldclock-digital-custom';
+                        }
+                        break;
 
-                case 'name-color':
-                    $widget->changeOption($option->option, 'itemNameColor');
-                    break;
+                    case 2:
+                        $widget->type = 'worldclock-analogue';
+                        break;
 
-                case 'description-color':
-                    $widget->changeOption($option->option, 'itemDescriptionColor');
-                    break;
-
-                case 'font-size':
-                    $widget->changeOption($option->option, 'itemFontSize');
-                    break;
-
-                case 'image-fit':
-                    $widget->changeOption($option->option, 'itemImageFit');
-                    break;
-
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
         }
     }

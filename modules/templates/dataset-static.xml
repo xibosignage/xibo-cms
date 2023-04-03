@@ -33,7 +33,7 @@
                     </test>
                 </visibility>
             </property>
-            <property id="template" type="code" allowLibraryRefs="true" variant="html">
+            <property id="template" type="richText" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
@@ -224,7 +224,6 @@ $(target).xiboTextRender(
     </template>
     <template>
         <id>dataset_table_1</id>
-        <legacyTemplateId>empty</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Plain Table (Customisable)</title>
@@ -494,7 +493,6 @@ $datasetTableContainer.dataSetRender(properties);
     </template>
     <template>
         <id>dataset_table_2</id>
-        <legacyTemplateId>light-green</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>A light green background with darker green borders. White heading text.</title>
@@ -754,7 +752,6 @@ $datasetTableContainer.dataSetRender(properties);
     </template>
     <template>
         <id>dataset_table_3</id>
-        <legacyTemplateId>simple-round</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Simple white table with rounded rows.</title>
@@ -1005,7 +1002,6 @@ $datasetTableContainer.dataSetRender(properties);
     </template>
     <template>
         <id>dataset_table_4</id>
-        <legacyTemplateId>transparent-blue</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Striped blue table with darker blue header.</title>
@@ -1254,7 +1250,6 @@ $datasetTableContainer.dataSetRender(properties);
     </template>
     <template>
         <id>dataset_table_5</id>
-        <legacyTemplateId>orange-grey-striped</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>White striped table with orange header.</title>
@@ -1501,7 +1496,6 @@ $datasetTableContainer.dataSetRender(properties);
     </template>
     <template>
         <id>dataset_table_6</id>
-        <legacyTemplateId>split-rows</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>White and grey table with split rows.</title>
@@ -1746,7 +1740,6 @@ $datasetTableContainer.dataSetRender(properties);
     </template>
     <template>
         <id>dataset_table_7</id>
-        <legacyTemplateId>dark-round</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>A dark table with round borders and yellow heading text.</title>
@@ -1986,7 +1979,6 @@ $datasetTableContainer.dataSetRender(properties);
     </template>
     <template>
         <id>dataset_table_8</id>
-        <legacyTemplateId>pill-colored</legacyTemplateId>
         <type>static</type>
         <dataType>dataset</dataType>
         <title>Round cells with multi colours and a full coloured header.</title>

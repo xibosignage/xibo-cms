@@ -64,19 +64,19 @@
                     <option name="rtl">Right to Left (RTL)</option>
                 </options>
             </property>
-            <property id="ta_text" type="code" allowLibraryRefs="true" variant="html">
+            <property id="template" type="richText" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
-            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="ta_text">
+            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="template">
                 <title>Snippets</title>
                 <helpText>Choose element to add to template</helpText>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
-            <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
+            <property id="css" type="code" allowLibraryRefs="true" variant="css">
                 <title>Optional Stylesheet Template</title>
             </property>
             <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
@@ -90,12 +90,12 @@
         <stencil>
             <twig><![CDATA[
 {% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
-{% if ta_css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
+{% if css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
 <style>
 {% if itemsSideBySide %}.text-render-item, .page { float: left; }{% endif %}
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
-{{ta_css}}
+{{css}}
 </style>
 {% endif %}
             ]]></twig>
@@ -107,7 +107,7 @@
 // properties: The properties for the widget
 // -------------------------------------------
 if (items.length > 0) {
-    items = $(items).xiboSubstitutesParser(properties.ta_text, properties.dateFormat, ['date', 'publishedDate'], {
+    items = $(items).xiboSubstitutesParser(properties.template, properties.dateFormat, ['date', 'publishedDate'], {
         description: 'summary',
         copyright: 'author',
     });
@@ -134,7 +134,6 @@ $(target).xiboTextRender(properties, items);
     </template>
     <template>
         <id>article_image_only</id>
-        <legacyTemplate>media-rss-image-only</legacyTemplate>
         <type>static</type>
         <dataType>article</dataType>
         <title>Image only</title>
@@ -166,7 +165,7 @@ $(target).xiboTextRender(properties, items);
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -248,7 +247,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
     </template>
     <template>
         <id>article_with_left_hand_text</id>
-        <legacyTemplate>media-rss-with-left-hand-text</legacyTemplate>
         <type>static</type>
         <dataType>article</dataType>
         <title>Image overlaid with the Feed Content on the Left</title>
@@ -296,7 +294,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -448,7 +446,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
     </template>
     <template>
         <id>article_with_title</id>
-        <legacyTemplate>media-rss-with-title</legacyTemplate>
         <type>static</type>
         <dataType>article</dataType>
         <title>Image overlaid with the Title</title>
@@ -492,7 +489,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -632,7 +629,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
     </template>
     <template>
         <id>article_with_desc_and_name_separator</id>
-        <legacyTemplate>prominent-title-with-desc-and-name-separator</legacyTemplate>
         <type>static</type>
         <dataType>article</dataType>
         <title>Prominent title with description and name separator</title>
@@ -670,7 +666,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
@@ -797,7 +793,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .article, #conte
     </template>
     <template>
         <id>article_title_only</id>
-        <legacyTemplate>title-only</legacyTemplate>
         <type>static</type>
         <dataType>article</dataType>
         <title>Title Only</title>
@@ -827,7 +822,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .article, #conte
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>
