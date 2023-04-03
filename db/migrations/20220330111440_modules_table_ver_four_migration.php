@@ -74,6 +74,8 @@ class ModulesTableVerFourMigration extends AbstractMigration
 
             // Handle any specific renames
             $this->execute('UPDATE `module` SET moduleId = \'core-rss-ticker\' WHERE moduleId = \'core-ticker\'');
+            $this->execute('UPDATE `module` SET moduleId = \'core-dataset\' WHERE moduleId = \'core-datasetticker\'');
+            $this->execute('DELETE FROM `module` WHERE moduleId = \'core-datasetview\'');
 
             // Drop the old table
             $this->dropTable('module_old');
