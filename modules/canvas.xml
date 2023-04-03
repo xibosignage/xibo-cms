@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Canvas module</description>
     <class></class>
+    <showIn>none</showIn>
     <type>global</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
@@ -33,12 +34,4 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties></properties>
-    <preview></preview>
-    <stencil>
-        <twig><![CDATA[
-        ]]></twig>
-    </stencil>
-    <onRender><![CDATA[
-console.log('Canvas module onRender');
-    ]]></onRender>
 </module>

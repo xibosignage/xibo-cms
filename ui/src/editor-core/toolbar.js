@@ -83,7 +83,8 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     // Show/hide modules based on showIn property
     if (
       el.showIn == 'playlist' && !isPlaylist ||
-      el.showIn == 'layout' && isPlaylist
+      el.showIn == 'layout' && isPlaylist ||
+      el.showIn == 'none'
     ) {
       return;
     }
