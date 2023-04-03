@@ -130,29 +130,29 @@ $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{
-    "summary": "Sample 1",
-    "description": "Something here",
+    "summary": "Sample Event 1",
+    "description": "This event will start an hour after the current date and time and ends 12 hours after that.",
     "location": null,
     "startDate": "%+1h%",
     "endDate": "%+12h%"
 },
 {
-    "summary": "Sample 2",
-    "description": null,
+    "summary": "Sample Event 2",
+    "description": "This event will start right away on the current date and time and ends after a day.",
     "location": null,
     "startDate": "%+0d%",
     "endDate": "%+1d%"
 },
 {
-    "summary": "Sample 3",
-    "description": null,
+    "summary": "Sample Event 3",
+    "description": "This event will start 2 hours after the current date and time and ends 4 hours after that.",
     "location": null,
     "startDate": "%+2h%",
     "endDate": "%+4h%"
 },
 {
-    "summary": "Sample 4",
-    "description": null,
+    "summary": "Sample Event 4",
+    "description": "This event will start 5 minutes after the current date and time and ends 30 minutes after that.",
     "location": null,
     "startDate": "%+5m%",
     "endDate": "%+30m%"
