@@ -37,7 +37,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *  },
  *  @SWG\ExternalDocumentation(
  *      description="Manual",
- *      url="http://xibo.org.uk/manual"
+ *      url="https://xibosignage.com/manual"
  *  )
  * )
  *
@@ -46,8 +46,8 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *  description="Xibo CMS API.
        Using HTTP formData requests.
        All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
- *  version="3.1",
- *  termsOfService="http://xibo.org.uk/legal",
+ *  version="3.3",
+ *  termsOfService="https://xibosignage.com/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
  *      url="http://www.gnu.org/licenses/"

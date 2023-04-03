@@ -1010,6 +1010,7 @@ class Playlist extends Base
         }
 
         // Issue the delete
+        $playlist->setModuleFactory($this->moduleFactory);
         $playlist->delete();
 
         // Success

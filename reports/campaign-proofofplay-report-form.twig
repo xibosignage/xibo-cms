@@ -227,9 +227,53 @@
                     {"data": "labelDate"},
                     {"data": "adPlays"},
                     {"data": "adDuration"},
-                    {"data": "impressions"},
-                    {"data": "spend"}
+                    {
+                        "data": "impressions",
+                        "render": dataTableRoundDecimal
+                    },
+                    {
+                        "data": "spend",
+                        "render": dataTableRoundDecimal
+                    },
                 ],
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+
+                    // Total over all pages
+                    let totalAdPlays = api.column(1).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalAdPlaysCurrentPage = api.column(1, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    let totalAdDuration = api.column(2).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalAdDurationCurrentPage = api.column(2, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    let totalImpression = api.column(3).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalImpressionCurrentPage = api.column(3, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    let totalSpend = api.column(4).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+                    let totalSpendCurrentPage = api.column(4, { page: 'current'}).data().reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
+
+                    // Update footer
+                    $(api.column(1).footer()).html(totalAdPlaysCurrentPage + ' (' + totalAdPlays + ' total)');
+                    $(api.column(2).footer()).html(totalAdDurationCurrentPage + ' (' + totalAdDuration + ' total)');
+                    $(api.column(3).footer()).html(parseFloat(totalImpressionCurrentPage).toFixed(2) + ' (' + parseFloat(totalImpression).toFixed(2) + ' total)');
+                    $(api.column(4).footer()).html(parseFloat(totalSpendCurrentPage).toFixed(2) + ' (' + parseFloat(totalSpend).toFixed(2) + ' total)');
+                },
             });
 
             // Get Data

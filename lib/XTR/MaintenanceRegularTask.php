@@ -24,6 +24,7 @@
 namespace Xibo\XTR;
 use Carbon\Carbon;
 use Xibo\Controller\Display;
+use Xibo\Entity\Schedule;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\DisplayFactory;
@@ -32,6 +33,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
@@ -78,6 +80,10 @@ class MaintenanceRegularTask implements TaskInterface
 
     /** @var  \Xibo\Helper\SanitizerService */
     private $sanitizerService;
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
 
     /** @inheritdoc */
     public function setFactories($container)
@@ -93,6 +99,7 @@ class MaintenanceRegularTask implements TaskInterface
         $this->playlistFactory = $container->get('playlistFactory');
         $this->moduleFactory = $container->get('moduleFactory');
         $this->sanitizerService = $container->get('sanitizerService');
+        $this->scheduleFactory = $container->get('scheduleFactory');
         return $this;
     }
 
@@ -120,6 +127,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->publishLayouts();
 
         $this->assessDynamicDisplayGroups();
+
+        $this->tidyAdCampaignSchedules();
 
         // Dispatch an event so that consumers can hook into regular maintenance.
         $event = new MaintenanceRegularEvent();
@@ -523,4 +532,28 @@ class MaintenanceRegularTask implements TaskInterface
             $this->runMessage .= ' - Done (not required)' . PHP_EOL . PHP_EOL;
         }
     }
+
+    private function tidyAdCampaignSchedules()
+    {
+        $this->runMessage .= '## ' . __('Tidy Ad Campaign Schedules') . PHP_EOL;
+        Profiler::start('RegularMaintenance::tidyAdCampaignSchedules', $this->log);
+        $count = 0;
+
+        foreach ($this->scheduleFactory->query(null, [
+            'adCampaignsOnly' => 1,
+            'toDt' => Carbon::now()->subDays(90)->unix()
+        ]) as $event) {
+            if (!empty($event->parentCampaignId)) {
+                $count++;
+                $this->log->debug('tidyAdCampaignSchedules : Found old Ad Campaign interrupt event ID '
+                    . $event->eventId . ' deleting');
+                $event->delete(['notify' => false]);
+            }
+        }
+
+        $this->log->debug('tidyAdCampaignSchedules : Deleted ' . $count . ' events');
+        Profiler::end('RegularMaintenance::tidyAdCampaignSchedules', $this->log);
+        $this->runMessage .= ' - Done ' . $count . PHP_EOL . PHP_EOL;
+    }
 }
+

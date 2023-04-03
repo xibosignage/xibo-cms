@@ -147,7 +147,8 @@ class ListenersMiddleware implements MiddlewareInterface
 
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\WidgetListener(
             $c->get('store'),
-            $c->get('widgetFactory')
+            $c->get('widgetFactory'),
+            $c->get('moduleFactory')
         )));
 
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\PurgeListListener(
@@ -194,6 +195,11 @@ class ListenersMiddleware implements MiddlewareInterface
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\OnUserDelete(
             $c->get('store')
+        ))->useLogger($c->get('logger')));
+
+        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\PlaylistListener(
+            $c->get('playlistFactory'),
+            $c->get('moduleFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\RegionListener(

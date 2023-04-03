@@ -1206,4 +1206,13 @@ class DataSet implements \JsonSerializable
     {
         $this->getStore()->insert('INSERT INTO `dataset_' . $dataSetIdTarget . '`  SELECT * FROM `dataset_' . $dataSetIdSource . '` ' ,[]);
     }
+
+    /**
+     * Clear DataSet cache
+     */
+    public function clearCache()
+    {
+        $this->getLog()->debug('Force sync detected, clear cache for remote dataSet ID ' . $this->dataSetId);
+        $this->pool->deleteItem('/dataset/cache/' . $this->dataSetId);
+    }
 }

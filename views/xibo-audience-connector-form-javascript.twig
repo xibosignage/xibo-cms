@@ -98,7 +98,13 @@
           data: 'geoFence',
           responsivePriority: 3,
           render: function(data) {
-            return data && data.length > 0;
+            let icon;
+            if (data && data.length > 0)
+              icon = "fa-check";
+            else
+              icon = "fa-times";
+
+            return '<span class="fa ' + icon + '"></span>';
           },
         },
         { data: 'priority', responsivePriority: 2 },
