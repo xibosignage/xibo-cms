@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,16 +27,6 @@ namespace Xibo\Widget\Provider;
  */
 interface DurationProviderInterface
 {
-    /**
-     * Get property
-     * Properties are set on Widgets and can be things like "feedUrl"
-     *  the property must exist in module properties for this type of widget
-     * @param string $property The property name
-     * @param mixed $default An optional default value. The return will be cast to the datatype of this default value.
-     * @return mixed
-     */
-    public function getProperty(string $property, $default = null);
-
     /**
      * Get the fully qualified path name of the file that needs its duration assessed
      * @return string the fully qualified path to the file

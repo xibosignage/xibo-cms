@@ -711,7 +711,8 @@ class Widget implements \JsonSerializable
         Module $module,
         bool $import = false
     ): Widget {
-        $this->getLog()->debug('calculateDuration: Calculating - existing value is ' . $this->calculatedDuration
+        $this->getLog()->debug('calculateDuration: Calculating for ' . $this->type
+            . ' - existing value is ' . $this->calculatedDuration
             . ' import is ' . ($import ? 'true' : 'false'));
 
         // Import
@@ -734,43 +735,50 @@ class Widget implements \JsonSerializable
             }
         }
 
-        // If we have been provided a widget interface, then we always use that to calculate the duration
-        $durationProvided = false;
-        $widgetInterface = $module->getWidgetProviderOrNull();
-        if ($widgetInterface !== null) {
-            // We use a duration provider
-            $this->getLog()->debug('calculateDuration: using a widget provider');
+        // Start with either the default module duration, or the duration provided
+        if ($this->useDuration == 1) {
+            // Widget duration is as specified
+            $this->calculatedDuration = $this->duration;
+        } else {
+            // Use the default duration
+            $this->calculatedDuration = $module->defaultDuration;
+        }
 
-            $module->decorateProperties($this, true);
-            $durationProvider = $module->createDurationProvider($this->duration, $module->getPropertyValues(false));
-            $widgetInterface->fetchDuration($durationProvider);
-
-            if ($durationProvider->isDurationSet()) {
-                $this->calculatedDuration = $durationProvider->getDuration();
-                $durationProvided = true;
-            }
-        } else if ($module->type === 'subplaylist') {
+        // Modify the duration if necessary
+        if ($module->type === 'subplaylist') {
             // Sub Playlists are a special case and provide their own duration.
             $this->getLog()->debug('calculateDuration: subplaylist using SubPlaylistDurationEvent');
 
             $event = new SubPlaylistDurationEvent($this);
             $this->getDispatcher()->dispatch($event, SubPlaylistDurationEvent::$NAME);
-            $durationProvided = true;
             $this->calculatedDuration = $event->getDuration();
-        }
+        } else if (($module->type === 'video' || $module->type === 'audio') && $this->useDuration === 0) {
+            // Video/Audio needs handling for the default duration being 0.
+            try {
+                $mediaId = $this->getPrimaryMediaId();
+                $this->calculatedDuration = $this->widgetMediaFactory->getDurationForMediaId($mediaId);
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->error('calculateDuration: video/audio without primaryMediaId. widgetId: '
+                    . $this->widgetId);
+            }
+        } else if ($module->regionSpecific === 1) {
+            // Non-file based module
+            // Duration can depend on the number of items per page for some widgets
+            // this is a legacy way of working, and our preference is to use elements
+            $numItems = $this->getOptionValue('numItems', 0);
 
-        if (!$durationProvided) {
-            if ($this->useDuration == 1) {
-                // Widget duration is as specified
-                $this->calculatedDuration = $this->duration;
-            } else {
-                // Use the default duration
-                $this->calculatedDuration = $module->defaultDuration;
+            if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+                // If we have paging involved then work out the page count.
+                $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
+                if ($itemsPerPage > 0) {
+                    $numItems = ceil($numItems / $itemsPerPage);
+                }
+
+                $this->calculatedDuration = $this->calculatedDuration * $numItems;
             }
         }
 
-        $this->getLog()->debug('Set to ' . $this->calculatedDuration);
-
+        $this->getLog()->debug('calculateDuration: set to ' . $this->calculatedDuration);
         return $this;
     }
 

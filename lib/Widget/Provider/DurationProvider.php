@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,8 +27,8 @@ namespace Xibo\Widget\Provider;
  */
 class DurationProvider implements DurationProviderInterface
 {
-    /** @var array */
-    private $properties;
+    /** @var string */
+    private $file;
 
     /** @var int Duration in seconds */
     private $duration;
@@ -38,21 +38,13 @@ class DurationProvider implements DurationProviderInterface
 
     /**
      * Constructor
-     * @param int $duration
-     * @param array $properties
+     * @param string|null $file
+     * @param int|null $duration
      */
-    public function __construct(int $duration, array $properties)
+    public function __construct(string $file, ?int $duration)
     {
+        $this->file = $file;
         $this->duration = $duration;
-        $this->properties = $properties;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getProperty(string $property, $default = null)
-    {
-        return $this->properties[$property] ?? $default;
     }
 
     /**
@@ -60,7 +52,7 @@ class DurationProvider implements DurationProviderInterface
      */
     public function getFile(): string
     {
-        return $this->getProperty('file');
+        return $this->file;
     }
 
     /**
@@ -78,7 +70,7 @@ class DurationProvider implements DurationProviderInterface
      */
     public function getDuration(): int
     {
-        return $this->duration;
+        return $this->duration ?? 0;
     }
 
     /**
