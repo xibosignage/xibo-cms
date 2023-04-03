@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -29,7 +29,6 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\DataType\SocialMedia;
@@ -61,12 +60,12 @@ class TwitterConnector implements ConnectorInterface
 
     public function getDescription(): string
     {
-        return 'Display Tweets';
+        return 'Use the Twitter Standard 1.1 API to search for and display tweets.';
     }
 
     public function getThumbnail(): string
     {
-        return '';
+        return 'theme/default/img/connectors/twitter.png';
     }
 
     public function getSettingsFormTwig(): string

@@ -35,11 +35,11 @@
     <startHeight>400</startHeight>
     <settings></settings>
     <properties>
-        <property id="ta_text" type="richText" allowLibraryRefs="true">
+        <property id="text" type="richText" allowLibraryRefs="true">
             <title>Enter text or HTML in the box below.</title>
             <helpText>Enter the text to display. The red rectangle reflects the size of the region you are editing. Shift+Enter will drop a single line. Enter alone starts a new paragraph.</helpText>
         </property>
-        <property id="mediaSnippets" type="snippet" mode="media" target="ta_text">
+        <property id="mediaSnippets" type="snippet" mode="media" target="text">
             <title>Media</title>
             <helpText>Choose media</helpText>
         </property>
@@ -94,32 +94,32 @@
 let hasClock = false;
 
 // Parse any Clock elements
-if (properties.ta_text && properties.ta_text.indexOf('[Clock]') >= 0) {
+if (properties.text && properties.text.indexOf('[Clock]') >= 0) {
     hasClock = true;
-    properties.ta_text = properties.ta_text.replace('[Clock]', '[HH:mm]');
+    properties.text = properties.text.replace('[Clock]', '[HH:mm]');
 }
 
-if (properties.ta_text && properties.ta_text.indexOf('[Clock|') >= 0) {
+if (properties.text && properties.text.indexOf('[Clock|') >= 0) {
     hasClock = true;
-    properties.ta_text = properties.ta_text.replace('[Clock|', '[');
+    properties.text = properties.text.replace('[Clock|', '[');
 }
 
-if (properties.ta_text && properties.ta_text.indexOf('[Date]') >= 0) {
+if (properties.text && properties.text.indexOf('[Date]') >= 0) {
     hasClock = true;
-    properties.ta_text = properties.ta_text.replace('[Date]', '[DD/MM/YYYY]');
+    properties.text = properties.text.replace('[Date]', '[DD/MM/YYYY]');
 }
 
-if (properties.ta_text && properties.ta_text.indexOf('[Date|') >= 0) {
+if (properties.text && properties.text.indexOf('[Date|') >= 0) {
     hasClock = true;
-    properties.ta_text = properties.ta_text.replace('[Date|', '[');
+    properties.text = properties.text.replace('[Date|', '[');
 }
 
 if (hasClock) {
     // Use regex to out the bit between the [] brackets and use that as the format mask for moment.
-    let text = properties.ta_text;
+    let text = properties.text;
     let regex = /\[.*?\]/g;
 
-    properties.ta_text = text.replace(regex, function (match) {
+    properties.text = text.replace(regex, function (match) {
         return '<span class="clock" format="' + match.replace('[', '').replace(']', '') + '"></span>';
     });
 
@@ -141,7 +141,7 @@ xiboIC.set(id, 'hasClock', hasClock);
 properties.type = 'text';
 
 // Replace content with the parsed text
-$(target).find('#content').html(properties.ta_text);
+$(target).find('#content').html(properties.text);
 
 // Image render
 $(target).find('img').xiboImageRender(properties);

@@ -41,13 +41,13 @@
         <property type="message">
             <title>Enter a format for the Digital Clock e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information.</title>
         </property>
-        <property id="ta_text" type="richText" allowLibraryRefs="true">
+        <property id="format" type="richText" allowLibraryRefs="true">
             <title>Enter text or HTML in the box below.</title>
             <default><![CDATA[
 <span style="font-size: 48px; color:#1c1c1c;">[HH:mm:ss]</span>
             ]]></default>
         </property>
-        <property id="dateFormatSnippets" type="snippet" mode="options" target="ta_text">
+        <property id="dateFormatSnippets" type="snippet" mode="options" target="text">
             <title>Date Formats</title>
             <helpText>Choose from a preset date format</helpText>
             <options>
@@ -68,20 +68,20 @@ moment.locale(globalOptions.locale);
 
 // Parse any Clock elements
 // Use regex to out the bit between the [] brackets and use that as the format mask for moment.
-let text = properties.ta_text;
+let text = properties.format;
 let regex = /\[.*?\]/g;
 
-properties.ta_text = text.replace(regex, function (match) {
+properties.format = text.replace(regex, function (match) {
     return '<span class="clock" format="' + match.replace('[', '').replace(']', '') + '"></span>';
 });
 
 // Replace content with the parsed text
-$(target).find('#content').html(properties.ta_text);
+$(target).find('#content').html(properties.format);
 
 // Create updateClock method and save to the interactive controller
 xiboIC.set(
     id,
-    'updateClock', 
+    'updateClock',
     function updateClock() {
         var offset = properties.offset || 0;
         $(".clock").each(function() {
@@ -93,7 +93,7 @@ xiboIC.set(
     ]]></onInitialize>
     <onVisible><![CDATA[
 const updateClock = xiboIC.get(id, 'updateClock');
-// Run update clock if it's defined in the template 
+// Run update clock if it's defined in the template
 if (typeof updateClock === 'function') {
     // Start the first time
     updateClock();
