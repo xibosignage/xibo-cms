@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -195,11 +195,6 @@ class ListenersMiddleware implements MiddlewareInterface
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\OnUserDelete(
             $c->get('store')
-        ))->useLogger($c->get('logger')));
-
-        $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\PlaylistListener(
-            $c->get('playlistFactory'),
-            $c->get('moduleFactory')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\RegionListener(
