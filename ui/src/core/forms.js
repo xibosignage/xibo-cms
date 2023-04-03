@@ -29,13 +29,25 @@ const checkCondition = function(type, value, targetValue, isTopLevel = true) {
     return true;
   } else if (type === 'neq' && targetValue != value) {
     return true;
-  } else if (type === 'gt' && targetValue > value) {
+  } else if (type === 'gt' &&
+    !Number.isNaN(parseInt(targetValue)) &&
+    !Number.isNaN(parseInt(value)) &&
+    parseInt(targetValue) > parseInt(value)) {
     return true;
-  } else if (type === 'lt' && targetValue < value) {
+  } else if (type === 'lt' &&
+    !Number.isNaN(parseInt(targetValue)) &&
+    !Number.isNaN(parseInt(value)) &&
+    parseInt(targetValue) < parseInt(value)) {
     return true;
-  } else if (type === 'egt' && targetValue >= value) {
+  } else if (type === 'egt' &&
+    !Number.isNaN(parseInt(targetValue)) &&
+    !Number.isNaN(parseInt(value)) &&
+    parseInt(targetValue) >= parseInt(value)) {
     return true;
-  } else if (type === 'elt' && targetValue <= value) {
+  } else if (type === 'elt' &&
+    !Number.isNaN(parseInt(targetValue)) &&
+    !Number.isNaN(parseInt(value)) &&
+    parseInt(targetValue) <= parseInt(value)) {
     return true;
   } else if (type === 'isTopLevel' && value == isTopLevel) {
     return true;
