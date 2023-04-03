@@ -20,15 +20,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
+namespace Xibo\Widget\Compatibility;
+
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 
 /**
- * Convert RSS old kebab-case properties to camelCase
+ * Convert widget from an old schema to a new schema
  */
-class RssWidgetCompatibility implements WidgetCompatibilityInterface
+class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -39,33 +40,29 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
-            switch ($option->option) {
-                case 'background-color':
-                    $widget->changeOption($option->option, 'itemBackgroundColor');
-                    break;
+            $countdownType = $widget->getOptionValue('countdownType', 1);
 
-                case 'title-color':
-                    $widget->changeOption($option->option, 'itemTitleColor');
-                    break;
+            if ($option->option === 'countdownType') {
+                switch ($countdownType) {
+                    case 1:
+                        $widget->type = 'countdown-text';
+                        break;
 
-                case 'name-color':
-                    $widget->changeOption($option->option, 'itemNameColor');
-                    break;
+                    case 2:
+                        $widget->type = 'countdown-clock';
+                        break;
 
-                case 'description-color':
-                    $widget->changeOption($option->option, 'itemDescriptionColor');
-                    break;
+                    case 3:
+                        $widget->type = 'countdown-table';
+                        break;
 
-                case 'font-size':
-                    $widget->changeOption($option->option, 'itemFontSize');
-                    break;
+                    case 4:
+                        $widget->type = 'countdown-days';
+                        break;
 
-                case 'image-fit':
-                    $widget->changeOption($option->option, 'itemImageFit');
-                    break;
-
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
         }
     }

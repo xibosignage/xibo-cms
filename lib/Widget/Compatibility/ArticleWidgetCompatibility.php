@@ -20,16 +20,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget;
+namespace Xibo\Widget\Compatibility;
 
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 
 /**
- * Convert widget from an old schema to a new schema
+ * Convert article old templateId to new templateId
  */
-class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
+class ArticleWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -40,23 +40,28 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
-            $clockType = $widget->getOptionValue('clockType', 1);
             $templateId = $widget->getOptionValue('templateId', '');
 
-            if ($option->option === 'clockType') {
-                switch ($clockType) {
-                    case 1:
-                        if ($templateId === 'worldclock1') {
-                            $widget->type = 'worldclock-digital-text';
-                        } elseif ($templateId === 'worldclock2') {
-                            $widget->type = 'worldclock-digital-date';
-                        } else {
-                            $widget->type = 'worldclock-digital-custom';
-                        }
+            if ($option->option === 'templateId') {
+                switch ($templateId) {
+                    case 'media-rss-image-only':
+                        $widget->setOptionValue('templateId', 'attrib', 'article_image_only');
                         break;
 
-                    case 2:
-                        $widget->type = 'worldclock-analogue';
+                    case 'media-rss-with-left-hand-text':
+                        $widget->setOptionValue('templateId', 'attrib', 'article_with_left_hand_text');
+                        break;
+
+                    case 'media-rss-with-title':
+                        $widget->setOptionValue('templateId', 'attrib', 'article_with_title');
+                        break;
+
+                    case 'prominent-title-with-desc-and-name-separator':
+                        $widget->setOptionValue('templateId', 'attrib', 'article_with_desc_and_name_separator');
+                        break;
+
+                    case 'title-only':
+                        $widget->setOptionValue('templateId', 'attrib', 'article_title_only');
                         break;
 
                     default:
