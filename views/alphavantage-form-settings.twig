@@ -37,10 +37,6 @@
         {{ forms.checkbox("isPaidPlan", title, interface.getSetting("isPaidPlan"), helpText) }}
     {% endif %}
 
-    {% set title %}{% trans "Paid plan?" %}{% endset %}
-    {% set helpText %}{% trans "Is the above key on a paid plan?" %}{% endset %}
-    {{ forms.checkbox("isPaidPlan", title, module.getSetting("isPaidPlan"), helpText) }}
-
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "This module uses 3rd party data. Please enter the number of seconds you would like to cache results." %}{% endset %}
     {{ forms.input("cachePeriod", title, interface.getSetting("cachePeriod", 3600), helpText) }}
