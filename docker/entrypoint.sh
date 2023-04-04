@@ -82,7 +82,7 @@ then
 
   # We won't have a settings.php in place, so we'll need to copy one in
   cp /tmp/settings.php-template /var/www/cms/web/settings.php
-  chown apache.apache -R /var/www/cms/web/settings.php
+  chown www-data.www-data /var/www/cms/web/settings.php
 
   SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
   /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
@@ -104,7 +104,7 @@ fi
 # Set the correct permissions on the public/private key
 chmod 600 /var/www/cms/library/certs/private.key
 chmod 660 /var/www/cms/library/certs/public.key
-chown -R apache.apache /var/www/cms/library/certs
+chown -R www-data.www-data /var/www/cms/library/certs
 
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
@@ -200,12 +200,6 @@ then
   # Set CMS Key
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$CMS_KEY' WHERE \`setting\`='SERVER_KEY' LIMIT 1"
 
-  if [ "$CMS_DEV_MODE" == "true" ]
-  then
-    echo "Setting up library location"
-    mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=1, \`userSee\`=1 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
-  fi
-
   # Configure Maintenance
   echo "Setting up Maintenance"
 
@@ -238,6 +232,9 @@ then
     /bin/sed -i "s/^MYSQL_BACKUP_ENABLED=.*$/MYSQL_BACKUP_ENABLED=$MYSQL_BACKUP_ENABLED/" /etc/periodic/15min/cms-db-backup
     /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup
 
+    echo "*/15 * * * root /etc/periodic/15min/cms-db-backup > /dev/null 2>&1" > /etc/cron.d/cms_backup_cron
+    echo "" >> /etc/cron.d/cms_backup_cron
+
     # Update /var/www/maintenance with current environment (for cron)
     if [ "$XTR_ENABLED" == "true" ]
     then
@@ -248,9 +245,8 @@ then
         echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
         chmod 755 /var/www/maintenance.sh
 
-        echo "* * * * *     /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/crontabs/apache
-        echo "" >> /etc/crontabs/apache
-        crontab -u apache /etc/crontabs/apache
+        echo "* * * * *  www-data   /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/cron.d/cms_maintenance_cron
+        echo "" >> /etc/cron.d/cms_maintenance_cron
     fi
 
     # Configure MSMTP to send emails if required
@@ -317,7 +313,7 @@ then
     if [ ! "$CMS_ALIAS" == "none" ]
     then
         echo "Setting up CMS alias"
-        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/conf.d/cms.conf
+        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/cms.conf
 
         echo "Settings up htaccess"
         /bin/cp /tmp/.htaccess /var/www/cms/web/.htaccess
@@ -350,44 +346,56 @@ then
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='0', userChange=0 WHERE \`setting\`='PHONE_HOME' LIMIT 1"
 fi
 
-# Configure PHP session.gc_maxlifetime
-sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php7/php.ini
-sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7/php.ini
-sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
-sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
-sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
-sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php7/php.ini
-sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php7/php.ini
-sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php7/php.ini
+echo "Configure PHP"
+
+# Configure PHP
+sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.2/apache2/php.ini
+sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.2/apache2/php.ini
+sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.2/apache2/php.ini
+sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php/8.2/apache2/php.ini
+sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php/8.2/apache2/php.ini
+sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.2/apache2/php.ini
+sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.2/apache2/php.ini
+sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.2/apache2/php.ini
+sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.2/cli/php.ini
+sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.2/cli/php.ini
+sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.2/cli/php.ini
+sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_CLI_MAX_EXECUTION_TIME/" /etc/php/8.2/cli/php.ini
+sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_CLI_MEMORY_LIMIT/" /etc/php/8.2/cli/php.ini
+sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.2/cli/php.ini
+sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.2/cli/php.ini
+sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.2/cli/php.ini
+
+echo "Configure Apache"
 
 # Configure Apache TimeOut
-sed -i "s/\bTimeout\b .*$/Timeout $CMS_APACHE_TIMEOUT/" /etc/apache2/conf.d/default.conf
+sed -i "s/\bTimeout\b .*$/Timeout $CMS_APACHE_TIMEOUT/" /etc/apache2/apache2.conf
 
 # Configure Indexes
 if [ "$CMS_APACHE_OPTIONS_INDEXES" == "true" ]
 then
-  sed -i "s/\-Indexes/\+Indexes/" /etc/apache2/conf.d/cms.conf
+  sed -i "s/\-Indexes/\+Indexes/" /etc/apache2/sites-enabled/cms.conf
 fi
 
 # Configure Apache ServerTokens
 if [ "$CMS_APACHE_SERVER_TOKENS" == "Prod" ]
 then
-  sed -i "s/ServerTokens.*$/ServerTokens Prod/" /etc/apache2/conf.d/cms.conf
+  sed -i "s/ServerTokens.*$/ServerTokens Prod/" /etc/apache2/sites-enabled/cms.conf
 fi
 
 # Configure Apache logging
 if [ "$CMS_APACHE_LOG_REQUEST_TIME" == "true" ]
 then
-  sed -i '/combined/s/^/#/' /etc/apache2/conf.d/cms.conf
+  sed -i '/combined/s/^/#/' /etc/apache2/sites-enabled/cms.conf
 else
-  sed -i '/requesttime/s/^/#/' /etc/apache2/conf.d/cms.conf
+  sed -i '/requesttime/s/^/#/' /etc/apache2/sites-enabled/cms.conf
 fi
 
 # Run CRON in Production mode
 if [ "$CMS_DEV_MODE" == "false" ]
 then
     echo "Starting cron"
-    /usr/sbin/crond
+    /usr/sbin/cron
 fi
 
 echo "Starting webserver"
