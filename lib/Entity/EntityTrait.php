@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -123,16 +123,19 @@ trait EntityTrait
         $intProperties = (array_key_exists('intProperties', $options)) ? $options['intProperties'] : [];
         $doubleProperties = (array_key_exists('doubleProperties', $options)) ? $options['doubleProperties'] : [];
         $stringProperties = (array_key_exists('stringProperties', $options)) ? $options['stringProperties'] : [];
-        $htmlStringProperties = (array_key_exists('htmlStringProperties', $options)) ? $options['htmlStringProperties'] : [];
+        $htmlStringProperties = (array_key_exists('htmlStringProperties', $options))
+            ? $options['htmlStringProperties'] : [];
 
         foreach ($properties as $prop => $val) {
             // Parse the property
-            if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties)) {
+            if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties))
+                && !in_array($prop, $stringProperties)
+            ) {
                 $val = intval($val);
             } else if (in_array($prop, $doubleProperties)) {
                 $val = doubleval($val);
-            } else if (in_array($prop, $stringProperties)) {
-                $val = filter_var($val, FILTER_SANITIZE_STRING);
+            } else if (in_array($prop, $stringProperties) && $val !== null) {
+                $val = htmlspecialchars($val);
             } else if (in_array($prop, $htmlStringProperties)) {
                 $val = htmlentities($val);
             }
@@ -241,19 +244,25 @@ trait EntityTrait
 
     /**
      * Json Serialize
-     * @param bool $forAudit
-     * @return array
      */
-    public function jsonSerialize($forAudit = false)
+    public function jsonSerialize(): array
     {
-        $exclude = $this->jsonExclude;
-
         $properties = ObjectVars::getObjectVars($this);
         $json = [];
         foreach ($properties as $key => $value) {
-            if (!in_array($key, $exclude) && !$forAudit) {
+            if (!in_array($key, $this->jsonExclude)) {
                 $json[$key] = $value;
-            } else if ($forAudit && in_array($key, $this->jsonInclude)) {
+            }
+        }
+        return $json;
+    }
+
+    public function jsonForAudit(): array
+    {
+        $properties = ObjectVars::getObjectVars($this);
+        $json = [];
+        foreach ($properties as $key => $value) {
+            if (in_array($key, $this->jsonInclude)) {
                 $json[$key] = $value;
             }
         }

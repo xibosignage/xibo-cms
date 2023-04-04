@@ -34,9 +34,6 @@ use Xibo\Widget\Provider\WidgetProviderInterface;
 /**
  * Class Module
  * @package Xibo\Entity
- * @property bool $isInstalled Is this module installed?
- * @property bool $isError Does this module have any errors?
- * @property string[] $errors An array of errors this module has.
  * @SWG\Definition()
  */
 class Module implements \JsonSerializable
@@ -241,6 +238,15 @@ class Module implements \JsonSerializable
      * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
     public $propertyGroups = [];
+
+    /** @property bool $isInstalled Is this module installed? */
+    public $isInstalled;
+
+    /** @property bool $isError Does this module have any errors? */
+    public $isError;
+
+    /** @property string[] $errors An array of errors this module has. */
+    public $errors;
 
     // </editor-fold>
 

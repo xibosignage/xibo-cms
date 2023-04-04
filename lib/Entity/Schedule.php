@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1637,7 +1637,7 @@ class Schedule implements \JsonSerializable
                     if ($key === 'displayGroups') {
                         foreach($value as $index => $displayGroup) {
                             /** @var DisplayGroup $displayGroup */
-                            $displayGroups[$index] = $displayGroup->jsonSerialize(true);
+                            $displayGroups[$index] = $displayGroup->jsonForAudit();
                         }
 
                         $objectAsJson[$key] = json_encode($displayGroups);
@@ -1691,11 +1691,11 @@ class Schedule implements \JsonSerializable
 
                     foreach($this->getOriginalValue($key) as $index => $displayGroup) {
                         /** @var DisplayGroup $displayGroup */
-                        $originalDisplayGroups[$index] = $displayGroup->jsonSerialize(true);
+                        $originalDisplayGroups[$index] = $displayGroup->jsonForAudit();
                     }
 
                     foreach($value as $index => $displayGroup) {
-                        $displayGroups[$index] = $displayGroup->jsonSerialize(true);
+                        $displayGroups[$index] = $displayGroup->jsonForAudit();
                     }
 
                     $changedProperties[$key] = json_encode($originalDisplayGroups) . ' > ' . json_encode($displayGroups);

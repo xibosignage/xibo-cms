@@ -81,7 +81,7 @@ class Property implements \JsonSerializable
     public $value;
 
     /** @inheritDoc */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->id,
