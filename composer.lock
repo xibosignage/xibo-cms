@@ -6473,12 +6473,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/dasgarner/support.git",
-                "reference": "1fa25ab99878ad9ba265102b8716eff2d23ea618"
+                "reference": "064203bf7de61bd2a4fe94811309d9ae2313fdf4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/support/zipball/1fa25ab99878ad9ba265102b8716eff2d23ea618",
-                "reference": "1fa25ab99878ad9ba265102b8716eff2d23ea618",
+                "url": "https://api.github.com/repos/dasgarner/support/zipball/064203bf7de61bd2a4fe94811309d9ae2313fdf4",
+                "reference": "064203bf7de61bd2a4fe94811309d9ae2313fdf4",
                 "shasum": ""
             },
             "require": {
@@ -6489,6 +6489,7 @@
             },
             "require-dev": {
                 "exussum12/coverage-checker": "^0.11.2",
+                "respect/validation": "2.2.*",
                 "squizlabs/php_codesniffer": "3.*"
             },
             "suggest": {
@@ -6516,7 +6517,7 @@
             "support": {
                 "source": "https://github.com/dasgarner/support/tree/westphal/php8"
             },
-            "time": "2023-04-04T14:31:17+00:00"
+            "time": "2023-04-04T17:22:43+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
