@@ -69,6 +69,11 @@
             <helpText>Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.</helpText>
             <default></default>
         </property>
+        <property id="durationIsPerItem" type="checkbox">
+            <title>Duration is per item</title>
+            <helpText>The duration specified is per item otherwise it is per feed.</helpText>
+            <default>0</default>
+        </property>
         <property id="removeMentions" type="checkbox">
             <title>Remove Mentions?</title>
             <helpText>Should mentions (@someone) be removed from the Tweet Text?</helpText>
