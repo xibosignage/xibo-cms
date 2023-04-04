@@ -155,13 +155,17 @@ class XiboSspConnector implements ConnectorInterface
         // Update API config.
         $this->setPartners($settings['apiKey'], $partners);
 
-        // If the API key has changed during this request, clear out displays on the old API key
-        if ($existingApiKey !== $settings['apiKey']) {
-            // Clear all displays for this CMS on the existing key
-            $this->setDisplays($existingApiKey, $existingCmsUrl, [], $settings);
-        } else if (!empty($existingCmsUrl) && $existingCmsUrl !== $settings['cmsUrl']) {
-            // Clear all displays for this CMS on the existing key
-            $this->setDisplays($settings['apiKey'], $existingCmsUrl, [], $settings);
+        try {
+            // If the API key has changed during this request, clear out displays on the old API key
+            if ($existingApiKey !== $settings['apiKey']) {
+                // Clear all displays for this CMS on the existing key
+                $this->setDisplays($existingApiKey, $existingCmsUrl, [], $settings);
+            } else if (!empty($existingCmsUrl) && $existingCmsUrl !== $settings['cmsUrl']) {
+                // Clear all displays for this CMS on the existing key
+                $this->setDisplays($settings['apiKey'], $existingCmsUrl, [], $settings);
+            }
+        } catch (\Exception $e) {
+            $this->getLogger()->error('Failed to set displays '. $e->getMessage());
         }
 
         // Add displays on the new API key (maintenance also does this, but do it now).

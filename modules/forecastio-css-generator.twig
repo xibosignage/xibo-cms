@@ -25,15 +25,15 @@
 		.bg-cloudy {
 		    background-image: url("{% if cloudyImage != "" %}{{ cloudyImage }}{% else %}[[assetId=wi-cloudy]]{% endif %}");
 		}
-		
+
 		.bg-partly-cloudy-day {
 		    background-image: url("{% if dayCloudyImage != "" %}{{ dayCloudyImage }}{% else %}[[assetId=wi-day-cloudy]]{% endif %}");
 		}
-		
+
 		.bg-clear-day {
 		    background-image: url("{% if dayClearImage %}{{ dayClearImage }}{% else %}[[assetId=wi-day-sunny]]{% endif %}");
 		}
-		
+
 		.bg-fog {
 		    background-image: url("{% if fogImage %}{{ fogImage }}{% else %}[[assetId=wi-fog]]{% endif %}");
 		}
@@ -41,11 +41,11 @@
 		.bg-sleet {
 		    background-image: url("{% if hailImage %}{{ hailImage }}{% else %}[[assetId=wi-hail]]{% endif %}");
 		}
-		
+
 		.bg-clear-night {
 		    background-image: url("{% if nightClearImage %}{{ nightClearImage }}{% else %}[[assetId=wi-night-clear]]{% endif %}");
 		}
-		
+
 		.bg-partly-cloudy-night {
 		    background-image: url("{% if nightPartlyCloudyImage %}{{ nightPartlyCloudyImage }}{% else %}[[assetId=wi-night-partly-cloudy]]{% endif %}");
 		}
@@ -53,15 +53,15 @@
 		.bg-rain {
 		    background-image: url("{% if rainImage %}{{ rainImage }}{% else %}[[assetId=wi-rain]]{% endif %}");
 		}
-		
+
 		.bg-snow {
 		    background-image: url("{% if snowImage %}{{ snowImage }}{% else %}[[assetId=wi-snow]]{% endif %}");
 		}
-		
+
 		.bg-wind {
 		    background-image: url("{% if windyImage %}{{ windyImage }}{% else %}[[assetId=wi-windy]]{% endif %}");
 		}
-		
+
 		.bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind {
 		    background-position: center;
 		{% if backgroundImage == 'center' %}
@@ -88,13 +88,13 @@
 
 {% macro colors(backgroundColor, textColor, iconsColor, footerColor, footerTextColor, footerIconsColor, shadowColor) %}
     {% if backgroundColor != '' %}
-    #content {
+    #content .container {
         background-color: {{ backgroundColor }} !important;
     }
     {% endif %}
 
     {% if textColor != '' %}
-    #content {
+    #content .container {
         color: {{ textColor }} !important;
     }
     {% endif %}

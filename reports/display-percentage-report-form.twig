@@ -62,7 +62,6 @@
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
                                 </a>
-                                <span id="imageLoader" class=""></span>
                             </div>
                         </form>
                     </div>
@@ -125,7 +124,7 @@
 
                             <div id="otherSpend" style="position: absolute;">
                                 <div class="switch-other-main">
-                                    <input type="checkbox" id="otherSpendSwitch" class="switch" checked
+                                    <input type="checkbox" id="otherSpendSwitch" checked
                                            data-chart-name="spendChart" data-chart-canvas="spendChartCanvas"
                                            data-on-text="Main" data-off-text="Other"/>
                                 </div>
@@ -142,7 +141,7 @@
 
                             <div id="otherPlaytime" style="position: absolute;">
                                 <div class="switch-other-main">
-                                    <input type="checkbox" id="otherPlaytimeSwitch" class="switch" checked
+                                    <input type="checkbox" id="otherPlaytimeSwitch" checked
                                            data-chart-name="playtimeChart" data-chart-canvas="playtimeChartCanvas"
                                            data-on-text="Main" data-off-text="Other"/>
                                 </div>
@@ -190,7 +189,7 @@
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
-                "order": [[1, "asc"]],
+                order: [[1, "asc"]],
                 data:{},
                 "columns": [
                     {
@@ -218,7 +217,6 @@
                     success: function success(data) {
                         result = data;
                         $applyBtn.removeClass('disabled');
-                        imageLoader.removeClass('fa fa-spinner fa-spin loading-icon');
 
                         // Based on tab load data
                         let activeTabHref = $('.nav-tabs .nav-item a.active').attr("href");
@@ -245,7 +243,8 @@
                 table.clear().draw();
 
                 if (Object.keys(data).length > 0) {
-                    table.rows.add( data ).draw()
+                    // Sort table by display spend
+                    table.rows.add(data).order([1, 'desc']).draw()
                 }
             }
 
@@ -290,30 +289,30 @@
                 eval(chartName).update();
             }
 
+            $("#otherSpendSwitch, #otherPlaytimeSwitch").bootstrapSwitch({
+                onSwitchChange: function(e, state) {
+                    let chartName = $(this).attr("data-chart-name");
+                    let mainTotal = $(this).attr("data-main-total");
 
-            $('#otherSpendSwitch, #otherPlaytimeSwitch').on('change.bootstrapSwitch', function (e) {
+                    // Main Chart Info
+                    let mainChartData = $(this).attr("data-main-data").split(",");
+                    let mainLabels = $(this).attr("data-main-labels").split(",");
+                    let mainBgColor = $(this).attr("data-main-bg-color").split(",");
 
-                let chartName = $(this).attr("data-chart-name");
-                let mainTotal = $(this).attr("data-main-total");
+                    // Other Chart Info
+                    let otherChartData = $(this).attr("data-other-data").split(",");
+                    let otherLabels = $(this).attr("data-other-labels").split(",");
+                    let otherBgColor = $(this).attr("data-other-bg-color").split(",");
 
-                // Main Chart Info
-                let mainChartData = $(this).attr("data-main-data").split(",");
-                let mainLabels = $(this).attr("data-main-labels").split(",");
-                let mainBgColor = $(this).attr("data-main-bg-color").split(",");
+                    if (state) {
+                        updateChartData(chartName, mainLabels, mainChartData, mainBgColor);
+                    } else {
+                        updateChartData(chartName, otherLabels, otherChartData, otherBgColor);
+                    }
 
-                // Other Chart Info
-                let otherChartData = $(this).attr("data-other-data").split(",");
-                let otherLabels = $(this).attr("data-other-labels").split(",");
-                let otherBgColor = $(this).attr("data-other-bg-color").split(",");
-
-                if (e.target.checked) {
-                    updateChartData(chartName, mainLabels, mainChartData, mainBgColor);
-                } else {
-                    updateChartData(chartName, otherLabels, otherChartData, otherBgColor);
+                    // Update chart config when other/main button pressed
+                    updateConfigAsNewObject(chartName, mainTotal);
                 }
-
-                // Update chart config when other/main button pressed
-                updateConfigAsNewObject(chartName, mainTotal);
             });
 
 
@@ -380,6 +379,8 @@
                     // Combine the Other slice in Main Chart
                     labels.push('Other');
                     data.push(otherChartTotal);
+
+                    // Set background color of "Other Slice"
                     backgroundColor.push('#808080');
 
                     // Show two buttons Other and Main
@@ -565,7 +566,6 @@
             // Apply
             $applyBtn.click(function () {
                 $(this).addClass('disabled');
-                imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
                 checkFilterAndApply();
                 getData($dataTable.data().url);
             });
@@ -592,6 +592,7 @@
                 reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?parentCampaignId=" + $parentCampaign.val() + "&reportName=displayPercentage" );
             };
 
+            imageLoader.hide();
             $applyBtn.addClass('disabled');
             checkFilterAndApply();
 

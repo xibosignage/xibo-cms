@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,33 +23,37 @@
 namespace Xibo\Listener\OnMediaDelete;
 
 use Xibo\Event\MediaDeleteEvent;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Listener\ListenerLoggerTrait;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\InvalidArgumentException;
 
 class WidgetListener
 {
     use ListenerLoggerTrait;
 
-    /**
-     * @var WidgetFactory
-     */
+    /** @var WidgetFactory */
     private $widgetFactory;
-    /**
-     * @var StorageServiceInterface
-     */
+
+    /** @var \Xibo\Factory\ModuleFactory */
+    private $moduleFactory;
+
+    /** @var StorageServiceInterface */
     private $storageService;
 
-    public function __construct(StorageServiceInterface $storageService, WidgetFactory $widgetFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $storageService,
+        WidgetFactory $widgetFactory,
+        ModuleFactory $moduleFactory
+    ) {
         $this->storageService = $storageService;
         $this->widgetFactory = $widgetFactory;
+        $this->moduleFactory = $moduleFactory;
     }
 
     /**
      * @param MediaDeleteEvent $event
-     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function __invoke(MediaDeleteEvent $event)
     {
@@ -57,7 +61,6 @@ class WidgetListener
         $parentMedia = $event->getParentMedia();
 
         foreach ($this->widgetFactory->getByMediaId($media->mediaId) as $widget) {
-            /* @var \Xibo\Entity\Widget $widget */
             $widget->unassignMedia($media->mediaId);
 
             if ($parentMedia != null) {
@@ -81,7 +84,10 @@ class WidgetListener
             }
 
             // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
-            if ($media->mediaType != 'module' && count($widget->mediaIds) <= 0) {
+            if ($media->mediaType != 'module'
+                && $this->moduleFactory->getByType($widget->type)->regionSpecific === 0
+                && count($widget->mediaIds) <= 0
+            ) {
                 $widget->delete();
             } else {
                 $widget->save(['saveWidgetOptions' => false]);

@@ -189,7 +189,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStats($filterBy = [])
+    public function getStats($filterBy = [], $isBufferedQuery = false)
     {
         $fromDt = $filterBy['fromDt'] ?? null;
         $toDt = $filterBy['toDt'] ?? null;
@@ -426,7 +426,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Run our query using a connection object (to save memory)
         $connection = $this->store->getConnection();
-        $connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        $connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $isBufferedQuery);
+
 
         // Prepare the statement
         $statement = $connection->prepare($sql);

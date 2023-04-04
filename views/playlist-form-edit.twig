@@ -147,12 +147,12 @@
                     </div>
                     <div class="tab-pane" id="populate">
                         <div class="dynamic-message">
+                            {% set message = "Populate with Library Media matching the criteria below and automatically maintain the Playlist."|trans %}
+                            {{ forms.message(message) }}
+
                             <div class="widget">
                                 <div class="widget-title">{% trans "Library Media" %}</div>
                                 <div class="widget-body">
-                                    {% set message = "Populate with Library Media matching the criteria below and automatically maintain the Playlist."|trans %}
-                                    {{ forms.message(message) }}
-
                                     {% set title %}{% trans "Name filter" %}{% endset %}
                                     {{ forms.inputWithLogicalOperator("filterMediaName", title, playlist.filterMediaName, "", "", "", "", playlist.filterMediaNameLogicalOperator) }}
 

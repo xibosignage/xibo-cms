@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -689,9 +689,13 @@ class Schedule implements \JsonSerializable
     /**
      * Delete this Schedule Event
      */
-    public function delete()
+    public function delete($options = [])
     {
         $this->load();
+
+        $options = array_merge([
+            'notify' => true
+        ], $options);
 
         // Notify display groups
         $notify = $this->displayGroups;
@@ -722,15 +726,19 @@ class Schedule implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
 
         // Notify
-        // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->inScheduleLookAhead() && $this->displayNotifyService !== null) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($notify) . ' display groups');
-            foreach ($notify as $displayGroup) {
-                /* @var DisplayGroup $displayGroup */
-                $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+        if ($options['notify']) {
+            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+            if ($this->inScheduleLookAhead() && $this->displayNotifyService !== null) {
+                $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($notify) . ' display groups');
+                foreach ($notify as $displayGroup) {
+                    /* @var DisplayGroup $displayGroup */
+                    $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                }
+            } else if ($this->displayNotifyService === null) {
+                $this->getLog()->info('Notify disabled, dependencies not set');
             }
-        } else if ($this->displayNotifyService === null) {
-            $this->getLog()->info('Notify disabled, dependencies not set');
+        } else {
+            $this->getLog()->debug('Event delete: Notify disabled, option set to false');
         }
 
         // Drop the cache for this event
@@ -1169,7 +1177,7 @@ class Schedule implements \JsonSerializable
                                 continue;
                             }
 
-                            if ($start >= $generateFromDt) {
+                            if ($end > $generateFromDt && $start < $generateToDt) {
                                 $this->getLog()->debug('Adding detail for ' . $start->toAtomString() . ' to ' . $end->toAtomString());
 
                                 if ($this->eventTypeId == self::$COMMAND_EVENT) {

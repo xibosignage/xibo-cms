@@ -89,10 +89,11 @@ interface TimeSeriesStoreInterface
     /**
      * Get statistics
      * @param $filterBy array[mixed]|null
+     * @param $isBufferedQuery bool Option to set buffered queries in MySQL
      * @throws GeneralException
      * @return TimeSeriesResultsInterface
      */
-    public function getStats($filterBy = []);
+    public function getStats($filterBy = [], $isBufferedQuery = false);
 
     /**
      * Get total count of export statistics

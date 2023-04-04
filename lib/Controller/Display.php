@@ -716,6 +716,10 @@ class Display extends Base
                     $display->commercialLicenceDescription = __('Display is not licensed');
             }
 
+            if ($display->clientCode < 400) {
+                $display->commercialLicenceDescription .= ' (' . __('The status will be updated with each Commercial Licence check') . ')';
+            }
+
             // Thumbnail
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle

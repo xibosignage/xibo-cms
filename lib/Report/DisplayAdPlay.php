@@ -238,6 +238,14 @@ class DisplayAdPlay implements ReportInterface
     /** @inheritDoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
+
+        // Get campaign
+        if (!empty($parentCampaignId)) {
+            $campaign = $this->campaignFactory->getById($parentCampaignId);
+        }
+
         // Display filter.
         try {
             // Get an array of display id this user has access to.
@@ -301,10 +309,10 @@ class DisplayAdPlay implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()]);
+                $fromDt = $sanitizedParams->getDate('fromDt', ['default' => Carbon::now()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' => Carbon::now()]);
+                $toDt = $sanitizedParams->getDate('toDt', ['default' => Carbon::now()]);
                 $toDt->endOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -317,11 +325,24 @@ class DisplayAdPlay implements ReportInterface
         }
 
         $params = [
+            'campaignId' => $parentCampaignId,
+            'layoutId' => $layoutId,
             'displayIds' => $displayIds,
             'groupBy' => $sanitizedParams->getString('groupBy')
         ];
-        $params['fromDt'] = $fromDt->format('Y-m-d H:i:s');
-        $params['toDt'] =  $toDt->format('Y-m-d H:i:s');
+
+        // when the reportfilter is wholecampaign take campaign start/end as form/to date
+        if (!empty($parentCampaignId) && $sanitizedParams->getString('reportFilter') === 'wholecampaign') {
+            $params['fromDt'] = !empty($campaign->getStartDt()) ? $campaign->getStartDt()->format('Y-m-d H:i:s') : null;
+            $params['toDt'] = !empty($campaign->getEndDt()) ? $campaign->getEndDt()->format('Y-m-d H:i:s') : null;
+
+            if (empty($campaign->getStartDt()) || empty($campaign->getEndDt())) {
+                return new ReportResult();
+            }
+        } else {
+            $params['fromDt'] = $fromDt->format('Y-m-d H:i:s');
+            $params['toDt'] =  $toDt->format('Y-m-d H:i:s');
+        }
 
         // --------
         // ReportDataEvent
@@ -341,22 +362,24 @@ class DisplayAdPlay implements ReportInterface
         $labels = [];
         $adPlaysData = [];
         $impressionsData = [];
+        $spendData = [];
         $backgroundColor = [];
-        $borderColor = [];
 
         foreach ($results['json'] as $row) {
             // ----
             // Build Chart data
             $labels[] = $row['labelDate'];
 
-            $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
-            $borderColor[] = 'rgb(240,93,41, 0.8)';
+            $backgroundColor[] = 'rgb(34, 207, 207, 0.7)';
 
             $adPlays = $row['adPlays'];
             $adPlaysData[] = ($adPlays == '') ? 0 : $adPlays;
 
             $impressions = $row['impressions'];
             $impressionsData[] = ($impressions == '') ? 0 : $impressions;
+
+            $spend = $row['spend'];
+            $spendData[] = ($spend == '') ? 0 : $spend;
 
             // ----
             // Build Tabular data
@@ -366,6 +389,7 @@ class DisplayAdPlay implements ReportInterface
             $entry['adPlays'] = $row['adPlays'];
             $entry['adDuration'] = $row['adDuration'];
             $entry['impressions'] = $row['impressions'];
+            $entry['spend'] = $row['spend'];
 
             $rows[] = $entry;
         }
@@ -385,10 +409,18 @@ class DisplayAdPlay implements ReportInterface
                     [
                         'label' => __('Total impressions'),
                         'yAxisID' => 'Impression',
-                        'borderColor' => $borderColor,
+                        'borderColor' => 'rgba(255,159,64,255)',
                         'type' => 'line',
                         'fill' => false,
                         'data' =>  $impressionsData
+                    ],
+                    [
+                        'label' => __('Total spend'),
+                        'yAxisID' => 'Spend',
+                        'borderColor' => 'rgba(255,99,132,255)',
+                        'type' => 'line',
+                        'fill' => false,
+                        'data' =>  $spendData
                     ]
                 ]
             ],
@@ -415,6 +447,18 @@ class DisplayAdPlay implements ReportInterface
                             'scaleLabel' =>  [
                                 'display' =>  true,
                                 'labelString' => __('Impression(s)')
+                            ],
+                            'ticks' =>  [
+                                'beginAtZero' => true
+                            ]
+                        ], [
+                            'id' => 'Spend',
+                            'type' => 'linear',
+                            'position' =>  'right',
+                            'display' =>  true,
+                            'scaleLabel' =>  [
+                                'display' =>  true,
+                                'labelString' => __('Spend')
                             ],
                             'ticks' =>  [
                                 'beginAtZero' => true
