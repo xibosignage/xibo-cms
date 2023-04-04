@@ -237,9 +237,20 @@ trait EntityTrait
      * @param mixed $default The default value to return if the unmatched property doesn't exist.
      * @return null|mixed
      */
-    public function getUnmatchedProperty(string $property, $default)
+    public function getUnmatchedProperty(string $property, mixed $default)
     {
         return $this->unmatchedProperties[$property] ?? $default;
+    }
+
+    /**
+     * @param string $property
+     * @param mixed $value
+     * @return $this
+     */
+    public function setUnmatchedProperty(string $property, mixed $value)
+    {
+        $this->unmatchedProperties[$property] = $value;
+        return $this;
     }
 
     /**
@@ -254,6 +265,16 @@ trait EntityTrait
                 $json[$key] = $value;
             }
         }
+
+        // Output unmatched properties too?
+        if (!in_array('unmatchedProperties', $this->jsonExclude)) {
+            foreach ($this->unmatchedProperties as $key => $value) {
+                if (!in_array($key, $this->jsonExclude)) {
+                    $json[$key] = $value;
+                }
+            }
+        }
+        
         return $json;
     }
 

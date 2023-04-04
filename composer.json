@@ -68,7 +68,7 @@
     "sallar/jdatetime": "dev-master",
     "gettext/gettext": "~4.0",
     "twig/twig": "3.x",
-    "respect/validation": "1.1.*",
+    "respect/validation": "2.2.*",
     "intervention/image": "2.7.2",
     "emojione/emojione": "^1.4",
     "phpmailer/phpmailer": "6.5.*",
