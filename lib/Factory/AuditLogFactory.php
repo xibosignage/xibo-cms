@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -52,58 +52,86 @@ class AuditLogFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId, auditlog.ipAddress ';
-        $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
+        $select = '
+            SELECT `logId`,
+                `logDate`,
+                `user`.`userName`,
+                `message`,
+                `objectAfter`,
+                `entity`,
+                `entityId`,
+                `auditlog`.userId,
+                `auditlog`.ipAddress
+        ';
+
+        $body = '
+            FROM `auditlog`
+                LEFT OUTER JOIN `user`
+                ON `user`.`userId` = `auditlog`.`userId`
+             WHERE 1 = 1 ';
 
         if ($sanitizedFilter->getInt('fromTimeStamp') !== null) {
-            $body .= ' AND `auditlog`.logDate >= :fromTimeStamp ';
+            $body .= ' AND `auditlog`.`logDate` >= :fromTimeStamp ';
             $params['fromTimeStamp'] = $sanitizedFilter->getInt('fromTimeStamp');
         }
 
         if ($sanitizedFilter->getInt('toTimeStamp') !== null) {
-            $body .= ' AND `auditlog`.logDate < :toTimeStamp ';
+            $body .= ' AND `auditlog`.`logDate` < :toTimeStamp ';
             $params['toTimeStamp'] = $sanitizedFilter->getInt('toTimeStamp');
         }
 
         if ($sanitizedFilter->getString('entity') != null) {
-            $body .= ' AND `auditlog`.entity LIKE :entity ';
+            $body .= ' AND `auditlog`.`entity` LIKE :entity ';
             $params['entity'] = '%' . $sanitizedFilter->getString('entity') . '%';
         }
 
         if ($sanitizedFilter->getString('userName') != null) {
-            $body .= ' AND `user`.userName LIKE :userName ';
+            $body .= ' AND `user`.`userName` LIKE :userName ';
             $params['userName'] = '%' . $sanitizedFilter->getString('userName') . '%';
         }
 
         if ($sanitizedFilter->getString('message') != null) {
-            $body .= ' AND `auditlog`.message LIKE :message ';
+            $body .= ' AND `auditlog`.`message` LIKE :message ';
             $params['message'] = '%' . $sanitizedFilter->getString('message') . '%';
         }
 
         if ($sanitizedFilter->getString('ipAddress') != null) {
-            $body .= ' AND `auditlog`.ipAddress LIKE :ipAddress ';
+            $body .= ' AND `auditlog`.`ipAddress` LIKE :ipAddress ';
             $params['ipAddress'] = '%' . $sanitizedFilter->getString('ipAddress') . '%';
         }
 
         if ($sanitizedFilter->getInt('entityId') !== null) {
-            $body .= ' AND ( `auditlog`.entityId = :entityId  ' ;
+            $body .= ' AND ( `auditlog`.`entityId` = :entityId  ' ;
             $params['entityId'] = $sanitizedFilter->getInt('entityId');
 
             $entity = $sanitizedFilter->getString('entity');
 
             // if we were supplied with both layout entity and entityId (layoutId), expand the results
             // we want to get all actions issued on this layout from the moment it was added
-            if (stripos($entity,'layout' ) !== false) {
+            if (stripos($entity, 'layout') !== false) {
+                $sqlLayoutHistory = '
+                    SELECT `campaign`.campaignId
+                      FROM `layout`
+                          INNER JOIN `lkcampaignlayout`
+                          ON `layout`.layoutId = `lkcampaignlayout`.layoutId
+                          INNER JOIN `campaign`
+                          ON `campaign`.campaignId = `lkcampaignlayout`.campaignId
+                     WHERE `campaign`.isLayoutSpecific = 1 
+                        AND `layout`.layoutId = :layoutId
+                ';
 
-                $sqlLayoutHistory = 'SELECT campaign.campaignId FROM layout INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND layout.layoutId = :layoutId';
-                $paramsLayoutHistory = ['layoutId' => $params['entityId']];
-                $results = $this->getStore()->select($sqlLayoutHistory, $paramsLayoutHistory);
+                $results = $this->getStore()->select($sqlLayoutHistory, ['layoutId' => $params['entityId']]);
                 foreach ($results as $row) {
                     $campaignId = $row['campaignId'];
                 }
 
                 if (isset($campaignId)) {
-                    $body .= ' OR auditlog.entityId IN (SELECT layouthistory.layoutId FROM layouthistory WHERE layouthistory.campaignId = :campaignId) ) ';
+                    $body .= '
+                        OR `auditlog`.`entityId` IN (
+                            SELECT `layouthistory`.`layoutId`
+                              FROM `layouthistory`
+                             WHERE `layouthistory`.`campaignId` = :campaignId
+                        )) ';
                     $params['campaignId'] = $campaignId;
                 } else {
                     $body .= ' ) ';
@@ -118,10 +146,14 @@ class AuditLogFactory extends BaseFactory
             $order .= 'ORDER BY ' . implode(', ', $sortOrder) . ' ';
         }
 
-        $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        $limit = '';
+        if ($filterBy !== null
+            && $sanitizedFilter->getInt('start') !== null
+            && $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0])
+                . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -120,7 +120,7 @@ class LogService implements LogServiceInterface
             //  audit log should rollback on failure.
             $dbh = PdoStorageService::newConnection('default');
             $this->_auditLogStatement = $dbh->prepare('
-                INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter, ipAddress)
+                INSERT INTO `auditlog` (`logDate`, `userId`, `entity`, `message`, `entityId`, `objectAfter`, `ipAddress`)
                   VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter, :ipAddress)
             ');
         }
