@@ -32,11 +32,17 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
-    <settings></settings>
+    <settings>
+        <property id="cachePeriodImages" type="number">
+            <title>Cache Period for Images</title>
+            <helpText>Please enter the number of hours you would like to cache mastodon images.</helpText>
+            <default>24</default>
+        </property>
+    </settings>
     <properties>
         <property id="uri" type="text" variant="uri">
             <title>Mastodon URL</title>
-            <helpText>The Link for the mastodon feed</helpText>
+            <helpText>The Link for the mastodon instance</helpText>
             <default></default>
             <rule>required</rule>
         </property>
@@ -47,7 +53,7 @@
         </property>
         <property id="numItems" type="number">
             <title>Count</title>
-            <helpText>The number of Tweets to return (default = 15).</helpText>
+            <helpText>The number of Posts to return (default = 15).</helpText>
             <default>15</default>
         </property>
         <property id="dateFormat" type="text" variant="dateFormat">
@@ -62,17 +68,17 @@
         </property>
         <property id="removeMentions" type="checkbox">
             <title>Remove Mentions?</title>
-            <helpText>Should mentions (@someone) be removed from the Tweet Text?</helpText>
+            <helpText>Should mentions (@someone) be removed from the Mastodon Post?</helpText>
             <default>0</default>
         </property>
         <property id="removeHashtags" type="checkbox">
             <title>Remove Hashtags?</title>
-            <helpText>Should Hashtags (#something) be removed from the Tweet Text?</helpText>
+            <helpText>Should Hashtags (#something) be removed from the Mastodon Post?</helpText>
             <default>0</default>
         </property>
         <property id="removeUrls" type="checkbox">
             <title>Remove URLs?</title>
-            <helpText>Should URLs be removed from the Tweet Text? Most URLs do not compliment digital signage.</helpText>
+            <helpText>Should URLs be removed from the Mastodon Post? Most URLs do not compliment digital signage.</helpText>
             <default>1</default>
         </property>
     </properties>
@@ -101,67 +107,67 @@ $(target).xiboLayoutAnimate(properties);
     <sampleData><![CDATA[
 [{
     "date": "Sun Jan 01 10:10:00 +0000 1001",
-    "text": "This is a sample tweet text",
-    "location": "Tweet location",
-    "photo": "[[assetId=twitterContentPhoto]]",
-    "user": "Tweet user",
-    "screenName": "@twitter_user",
-    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
-    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
-    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
+    "text": "This is a sample mastodon text",
+    "location": "Mastodon location",
+    "photo": "[[assetId=mastodonContentPhoto]]",
+    "user": "Mastodon user",
+    "screenName": "@mastodon_user",
+    "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
-    "text": "This is a sample tweet text",
-    "location": "Tweet location",
-    "photo": "[[assetId=twitterContentPhoto]]",
-    "user": "Tweet user",
-    "screenName": "@twitter_user",
-    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
-    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
-    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
+    "text": "This is a sample mastodon text",
+    "location": "Mastodon location",
+    "photo": "[[assetId=mastodonContentPhoto]]",
+    "user": "Mastodon user",
+    "screenName": "@mastodon_user",
+    "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
-    "text": "This is a sample tweet text",
-    "location": "Tweet location",
-    "photo": "[[assetId=twitterContentPhoto]]",
-    "user": "Tweet user",
-    "screenName": "@twitter_user",
-    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
-    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
-    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
+    "text": "This is a sample mastodon text",
+    "location": "Mastodon location",
+    "photo": "[[assetId=mastodonContentPhoto]]",
+    "user": "Mastodon user",
+    "screenName": "@mastodon_user",
+    "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
-    "text": "This is a sample tweet text",
-    "location": "Tweet location",
-    "photo": "[[assetId=twitterContentPhoto]]",
-    "user": "Tweet user",
-    "screenName": "@twitter_user",
-    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
-    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
-    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
+    "text": "This is a sample mastodon text",
+    "location": "Mastodon location",
+    "photo": "[[assetId=mastodonContentPhoto]]",
+    "user": "Mastodon user",
+    "screenName": "@mastodon_user",
+    "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
     "date": "Sun Jan 01 10:10:00 +0000 1001",
-    "text": "This is a sample tweet text",
-    "location": "Tweet location",
-    "photo": "[[assetId=twitterContentPhoto]]",
-    "user": "Tweet user",
-    "screenName": "@twitter_user",
-    "userProfileImage": "[[assetId=twitterProfilePhoto]]",
-    "userProfileImageMini": "[[assetId=twitterProfilePhotoMini]]",
-    "userProfileImageBigger": "[[assetId=twitterProfilePhotoBigger]]"
+    "text": "This is a sample mastodon text",
+    "location": "Mastodon location",
+    "photo": "[[assetId=mastodonContentPhoto]]",
+    "user": "Mastodon user",
+    "screenName": "@mastodon_user",
+    "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
+    "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
+    "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 }]
     ]]></sampleData>
     <preview></preview>
     <assets>
         <asset id="providerLogo" type="path" mimeType="image/png" path="/modules/assets/twitter_blue.png"></asset>
         <asset id="providerLogoWhite" type="path" mimeType="image/png" path="/modules/assets/twitter_white.png"></asset>
-        <asset id="twitterContentPhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
-        <asset id="twitterProfilePhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo.jpg"></asset>
-        <asset id="twitterProfilePhotoMini" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_mini.jpg"></asset>
-        <asset id="twitterProfilePhotoBigger" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_bigger.jpg"></asset>
+        <asset id="mastodonContentPhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
+        <asset id="mastodonProfilePhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo.jpg"></asset>
+        <asset id="mastodonProfilePhotoMini" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_mini.jpg"></asset>
+        <asset id="mastodonProfilePhotoBigger" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_bigger.jpg"></asset>
     </assets>
 </module>

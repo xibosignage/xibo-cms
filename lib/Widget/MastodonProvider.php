@@ -67,9 +67,8 @@ class MastodonProvider implements WidgetProviderInterface
 
             $this->getLog()->debug('Mastodon: count: ' . count($result));
 
-            // TODO when should we expire the media, we dont have any settings
             // Expiry time for any media that is downloaded
-            $expires = Carbon::now()->addHours(24)->format('U');
+            $expires = Carbon::now()->addHours($dataProvider->getSetting('cachePeriodImages', 24))->format('U');
 
             foreach ($result as $item) {
                 // Parse the mastodon
