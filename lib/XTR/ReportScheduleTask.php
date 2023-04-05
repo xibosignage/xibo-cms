@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -311,7 +311,7 @@ class ReportScheduleTask implements TaskInterface
                     $notification = $this->notificationFactory->createEmpty();
                     $notification->subject = $report->description;
                     $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
-                    $notification->createdDt = Carbon::now()->format('U');
+                    $notification->createDt = Carbon::now()->format('U');
                     $notification->releaseDt = Carbon::now()->format('U');
                     $notification->isEmail = 1;
                     $notification->isInterrupt = 0;

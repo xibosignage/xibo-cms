@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -52,7 +52,7 @@ class Notification implements \JsonSerializable
      * )
      * @var int
      */
-    public $createdDt;
+    public $createDt;
 
     /**
      * @SWG\Property(
@@ -297,7 +297,7 @@ class Notification implements \JsonSerializable
         ', [
             'subject' => $this->subject,
             'body' => $this->body,
-            'createDt' => $this->createdDt,
+            'createDt' => $this->createDt,
             'releaseDt' => $this->releaseDt,
             'isEmail' => $this->isEmail,
             'isInterrupt' => $this->isInterrupt,
@@ -330,7 +330,7 @@ class Notification implements \JsonSerializable
         ', [
             'subject' => $this->subject,
             'body' => $this->body,
-            'createDt' => $this->createdDt,
+            'createDt' => $this->createDt,
             'releaseDt' => $this->releaseDt,
             'isEmail' => $this->isEmail,
             'isInterrupt' => $this->isInterrupt,
