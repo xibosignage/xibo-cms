@@ -542,9 +542,9 @@ class Layout extends Base
 
         // for remote source, we import the Layout and save the thumbnail to temporary file
         // after save we can move the image to correct library folder, as we have campaignId
-        if ($source === 'remote' && !empty($layout->thumbnail)) {
+        if ($source === 'remote' && !empty($layout->getUnmatchedProperty('thumbnail'))) {
             $campaignThumb = $layout->getThumbnailUri();
-            rename($layout->thumbnail, $campaignThumb);
+            rename($layout->getUnmatchedProperty('thumbnail'), $campaignThumb);
         }
 
         if ($templateId != null && $template !== null) {
@@ -1459,25 +1459,25 @@ class Layout extends Base
                     } catch (NotFoundException $notFoundException) {
                         // This module isn't available, mark it as invalid.
                         $widget->isValid = 0;
-                        $widget->moduleName = __('Invalid Module');
-                        $widget->name = __('Invalid Module');
-                        $widget->tags = [];
-                        $widget->isDeletable = 1;
+                        $widget->setUnmatchedProperty('moduleName', __('Invalid Module'));
+                        $widget->setUnmatchedProperty('name', __('Invalid Module'));
+                        $widget->setUnmatchedProperty('tags', []);
+                        $widget->setUnmatchedProperty('isDeletable', 1);
                         continue;
                     }
 
-                    $widget->moduleName = $module->name;
+                    $widget->setUnmatchedProperty('moduleName', $module->name);
 
                     if ($module->regionSpecific == 0) {
                         // Use the media assigned to this widget
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        $widget->name = $widget->getOptionValue('name', $media->name);
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $media->name));
 
                         // Augment with tags
-                        $widget->tags = $media->tags;
+                        $widget->setUnmatchedProperty('tags', $media->tags);
                     } else {
-                        $widget->name = $widget->getOptionValue('name', $module->name);
-                        $widget->tags = [];
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
+                        $widget->setUnmatchedProperty('tags', []);
                     }
 
                     // Sub-playlists should calculate a fresh duration
@@ -1551,20 +1551,26 @@ class Layout extends Base
             $layout->includeProperty('buttons');
 
             // Thumbnail
-            $layout->thumbnail = '';
+            $layout->setUnmatchedProperty('thumbnail', '');
             if (file_exists($layout->getThumbnailUri())) {
-                $layout->thumbnail = $this->urlFor($request, 'layout.download.thumbnail', ['id' => $layout->layoutId]);
+                $layout->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor($request, 'layout.download.thumbnail', ['id' => $layout->layoutId])
+                );
             }
 
             // Fix up the description
-            $layout->descriptionFormatted = $layout->description;
+            $layout->setUnmatchedProperty('descriptionFormatted', $layout->description);
 
             if ($layout->description != '') {
                 if ($showDescriptionId == 1) {
                     // Parse down for description
-                    $layout->descriptionFormatted = Parsedown::instance()->text($layout->description);
+                    $layout->setUnmatchedProperty(
+                        'descriptionFormatted',
+                        Parsedown::instance()->text($layout->description)
+                    );
                 } else if ($showDescriptionId == 2) {
-                    $layout->descriptionFormatted = strtok($layout->description, "\n");
+                    $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
                 }
             }
 
@@ -1574,49 +1580,36 @@ class Layout extends Base
                 foreach ($layout->regions as $region) {
                     foreach ($region->getPlaylist()->widgets as $widget) {
                         $module = $this->moduleFactory->getByType($widget->type);
-                        $widget->moduleName = $module->name;
-                        $widget->name = $widget->getOptionValue('name', $module->name);
+                        $widget->setUnmatchedProperty('moduleName', $module->name);
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
                     }
                 }
 
                 // provide our layout object to a template to render immediately
-                $layout->descriptionFormatted = $this->renderTemplateToString(
+                $layout->setUnmatchedProperty('descriptionFormatted', $this->renderTemplateToString(
                     'layout-page-grid-widgetlist',
                     (array)$layout
-                );
+                ));
             }
 
-            switch ($layout->status) {
-                case Status::$STATUS_VALID:
-                    $layout->statusDescription = __('This Layout is ready to play');
-                    break;
+            $layout->setUnmatchedProperty('statusDescription', match ($layout->status) {
+                Status::$STATUS_VALID => __('This Layout is ready to play'),
+                Status::$STATUS_PLAYER => __('There are items on this Layout that can only be assessed by the Display'),
+                Status::$STATUS_NOT_BUILT => __('This Layout has not been built yet'),
+                default => __('This Layout is invalid and should not be scheduled'),
+            });
 
-                case Status::$STATUS_PLAYER:
-                    $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');// @phpcs:ignore
-                    break;
+            $layout->setUnmatchedProperty('enableStatDescription', match ($layout->enableStat) {
+                1 => __('This Layout has enable stat collection set to ON'),
+                default => __('This Layout has enable stat collection set to OFF'),
+            });
 
-                case Status::$STATUS_NOT_BUILT:
-                    $layout->statusDescription = __('This Layout has not been built yet');
-                    break;
+            // Check if user has "delete permissions" - for layout designer to show/hide Delete button
+            $layout->setUnmatchedProperty('deletePermission', $this->getUser()->featureEnabled('layout.modify'));
 
-                default:
-                    $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
-            }
-
-            switch ($layout->enableStat) {
-                case 1:
-                    $layout->enableStatDescription = __('This Layout has enable stat collection set to ON');
-                    break;
-
-                default:
-                    $layout->enableStatDescription = __('This Layout has enable stat collection set to OFF');
-            }
-
-            // Check if user has delete permissions - for layout designer to show/hide Delete button
-            $layout->deletePermission = $this->getUser()->featureEnabled('layout.modify');
-
-            // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
-            $layout->scheduleNowPermission = $this->getUser()->featureEnabled('schedule.now');
+            // Check if user has view permissions to the schedule now page - for layout designer to show/hide
+            // the Schedule Now button
+            $layout->setUnmatchedProperty('scheduleNowPermission', $this->getUser()->featureEnabled('schedule.now'));
 
             // Add some buttons for this row
             if ($this->getUser()->featureEnabled('layout.modify')

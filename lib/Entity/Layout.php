@@ -54,9 +54,6 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
- *
- * @property $isLocked
- * @property $thumbnail
  */
 class Layout implements \JsonSerializable
 {
@@ -266,6 +263,12 @@ class Layout implements \JsonSerializable
      * @SWG\Property(description="Code identifier for this Layout")
      */
     public $code;
+
+    /**
+     * @SWG\Property(description="Is this layout locked by another user?")
+     * @var bool
+     */
+    public $isLocked;
 
     // Child items
     /**
