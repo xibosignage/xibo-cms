@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -70,7 +70,7 @@ trait ModulePropertyTrait
             // TODO: should we cast values to their appropriate field formats.
             if ($decorateForOutput) {
                 // Does this property have library references?
-                if ($property->allowLibraryRefs) {
+                if ($property->allowLibraryRefs && !empty($value)) {
                     // Parse them out and replace for our special syntax.
                     $matches = [];
                     preg_match_all('/\[(.*?)\]/', $value, $matches);

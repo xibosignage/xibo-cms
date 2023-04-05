@@ -123,7 +123,11 @@ class Folder extends Base
             $folder->type = 'home';
         }
 
-        $children = array_filter(explode(',', $folder->children));
+        if (!empty($folder->children)) {
+            $children = array_filter(explode(',', $folder->children));
+        } else {
+            $children = [];
+        }
         $childrenDetails = [];
 
         foreach ($children as $childId) {
