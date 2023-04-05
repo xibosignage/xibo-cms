@@ -20,30 +20,21 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Xibo\Validation\Exceptions;
 
-namespace Xibo\Validation\Rules;
-
-
-use Respect\Validation\Rules\AbstractRule;
+use Respect\Validation\Exceptions\ValidationException;
 
 /**
- * Class Longitude
- * @package Xibo\Validation\Rules
+ * Latitude Exception
  */
-class Longitude extends AbstractRule
+class LatitudeException extends ValidationException
 {
-    /**
-     * @param $input
-     * @return bool
-     */
-    public function validate($input): bool
-    {
-        if (!is_numeric($input)) {
-            return false;
-        }
-
-        $longitude = doubleval($input);
-
-        return ($longitude >= -180 && $longitude <= 180);
-    }
+    protected $defaultTemplates = [
+        self::MODE_DEFAULT => [
+            self::STANDARD => 'Latitude is not valid',
+        ],
+        self::MODE_NEGATIVE => [
+            self::STANDARD => 'Negative of Latitude is not valid.',
+        ],
+    ];
 }

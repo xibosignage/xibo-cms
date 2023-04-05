@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -99,12 +99,15 @@ class Task extends Base
     public function grid(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $tasks = $this->taskFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
+        $tasks = $this->taskFactory->query(
+            $this->gridRenderSort($sanitizedParams),
+            $this->gridRenderFilter([], $sanitizedParams)
+        );
 
         foreach ($tasks as $task) {
             /** @var \Xibo\Entity\Task $task */
 
-            $task->nextRunDt = $task->nextRunDate();
+            $task->setUnmatchedProperty('nextRunDt', $task->nextRunDate());
 
             if ($this->isApi($request))
                 continue;
@@ -395,7 +398,7 @@ class Task extends Base
         $task = $this->taskFactory->getById($id);
 
         // Set to running
-        $this->getLog()->debug('Running Task ' . $task->name
+        $this->getLog()->debug('run: Running Task ' . $task->name
             . ' [' . $task->taskId . '], Class = ' . $task->class);
 
         // Run
@@ -435,7 +438,7 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_SUCCESS;
             $task->lastRunExitCode = 0;
         } catch (\Exception $e) {
-            $this->getLog()->error($e->getMessage() . ' Exception Type: ' . get_class($e));
+            $this->getLog()->error('run: ' . $e->getMessage() . ' Exception Type: ' . get_class($e));
             $this->getLog()->debug($e->getTraceAsString());
 
             // We should roll back anything we've done so far
@@ -461,7 +464,7 @@ class Task extends Base
         // Finished
         $task->setFinished();
 
-        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: '
+        $this->getLog()->debug('run: Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: '
             . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         $this->setNoOutput();
@@ -480,7 +483,7 @@ class Task extends Base
      */
     public function poll(Request $request, Response $response)
     {
-        $this->getLog()->debug('XTR poll started');
+        $this->getLog()->debug('poll: XTR poll started');
 
         // Process timeouts
         $this->pollProcessTimeouts();
@@ -523,7 +526,7 @@ class Task extends Base
                     ->format('U');
 
                 if ($task['runNow'] == 1 || $nextRunDt <= Carbon::now()->format('U')) {
-                    $this->getLog()->info('Running Task ' . $taskId);
+                    $this->getLog()->info('poll: Running Task ' . $taskId);
 
                     try {
                         // Pass to run.
@@ -531,8 +534,9 @@ class Task extends Base
                     } catch (\Exception $exception) {
                         // The only thing which can fail inside run is core code,
                         // so it is reasonable here to disable the task.
-                        $this->getLog()->error('Task run error for taskId ' . $taskId
+                        $this->getLog()->error('poll: Task run error for taskId ' . $taskId
                             . '. E = ' . $exception->getMessage());
+                        $this->getLog()->debug($exception->getTraceAsString());
 
                         // Set to error and disable.
                         $this->store->update('

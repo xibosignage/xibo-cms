@@ -574,9 +574,6 @@ class Display implements \JsonSerializable
         $this->displayProfileFactory = $displayProfileFactory;
         $this->displayFactory = $displayFactory;
         $this->folderFactory = $folderFactory;
-
-        // Initialise extra validation rules
-        v::with('Xibo\\Validation\\Rules\\');
     }
 
     /**
