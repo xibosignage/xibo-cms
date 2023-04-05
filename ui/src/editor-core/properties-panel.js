@@ -406,6 +406,10 @@ PropertiesPanel.prototype.render = function(
     if (target.type === 'layout') {
       dataToRender.imageDownloadUrl = imageDownloadUrl;
       dataToRender.libraryAddUrl = libraryAddUrl;
+
+      // Add new property:orientation
+      dataToRender.orientation = lD.viewer.getLayoutOrientation(
+        dataToRender.resolution.width, dataToRender.resolution.height);
     }
 
     const html = propertiesPanelTemplate({

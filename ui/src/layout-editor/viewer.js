@@ -37,6 +37,9 @@ const Viewer = function(parent, container) {
   // Moveable object
   this.moveable = null;
 
+  // Layout orientation
+  this.orientation = null;
+
   // Initialise moveable
   this.initMoveable();
 };
@@ -93,6 +96,21 @@ Viewer.prototype.scaleElement = function(element, container) {
     containerDimensions.width / 2 - elementDimensions.width / 2;
 
   return elementDimensions;
+};
+
+/**
+ * Get layout orientation
+ * @param {number} width
+ * @param {number} height
+ * @return {string} portrait | landscape
+ * */
+Viewer.prototype.getLayoutOrientation = function(width, height) {
+  // Get layout orientation
+  if (width < height) {
+    return 'portrait';
+  } else {
+    return 'landscape';
+  }
 };
 
 
@@ -159,6 +177,11 @@ Viewer.prototype.render = function(forceReload = false) {
   this.containerElementDimensions =
     this.scaleElement(lD.layout, $viewerContainer);
 
+  this.orientation = this.getLayoutOrientation(
+    this.containerElementDimensions.width,
+    this.containerElementDimensions.height,
+  );
+
   // Apply viewer scale to the layout
   const scaledLayout = lD.layout.scale($viewerContainer);
 
@@ -170,6 +193,7 @@ Viewer.prototype.render = function(forceReload = false) {
     layout: scaledLayout,
     trans: viewerTrans,
     theme: this.theme,
+    orientation: this.orientation,
   });
 
   // Replace container html
