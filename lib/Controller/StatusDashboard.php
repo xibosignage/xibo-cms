@@ -347,8 +347,9 @@ class StatusDashboard extends Base
             $data['nowShowing'] = $sth->fetchColumn(0);
 
             // Latest news
-            // TODO; we will need to replace Pico feed
-            if (false && $this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))) {
+            if ($this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1
+                && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))
+            ) {
                 // Make sure we have the cache location configured
                 MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
