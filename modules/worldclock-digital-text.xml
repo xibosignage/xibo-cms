@@ -70,6 +70,20 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
+        <property id="labelColor" type="color">
+            <title>Label Colour</title>
+            <helpText>The color of the label</helpText>
+            <default></default>
+        </property>
+        <property id="dateTimeColor" type="color">
+            <title>Date/Time Colour</title>
+            <helpText>The color of the text</helpText>
+            <default></default>
+        </property>
+        <property id="backgroundColor" type="color">
+            <title>Background Colour</title>
+            <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -109,6 +123,11 @@
 .clockContainer p {
   margin: 0;
 }
+
+{% if labelColor %}.world-clock-label { color: {{labelColor}}; }{% endif %}
+{% if dateTimeColor %}.hourText { color: {{dateTimeColor}}; }{% endif %}
+{% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
+
 </style>
         ]]></twig>
     </stencil>
