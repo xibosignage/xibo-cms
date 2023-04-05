@@ -1170,6 +1170,12 @@
     align-items: center;
     margin-bottom: -3px;
     flex-wrap: wrap;
+
+    &.resolution-orientation {
+        &--portrait {
+            min-height: 360px;
+        }
+    }
 }
 
 .background-image-actions .btn-group {
@@ -1199,9 +1205,26 @@
     }
 }
 
-.background-image-add.ui-droppable-active .background-image-drop {
-    display: block;
-    z-index: calc(#{$designer-overlay-z-index} + 10);
+.background-image-add.ui-droppable-active {
+    .background-image-drop {
+        display: block;
+        z-index: 3;
+    }
+    &.ui-droppable-hover {
+        .background-image-drop {
+            @include set-transparent-color(background-color, $xibo-color-primary, 0.9);
+        }
+    }
+
+    &.resolution-orientation {
+        &--portrait {
+            .background-image-drop {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+    }
 }
 
 div#bg_not_found_icon {
