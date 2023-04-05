@@ -3082,7 +3082,7 @@ class Layout extends Base
                                 $region->left + ($region->width / 2),
                                 $region->top + ($region->height / 2),
                                 function ($font) {
-                                    $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                    $font->file(PROJECT_ROOT . '/web/theme/default/fonts/Railway.ttf');
                                     $font->size(84);
                                     $font->color('#000000');
                                     $font->align('center');
@@ -3144,7 +3144,7 @@ class Layout extends Base
                                     $region->left + ($region->width / 2),
                                     $region->top + ($region->height / 2),
                                     function ($font) {
-                                        $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                        $font->file(PROJECT_ROOT . '/web/theme/default/fonts/Railway.ttf');
                                         $font->size(84);
                                         $font->color('#000000');
                                         $font->align('center');
@@ -3160,7 +3160,7 @@ class Layout extends Base
                             $region->left + $region->width - 10,
                             $region->top + $region->height - 10,
                             function ($font) {
-                                $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                $font->file(PROJECT_ROOT . '/web/theme/default/fonts/Railway.ttf');
                                 $font->size(36);
                                 $font->color('#000000');
                                 $font->align('right');
