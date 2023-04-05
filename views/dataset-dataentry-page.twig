@@ -187,6 +187,7 @@
                 $('.dataset-edit-title-mode').text(multiSelectTitleTrans);
                 $('.widget-title .badge').attr('title', multiSelectHelpTrans);
                 $("#datasets tbody").off('click', 'tr');
+                $('#datasets tbody tr.selected').removeClass('selected');
                 $(".deleteSelectedRows").removeClass('d-none');
                 $('#datasets tbody').on('click', 'tr', function(ev) {
 
@@ -213,7 +214,7 @@
                 $('.widget-title .badge').attr('title', editModeHelpTrans);
                 $(".deleteSelectedRows").addClass('d-none');
                 $("#datasets tbody").off('click', 'tr');
-                $('#datasets tbody tr[role="row"].selected').removeClass('selected');
+                $('#datasets tbody tr.selected').removeClass('selected');
                 $(".deleteSelectedRows").attr('disabled', 'disabled');
                 $("#datasets tbody").on('click', 'tr', dataSetEditFormOpen);
             }
@@ -227,7 +228,7 @@
             var rowIds = [];
             var processedRows = 0;
 
-            $('#datasets tbody tr[role="row"].selected').each(function(idx, ele) {
+            $('#datasets tbody tr.selected').each(function(idx, ele) {
                 rows.push(table.row(ele).data());
             });
 

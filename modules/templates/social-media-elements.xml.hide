@@ -24,6 +24,7 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Profile Photo</title>
+        <thumbnail>fulltime-np</thumbnail>
         <properties>
             <property></property>
         </properties>
@@ -32,6 +33,9 @@
 <div class="twitter-profile" style="color:{{color}}"></div>
             ]]></hbs>
         </stencil>
+        <assets>
+            <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
+        </assets>
     </template>
     <template>
         <id>tweet1</id>

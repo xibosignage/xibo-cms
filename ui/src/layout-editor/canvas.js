@@ -4,8 +4,9 @@
  * Canvas contructor
  * @param {number} id - region id
  * @param {object} data - data from the API request
+ * @param {object} layoutDimensions - layout dimensions
  */
-const Canvas = function(id, data) {
+const Canvas = function(id, data, layoutDimensions) {
   this.id = 'region_' + id;
   this.regionId = id;
 
@@ -31,8 +32,8 @@ const Canvas = function(id, data) {
 
   // set dimentions
   this.dimensions = {
-    width: 0,
-    height: 0,
+    width: layoutDimensions.width,
+    height: layoutDimensions.height,
     top: 0,
     left: 0,
   };

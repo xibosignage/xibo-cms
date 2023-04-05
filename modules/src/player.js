@@ -49,6 +49,35 @@ $(function() {
     }
   };
 
+  const macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
+
+  const composeUTCDateFromMacro = (macroStr) => {
+    const utcFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+    const dateNow = moment().utc();
+    // Check if input has the correct format
+    const dateStr = String(macroStr);
+
+    if (dateStr.length === 0 ||
+        dateStr.match(macroRegex) === null
+    ) {
+      return dateNow.format(utcFormat);
+    }
+
+    // Trim the macro date string
+    const dateOffsetStr = dateStr.replaceAll('%', '');
+    const params = (op) => dateOffsetStr.replace(op, '')
+      .split(/(\d+)/).filter(Boolean);
+    const addRegex = /^\+/g;
+    const subtractRegex = /^\-/g;
+
+    // Check if it's add or subtract offset and return composed date
+    if (dateOffsetStr.match(addRegex) !== null) {
+      return dateNow.add(...params(addRegex)).format(utcFormat);
+    } else if (dateOffsetStr.match(subtractRegex) !== null) {
+      return dateNow.subtract(...params(subtractRegex)).format(utcFormat);
+    }
+  };
+
   // Call the data url and parse out the template.
   $.each(widgetData, function(_key, widget) {
     // Check if we have template from templateId or module
@@ -76,10 +105,11 @@ $(function() {
     // if we have data on the widget (for older players),
     // or if we are not in preview and have empty data on Widget (like text)
     // do not run ajax use that data instead
-    if ((widget.data.data !== undefined && widget.data.data.length > 0)
-      || (widget.data.length == 0 && !isPreview)
+    if (
+      (widget.data.data !== undefined && widget.data.data.length > 0) ||
+      (widget.data.length == 0 && !isPreview)
     ) {
-      initPlayer(widget.data)
+      initPlayer(widget.data);
     } else {
       // else get data from widget.url,
       // this will be either getData for preview
@@ -88,12 +118,16 @@ $(function() {
         method: 'GET',
         url: widget.url,
       }).done(function(data) {
-        initPlayer(data)
+        initPlayer(data);
       }).fail(function(jqXHR, textStatus, errorThrown) {
         console.log(jqXHR, textStatus, errorThrown);
       });
     }
 
+    /**
+     * Initialize the player
+     * @param {*} data
+     */
     function initPlayer(data) {
       const $target = $('body');
       let dataItems = [];
@@ -101,29 +135,32 @@ $(function() {
       const isArray = Array.isArray(data);
 
       // If the request failed, and we're in preview, show the error message
-      if (!isArray && data.success === false && isPreview) {
+      if ((!widget.isValid ||
+          (!isArray && data.success === false)
+      ) && isPreview) {
         $target.append(
           '<div class="error-message" role="alert">' +
           data.message +
           '</div>');
-      } else if (
-        !isArray &&
-        data.data !== undefined &&
-        data.data.length === 0 &&
-        widget.sample &&
-        isPreview
-      ) {
-        // If data is empty, use sample data instead
-        // Add single element or array of elements
-        dataItems = (Array.isArray(widget.sample)) ?
-          widget.sample.slice(0) : [widget.sample];
-      } else if (
-        !isArray &&
-        data.data !== undefined &&
-        data.data.length > 0
-      ) {
-        // Add items to the widget
-        dataItems = data.data;
+
+        if (widget.sample) {
+          // If data is empty, use sample data instead
+          // Add single element or array of elements
+          dataItems = (Array.isArray(widget.sample)) ?
+            widget.sample.slice(0) : [widget.sample];
+
+          dataItems = dataItems.reduce((data, item) => {
+            Object.keys(item).forEach((itemKey) => {
+              if (String(item[itemKey]).match(macroRegex) !== null) {
+                item[itemKey] = composeUTCDateFromMacro(item[itemKey]);
+              }
+            });
+
+            return [...data, {...item}];
+          }, []);
+        }
+      } else {
+        dataItems = data?.data || [];
       }
 
       // Add meta to the widget if it exists

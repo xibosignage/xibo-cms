@@ -70,16 +70,17 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
       regionid: this.regionId,
     }];
 
+    // Update new values if they are provided
     const newValues = [{
-      width: transform.width,
-      height: transform.height,
-      top: transform.top,
-      left: transform.left,
+      width: (transform.width) ? transform.width : this.dimensions.width,
+      height: (transform.height) ? transform.height : this.dimensions.height,
+      top: (transform.top) ? transform.top : this.dimensions.top,
+      left: (transform.left) ? transform.left : this.dimensions.left,
       regionid: this.regionId,
     }];
 
     // Add a tranform change to the history array
-    lD.manager.addChange(
+    lD.historyManager.addChange(
       'transform',
       'region',
       this.regionId,
@@ -163,7 +164,7 @@ Region.prototype.editPropertyForm = function(property) {
             dataToSave = form.serialize();
           }
 
-          app.manager.addChange(
+          app.historyManager.addChange(
             'save' + property,
             'widget', // targetType
             self.regionId, // targetId

@@ -104,6 +104,16 @@ Bottombar.prototype.render = function(element) {
         trashActive: trashBinActive,
       },
     ));
+  } else if (element.type == 'element') {
+    // Render element toolbar
+    this.DOMObject.html(bottomBarViewerTemplate(
+      {
+        trans: newBottomBarTrans,
+        readOnlyModeOn: readOnlyModeOn,
+        element: element,
+        trashActive: trashBinActive,
+      },
+    ));
   }
 
   // If read only mode is enabled

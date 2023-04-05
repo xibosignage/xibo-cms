@@ -8,12 +8,7 @@
         <span>{{data.title}}</span>
     </div>
 </div>
-<form id="template-search-form" class="template-search-form">
-    <div class="form-group">
-        <label for="template-name" class="mb-0">{{trans.searchFilters.search}}</label>
-        <input id="template-name" name="template-name" type="text" class="form-control input-name"
-            value="{{ filters.name.value }}">
-    </div>
-</form>
+
+{{> toolbar-search-form trans=trans filters=filters class="template-search-form" autocomplete="off"}}
 
 <div class="toolbar-pane-container"></div>

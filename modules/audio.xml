@@ -40,9 +40,12 @@
         </property>
     </settings>
     <properties>
+        <property id="message-duration" type="message">
+            <title>This audio will play for %media.duration% seconds. To cut the audio short set a lower duration in the Advanced tab, to wait on the last frame or select to Loop set a higher duration.</title>
+        </property>
         <property id="loop" type="checkbox">
             <title>Loop?</title>
-            <helpText>Should the video loop if it finishes before the provided duration?</helpText>
+            <helpText>Should the audio loop if it finishes before the provided duration?</helpText>
             <default>0</default>
         </property>
     </properties>

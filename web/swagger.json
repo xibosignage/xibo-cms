@@ -3,7 +3,7 @@
     "info": {
         "title": "Xibo API",
         "description": "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
-        "termsOfService": "http://xibo.org.uk/legal",
+        "termsOfService": "https://xibosignage.com/legal",
         "contact": {
             "email": "info@xibo.org.uk"
         },
@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "3.1"
+        "version": "3.3"
     },
     "basePath": "/api",
     "schemes": [
@@ -17557,6 +17557,6 @@
     ],
     "externalDocs": {
         "description": "Manual",
-        "url": "http://xibo.org.uk/manual"
+        "url": "https://xibosignage.com/manual"
     }
 }

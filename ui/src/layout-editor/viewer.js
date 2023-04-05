@@ -8,6 +8,7 @@ const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
 const viewerActionEditRegionTemplate =
   require('../templates/viewer-action-edit-region.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
+const viewerElementTemplate = require('../templates/viewer-element.hbs');
 
 /**
  * Viewer contructor
@@ -100,8 +101,6 @@ Viewer.prototype.scaleElement = function(element, container) {
  * @param {object} forceReload - Force reload
 */
 Viewer.prototype.render = function(forceReload = false) {
-  const self = this;
-
   // Check background colour and set theme
   const hsvColor =
     (this.parent.layout.backgroundColor) ?
@@ -207,6 +206,28 @@ Viewer.prototype.render = function(forceReload = false) {
       this.renderRegion(lD.layout.regions[regionIndex]);
     }
   }
+
+  // Render preview canvas if it's not an empty object
+  (!$.isEmptyObject(lD.layout.canvas)) && this.renderCanvas(lD.layout.canvas);
+
+  // Handle UI interactions
+  this.handleInteractions();
+
+  // Refresh on window resize
+  $(window).on('resize', function() {
+    this.update();
+  }.bind(this));
+
+  // Update moveable
+  this.updateMoveable();
+};
+
+/**
+ * Handle viewer interactions
+ */
+Viewer.prototype.handleInteractions = function() {
+  const self = this;
+  const $viewerContainer = this.DOMObject;
 
   // Handle droppable layout area
   const $droppableArea = $viewerContainer.find('.layout.droppable');
@@ -400,6 +421,15 @@ Viewer.prototype.render = function(forceReload = false) {
                 target: $(e.target).find('.designer-widget'),
               });
               self.selectElement($(e.target).find('.designer-widget'));
+            } else if (
+              $(e.target).hasClass('designer-element') &&
+              !$(e.target).hasClass('selected')
+            ) {
+              // Select element if exists
+              lD.selectObject({
+                target: $(e.target),
+              });
+              self.selectElement($(e.target));
             }
           }, 200);
         } else {
@@ -429,13 +459,17 @@ Viewer.prototype.render = function(forceReload = false) {
     }).contextmenu(function(ev) {
       // Context menu
       if (
-        $(ev.target).is('.editable, .deletable, .permissionsModifiable')
+        $(ev.target).is('.editable, .deletable, .permissionsModifiable') &&
+        !$(ev.target).hasClass('contextMenuOpen')
       ) {
         // Open context menu
         lD.openContextMenu(ev.target, {
           x: ev.pageX,
           y: ev.pageY,
         });
+
+        // Mark context menu as open for the target
+        $(ev.target).addClass('contextMenuOpen');
       }
       // Prevent browser menu to open
       return false;
@@ -446,14 +480,6 @@ Viewer.prototype.render = function(forceReload = false) {
     this.reload = true;
     this.toggleFullscreen();
   }.bind(this));
-
-  // Refresh on window resize
-  $(window).on('resize', function() {
-    this.update();
-  }.bind(this));
-
-  // Update moveable
-  this.updateMoveable();
 };
 
 /**
@@ -462,6 +488,7 @@ Viewer.prototype.render = function(forceReload = false) {
 Viewer.prototype.update = function() {
   const $viewerContainer = this.DOMObject;
   const $viewElement = $viewerContainer.find('.viewer-element');
+  const self = this;
 
   // Hide viewer element
   $viewElement.hide();
@@ -488,6 +515,23 @@ Viewer.prototype.update = function() {
   for (const regionIndex in lD.layout.regions) {
     if (lD.layout.regions.hasOwnProperty(regionIndex)) {
       this.updateRegion(lD.layout.regions[regionIndex]);
+    }
+  }
+
+  // Render preview elements
+  for (const canvasWidget in lD.layout.canvas.widgets) {
+    if (lD.layout.canvas.widgets.hasOwnProperty(canvasWidget)) {
+      const widgetElements = lD.layout.canvas.widgets[canvasWidget].elements;
+
+      for (const elementIndex in widgetElements) {
+        if (widgetElements.hasOwnProperty(elementIndex)) {
+          this.updateElement(widgetElements[elementIndex]);
+          self.renderElement(
+            widgetElements[elementIndex],
+            lD.layout.canvas,
+          );
+        }
+      }
     }
   }
 
@@ -682,6 +726,40 @@ Viewer.prototype.renderRegionDebounced = _.debounce(
 );
 
 /**
+ * Update element
+ * @param {object} element
+ */
+Viewer.prototype.updateElement = function(
+  element,
+) {
+  const $container = this.DOMObject.find(`#${element.id}`);
+
+  // Calculate scaled dimensions
+  element.scaledDimensions = {
+    height: element.height * this.containerElementDimensions.scale,
+    left: element.left * this.containerElementDimensions.scale,
+    top: element.top * this.containerElementDimensions.scale,
+    width: element.width * this.containerElementDimensions.scale,
+  };
+
+  // Update element
+  $container.css({
+    height: element.scaledDimensions.height,
+    left: element.scaledDimensions.left,
+    top: element.scaledDimensions.top,
+    width: element.scaledDimensions.width,
+  });
+
+  // Update element content
+  this.renderElementContent(
+    element,
+  );
+
+  // Update moveable
+  this.updateMoveable();
+};
+
+/**
  * Update Region
  * @param {object} region - region object
  * @param {boolean} changed - if region was changed
@@ -728,6 +806,182 @@ Viewer.prototype.updateRegion = function(
 
   // Update moveable
   this.updateMoveable();
+};
+
+
+/**
+ * Render canvas in the viewer
+ * @param {object} canvas - canvas object
+ */
+Viewer.prototype.renderCanvas = function(
+  canvas,
+) {
+  // Render widgets
+  for (const widgetId in canvas.widgets) {
+    if (canvas.widgets.hasOwnProperty(widgetId)) {
+      const widget = canvas.widgets[widgetId];
+
+      // Get elements from widget
+      for (const elementId in widget.elements) {
+        if (widget.elements.hasOwnProperty(elementId)) {
+          const element = widget.elements[elementId];
+
+          // Render element
+          this.renderElement(element, canvas);
+        }
+      }
+    }
+  }
+};
+
+/**
+ * Render element
+ * @param {object} element - element object
+ * @param {object} canvas - canvas object
+ */
+Viewer.prototype.renderElement = function(
+  element,
+  canvas,
+) {
+  const self = this;
+  // Get canvas region container
+  const $canvasRegionContainer = this.DOMObject.find(`#${canvas.id}`);
+
+  // Scale element based on viewer scale
+  const viewerScale = this.containerElementDimensions.scale;
+  const elementRenderDimensions = {
+    height: element.height * viewerScale,
+    left: element.left * viewerScale,
+    top: element.top * viewerScale,
+    width: element.width * viewerScale,
+    scale: 1, // TODO: We need to fix scaling
+    zIndex: element.layer,
+  };
+
+  // Get element template by id
+  element.getTemplate().then((template) => {
+    // Render element with template
+    const $newElement = $(viewerElementTemplate({
+      element: element,
+      canvas: canvas,
+      template: template,
+      dimensions: elementRenderDimensions,
+    }));
+
+    // Append element html to the canvas region container
+    // if it doesn't exist, otherwise replace it
+    if ($canvasRegionContainer.find(`#${element.elementId}`).length) {
+      $canvasRegionContainer.find(`#${element.elementId}`)
+        .replaceWith($newElement);
+    } else {
+      $newElement.appendTo($canvasRegionContainer);
+    }
+
+    // Create and render HBS template from template
+    if (template.stencil.hbs) {
+      const hbsTemplate = Handlebars.compile(template.stencil.hbs);
+
+      // If element has no properties, use template's default properties
+      if (!element.properties) {
+        element.properties = template.properties;
+      }
+
+      // Convert properties to object with id and value
+      const properties = {};
+      for (const propertyId in element.properties) {
+        if (element.properties.hasOwnProperty(propertyId)) {
+          const property = element.properties[propertyId];
+
+          // Add property to properties object
+          // if doesn't have a value, use default value
+          properties[property.id] =
+            property.value ? property.value : property.default;
+        }
+      }
+
+      // Compile hbs template with data
+      const hbsHtml = hbsTemplate(properties);
+
+      // Append hbs html to the element
+      $newElement.find('.element-content').html(hbsHtml);
+    }
+
+    // Call on template render if it exists
+    if (template.onTemplateRender) {
+      const onTemplateRender =
+        window['onTemplateRender_' + element.elementId];
+
+      // Call on template render on element creation
+      onTemplateRender(element.properties);
+    }
+
+    // Handle viewer interactions
+    self.handleInteractions();
+
+    // Update moveable
+    this.updateMoveable();
+  });
+};
+
+/**
+ * Update element content
+ * @param {Object} element
+ */
+Viewer.prototype.renderElementContent = function(
+  element,
+) {
+  // Get element container
+  const $elementContainer = this.DOMObject.find(`#${element.elementId}`);
+
+  // Get element template
+  element.getTemplate().then((template) => {
+    // Render element with template
+    const $newElement = $(viewerElementTemplate({
+      element: element,
+      template: template,
+    }));
+
+    // Append element html to the canvas region container
+    $elementContainer.find('.element-content').html($newElement.html());
+
+    // Create and render HBS template from template
+    if (template.stencil.hbs) {
+      const hbsTemplate = Handlebars.compile(template.stencil.hbs);
+
+      // If element has no properties, use template's default properties
+      if (!element.properties) {
+        element.properties = template.properties;
+      }
+
+      // Convert properties to object with id and value
+      const properties = {};
+      for (const propertyId in element.properties) {
+        if (element.properties.hasOwnProperty(propertyId)) {
+          const property = element.properties[propertyId];
+
+          // Add property to properties object
+          // if doesn't have a value, use default value
+          properties[property.id] =
+            property.value ? property.value : property.default;
+        }
+      }
+
+      // Compile hbs template with data
+      const hbsHtml = hbsTemplate(properties);
+
+      // Append hbs html to the element
+      $elementContainer.find('.element-content').html(hbsHtml);
+    }
+
+    // Call on template render if it exists
+    if (template.onTemplateRender) {
+      const onTemplateRender =
+        window['onTemplateRender_' + element.elementId];
+
+      // Call on template render on element creation
+      onTemplateRender(element.properties);
+    }
+  });
 };
 
 /**
@@ -807,6 +1061,36 @@ Viewer.prototype.initMoveable = function() {
     }
   };
 
+  const saveElementProperties = function(
+    element,
+    hasMoved = false,
+  ) {
+    const scale = self.containerElementDimensions.scale;
+
+    const $element = $(element);
+    const elementId = $element.attr('id');
+    const parentWidget = lD.getElementByTypeAndId(
+      'widget',
+      'widget_' + $element.data('regionId') + '_' + $element.data('widgetId'),
+      'canvas',
+    );
+
+    const elementObject = parentWidget.elements[elementId];
+
+    // Save dimensions
+    elementObject.width = parseInt($element.width() / scale);
+    elementObject.height = parseInt($element.height() / scale);
+
+    // Only change top/left if element has moved
+    if (hasMoved) {
+      elementObject.top = parseInt($element.position().top / scale);
+      elementObject.left = parseInt($element.position().left / scale);
+    }
+
+    // Save element
+    parentWidget.saveElements();
+  };
+
   // Create moveable
   this.moveable = new Moveable(document.body, {
     draggable: true,
@@ -841,7 +1125,15 @@ Viewer.prototype.initMoveable = function() {
       e.target.style.top = `${e.top}px`;
     }
   }).on('dragEnd', (e) => {
-    (e.isDrag) && saveRegionProperties(e.target, false, true);
+    if (e.isDrag) {
+      // Save region properties
+      (lD.selectedObject.type == 'region') &&
+        saveRegionProperties(e.target, true, true);
+
+      // Save element properties
+      (lD.selectedObject.type == 'element') &&
+        saveElementProperties(e.target, true);
+    }
   });
 
   /* resizable */
@@ -856,16 +1148,20 @@ Viewer.prototype.initMoveable = function() {
     e.target.style.transform =
       `translate(${beforeTranslate[0]}px, ${beforeTranslate[1]}px)`;
 
-    // Save new dimensions to region object
+    // Update element dimension properties
     lD.selectedObject.transform({
       width: parseInt(e.width / self.containerElementDimensions.scale),
       height: parseInt(e.height / self.containerElementDimensions.scale),
-      top: lD.selectedObject.dimensions.top,
-      left: lD.selectedObject.dimensions.left,
     }, false);
 
-    // Update region
-    self.updateRegion(lD.selectedObject, true);
+    // Update target object
+    if (lD.selectedObject.type == 'region') {
+      // Update region
+      self.updateRegion(lD.selectedObject, true);
+    } else if (lD.selectedObject.type == 'element') {
+      // Update element
+      self.updateElement(lD.selectedObject, true);
+    }
   }).on('resizeEnd', (e) => {
     // Change transform translate to the new position
     const transformSplit = (e.target.style.transform).split(/[(),]+/);
@@ -884,7 +1180,13 @@ Viewer.prototype.initMoveable = function() {
       parseFloat(transformSplit[2]) != 0
     );
 
-    saveRegionProperties(e.target, true, moved);
+    // Save region properties
+    (lD.selectedObject.type == 'region') &&
+      saveRegionProperties(e.target, true, moved);
+
+    // Save element properties
+    (lD.selectedObject.type == 'element') &&
+      saveElementProperties(e.target, moved);
   });
 };
 
@@ -916,7 +1218,8 @@ Viewer.prototype.updateMoveable = function() {
   if (
     $selectedElement &&
     (
-      $selectedElement.hasClass('designer-region')
+      $selectedElement.hasClass('designer-region') ||
+      $selectedElement.hasClass('designer-element')
     ) &&
     $.contains(document, $selectedElement[0])
   ) {

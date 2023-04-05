@@ -12,7 +12,7 @@
 <div class="toolbar-pane-container">
     <div class="toolbar-pane-content">
         {{#each content}}
-            {{#unless hideElement}}
+            {{#unless hideCard}}
                 {{!-- Load cards according to type searchItem/Widget --}}
                 {{> toolbar-card contentType="widgets" trans=../trans icon="module"}}
             {{/unless}}

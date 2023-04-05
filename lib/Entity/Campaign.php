@@ -340,7 +340,7 @@ class Campaign implements \JsonSerializable
      */
     public function getStartDt()
     {
-        return $this->startDt == 0 ? null : Carbon::createFromFormat('U', $this->startDt);
+        return $this->startDt == 0 ? null : Carbon::createFromTimestamp($this->startDt);
     }
 
     /**
@@ -348,7 +348,7 @@ class Campaign implements \JsonSerializable
      */
     public function getEndDt()
     {
-        return $this->endDt == 0 ? null : Carbon::createFromFormat('U', $this->endDt);
+        return $this->endDt == 0 ? null : Carbon::createFromTimestamp($this->endDt);
     }
 
     /**
