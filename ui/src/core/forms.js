@@ -1758,11 +1758,15 @@ window.forms = {
             // value of the dependency to the target data attribute
             $target.data('depends-on-value', valueToSet);
 
-            // Reset the target form field
-            forms.initFields(container, $target, targetId);
+            if (forms.fieldsInitialized === false) {
+              // Reset the target form field
+              forms.initFields(container, $target, targetId);
+            }
           }
         });
       });
+
+      this.fieldsInitialized = true;
     }
   },
   /**
@@ -1937,4 +1941,6 @@ window.forms = {
       }, 500));
     });
   },
+
+  fieldsInitialized: false,
 };
