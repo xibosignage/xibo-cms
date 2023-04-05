@@ -1323,7 +1323,7 @@ class Layout implements \JsonSerializable
             $regionOptionsNode = $document->createElement('options');
 
             foreach ($region->regionOptions as $regionOption) {
-                $regionOptionNode = $document->createElement($regionOption->option, $regionOption->value);
+                $regionOptionNode = $document->createElement($regionOption->option, $regionOption->value ?? '');
                 $regionOptionsNode->appendChild($regionOptionNode);
             }
 
@@ -1656,7 +1656,7 @@ class Layout implements \JsonSerializable
                             continue;
                         }
 
-                        $optionNode = $document->createElement($option->option, $option->value);
+                        $optionNode = $document->createElement($option->option, $option->value ?? '');
                         $optionsNode->appendChild($optionNode);
                     }
 

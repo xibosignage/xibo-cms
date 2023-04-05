@@ -42,12 +42,12 @@ class SubPlaylistWidgetsEvent extends Event
     /**
      * constructor.
      * @param \Xibo\Entity\Widget $widget
-     * @param int $tempId
+     * @param int|null $tempId
      */
-    public function __construct(\Xibo\Entity\Widget $widget, int $tempId)
+    public function __construct(\Xibo\Entity\Widget $widget, ?int $tempId)
     {
         $this->widget = $widget;
-        $this->tempId = $tempId;
+        $this->tempId = $tempId ?? 0;
     }
 
     /**

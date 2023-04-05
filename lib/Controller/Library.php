@@ -2687,7 +2687,7 @@ class Library extends Base
             $importQueue[] = $import;
         }
         $event = new LibraryProviderImportEvent($importQueue);
-        $this->getDispatcher()->dispatch($event->getName(), $event);
+        $this->getDispatcher()->dispatch($event, $event->getName());
 
         // Pull out our events and upload
         foreach ($importQueue as $import) {
@@ -2708,7 +2708,9 @@ class Library extends Base
                         0,
                         [
                             'fileType' => strtolower($module->type),
-                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->defaultDuration,
+                            'duration' => !(empty($import->searchResult->duration))
+                                ? $import->searchResult->duration
+                                : $module->defaultDuration,
                             'enableStat' => $enableStat,
                             'folderId' => $folder->getId(),
                             'permissionsFolderId' => $folder->permissionsFolderId

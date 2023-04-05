@@ -302,9 +302,14 @@ class MediaFactory extends BaseFactory
                     $requestOptions = array_merge($media->downloadRequestOptions(), [
                         'sink' => $sink,
                         'on_headers' => function (ResponseInterface $response) {
-                            $this->getLog()->debug('DEBUG: ' . $response->getStatusCode());
+                            $this->getLog()->debug('processDownloads: on_headers status code = '
+                                . $response->getStatusCode());
+
                             if ($response->getStatusCode() < 299) {
-                                $this->getLog()->debug('DEBUG: ' . var_export($response->getHeaders(), true));
+                                $this->getLog()->debug('processDownloads: successful, headers = '
+                                    . var_export($response->getHeaders(), true));
+
+                                // Get the content length
                                 $contentLength = $response->getHeaderLine('Content-Length');
                                 if (empty($contentLength)
                                     || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
@@ -335,7 +340,8 @@ class MediaFactory extends BaseFactory
                             $success($item);
                         }
                     } catch (\Exception $e) {
-                        $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
+                        $this->getLog()->error('processDownloads: Unable to save mediaId '
+                            . $item->mediaId . '. ' . $e->getMessage());
 
                         // Remove it
                         $item->delete(['rollback' => true]);

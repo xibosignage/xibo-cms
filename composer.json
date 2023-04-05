@@ -6,20 +6,12 @@
     "digital signage",
     "spring signage"
   ],
-  "homepage": "http://xibo.org.uk",
+  "homepage": "https://xibosignage.com",
   "license": "AGPL-3.0",
   "authors": [
     {
-      "name": "Daniel Garner",
-      "homepage": "https://github.com/dasgarner"
-    },
-    {
-      "name": "Alexander Harrington",
-      "homepage": "https://github.com/alexharrington"
-    },
-    {
       "name": "Xibo Signage Ltd",
-      "homepage": "https://xibo.org.uk"
+      "homepage": "https://xibosignage.com"
     },
     {
       "name": "Xibo Contributors",
@@ -72,7 +64,7 @@
     "intervention/image": "2.7.2",
     "emojione/emojione": "^1.4",
     "phpmailer/phpmailer": "6.5.*",
-    "guzzlehttp/guzzle": "6.5.*",
+    "guzzlehttp/guzzle": "7.5.*",
     "league/oauth2-client": "^2.4",
     "james-heinrich/getid3": "^1.9",
     "onelogin/php-saml": "3.3.x",

@@ -685,7 +685,7 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
         }
 
-        if (isset($this->urlDownload) && $this->urlDownload === true) {
+        if ($this->getUnmatchedProperty('urlDownload', false) === true) {
             // for upload via URL, handle cases where URL do not have specified extension in url
             // we either have a long string after lastPeriod or nothing
             $extension = $this->getUnmatchedProperty('extension');

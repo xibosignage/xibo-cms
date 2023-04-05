@@ -1530,19 +1530,23 @@ class Layout extends Base
                     }
                 }
 
+                /** @var Region[] $allRegions */
                 $allRegions = array_merge($layout->regions, $layout->drawers);
 
                 // Augment regions with permissions
                 foreach ($allRegions as $region) {
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
-                        $region->isEditable = $this->getUser()->checkEditable($region);
+                        $region->setUnmatchedProperty('isEditable', $this->getUser()->checkEditable($region));
 
                          // Augment with deletable flag
-                        $region->isDeletable = $this->getUser()->checkDeleteable($region);
+                        $region->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($region));
 
                         // Augment with permissions flag
-                        $region->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($region);
+                        $region->setUnmatchedProperty(
+                            'isPermissionsModifiable',
+                            $this->getUser()->checkPermissionsModifyable($region)
+                        );
                     }
                 }
             }
@@ -2399,7 +2403,7 @@ class Layout extends Base
             ];
 
             $this->getState()->success = true;
-            $this->session->setUnmatchedProperty('refreshExpiry', false);
+            $this->session->refreshExpiry = false;
         }
 
         return $this->render($request, $response);

@@ -1367,7 +1367,7 @@ class Playlist extends Base
         $playlist->save(['saveTags' => false]);
 
         // Add new widgets to playlist for return values
-        $playlist->newWidgets = $newWidgets;
+        $playlist->setUnmatchedProperty('newWidgets', $newWidgets);
 
         // Success
         $this->getState()->hydrate([
