@@ -55,10 +55,6 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
- * @property $libraryQuotaFormatted
- * @property $twoFactorDescription
- * @property $homePage
- * @property $homeFolder
  */
 class User implements \JsonSerializable, UserEntityInterface
 {

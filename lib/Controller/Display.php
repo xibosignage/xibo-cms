@@ -727,7 +727,7 @@ class Display extends Base
             $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
 
             // Is a transfer to another CMS in progress?
-            $display->isCmsTransferInProgress = (!empty($display->newCmsAddress));
+            $display->setUnmatchedProperty('isCmsTransferInProgress', (!empty($display->newCmsAddress)));
 
             // Edit and Delete buttons first
             if ($this->getUser()->featureEnabled('displays.modify')
@@ -1046,7 +1046,7 @@ class Display extends Base
                     ]
                 ];
 
-                if ($display->isCmsTransferInProgress) {
+                if ($display->getUnmatchedProperty('isCmsTransferInProgress', false)) {
                     $display->buttons[] = [
                         'id' => 'display_button_move_cancel',
                         'url' => $this->urlFor($request, 'display.moveCmsCancel.form', ['id' => $display->displayId]),
@@ -1153,7 +1153,7 @@ class Display extends Base
 
         // We have permission - load
         $display->load();
-        $display->tagsString = $display->getTagString();
+        $display->setUnmatchedProperty('tagsString', $display->getTagString());
 
         // Dates
         $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());

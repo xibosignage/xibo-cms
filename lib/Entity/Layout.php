@@ -1409,7 +1409,10 @@ class Layout implements \JsonSerializable
                     // Region duration
                     // If we have a cycle playback duration, we use that, otherwise we use the normal calculated
                     // duration.
-                    $tempCyclePlaybackAverageDuration = $widget->tempCyclePlaybackAverageDuration ?? 0;
+                    $tempCyclePlaybackAverageDuration = $widget->getUnmatchedProperty(
+                        'tempCyclePlaybackAverageDuration',
+                        0
+                    );
                     if ($tempCyclePlaybackAverageDuration) {
                         $region->duration = $region->duration + $tempCyclePlaybackAverageDuration;
                     } else {

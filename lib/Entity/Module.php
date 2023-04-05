@@ -239,13 +239,13 @@ class Module implements \JsonSerializable
      */
     public $propertyGroups = [];
 
-    /** @property bool $isInstalled Is this module installed? */
+    /** @var bool $isInstalled Is this module installed? */
     public $isInstalled;
 
-    /** @property bool $isError Does this module have any errors? */
+    /** @var bool $isError Does this module have any errors? */
     public $isError;
 
-    /** @property string[] $errors An array of errors this module has. */
+    /** @var string[] $errors An array of errors this module has. */
     public $errors;
 
     // </editor-fold>

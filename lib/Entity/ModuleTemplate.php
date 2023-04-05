@@ -29,8 +29,6 @@ use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Represents a module template
- * @property bool $isError Does this module have any errors?
- * @property string[] $errors An array of errors this module has.
  */
 class ModuleTemplate implements \JsonSerializable
 {
@@ -96,6 +94,12 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var string A Renderer to run if custom rendering is required. */
     public $onTemplateRender;
+    
+    /** @var bool $isError Does this module have any errors? */
+    public $isError;
+
+    /** @var string[] $errors An array of errors this module has. */
+    public $errors;
 
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;

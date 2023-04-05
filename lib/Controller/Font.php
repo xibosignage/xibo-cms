@@ -142,7 +142,7 @@ class Font extends Base
         ], $parsedQueryParams));
 
         foreach ($fonts as $font) {
-            $font->fileSizeFormatted = ByteFormatter::format($font->size);
+            $font->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($font->size));
             $font->buttons = [];
             if ($this->isApi($request)) {
                 break;

@@ -280,7 +280,7 @@ class Playlist extends Base
                 ]);
 
                 foreach ($playlist->widgets as $widget) {
-                    $widget->tags = [];
+                    $widget->setUnmatchedProperty('tags', []);
 
                     try {
                         $module = $this->moduleFactory->getByType($widget->type);
@@ -290,8 +290,11 @@ class Playlist extends Base
                     }
 
                     // Embed the name of this widget
-                    $widget->moduleName = $module->name;
-                    $widget->name = $widget->getOptionValue('name', $widget->moduleName);
+                    $widget->setUnmatchedProperty('moduleName', $module->name);
+                    $widget->setUnmatchedProperty(
+                        'name',
+                        $widget->getOptionValue('name', $module->name)
+                    );
 
                     // Sub-playlists should calculate a fresh duration
                     if ($widget->type === 'subplaylist') {
@@ -302,7 +305,7 @@ class Playlist extends Base
                     if ($loadTags && $module->regionSpecific == 0) {
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         $media->load();
-                        $widget->tags = $media->tags;
+                        $widget->setUnmatchedProperty('tags', $media->tags);
                     }
 
                     // Get transitions
@@ -314,13 +317,16 @@ class Playlist extends Base
                     // Permissions?
                     if ($loadPermissions) {
                         // Augment with editable flag
-                        $widget->isEditable = $this->getUser()->checkEditable($widget);
+                        $widget->setUnmatchedProperty('isEditable', $this->getUser()->checkEditable($widget));
 
                         // Augment with deletable flag
-                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+                        $widget->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($widget));
 
                         // Augment with permissions flag
-                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
+                        $widget->setUnmatchedProperty(
+                            'isPermissionsModifiable',
+                            $this->getUser()->checkPermissionsModifyable($widget)
+                        );
                     }
                 }
             }
@@ -333,15 +339,24 @@ class Playlist extends Base
 
             switch ($playlist->enableStat) {
                 case 'On':
-                    $playlist->enableStatDescription = __('This Playlist has enable stat collection set to ON');
+                    $playlist->setUnmatchedProperty(
+                        'enableStatDescription',
+                        __('This Playlist has enable stat collection set to ON')
+                    );
                     break;
 
                 case 'Off':
-                    $playlist->enableStatDescription = __('This Playlist has enable stat collection set to OFF');
+                    $playlist->setUnmatchedProperty(
+                        'enableStatDescription',
+                        __('This Playlist has enable stat collection set to OFF')
+                    );
                     break;
 
                 default:
-                    $playlist->enableStatDescription = __('This Playlist has enable stat collection set to INHERIT');
+                    $playlist->setUnmatchedProperty(
+                        'enableStatDescription',
+                        __('This Playlist has enable stat collection set to INHERIT')
+                    );
             }
 
             // Only proceed if we have edit permissions
@@ -768,7 +783,7 @@ class Playlist extends Base
             throw new AccessDeniedException();
         }
 
-        $playlist->tagsString = $playlist->getTagString();
+        $playlist->setUnmatchedProperty('tagsString', $playlist->getTagString());
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([

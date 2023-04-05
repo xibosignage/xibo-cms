@@ -182,7 +182,7 @@ class Property implements \JsonSerializable
      */
     public function validate(): Property
     {
-        if (strlen($this->value) > 67108864) {
+        if (!empty($this->value) && strlen($this->value) > 67108864) {
             throw new ValueTooLargeException(__('Value too large for %s', $this->id), $this->id);
         }
 

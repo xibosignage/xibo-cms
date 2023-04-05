@@ -24,8 +24,6 @@ namespace Xibo\Controller;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
-use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
@@ -292,24 +290,17 @@ class User extends Base
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
 
-            $user->libraryQuotaFormatted = ByteFormatter::format($user->libraryQuota * 1024);
+            $user->setUnmatchedProperty('libraryQuotaFormatted', ByteFormatter::format($user->libraryQuota * 1024));
 
             $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
             $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' . $user->userName . ' is ' . $user->loggedIn);
 
             // Set some text for the display status
-            switch ($user->twoFactorTypeId) {
-                case 1:
-                    $user->twoFactorDescription = __('Email');
-                    break;
-
-                case 2:
-                    $user->twoFactorDescription = __('Google Authenticator');
-                    break;
-
-                default:
-                    $user->twoFactorDescription = __('Disabled');
-            }
+            $user->setUnmatchedProperty('twoFactorDescription', match ($user->twoFactorTypeId) {
+                1 => __('Email'),
+                2 => __('Google Authenticator'),
+                default => __('Disabled'),
+            });
 
             if ($this->isApi($request)) {
                 continue;
@@ -319,14 +310,17 @@ class User extends Base
 
             // Deal with the home page
             try {
-                $user->homePage = $this->userGroupFactory->getHomepageByName($user->homePageId)->title;
+                $user->setUnmatchedProperty(
+                    'homePage',
+                    $this->userGroupFactory->getHomepageByName($user->homePageId)->title
+                );
             } catch (NotFoundException $exception) {
                 $this->getLog()->error('User has homepage which does not exist. userId: ' . $user->userId . ', homepage: ' . $user->homePageId);
-                $user->homePage = __('Unknown homepage, please edit to update.');
+                $user->setUnmatchedProperty('homePage', __('Unknown homepage, please edit to update.'));
             }
 
             // Set the home folder
-            $user->homeFolder = $user->getUnmatchedProperty('homeFolder', '/');
+            $user->setUnmatchedProperty('homeFolder', $user->getUnmatchedProperty('homeFolder', '/'));
 
             // Super admins have some buttons
             if ($this->getUser()->featureEnabled('users.modify')

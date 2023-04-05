@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -187,7 +187,7 @@ class FolderFactory extends BaseFactory
             'folderId' => $folder->id,
         ]);
 
-        $folder->homeFolderCount = intval($results[0]['cnt'] ?? 0);
+        $folder->setUnmatchedProperty('homeFolderCount', intval($results[0]['cnt'] ?? 0));
     }
 
     /**
@@ -214,13 +214,14 @@ class FolderFactory extends BaseFactory
             'permissionEntity' => 'Xibo\Entity\Folder',
         ]);
 
-        $folder->sharing = [];
+        $sharing = [];
         foreach ($results as $row) {
-            $folder->sharing[] = [
+            $sharing[] = [
                 'name' => $row['group'],
                 'isGroup' => intval($row['isUserSpecific']) !== 1,
             ];
         }
+        $folder->setUnmatchedProperty('sharing', $sharing);
     }
 
     /**
@@ -230,7 +231,7 @@ class FolderFactory extends BaseFactory
      */
     public function decorateWithUsage(Folder $folder)
     {
-        $folder->usage = [];
+        $usage = [];
 
         $results = $this->getStore()->select('
             SELECT \'Library\' AS `type`,
@@ -280,7 +281,7 @@ class FolderFactory extends BaseFactory
         foreach ($results as $row) {
             $count = intval($row['cnt'] ?? 0);
             if ($count > 0) {
-                $folder->usage[] = [
+                $usage[] = [
                     'type' => __($row['type']),
                     'count' => $count,
                     'sizeBytes' => intval($row['size'] ?? 0),
@@ -288,5 +289,7 @@ class FolderFactory extends BaseFactory
                 ];
             }
         }
+
+        $folder->setUnmatchedProperty('usage', $usage);
     }
 }

@@ -1517,13 +1517,16 @@ class Layout extends Base
 
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
-                        $widget->isEditable = $this->getUser()->checkEditable($widget);
+                        $widget->setUnmatchedProperty('isEditable', $this->getUser()->checkEditable($widget));
 
                         // Augment with deletable flag
-                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+                        $widget->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($widget));
 
                         // Augment with permissions flag
-                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
+                        $widget->setUnmatchedProperty(
+                            'isPermissionsModifiable',
+                            $this->getUser()->checkPermissionsModifyable($widget)
+                        );
                     }
                 }
 
@@ -2396,7 +2399,7 @@ class Layout extends Base
             ];
 
             $this->getState()->success = true;
-            $this->session->refreshExpiry = false;
+            $this->session->setUnmatchedProperty('refreshExpiry', false);
         }
 
         return $this->render($request, $response);

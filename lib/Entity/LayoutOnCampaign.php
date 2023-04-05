@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,7 +24,6 @@ namespace Xibo\Entity;
 
 /**
  * @SWG\Definition("Layout linked to a Campaign")
- * @property bool $locked Is this layout locked
  */
 class LayoutOnCampaign implements \JsonSerializable
 {
