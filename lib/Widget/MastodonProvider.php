@@ -33,7 +33,7 @@ use Xibo\Widget\Provider\WidgetProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderTrait;
 
 /**
- * Downloads a Mstodon feed and returns SocialMedia data types
+ * Downloads a Mastodon feed and returns SocialMedia data types
  */
 class MastodonProvider implements WidgetProviderInterface
 {
@@ -42,9 +42,6 @@ class MastodonProvider implements WidgetProviderInterface
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
         $uri = $dataProvider->getSetting('defaultServerUrl', 'https://mastodon.social');
-        if (empty($uri)) {
-            throw new InvalidArgumentException(__('Please enter the Default Server URL to a valid Mastodon instance in settings.'), 'defaultServerUrl');
-        }
 
         try {
             $httpOptions = [
