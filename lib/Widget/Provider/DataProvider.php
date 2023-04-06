@@ -198,7 +198,7 @@ class DataProvider implements DataProviderInterface
     {
         if ($this->settings === null) {
             foreach ($this->module->settings as $item) {
-                $this->settings[$item->id] = $item->value ?? $item->default;
+                $this->settings[$item->id] = $item->value ?: $item->default;
             }
         }
 
