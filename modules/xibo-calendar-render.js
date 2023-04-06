@@ -582,11 +582,11 @@ jQuery.fn.extend({
               options.rangeStart && (_startDate = moment(options.rangeStart));
               options.rangeEnd && (_endDate = moment(options.rangeEnd));
             } else {
-              _startDate = TODAY.startOf('d');
+              _startDate = moment(TODAY).startOf('d');
             } // Add event
 
 
-            if ((!_startDate || momentAux >= _startDate) && (!_endDate || momentAux <= _endDate)) {
+            if ((!_startDate || moment(event.startDate) >= _startDate) && (!_endDate || moment(event.endDate) <= _endDate)) {
               _addEventToDay(momentAux, event, eventTotalDays, currentDayOfEvent);
             }
 
