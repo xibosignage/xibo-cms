@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -74,6 +74,9 @@ class DataProvider implements DataProviderInterface
 
     /** @var null cached property values. */
     private $properties = null;
+
+    /** @var null cached setting values. */
+    private $settings = null;
 
     /**
      * Constructor
@@ -193,7 +196,13 @@ class DataProvider implements DataProviderInterface
      */
     public function getSetting(string $setting, $default = null)
     {
-        return $this->module->settings[$setting] ?? $default;
+        if ($this->settings === null) {
+            foreach ($this->module->settings as $item) {
+                $this->settings[$item->id] = $item->value ?: $item->default;
+            }
+        }
+
+        return $this->settings[$setting] ?? $default;
     }
 
     /**

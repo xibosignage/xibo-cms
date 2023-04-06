@@ -3,7 +3,10 @@
 @import "variables";
 $fa-font-path: "~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
+$fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
 @import "~@fortawesome/fontawesome-free/scss/fontawesome";
+@import "~@fortawesome/fontawesome-free/scss/brands";
+
 
 // CSS
 /* Form Editor Controls */
@@ -293,6 +296,10 @@ $fa-font-path: "~font-awesome/fonts";
 
 .module-icon-spacer {
     @extend .fa-hourglass-o;
+}
+
+.module-icon-mastodon {
+    @extend .fab, .fa-mastodon;
 }
 
 .module-icon-stocks {
