@@ -396,6 +396,8 @@ class WidgetHtmlRenderer
                 'sample' => $module->sampleData, //TODO decorate for player/preview [[sampleData=]]
                 'properties' => $module->getPropertyValues(),
                 'isValid' => $widget->isValid === 1,
+                'duration' => $widget->duration,
+                'calculatedDuration' => $widget->calculatedDuration,
             ];
 
             // Do we have a library file with this module?

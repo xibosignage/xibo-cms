@@ -40,6 +40,7 @@ const PlaylistTimeline = require('../playlist-editor/playlist-timeline.js');
 const Toolbar = require('../editor-core/toolbar.js');
 const PropertiesPanel = require('../editor-core/properties-panel.js');
 const HistoryManager = require('../editor-core/history-manager.js');
+const TemplateManager = require('../layout-editor/template-manager.js');
 const topbarTemplatePlaylistEditor =
   require('../templates/topbar-playlist-editor.hbs');
 
@@ -81,6 +82,9 @@ window.pE = {
 
   // History Manager
   historyManager: {},
+
+  // Template manager
+  templateManager: {},
 
   // Selected object
   selectedObject: {},
@@ -140,10 +144,15 @@ pE.loadEditor = function(inline = false) {
           inline ?
             playlistEditorTemplate() :
             playlistEditorExternalContainerTemplate(
-                {
-                  trans: editorsTrans,
-                },
+              {
+                trans: editorsTrans,
+              },
             ),
+        );
+
+        // Initialize template manager
+        pE.templateManager = new TemplateManager(
+          pE,
         );
 
         // Initialize timeline and create data structure
@@ -216,9 +225,10 @@ pE.loadEditor = function(inline = false) {
         pE.common.hideLoadingScreen();
 
         // Handle editor close button
-        pE.editorContainer.find('#closePlaylistEditorBtn').on('click', function() {
-          pE.close();
-        });
+        pE.editorContainer.find('#closePlaylistEditorBtn')
+          .on('click', function() {
+            pE.close();
+          });
       } else {
         // Login Form needed?
         if (res.login) {

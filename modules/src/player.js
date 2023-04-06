@@ -254,12 +254,19 @@ $(function() {
       }
 
       // Run all render functions
+      const optionsForRendering = Object.assign(
+        widget.properties,
+        globalOptions,
+        {
+          duration: widget.duration,
+        },
+      );
       $.each(window.renders, function(_key, render) {
         render(
           widget.widgetId,
           $target,
           widget.items,
-          Object.assign(widget.properties, globalOptions),
+          optionsForRendering,
           widget.meta,
         );
       });

@@ -434,47 +434,47 @@ lD.selectObject =
       // Unselect the previous selectedObject object if still selected
       if (this.selectedObject.selected) {
         switch (this.selectedObject.type) {
-        case 'region':
-          if (this.layout.regions[this.selectedObject.id]) {
-            this.layout.regions[this.selectedObject.id].selected = false;
-          }
-          break;
-
-        case 'widget':
-          if (this.selectedObject.drawerWidget) {
-            if (
-              this.layout.drawer.widgets[this.selectedObject.id]
-            ) {
-              this.layout.drawer.widgets[this.selectedObject.id]
-                .selected = false;
+          case 'region':
+            if (this.layout.regions[this.selectedObject.id]) {
+              this.layout.regions[this.selectedObject.id].selected = false;
             }
-          } else {
-            if (
-              this.layout.regions[this.selectedObject.regionId] &&
-              this.layout.regions[this.selectedObject.regionId]
-                .widgets[this.selectedObject.id]
-            ) {
-              this.layout.regions[this.selectedObject.regionId]
-                .widgets[this.selectedObject.id]
-                .selected = false;
+            break;
+
+          case 'widget':
+            if (this.selectedObject.drawerWidget) {
+              if (
+                this.layout.drawer.widgets[this.selectedObject.id]
+              ) {
+                this.layout.drawer.widgets[this.selectedObject.id]
+                  .selected = false;
+              }
+            } else {
+              if (
+                this.layout.regions[this.selectedObject.regionId] &&
+                this.layout.regions[this.selectedObject.regionId]
+                  .widgets[this.selectedObject.id]
+              ) {
+                this.layout.regions[this.selectedObject.regionId]
+                  .widgets[this.selectedObject.id]
+                  .selected = false;
+              }
             }
-          }
 
-          break;
+            break;
 
-        case 'element':
-          const parentRegion = this.selectedObject.regionId;
-          const parentWidget = this.selectedObject.widgetId;
+          case 'element':
+            const parentRegion = this.selectedObject.regionId;
+            const parentWidget = this.selectedObject.widgetId;
 
-          const element = this.layout.canvas.widgets[
-            'widget_' + parentRegion + '_' + parentWidget
-          ].elements[this.selectedObject.elementId];
+            const element = this.layout.canvas.widgets[
+              'widget_' + parentRegion + '_' + parentWidget
+            ].elements[this.selectedObject.elementId];
 
-          if (element) {
-            element.selected = false;
-          }
-        default:
-          break;
+            if (element) {
+              element.selected = false;
+            }
+          default:
+            break;
         }
       }
 
