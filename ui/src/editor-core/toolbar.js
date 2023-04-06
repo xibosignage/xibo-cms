@@ -1919,6 +1919,8 @@ Toolbar.prototype.loadTemplates = function(
   moduleType,
 ) {
   const self = this;
+  const app = this.parent;
+
   // Show loading
   $container.find('.toolbar-pane-container').before(
     `<div class="loading-container-toolbar w-100 text-center">
@@ -1926,7 +1928,7 @@ Toolbar.prototype.loadTemplates = function(
     </div>`);
 
   // Get templates data
-  lD.templateManager.getTemplateByDataType(contentType)
+  app.templateManager.getTemplateByDataType(contentType)
     .then(function(templatesData) {
       const populateContent = function() {
         const elements = [];
