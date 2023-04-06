@@ -33,6 +33,11 @@
     <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
     <settings>
+        <property id="defaultServerUrl" type="text">
+            <title>Default Server URL</title>
+            <helpText>The default URL for the mastodon instance.</helpText>
+            <default>https://mastodon.social</default>
+        </property>
         <property id="cachePeriodImages" type="number">
             <title>Cache Period for Images</title>
             <helpText>Please enter the number of hours you would like to cache mastodon images.</helpText>
@@ -40,21 +45,35 @@
         </property>
     </settings>
     <properties>
-        <property id="uri" type="text" variant="uri">
-            <title>Mastodon URL</title>
-            <helpText>The Link for the mastodon instance</helpText>
+        <property id="hashtag" type="text">
+            <title>Hashtag</title>
+            <helpText>Hashtag. You can test your search tag in the mastodon URL first.</helpText>
             <default></default>
-            <rule>required</rule>
         </property>
-        <property id="tag" type="text">
-            <title>Tag</title>
-            <helpText>Tag. You can test your search tag in the mastodon URL first.</helpText>
+        <property id="searchOn" type="dropdown" mode="single">
+            <title>Search on</title>
+            <helpText>Show only local/remote server posts.</helpText>
+            <default>all</default>
+            <options>
+                <option name="all">All known servers</option>
+                <option name="local">Local server</option>
+                <option name="remote">Remote servers</option>
+            </options>
+        </property>
+        <property id="serverUrl" type="text">
+            <title>Server</title>
+            <helpText>Leave empty to use the one from settings.</helpText>
             <default></default>
         </property>
         <property id="numItems" type="number">
             <title>Count</title>
-            <helpText>The number of Posts to return (default = 15).</helpText>
+            <helpText>The number of posts to return (default = 15).</helpText>
             <default>15</default>
+        </property>
+        <property id="onlyMedia" type="checkbox">
+            <title>Media Only?</title>
+            <helpText>Only return posts with attached media?</helpText>
+            <default>0</default>
         </property>
         <property id="dateFormat" type="text" variant="dateFormat">
             <title>Date Format</title>
@@ -163,11 +182,11 @@ $(target).xiboLayoutAnimate(properties);
     ]]></sampleData>
     <preview></preview>
     <assets>
-        <asset id="providerLogo" type="path" mimeType="image/png" path="/modules/assets/twitter_blue.png"></asset>
-        <asset id="providerLogoWhite" type="path" mimeType="image/png" path="/modules/assets/twitter_white.png"></asset>
-        <asset id="mastodonContentPhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
-        <asset id="mastodonProfilePhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo.jpg"></asset>
-        <asset id="mastodonProfilePhotoMini" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_mini.jpg"></asset>
-        <asset id="mastodonProfilePhotoBigger" type="path" mimeType="image/png" path="/modules/assets/twitter_profile_photo_bigger.jpg"></asset>
+        <asset id="providerLogo" type="path" mimeType="image/png" path="/modules/assets/mastodon_blue.png"></asset>
+        <asset id="providerLogoWhite" type="path" mimeType="image/png" path="/modules/assets/mastodon_white.png"></asset>
+        <asset id="mastodonContentPhoto" type="path" mimeType="image/png" path="/modules/assets/mastodon_content_photo.jpg"></asset>
+        <asset id="mastodonProfilePhoto" type="path" mimeType="image/png" path="/modules/assets/mastodon_profile_photo.jpg"></asset>
+        <asset id="mastodonProfilePhotoMini" type="path" mimeType="image/png" path="/modules/assets/mastodon_profile_photo_mini.jpg"></asset>
+        <asset id="mastodonProfilePhotoBigger" type="path" mimeType="image/png" path="/modules/assets/mastodon_profile_photo_bigger.jpg"></asset>
     </assets>
 </module>

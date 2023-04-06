@@ -41,9 +41,9 @@ class MastodonProvider implements WidgetProviderInterface
 
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
-        $uri = $dataProvider->getProperty('uri');
+        $uri = $dataProvider->getSetting('defaultServerUrl', 'https://mastodon.social');
         if (empty($uri)) {
-            throw new InvalidArgumentException(__('Please enter a the URI to a valid Mastodon feed.'), 'uri');
+            throw new InvalidArgumentException(__('Please enter the Default Server URL to a valid Mastodon instance in settings.'), 'defaultServerUrl');
         }
 
         try {
@@ -54,11 +54,31 @@ class MastodonProvider implements WidgetProviderInterface
                 ]
             ];
 
-            // Tag
-            $tag = trim($dataProvider->getProperty('tag', ''));
-            if (!empty($tag)) {
-                $uri = rtrim($uri,"/").'/'.$tag;
+            if ($dataProvider->getProperty('searchOn', 'all') === 'local') {
+                $httpOptions['query']['local'] = true;
+            } elseif ($dataProvider->getProperty('searchOn', 'all') === 'remote') {
+                $httpOptions['query']['remote'] = true;
             }
+
+            // Media Only
+            if ($dataProvider->getProperty('onlyMedia', 0)) {
+                $httpOptions['query']['only_media'] = true;
+            }
+
+            if (!empty($dataProvider->getProperty('serverUrl',''))) {
+                $uri = $dataProvider->getProperty('serverUrl', '');
+            }
+
+            // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
+            $hashtag = trim($dataProvider->getProperty('hashtag', ''));
+            if (!empty($hashtag)) {
+                $uri = rtrim($uri,"/").'/api/v1/timelines/tag/'. trim($hashtag,"#");
+            } else {
+                $uri = rtrim($uri,"/").'/api/v1/timelines/public';
+            }
+
+            $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: '. json_encode($httpOptions));
+
             $response = $dataProvider
                 ->getGuzzleClient($httpOptions)
                 ->get($uri);
@@ -115,9 +135,9 @@ class MastodonProvider implements WidgetProviderInterface
 
         } catch (RequestException $requestException) {
             // Log and return empty?
-            $this->getLog()->error('Mastodon: Unable to get feed: ' . $uri
+            $this->getLog()->error('Mastodon: Unable to get posts: ' . $uri
                 . ', e: ' . $requestException->getMessage());
-            throw new ConfigurationException(__('Unable to download feed'));
+            throw new ConfigurationException(__('Unable to download posts'));
         } catch (\Exception $exception) {
 
             // Log and return empty?
