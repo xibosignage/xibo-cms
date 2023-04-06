@@ -916,9 +916,9 @@ class LayoutFactory extends BaseFactory
             } else if (count($regionWidgets) === 1) {
                 $regionType = 'frame';
             } else if (count($regionWidgets) === 0) {
-                $regionType = 'playlist';
-            } else {
                 $regionType = 'zone';
+            } else {
+                $regionType = 'playlist';
             }
 
             // Create the region

@@ -330,7 +330,7 @@ class Module implements \JsonSerializable
         if ($this->widgetProvider === null) {
             return $this->defaultDuration;
         }
-        $durationProvider = $this->moduleFactory->createDurationProvider($file);
+        $durationProvider = $this->moduleFactory->createDurationProvider($file, null);
         $this->widgetProvider->fetchDuration($durationProvider);
 
         return $durationProvider->getDuration();
