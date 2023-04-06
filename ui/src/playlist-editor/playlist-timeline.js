@@ -3,7 +3,8 @@
 // Load templates
 const timelineTemplate = require('../templates/playlist-timeline.hbs');
 const timelineInfoTemplate = require('../templates/playlist-timeline-info.hbs');
-const timelineHeaderInfoTemplate = require('../templates/playlist-timeline-header-info.hbs');
+const timelineHeaderInfoTemplate =
+  require('../templates/playlist-timeline-header-info.hbs');
 
 const defaultStepHeight = 20;
 const zoomLevelChangeStep = 5;

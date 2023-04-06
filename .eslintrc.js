@@ -31,7 +31,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    indent: ['error', 2],
+    indent: ['error', 2, {SwitchCase: 1}],
     'quote-props': ['warn', 'as-needed'],
     'dot-location': ['warn', 'property'],
     'linebreak-style': [0, 'error', 'windows'],
