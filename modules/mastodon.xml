@@ -26,7 +26,7 @@
     <class>\Xibo\Widget\MastodonProvider</class>
     <type>mastodon</type>
     <dataType>social-media</dataType>
-    <dataCacheKey>%searchTerm%_%numItems%</dataCacheKey>
+    <dataCacheKey>%searchTerm%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -47,7 +47,7 @@
     <properties>
         <property id="hashtag" type="text">
             <title>Hashtag</title>
-            <helpText>Hashtag. You can test your search tag in the mastodon URL first.</helpText>
+            <helpText>Test your search by using a Hashtag to return results from the mastadon URL provided in the module settings.</helpText>
             <default></default>
         </property>
         <property id="searchOn" type="dropdown" mode="single">
