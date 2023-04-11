@@ -34,6 +34,8 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Middleware
  *
  * Provide CAS authentication to Xibo configured via settings.php.
+ *
+ * This class was originally contributed by Emmanuel Blindauer
  */
 class CASAuthentication extends AuthenticationBase
 {
