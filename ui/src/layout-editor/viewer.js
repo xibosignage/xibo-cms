@@ -9,6 +9,9 @@ const viewerActionEditRegionTemplate =
   require('../templates/viewer-action-edit-region.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const viewerElementTemplate = require('../templates/viewer-element.hbs');
+const viewerElementContentTemplate =
+  require('../templates/viewer-element-content.hbs');
+
 
 /**
  * Viewer contructor
@@ -33,6 +36,10 @@ const Viewer = function(parent, container) {
 
   // Theme ( light / dark)
   this.theme = 'light';
+  this.themeColors = {
+    light: '#f9f9f9',
+    dark: '#333333',
+  };
 
   // Moveable object
   this.moveable = null;
@@ -756,7 +763,7 @@ Viewer.prototype.renderRegionDebounced = _.debounce(
 Viewer.prototype.updateElement = function(
   element,
 ) {
-  const $container = this.DOMObject.find(`#${element.id}`);
+  const $container = this.DOMObject.find(`#${element.elementId}`);
 
   // Calculate scaled dimensions
   element.scaledDimensions = {
@@ -766,12 +773,9 @@ Viewer.prototype.updateElement = function(
     width: element.width * this.containerElementDimensions.scale,
   };
 
-  // Update element
+  // Update element index
   $container.css({
-    height: element.scaledDimensions.height,
-    left: element.scaledDimensions.left,
-    top: element.scaledDimensions.top,
-    width: element.scaledDimensions.width,
+    'z-index': element.layer,
   });
 
   // Update element content
@@ -878,67 +882,27 @@ Viewer.prototype.renderElement = function(
     left: element.left * viewerScale,
     top: element.top * viewerScale,
     width: element.width * viewerScale,
-    scale: 1, // TODO: We need to fix scaling
-    zIndex: element.layer,
+    // If layer is negative, set it to 0
+    layer: element.layer < 0 ? 0 : element.layer,
   };
 
-  // Get element template by id
-  element.getTemplate().then((template) => {
-    // Render element with template
-    const $newElement = $(viewerElementTemplate({
-      element: element,
-      canvas: canvas,
-      template: template,
-      dimensions: elementRenderDimensions,
-    }));
+  // Render element container
+  const $newElement = $(viewerElementTemplate({
+    element: element,
+    dimensions: elementRenderDimensions,
+  }));
 
-    // Append element html to the canvas region container
-    // if it doesn't exist, otherwise replace it
-    if ($canvasRegionContainer.find(`#${element.elementId}`).length) {
-      $canvasRegionContainer.find(`#${element.elementId}`)
-        .replaceWith($newElement);
-    } else {
-      $newElement.appendTo($canvasRegionContainer);
-    }
+  // Append element html to the canvas region container
+  // if it doesn't exist, otherwise replace it
+  if ($canvasRegionContainer.find(`#${element.elementId}`).length) {
+    $canvasRegionContainer.find(`#${element.elementId}`)
+      .replaceWith($newElement);
+  } else {
+    $newElement.appendTo($canvasRegionContainer);
+  }
 
-    // Create and render HBS template from template
-    if (template.stencil.hbs) {
-      const hbsTemplate = Handlebars.compile(template.stencil.hbs);
-
-      // If element has no properties, use template's default properties
-      if (!element.properties) {
-        element.properties = template.properties;
-      }
-
-      // Convert properties to object with id and value
-      const properties = {};
-      for (const propertyId in element.properties) {
-        if (element.properties.hasOwnProperty(propertyId)) {
-          const property = element.properties[propertyId];
-
-          // Add property to properties object
-          // if doesn't have a value, use default value
-          properties[property.id] =
-            property.value ? property.value : property.default;
-        }
-      }
-
-      // Compile hbs template with data
-      const hbsHtml = hbsTemplate(properties);
-
-      // Append hbs html to the element
-      $newElement.find('.element-content').html(hbsHtml);
-    }
-
-    // Call on template render if it exists
-    if (template.onTemplateRender) {
-      const onTemplateRender =
-        window['onTemplateRender_' + element.elementId];
-
-      // Call on template render on element creation
-      onTemplateRender(element.properties);
-    }
-
+  // Render element content and handle interactions after
+  this.renderElementContent(element, () => {
     // Handle viewer interactions
     self.handleInteractions();
 
@@ -950,61 +914,65 @@ Viewer.prototype.renderElement = function(
 /**
  * Update element content
  * @param {Object} element
+ * @param {Function} callback
  */
 Viewer.prototype.renderElementContent = function(
   element,
+  callback = null,
 ) {
+  const self = this;
   // Get element container
   const $elementContainer = this.DOMObject.find(`#${element.elementId}`);
 
-  // Get element template
+  // Get element template ( most of the time
+  // template will be already loaded/chached )
   element.getTemplate().then((template) => {
     // Render element with template
-    const $newElement = $(viewerElementTemplate({
+    $elementContainer.html($(viewerElementContentTemplate({
       element: element,
       template: template,
-    }));
-
-    // Append element html to the canvas region container
-    $elementContainer.find('.element-content').html($newElement.html());
+      scale: self.containerElementDimensions.scale,
+      originalWidth: element.width,
+      originalHeight: element.height,
+    })));
 
     // Create and render HBS template from template
-    if (template.stencil.hbs) {
-      const hbsTemplate = Handlebars.compile(template.stencil.hbs);
+    const hbsTemplate = Handlebars.compile(template.stencil.hbs);
 
-      // If element has no properties, use template's default properties
-      if (!element.properties) {
-        element.properties = template.properties;
-      }
-
+    // Get element properties
+    element.getProperties().then((properties) => {
       // Convert properties to object with id and value
-      const properties = {};
-      for (const propertyId in element.properties) {
-        if (element.properties.hasOwnProperty(propertyId)) {
-          const property = element.properties[propertyId];
+      const convertedProperties = {};
+      for (const key in properties) {
+        if (properties.hasOwnProperty(key)) {
+          const property = properties[key];
 
           // Add property to properties object
-          // if doesn't have a value, use default value
-          properties[property.id] =
-            property.value ? property.value : property.default;
+          convertedProperties[property.id] = (property.value == undefined) ?
+            property.default : property.value;
         }
       }
 
       // Compile hbs template with data
-      const hbsHtml = hbsTemplate(properties);
+      const hbsHtml = hbsTemplate(convertedProperties);
 
       // Append hbs html to the element
       $elementContainer.find('.element-content').html(hbsHtml);
-    }
 
-    // Call on template render if it exists
-    if (template.onTemplateRender) {
-      const onTemplateRender =
-        window['onTemplateRender_' + element.elementId];
+      // Call on template render if it exists
+      if (template.onTemplateRender) {
+        const onTemplateRender =
+          window['onTemplateRender_' + element.elementId];
 
-      // Call on template render on element creation
-      onTemplateRender(element.properties);
-    }
+        // Call on template render on element creation
+        onTemplateRender(element.properties);
+      }
+
+      // Call callback if it exists
+      if (callback) {
+        callback();
+      }
+    });
   });
 };
 
@@ -1574,6 +1542,23 @@ Viewer.prototype.addActionEditArea = function(
  */
 Viewer.prototype.removeActionEditArea = function() {
   this.DOMObject.find('.designer-region-drawer').remove();
+};
+
+/**
+ * Save temporary object
+ * @param {string} objectId - Object ID
+ * @param {string} objectType - Object type
+ * @param {object} data - Object data
+ */
+Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
+  lD.selectedObject.id = objectId;
+  lD.selectedObject.type = objectType;
+
+  // Append temporary object to the viewer
+  $('<div>', {
+    id: objectId,
+    data: data,
+  }).appendTo(this.DOMObject);
 };
 
 module.exports = Viewer;

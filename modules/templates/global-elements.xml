@@ -29,7 +29,7 @@
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
         <properties>
-            <property id="text" type="text">
+            <property id="text" type="textArea">
                 <title>Text</title>
                 <default>Text</default>
             </property>
@@ -39,42 +39,26 @@
             </property>
             <property id="fontColor" type="color">
                 <title>Font Color</title>
-                <default>#1775F6</default>
+                <default>%THEME_COLOR%</default>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
             </property>
-            <property id="horizontalAlign" type="dropdown">
-                <title>Horizontal Align</title>
-                <default>center</default>
-                <options>
-                    <option name="flex-start">Left</option>
-                    <option name="center">Center</option>
-                    <option name="flex-end">Right</option>
-                </options>
-            </property>
-            <property id="verticalAlign" type="dropdown">
-                <title>Vertical Align</title>
-                <default>center</default>
-                <options>
-                    <option name="flex-start">Top</option>
-                    <option name="center">Middle</option>
-                    <option name="flex-end">Bottom</option>
-                </options>
-            </property>
-            <property id="background" type="checkbox">
-                <title>Show Background Color</title>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
                 <default>0</default>
-                <helpText>Should the widget have a background color?</helpText>
             </property>
-            <property id="backgroundColor" type="color">
-                <title>Background Color</title>
-                <visibility>
-                    <test>
-                        <condition field="background" type="eq">1</condition>
-                    </test>
-                </visibility>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
             </property>
             <property id="textWrap" type="checkbox">
                 <title>Text Wrap</title>
@@ -93,7 +77,6 @@
             </property>
             <property id="textShadowColor" type="color">
                 <title>Text Shadow Color</title>
-                <default>#555</default>
                 <visibility>
                     <test>
                         <condition field="textShadow" type="eq">1</condition>
@@ -127,6 +110,24 @@
                     </test>
                 </visibility>
             </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
@@ -136,15 +137,17 @@
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
     {{#if fontColor}}color: {{fontColor}};{{/if}}
-    {{#if background}}background-color: {{backgroundColor}};{{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
     {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
     {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}white-space: normal;{{else}}white-space: nowrap;{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
-{{text}}
+<div>{{text}}</div>
 </div>
             ]]></hbs>
         </stencil>
@@ -165,6 +168,20 @@
                 <title>Background Color</title>
                 <default>#1775F6</default>
             </property>
+            <property id="roundBorder" type="checkbox">
+                <title>Round Border</title>
+                <default>0</default>
+                <helpText>Should the square have rounded corners?</helpText>
+            </property>
+            <property id="borderRadius" type="number">
+                <title>Border Radius</title>
+                <default>20</default>
+                <visibility>
+                    <test>
+                        <condition field="roundBorder" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
                 <default>1</default>
@@ -172,7 +189,7 @@
             </property>
             <property id="outlineColor" type="color">
                 <title>Outline Color</title>
-                <default>#e5de41</default>
+                <default>%THEME_COLOR%</default>
                 <visibility>
                     <test>
                         <condition field="outline" type="eq">1</condition>
@@ -181,7 +198,7 @@
             </property>
             <property id="outlineWidth" type="number">
                 <title>Outline Width</title>
-                <default>4</default>
+                <default>8</default>
                 <visibility>
                     <test>
                         <condition field="outline" type="eq">1</condition>
@@ -194,6 +211,7 @@
 <div class="rectangle-container"
     style="background-color: {{backgroundColor}};
     {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
+    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
     width: 100%; height: 100%;"
 >
 </div>

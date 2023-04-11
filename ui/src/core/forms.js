@@ -64,7 +64,7 @@ window.forms = {
      * @param {string} [targetId] - Target Id ( widget, element, etc.)
      * @param {boolean} [playlistId] - If widget, the playlistId
      * @param {object[]} [propertyGroups] - Groups to add the properties to
-     * @param {boolean} [elementProperties]
+     * @param {boolean} [customClass] - Custom class to add to the form fields
      *  - If the properties are for an element
      */
   createFields: function(
@@ -73,7 +73,7 @@ window.forms = {
     targetId,
     playlistId,
     propertyGroups = [],
-    elementProperties = false,
+    customClass,
   ) {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
@@ -269,9 +269,9 @@ window.forms = {
             $newField.attr('data-visibility', property.visibility);
           }
 
-          // Mark property as an element property only
-          if (elementProperties) {
-            $newField.find('[name]').addClass('element-property');
+          // Add custom class to the field if not already set
+          if (customClass) {
+            $newField.find('[name]').addClass(customClass);
           }
         } else {
           console.error('Form type not found: ' + property.type);

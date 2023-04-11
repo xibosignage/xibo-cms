@@ -44,17 +44,40 @@ Element.prototype.getProperties = function() {
       const templateCopy = JSON.parse(JSON.stringify(template));
 
       // Merge template properties with element properties
-      if (self.properties != undefined && templateCopy != undefined) {
+      if (templateCopy != undefined) {
         for (let j = 0; j < templateCopy.properties.length; j++) {
           const property = templateCopy.properties[j];
 
           // If we have a value for the property, set it
-          for (let i = 0; i < self.properties.length; i++) {
-            const elementProperty = self.properties[i];
+          if (self.properties) {
+            for (let i = 0; i < self.properties.length; i++) {
+              const elementProperty = self.properties[i];
 
-            if (elementProperty.id === property.id) {
-              property.value = elementProperty.value;
+              if (elementProperty.id === property.id) {
+                property.value = elementProperty.value;
+                property.default = elementProperty.default;
+              }
             }
+          }
+
+          // If value is unset and we have default, use it instead
+          // Make replacements for the default value
+          // if we have any special value
+          if (String(property.default).match(/%(.*?)%/gi)) {
+            const placeholder = property.default.slice(1, -1);
+
+            switch (placeholder) {
+              case 'THEME_COLOR':
+                property.default = lD.viewer.themeColors[lD.viewer.theme];
+                break;
+
+              default:
+                break;
+            }
+          }
+
+          if (property.value == undefined) {
+            property.value = property.default;
           }
         }
       }
