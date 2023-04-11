@@ -2,8 +2,6 @@
 # This is the dev container and doesn't contain CRON or composer it maps the PWD straight through
 # Stage 1
 # Build the CMS container
-# Stage 2
-# Build the CMS container
 FROM debian:bullseye-slim
 LABEL org.opencontainers.image.authors="support@xibosignage.com"
 
@@ -55,6 +53,7 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
 
 RUN update-alternatives --set php /usr/bin/php8.2
 
+# Enable Apache module
 RUN a2enmod rewrite \
     && a2enmod headers
 
