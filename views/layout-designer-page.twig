@@ -158,14 +158,14 @@
             function backGroundFormSetup(dialog) {
                 var $backgroundImageId = $('[name="backgroundImageId"]', dialog);
                 var notFoundIcon = $('#bg_not_found_icon', dialog);
-                var backgroundImage = $('#bg_image_image', dialog);
+                var bgImageFileName = $('#bg_media_name', dialog);
+                var saveButton = $('button#save', dialog);
                 var initialBackgroundImageId = $backgroundImageId.val();
                 var backgroundChanged = false;
 
                 function backgroundImageChange() {
                     // Want to attach an onchange event to the drop down for the bg-image
                     var id = $backgroundImageId.val();
-                    var src;
                     var isNotDefined = [0, ''].indexOf(id) !== -1;
 
                     // Disable remove button if no image is defined
@@ -175,16 +175,17 @@
                     if (isNotDefined) {
                         // Show not found icon and hide image
                         notFoundIcon.show();
-                        backgroundImage.hide();
+                        bgImageFileName.hide();
                     } else {
 
                         // Hide not found icon and show image
                         notFoundIcon.hide();
-                        backgroundImage.show();
+                        bgImageFileName.show();
 
-                        // Replace image source
-                        src = backgroundImage.data().url.replace(":id", id);
-                        backgroundImage.attr("src", src);
+                        // Auto-submit form
+                        if (id !== initialBackgroundImageId) {
+                          saveButton.trigger('click');
+                        }
                     }
 
                     if (id !== initialBackgroundImageId) {
@@ -202,6 +203,7 @@
                     } else {
                         $backgroundImageId.val(mediaToAdd).trigger('change');
                     }
+
                     // Deselect drop zones after adding
                     lD.toolbar.deselectCardsAndDropZones();
                 }
@@ -341,18 +343,17 @@
                             $('[name="backgroundImageId"]').val(mediaId);
                         }
 
-                        // Update the preview image
-                        var $bgImagePreview = dialog.find("#bg_image_image");
-                        $bgImagePreview
-                            .prop("src", $bgImagePreview.data().url.replace(":id", mediaId))
-                            .show();
-
                         dialog.find("#bg_not_found_icon").hide();
 
                         // Enable the remove button
                         dialog.find("#backgroundRemoveButton").removeClass("disabled");
 
                         XiboDialogClose();
+
+                        // Auto-submit form
+                        setTimeout(function(){
+                          $(dialog).find('button#save').trigger('click');
+                        }, 100);
                     }
                 });
             }

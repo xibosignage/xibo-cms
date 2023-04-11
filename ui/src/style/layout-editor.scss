@@ -1231,6 +1231,12 @@ div#bg_not_found_icon {
     width: 60%;
 }
 
+div#bg_media_name {
+    padding-left: 20px;
+    padding-right: 20px;
+    word-break: break-all;
+}
+
 #actionsTab {
     .header {
         margin-left: 0;
