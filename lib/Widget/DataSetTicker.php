@@ -497,11 +497,6 @@ class DataSetTicker extends ModuleWidget
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
         $numItems = $this->getOption('numItems', 0);
 
-        // Text/CSS subsitution variables.
-        // DataSet tickers or feed tickers without overrides.
-        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('template', ''));
-        $css = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('css', ''));
-
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
 
@@ -524,7 +519,11 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Generate a JSON string of substituted items.
-        $items = $this->getDataSetItems($displayId, $text);
+        $items = $this->getDataSetItems($displayId);
+
+        // parse css library references after the getDataSetItems, so they are not cleared by that function.
+        // https://github.com/xibosignage/xibo/issues/3024
+        $css = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('css', ''));
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -615,19 +614,21 @@ class DataSetTicker extends ModuleWidget
 
     /**
      * @param $displayId
-     * @param $text
      * @return array
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    private function getDataSetItems($displayId, $text)
+    private function getDataSetItems($displayId)
     {
         // We know there isn't any direct linked media here, so we can clear our mediaIds manually
         // This is not needed in v4
         // https://github.com/xibosignage/xibo/issues/3017
+        // parse template library references here, otherwise they will be cleared by this function
+        // https://github.com/xibosignage/xibo/issues/3024
         $this->widget->mediaIds = [];
+        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('template', ''));
 
         // Extra fields for data sets
         $dataSetId = $this->getOption('dataSetId');

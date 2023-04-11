@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -305,6 +305,16 @@ class Applications extends Base
                 Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 $request->getAttribute('ip_address')
             );
+
+            $this->getLog()->audit(
+                'Auth',
+                0,
+                'Application access approved',
+                [
+                    'Application identifier ends with' => substr($authRequest->getClient()->getIdentifier(), -8),
+                    'Application Name' => $authRequest->getClient()->getName()
+                ]
+            );
         } else {
             $authRequest->setAuthorizationApproved(false);
         }
@@ -603,6 +613,16 @@ class Applications extends Base
         $this->applicationFactory->revokeAuthorised($userId, $client->key);
         // clear cache for this clientId/userId pair, this is how we know the application is no longer approved
         $this->pool->getItem('C_' . $client->key . '/' . $userId)->clear();
+
+        $this->getLog()->audit(
+            'Auth',
+            0,
+            'Application access revoked',
+            [
+                'Application identifier ends with' => substr($client->key, -8),
+                'Application Name' => $client->getName()
+            ]
+        );
 
         $this->getState()->hydrate([
             'httpStatus' => 204,

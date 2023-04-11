@@ -135,6 +135,10 @@
                         {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
                         {{ forms.input("stripTags", title, module.getOption("stripTags"), helpText) }}
 
+                        {% set title %}{% trans "User Agent" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally set specific User Agent for this request, provide only the value, relevant header will be added automatically" %}{% endset %}
+                        {{ forms.input("userAgent", title, module.getOption("userAgent"), helpText) }}
+
                         {% set title %}{% trans "Decode the HTML entities in this feed before parsing it" %}{% endset %}
                         {% set helpText %}{% trans "Should we decode the HTML entities in this feed before parsing it?" %}{% endset %}
                         {{ forms.checkbox("decodeHtml", title, module.getOption("decodeHtml"), helpText) }}

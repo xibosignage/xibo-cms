@@ -937,10 +937,10 @@ class ForecastIo extends ModuleWidget
 
             switch ($key) {
                 case 'background-color':
-                    $css .= ' #content { background-color: ' . $this->getOption($key) . ' !important; } ';
+                    $css .= ' #content .container { background-color: ' . $this->getOption($key) . ' !important; } ';
                     break;
                 case 'text-color':
-                    $css .= ' #content { color: ' . $this->getOption($key) . ' !important; } ';
+                    $css .= ' #content .container { color: ' . $this->getOption($key) . ' !important; } ';
                     break;
                 case 'icons-color':
                     $css .= ' .wi { color: ' . $this->getOption($key) . ' !important; } ';

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -69,12 +69,23 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
         }
 
         // client credentials, we take user from the client entity
-        if ($userIdentifier === null) {
-            $accessToken->setUserIdentifier($clientEntity->userId);
-        } else {
-            // authentication code, we should have a userIdentifier here
-            $accessToken->setUserIdentifier($userIdentifier);
-        }
+        // authentication code, we have userIdentifier already
+        $userIdentifier = $userIdentifier ?? $clientEntity->userId;
+
+        $accessToken->setUserIdentifier($userIdentifier);
+
+        // set user and log to audit
+        $this->logger->setUserId($userIdentifier);
+        $this->logger->audit(
+            'Auth',
+            0,
+            'Access Token issued',
+            [
+                'Application identifier ends with' => substr($clientEntity->getIdentifier(), -8),
+                'Application Name' => $clientEntity->getName()
+            ]
+        );
+
         return $accessToken;
     }
 

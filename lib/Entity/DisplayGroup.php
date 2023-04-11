@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -820,6 +820,9 @@ class DisplayGroup implements \JsonSerializable
 
         // Delete assignments
         $this->removeAssignments();
+
+        // delete link to ad campaign.
+        $this->getStore()->update('DELETE FROM `lkcampaigndisplaygroup` WHERE displayGroupId = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);
 
         // Delete the Group itself
         $this->getStore()->update('DELETE FROM `displaygroup` WHERE DisplayGroupID = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);

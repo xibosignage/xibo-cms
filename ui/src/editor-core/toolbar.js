@@ -905,6 +905,12 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                         element.mediaDuration = app.common.timeFormat(element.duration);
                     }
 
+                    // Get video thumbnail for videos with provider
+                    // Local videos will have an image thumbnail
+                    if (element.type == 'video' && element.provider) {
+                        element.videoThumbnail = element.thumbnail;
+                    }
+
                     // Use template
                     const $card = $(ToolbarCardMediaTemplate(element));
 
@@ -1169,7 +1175,8 @@ Toolbar.prototype.handleCardsBehaviour = function() {
     const self = this;
 
     // If in edit mode
-    if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
+    // and we have app initialised
+    if (app && (app.readOnlyMode === undefined || app.readOnlyMode === false)) {
         this.DOMObject.find('.toolbar-card').each(function() {
             $(this).draggable({
                 cursor: 'crosshair',
