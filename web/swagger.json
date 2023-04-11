@@ -13590,6 +13590,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "userAgent",
+                        "in": "formData",
+                        "description": "Custom user Agent value",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "decodeHtml",
                         "in": "formData",
                         "description": "Should we decode the HTML entities in this feed before parsing it?",
