@@ -410,6 +410,7 @@ PropertiesPanel.prototype.render = function(
       // Add new property:orientation
       dataToRender.orientation = lD.viewer.getLayoutOrientation(
         dataToRender.resolution.width, dataToRender.resolution.height);
+      dataToRender.bgImageName = dataToRender.backgrounds[0]?.name || '';
     }
 
     const html = propertiesPanelTemplate({
