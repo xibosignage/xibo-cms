@@ -153,9 +153,11 @@ Layout.prototype.createDataStructure = function(data) {
             for (let index = 0; index < widgetElements.length; index++) {
               const element = widgetElements[index];
 
-              // Generate temporary ID
-              element.elementId =
-                'element_' + Math.floor(Math.random() * 1000000);
+              // Generate temporary ID if it doesn't exist
+              if (!element.elementId) {
+                element.elementId =
+                  'element_' + Math.floor(Math.random() * 1000000);
+              }
 
               // Save element type from widget sub type
               element.elementType = newWidget.subType;

@@ -5,11 +5,9 @@
 >
     <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
-    <textarea class="form-control" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
+    <textarea class="form-control" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" rows="6"
         {{#each customData}}
             data-{{this.name}}="{{this.value}}"
         {{/each}}
-    />
-    {{value}}
-    </textarea>
+    />{{value}}</textarea>
 </div>

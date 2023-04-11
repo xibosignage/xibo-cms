@@ -596,8 +596,19 @@ Widget.prototype.saveElements = function(
 
   // Convert element to the correct type
   elementsToSave = Object.values(elementsToSave).map((element) => {
+    // Save only id and value for element properties if they are not empty
+    if (element.properties != undefined) {
+      element.properties = Object.values(element.properties).map((property) => {
+        return {
+          id: property.id,
+          value: property.value,
+        };
+      });
+    }
+
     const elementObject = {
       id: element.id,
+      elementId: element.elementId,
       left: element.left,
       top: element.top,
       width: element.width,
