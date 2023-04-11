@@ -1,11 +1,10 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2021 Xibo Signage Ltd
- * Author: Emmanuel Blindauer
- * Based on SAMLAuthentication.php
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * This file (CASAuthentication.php) is part of Xibo.
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,7 +23,6 @@
 
 namespace Xibo\Middleware;
 
-use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\LogoutTrait;
@@ -119,7 +117,7 @@ class CASAuthentication extends AuthenticationBase
             $settings['server'],
             intval($settings['port']),
             $settings['uri'],
-            true
+            $settings['service_base_url']
         );
     }
 
