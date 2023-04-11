@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "003d88f425011986dc12ede9e0a19ff4",
+    "content-hash": "010dd33c65ffb3e0a4fbaebff39875b4",
     "packages": [
         {
             "name": "akrabat/ip-address-middleware",
@@ -6426,16 +6426,16 @@
         },
         {
             "name": "xibosignage/support",
-            "version": "dev-westphal/php8",
+            "version": "dev-php8",
             "source": {
                 "type": "git",
-                "url": "https://github.com/dasgarner/support.git",
-                "reference": "b02685bfc98efa251e7f101099be8278449398f1"
+                "url": "https://github.com/xibosignage/support.git",
+                "reference": "c01fc1dd41ec81aef3df1f775a163407736701d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/support/zipball/b02685bfc98efa251e7f101099be8278449398f1",
-                "reference": "b02685bfc98efa251e7f101099be8278449398f1",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/c01fc1dd41ec81aef3df1f775a163407736701d1",
+                "reference": "c01fc1dd41ec81aef3df1f775a163407736701d1",
                 "shasum": ""
             },
             "require": {
@@ -6472,9 +6472,10 @@
             "description": "Support functions used throughout the Xibo Signage Platform",
             "homepage": "https://xibosignage.com",
             "support": {
-                "source": "https://github.com/dasgarner/support/tree/westphal/php8"
+                "source": "https://github.com/xibosignage/support/tree/php8",
+                "issues": "https://github.com/xibosignage/support/issues"
             },
-            "time": "2023-04-05T10:35:03+00:00"
+            "time": "2023-04-11T15:50:12+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",

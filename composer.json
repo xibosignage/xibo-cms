@@ -20,7 +20,7 @@
   ],
   "repositories": [{
     "type": "vcs",
-    "url": "https://github.com/dasgarner/support"
+    "url": "https://github.com/xibosignage/support"
   },{
     "type": "vcs",
     "url": "https://github.com/dasgarner/picofeed"
@@ -73,7 +73,7 @@
     "tedivm/stash": "^v0.17.6",
     "phenx/php-font-lib": "^0.5.0",
     "symfony/event-dispatcher": "^4.1",
-    "xibosignage/support": "dev-westphal/php8",
+    "xibosignage/support": "dev-php8",
     "xibosignage/oauth2-xibo-cms": "dev-feature/3.0",
     "mtdowling/cron-expression": "^1.1",
     "ralouphie/mimey": "^1.0",
