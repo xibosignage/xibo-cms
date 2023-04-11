@@ -1,0 +1,19 @@
+<div class="element-content"
+    style="
+    width: {{originalWidth}}px;
+    height: {{originalHeight}}px;
+
+    {{#if scale}}
+        transform: scale({{scale}});
+        transform-origin: top left;
+    {{/if}}">
+
+{{#with template}}
+    {{#if onTemplateRender}}
+        <script type="text/javascript">
+            function onTemplateRender_{{ ../element.elementId }}(properties) {
+                {{{onTemplateRender}}}
+            }
+        </script>
+    {{/if}}
+{{/with}}

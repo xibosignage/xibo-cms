@@ -195,9 +195,16 @@ PropertiesPanel.prototype.save = function(target) {
   }
 };
 
+/**
+ * Save element properties
+ * @param {*} target - the element that the form relates to
+ * @param {*} properties - the properties to save
+ * @param {boolean} positionChanged - if the position of the element has changed
+ */
 PropertiesPanel.prototype.saveElement = function(
   target,
   properties,
+  positionChanged = false,
 ) {
   const app = this.parent;
 
@@ -211,7 +218,7 @@ PropertiesPanel.prototype.saveElement = function(
   // Form properties to the target element if they exist
   if (typeof properties != 'undefined') {
     const elementProperties =
-      properties.map((i, property) => {
+      properties.map((_i, property) => {
         const propertyObject = {
           id: $(property).attr('name'),
           value: $(property).val(),
@@ -233,8 +240,13 @@ PropertiesPanel.prototype.saveElement = function(
 
   // Save elements to the widget
   parentWidget.saveElements().then((_res) => {
-    // Render element content
-    app.viewer.renderElementContent(target);
+    // Update element position
+    if (positionChanged) {
+      app.viewer.updateElement(target);
+    } else {
+      // Render element content
+      app.viewer.renderElementContent(target);
+    }
   });
 };
 
@@ -501,13 +513,30 @@ PropertiesPanel.prototype.render = function(
           // so we don't modify the original object
           properties = JSON.parse(JSON.stringify(properties));
 
+          // Create common fields
+          forms.createFields(
+            [{
+              id: 'layer',
+              title: propertiesPanelTrans.layer,
+              value: targetAux.layer,
+              type: 'number',
+              visibility: [],
+            }],
+            self.DOMObject.find('#appearanceTab'),
+            targetAux.elementId,
+            null,
+            null,
+            'element-property element-common-property',
+          );
+
+          // Create element fields
           forms.createFields(
             properties,
             self.DOMObject.find('#appearanceTab'),
             targetAux.elementId,
             null,
             null,
-            true,
+            'element-property',
           );
 
           // Show the appearance tab
@@ -517,12 +546,44 @@ PropertiesPanel.prototype.render = function(
           self.initFields(targetAux, res.data, actionEditMode, true);
 
           // When we change the element fields, save them
-          self.DOMObject.find('[name].element-property').on(
+          self.DOMObject.find(
+            '[name].element-property',
+          ).on(
             'change',
-            function() {
+            function(ev) {
+              const $target = $(ev.currentTarget);
+              let containerChanged = false;
+              // If the property is common, save it to the element
+              if ($target.hasClass('element-common-property')) {
+                // Get the property name
+                const propertyName = $target.attr('name');
+
+                // Get the value
+                let value = $target.val();
+
+                // If property is layer, convert to int
+                // and don't allow negative values
+                if (propertyName === 'layer') {
+                  value = parseInt(value);
+                  if (value < 0) {
+                    value = 0;
+                  }
+                }
+
+                // Set the property
+                targetAux[propertyName] = value;
+
+                // Set the container changed flag
+                containerChanged = true;
+              }
+
+              // Save the element
               self.saveElement(
                 targetAux,
-                self.DOMObject.find('[name].element-property'),
+                self.DOMObject.find(
+                  '[name].element-property:not(.element-common-property)',
+                ),
+                containerChanged,
               );
             },
           );

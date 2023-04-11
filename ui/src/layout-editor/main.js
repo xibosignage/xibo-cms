@@ -989,28 +989,6 @@ lD.deleteSelectedObject = function(
   }
 };
 
-
-// TODO: can we remove this?
-/**
- * Delete dragged object
- * @param {object} draggable - "jqueryui droppable" ui draggable object
- */
-lD.deleteDraggedObject = function(draggable) {
-  const objectType = draggable.data('type');
-  let objectId = null;
-  let objectAuxId = null;
-
-  if (objectType === 'region') {
-    objectId = lD.layout.regions[draggable.attr('id')].regionId;
-  } else if (objectType === 'widget') {
-    objectId = lD.layout.regions[draggable.data('widgetRegion')]
-      .widgets[draggable.data('widgetId')].widgetId;
-    objectAuxId = lD.layout.regions[draggable.data('widgetRegion')].regionId;
-  }
-
-  lD.deleteObject(objectType, objectId, objectAuxId);
-};
-
 /**
  * Delete object
  * @param {string} objectType - Object type (widget, region)
@@ -1391,12 +1369,33 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         element,
         widget,
       ) {
+        // Create a unique id for the element
+        element.elementId =
+          'element_' + element.id + '_' +
+          Math.floor(Math.random() * 1000000);
+
         // Add element to the widget
         widget.addElement(element, false);
 
         // Save JSON with new element into the widget
         widget.saveElements().then((_res) => {
-          // TODO: Select element when data reloads
+          // Save a temporary element to the layout
+          // so we can select it when the data reloads
+          lD.layout.temporaryElement = element;
+
+          // Save the new element as temporary
+          lD.viewer.saveTemporaryObject(
+            element.elementId,
+            'element',
+            {
+              type: 'element',
+              parentType: 'widget',
+              widgetId: widget.widgetId,
+              regionId: widget.regionId.split('_')[1],
+            },
+          );
+
+          // Reload data and select element when data reloads
           lD.reloadData(lD.layout, true, true);
         });
       };
@@ -1555,31 +1554,6 @@ lD.addModuleToPlaylist = function(
   drawerWidget = false,
   zoneWidget = false,
 ) {
-  // Mark new widget as selected
-  // and append it to the viewer
-  const saveNewlyAddedWidget = function(widgetId) {
-    if (drawerWidget) {
-      return;
-    }
-
-    lD.selectedObject.id =
-    'widget_' + regionId + '_' + widgetId;
-    lD.selectedObject.type = 'widget';
-
-    // Append temporary object to the viewer
-    $('<div>', {
-      id: 'widget_' +
-      regionId +
-      '_' +
-      widgetId,
-      data: {
-        type: 'widget',
-        parentType: 'region',
-        widgetRegion: 'region_' + regionId,
-      },
-    }).appendTo(lD.viewer.DOMObject);
-  };
-
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     const validExt = moduleData.validExt.replace(/,/g, '|');
     let numUploads = 0;
@@ -1647,7 +1621,17 @@ lD.addModuleToPlaylist = function(
 
         // The new selected object as the id based
         // on the previous selected region
-        saveNewlyAddedWidget(widgetId);
+        if (!drawerWidget) {
+          lD.viewer.saveTemporaryObject(
+            'widget_' + regionId + '_' + widgetId,
+            'widget',
+            {
+              type: 'widget',
+              parentType: 'region',
+              widgetRegion: 'region_' + regionId,
+            },
+          );
+        }
       },
     }).attr('data-test', 'uploadFormModal');
   } else { // Add widget to a region
@@ -1705,8 +1689,15 @@ lD.addModuleToPlaylist = function(
       toastr.success(res.message);
 
       // Save the new widget as temporary
-      // if widget isn't a global widget
-      saveNewlyAddedWidget(res.data.widgetId);
+      lD.viewer.saveTemporaryObject(
+        'widget_' + regionId + '_' + res.data.widgetId,
+        'widget',
+        {
+          type: 'widget',
+          parentType: 'region',
+          widgetRegion: 'region_' + regionId,
+        },
+      );
 
       if (!drawerWidget) {
         // Reload data ( and viewer )
@@ -1818,23 +1809,19 @@ lD.addMediaToPlaylist = function(
     toastr.success(res.message);
 
     if (!drawerWidget) {
-      // The new selected object as the id based on the previous selected region
-      lD.selectedObject.id =
-      'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
-      lD.selectedObject.type = 'widget';
-
-      // Append temporary object to the viewer
-      $('<div>', {
-        id: 'widget_' +
+      // Save the new widget as temporary
+      lD.viewer.saveTemporaryObject(
+        'widget_' +
           res.data.regionId + '_' +
           res.data.newWidgets[0].widgetId,
-        data: {
+        'widget',
+        {
           type: 'widget',
           parentType: 'region',
           widgetRegion: 'region_' + res.data.regionId,
           isInDrawer: drawerWidget,
         },
-      }).appendTo(lD.viewer.DOMObject);
+      );
 
       // Reload data ( and viewer )
       lD.reloadData(lD.layout, true);
