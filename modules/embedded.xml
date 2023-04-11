@@ -59,10 +59,6 @@
             <title>Custom Style Sheets</title>
         </property>
         <property id="embedScript" type="code" variant="javascript">
-            <title>JavaScript to embed</title>
-            <helpText>Please include script tags.</helpText>
-        </property>
-        <property id="embedHead" type="richText" variant="html">
             <title>HEAD content to embed</title>
             <helpText>Please include script tags.</helpText>
         </property>
