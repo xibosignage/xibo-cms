@@ -75,6 +75,20 @@ PropertiesPanel.prototype.save = function(target) {
   // Run form submit module optional function
   if (target.type === 'widget') {
     formHelpers.widgetFormEditBeforeSubmit(this.DOMObject, target.subType);
+
+    const errors = formHelpers.validateFormBeforeSubmit(this.DOMObject);
+
+    if (errors !== null) {
+      const errorMessage = Object.values(errors).join('</br>');
+      // Display message in form
+      formHelpers.displayErrorMessage(form, errorMessage, 'danger');
+
+      // Show toast message
+      toastr.error(errorMessage);
+      return false;
+    } else {
+      formHelpers.clearErrorMessage(form);
+    }
   }
 
   let requestPath;

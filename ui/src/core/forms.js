@@ -269,6 +269,15 @@ window.forms = {
             $newField.attr('data-visibility', property.visibility);
           }
 
+          // Add required attribute to the field if not already set
+          if (
+            property.validation.length &&
+            !$newField.attr('data-is-required')
+          ) {
+            $newField.attr('data-is-required', true);
+            property.isRequired = true;
+          }
+
           // Mark property as an element property only
           if (elementProperties) {
             $newField.find('[name]').addClass('element-property');

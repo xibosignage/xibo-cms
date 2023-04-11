@@ -2201,6 +2201,40 @@ const formHelpers = function() {
       }, 300);
     });
   };
+
+  /**
+   * Validate required form input fields
+   * @param {object} container - Form object
+   * @return {object|null} errors
+   */
+  this.validateFormBeforeSubmit = function(container) {
+    const errors = {};
+    $(container).find('.xibo-form-input[data-is-required]')
+      .each(function(_idx, el) {
+        const inputField = $(el).find('input');
+        const fieldType = inputField.attr('type');
+        const errorMessage = errorMessagesTrans.requiredField.replace(
+          '%property%',
+          inputField.attr('name'),
+        );
+
+        if (fieldType === 'text') {
+          if (inputField.val().length === 0) {
+            errors[inputField.attr('name')] = errorMessage;
+          }
+        } else if (fieldType === 'checkbox') {
+          if (!inputField.is(':checked')) {
+            errors[inputField.attr('name')] = errorMessage;
+          }
+        }
+      });
+
+    if (Object.keys(errors).length > 0) {
+      return errors;
+    }
+
+    return null;
+  };
 };
 
 
