@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Flip Clock</description>
     <class></class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\ClockWidgetCompatibility</compatibilityClass>
     <type>clock-flip</type>
     <group id="clock" icon="clock">Clock</group>
     <legacyType>clock</legacyType>

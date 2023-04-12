@@ -29,6 +29,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\Provider\DataProvider;
+use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 
 /**
@@ -256,6 +257,9 @@ class Module implements \JsonSerializable
     /** @var WidgetProviderInterface */
     private $widgetProvider;
 
+    /**  @var WidgetCompatibilityInterface */
+    private $widgetCompatibility;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -353,6 +357,37 @@ class Module implements \JsonSerializable
         $this->widgetProvider
             ->setLog($this->getLog()->getLoggerInterface())
             ->setDispatcher($this->getDispatcher());
+        return $this;
+    }
+
+    /**
+     * Is a widget compatibility available
+     * @return bool
+     */
+    public function isWidgetCompatibilityAvailable(): bool
+    {
+        return $this->widgetCompatibility !== null;
+    }
+
+    /**
+     * Get this module's widget compatibility, or null if there isn't one
+     * @return \Xibo\Widget\Provider\WidgetCompatibilityInterface|null
+     */
+    public function getWidgetCompatibilityOrNull(): ?WidgetCompatibilityInterface
+    {
+        return $this->widgetCompatibility;
+    }
+
+    /**
+     * Sets the widget compatibility for this module
+     * @param WidgetCompatibilityInterface $widgetCompatibility
+     * @return $this
+     */
+    public function setWidgetCompatibility(WidgetCompatibilityInterface $widgetCompatibility): Module
+    {
+        $this->widgetCompatibility = $widgetCompatibility;
+        $this->widgetCompatibility
+            ->setLog($this->getLog()->getLoggerInterface());
         return $this;
     }
 

@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Analogue Clock</description>
     <class></class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\ClockWidgetCompatibility</compatibilityClass>
     <type>clock-analogue</type>
     <group id="clock" icon="clock">Clock</group>
     <legacyType>clock</legacyType>

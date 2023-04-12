@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Custom World Clock</description>
     <class></class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\WorldClockWidgetCompatibility</compatibilityClass>
     <type>worldclock-digital-custom</type>
     <group id="worldclock" icon="world">World Clock</group>
     <legacyType>worldclock</legacyType>

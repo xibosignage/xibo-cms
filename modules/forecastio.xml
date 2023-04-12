@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>A module for displaying weather information. Uses the Forecast API</description>
     <class></class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\WeatherWidgetCompatibility</compatibilityClass>
     <type>forecastio</type>
     <dataType>forecast</dataType>
     <dataCacheKey>%useDisplayLocation%_%latitude%_%longitude%_%units%_%lang%</dataCacheKey>

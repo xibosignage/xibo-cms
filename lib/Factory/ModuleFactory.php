@@ -478,6 +478,18 @@ class ModuleFactory extends BaseFactory
                         $module->setWidgetProvider(new $class());
                     }
 
+                    // Create a widget compatibility if necessary
+                    // Take our module and see if it has a class associated with it
+                    if (!empty($module->compatibilityClass)) {
+                        // We create a module specific provider
+                        if (!class_exists($module->compatibilityClass)) {
+                            $module->errors[] = 'Module compatibilityClass not found: ' . $module->compatibilityClass;
+                        }
+                        $compatibilityClass = $module->compatibilityClass;
+                        $module->setWidgetCompatibility(new $compatibilityClass());
+                    }
+
+
                     // Set error state
                     $module->isError = $module->errors !== null && count($module->errors) > 0;
 

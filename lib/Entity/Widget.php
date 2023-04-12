@@ -1177,7 +1177,8 @@ class Widget implements \JsonSerializable
             `calculatedDuration` = :calculatedDuration,
             `fromDt` = :fromDt,
             `toDt` = :toDt, 
-            `modifiedDt` = :modifiedDt
+            `modifiedDt` = :modifiedDt,
+            `schemaVersion` = :schemaVersion
            WHERE `widgetId` = :widgetId
         ';
 
@@ -1192,7 +1193,8 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
-            'modifiedDt' => Carbon::now()->format('U')
+            'modifiedDt' => Carbon::now()->format('U'),
+            'schemaVersion' => $this->schemaVersion
         ];
 
         $this->getStore()->update($sql, $params);
