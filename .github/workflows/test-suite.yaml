@@ -25,7 +25,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: cms-web
-          build-args: GIT_COMMIT=${GITHUB_SHA}
+          build-args: GIT_COMMIT=${{ github.sha }}
           push: false
           load: true
       - name: Pull
