@@ -311,7 +311,7 @@ class Widget extends Base
         //  we don't worry about elements here, the layout editor manages those for us.
         $template = null;
         $templateId = $widget->getOptionValue('templateId', null);
-        if ($module->isTemplateExpected() && !empty($templateId)) {
+        if ($module->isTemplateExpected() && !empty($templateId) && $templateId !== 'elements') {
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
 
             // Decorate the template with any properties saved in the widget
@@ -378,13 +378,20 @@ class Widget extends Base
         $widget->setOptionValue('name', 'attrib', $params->getString('name'));
         $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
 
-        // Should we save a template?
-        // we're allowed to change between static templates, but not between elements and static templates.
-        $existingTemplate = $widget->getOptionValue('templateId', 'elements');
+        // Save the template if provided
         $templateId = $params->getString('templateId');
         $template = null;
-        if ($existingTemplate !== 'elements' && $module->isTemplateExpected() && !empty($templateId)) {
-            // Check it.
+        if (!empty($templateId) && $templateId !== 'elements') {
+            // We're allowed to change between static templates, but not between elements and static templates.
+            // We can't change away from elements
+            if ($widget->getOptionValue('templateId', null) === 'elements') {
+                throw new InvalidArgumentException(
+                    __('This widget uses elements and can not be changed to a static template'),
+                    'templateId'
+                );
+            }
+
+            // We must be a static
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
 
             // Make sure its static
@@ -394,12 +401,10 @@ class Widget extends Base
                     'templateId'
                 );
             }
-
-            // Set it
-            $widget->setOptionValue('templateId', 'attrib', $templateId);
-        } else if ($existingTemplate !== 'elements') {
-            $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $existingTemplate);
         }
+
+        // Set it
+        $widget->setOptionValue('templateId', 'attrib', $templateId);
 
         // Before we start, clean out any cached media
         $widget->clearCachedMedia();
