@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -165,7 +165,7 @@ if (isset($_GET['file'])) {
                 $file = $requiredFileFactory->getByDisplayAndDependency($displayId, $fileType, $itemId);
 
                 // Update $file->path with the path on disk (likely /dependencies/$fileType/$itemId)
-                $event = new XmdsDependencyRequestEvent($fileType, $itemId);
+                $event = new XmdsDependencyRequestEvent($file);
                 $container->get('dispatcher')->dispatch($event, XmdsDependencyRequestEvent::$NAME);
 
                 // Path should be set - we only want the relative path here.
