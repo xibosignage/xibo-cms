@@ -39,7 +39,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ghcr.io/xibosignage/xibo-cms:latest
-          build-args: GIT_COMMIT=${GITHUB_SHA}
+          build-args: GIT_COMMIT=${{ github.sha }}
           push: true
 
       # Release branch
@@ -50,6 +50,6 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ghcr.io/xibosignage/xibo-cms:${GITHUB_REF##*/}
-          build-args: GIT_COMMIT=${GITHUB_SHA}
+          tags: ghcr.io/xibosignage/xibo-cms:${{ github.ref_name }}
+          build-args: GIT_COMMIT=${{ github.sha }}
           push: true

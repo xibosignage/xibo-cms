@@ -29,8 +29,8 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ghcr.io/xibosignage/xibo-cms:release-${GITHUB_REF##*/}
-          build-args: GIT_COMMIT=${GITHUB_SHA}
+          tags: ghcr.io/xibosignage/xibo-cms:${{ github.ref_name }}
+          build-args: GIT_COMMIT=${{ github.sha }}
           push: true
           load: true
       - name: Build archive
