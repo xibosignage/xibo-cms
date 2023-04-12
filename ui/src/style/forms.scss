@@ -284,3 +284,13 @@
         padding: 1rem 0 0.25rem 0;
     }
 }
+
+#errorMessage {
+    margin-left: 15px;
+    box-sizing: border-box;
+    width: calc(100% - 30px);
+
+    p {
+        margin-bottom: 0;
+    }
+}
