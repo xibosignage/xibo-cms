@@ -4,7 +4,6 @@ on:
   pull_request:
     branches-ignore:
       - master
-      - westphal # temporarily disable the test suite while we undertake large engineering work on this branch
 
 jobs:
   test-suite:
