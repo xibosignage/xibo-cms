@@ -1845,7 +1845,7 @@ class LayoutFactory extends BaseFactory
         $image_path = $zip->getFromName('library/thumbs/campaign_thumb.png');
         if ($image_path !== false) {
             $temporaryLayoutThumb = $libraryLocation . $layout->layout . '-campaign_thumb.png';
-            $layout->thumbnail = $temporaryLayoutThumb;
+            $layout->setUnmatchedProperty('thumbnail', $temporaryLayoutThumb);
             $image = imagecreatefromstring($image_path);
             imagepng($image, $temporaryLayoutThumb);
         }

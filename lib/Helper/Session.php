@@ -1,14 +1,15 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -107,7 +108,7 @@ class Session implements \SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function open($savePath, $sessionName)
+    public function open($savePath, $sessionName): bool
     {
         //$this->log->debug('Session open');
         $this->maxLifetime = ini_get('session.gc_maxlifetime');
@@ -117,7 +118,7 @@ class Session implements \SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function close()
+    public function close(): bool
     {
         //$this->log->debug('Session close');
 
@@ -164,7 +165,7 @@ class Session implements \SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    function read($key)
+    public function read($key): false|string
     {
         //$this->log->debug('Session read');
 
@@ -227,7 +228,7 @@ class Session implements \SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function write($key, $val)
+    public function write($key, $val): bool
     {
         //$this->log->debug('Session write');
 
@@ -248,7 +249,7 @@ class Session implements \SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function destroy($key)
+    public function destroy($key): bool
     {
         //$this->log->debug('Session destroy');
         try {
@@ -263,7 +264,7 @@ class Session implements \SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function gc($maxLifetime)
+    public function gc($maxLifetime): false|int
     {
         //$this->log->debug('Session gc');
         $this->gcCalled = true;
@@ -460,7 +461,7 @@ class Session implements \SessionHandlerInterface
 
         $this->getDb()->update($sql, $params);
     }
-    
+
     /**
      * Get the Client IP Address
      * @return string

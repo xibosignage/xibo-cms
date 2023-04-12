@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -36,7 +36,6 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SendFile;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\MediaService;
-use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 
@@ -307,8 +306,10 @@ class Notification extends Base
         $notification->load();
 
         // Adjust the dates
-        $notification->createdDt = Carbon::createFromTimestamp($notification->createdDt)->format(DateFormatHelper::getSystemFormat());
-        $notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)->format(DateFormatHelper::getSystemFormat());
+        $notification->createDt = Carbon::createFromTimestamp($notification->createDt)
+            ->format(DateFormatHelper::getSystemFormat());
+        $notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)
+            ->format(DateFormatHelper::getSystemFormat());
 
         if (!$this->getUser()->checkEditable($notification)) {
             throw new AccessDeniedException();
@@ -508,13 +509,13 @@ class Notification extends Base
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = Carbon::now()->format('U');
+        $notification->createDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt');
 
         if ($notification->releaseDt !== null) {
             $notification->releaseDt = $notification->releaseDt->format('U');
         } else {
-            $notification->releaseDt = $notification->createdDt;
+            $notification->releaseDt = $notification->createDt;
         }
 
         $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
@@ -674,7 +675,7 @@ class Notification extends Base
 
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = Carbon::now()->format('U');
+        $notification->createDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
         $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');

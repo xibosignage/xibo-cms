@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -371,7 +371,7 @@ class TagFactory extends BaseFactory
          `lktagdisplaygroup`.value,
          \'Display\' AS type
          FROM `display` INNER JOIN `lkdisplaydg` ON `lkdisplaydg`.displayId = `display`.displayId
-         INNER JOIN `displaygroup` ON `displayGroup`.displayGroupId = `lkdisplaydg`.displayGroupId AND `displaygroup`.isDisplaySpecific = 1
+         INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId AND `displaygroup`.isDisplaySpecific = 1
          INNER JOIN lktagdisplaygroup ON `lktagdisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
          WHERE `lktagdisplaygroup`.tagId = :tagId
          UNION ALL

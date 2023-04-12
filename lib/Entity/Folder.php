@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -33,13 +33,6 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * Class Folder
  * @package Xibo\Entity
  * @SWG\Definition()
- *
- * @property string $a_attr
- * @property string $li_attr
- * @property string $type The type of folder (home or root)
- * @property int $homeFolderCount How many times the folder is used as a home folder, optionally decorated by Folder Factory
- * @property array $sharing Sharing information, optionally decorated by Folder Factory
- * @property array $usage Usage information, optionally decorated by Folder Factory
  */
 class Folder
 {
@@ -50,6 +43,12 @@ class Folder
      * @var int
      */
     public $id;
+
+    /**
+     * @SWG\Property(description="The type of folder (home or root)")
+     * @var string
+     */
+    public $type;
 
     /**
      * @SWG\Property(description="The name of this Folder")

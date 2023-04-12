@@ -16,6 +16,16 @@ Content-Type: application/xml
       <clientCode xsi:type="xsd:int">400</clientCode>
       <macAddress xsi:type="xsd:string">{{macAddress}}</macAddress>
       <licenceResult xsi:type="xsd:string">trial</licenceResult>
+      <xmrChannel xsi:type="xsd:string">XMR_test_channel</xmrChannel>
+      <xmrPubKey xsi:type="xsd:string">-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8tUH0MqtiB7Hq7a+Au0v
+3MHFDnlwBmSz9S+44dGir0d119pbZQKb1D5JaGTWsBq0Ca4yAW/XtDwL5Olbue8n
+y2PBygUArJulUQdCeguAKmHCcRw6rce0ZsQymUe84dclf9l7yyCbo1VTDBH651UT
+a/ei6ATBPeLhh98lDKDpz/RmsXuW695thxhTRXPIILDDKYkK5yQF2DNEgVoShFjG
+TRys5AL2ZUrGHrrT5dxOfbNE0sU8qvoYVQIjyUVhANzh66bu8QTbjDcRLMiKE1lJ
+l5U/XOnNkKi+qNimFWRKlNS0sOvPdTJHHZZEaoFa2FXGYGL8/XAidwT6YSY702Gb
+8wIDAQAB
+-----END PUBLIC KEY-----</xmrPubKey>
     </tns:RegisterDisplay>
   </soap:Body>
 </soap:Envelope>

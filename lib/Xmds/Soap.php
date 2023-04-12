@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Xmds;
@@ -324,7 +323,7 @@ class Soap
     protected function doRequiredFiles(
         $serverKey,
         $hardwareKey,
-        $httpDownloads,
+        bool $httpDownloads,
         bool $isSupportsDataUrl = false,
         bool $isSupportsDependency = false
     ) {
@@ -652,7 +651,7 @@ class Soap
                 $parsedRow = $this->getSanitizer($row);
                 // Media
                 $path = $parsedRow->getString('path');
-                $id = $parsedRow->getString('id');
+                $id = $parsedRow->getParam('id');
                 $md5 = $row['MD5'];
                 $fileSize = $parsedRow->getInt('FileSize');
                 $released = $parsedRow->getInt('released');

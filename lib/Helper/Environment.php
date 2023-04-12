@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -33,8 +33,8 @@ class Environment
     public static $WEBSITE_VERSION_NAME = '4.0.0-alpha';
     public static $XMDS_VERSION = '6';
     public static $XLF_VERSION = 3;
-    public static $VERSION_REQUIRED = '7.2.9';
-    public static $VERSION_UNSUPPORTED = '8.0';
+    public static $VERSION_REQUIRED = '8.1.0';
+    public static $VERSION_UNSUPPORTED = '9.0';
 
     /** @var null cache migration status for the whole request */
     private static $_migration_status = null;

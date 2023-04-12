@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -347,7 +347,7 @@ class DataSetFactory extends BaseFactory
         $result->entries = [];
         $result->number = 0;
         $result->isEligibleToTruncate = false;
-        
+
         // Getting all dependant values if needed
         // just an empty array if we don't have a dependent
         $values = [
@@ -359,7 +359,7 @@ class DataSetFactory extends BaseFactory
 
             $values = $dependant->getData();
         }
-        
+
         // Fetching data for every field in the dependant dataSet
         foreach ($values as $options) {
             // Make some request params to provide to the HTTP client
@@ -402,7 +402,13 @@ class DataSetFactory extends BaseFactory
             if ($dataSet->method === 'POST') {
                 parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['form_params']);
             } else {
-                parse_str(parse_url($resolvedUri, PHP_URL_QUERY), $queryParamsArray);
+                // Get the query params from the URL.
+                $queryParamsArray = [];
+                $dataSetPostData = [];
+                $parsedUrl = parse_url($resolvedUri, PHP_URL_QUERY);
+                if ($parsedUrl) {
+                    parse_str($parsedUrl, $queryParamsArray);
+                }
                 parse_str($this->replaceParams($dataSet->postData, $options), $dataSetPostData);
                 $requestParams['query'] = array_merge($queryParamsArray, $dataSetPostData);
             }
@@ -528,7 +534,7 @@ class DataSetFactory extends BaseFactory
                 throw new InvalidArgumentException(__('Unable to get Data for %s because %s.', $dataSet->dataSet, $requestException->getMessage()), 'dataSetId');
             }
         }
-        
+
         return $result;
     }
 

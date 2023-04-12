@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -40,9 +40,6 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
- * @property $extension
- * @property $thumbnail
- * @property $tagsString
  */
 class Media implements \JsonSerializable
 {
@@ -688,11 +685,12 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
         }
 
-        if (isset($this->urlDownload) && $this->urlDownload === true) {
+        if ($this->getUnmatchedProperty('urlDownload', false) === true) {
             // for upload via URL, handle cases where URL do not have specified extension in url
             // we either have a long string after lastPeriod or nothing
-            if (isset($this->extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
-                $saveName = $this->mediaId . '.' . $this->extension;
+            $extension = $this->getUnmatchedProperty('extension');
+            if (isset($extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
+                $saveName = $this->mediaId . '.' . $extension;
             }
 
             // if needed strip any not needed characters from the storedAs, this should be just <mediaId>.<extension>

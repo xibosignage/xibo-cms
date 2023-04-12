@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -85,7 +85,7 @@ class NotificationFactory extends BaseFactory
         $notification = $this->createEmpty();
         $notification->subject = $subject;
         $notification->body = $body;
-        $notification->createdDt = $date->format('U');
+        $notification->createDt = $date->format('U');
         $notification->releaseDt = $date->format('U');
         $notification->isEmail = ($isEmail) ? 1 : 0;
         $notification->isInterrupt = 0;
