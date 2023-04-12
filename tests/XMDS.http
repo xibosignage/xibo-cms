@@ -88,4 +88,9 @@ Content-Type: application/xml
 
 ###
 
+# Get the fileID from the Required Files response.
+GET {{url}}/xmds.php?file=6fdcddfc0c386f5abce4f8c8b5983b1a&displayId=1&type=P&itemId=1&fileType=fontCss
 
+###
+
+GET {{url}}/xmds.php?file=6fdcddfc0c386f5abce4f8c8b5983b1a&displayId=1&type=P&itemId=4&fileType=font

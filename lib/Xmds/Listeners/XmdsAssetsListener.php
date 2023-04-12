@@ -51,14 +51,15 @@ class XmdsAssetsListener
         $this->moduleTemplateFactory = $moduleTemplateFactory;
     }
 
-    public function onDependencyRequest(XmdsDependencyRequestEvent $event)
+    public function onDependencyRequest(XmdsDependencyRequestEvent $event): void
     {
         $this->getLogger()->debug('onDependencyRequest: XmdsAssetsListener');
 
         if ($event->getFileType() === 'asset') {
             // Get the asset using only the assetId.
             try {
-                $asset = $this->moduleFactory->getAssetsFromAnywhereById($event->getRealId(), $this->moduleTemplateFactory);
+                $asset = $this->moduleFactory
+                    ->getAssetsFromAnywhereById($event->getRealId(), $this->moduleTemplateFactory);
 
                 if ($asset->isSendToPlayer()) {
                     // Return the full path to this asset
@@ -68,7 +69,8 @@ class XmdsAssetsListener
                     $this->getLogger()->debug('onDependencyRequest: asset found but is cms only');
                 }
             } catch (NotFoundException $notFoundException) {
-                $this->getLogger()->info('onDependencyRequest: No asset found for assetId: ' . $event->getId());
+                $this->getLogger()->info('onDependencyRequest: No asset found for assetId: '
+                    . $event->getRealId());
             }
         }
     }

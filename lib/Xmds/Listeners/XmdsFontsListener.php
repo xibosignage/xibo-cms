@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -26,6 +26,7 @@ use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\FontFactory;
 use Xibo\Listener\ListenerLoggerTrait;
+use Xibo\Xmds\Entity\Dependency;
 
 /**
  * A listener to supply fonts as dependencies to players.
@@ -33,6 +34,8 @@ use Xibo\Listener\ListenerLoggerTrait;
 class XmdsFontsListener
 {
     use ListenerLoggerTrait;
+
+    use XmdsListenerTrait;
 
     /**
      * @var FontFactory
@@ -44,7 +47,7 @@ class XmdsFontsListener
         $this->fontFactory = $fontFactory;
     }
 
-    public function onDependencyList(XmdsDependencyListEvent $event)
+    public function onDependencyList(XmdsDependencyListEvent $event): void
     {
         $this->getLogger()->debug('onDependencyList: XmdsFontsListener');
 
@@ -52,15 +55,17 @@ class XmdsFontsListener
             $event->addDependency(
                 'font',
                 $font->id,
-                'fonts/'.$font->fileName,
+                'fonts/' . $font->fileName,
                 $font->size,
                 $font->md5,
                 true,
-                $this->getLegacyId($font->id)
+                $this->getLegacyId($font->id, Dependency::LEGACY_ID_OFFSET_FONT)
             );
         }
-        $fontsCssPath = PROJECT_ROOT . '/library/fonts/fonts.css';
 
+        // Always add fonts.css to the list.
+        // This can have the ID of 1 because it is a different file type and will therefore be unique.
+        $fontsCssPath = PROJECT_ROOT . '/library/fonts/fonts.css';
         $event->addDependency(
             'fontCss',
             1,
@@ -68,24 +73,19 @@ class XmdsFontsListener
             filesize($fontsCssPath),
             md5($fontsCssPath),
             true,
-            $this->getLegacyId(1)
+            $this->getLegacyId(1, Dependency::LEGACY_ID_OFFSET_FONT)
         );
     }
 
-    public function onDependencyRequest(XmdsDependencyRequestEvent $event)
+    public function onDependencyRequest(XmdsDependencyRequestEvent $event): void
     {
         $this->getLogger()->debug('onDependencyRequest: XmdsFontsListener');
 
         if ($event->getFileType() === 'font') {
-            $font = $this->fontFactory->getById($event->getId());
-            $event->setRelativePathToLibrary('/fonts/' . $font->fileName);
+            $font = $this->fontFactory->getById($event->getRealId());
+            $event->setRelativePathToLibrary('fonts/' . $font->fileName);
         } else if ($event->getFileType() === 'fontCss') {
-            $event->setRelativePathToLibrary('/fonts/fonts.css');
+            $event->setRelativePathToLibrary('fonts/fonts.css');
         }
-    }
-
-    private function getLegacyId(int $id): int
-    {
-        return ($id + 100000000) * -1;
     }
 }
