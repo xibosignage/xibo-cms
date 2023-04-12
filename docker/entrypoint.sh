@@ -302,11 +302,11 @@ then
     fi
 
     mkdir -p /var/www/cms/library/temp
-    chown apache.apache -R /var/www/cms/library
-    chown apache.apache -R /var/www/cms/custom
-    chown apache.apache -R /var/www/cms/web/theme/custom
-    chown apache.apache -R /var/www/cms/web/userscripts
-    chown apache.apache -R /var/www/cms/ca-certs
+    chown www-data:www-data -R /var/www/cms/library
+    chown www-data:www-data -R /var/www/cms/custom
+    chown www-data:www-data -R /var/www/cms/web/theme/custom
+    chown www-data:www-data -R /var/www/cms/web/userscripts
+    chown www-data:www-data -R /var/www/cms/ca-certs
 
     # If we have a CMS ALIAS environment variable, then configure that in our Apache conf.
     # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
