@@ -1,10 +1,10 @@
 <?php
 /*
- * Lukas Zurschmiede aka LukyLuke - https://github.com/LukyLuke
- * Copyright (C) 2017-2018 Lukas Zurschmiede
- *  contributions by Spring Signage Ltd (https://springsignage.com)
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * (RemoteDataSetFetchTask.php)  This file is part of Xibo.
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -191,8 +191,8 @@ class RemoteDataSetFetchTask implements TaskInterface
                 $notification = $this->notificationFactory->createEmpty();
                 $notification->subject = __('Remote DataSet %s failed to synchronise', $dataSet->dataSet);
                 $notification->body = 'The error is: ' . $e->getMessage();
-                $notification->createdDt = Carbon::now()->format('U');
-                $notification->releaseDt = $notification->createdDt;
+                $notification->createDt = Carbon::now()->format('U');
+                $notification->releaseDt = $notification->createDt;
                 $notification->isEmail = 0;
                 $notification->isInterrupt = 0;
                 $notification->userId = $this->user->userId;
@@ -213,7 +213,7 @@ class RemoteDataSetFetchTask implements TaskInterface
 
         $this->appendRunMessage(__('Done'));
     }
-    
+
     /**
      * Order the list of DataSets to be processed so that it is dependent aware.
      *

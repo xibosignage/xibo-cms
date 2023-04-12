@@ -32,7 +32,7 @@ class Extend implements \JsonSerializable
     public $with;
 
     /** @inheritDoc */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'template' => $this->template,

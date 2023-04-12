@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -91,8 +91,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             $layout->save(['saveActions' => false, 'import' => $importTags]);
 
-            if (!empty($layout->thumbnail)) {
-                rename($layout->thumbnail, $layout->getThumbnailUri());
+            if (!empty($layout->getUnmatchedProperty('thumbnail'))) {
+                rename($layout->getUnmatchedProperty('thumbnail'), $layout->getThumbnailUri());
             }
             $layout->managePlaylistClosureTable();
             $layout->manageActions();

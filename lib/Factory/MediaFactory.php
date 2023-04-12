@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -180,7 +180,7 @@ class MediaFactory extends BaseFactory
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
             if (is_dir($folder . DIRECTORY_SEPARATOR . $file)) continue;
-            
+
             $file = $this->createModuleSystemFile($file, $folder . DIRECTORY_SEPARATOR . $file);
             $file->moduleSystemFile = true;
 
@@ -217,14 +217,15 @@ class MediaFactory extends BaseFactory
             $media->duration = $requestOptions['duration'];
             $media->moduleSystemFile = 0;
             $media->isRemote = true;
-            $media->urlDownload = true;
-            $media->extension = $requestOptions['extension'] ?? null;
+            $media->setUnmatchedProperty('urlDownload', true);
+            $media->setUnmatchedProperty('extension', $requestOptions['extension'] ?? null);
             $media->enableStat = $requestOptions['enableStat'];
             $media->folderId = $requestOptions['folderId'];
             $media->permissionsFolderId = $requestOptions['permissionsFolderId'];
         }
 
-        $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
+        $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is '
+            . $media->mediaId . '.');
 
         // We update the desired expiry here - isSavedRequired is tested against the original value
         $media->expires = $expiry;
@@ -301,9 +302,14 @@ class MediaFactory extends BaseFactory
                     $requestOptions = array_merge($media->downloadRequestOptions(), [
                         'sink' => $sink,
                         'on_headers' => function (ResponseInterface $response) {
-                            $this->getLog()->debug('DEBUG: ' . $response->getStatusCode());
+                            $this->getLog()->debug('processDownloads: on_headers status code = '
+                                . $response->getStatusCode());
+
                             if ($response->getStatusCode() < 299) {
-                                $this->getLog()->debug('DEBUG: ' . var_export($response->getHeaders(), true));
+                                $this->getLog()->debug('processDownloads: successful, headers = '
+                                    . var_export($response->getHeaders(), true));
+
+                                // Get the content length
                                 $contentLength = $response->getHeaderLine('Content-Length');
                                 if (empty($contentLength)
                                     || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
@@ -334,7 +340,8 @@ class MediaFactory extends BaseFactory
                             $success($item);
                         }
                     } catch (\Exception $e) {
-                        $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
+                        $this->getLog()->error('processDownloads: Unable to save mediaId '
+                            . $item->mediaId . '. ' . $e->getMessage());
 
                         // Remove it
                         $item->delete(['rollback' => true]);
@@ -355,7 +362,7 @@ class MediaFactory extends BaseFactory
                             $reason->getMessage()
                         )
                     );
-                    
+
                     // We should remove the media record.
                     $queue[$index]->delete(['rollback' => true]);
 

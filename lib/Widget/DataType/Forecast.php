@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -69,7 +69,7 @@ class Forecast implements \JsonSerializable, DataTypeInterface
     public $visibilityDistanceUnit;
 
     /** @inheritDoc */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'time' => $this->time,

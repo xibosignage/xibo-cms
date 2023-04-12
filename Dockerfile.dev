@@ -1,84 +1,81 @@
-# this is the dev container and doesn't contain CRON or composer
-# it maps the PWD straight through
-
-# Multi-stage build
-# Stage 0
-# Compile xsendfile apache module
-FROM alpine:3.15 as sendfile
-ADD docker/mod_xsendfile.c /mod_xsendfile.c
-RUN apk update && apk upgrade && apk add \
-        gcc \
-        musl-dev \
-        apache2-dev \
-        apache2
-
-RUN cd / && \
-    apxs -cia mod_xsendfile.c
-
+# Xibo Development Container
+# This is the dev container and doesn't contain CRON or composer it maps the PWD straight through
 # Stage 1
 # Build the CMS container
-FROM alpine:3.15
-MAINTAINER Xibo Signage <support@xibosignage.com>
+FROM debian:bullseye-slim
+LABEL org.opencontainers.image.authors="support@xibosignage.com"
 
-# Install apache, PHP, and supplimentary programs.
-RUN apk update && apk upgrade && apk add tar \
+RUN apt update && \
+    apt install -y software-properties-common lsb-release ca-certificates curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+
+# Add sury.org PHP Repository
+RUN curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg && \
+    sh -c 'echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
+
+RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y && apt install -y \
+    tar \
     bash \
     curl \
-    php7 \
-    php7-apache2 \
-    php7-zmq \
-    php7-json \
-    php7-gd \
-    php7-dom \
-    php7-pdo \
-    php7-zip \
-    php7-pdo_mysql \
-    php7-gettext \
-    php7-soap \
-    php7-iconv \
-    php7-curl \
-    php7-session \
-    php7-sockets \
-    php7-ctype \
-    php7-fileinfo \
-    php7-xml \
-    php7-simplexml \
-    php7-xmlwriter \
-    php7-tokenizer \
-    php7-mbstring \
-    php7-memcached \
-    php7-tokenizer \
-    php7-pecl-mongodb \
-    php7-zlib \
-    mysql-client \
-    msmtp \
-    python2 \
     apache2 \
-    ca-certificates \
+    libapache2-mod-xsendfile \
+    netcat \
+    iputils-ping \
+    php8.2 \
+    libapache2-mod-php8.2 \
+    php8.2-zmq \
+    php8.2-gd \
+    php8.2-dom \
+    php8.2-pdo \
+    php8.2-zip \
+    php8.2-mysql \
+    php8.2-gettext \
+    php8.2-soap \
+    php8.2-iconv \
+    php8.2-curl \
+    php8.2-ctype \
+    php8.2-fileinfo \
+    php8.2-xml \
+    php8.2-simplexml \
+    php8.2-mbstring \
+    php8.2-memcached \
+    php8.2-phar \
+    php8.2-opcache \
+    php8.2-mongodb \
     tzdata \
+    msmtp \
     openssl \
-    && rm -rf /var/cache/apk/*
+    cron \
+    default-mysql-client \
+    && dpkg-reconfigure --frontend noninteractive tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --set php /usr/bin/php8.2
+
+# Enable Apache module
+RUN a2enmod rewrite \
+    && a2enmod headers
 
 # Add all necessary config files in one layer
 ADD docker/ /
 
 # Adjust file permissions as appropriate
 RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
-             /etc/periodic/15min/cms-db-backup && \
-    mkdir -p /run/apache2 && \
-    rm /etc/apache2/conf.d/info.conf && \
-    rm /etc/apache2/conf.d/userdir.conf && \
+    /etc/periodic/15min/cms-db-backup && \
     chmod 777 /tmp
 
-# Add xsendfile Module
-COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsendfile.so
-
 # Update the PHP.ini file
-RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini && \
-    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
-    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini && \
-    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php7/php.ini && \
-    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php7/php.ini
+RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.2/apache2/php.ini && \
+    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php/8.2/apache2/php.ini && \
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php/8.2/apache2/php.ini && \
+    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php/8.2/apache2/php.ini && \
+    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php/8.2/apache2/php.ini && \
+    sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.2/cli/php.ini && \
+    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php/8.2/cli/php.ini && \
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php/8.2/cli/php.ini && \
+    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php/8.2/cli/php.ini && \
+    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php/8.2/cli/php.ini
 
 # Capture the git commit for this build if we provide one
 ARG GIT_COMMIT=dev
@@ -102,6 +99,8 @@ ENV CMS_DEV_MODE=true \
     CMS_PHP_UPLOAD_MAX_FILESIZE=2G \
     CMS_PHP_MAX_EXECUTION_TIME=300 \
     CMS_PHP_MEMORY_LIMIT=256M \
+    CMS_PHP_CLI_MAX_EXECUTION_TIME=0 \
+    CMS_PHP_CLI_MEMORY_LIMIT=256M \
     CMS_PHP_COOKIE_SECURE=Off \
     CMS_PHP_COOKIE_HTTP_ONLY=On \
     CMS_PHP_COOKIE_SAMESITE=Lax \

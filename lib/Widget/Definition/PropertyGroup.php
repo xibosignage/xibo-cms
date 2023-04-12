@@ -33,7 +33,7 @@ class PropertyGroup implements \JsonSerializable
     public $helpText;
 
     /** @inheritDoc */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->id,

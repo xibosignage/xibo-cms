@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -633,7 +633,7 @@ class Campaign extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
-        $campaign->tagsString = $campaign->getTagString();
+        $campaign->setUnmatchedProperty('tagsString', $campaign->getTagString());
 
         if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
@@ -646,9 +646,9 @@ class Campaign extends Base
             if (!$this->getUser()->checkViewable($this->layoutFactory->getById($layout->layoutId))) {
                 // Hide all layout details from the user
                 $layout->layout = __('Layout');
-                $layout->locked = true;
+                $layout->setUnmatchedProperty('locked', true);
             } else {
-                $layout->locked = false;
+                $layout->setUnmatchedProperty('locked', false);
             }
             $layouts[] = $layout;
         }

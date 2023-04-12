@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -226,7 +226,7 @@ class ScheduleReminderTask implements TaskInterface
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $subject;
         $notification->body = $body;
-        $notification->createdDt = Carbon::now()->format('U');
+        $notification->createDt = Carbon::now()->format('U');
         $notification->releaseDt = $releaseDt;
         $notification->isEmail = $reminder->isEmail;
         $notification->isInterrupt = 0;

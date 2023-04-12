@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -243,12 +243,12 @@ class Library extends Base
     {
         return $this->folderFactory;
     }
-    
+
     public function useMediaService(MediaServiceInterface $mediaService)
     {
         $this->mediaService = $mediaService;
     }
-    
+
     public function getMediaService()
     {
         return $this->mediaService->setUser($this->getUser());
@@ -275,15 +275,18 @@ class Library extends Base
 
             // Thumbnail
             $module = $this->moduleFactory->getByType($media->mediaType);
-            $media->thumbnail = '';
+            $media->setUnmatchedProperty('thumbnail', '');
             if ($module->hasThumbnail) {
-                $media->thumbnail = $this->urlFor($request, 'library.download', [
-                    'id' => $media->mediaId
-                ], [
-                    'preview' => 1
-                ]);
+                $media->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor($request, 'library.download', [
+                        'id' => $media->mediaId
+                    ], [
+                        'preview' => 1
+                    ])
+                );
             }
-            $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
+            $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
 
             $this->getState()->template = 'library-direct-media-details';
             $this->getState()->setData([
@@ -540,30 +543,32 @@ class Library extends Base
 
         // Add some additional row content
         foreach ($mediaList as $media) {
-            /* @var \Xibo\Entity\Media $media */
-            $media->revised = ($media->parentId != 0) ? 1 : 0;
+            $media->setUnmatchedProperty('revised', ($media->parentId != 0) ? 1 : 0);
 
             // Thumbnail
-            $media->thumbnail = '';
+            $media->setUnmatchedProperty('thumbnail', '');
             try {
                 $module = $this->moduleFactory->getByType($media->mediaType);
                 if ($module->hasThumbnail) {
-                    $media->thumbnail = $this->urlFor($request, 'library.download', [
-                        'id' => $media->mediaId
-                    ], [
-                        'preview' => 1
-                    ]);
+                    $media->setUnmatchedProperty(
+                        'thumbnail',
+                        $this->urlFor($request, 'library.download', [
+                            'id' => $media->mediaId
+                        ], [
+                            'preview' => 1
+                        ])
+                    );
                 }
             } catch (NotFoundException $notFoundException) {
                 $this->getLog()->error('Module ' . $media->mediaType . ' not found');
             }
 
-            $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
+            $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
 
             // Media expiry
-            $media->mediaExpiresIn = __('Expires %s');
-            $media->mediaExpiryFailed = __('Expired ');
-            $media->mediaNoExpiryDate = __('Never');
+            $media->setUnmatchedProperty('mediaExpiresIn', __('Expires %s'));
+            $media->setUnmatchedProperty('mediaExpiryFailed', __('Expired '));
+            $media->setUnmatchedProperty('mediaNoExpiryDate', __('Never'));
 
             if ($this->isApi($request)) {
                 $media->excludeProperty('mediaExpiresIn');
@@ -579,28 +584,43 @@ class Library extends Base
 
             switch ($media->released) {
                 case 1:
-                    $media->releasedDescription = '';
+                    $media->setUnmatchedProperty('releasedDescription', '');
                     break;
 
                 case 2:
-                    $media->releasedDescription = __('The uploaded image is too large and cannot be processed, please use another image.');
+                    $media->setUnmatchedProperty(
+                        'releasedDescription',
+                        __('The uploaded image is too large and cannot be processed, please use another image.')
+                    );
                     break;
 
                 default:
-                    $media->releasedDescription = __('This image will be resized according to set thresholds and limits.');
+                    $media->setUnmatchedProperty(
+                        'releasedDescription',
+                        __('This image will be resized according to set thresholds and limits.')
+                    );
             }
 
             switch ($media->enableStat) {
                 case 'On':
-                    $media->enableStatDescription = __('This Media has enable stat collection set to ON');
+                    $media->setUnmatchedProperty(
+                        'enableStatDescription',
+                        __('This Media has enable stat collection set to ON')
+                    );
                     break;
 
                 case 'Off':
-                    $media->enableStatDescription = __('This Media has enable stat collection set to OFF');
+                    $media->setUnmatchedProperty(
+                        'enableStatDescription',
+                        __('This Media has enable stat collection set to OFF')
+                    );
                     break;
 
                 default:
-                    $media->enableStatDescription = __('This Media has enable stat collection set to INHERIT');
+                    $media->setUnmatchedProperty(
+                        'enableStatDescription',
+                        __('This Media has enable stat collection set to INHERIT')
+                    );
             }
 
             $media->buttons = [];
@@ -612,14 +632,14 @@ class Library extends Base
                 // Edit
                 $media->buttons[] = array(
                     'id' => 'content_button_edit',
-                    'url' => $this->urlFor($request,'library.edit.form', ['id' => $media->mediaId]),
+                    'url' => $this->urlFor($request, 'library.edit.form', ['id' => $media->mediaId]),
                     'text' => __('Edit')
                 );
 
                 // Copy Button
                 $media->buttons[] = array(
                     'id' => 'media_button_copy',
-                    'url' => $this->urlFor($request,'library.copy.form', ['id' => $media->mediaId]),
+                    'url' => $this->urlFor($request, 'library.copy.form', ['id' => $media->mediaId]),
                     'text' => __('Copy')
                 );
 
@@ -627,11 +647,15 @@ class Library extends Base
                 if ($this->getUser()->featureEnabled('folder.view')) {
                     $media->buttons[] = [
                         'id' => 'library_button_selectfolder',
-                        'url' => $this->urlFor($request,'library.selectfolder.form', ['id' => $media->mediaId]),
+                        'url' => $this->urlFor($request, 'library.selectfolder.form', ['id' => $media->mediaId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'library.selectfolder', ['id' => $media->mediaId])],
+                            [
+                                'name' => 'commit-url', 'value' => $this->urlFor($request, 'library.selectfolder', [
+                                    'id' => $media->mediaId
+                                ])
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'library_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -1167,7 +1191,7 @@ class Library extends Base
         }
 
         $media->enableStat = ($media->enableStat == null) ? $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT') : $media->enableStat;
-        $media->tagsString = $media->getTagString();
+        $media->setUnmatchedProperty('tagsString', $media->getTagString());
 
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
@@ -2073,7 +2097,7 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
-        $media->tagsString = $media->getTagString();
+        $media->setUnmatchedProperty('tagsString', $media->getTagString());
 
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
@@ -2236,7 +2260,7 @@ class Library extends Base
         ]);
 
         return $this->render($request, $response);
-        
+
     }
 
     /**
@@ -2663,7 +2687,7 @@ class Library extends Base
             $importQueue[] = $import;
         }
         $event = new LibraryProviderImportEvent($importQueue);
-        $this->getDispatcher()->dispatch($event->getName(), $event);
+        $this->getDispatcher()->dispatch($event, $event->getName());
 
         // Pull out our events and upload
         foreach ($importQueue as $import) {
@@ -2684,7 +2708,9 @@ class Library extends Base
                         0,
                         [
                             'fileType' => strtolower($module->type),
-                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->defaultDuration,
+                            'duration' => !(empty($import->searchResult->duration))
+                                ? $import->searchResult->duration
+                                : $module->defaultDuration,
                             'enableStat' => $enableStat,
                             'folderId' => $folder->getId(),
                             'permissionsFolderId' => $folder->permissionsFolderId

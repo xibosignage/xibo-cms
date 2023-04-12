@@ -484,7 +484,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
-        $displayGroup->tagsString = $displayGroup->getTagString();
+        $displayGroup->setUnmatchedProperty('tagsString', $displayGroup->getTagString());
 
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([

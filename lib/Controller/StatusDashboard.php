@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -347,7 +347,9 @@ class StatusDashboard extends Base
             $data['nowShowing'] = $sth->fetchColumn(0);
 
             // Latest news
-            if ($this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))) {
+            if ($this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1
+                && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))
+            ) {
                 // Make sure we have the cache location configured
                 MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 

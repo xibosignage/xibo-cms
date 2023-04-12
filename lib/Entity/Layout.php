@@ -54,9 +54,6 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
- *
- * @property $isLocked
- * @property $thumbnail
  */
 class Layout implements \JsonSerializable
 {
@@ -266,6 +263,12 @@ class Layout implements \JsonSerializable
      * @SWG\Property(description="Code identifier for this Layout")
      */
     public $code;
+
+    /**
+     * @SWG\Property(description="Is this layout locked by another user?")
+     * @var bool
+     */
+    public $isLocked;
 
     // Child items
     /**
@@ -1320,7 +1323,7 @@ class Layout implements \JsonSerializable
             $regionOptionsNode = $document->createElement('options');
 
             foreach ($region->regionOptions as $regionOption) {
-                $regionOptionNode = $document->createElement($regionOption->option, $regionOption->value);
+                $regionOptionNode = $document->createElement($regionOption->option, $regionOption->value ?? '');
                 $regionOptionsNode->appendChild($regionOptionNode);
             }
 
@@ -1406,7 +1409,10 @@ class Layout implements \JsonSerializable
                     // Region duration
                     // If we have a cycle playback duration, we use that, otherwise we use the normal calculated
                     // duration.
-                    $tempCyclePlaybackAverageDuration = $widget->tempCyclePlaybackAverageDuration ?? 0;
+                    $tempCyclePlaybackAverageDuration = $widget->getUnmatchedProperty(
+                        'tempCyclePlaybackAverageDuration',
+                        0
+                    );
                     if ($tempCyclePlaybackAverageDuration) {
                         $region->duration = $region->duration + $tempCyclePlaybackAverageDuration;
                     } else {
@@ -1650,7 +1656,7 @@ class Layout implements \JsonSerializable
                             continue;
                         }
 
-                        $optionNode = $document->createElement($option->option, $option->value);
+                        $optionNode = $document->createElement($option->option, $option->value ?? '');
                         $optionsNode->appendChild($optionNode);
                     }
 

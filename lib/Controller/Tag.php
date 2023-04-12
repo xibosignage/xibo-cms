@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -457,7 +457,10 @@ class Tag extends Base
             'tagId' => $id,
         ];
 
-        $entries = $this->tagFactory->getAllLinks($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
+        $entries = $this->tagFactory->getAllLinks(
+            $this->gridRenderSort($sanitizedParams),
+            $this->gridRenderFilter($filter, $sanitizedQueryParams)
+        );
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->tagFactory->countLast();

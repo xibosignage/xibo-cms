@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -147,9 +147,9 @@ class PlayerVersionFactory extends BaseFactory
         if ($sortOrder === null) {
             $sortOrder = ['code DESC'];
         }
-        
+
         $sanitizedFilter = $this->getSanitizer($filterBy);
-        
+
         $params = [];
         $entries = [];
 
@@ -241,11 +241,11 @@ class PlayerVersionFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entry = $this->createEmpty()->hydrate($row);
             if ($entry->type === 'sssp') {
-                $entry->typeShow = 'Tizen';
+                $entry->setUnmatchedProperty('typeShow', 'Tizen');
             } else if ($entry->type === 'lg') {
-                $entry->typeShow = 'webOS';
+                $entry->setUnmatchedProperty('typeShow', 'webOS');
             } else {
-                $entry->typeShow = ucfirst($row['type']);
+                $entry->setUnmatchedProperty('typeShow', ucfirst($row['type']));
             }
 
             $entries[] = $entry;

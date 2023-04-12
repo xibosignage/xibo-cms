@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -79,11 +79,14 @@ class DatabaseLogHandler extends AbstractProcessingHandler
      */
     protected function write(array $record)
     {
-        if (self::$statement == NULL) {
+        if (self::$statement == null) {
             self::$pdo = PdoStorageService::newConnection('log');
 
-            $SQL = 'INSERT INTO `log` (runNo, logdate, channel, type, page, function, message, userid, displayid)
-                      VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)';
+            $SQL = '
+                INSERT INTO `log` 
+                        (`runNo`, `logdate`, `channel`, `type`, `page`, `function`, `message`, `userid`, `displayid`)
+                      VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)
+            ';
 
             self::$statement = self::$pdo->prepare($SQL);
         }

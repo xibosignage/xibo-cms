@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -60,94 +60,117 @@ class LogFactory extends BaseFactory
         $params = [];
         $order = ''; $limit = '';
 
-        $select = 'SELECT logId, runNo, logDate, channel, page, function, message, display.displayId, display.display, type';
+        $select = '
+            SELECT `logId`,
+                `runNo`,
+                `logDate`,
+                `channel`,
+                `page`,
+                `function`,
+                `message`,
+                `display`.`displayId`,
+                `display`.`display`,
+                `type`
+        ';
 
         $body = '
               FROM `log`
-                  LEFT OUTER JOIN display
-                  ON display.displayid = log.displayid
+                  LEFT OUTER JOIN `display`
+                  ON `display`.`displayid` = `log`.`displayid`
                   ';
         if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= 'INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayID = log.displayid ';
+                        ON `lkdisplaydg`.`DisplayID` = `log`.`displayid` ';
         }
 
         $body .= ' WHERE 1 = 1 ';
 
 
         if ($parsedFilter->getInt('fromDt') !== null) {
-            $body .= ' AND logdate > :fromDt ';
+            $body .= ' AND `logdate` > :fromDt ';
             $params['fromDt'] = Carbon::createFromTimestamp( $parsedFilter->getInt('fromDt'))->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getInt('toDt') !== null) {
-            $body .= ' AND logdate <= :toDt ';
+            $body .= ' AND `logdate` <= :toDt ';
             $params['toDt'] = Carbon::createFromTimestamp( $parsedFilter->getInt('toDt'))->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getString('runNo') != null) {
-            $body .= ' AND runNo = :runNo ';
+            $body .= ' AND `runNo` = :runNo ';
             $params['runNo'] = $parsedFilter->getString('runNo');
         }
 
         if ($parsedFilter->getString('type') != null) {
-            $body .= ' AND type = :type ';
+            $body .= ' AND `type` = :type ';
             $params['type'] = $parsedFilter->getString('type');
         }
 
         if ($parsedFilter->getString('channel') != null) {
-            $body .= ' AND channel LIKE :channel ';
+            $body .= ' AND `channel` LIKE :channel ';
             $params['channel'] = '%' . $parsedFilter->getString('channel') . '%';
         }
 
         if ($parsedFilter->getString('page') != null) {
-            $body .= ' AND page LIKE :page ';
+            $body .= ' AND `page` LIKE :page ';
             $params['page'] = '%' . $parsedFilter->getString('page') . '%';
         }
 
         if ($parsedFilter->getString('function') != null) {
-            $body .= ' AND function LIKE :function ';
+            $body .= ' AND `function` LIKE :function ';
             $params['function'] = '%' . $parsedFilter->getString('function') . '%';
         }
 
         if ($parsedFilter->getString('message') != null) {
-            $body .= ' AND message LIKE :message ';
+            $body .= ' AND `message` LIKE :message ';
             $params['message'] = '%' . $parsedFilter->getString('message') . '%';
         }
 
         if ($parsedFilter->getInt('displayId') !== null) {
-            $body .= ' AND log.displayId = :displayId ';
+            $body .= ' AND `log`.`displayId` = :displayId ';
             $params['displayId'] = $parsedFilter->getInt('displayId');
         }
 
         if ($parsedFilter->getInt('userId') !== null) {
-            $body .= ' AND log.userId = :userId ';
+            $body .= ' AND `log`.`userId` = :userId ';
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
         if ($parsedFilter->getCheckbox('excludeLog') == 1) {
-            $body .= ' AND (log.page NOT LIKE \'/log%\' OR log.page = \'/login\') ';
-            $body .= ' AND log.page <> \'/user/pref\' AND log.page <> \'/clock\' AND log.page <> \'/library/fontcss\' ';
+            $body .= ' AND (`log`.`page` NOT LIKE \'/log%\' OR `log`.`page` = \'/login\') ';
+            $body .= ' AND `log`.`page` NOT IN(\'/user/pref\', \'/clock\', \'/library/fontcss\') ';
         }
 
         // Filter by Display Name?
         if ($parsedFilter->getString('display') != null) {
             $terms = explode(',', $parsedFilter->getString('display'));
-            $this->nameFilter('display', 'display', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter(
+                'display',
+                'display',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1)
+            );
         }
 
         if ($parsedFilter->getInt('displayGroupId') !== null) {
-            $body .= ' AND lkdisplaydg.displaygroupid = :displayGroupId ';
+            $body .= ' AND `lkdisplaydg`.`displaygroupid` = :displayGroupId ';
             $params['displayGroupId'] = $parsedFilter->getInt('displayGroupId');
         }
 
         // Sorting?
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order = ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         // Paging
-        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length', ['default' => 10]) !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start', ['default' => 0]), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null
+            && $parsedFilter->getInt('start') !== null
+            && $parsedFilter->getInt('length', ['default' => 10]) !== null
+        ) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', '
+                . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -155,7 +178,7 @@ class LogFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row,  ['htmlStringProperties' => ['message']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
         }
 
         // Paging

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -25,9 +25,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
-use Slim\Routing\RouteParser;
 use Stash\Interfaces\PoolInterface;
-use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\MediaDeleteEvent;
@@ -322,15 +320,24 @@ class MediaService implements MediaServiceInterface
             if ($item == '.' || $item == '..') {
                 continue;
             }
+
+            // Path
+            $filePath = $libraryTemp . DIRECTORY_SEPARATOR . $item;
+
+            if (is_dir($filePath)) {
+                $this->log->debug('Skipping folder: ' . $item);
+                continue;
+            }
+
             // Has this file been written to recently?
-            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > Carbon::now()->subSeconds(86400)->format('U')) {
+            if (filemtime($filePath) > Carbon::now()->subSeconds(86400)->format('U')) {
                 $this->log->debug('Skipping active file: ' . $item);
                 continue;
             }
 
             $this->log->debug('Deleting temp file: ' . $item);
 
-            unlink($libraryTemp . DIRECTORY_SEPARATOR . $item);
+            unlink($filePath);
         }
     }
 
