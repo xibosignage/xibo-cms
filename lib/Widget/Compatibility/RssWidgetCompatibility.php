@@ -39,6 +39,7 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         foreach ($widget->widgetOptions as $option) {
+
             switch ($option->option) {
                 case 'background-color':
                     $widget->changeOption($option->option, 'itemBackgroundColor');
@@ -63,6 +64,35 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
                 case 'image-fit':
                     $widget->changeOption($option->option, 'itemImageFit');
                     break;
+
+                case 'templateId':
+                    $templateId = $widget->getOptionValue('templateId', '');
+                    switch ($templateId) {
+                        case 'media-rss-image-only':
+                            $widget->setOptionValue('templateId', 'attrib', 'article_image_only');
+                            break;
+
+                        case 'media-rss-with-left-hand-text':
+                            $widget->setOptionValue('templateId', 'attrib', 'article_with_left_hand_text');
+                            break;
+
+                        case 'media-rss-with-title':
+                            $widget->setOptionValue('templateId', 'attrib', 'article_with_title');
+                            break;
+
+                        case 'prominent-title-with-desc-and-name-separator':
+                            $widget->setOptionValue('templateId', 'attrib', 'article_with_desc_and_name_separator');
+                            break;
+
+                        case 'title-only':
+                            $widget->setOptionValue('templateId', 'attrib', 'article_title_only');
+                            break;
+
+                        default:
+                            break;
+                    }
+                    break;
+
 
                 default:
                     break;

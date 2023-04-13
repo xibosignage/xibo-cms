@@ -1,0 +1,131 @@
+<?php
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Xibo\XTR;
+
+use Xibo\Entity\Task;
+
+/**
+ * Class WidgetCompatibilityTask
+ * Keep all widgets which have data up to date
+ * @package Xibo\XTR
+ */
+class WidgetCompatibilityTask implements TaskInterface
+{
+    use TaskTrait;
+
+    /** @var \Xibo\Factory\ModuleFactory */
+    private $moduleFactory;
+
+    /** @var \Xibo\Factory\WidgetFactory */
+    private $widgetFactory;
+
+    /** @var \Xibo\Factory\LayoutFactory */
+    private $layoutFactory;
+
+    /** @var \Xibo\Factory\RegionFactory */
+    private $regionFactory;
+
+    /** @var \Xibo\Factory\TaskFactory */
+    private $taskFactory;
+
+    /** @var Task The Task */
+    private $compatibilityTask;
+
+    /** @var array The cache for layout */
+    private $layoutCache = [];
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+        $this->moduleFactory = $container->get('moduleFactory');
+        $this->widgetFactory = $container->get('widgetFactory');
+        $this->layoutFactory = $container->get('layoutFactory');
+        $this->regionFactory = $container->get('regionFactory');
+        $this->taskFactory = $container->get('taskFactory');
+        return $this;
+    }
+
+    /** @inheritdoc
+     */
+    public function run()
+    {
+        $this->runMessage = '# ' . __('Widget Compatibility') . PHP_EOL . PHP_EOL;
+
+        $widgets = $this->widgetFactory->query(null, [
+            'schemaVersion' => 1
+        ]);
+
+        $countWidgets = 0;
+        foreach ($widgets as $widget) {
+            // Load the widget
+            $widget->load();
+
+            $module = $this->moduleFactory->getByType($widget->type);
+            if ($module->isWidgetCompatibilityAvailable()) {
+                $countWidgets++;
+
+                // Grab a widget compatibility interface, if there is one
+                $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
+                if ($widgetCompatibilityInterface !== null) {
+                    $this->log->debug('WidgetCompatibilityTask: widgetId ' . $widget->widgetId);
+                    $widgetCompatibilityInterface->setLog($this->log->getLoggerInterface())
+                        ->upgradeWidget($widget, $widget->schemaVersion, 2);
+
+                    $widget->schemaVersion = 2;
+                    $widget->save(['alwaysUpdate'=>true]);
+                }
+
+                try {
+
+                    // Get the layout of the widget and set it to rebuild.
+                    $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
+                    $layout = $this->layoutFactory->getById($region->layoutId);
+                    if (!in_array($layout->layoutId, $this->layoutCache)) {
+                        $layout->save(['notify' => false, 'saveTags' => false, 'setBuildRequired' => true]);
+                        $this->layoutCache[] = $layout->layoutId;
+                    }
+                } catch (\Exception $e) {
+                    $this->log->error('Failed to set layout rebuild for widgetId: ' . $widget->widgetId .
+                        ', message: ' . $e->getMessage());
+                    $this->appendRunMessage('Layout rebuild error for widgetId: : '. $widget->widgetId);
+                }
+            }
+        }
+
+
+        // Get Widget Compatibility Task
+        $this->compatibilityTask = $this->taskFactory->getByClass('\Xibo\XTR\\WidgetCompatibilityTask');
+
+        // Mark the task as disabled if it is active
+        if ($this->compatibilityTask->isActive == 1) {
+            $this->compatibilityTask->isActive = 0;
+            $this->compatibilityTask->save();
+            $this->store->commitIfNecessary();
+
+            $this->appendRunMessage('Disabling widget compatibility task.');
+            $this->log->debug('Disabling widget compatibility task.');
+        }
+        $this->log->info('Total widgets upgraded: '. $countWidgets);
+        $this->appendRunMessage('Total widgets upgraded: '. $countWidgets);
+    }
+}
