@@ -263,4 +263,13 @@ class Property implements \JsonSerializable
                 return $params->getString($key);
         }
     }
+
+    /**
+     * Should this property be represented with CData
+     * @return bool
+     */
+    public function isCData(): bool
+    {
+        return $this->type === 'code' || $this->type === 'richText';
+    }
 }
