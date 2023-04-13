@@ -1186,10 +1186,10 @@ class Display extends Base
         $display->setUnmatchedProperty('tagsString', $display->getTagString());
 
         // Dates
-        $display->setUnmatchedProperty(
-            'auditingUntilIso',
-            Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat())
-        );
+        $auditingUntilIso = !empty($display->auditingUntil)
+            ? Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat())
+            : null;
+        $display->setUnmatchedProperty('auditingUntilIso', $auditingUntilIso);
 
         // Get the settings from the profile
         $profile = $display->getSettings();
