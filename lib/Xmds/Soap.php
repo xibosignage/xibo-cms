@@ -1608,7 +1608,19 @@ class Soap
 
         if (count($logs) > 0) {
             // Insert
-            $sql = 'INSERT INTO log (runNo, logdate, channel, type, page, function, message, userid, displayid) VALUES ';
+            $sql = '
+                INSERT INTO log (
+                    `runNo`,
+                    `logdate`,
+                    `channel`,
+                    `type`,
+                    `page`,
+                    `function`,
+                    `message`,
+                    `userid`,
+                    `displayid`
+                ) VALUES 
+            ';
             $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
             $sql = $sql . implode(', ', array_fill(1, count($logs), $placeHolders));
