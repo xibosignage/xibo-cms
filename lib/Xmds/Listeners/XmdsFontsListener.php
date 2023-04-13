@@ -71,7 +71,7 @@ class XmdsFontsListener
             1,
             'fonts/fonts.css',
             filesize($fontsCssPath),
-            md5($fontsCssPath),
+            md5_file($fontsCssPath),
             true,
             $this->getLegacyId(1, Dependency::LEGACY_ID_OFFSET_FONT)
         );
