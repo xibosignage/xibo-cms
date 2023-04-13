@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\Render;
@@ -36,6 +35,7 @@ use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
