@@ -1038,17 +1038,20 @@ class Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Sender', "This Display is not authorised.");
+            throw new \SoapFault('Sender', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         // Check the cache
@@ -1058,7 +1061,11 @@ class Soap
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            $this->getLog()->info(sprintf('Returning Schedule from Cache for display %s. Options %s.', $this->display->display, json_encode($options)));
+            $this->getLog()->info(sprintf(
+                'Returning Schedule from Cache for display %s. Options %s.',
+                $this->display->display,
+                json_encode($options)
+            ));
 
             // Log Bandwidth
             $this->logBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
@@ -1071,9 +1078,8 @@ class Soap
         $cache->lock(120);
 
         // Generate the Schedule XML
-        $scheduleXml = new \DOMDocument("1.0");
-        $layoutElements = $scheduleXml->createElement("schedule");
-
+        $scheduleXml = new \DOMDocument('1.0');
+        $layoutElements = $scheduleXml->createElement('schedule');
         $scheduleXml->appendChild($layoutElements);
 
         // Filter criteria
@@ -1090,21 +1096,25 @@ class Soap
             : $this->display->defaultLayoutId;
 
         try {
-            $dbh = $this->getStore()->getConnection();
+            // Dependencies
+            // ------------
+            $moduleDependents = [];
+            $dependencyListEvent = new XmdsDependencyListEvent($this->display);
+            $this->getDispatcher()->dispatch($dependencyListEvent, 'xmds.dependency.list');
 
-            // Get all the module dependants
-            $sth = $dbh->prepare("SELECT DISTINCT StoredAs FROM `media` WHERE media.type = 'font' OR (media.type = 'module' AND media.moduleSystemFile = 1) ");
-            $sth->execute(array());
-            $rows = $sth->fetchAll();
-            $moduleDependents = array();
-
-            foreach ($rows as $dependent) {
-                $moduleDependents[] = $dependent['StoredAs'];
+            // Add each resolved dependency to our list of global dependents.
+            foreach ($dependencyListEvent->getDependencies() as $dependency) {
+                $moduleDependents[] = basename($dependency->path);
             }
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $this->fromFilter, $this->toFilter, $options);
+            $events = $this->scheduleFactory->getForXmds(
+                $this->display->displayId,
+                $this->fromFilter,
+                $this->toFilter,
+                $options
+            );
 
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];

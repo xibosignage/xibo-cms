@@ -32,7 +32,6 @@ use Xibo\Entity\User;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -119,24 +118,13 @@ class MediaFactory extends BaseFactory
     }
 
     /**
-     * Create System Module File
-     * @param $name
-     * @param string $file
-     * @return Media
-     */
-    public function createModuleSystemFile($name, $file = '')
-    {
-        return $this->createModuleFile($name, $file, 1);
-    }
-
-    /**
      * Create Module File
      * @param $name
-     * @param $file
-     * @param $systemFile
+     * @param string|null $file
      * @return Media
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function createModuleFile($name, $file = '', $systemFile = 0)
+    public function createModuleFile($name, ?string $file = ''): Media
     {
         if ($file == '') {
             $file = $name;
@@ -149,8 +137,7 @@ class MediaFactory extends BaseFactory
             // Reassert the new file (which we might want to download)
             $media->fileName = $file;
             $media->storedAs = $name;
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             $media = $this->createEmpty();
             $media->name = $name;
             $media->fileName = $file;
@@ -158,33 +145,7 @@ class MediaFactory extends BaseFactory
             $media->expires = 0;
             $media->storedAs = $name;
             $media->ownerId = $this->getUserFactory()->getSystemUser()->getOwnerId();
-            $media->moduleSystemFile = $systemFile;
-        }
-
-        return $media;
-    }
-
-    /**
-     * Create module files from folder
-     * @param string $folder The path to the folder to add.
-     * @return Media[]
-     * @throws InvalidArgumentException
-     */
-    public function createModuleFileFromFolder($folder)
-    {
-        $media = [];
-
-        if (!is_dir($folder)) {
-            throw new InvalidArgumentException(__('Not a folder'));
-        }
-
-        foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-            if (is_dir($folder . DIRECTORY_SEPARATOR . $file)) continue;
-
-            $file = $this->createModuleSystemFile($file, $folder . DIRECTORY_SEPARATOR . $file);
-            $file->moduleSystemFile = true;
-
-            $media[] = $file;
+            $media->moduleSystemFile = 0;
         }
 
         return $media;
