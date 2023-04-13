@@ -114,7 +114,7 @@ class Media implements \JsonSerializable
     public $valid = 0;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this media is a system file or not")
+     * @SWG\Property(description="DEPRECATED: Flag indicating whether this media is a system file or not")
      * @var int
      */
     public $moduleSystemFile = 0;
@@ -786,7 +786,7 @@ class Media implements \JsonSerializable
         ]);
     }
 
-    private function assessDimensions()
+    private function assessDimensions(): void
     {
         if ($this->mediaType === 'image' || ($this->mediaType === 'module' && $this->moduleSystemFile === 0)) {
             $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');

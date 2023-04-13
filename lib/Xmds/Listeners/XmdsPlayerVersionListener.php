@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,6 +27,7 @@ use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Listener\ListenerLoggerTrait;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Xmds\Entity\Dependency;
 
 /**
  * A listener to supply player version files to players
@@ -34,6 +35,8 @@ use Xibo\Support\Exception\NotFoundException;
 class XmdsPlayerVersionListener
 {
     use ListenerLoggerTrait;
+
+    use XmdsListenerTrait;
 
     /**
      * @var PlayerVersionFactory
@@ -45,7 +48,7 @@ class XmdsPlayerVersionListener
         $this->playerVersionFactory = $playerVersionFactory;
     }
 
-    public function onDependencyList(XmdsDependencyListEvent $event)
+    public function onDependencyList(XmdsDependencyListEvent $event): void
     {
         $this->getLogger()->debug('onDependencyList: XmdsPlayerVersionListener');
 
@@ -71,7 +74,7 @@ class XmdsPlayerVersionListener
                 $version->size,
                 $version->md5,
                 true,
-                $this->getLegacyId($playerVersionMediaId)
+                $this->getLegacyId($playerVersionMediaId, Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE)
             );
         } catch (NotFoundException $notFoundException) {
             // Ignore this
@@ -85,13 +88,8 @@ class XmdsPlayerVersionListener
         $this->getLogger()->debug('onDependencyRequest: XmdsPlayerVersionListener');
 
         if ($event->getFileType() === 'playersoftware') {
-            $version = $this->playerVersionFactory->getById($event->getId());
+            $version = $this->playerVersionFactory->getById($event->getRealId());
             $event->setRelativePathToLibrary('/playersoftware/' . $version->fileName);
         }
-    }
-
-    private function getLegacyId(int $id): int
-    {
-        return ($id + 200000000) * -1;
     }
 }
