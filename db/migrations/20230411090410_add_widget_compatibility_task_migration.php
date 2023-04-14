@@ -31,9 +31,21 @@ class AddWidgetCompatibilityTaskMigration extends AbstractMigration
 {
     public function change()
     {
-        // Check to see if the task exists
-        if (!$this->fetchRow('SELECT * FROM `task` WHERE name = \'Widget Compatibity\'')) {
-            $this->execute('INSERT INTO `task` SET `name`=\'Widget Compatibity\', `class`=\'\\\\Xibo\\\\XTR\\\\WidgetCompatibilityTask\', `status`=2, `isActive`=1, `configFile`=\'/tasks/widget-compatibility.task\', `options`=\'{}\', `runNow`=1, `schedule`=\'0 0 1 1 *\';');
-        }
+
+        // Add a task for widget upgrade from v3 to v4
+        $this->table('task')
+            ->insert([
+                'name' => 'Widget Compatibity',
+                'class' => '\Xibo\XTR\WidgetCompatibilityTask',
+                'options' => '[]',
+                'schedule' => '0 0 1 1 *',
+                'isActive' => '1',
+                'configFile' => '/tasks/widget-compatibility.task',
+                'pid' => 0,
+                'lastRunDt' => 0,
+                'lastRunDuration' => 0,
+                'lastRunExitCode' => 0
+            ])
+            ->save();
     }
 }

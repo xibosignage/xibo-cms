@@ -26,7 +26,7 @@ use Xibo\Entity\Task;
 
 /**
  * Class WidgetCompatibilityTask
- * Keep all widgets which have data up to date
+ * Run only once when upgrading widget from v3 to v4
  * @package Xibo\XTR
  */
 class WidgetCompatibilityTask implements TaskInterface
@@ -42,14 +42,11 @@ class WidgetCompatibilityTask implements TaskInterface
     /** @var \Xibo\Factory\LayoutFactory */
     private $layoutFactory;
 
-    /** @var \Xibo\Factory\RegionFactory */
-    private $regionFactory;
+    /** @var \Xibo\Factory\playlistFactory */
+    private $playlistFactory;
 
     /** @var \Xibo\Factory\TaskFactory */
     private $taskFactory;
-
-    /** @var Task The Task */
-    private $compatibilityTask;
 
     /** @var array The cache for layout */
     private $layoutCache = [];
@@ -60,7 +57,7 @@ class WidgetCompatibilityTask implements TaskInterface
         $this->moduleFactory = $container->get('moduleFactory');
         $this->widgetFactory = $container->get('widgetFactory');
         $this->layoutFactory = $container->get('layoutFactory');
-        $this->regionFactory = $container->get('regionFactory');
+        $this->playlistFactory = $container->get('playlistFactory');
         $this->taskFactory = $container->get('taskFactory');
         return $this;
     }
@@ -69,6 +66,8 @@ class WidgetCompatibilityTask implements TaskInterface
      */
     public function run()
     {
+        // This task should only be run once when upgrading for the first time from v3 to v4.
+        // If the Widget Compatibility class is defined, it needs to be executed to upgrade the widgets.
         $this->runMessage = '# ' . __('Widget Compatibility') . PHP_EOL . PHP_EOL;
 
         $widgets = $this->widgetFactory->query(null, [
@@ -88,21 +87,23 @@ class WidgetCompatibilityTask implements TaskInterface
                 $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
                 if ($widgetCompatibilityInterface !== null) {
                     $this->log->debug('WidgetCompatibilityTask: widgetId ' . $widget->widgetId);
-                    $widgetCompatibilityInterface->setLog($this->log->getLoggerInterface())
-                        ->upgradeWidget($widget, $widget->schemaVersion, 2);
-
-                    $widget->schemaVersion = 2;
-                    $widget->save(['alwaysUpdate'=>true]);
+                    try {
+                        $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
+                        $widget->schemaVersion = 2;
+                        $widget->save(['alwaysUpdate'=>true]);
+                    } catch (\Exception $e) {
+                        $this->log->error('Failed to upgrade for widgetId: ' . $widget->widgetId .
+                            ', message: ' . $e->getMessage());
+                        $this->appendRunMessage('Upgrade widget error for widgetId: : '. $widget->widgetId);
+                    }
                 }
 
                 try {
-
                     // Get the layout of the widget and set it to rebuild.
-                    $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-                    $layout = $this->layoutFactory->getById($region->layoutId);
-                    if (!in_array($layout->layoutId, $this->layoutCache)) {
-                        $layout->save(['notify' => false, 'saveTags' => false, 'setBuildRequired' => true]);
-                        $this->layoutCache[] = $layout->layoutId;
+                    $playlist = $this->playlistFactory->getById($widget->playlistId)[0];
+                    if (!in_array($playlist->layoutId, $this->layoutCache)) {
+                        $playlist->notifyLayouts();
+                        $this->layoutCache[] = $playlist->layoutId;
                     }
                 } catch (\Exception $e) {
                     $this->log->error('Failed to set layout rebuild for widgetId: ' . $widget->widgetId .
@@ -112,14 +113,13 @@ class WidgetCompatibilityTask implements TaskInterface
             }
         }
 
-
         // Get Widget Compatibility Task
-        $this->compatibilityTask = $this->taskFactory->getByClass('\Xibo\XTR\\WidgetCompatibilityTask');
+        $compatibilityTask = $this->taskFactory->getByClass('\Xibo\XTR\\WidgetCompatibilityTask');
 
         // Mark the task as disabled if it is active
-        if ($this->compatibilityTask->isActive == 1) {
-            $this->compatibilityTask->isActive = 0;
-            $this->compatibilityTask->save();
+        if ($compatibilityTask->isActive == 1) {
+            $compatibilityTask->isActive = 0;
+            $compatibilityTask->save();
             $this->store->commitIfNecessary();
 
             $this->appendRunMessage('Disabling widget compatibility task.');
