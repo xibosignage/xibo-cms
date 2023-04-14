@@ -116,16 +116,19 @@ trait ModuleXmlTrait
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
 
                 // Is this a variable?
-                if (!empty($defaultValue)) {
-                    if ($module !== null
-                        && Str::startsWith($defaultValue, '%')
-                        && Str::endsWith($defaultValue, '%')
-                    ) {
-                        $defaultValue = $module->getSetting(str_replace('%', '', $defaultValue));
-                    } else if (Str::startsWith($defaultValue, '#')
-                        && Str::endsWith($defaultValue, '#')
-                    ) {
-                        $defaultValue = $this->getConfig()->getSetting(str_replace('#', '', $defaultValue));
+                if ($defaultValue !== null) {
+                    // If we're not empty, then try and do any variable substitutions
+                    if (!empty($defaultValue)) {
+                        if ($module !== null
+                            && Str::startsWith($defaultValue, '%')
+                            && Str::endsWith($defaultValue, '%')
+                        ) {
+                            $defaultValue = $module->getSetting(str_replace('%', '', $defaultValue));
+                        } else if (Str::startsWith($defaultValue, '#')
+                            && Str::endsWith($defaultValue, '#')
+                        ) {
+                            $defaultValue = $this->getConfig()->getSetting(str_replace('#', '', $defaultValue));
+                        }
                     }
                     $defaultValues[$property->id] = $defaultValue;
                 }
