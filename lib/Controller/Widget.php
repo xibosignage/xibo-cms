@@ -401,10 +401,13 @@ class Widget extends Base
                     'templateId'
                 );
             }
-        }
 
-        // Set it
-        $widget->setOptionValue('templateId', 'attrib', $templateId);
+            // Set it
+            $widget->setOptionValue('templateId', 'attrib', $templateId);
+        } else if ($templateId === 'elements') {
+            // If it was empty to start with and now its elements, we should set it.
+            $widget->setOptionValue('templateId', 'attrib', $templateId);
+        }
 
         // Before we start, clean out any cached media
         $widget->clearCachedMedia();
