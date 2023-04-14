@@ -379,8 +379,8 @@ class Region extends Base
         $region->name = $sanitizedParams->getString('name');
         $region->width = $sanitizedParams->getDouble('width');
         $region->height = $sanitizedParams->getDouble('height');
-        $region->top = $sanitizedParams->getDouble('top');
-        $region->left = $sanitizedParams->getDouble('left');
+        $region->top = $sanitizedParams->getDouble('top', ['default' => 0]);
+        $region->left = $sanitizedParams->getDouble('left', ['default' => 0]);
         $region->zIndex = $sanitizedParams->getInt('zIndex');
         $region->type = $sanitizedParams->getString('type');
 

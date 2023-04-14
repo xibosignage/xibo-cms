@@ -45,7 +45,7 @@ class Asset implements \JsonSerializable
     public $cmsOnly;
 
     /** @inheritDoc */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->id,
@@ -122,6 +122,6 @@ class Asset implements \JsonSerializable
 
     private function getLegacyId(): int
     {
-        return (random_int(300000000, 400000000)) * -1;
+        return (random_int(Dependency::LEGACY_ID_OFFSET_ASSET, (Dependency::LEGACY_ID_OFFSET_ASSET + 300000000))) * -1;
     }
 }

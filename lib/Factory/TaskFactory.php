@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -98,7 +98,7 @@ class TaskFactory extends BaseFactory
         if ($sortOrder == null) {
             $sortOrder = ['name'];
         }
-        
+
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
@@ -122,7 +122,7 @@ class TaskFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('taskId') !== null) {
-            $params['taskId'] = $sanitizedFilter->getString('taskId');
+            $params['taskId'] = $sanitizedFilter->getInt('taskId');
             $body .= ' AND `taskId` = :taskId ';
         }
 

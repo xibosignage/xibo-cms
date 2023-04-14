@@ -20,22 +20,21 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget\Definition;
+namespace Xibo\Xmds\Listeners;
 
 /**
- * A Legacy Type
+ * A trait added to all Xmds Listeners
  */
-class LegacyType implements \JsonSerializable
+trait XmdsListenerTrait
 {
-    public $name;
-    public $condition;
-
-    /** @inheritDoc */
-    public function jsonSerialize(): array
+    /**
+     * Get a Legacy ID we can use for older XMDS schema versions
+     * @param int $id
+     * @param int $offset
+     * @return int
+     */
+    private function getLegacyId(int $id, int $offset): int
     {
-        return [
-            'name' => $this->name,
-            'condition' => $this->condition,
-        ];
+        return ($id + $offset) * -1;
     }
 }

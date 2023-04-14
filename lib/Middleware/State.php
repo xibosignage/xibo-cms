@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -29,6 +29,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Respect\Validation\Factory;
 use Slim\App;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
@@ -270,6 +271,13 @@ class State implements Middleware
                 $container->get('logger')->pushProcessor($processor);
             }
         }
+
+        // Add additional validation rules
+        Factory::setDefaultInstance(
+            (new Factory())
+                ->withRuleNamespace('Xibo\\Validation\\Rules')
+                ->withExceptionNamespace('Xibo\\Validation\\Exceptions')
+        );
 
         return $request;
     }

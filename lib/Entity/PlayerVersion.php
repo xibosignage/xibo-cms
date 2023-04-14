@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -35,8 +35,6 @@ use Xibo\Storage\StorageServiceInterface;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
- * @property string $fileSizeFormatted
- * @property string $typeShow
 */
 class PlayerVersion implements \JsonSerializable
 {

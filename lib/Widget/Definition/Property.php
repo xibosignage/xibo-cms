@@ -81,7 +81,7 @@ class Property implements \JsonSerializable
     public $value;
 
     /** @inheritDoc */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->id,
@@ -182,7 +182,7 @@ class Property implements \JsonSerializable
      */
     public function validate(): Property
     {
-        if (strlen($this->value) > 67108864) {
+        if (!empty($this->value) && strlen($this->value) > 67108864) {
             throw new ValueTooLargeException(__('Value too large for %s', $this->id), $this->id);
         }
 
@@ -262,5 +262,14 @@ class Property implements \JsonSerializable
             default:
                 return $params->getString($key);
         }
+    }
+
+    /**
+     * Should this property be represented with CData
+     * @return bool
+     */
+    public function isCData(): bool
+    {
+        return $this->type === 'code' || $this->type === 'richText';
     }
 }

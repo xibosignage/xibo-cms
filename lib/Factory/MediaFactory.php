@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -32,7 +32,6 @@ use Xibo\Entity\User;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -119,24 +118,13 @@ class MediaFactory extends BaseFactory
     }
 
     /**
-     * Create System Module File
-     * @param $name
-     * @param string $file
-     * @return Media
-     */
-    public function createModuleSystemFile($name, $file = '')
-    {
-        return $this->createModuleFile($name, $file, 1);
-    }
-
-    /**
      * Create Module File
      * @param $name
-     * @param $file
-     * @param $systemFile
+     * @param string|null $file
      * @return Media
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function createModuleFile($name, $file = '', $systemFile = 0)
+    public function createModuleFile($name, ?string $file = ''): Media
     {
         if ($file == '') {
             $file = $name;
@@ -149,8 +137,7 @@ class MediaFactory extends BaseFactory
             // Reassert the new file (which we might want to download)
             $media->fileName = $file;
             $media->storedAs = $name;
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             $media = $this->createEmpty();
             $media->name = $name;
             $media->fileName = $file;
@@ -158,33 +145,7 @@ class MediaFactory extends BaseFactory
             $media->expires = 0;
             $media->storedAs = $name;
             $media->ownerId = $this->getUserFactory()->getSystemUser()->getOwnerId();
-            $media->moduleSystemFile = $systemFile;
-        }
-
-        return $media;
-    }
-
-    /**
-     * Create module files from folder
-     * @param string $folder The path to the folder to add.
-     * @return Media[]
-     * @throws InvalidArgumentException
-     */
-    public function createModuleFileFromFolder($folder)
-    {
-        $media = [];
-
-        if (!is_dir($folder)) {
-            throw new InvalidArgumentException(__('Not a folder'));
-        }
-
-        foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-            if (is_dir($folder . DIRECTORY_SEPARATOR . $file)) continue;
-            
-            $file = $this->createModuleSystemFile($file, $folder . DIRECTORY_SEPARATOR . $file);
-            $file->moduleSystemFile = true;
-
-            $media[] = $file;
+            $media->moduleSystemFile = 0;
         }
 
         return $media;
@@ -217,14 +178,15 @@ class MediaFactory extends BaseFactory
             $media->duration = $requestOptions['duration'];
             $media->moduleSystemFile = 0;
             $media->isRemote = true;
-            $media->urlDownload = true;
-            $media->extension = $requestOptions['extension'] ?? null;
+            $media->setUnmatchedProperty('urlDownload', true);
+            $media->setUnmatchedProperty('extension', $requestOptions['extension'] ?? null);
             $media->enableStat = $requestOptions['enableStat'];
             $media->folderId = $requestOptions['folderId'];
             $media->permissionsFolderId = $requestOptions['permissionsFolderId'];
         }
 
-        $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
+        $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is '
+            . $media->mediaId . '.');
 
         // We update the desired expiry here - isSavedRequired is tested against the original value
         $media->expires = $expiry;
@@ -301,9 +263,14 @@ class MediaFactory extends BaseFactory
                     $requestOptions = array_merge($media->downloadRequestOptions(), [
                         'sink' => $sink,
                         'on_headers' => function (ResponseInterface $response) {
-                            $this->getLog()->debug('DEBUG: ' . $response->getStatusCode());
+                            $this->getLog()->debug('processDownloads: on_headers status code = '
+                                . $response->getStatusCode());
+
                             if ($response->getStatusCode() < 299) {
-                                $this->getLog()->debug('DEBUG: ' . var_export($response->getHeaders(), true));
+                                $this->getLog()->debug('processDownloads: successful, headers = '
+                                    . var_export($response->getHeaders(), true));
+
+                                // Get the content length
                                 $contentLength = $response->getHeaderLine('Content-Length');
                                 if (empty($contentLength)
                                     || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
@@ -334,7 +301,8 @@ class MediaFactory extends BaseFactory
                             $success($item);
                         }
                     } catch (\Exception $e) {
-                        $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
+                        $this->getLog()->error('processDownloads: Unable to save mediaId '
+                            . $item->mediaId . '. ' . $e->getMessage());
 
                         // Remove it
                         $item->delete(['rollback' => true]);
@@ -355,7 +323,7 @@ class MediaFactory extends BaseFactory
                             $reason->getMessage()
                         )
                     );
-                    
+
                     // We should remove the media record.
                     $queue[$index]->delete(['rollback' => true]);
 

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -142,7 +142,7 @@ class Font extends Base
         ], $parsedQueryParams));
 
         foreach ($fonts as $font) {
-            $font->fileSizeFormatted = ByteFormatter::format($font->size);
+            $font->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($font->size));
             $font->buttons = [];
             if ($this->isApi($request)) {
                 break;
@@ -591,6 +591,9 @@ class Font extends Base
 
         // Return the CSS to the browser as a file
         $out = fopen($tempFileName, 'w');
+        if (!$out) {
+            throw new ConfigurationException(__('Unable to write to the library'));
+        }
         fputs($out, $localCss);
         fclose($out);
 

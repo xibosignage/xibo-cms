@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -98,7 +98,9 @@ class Folder extends Base
         } else {
             // Show a tree view of all folders.
             $rootFolder = $this->folderFactory->getById(1);
-            $rootFolder->a_attr['title'] = __('Right click a Folder for further Options');
+            $rootFolder->setUnmatchedProperty('a_attr', [
+                'title' => __('Right click a Folder for further Options')
+            ]);
             $this->buildTreeView($rootFolder, $this->getUser()->homeFolderId);
             return $response->withJson([$rootFolder]);
         }
@@ -121,7 +123,11 @@ class Folder extends Base
             $folder->type = 'home';
         }
 
-        $children = array_filter(explode(',', $folder->children));
+        if (!empty($folder->children)) {
+            $children = array_filter(explode(',', $folder->children));
+        } else {
+            $children = [];
+        }
         $childrenDetails = [];
 
         foreach ($children as $childId) {
@@ -134,7 +140,9 @@ class Folder extends Base
 
                 if (!$this->getUser()->checkViewable($child)) {
                     $child->text = __('Private Folder');
-                    $child->li_attr['disabled'] = true;
+                    $child->setUnmatchedProperty('li_attr', [
+                        'disabled' => true,
+                    ]);
                 }
 
                 if ($homeFolderId === $child->id) {

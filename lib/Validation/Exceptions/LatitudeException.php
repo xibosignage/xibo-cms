@@ -20,22 +20,21 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget\Definition;
+namespace Xibo\Validation\Exceptions;
+
+use Respect\Validation\Exceptions\ValidationException;
 
 /**
- * A Legacy Type
+ * Latitude Exception
  */
-class LegacyType implements \JsonSerializable
+class LatitudeException extends ValidationException
 {
-    public $name;
-    public $condition;
-
-    /** @inheritDoc */
-    public function jsonSerialize(): array
-    {
-        return [
-            'name' => $this->name,
-            'condition' => $this->condition,
-        ];
-    }
+    protected $defaultTemplates = [
+        self::MODE_DEFAULT => [
+            self::STANDARD => 'Latitude is not valid',
+        ],
+        self::MODE_NEGATIVE => [
+            self::STANDARD => 'Negative of Latitude is not valid.',
+        ],
+    ];
 }

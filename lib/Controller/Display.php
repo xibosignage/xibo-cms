@@ -652,7 +652,10 @@ class Display extends Base
                 $display->includeProperty('overrideConfig');
             }
 
-            $display->bandwidthLimitFormatted = ByteFormatter::format($display->bandwidthLimit * 1024);
+            $display->setUnmatchedProperty(
+                'bandwidthLimitFormatted',
+                ByteFormatter::format($display->bandwidthLimit * 1024)
+            );
 
             // Current layout from cache
             $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
@@ -675,63 +678,81 @@ class Display extends Base
             }
 
             // Add in the display profile information
-            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
+            $display->setUnmatchedProperty(
+                'displayProfile',
+                (!array_key_exists($display->displayProfileId, $displayProfiles))
+                    ? $displayProfileName . __(' (Default)')
+                    : $displayProfiles[$display->displayProfileId]
+            );
 
             $display->includeProperty('buttons');
 
             // Format the storage available / total space
-            $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
-            $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
-            $display->storagePercentage = ($display->storageTotalSpace == 0) ? 0 : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2);
+            $display->setUnmatchedProperty(
+                'storageAvailableSpaceFormatted',
+                ByteFormatter::format($display->storageAvailableSpace)
+            );
+            $display->setUnmatchedProperty(
+                'storageTotalSpaceFormatted',
+                ByteFormatter::format($display->storageTotalSpace)
+            );
+            $display->setUnmatchedProperty(
+                'storagePercentage',
+                ($display->storageTotalSpace == 0)
+                    ? 0
+                    : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2)
+            );
 
             // Set some text for the display status
-            switch ($display->mediaInventoryStatus) {
-                case 1:
-                    $display->statusDescription = __('Display is up to date');
-                    break;
-
-                case 2:
-                    $display->statusDescription = __('Display is downloading new files');
-                    break;
-
-                case 3:
-                    $display->statusDescription = __('Display is out of date but has not yet checked in with the server');
-                    break;
-
-                default:
-                    $display->statusDescription = __('Unknown Display Status');
-            }
+            $display->setUnmatchedProperty('statusDescription', match ($display->mediaInventoryStatus) {
+                1 => __('Display is up to date'),
+                2 => __('Display is downloading new files'),
+                3 => __('Display is out of date but has not yet checked in with the server'),
+                default => __('Unknown Display Status'),
+            });
 
             // Commercial Licence
-            switch ($display->commercialLicence) {
-                case 1:
-                    $display->commercialLicenceDescription = __('Display is fully licensed');
-                    break;
-
-                case 2:
-                    $display->commercialLicenceDescription = __('Display is on a trial licence');
-                    break;
-
-                default:
-                    $display->commercialLicenceDescription = __('Display is not licensed');
-            }
+            $display->setUnmatchedProperty('commercialLicenceDescription', match ($display->commercialLicence) {
+                1 => __('Display is fully licensed'),
+                2 => __('Display is on a trial licence'),
+                default => __('Display is not licensed'),
+            });
 
             if ($display->clientCode < 400) {
-                $display->commercialLicenceDescription .= ' (' . __('The status will be updated with each Commercial Licence check') . ')';
+                $commercialLicenceDescription = $display->getUnmatchedProperty('commercialLicenceDescription');
+                $commercialLicenceDescription .= ' ('
+                    . __('The status will be updated with each Commercial Licence check') . ')';
+                $display->setUnmatchedProperty('commercialLicenceDescription', $commercialLicenceDescription);
             }
 
             // Thumbnail
-            $display->thumbnail = '';
+            $display->setUnmatchedProperty('thumbnail', '');
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $display->thumbnail = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
+            if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/'
+                . $display->displayId . '_screenshot.jpg')) {
+                $display->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor($request, 'display.screenShot', [
+                        'id' => $display->displayId
+                    ]) . '?' . Random::generateString()
+                );
             }
 
-            $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
-            $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
+            $display->setUnmatchedProperty(
+                'teamViewerLink',
+                (!empty($display->teamViewerSerial))
+                    ? 'https://start.teamviewer.com/' . $display->teamViewerSerial
+                    : ''
+            );
+            $display->setUnmatchedProperty(
+                'webkeyLink',
+                (!empty($display->webkeySerial))
+                    ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial
+                    : ''
+            );
 
             // Is a transfer to another CMS in progress?
-            $display->isCmsTransferInProgress = (!empty($display->newCmsAddress));
+            $display->setUnmatchedProperty('isCmsTransferInProgress', (!empty($display->newCmsAddress)));
 
             // Edit and Delete buttons first
             if ($this->getUser()->featureEnabled('displays.modify')
@@ -1050,7 +1071,7 @@ class Display extends Base
                     ]
                 ];
 
-                if ($display->isCmsTransferInProgress) {
+                if ($display->getUnmatchedProperty('isCmsTransferInProgress', false)) {
                     $display->buttons[] = [
                         'id' => 'display_button_move_cancel',
                         'url' => $this->urlFor($request, 'display.moveCmsCancel.form', ['id' => $display->displayId]),
@@ -1106,17 +1127,22 @@ class Display extends Base
             }
 
             // Add in the display profile information
-            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
+            $display->setUnmatchedProperty(
+                'displayProfile',
+                (!array_key_exists($display->displayProfileId, $displayProfiles))
+                    ? $displayProfileName . __(' (Default)')
+                    : $displayProfiles[$display->displayProfileId]
+            );
 
             $properties = [
                 'display' => $display->display,
                 'status' => $display->mediaInventoryStatus ? $status[$display->mediaInventoryStatus] : __('Unknown'),
                 'mediaInventoryStatus' => $display->mediaInventoryStatus,
-                'orientation' => ucwords($display->orientation),
+                'orientation' => ucwords($display->orientation ?: __('Unknown')),
                 'displayId' => $display->getId(),
                 'licensed' => $display->licensed,
                 'loggedIn' => $display->loggedIn,
-                'displayProfile' => $display->displayProfile,
+                'displayProfile' => $display->getUnmatchedProperty('displayProfile'),
                 'resolution' => $display->resolution,
                 'lastAccessed' => $display->lastAccessed,
             ];
@@ -1125,8 +1151,8 @@ class Display extends Base
                 $properties['thumbnail'] = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
-            $longitude = ($display->longitude) ? $display->longitude : $this->getConfig()->getSetting('DEFAULT_LONG');
-            $latitude =  ($display->latitude) ? $display->latitude : $this->getConfig()->getSetting('DEFAULT_LAT');
+            $longitude = ($display->longitude) ?: $this->getConfig()->getSetting('DEFAULT_LONG');
+            $latitude =  ($display->latitude) ?: $this->getConfig()->getSetting('DEFAULT_LAT');
 
             $geo = new Point([(double)$longitude, (double)$latitude]);
 
@@ -1157,10 +1183,13 @@ class Display extends Base
 
         // We have permission - load
         $display->load();
-        $display->tagsString = $display->getTagString();
+        $display->setUnmatchedProperty('tagsString', $display->getTagString());
 
         // Dates
-        $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+        $auditingUntilIso = !empty($display->auditingUntil)
+            ? Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat())
+            : null;
+        $display->setUnmatchedProperty('auditingUntilIso', $auditingUntilIso);
 
         // Get the settings from the profile
         $profile = $display->getSettings();
@@ -1659,7 +1688,7 @@ class Display extends Base
             $display->tags = $tags;
         }
 
-        if ($display->auditingUntil !== null) {
+        if (!empty($display->auditingUntil)) {
             $display->auditingUntil = $display->auditingUntil->format('U');
         }
 

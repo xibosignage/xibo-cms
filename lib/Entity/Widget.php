@@ -42,8 +42,6 @@ use Xibo\Widget\Definition\Property;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
- * @property int $isValid Is this Widget valid
- * @property double $tempCyclePlaybackAverageDuration The average duration if cycle playback is enabled.
  */
 class Widget implements \JsonSerializable
 {
@@ -208,6 +206,12 @@ class Widget implements \JsonSerializable
      * @var string read only string
      */
     public $tempWidgetId = null;
+
+    /**
+     * Flag to indicate whether the widget is valid
+     * @var bool
+     */
+    public $isValid = false;
 
     /**
      * Flag to indicate whether the widget is newly added
@@ -830,7 +834,7 @@ class Widget implements \JsonSerializable
             if ($property->value === null) {
                 $this->removeOption($property->id);
             } else {
-                $type = ($property->type === 'code' || $property->type === 'richText') ? 'cdata' : 'attrib';
+                $type = $property->isCData() ? 'cdata' : 'attrib';
 
                 // Apply any filters on the data.
                 if ($property->type === 'input' && $property->variant === 'uri') {

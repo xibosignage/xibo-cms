@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -43,7 +43,6 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
- * @property $tagsString
  */
 class Playlist implements \JsonSerializable
 {
@@ -942,7 +941,10 @@ class Playlist implements \JsonSerializable
                             . ', totalDuration is ' . $totalDuration);
 
                         foreach ($subPlaylistWidgets as $subPlaylistWidget) {
-                            $subPlaylistWidget->tempCyclePlaybackAverageDuration = $cycleDuration;
+                            $subPlaylistWidget->setUnmatchedProperty(
+                                'tempCyclePlaybackAverageDuration',
+                                $cycleDuration
+                            );
                             $widgets[] = $subPlaylistWidget;
                         }
                     } else {

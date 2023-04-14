@@ -2201,6 +2201,56 @@ const formHelpers = function() {
       }, 300);
     });
   };
+
+  /**
+   * Validate required form input fields
+   * @param {object} container - Form object
+   * @return {object|null} errors
+   */
+  this.validateFormBeforeSubmit = function(container) {
+    const errors = {};
+    $(container).find('.xibo-form-input[data-is-required]')
+      .each(function(_idx, el) {
+        let inputField = null;
+        let fieldType = null;
+
+        if ($(el).find('input').length) {
+          inputField = $(el).find('input');
+          fieldType = inputField.attr('type');
+        } else if ($(el).find('select').length) {
+          inputField = $(el).find('select');
+          fieldType = 'select';
+        }
+
+        const errorMessage = errorMessagesTrans.requiredField.replace(
+          '%property%',
+          inputField.attr('name'),
+        );
+
+        if (fieldType === 'text' || fieldType === 'number') {
+          if (inputField.val().length === 0) {
+            errors[inputField.attr('name')] = errorMessage;
+          }
+        } else if (fieldType === 'checkbox') {
+          if (!inputField.is(':checked')) {
+            errors[inputField.attr('name')] = errorMessage;
+          }
+        } else if (fieldType === 'select') {
+          if (inputField.val() === null ||
+            inputField.val()?.length == undefined ||
+            inputField.val()?.length === 0
+          ) {
+            errors[inputField.attr('name')] = errorMessage;
+          }
+        }
+      });
+
+    if (Object.keys(errors).length > 0) {
+      return errors;
+    }
+
+    return null;
+  };
 };
 
 

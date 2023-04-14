@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Event;
@@ -93,6 +92,11 @@ class XmdsDependencyRequestEvent extends Event
         return $this->id;
     }
 
+    /**
+     * The Real ID of the dependency request
+     *  this will always be the ID of the item (asset/font/etc.) regardless of XMDS schema version being used.
+     * @return string
+     */
     public function getRealId() : string
     {
         return $this->realId;

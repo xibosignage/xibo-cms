@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -42,10 +42,8 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Display
  * @package Xibo\Entity
- * @property $isCmsTransferInProgress Is a transfer to another CMS in progress?
  *
  * @SWG\Definition()
- * @property $tagsString
  */
 class Display implements \JsonSerializable
 {
@@ -576,9 +574,6 @@ class Display implements \JsonSerializable
         $this->displayProfileFactory = $displayProfileFactory;
         $this->displayFactory = $displayFactory;
         $this->folderFactory = $folderFactory;
-
-        // Initialise extra validation rules
-        v::with('Xibo\\Validation\\Rules\\');
     }
 
     /**
@@ -663,11 +658,16 @@ class Display implements \JsonSerializable
      * Is this display auditing?
      * return bool
      */
-    public function isAuditing()
+    public function isAuditing(): bool
     {
-        $this->getLog()->debug(sprintf('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, Carbon::now()->format('U')));
+        $this->getLog()->debug(sprintf(
+            'Testing whether this display is auditing. %d vs %d.',
+            $this->auditingUntil,
+            Carbon::now()->format('U')
+        ));
+
         // Test $this->auditingUntil against the current date.
-        return ($this->auditingUntil >= Carbon::now()->format('U'));
+        return (!empty($this->auditingUntil) && $this->auditingUntil >= Carbon::now()->format('U'));
     }
 
     /**
@@ -1229,7 +1229,7 @@ class Display implements \JsonSerializable
                         $defaultItem = array_merge($defaultItem, $override[$i]);
                         break;
                     }
-                    
+
                 }
             }
         }

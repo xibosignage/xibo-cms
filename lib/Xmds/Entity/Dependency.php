@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,6 +28,10 @@ namespace Xibo\Xmds\Entity;
  */
 class Dependency
 {
+    const LEGACY_ID_OFFSET_FONT = 100000000;
+    const LEGACY_ID_OFFSET_PLAYER_SOFTWARE = 200000000;
+    const LEGACY_ID_OFFSET_ASSET = 300000000;
+
     public $fileType;
     public $legacyId;
     public $id;

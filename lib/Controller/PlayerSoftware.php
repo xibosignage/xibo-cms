@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -140,7 +140,7 @@ class PlayerSoftware extends Base
 
         // add row buttons
         foreach ($versions as $version) {
-            $version->fileSizeFormatted = ByteFormatter::format($version->size);
+            $version->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($version->size));
             if ($this->isApi($request)) {
                 continue;
             }
