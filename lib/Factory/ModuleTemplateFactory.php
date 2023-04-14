@@ -56,6 +56,22 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * @param string $type The type of template (element|elementGroup|static)
+     * @param string $id
+     * @return \Xibo\Entity\ModuleTemplate
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getByTypeAndId(string $type, string $id): ModuleTemplate
+    {
+        foreach ($this->load() as $template) {
+            if ($template->type === $type && $template->templateId === $id) {
+                return $template;
+            }
+        }
+        throw new NotFoundException(sprintf(__('%s not found for %s'), $type, $id));
+    }
+
+    /**
      * @param string $dataType
      * @param string $id
      * @return \Xibo\Entity\ModuleTemplate
