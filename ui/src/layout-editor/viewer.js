@@ -953,25 +953,31 @@ Viewer.prototype.renderElementContent = function(
         }
       }
 
-      // Compile hbs template with data
-      const hbsHtml = hbsTemplate(convertedProperties);
+      // Get element data from widget
+      element.getData().then((widgetData) => {
+        // Add widget data to properties
+        convertedProperties.data = widgetData;
 
-      // Append hbs html to the element
-      $elementContainer.find('.element-content').html(hbsHtml);
+        // Compile hbs template with data
+        const hbsHtml = hbsTemplate(convertedProperties);
 
-      // Call on template render if it exists
-      if (template.onTemplateRender) {
-        const onTemplateRender =
-          window['onTemplateRender_' + element.elementId];
+        // Append hbs html to the element
+        $elementContainer.find('.element-content').html(hbsHtml);
 
-        // Call on template render on element creation
-        onTemplateRender(element.properties);
-      }
+        // Call on template render if it exists
+        if (template.onTemplateRender) {
+          const onTemplateRender =
+            window['onTemplateRender_' + element.elementId];
 
-      // Call callback if it exists
-      if (callback) {
-        callback();
-      }
+          // Call on template render on element creation
+          onTemplateRender(element.properties);
+        }
+
+        // Call callback if it exists
+        if (callback) {
+          callback();
+        }
+      });
     });
   });
 };
@@ -1018,24 +1024,32 @@ Viewer.prototype.initMoveable = function() {
  * @param {object} region - Region object
  * @param {boolean} updateRegion - Update region rendering
  * @param {boolean} hasMoved - Has region moved
+ * @param {boolean} hasScaled - Has region scaled
  */
   const saveRegionProperties = function(
     region,
     updateRegion = true,
     hasMoved = false,
+    hasScaled = false,
   ) {
     const scale = self.containerElementDimensions.scale;
     const regionId = $(region).attr('id');
-    const transform = {
-      width: parseInt($(region).width() / scale),
-      height: parseInt($(region).height() / scale),
-    };
+    const transform = {};
     const regionObject = lD.layout.regions[regionId];
+
+    // Only change width/height if region has scaled
+    if (hasScaled) {
+      transform.width = parseFloat($(region).width() / scale);
+      transform.height = parseFloat($(region).height() / scale);
+    } else {
+      transform.width = regionObject.dimensions.width;
+      transform.height = regionObject.dimensions.height;
+    }
 
     // Only change top/left if region has moved
     if (hasMoved) {
-      transform.top = parseInt($(region).position().top / scale);
-      transform.left = parseInt($(region).position().left / scale);
+      transform.top = parseFloat($(region).position().top / scale);
+      transform.left = parseFloat($(region).position().left / scale);
     } else {
       transform.top = regionObject.dimensions.top;
       transform.left = regionObject.dimensions.left;
@@ -1120,7 +1134,7 @@ Viewer.prototype.initMoveable = function() {
     if (e.isDrag) {
       // Save region properties
       (lD.selectedObject.type == 'region') &&
-        saveRegionProperties(e.target, true, true);
+        saveRegionProperties(e.target, true, true, false);
 
       // Save element properties
       (lD.selectedObject.type == 'element') &&
@@ -1142,8 +1156,8 @@ Viewer.prototype.initMoveable = function() {
 
     // Update element dimension properties
     lD.selectedObject.transform({
-      width: parseInt(e.width / self.containerElementDimensions.scale),
-      height: parseInt(e.height / self.containerElementDimensions.scale),
+      width: parseFloat(e.width / self.containerElementDimensions.scale),
+      height: parseFloat(e.height / self.containerElementDimensions.scale),
     }, false);
 
     // Update target object
@@ -1174,7 +1188,7 @@ Viewer.prototype.initMoveable = function() {
 
     // Save region properties
     (lD.selectedObject.type == 'region') &&
-      saveRegionProperties(e.target, true, moved);
+      saveRegionProperties(e.target, true, moved, true);
 
     // Save element properties
     (lD.selectedObject.type == 'element') &&

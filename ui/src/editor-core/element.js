@@ -13,8 +13,7 @@ const Element = function(data, widgetId, regionId) {
 
   this.id = data.id;
   this.elementId = data.elementId;
-
-  this.elementType = data.elementType;
+  this.elementType = data.type;
 
   this.left = data.left;
   this.top = data.top;
@@ -27,6 +26,10 @@ const Element = function(data, widgetId, regionId) {
   // Set element to always be deletable
   this.isDeletable = true;
 
+  // Element data from the linked widget/module
+  this.data = {};
+
+  // Element template
   this.template = {};
 };
 
@@ -130,6 +133,61 @@ Element.prototype.transform = function(transform) {
   (transform.height) && (this.height = transform.height);
   (transform.top) && (this.top = transform.top);
   (transform.left) && (this.left = transform.left);
+};
+
+/**
+ * Get linked widget data
+  * @return {Promise} - Promise with widget data
+ */
+Element.prototype.getData = function() {
+  const self = this;
+  const linkToAPI = urlsForApi.module.getData;
+  const requestPath =
+    linkToAPI.url
+      .replace(':id', this.widgetId)
+      .replace(':regionId', this.regionId);
+
+  return new Promise(function(resolve, reject) {
+    // If element already has data, use cached data
+    if (
+      !$.isEmptyObject(self.data) ||
+      self.elementType === 'global'
+    ) {
+      resolve(self.data);
+    } else {
+      $.ajax({
+        url: requestPath,
+        type: linkToAPI.type,
+        dataType: 'json',
+      }).done((data) => {
+        if (!data.data) {
+          // Get widget
+          const widget =
+            lD.getElementByTypeAndId(
+              'widget',
+              'widget_' + self.regionId + '_' + self.widgetId,
+              'region_' + self.regionId,
+            );
+
+          // Show sample data
+          for (let i = 0; i < modulesList.length; i++) {
+            if (modulesList[i].type === widget.subType) {
+              self.data = modulesList[i].sampleData[0];
+              resolve(self.data);
+            }
+          }
+        } else if (data.data.length > 0) {
+          // Return just first item
+          self.data = data.data[0];
+        }
+
+        // Resolve the promise with the data
+        resolve(self.data);
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error('getData', jqXHR, textStatus, errorThrown);
+      });
+    }
+  });
 };
 
 module.exports = Element;

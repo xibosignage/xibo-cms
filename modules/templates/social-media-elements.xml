@@ -1,0 +1,106 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>profile-photo</id>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <title>Profile Photo</title>
+        <thumbnail>fulltime-np</thumbnail>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="objectFit" type="dropdown" mode="single">
+                <title>Scale type</title>
+                <helpText>How should this image be scaled?</helpText>
+                <default>center</default>
+                <options>
+                    <option name="fill">Fill</option>
+                    <option name="contain">Contain</option>
+                    <option name="cover">Cover</option>
+                    <option name="none">None</option>
+                    <option name="scale-down">Scale Down</option>
+                    <option name="center">Center</option>
+                </options>
+            </property>
+            <property id="alignId" type="dropdown" mode="single">
+                <title>Horizontal Align</title>
+                <helpText>How should this image be aligned?</helpText>
+                <default>center</default>
+                <options>
+                    <option name="left">Left</option>
+                    <option name="center">Centre</option>
+                    <option name="right">Right</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="objectFit" type="eq">center</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="valignId" type="dropdown" mode="single">
+                <title>Vertical Align</title>
+                <helpText>How should this image be vertically aligned?</helpText>
+                <default>middle</default>
+                <options>
+                    <option name="top">Top</option>
+                    <option name="middle">Middle</option>
+                    <option name="bottom">Bottom</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="objectFit" type="eq">center</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;">
+   <img src="{{ data.photo }}" style="width:100%; height: 100%; object-fit: {{ objectFit }}; object-position: {{ alignId }} {{ valignId }}; position: absolute; top: 0; left: 0;"/>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
+            <asset id="twitterContentPhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
+        </assets>
+    </template>
+    <template>
+        <id>tweet1</id>
+        <type>element-group</type>
+        <dataType>social-media</dataType>
+        <title>Tweet</title>
+        <stencil>
+            <width></width>
+            <height></height>
+            <elements>
+                <element id="profile-photo">
+                    <top>150</top>
+                    <left>350</left>
+                    <defaultProperties>
+                        <property id=""></property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+    </template>
+</templates>

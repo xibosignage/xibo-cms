@@ -311,7 +311,7 @@ class Widget extends Base
         //  we don't worry about elements here, the layout editor manages those for us.
         $template = null;
         $templateId = $widget->getOptionValue('templateId', null);
-        if ($module->isTemplateExpected() && !empty($templateId)) {
+        if ($module->isTemplateExpected() && !empty($templateId) && $templateId !== 'elements') {
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
 
             // Decorate the template with any properties saved in the widget

@@ -240,6 +240,9 @@ PropertiesPanel.prototype.saveElement = function(
 
   // Save elements to the widget
   parentWidget.saveElements().then((_res) => {
+    // Reset element data
+    target.data = {};
+
     // Update element position
     if (positionChanged) {
       app.viewer.updateElement(target);
@@ -490,6 +493,7 @@ PropertiesPanel.prototype.render = function(
       // If we have a template for the widget, create the fields
       if (
         res.data.template != undefined &&
+        res.data.template != 'elements' &&
         res.data.template.properties.length > 0
       ) {
         forms.createFields(

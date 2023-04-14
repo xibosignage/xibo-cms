@@ -609,6 +609,7 @@ Widget.prototype.saveElements = function(
     const elementObject = {
       id: element.id,
       elementId: element.elementId,
+      type: element.elementType,
       left: element.left,
       top: element.top,
       width: element.width,
@@ -672,6 +673,8 @@ Widget.prototype.removeElement = function(
   elementId,
   save,
 ) {
+  const app = this.editorObject;
+
   // Remove element from DOM
   $(`#${elementId}`).remove();
 
@@ -685,6 +688,16 @@ Widget.prototype.removeElement = function(
   if (this.editorObject.selectedObject.elementId == elementId) {
     this.editorObject.selectObject({
       reloadViewer: true,
+    });
+  }
+
+  // Check if there's no more elements in widget and remove it
+  if (Object.keys(this.elements).length == 0) {
+    app.layout.deleteElement('widget', this.widgetId).then(() => {
+      // Reload layout
+      app.reloadData(app.layout, true);
+    }).catch((error) => {
+      console.error(error);
     });
   }
 };

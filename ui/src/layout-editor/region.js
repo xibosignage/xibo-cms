@@ -102,8 +102,10 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
   // Apply changes to the region ( updating values )
   this.dimensions.width = transform.width;
   this.dimensions.height = transform.height;
-  this.dimensions.top = transform.top;
-  this.dimensions.left = transform.left;
+  this.dimensions.top =
+    (transform.top) ? transform.top : this.dimensions.top;
+  this.dimensions.left =
+    (transform.left) ? transform.left : this.dimensions.left;
 };
 
 /**

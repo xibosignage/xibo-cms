@@ -1034,7 +1034,7 @@ lD.deleteObject = function(
         objectType,
         objectId,
         options,
-      ).then((res) => { // Success
+      ).then((res) => {
         // Behavior if successful
         toastr.success(res.message);
         lD.reloadData(lD.layout, true);
@@ -1405,6 +1405,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       const element =
       {
         id: draggableData.templateId,
+        type: draggableData.dataType,
         left: dropPosition.left,
         top: dropPosition.top,
         width: draggableData.templateStartWidth,
@@ -1656,7 +1657,12 @@ lD.addModuleToPlaylist = function(
     }
 
     // Set template if if exists
-    if (moduleData.templateId) {
+    // for elements, we use the elements template
+    if (moduleData.type === 'element') {
+      addOptions = addOptions || {};
+      addOptions.templateId = 'elements';
+    } else if (moduleData.templateId) {
+      // For other modules, we use the template id
       addOptions = addOptions || {};
       addOptions.templateId = moduleData.templateId;
     }
@@ -1676,8 +1682,8 @@ lD.addModuleToPlaylist = function(
         },
       },
     ).then((res) => { // Success
-      // Check if we added a element ( global widget )
-      if (res.data.type === 'global') {
+      // Check if we added a element
+      if (moduleData.type === 'element') {
         // Hide loading screen
         lD.common.hideLoadingScreen('addModuleToPlaylist');
 
@@ -1726,6 +1732,9 @@ lD.addModuleToPlaylist = function(
       }
 
       lD.common.hideLoadingScreen('addModuleToPlaylist');
+
+      // Return the promise with the data
+      return res;
     }).catch((error) => { // Fail/error
       lD.common.hideLoadingScreen('addModuleToPlaylist');
 
