@@ -271,7 +271,7 @@ window.forms = {
 
           // Add required attribute to the field if not already set
           if (
-            property.validation.length &&
+            property?.validation?.length &&
             !$newField.attr('data-is-required')
           ) {
             $newField.attr('data-is-required', true);
