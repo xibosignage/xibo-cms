@@ -24,21 +24,18 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Profile Photo</title>
-        <thumbnail>fulltime-np</thumbnail>
-        <startWidth>200</startWidth>
+        <thumbnail>profile-photo</thumbnail>
+        <startWidth>100</startWidth>
         <startHeight>100</startHeight>
         <properties>
             <property id="objectFit" type="dropdown" mode="single">
                 <title>Scale type</title>
                 <helpText>How should this image be scaled?</helpText>
-                <default>center</default>
+                <default>cover</default>
                 <options>
                     <option name="fill">Fill</option>
                     <option name="contain">Contain</option>
                     <option name="cover">Cover</option>
-                    <option name="none">None</option>
-                    <option name="scale-down">Scale Down</option>
-                    <option name="center">Center</option>
                 </options>
             </property>
             <property id="alignId" type="dropdown" mode="single">
@@ -52,7 +49,7 @@
                 </options>
                 <visibility>
                     <test>
-                        <condition field="objectFit" type="eq">center</condition>
+                        <condition field="objectFit" type="neq">fill</condition>
                     </test>
                 </visibility>
             </property>
@@ -67,21 +64,306 @@
                 </options>
                 <visibility>
                     <test>
-                        <condition field="objectFit" type="eq">center</condition>
+                        <condition field="objectFit" type="neq">fill</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="roundBorder" type="checkbox">
+                <title>Round Border</title>
+                <default>0</default>
+                <helpText>Should the square have rounded corners?</helpText>
+                <visibility>
+                    <test>
+                        <condition field="objectFit" type="neq">contain</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="borderRadius" type="number">
+                <title>Border Radius</title>
+                <default>20</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="roundBorder" type="eq">1</condition>
+                        <condition field="objectFit" type="neq">contain</condition>
                     </test>
                 </visibility>
             </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;">
-   <img src="{{ data.photo }}" style="width:100%; height: 100%; object-fit: {{ objectFit }}; object-position: {{ alignId }} {{ valignId }}; position: absolute; top: 0; left: 0;"/>
+<div class="img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
+    {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
+    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
+   <img src="{{ data.userProfileImage }}" style="width:100%; height: 100%; object-fit: {{ objectFit }}; object-position: {{ alignId }} {{ valignId }}; position: absolute; top: 0; left: 0;"/>
 </div>
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
-            <asset id="twitterContentPhoto" type="path" mimeType="image/png" path="/modules/assets/twitter_content_photo.jpg"></asset>
+            <asset id="profile-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/profile-photo.png" />
+        </assets>
+    </template>
+    <template>
+        <id>social-media-description</id>
+        <title>Description</title>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>social-media-description</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>30</default>
+            </property>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
+                <default>0</default>
+            </property>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Color</title>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="text-render-container"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div>{{data.text}}</div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="social-media-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/social-media-description.png" />
+        </assets>
+    </template>
+    <template>
+        <id>social-media-username</id>
+        <title>Username</title>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>social-media-username</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>30</default>
+            </property>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
+                <default>0</default>
+            </property>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Color</title>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="text-render-container"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div>{{data.user}}</div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="social-media-username" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/social-media-username.png" />
         </assets>
     </template>
     <template>

@@ -465,10 +465,13 @@ lD.selectObject =
           case 'element':
             const parentRegion = this.selectedObject.regionId;
             const parentWidget = this.selectedObject.widgetId;
-
-            const element = this.layout.canvas.widgets[
+            const parentWidgetObj = this.layout.canvas.widgets[
               'widget_' + parentRegion + '_' + parentWidget
-            ].elements[this.selectedObject.elementId];
+            ];
+
+            const element = (parentWidgetObj) ?
+              parentWidgetObj.elements[this.selectedObject.elementId] :
+              null;
 
             if (element) {
               element.selected = false;

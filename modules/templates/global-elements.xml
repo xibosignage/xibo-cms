@@ -29,6 +29,16 @@
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
         <properties>
+            <property id="sample" type="dropdown" mode="single">
+                <title>Items direction</title>
+                <helpText>The display order if there's more than one item.</helpText>
+                <default>0</default>
+                <options>
+                    <option name="0"></option>
+                    <option name="1">Horizontal</option>
+                    <option name="2">Vertical</option>
+                </options>
+            </property>
             <property id="text" type="textArea">
                 <title>Text</title>
                 <default>Text</default>

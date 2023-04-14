@@ -141,50 +141,22 @@ Element.prototype.transform = function(transform) {
  */
 Element.prototype.getData = function() {
   const self = this;
-  const linkToAPI = urlsForApi.module.getData;
-  const requestPath =
-    linkToAPI.url
-      .replace(':id', this.widgetId)
-      .replace(':regionId', this.regionId);
+  const parentWidget = lD.getElementByTypeAndId(
+    'widget',
+    'widget_' + this.regionId + '_' + this.widgetId,
+    'canvas',
+  );
 
   return new Promise(function(resolve, reject) {
     // If element already has data, use cached data
     if (
-      !$.isEmptyObject(self.data) ||
       self.elementType === 'global'
     ) {
-      resolve(self.data);
+      resolve();
     } else {
-      $.ajax({
-        url: requestPath,
-        type: linkToAPI.type,
-        dataType: 'json',
-      }).done((data) => {
-        if (!data.data) {
-          // Get widget
-          const widget =
-            lD.getElementByTypeAndId(
-              'widget',
-              'widget_' + self.regionId + '_' + self.widgetId,
-              'region_' + self.regionId,
-            );
-
-          // Show sample data
-          for (let i = 0; i < modulesList.length; i++) {
-            if (modulesList[i].type === widget.subType) {
-              self.data = modulesList[i].sampleData[0];
-              resolve(self.data);
-            }
-          }
-        } else if (data.data.length > 0) {
-          // Return just first item
-          self.data = data.data[0];
-        }
-
+      parentWidget.getData().then((data) => {
         // Resolve the promise with the data
-        resolve(self.data);
-      }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.error('getData', jqXHR, textStatus, errorThrown);
+        resolve(data);
       });
     }
   });
