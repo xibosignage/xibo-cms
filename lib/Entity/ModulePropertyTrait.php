@@ -50,7 +50,7 @@ trait ModulePropertyTrait
                 $property->value = intval($property->value);
             }
 
-            if ($property->variant === 'uri') {
+            if ($property->variant === 'uri' && !empty($value)) {
                 $property->value = urldecode($property->value);
             }
         }
@@ -85,7 +85,7 @@ trait ModulePropertyTrait
                     }
                 }
 
-                if ($property->variant === 'dateFormat') {
+                if ($property->variant === 'dateFormat' && !empty($value)) {
                     $value = DateFormatHelper::convertPhpToMomentFormat($value);
                 }
 
