@@ -35,10 +35,7 @@ const Toolbar = function(
   this.parent = parent;
   this.DOMObject = container;
   this.openedMenu = -1;
-  this.openedSubMenu = null;
-
-  this.widgetMenuIndex = 0;
-  this.libraryMenuIndex = 5;
+  this.openedSubMenu = -1;
 
   this.selectedCard = {};
 
@@ -481,17 +478,40 @@ Toolbar.prototype.loadPrefs = function() {
     if (res.success) {
       const loadedData = JSON.parse(res.data.value);
 
+      const findMenuIndexByName = function(name) {
+        let foundMenu = -1;
+
+        for (let i = 0; i < self.menuItems.length; i++) {
+          if (self.menuItems[i].name == name) {
+            foundMenu = i;
+            break;
+          }
+        }
+
+        return foundMenu;
+      };
+
       // Load opened menu
-      self.openedMenu =
-        (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
+      if (loadedData.openedMenu != undefined) {
+        self.openedMenu = findMenuIndexByName(loadedData.openedMenu);
+      } else {
+        self.openedMenu = -1;
+      }
 
       // Load opened submenu
       self.openedSubMenu =
         (loadedData.openedSubMenu != undefined) ?
-          loadedData.openedSubMenu : null;
+          loadedData.openedSubMenu : -1;
+
+      // If we have opened submenu, replace parent with menu index
+      if (self.openedSubMenu != null) {
+        self.openedSubMenu.parent =
+          findMenuIndexByName(self.openedSubMenu.parent);
+      }
 
       // Load favourites
-      self.menuItems[self.widgetMenuIndex].favouriteModules =
+      const widgetMenuIndex = findMenuIndexByName('widgets');
+      self.menuItems[widgetMenuIndex].favouriteModules =
         (loadedData.favouriteModules != undefined) ?
           loadedData.favouriteModules :
           [];
@@ -546,21 +566,40 @@ Toolbar.prototype.loadPrefs = function() {
  */
 Toolbar.prototype.savePrefs = function(clearPrefs = false) {
   const app = this.parent;
+  const self = this;
 
-  // Save only some of the tab menu data
-  let openedMenu = this.openedMenu;
-  let openedSubMenu = this.openedSubMenu;
+  // Get opened menu name to save
+  let openedMenu =
+    (this.openedMenu != -1) ?
+      this.menuItems[this.openedMenu].name : -1;
+
+  // Make a copy of the opened submenu object
+  let openedSubMenu =
+  (this.openedSubMenu != -1) ?
+    Object.assign({}, this.openedSubMenu) : -1;
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
   let favouriteModules = [];
   const filters = [];
 
+  // If we have opened submenu, save parent with name instead of index
+  if (
+    openedSubMenu != -1 &&
+    openedSubMenu.parent != undefined &&
+    openedSubMenu.parent != -1
+  ) {
+    openedSubMenu.parent = this.menuItems[openedSubMenu.parent].name;
+  }
+
   if (clearPrefs) {
     openedMenu = -1;
-    openedSubMenu = null;
+    openedSubMenu = -1;
     displayTooltips = 1;
   } else {
-    // Save favourite
-    favouriteModules = this.menuItems[this.widgetMenuIndex].favouriteModules;
+    // Save favourite modules
+    const widgetMenu = self.menuItems.find(function(el) {
+      return (el.name == 'widgets');
+    });
+    favouriteModules = widgetMenu.favouriteModules;
 
     // Save filters
     this.menuItems.forEach((menu, menuIdx) => {
@@ -706,7 +745,7 @@ Toolbar.prototype.render = function() {
     // and do not open the menu
     if (this.menuItems[this.openedMenu].disabled === true) {
       this.openedMenu = -1;
-      this.openedSubMenu = null;
+      this.openedSubMenu = -1;
 
       // Close toolbar
       this.DOMObject.find('nav').removeClass('opened');
@@ -715,7 +754,7 @@ Toolbar.prototype.render = function() {
     } else {
       // Do we have opened sub menu?
       const openedSubMenu =
-        this.openedSubMenu &&
+        (this.openedSubMenu && this.openedSubMenu != -1) &&
         this.openedSubMenu.parent == this.openedMenu;
 
       this.openMenu(this.openedMenu, true, openedSubMenu);
@@ -1174,7 +1213,10 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         ' .media-search-form',
       ).serializeObject();
 
-    if (menu == self.libraryMenuIndex && filter.type == '') {
+    if (
+      self.menuItems[menu].name == 'library' &&
+      filter.type == ''
+    ) {
       filter.types = self.moduleListOtherFiltered.map((el) => el.type);
     }
 
@@ -1417,8 +1459,11 @@ Toolbar.prototype.elementsContentCreateWindow = function(menu) {
  * @param {object} target - The target element
  */
 Toolbar.prototype.toggleFavourite = function(target) {
-  const favouriteModulesArray =
-    this.menuItems[this.widgetMenuIndex].favouriteModules;
+  const self = this;
+  const widgetMenu = self.menuItems.find(function(el) {
+    return (el.name == 'widgets');
+  });
+  const favouriteModulesArray = widgetMenu.favouriteModules;
 
   const $card = $(target).parent('.toolbar-card');
   const cardType = $card.data().subType;
@@ -1822,7 +1867,7 @@ Toolbar.prototype.openSubMenu = function(
     $submenuContainer.removeClass('toolbar-cards-pane');
 
     // Clear submenu
-    self.openedSubMenu = null;
+    self.openedSubMenu = -1;
 
     // Open menu
     self.openMenu(openedMenu, true);
@@ -1888,7 +1933,7 @@ Toolbar.prototype.openGroupMenu = function(
     $submenuContainer.removeClass('toolbar-group-pane');
 
     // Clear submenu
-    self.openedSubMenu = null;
+    self.openedSubMenu = -1;
 
     // Open menu
     self.openMenu(openedMenu, true);
