@@ -91,6 +91,7 @@ PropertiesPanel.prototype.save = function(target) {
 
       // Show toast message
       toastr.error(errorMessage);
+      return false;
     } else {
       formHelpers.clearErrorMessage(form);
     }
