@@ -172,7 +172,7 @@ class WidgetSyncTask implements TaskInterface
         // Remove display_media records which have not been touched for a defined period of time.
         $this->removeOldDisplayLinks();
 
-        $this->log->info('Total time spent caching is ' . $timeCaching);
+        $this->log->info('Total time spent caching is ' . $timeCaching . ', synced ' . $countWidgets . ' widgets');
 
         $this->appendRunMessage('Synced ' . $countWidgets . ' widgets');
     }
@@ -225,7 +225,7 @@ class WidgetSyncTask implements TaskInterface
         }
 
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)) {
-            $this->getLogger()->debug('Cache expired, pulling fresh');
+            $this->getLogger()->debug('Cache expired, pulling fresh: key: ' . $cacheKey);
 
             try {
                 if ($widgetInterface !== null) {
@@ -267,7 +267,10 @@ class WidgetSyncTask implements TaskInterface
                 $widgetDataProviderCache->finaliseCache();
             }
         } else {
-            $this->getLogger()->debug('Cache still valid');
+            $this->getLogger()->debug('Cache still valid, key: ' . $cacheKey);
+
+            // Get the existing mediaIds so that we can maintain the links to displays.
+            $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
         }
 
         return $mediaIds;
@@ -293,10 +296,12 @@ class WidgetSyncTask implements TaskInterface
      */
     private function linkDisplays(array $displays, array $mediaIds): void
     {
+        $this->getLogger()->debug('linkDisplays: ' . count($displays) . ' displays, ' . count($mediaIds) . ' media');
+
         $sql = '
-            INSERT INTO `display_media` (displayId, mediaId) 
-                VALUES (:displayId, :mediaId)
-            ON DUPLICATE KEY UPDATE mediaId = mediaId
+            INSERT INTO `display_media` (`displayId`, `mediaId`, `modifiedAt`) 
+                VALUES (:displayId, :mediaId, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE `modifiedAt` = CURRENT_TIMESTAMP
         ';
 
         // TODO: there will be a much more efficient way to do this!
@@ -318,9 +323,9 @@ class WidgetSyncTask implements TaskInterface
      * @param int $days
      * @return void
      */
-    private function removeOldDisplayLinks(int $days = 5)
+    private function removeOldDisplayLinks(int $days = 5): void
     {
-        $sql = 'DELETE FROM `display_media` WHERE modifiedAt < :modifiedAt';
+        $sql = 'DELETE FROM `display_media` WHERE `modifiedAt` < :modifiedAt';
         $this->store->update($sql, [
             'modifiedAt' => Carbon::now()->subDays($days)->format(DateFormatHelper::getSystemFormat()),
         ]);

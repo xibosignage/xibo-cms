@@ -124,7 +124,7 @@ class Soap7 extends Soap6
 
             // We just want the data.
             $dataModule = $this->moduleFactory->getByType($widget->type);
-            if ($dataModule->isDataProviderExpected()) {
+            if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
                 // We only ever return cache.
                 $dataProvider = $module->createDataProvider($widget);
 
@@ -148,15 +148,11 @@ class Soap7 extends Soap6
                     // Get media references
                     $media = [];
                     $sql = '
-                        SELECT mediaId, storedAs
+                        SELECT `media`.`mediaId`, `media`.`storedAs`
                           FROM `media`
-                            INNER JOIN `lkmediadisplaygroup`
-                            ON `lkmediadisplaygroup`.mediaId = `media`.mediaId
-                            INNER JOIN `lkdgdg`
-                            ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
-                            INNER JOIN `lkdisplaydg`
-                            ON lkdisplaydg.displayGroupId = `lkdgdg`.childId
-                         WHERE lkdisplaydg.displayId = :displayId
+                            INNER JOIN `display_media`
+                            ON `display_media`.mediaid = `media`.mediaId
+                         WHERE `display_media`.displayId = :displayId
                     ';
 
                     // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
@@ -164,7 +160,10 @@ class Soap7 extends Soap6
                         'displayId' => $this->display->displayId
                     ]) as $row) {
                         $media[$row['mediaId']] = $row['storedAs'];
-                    };
+                    }
+
+                    $this->getLog()->debug('Get Data');
+                    $this->getLog()->debug(json_encode($dataProvider->getData()));
 
                     $resource = json_encode([
                         'data' => $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media),
@@ -183,9 +182,11 @@ class Soap7 extends Soap6
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
         } catch (NotFoundException $notEx) {
+            $this->getLog()->error('Unknown error during getResource. E = ' . $notEx->getMessage());
+            $this->getLog()->debug($notEx->getTraceAsString());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         } catch (\Exception $e) {
-            $this->getLog()->error('Unknown error during getResource. E = ' . $e->getMessage());
+            $this->getLog()->error('Unknown error during getData. E = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }

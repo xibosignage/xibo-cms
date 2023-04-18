@@ -2734,7 +2734,7 @@ class Soap
             ->createForGetDependency(
                 $this->display->displayId,
                 $dependency->fileType,
-                ($isSupportsDependency ? $dependency->id : $dependency->legacyId),
+                $dependency->legacyId,
                 $dependency->id,
                 $dependencyBasePath
             )

@@ -368,7 +368,8 @@ class Soap4 extends Soap
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndDependency(
                     $this->display->displayId,
                     $fileType,
-                    $fileId
+                    $fileId,
+                    ($fileType == 'media' && $fileId < 0)
                 );
 
                 // File is valid, see if we can return it.
