@@ -594,15 +594,6 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     openedSubMenu.parent = this.menuItems[openedSubMenu.parent].name;
   }
 
-  // If we have opened submenu, save parent with name instead of index
-  if (
-    openedSubMenu != -1 &&
-    openedSubMenu.parent != undefined &&
-    openedSubMenu.parent != -1
-  ) {
-    openedSubMenu.parent = this.menuItems[openedSubMenu.parent].name;
-  }
-
   if (clearPrefs) {
     openedMenu = -1;
     openedSubMenu = -1;
