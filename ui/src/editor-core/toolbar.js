@@ -518,13 +518,17 @@ Toolbar.prototype.loadPrefs = function() {
 
       // Load filters
       if (loadedData.filters) {
-        loadedData.filters.forEach((menu, menuIdx) => {
-          for (const filter in menu) {
-            if (menu.hasOwnProperty(filter)) {
-              self.menuItems[menuIdx].filters[filter].value = menu[filter];
+        for (const filter in loadedData.filters) {
+          if (loadedData.filters.hasOwnProperty(filter)) {
+            const menuIdx = findMenuIndexByName(filter);
+            for (const filterValue in loadedData.filters[filter]) {
+              if (loadedData.filters[filter].hasOwnProperty(filterValue)) {
+                self.menuItems[menuIdx].filters[filterValue].value =
+                  loadedData.filters[filter][filterValue];
+              }
             }
           }
-        });
+        }
       }
 
       // Tooltip options
@@ -579,7 +583,16 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     Object.assign({}, this.openedSubMenu) : -1;
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
   let favouriteModules = [];
-  const filters = [];
+  const filters = {};
+
+  // If we have opened submenu, save parent with name instead of index
+  if (
+    openedSubMenu != -1 &&
+    openedSubMenu.parent != undefined &&
+    openedSubMenu.parent != -1
+  ) {
+    openedSubMenu.parent = this.menuItems[openedSubMenu.parent].name;
+  }
 
   // If we have opened submenu, save parent with name instead of index
   if (
@@ -602,14 +615,14 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     favouriteModules = widgetMenu.favouriteModules;
 
     // Save filters
-    this.menuItems.forEach((menu, menuIdx) => {
-      filters[menuIdx] = {};
+    this.menuItems.forEach((menu) => {
+      filters[menu.name] = {};
       for (const filter in menu.filters) {
         if (
           this.defaultFilters[filter].value != menu.filters[filter].value &&
           menu.filters[filter].locked != true
         ) {
-          filters[menuIdx][filter] = menu.filters[filter].value;
+          filters[menu.name][filter] = menu.filters[filter].value;
         }
       }
     });
@@ -1982,6 +1995,9 @@ Toolbar.prototype.loadTemplates = function(
 
         // Get filter value
         const filterValue = $container.find('#input-name').val();
+
+        // Save filter value to the menu item
+        self.menuItems[self.openedMenu].filters.name.value = filterValue;
 
         // Loop through templates data object
         for (const key in templatesData) {
