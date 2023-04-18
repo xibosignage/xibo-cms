@@ -13,8 +13,7 @@ const Element = function(data, widgetId, regionId) {
 
   this.id = data.id;
   this.elementId = data.elementId;
-
-  this.elementType = data.elementType;
+  this.elementType = data.type;
 
   this.left = data.left;
   this.top = data.top;
@@ -27,6 +26,10 @@ const Element = function(data, widgetId, regionId) {
   // Set element to always be deletable
   this.isDeletable = true;
 
+  // Element data from the linked widget/module
+  this.data = {};
+
+  // Element template
   this.template = {};
 };
 
@@ -130,6 +133,33 @@ Element.prototype.transform = function(transform) {
   (transform.height) && (this.height = transform.height);
   (transform.top) && (this.top = transform.top);
   (transform.left) && (this.left = transform.left);
+};
+
+/**
+ * Get linked widget data
+  * @return {Promise} - Promise with widget data
+ */
+Element.prototype.getData = function() {
+  const self = this;
+  const parentWidget = lD.getElementByTypeAndId(
+    'widget',
+    'widget_' + this.regionId + '_' + this.widgetId,
+    'canvas',
+  );
+
+  return new Promise(function(resolve, reject) {
+    // If element already has data, use cached data
+    if (
+      self.elementType === 'global'
+    ) {
+      resolve();
+    } else {
+      parentWidget.getData().then((data) => {
+        // Resolve the promise with the data
+        resolve(data);
+      });
+    }
+  });
 };
 
 module.exports = Element;

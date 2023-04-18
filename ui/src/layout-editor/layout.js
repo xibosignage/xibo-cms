@@ -159,9 +159,6 @@ Layout.prototype.createDataStructure = function(data) {
                   'element_' + Math.floor(Math.random() * 1000000);
               }
 
-              // Save element type from widget sub type
-              element.elementType = newWidget.subType;
-
               newWidget.elements[element.elementId] = new Element(
                 element,
                 newWidget.widgetId,
@@ -846,31 +843,32 @@ Layout.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
   const getElement = this.DOMObject.find('#' + regionId + ' #' + widgetId);
 
   switch (moveType) {
-  case 'oneRight':
-    getElement.insertAfter(
-      getElement.next('.designer-widget:not(.designer-widget-ghost)'),
-    );
-    break;
+    case 'oneRight':
+      getElement.insertAfter(
+        getElement.next('.designer-widget:not(.designer-widget-ghost)'),
+      );
+      break;
 
-  case 'oneLeft':
-    getElement.insertBefore(
-      getElement.prev('.designer-widget:not(.designer-widget-ghost)'),
-    );
-    break;
+    case 'oneLeft':
+      getElement.insertBefore(
+        getElement.prev('.designer-widget:not(.designer-widget-ghost)'),
+      );
+      break;
 
-  case 'topRight':
-    getElement.insertAfter(
-      getElement.nextAll('.designer-widget:not(.designer-widget-ghost)').last(),
-    );
-    break;
+    case 'topRight':
+      getElement.insertAfter(
+        getElement
+          .nextAll('.designer-widget:not(.designer-widget-ghost)').last(),
+      );
+      break;
 
-  case 'topLeft':
-    getElement.prependTo(getElement.parent());
-    break;
+    case 'topLeft':
+      getElement.prependTo(getElement.parent());
+      break;
 
-  default:
-    console.warn('Change type not known');
-    return;
+    default:
+      console.warn('Change type not known');
+      return;
   }
 
   // Save new order

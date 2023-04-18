@@ -1,0 +1,418 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>event-summary</id>
+        <title>Summary</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>event-summary</thumbnail>
+        <startWidth>300</startWidth>
+        <startHeight>80</startHeight>
+        <properties>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>40</default>
+            </property>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
+                <default>0</default>
+            </property>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Color</title>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="text-render-container"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div>{{data.summary}}</div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="event-summary" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-summary.png" />
+        </assets>
+    </template>
+    <template>
+        <id>event-description</id>
+        <title>Description</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>event-description</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>30</default>
+            </property>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
+                <default>0</default>
+            </property>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Color</title>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="text-render-container"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div>{{data.description}}</div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="event-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
+        </assets>
+    </template>
+    <template>
+        <id>event-startDate</id>
+        <title>Start Date</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>event-description</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>80</startHeight>
+        <properties>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>25</default>
+            </property>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
+                <default>0</default>
+            </property>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Color</title>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="text-render-container"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div>{{data.startDate}}</div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="event-startDate" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-startDate.png" />
+        </assets>
+    </template>
+</templates>

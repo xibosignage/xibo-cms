@@ -409,6 +409,13 @@ class Widget extends Base
             $widget->setOptionValue('templateId', 'attrib', $templateId);
         }
 
+        // If we did not set the template in this save, then pull it out so that we can save its properties
+        // don't do this for elements.
+        $existingTemplateId = $widget->getOptionValue('templateId', null);
+        if ($template === null && $existingTemplateId !== null && $existingTemplateId !== 'elements') {
+            $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $existingTemplateId);
+        }
+
         // Before we start, clean out any cached media
         $widget->clearCachedMedia();
 
