@@ -62,16 +62,16 @@ class MastodonProvider implements WidgetProviderInterface
                 $httpOptions['query']['only_media'] = true;
             }
 
-            if (!empty($dataProvider->getProperty('serverUrl',''))) {
+            if (!empty($dataProvider->getProperty('serverUrl', ''))) {
                 $uri = $dataProvider->getProperty('serverUrl', '');
             }
 
             // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
             $hashtag = trim($dataProvider->getProperty('hashtag', ''));
             if (!empty($hashtag)) {
-                $uri = rtrim($uri,"/").'/api/v1/timelines/tag/'. trim($hashtag,"#");
+                $uri = rtrim($uri, "/").'/api/v1/timelines/tag/'. trim($hashtag, "#");
             } else {
-                $uri = rtrim($uri,"/").'/api/v1/timelines/public';
+                $uri = rtrim($uri, "/").'/api/v1/timelines/public';
             }
 
             $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: '. json_encode($httpOptions));
@@ -132,14 +132,12 @@ class MastodonProvider implements WidgetProviderInterface
 
             // If we've got data, then set our cache period.
             $dataProvider->setCacheTtl($dataProvider->getSetting('cachePeriod', 3600));
-
         } catch (RequestException $requestException) {
             // Log and return empty?
             $this->getLog()->error('Mastodon: Unable to get posts: ' . $uri
                 . ', e: ' . $requestException->getMessage());
             throw new ConfigurationException(__('Unable to download posts'));
         } catch (\Exception $exception) {
-
             // Log and return empty?
             $this->getLog()->error('Mastodon: ' . $exception->getMessage());
             $this->getLog()->debug($exception->getTraceAsString());
