@@ -69,9 +69,9 @@ class MastodonProvider implements WidgetProviderInterface
             // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
             $hashtag = trim($dataProvider->getProperty('hashtag', ''));
             if (!empty($hashtag)) {
-                $uri = rtrim($uri, "/").'/api/v1/timelines/tag/'. trim($hashtag, "#");
+                $uri = rtrim($uri, '/').'/api/v1/timelines/tag/'. trim($hashtag, '#');
             } else {
-                $uri = rtrim($uri, "/").'/api/v1/timelines/public';
+                $uri = rtrim($uri, '/').'/api/v1/timelines/public';
             }
 
             $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: '. json_encode($httpOptions));
