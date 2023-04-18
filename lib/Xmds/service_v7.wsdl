@@ -138,7 +138,9 @@
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
         <part name="fileType" type="xsd:string" />
-        <part name="id" type="xsd:int" />
+        <part name="id" type="xsd:string" />
+        <part name="chunkOffset" type="xsd:double" />
+        <part name="chunkSize" type="xsd:double" />
     </message>
     <message name="GetDependencyResponse">
         <part name="file" type="xsd:base64Binary" />

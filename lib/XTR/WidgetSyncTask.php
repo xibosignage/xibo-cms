@@ -96,6 +96,9 @@ class WidgetSyncTask implements TaskInterface
             try {
                 if ($row !== false) {
                     $widgetId = (int)$row['itemId'];
+
+                    $this->getLogger()->debug('widgetSyncTask: processing widgetId ' . $widgetId);
+
                     $widget = $this->widgetFactory->getById($widgetId);
                     $widget->load();
 
@@ -106,6 +109,8 @@ class WidgetSyncTask implements TaskInterface
                     // This also refreshes any library or external images referenced by the data so that they aren't
                     // considered for removal.
                     if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+                        $this->getLogger()->debug('widgetSyncTask: data provider expected.');
+
                         // Record start time
                         $countWidgets++;
                         $startTime = microtime(true);
@@ -114,12 +119,7 @@ class WidgetSyncTask implements TaskInterface
                         $widgetInterface = $module->getWidgetProviderOrNull();
 
                         // Is the cache key display specific?
-                        $cacheKey = null;
-                        if ($widgetInterface !== null) {
-                            $cacheKey = $widgetInterface->getDataCacheKey(
-                                $module->createDataProvider($widget)
-                            );
-                        }
+                        $cacheKey = $widgetInterface?->getDataCacheKey($module->createDataProvider($widget));
                         if ($cacheKey === null) {
                             $cacheKey = $module->dataCacheKey;
                         }
@@ -129,13 +129,21 @@ class WidgetSyncTask implements TaskInterface
 
                         // We're either assigning all media to all displays, or we're assigning then one by one
                         if ($isDisplaySpecific) {
+                            $this->getLogger()->debug('widgetSyncTask: cache is display specific');
+
                             // We need to run the cache for every display this widget is assigned to.
                             foreach ($this->getDisplays($widget) as $display) {
-                                $mediaIds = $this->cache($module, $widget, $widgetInterface,
-                                    intval($display['displayId']));
+                                $mediaIds = $this->cache(
+                                    $module,
+                                    $widget,
+                                    $widgetInterface,
+                                    intval($display['displayId'])
+                                );
                                 $this->linkDisplays([$display], $mediaIds);
                             }
                         } else {
+                            $this->getLogger()->debug('widgetSyncTask: cache is not display specific');
+
                             // Just a single run will do it.
                             $mediaIds = $this->cache($module, $widget, $widgetInterface, null);
                             $this->linkDisplays($this->getDisplays($widget), $mediaIds);
@@ -144,7 +152,7 @@ class WidgetSyncTask implements TaskInterface
                         // Record end time and aggregate for final total
                         $duration = (microtime(true) - $startTime);
                         $timeCaching = $timeCaching + $duration;
-                        $this->log->debug('Took ' . $duration
+                        $this->log->debug('widgetSyncTask: Took ' . $duration
                             . ' seconds to check and/or cache widgetId ' . $widget->widgetId);
 
                         // Commit so that any images we've downloaded have their cache times updated for the
@@ -156,7 +164,8 @@ class WidgetSyncTask implements TaskInterface
             } catch (GeneralException $xiboException) {
                 // Log and skip to the next layout
                 $this->log->debug($xiboException->getTraceAsString());
-                $this->log->error('Cannot process widget ' . $widgetId . ', E = ' . $xiboException->getMessage());
+                $this->log->error('widgetSyncTask: Cannot process widget ' . $widgetId
+                    . ', E = ' . $xiboException->getMessage());
             }
         }
 

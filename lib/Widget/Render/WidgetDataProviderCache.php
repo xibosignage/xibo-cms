@@ -83,16 +83,18 @@ class WidgetDataProviderCache
 
     /**
      * Decorate this data provider with cache
-     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @param DataProviderInterface $dataProvider
      * @param string $cacheKey
-     * @param \Carbon\Carbon|null $dataModifiedDt The date any associated data was modified.
+     * @param Carbon|null $dataModifiedDt The date any associated data was modified.
+     * @param bool $isLockIfMiss Should the cache be locked if it's a miss? Defaults to true.
      * @return bool
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws GeneralException
      */
     public function decorateWithCache(
         DataProviderInterface $dataProvider,
         string $cacheKey,
-        ?Carbon $dataModifiedDt
+        ?Carbon $dataModifiedDt,
+        bool $isLockIfMiss = true
     ): bool {
         $this->cache = $this->pool->getItem('/widget/html/' . md5($cacheKey));
         $data = $this->cache->get();
