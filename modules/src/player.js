@@ -298,4 +298,51 @@ $(function() {
       xiboIC.lockAllInteractions();
     }
   });
+
+  // Parse out the template with elements.
+  $.each(elements, function(_key, widgetElements) {
+    if (widgetElements?.length > 0) {
+      const $content = $('#content');
+
+      $.each(widgetElements, function(_widgetElemKey, widgetElement) {
+        if (widgetElement?.elements?.length > 0) {
+          $.each(widgetElement.elements, function(_elemKey, element) {
+            // Check if we have template from templateId or module
+            // and set it as the template
+            let $template = null;
+            if ($('#hbs-' + element.id).length > 0) {
+              $template = $('#hbs-' + element.id);
+            }
+
+            let hbs = null;
+
+            // Compile the template if it exists
+            if ($template && $template.length > 0) {
+              hbs = Handlebars.compile($template.html());
+            }
+
+            const elementProperties = {};
+            if (element.properties.length > 0) {
+              // Map properties as key:value pair.
+              $.each(element.properties, function(_idx, property) {
+                if (!elementProperties.hasOwnProperty(property.id)) {
+                  elementProperties[property.id] = property.value;
+                }
+              });
+            }
+
+            if (hbs) {
+              const hbsTemplate = hbs(
+                Object.assign(elementProperties, globalOptions),
+              );
+
+              $content.append($(hbsTemplate).first().xiboElementsRender(
+                Object.assign(elementProperties, element, globalOptions),
+              ).prop('outerHTML'));
+            }
+          });
+        }
+      });
+    }
+  });
 });
