@@ -302,8 +302,8 @@ $(() => {
       // Refresh the designer containers
       lD.refreshEditor(true, true);
 
-      // Load preferences
-      lD.loadPrefs();
+      // TODO: Load preferences (not being used at the moment)
+      // lD.loadPrefs();
     } else {
       // Login Form needed?
       if (res.login) {

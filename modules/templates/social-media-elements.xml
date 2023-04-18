@@ -24,7 +24,7 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Profile Photo</title>
-        <thumbnail>profile-photo</thumbnail>
+        <thumbnail>social-media-profile-photo</thumbnail>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
         <properties>
@@ -99,7 +99,7 @@
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="profile-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/profile-photo.png" />
+            <asset id="social-media-profile-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/social-media-profile-photo.png" />
         </assets>
     </template>
     <template>
@@ -231,7 +231,7 @@
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="social-media-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/social-media-description.png" />
+            <asset id="social-media-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-description.png" />
         </assets>
     </template>
     <template>
@@ -363,7 +363,7 @@
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="social-media-username" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/social-media-username.png" />
+            <asset id="social-media-username" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
         </assets>
     </template>
     <template>
