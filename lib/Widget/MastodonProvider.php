@@ -130,6 +130,9 @@ class MastodonProvider implements WidgetProviderInterface
                 $dataProvider->addItem($mastodon);
             }
 
+            // If we've got data, then set our cache period.
+            $dataProvider->setCacheTtl($dataProvider->getSetting('cachePeriod', 3600));
+
         } catch (RequestException $requestException) {
             // Log and return empty?
             $this->getLog()->error('Mastodon: Unable to get posts: ' . $uri
