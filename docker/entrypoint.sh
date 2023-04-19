@@ -313,7 +313,7 @@ then
     if [ ! "$CMS_ALIAS" == "none" ]
     then
         echo "Setting up CMS alias"
-        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/cms.conf
+        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/000-default.conf
 
         echo "Settings up htaccess"
         /bin/cp /tmp/.htaccess /var/www/cms/web/.htaccess
@@ -374,21 +374,21 @@ sed -i "s/\bTimeout\b .*$/Timeout $CMS_APACHE_TIMEOUT/" /etc/apache2/apache2.con
 # Configure Indexes
 if [ "$CMS_APACHE_OPTIONS_INDEXES" == "true" ]
 then
-  sed -i "s/\-Indexes/\+Indexes/" /etc/apache2/sites-enabled/cms.conf
+  sed -i "s/\-Indexes/\+Indexes/" /etc/apache2/sites-enabled/000-default.conf
 fi
 
 # Configure Apache ServerTokens
 if [ "$CMS_APACHE_SERVER_TOKENS" == "Prod" ]
 then
-  sed -i "s/ServerTokens.*$/ServerTokens Prod/" /etc/apache2/sites-enabled/cms.conf
+  sed -i "s/ServerTokens.*$/ServerTokens Prod/" /etc/apache2/sites-enabled/000-default.conf
 fi
 
 # Configure Apache logging
 if [ "$CMS_APACHE_LOG_REQUEST_TIME" == "true" ]
 then
-  sed -i '/combined/s/^/#/' /etc/apache2/sites-enabled/cms.conf
+  sed -i '/combined/s/^/#/' /etc/apache2/sites-enabled/000-default.conf
 else
-  sed -i '/requesttime/s/^/#/' /etc/apache2/sites-enabled/cms.conf
+  sed -i '/requesttime/s/^/#/' /etc/apache2/sites-enabled/000-default.conf
 fi
 
 # Run CRON in Production mode

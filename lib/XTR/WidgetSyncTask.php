@@ -96,6 +96,9 @@ class WidgetSyncTask implements TaskInterface
             try {
                 if ($row !== false) {
                     $widgetId = (int)$row['itemId'];
+
+                    $this->getLogger()->debug('widgetSyncTask: processing widgetId ' . $widgetId);
+
                     $widget = $this->widgetFactory->getById($widgetId);
                     $widget->load();
 
@@ -106,6 +109,8 @@ class WidgetSyncTask implements TaskInterface
                     // This also refreshes any library or external images referenced by the data so that they aren't
                     // considered for removal.
                     if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+                        $this->getLogger()->debug('widgetSyncTask: data provider expected.');
+
                         // Record start time
                         $countWidgets++;
                         $startTime = microtime(true);
@@ -114,12 +119,7 @@ class WidgetSyncTask implements TaskInterface
                         $widgetInterface = $module->getWidgetProviderOrNull();
 
                         // Is the cache key display specific?
-                        $cacheKey = null;
-                        if ($widgetInterface !== null) {
-                            $cacheKey = $widgetInterface->getDataCacheKey(
-                                $module->createDataProvider($widget)
-                            );
-                        }
+                        $cacheKey = $widgetInterface?->getDataCacheKey($module->createDataProvider($widget));
                         if ($cacheKey === null) {
                             $cacheKey = $module->dataCacheKey;
                         }
@@ -129,13 +129,21 @@ class WidgetSyncTask implements TaskInterface
 
                         // We're either assigning all media to all displays, or we're assigning then one by one
                         if ($isDisplaySpecific) {
+                            $this->getLogger()->debug('widgetSyncTask: cache is display specific');
+
                             // We need to run the cache for every display this widget is assigned to.
                             foreach ($this->getDisplays($widget) as $display) {
-                                $mediaIds = $this->cache($module, $widget, $widgetInterface,
-                                    intval($display['displayId']));
+                                $mediaIds = $this->cache(
+                                    $module,
+                                    $widget,
+                                    $widgetInterface,
+                                    intval($display['displayId'])
+                                );
                                 $this->linkDisplays([$display], $mediaIds);
                             }
                         } else {
+                            $this->getLogger()->debug('widgetSyncTask: cache is not display specific');
+
                             // Just a single run will do it.
                             $mediaIds = $this->cache($module, $widget, $widgetInterface, null);
                             $this->linkDisplays($this->getDisplays($widget), $mediaIds);
@@ -144,7 +152,7 @@ class WidgetSyncTask implements TaskInterface
                         // Record end time and aggregate for final total
                         $duration = (microtime(true) - $startTime);
                         $timeCaching = $timeCaching + $duration;
-                        $this->log->debug('Took ' . $duration
+                        $this->log->debug('widgetSyncTask: Took ' . $duration
                             . ' seconds to check and/or cache widgetId ' . $widget->widgetId);
 
                         // Commit so that any images we've downloaded have their cache times updated for the
@@ -156,14 +164,15 @@ class WidgetSyncTask implements TaskInterface
             } catch (GeneralException $xiboException) {
                 // Log and skip to the next layout
                 $this->log->debug($xiboException->getTraceAsString());
-                $this->log->error('Cannot process widget ' . $widgetId . ', E = ' . $xiboException->getMessage());
+                $this->log->error('widgetSyncTask: Cannot process widget ' . $widgetId
+                    . ', E = ' . $xiboException->getMessage());
             }
         }
 
         // Remove display_media records which have not been touched for a defined period of time.
         $this->removeOldDisplayLinks();
 
-        $this->log->info('Total time spent caching is ' . $timeCaching);
+        $this->log->info('Total time spent caching is ' . $timeCaching . ', synced ' . $countWidgets . ' widgets');
 
         $this->appendRunMessage('Synced ' . $countWidgets . ' widgets');
     }
@@ -216,7 +225,7 @@ class WidgetSyncTask implements TaskInterface
         }
 
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)) {
-            $this->getLogger()->debug('Cache expired, pulling fresh');
+            $this->getLogger()->debug('Cache expired, pulling fresh: key: ' . $cacheKey);
 
             try {
                 if ($widgetInterface !== null) {
@@ -258,7 +267,10 @@ class WidgetSyncTask implements TaskInterface
                 $widgetDataProviderCache->finaliseCache();
             }
         } else {
-            $this->getLogger()->debug('Cache still valid');
+            $this->getLogger()->debug('Cache still valid, key: ' . $cacheKey);
+
+            // Get the existing mediaIds so that we can maintain the links to displays.
+            $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
         }
 
         return $mediaIds;
@@ -284,10 +296,12 @@ class WidgetSyncTask implements TaskInterface
      */
     private function linkDisplays(array $displays, array $mediaIds): void
     {
+        $this->getLogger()->debug('linkDisplays: ' . count($displays) . ' displays, ' . count($mediaIds) . ' media');
+
         $sql = '
-            INSERT INTO `display_media` (displayId, mediaId) 
-                VALUES (:displayId, :mediaId)
-            ON DUPLICATE KEY UPDATE mediaId = mediaId
+            INSERT INTO `display_media` (`displayId`, `mediaId`, `modifiedAt`) 
+                VALUES (:displayId, :mediaId, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE `modifiedAt` = CURRENT_TIMESTAMP
         ';
 
         // TODO: there will be a much more efficient way to do this!
@@ -309,9 +323,9 @@ class WidgetSyncTask implements TaskInterface
      * @param int $days
      * @return void
      */
-    private function removeOldDisplayLinks(int $days = 5)
+    private function removeOldDisplayLinks(int $days = 5): void
     {
-        $sql = 'DELETE FROM `display_media` WHERE modifiedAt < :modifiedAt';
+        $sql = 'DELETE FROM `display_media` WHERE `modifiedAt` < :modifiedAt';
         $this->store->update($sql, [
             'modifiedAt' => Carbon::now()->subDays($days)->format(DateFormatHelper::getSystemFormat()),
         ]);
