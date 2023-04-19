@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,10 +23,12 @@
 namespace Xibo\OAuth;
 
 use Carbon\Carbon;
-use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Encoding\ChainedFormatter;
+use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Token\Builder;
 use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\Traits\AccessTokenTrait;
@@ -51,8 +53,10 @@ class AccessTokenEntity implements AccessTokenEntityInterface
     private function convertToJWT(CryptKey $privateKey)
     {
         $userId = $this->getUserIdentifier();
+        $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
+        $signingKey = Key\InMemory::file($privateKey->getKeyPath());
 
-        return (new Builder())
+        return $tokenBuilder
             ->issuedBy('info@xibosignage.com')
             ->permittedFor($this->getClient()->getIdentifier())
             ->identifiedBy($this->getIdentifier())
@@ -61,7 +65,7 @@ class AccessTokenEntity implements AccessTokenEntityInterface
             ->expiresAt($this->getExpiryDateTime())
             ->relatedTo($userId)
             ->withClaim('scopes', $this->getScopes())
-            ->getToken(new Sha256(), new Key($privateKey->getKeyPath()))
+            ->getToken(new Sha256(), $signingKey)
             ;
     }
 
@@ -70,6 +74,6 @@ class AccessTokenEntity implements AccessTokenEntityInterface
      */
     public function __toString()
     {
-        return (string) $this->convertToJWT($this->privateKey);
+        return $this->convertToJWT($this->privateKey)->toString();
     }
 }

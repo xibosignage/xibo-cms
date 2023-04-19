@@ -384,7 +384,7 @@ class Applications extends Base
                 }
             }
 
-            $scope->selected = $found ? 1 : 0;
+            $scope->setUnmatchedProperty('selected', $found ? 1 : 0);
         }
 
         // Render the view
