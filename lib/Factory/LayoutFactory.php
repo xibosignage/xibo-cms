@@ -539,6 +539,41 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * @param string $type
+     * @param int $id
+     * @return Layout|null
+     * @throws NotFoundException
+     */
+    public function getLinkedFullScreenLayout(string $type, int $id): ?Layout
+    {
+        $layouts = null;
+
+        if ($type === 'media') {
+            $layouts = $this->query(
+                null,
+                [
+                    'mediaId' => $id,
+                    'campaignType' => $type
+                ]
+            );
+        } else if ($type === 'playlist') {
+            $layouts = $this->query(
+                null,
+                [
+                    'playlistId' => $id,
+                    'campaignType' => $type
+                ]
+            );
+        }
+
+        if (count($layouts) <= 0) {
+            return null;
+        }
+
+        return $layouts[0];
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @param null $layout
@@ -983,7 +1018,7 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode['useDuration'];
                 $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
-                $widget->schemaVersion = (int)$mediaNode['schemaVersion'];
+                $widget->schemaVersion = isset($mediaNode['schemaVersion']) ? (int)$mediaNode['schemaVersion'] : 1;
 
                 // Widget from/to dates.
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
@@ -2054,6 +2089,7 @@ class LayoutFactory extends BaseFactory
                         `layout`.userID,
                         `user`.userName as owner,
                         `campaign`.CampaignID,
+                        `campaign`.type,
                         `layout`.status,
                         `layout`.statusMessage,
                         `layout`.enableStat,
@@ -2426,6 +2462,11 @@ class LayoutFactory extends BaseFactory
             } else {
                 $body .= ' AND layout.width >= layout.height ';
             }
+        }
+
+        if ($parsedFilter->getString('campaignType') != '') {
+            $body .= ' AND campaign.type = :type ';
+            $params['type'] = $parsedFilter->getString('campaignType');
         }
 
         // Logged in user view permissions

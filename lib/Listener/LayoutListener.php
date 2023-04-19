@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,6 +28,7 @@ use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
+use Xibo\Event\PlaylistDeleteEvent;
 use Xibo\Event\TagDeleteEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\LayoutFactory;
@@ -73,6 +74,7 @@ class LayoutListener
         $dispatcher->addListener(MediaFullLoadEvent::$NAME, [$this, 'onMediaLoad']);
         $dispatcher->addListener(LayoutOwnerChangeEvent::$NAME, [$this, 'onOwnerChange']);
         $dispatcher->addListener(TagDeleteEvent::$NAME, [$this, 'onTagDelete']);
+        $dispatcher->addListener(PlaylistDeleteEvent::$NAME, [$this, 'onPlaylistDelete']);
         return $this;
     }
 
@@ -105,6 +107,13 @@ class LayoutListener
             }
 
             $layout->save(Layout::$saveOptionsMinimum);
+        }
+
+        // do we have any full screen Layout linked to this Media item?
+        $linkedLayout = $this->layoutFactory->getLinkedFullScreenLayout('media', $media->mediaId);
+
+        if (!empty($linkedLayout)) {
+            $linkedLayout->delete();
         }
     }
 
@@ -200,5 +209,21 @@ class LayoutListener
             'DELETE FROM `lktaglayout` WHERE `lktaglayout`.tagId = :tagId',
             ['tagId' => $event->getTagId()]
         );
+    }
+
+    /**
+     * @param PlaylistDeleteEvent $event
+     * @return void
+     */
+    public function onPlaylistDelete(PlaylistDeleteEvent $event)
+    {
+        $playlist = $event->getPlaylist();
+
+        // do we have any full screen Layout linked to this playlist?
+        $layout = $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId);
+
+        if (!empty($layout)) {
+            $layout->delete();
+        }
     }
 }

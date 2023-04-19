@@ -45,6 +45,8 @@ class Campaign implements \JsonSerializable
     use EntityTrait;
     use TagLinkTrait;
 
+    public static $availableTypes = ['ad', 'list', 'media', 'playlist'];
+
     /**
      * @SWG\Property(description="The Campaign Id")
      * @var int
@@ -58,7 +60,7 @@ class Campaign implements \JsonSerializable
     public $ownerId;
 
     /**
-     * @SWG\Property(description="The type of campaign, either list or ad")
+     * @SWG\Property(description="The type of campaign, either list, ad, playlist or media")
      * @var string
      */
     public $type;
@@ -466,7 +468,7 @@ class Campaign implements \JsonSerializable
      */
     public function validate()
     {
-        if ($this->type !== 'list' && $this->type !== 'ad') {
+        if (!in_array($this->type, self::$availableTypes)) {
             throw new InvalidArgumentException(__('Invalid type'), 'type');
         }
 

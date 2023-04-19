@@ -57,6 +57,9 @@ class Schedule implements \JsonSerializable
     public static $INTERRUPT_EVENT = 4;
     public static $CAMPAIGN_EVENT = 5;
     public static $ACTION_EVENT = 6;
+
+    public static $MEDIA_EVENT = 7;
+    public static $PLAYLIST_EVENT = 8;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -544,7 +547,9 @@ class Schedule implements \JsonSerializable
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT ||
             $this->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
             $this->eventTypeId == Schedule::$OVERLAY_EVENT ||
-            $this->eventTypeId == Schedule::$INTERRUPT_EVENT
+            $this->eventTypeId == Schedule::$INTERRUPT_EVENT ||
+            $this->eventTypeId == Schedule::$MEDIA_EVENT ||
+            $this->eventTypeId == Schedule::$PLAYLIST_EVENT
         ) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId)) {
@@ -1716,5 +1721,19 @@ class Schedule implements \JsonSerializable
         }
 
         return $changedProperties;
+    }
+
+    public static function getEventTypes()
+    {
+        return [
+            ['eventTypeId' => self::$LAYOUT_EVENT, 'eventTypeName' => __('Layout')],
+            ['eventTypeId' => self::$COMMAND_EVENT, 'eventTypeName' => __('Command')],
+            ['eventTypeId' => self::$OVERLAY_EVENT, 'eventTypeName' => __('Overlay Layout')],
+            ['eventTypeId' => self::$INTERRUPT_EVENT, 'eventTypeName' => __('Interrupt Layout')],
+            ['eventTypeId' => self::$CAMPAIGN_EVENT, 'eventTypeName' => __('Campaign')],
+            ['eventTypeId' => self::$ACTION_EVENT, 'eventTypeName' => __('Action')],
+            ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Library Media')],
+            ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Playlist')],
+        ];
     }
 }

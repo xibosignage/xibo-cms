@@ -477,6 +477,17 @@ class MediaFactory extends BaseFactory
         return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited, 'excludeDynamicPlaylistMedia' => $excludeDynamicPlaylistMedia]);
     }
 
+    /**
+     * Get Media by campaignId
+     * @param int $campaignId
+     * @return Media[]
+     * @throws NotFoundException
+     */
+    public function getByCampaignId($campaignId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
+    }
+
     public function getForMenuBoards()
     {
         return $this->query(null, ['onlyMenuBoardAllowed' => 1]);
@@ -781,6 +792,26 @@ class MediaFactory extends BaseFactory
             }
 
             $params['layoutId'] = $sanitizedFilter->getInt('layoutId');
+        }
+
+        if ($sanitizedFilter->getInt('campaignId') !== null) {
+            $body .= '
+                AND media.mediaId IN (
+                    SELECT `lkwidgetmedia`.mediaId
+                      FROM region
+                        INNER JOIN playlist
+                        ON playlist.regionId = region.regionId
+                        INNER JOIN lkplaylistplaylist
+                        ON lkplaylistplaylist.parentId = playlist.playlistId
+                        INNER JOIN widget
+                        ON widget.playlistId = lkplaylistplaylist.childId
+                        INNER JOIN lkwidgetmedia
+                        ON widget.widgetId = lkwidgetmedia.widgetId
+                        INNER JOIN `lkcampaignlayout` lkcl
+                        ON lkcl.layoutid = region.layoutid
+                        AND lkcl.CampaignID = :campaignId)';
+
+            $params['campaignId'] = $sanitizedFilter->getInt('campaignId');
         }
 
         // Tags
