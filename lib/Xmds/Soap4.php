@@ -277,7 +277,7 @@ class Soap4 extends Soap
 
         // Audit our return
         $this->getLog()->debug($returnXml);
-        
+
         // Phone Home?
         $this->phoneHome();
 
@@ -365,11 +365,13 @@ class Soap4 extends Soap
         try {
             if ($isDependency || ($fileType == 'media' && $fileId < 0)) {
                 // Validate the nonce
+                // If we are an older player downloading as media using a faux fileId, then this lookup
+                // should be performed against the `itemId`
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndDependency(
                     $this->display->displayId,
                     $fileType,
                     $fileId,
-                    ($fileType == 'media' && $fileId < 0)
+                    !($fileType == 'media' && $fileId < 0)
                 );
 
                 // File is valid, see if we can return it.
