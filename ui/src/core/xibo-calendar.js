@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -660,7 +660,7 @@ var setupScheduleForm = function(dialog) {
 
                 XiboSubmitResponse(xhr, form);
 
-                if (xhr.success) {
+                if (xhr.success && calendar !== undefined) {
                     // Reload the Calendar
                     calendar.options['clearCache'] = true;
                     calendar.view();
@@ -718,7 +718,6 @@ var deleteRecurringScheduledEvent = function(id, eventStart, eventEnd) {
 }
 
 var beforeSubmitScheduleForm = function(form) {
-
     var checkboxes = form.find('[name="reminder_isEmail[]"]');
 
     checkboxes.each(function (index) {
@@ -726,9 +725,37 @@ var beforeSubmitScheduleForm = function(form) {
     });
 
     $('[data-toggle="popover"]').popover();
+    const eventTypeId = form.find('#eventTypeId').val();
+    if (eventTypeId == 7 || eventTypeId == 8) {
+        let data = {
+            id: eventTypeId == 7 ? form.find('#mediaId').val() : form.find('#playlistId').val(),
+            type: eventTypeId == 7 ? 'media' : 'playlist',
+            layoutDuration: eventTypeId == 7 ? form.find('#layoutDuration').val() : null,
+            resolutionId: form.find('#resolutionId').select2('data').length > 0 ? form.find('#resolutionId').select2('data')[0].id : null,
+            backgroundColor: form.find('#backgroundColor').val()
+        }
 
-    form.submit();
-
+        // create or fetch Full screen Layout linked to this media/playlist
+        $.ajax({
+            type: 'POST',
+            url: form.data().fullScreenUrl,
+            cache: false,
+            dataType: 'json',
+            data: data,
+        })
+          .then(
+            (response) => {
+                if (!response.success) {
+                    SystemMessage((response.message == '') ? translation.failure : response.message, false);
+                }
+                form.find('#fullScreenCampaignId').val(response.data.campaignId);
+                form.submit();
+            }, (xhr) => {
+                SystemMessage(xhr.responseText, false);
+            })
+    } else {
+        form.submit();
+    }
 };
 
 /**
@@ -812,25 +839,32 @@ var processScheduleFormElements = function(el) {
         case 'eventTypeId':
             console.log('Process: eventTypeId, val = ' + fieldVal);
 
-            var layoutControlDisplay = (fieldVal == 2 || fieldVal == 6) ? "none" : "";
-            var endTimeControlDisplay = (fieldVal == 2) ? "none" : "";
-            var startTimeControlDisplay = (fieldVal == 2) ? "" : "";
-            var dayPartControlDisplay = (fieldVal == 2) ? "none" : "";
-            var commandControlDisplay = (fieldVal == 2) ? "" : "none";
-            var scheduleSyncControlDisplay = (fieldVal == 1) ? "" : "none";
-            var interruptControlDisplay = (fieldVal == 4) ? "" : "none";
-            var actionControlDisplay = (fieldVal == 6) ? "" : "none";
+            var layoutControlDisplay =
+              (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8) ? 'none' : '';
+            var endTimeControlDisplay = (fieldVal == 2) ? 'none' : '';
+            var startTimeControlDisplay = (fieldVal == 2) ? '' : '';
+            var dayPartControlDisplay = (fieldVal == 2) ? 'none' : '';
+            var commandControlDisplay = (fieldVal == 2) ? '' : 'none';
+            var scheduleSyncControlDisplay = (fieldVal == 1) ? '' : 'none';
+            var interruptControlDisplay = (fieldVal == 4) ? '' : 'none';
+            var actionControlDisplay = (fieldVal == 6) ? '' : 'none';
             var maxPlaysControlDisplay = (fieldVal == 2 || fieldVal == 6) ? 'none' : '';
+            var mediaScheduleControlDisplay = (fieldVal == 7) ? '' : 'none';
+            var playlistScheduleControlDisplay = (fieldVal == 8) ? '' : 'none';
+            var playlistMediaScheduleControlDisplay = (fieldVal == 7 || fieldVal == 8) ? '' : 'none'
 
-            $(".layout-control").css('display', layoutControlDisplay);
-            $(".endtime-control").css('display', endTimeControlDisplay);
-            $(".starttime-control").css('display', startTimeControlDisplay);
-            $(".day-part-control").css('display', dayPartControlDisplay);
-            $(".command-control").css('display', commandControlDisplay);
-            $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
-            $(".interrupt-control").css('display', interruptControlDisplay);
-            $(".action-control").css('display', actionControlDisplay);
+            $('.layout-control').css('display', layoutControlDisplay);
+            $('.endtime-control').css('display', endTimeControlDisplay);
+            $('.starttime-control').css('display', startTimeControlDisplay);
+            $('.day-part-control').css('display', dayPartControlDisplay);
+            $('.command-control').css('display', commandControlDisplay);
+            $('.sync-schedule-control').css('display', scheduleSyncControlDisplay);
+            $('.interrupt-control').css('display', interruptControlDisplay);
+            $('.action-control').css('display', actionControlDisplay);
             $('.max-plays-control').css('display', maxPlaysControlDisplay);
+            $('.media-control').css('display', mediaScheduleControlDisplay);
+            $('.playlist-control').css('display', playlistScheduleControlDisplay);
+            $('.media-playlist-control').css('display', playlistMediaScheduleControlDisplay);
 
             // action event type
             if (fieldVal === 6) {
@@ -866,6 +900,8 @@ var processScheduleFormElements = function(el) {
             // Change the help text and label of the campaignId dropdown
             var $campaignSelect = el.closest("form").find("#campaignId");
             var $layoutControl = $(".layout-control");
+            var $resolutionControl = $('.resolution-control');
+            var $resolutionSelect = el.closest('form').find('#resolutionId');
             var searchIsLayoutSpecific = -1;
 
             if (fieldVal === "1" || fieldVal === "3" || fieldVal === "4") {
@@ -877,12 +913,25 @@ var processScheduleFormElements = function(el) {
                 $layoutControl.children("div").children("small.form-text.text-muted").text($campaignSelect.data("transLayoutHelpText"));
 
             } else {
+
                 // Load Campaigns only
                 searchIsLayoutSpecific = 0;
 
                 // Change Label and Help text when Campaign event type is selected
                 $layoutControl.children("label").text($campaignSelect.data("transCampaign"));
                 $layoutControl.children("div").children("small.form-text.text-muted").text($campaignSelect.data("transCampaignHelpText"));
+            }
+
+            if (fieldVal == 7) {
+                $resolutionControl
+                  .children('div')
+                  .children('small.form-text.text-muted')
+                  .text($resolutionSelect.data('transMediaHelpText'))
+            } else if (fieldVal == 8) {
+                $resolutionControl
+                  .children('div')
+                  .children('small.form-text.text-muted')
+                  .text($resolutionSelect.data('transPlaylistHelpText'))
             }
 
             // Set the search criteria
@@ -1450,4 +1499,23 @@ var setupSelectForSchedule = function (dialog) {
             }
         }
     });
+
+    $('#mediaId, #playlistId', dialog).on('select2:select', function(event) {
+        let hasFullScreenLayout = false;
+        if (event.params.data.data !== undefined) {
+            hasFullScreenLayout = event.params.data.data[0].hasFullScreenLayout;
+        } else if (event.params.data.hasFullScreenLayout !== undefined) {
+            hasFullScreenLayout = event.params.data.hasFullScreenLayout;
+        }
+
+        if (hasFullScreenLayout) {
+            $('.no-full-screen-layout').css('display', 'none')
+        } else {
+            if ($(this).attr('id') === 'mediaId') {
+                $('.no-full-screen-layout').css('display', '')
+            } else {
+                $('.no-full-screen-layout.media-playlist-control').css('display', '')
+            }
+        }
+    })
 };
