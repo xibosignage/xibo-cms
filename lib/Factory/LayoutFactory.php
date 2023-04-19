@@ -983,7 +983,7 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode['useDuration'];
                 $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
-                $widget->schemaVersion = (int)$mediaNode['schemaVersion'];
+                $widget->schemaVersion = (int)$mediaNode['schemaVersion']; // Todo we get an `undefined array key` error here
 
                 // Widget from/to dates.
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
@@ -992,15 +992,6 @@ class LayoutFactory extends BaseFactory
                 $this->setWidgetExpiryDatesOrDefault($widget);
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
-
-                // Does this module type exist?
-                if (!array_key_exists($widget->type, $modules)) {
-                    $this->getLog()->error(sprintf('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules))));
-                    continue;
-                }
-
-                /* @var \Xibo\Entity\Module $module */
-                $module = $modules[$widget->type];
 
                 //
                 // Get all widget options
@@ -1035,6 +1026,32 @@ class LayoutFactory extends BaseFactory
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
                     }
+                }
+
+                $widgetProperties = [];
+                foreach ($widget->widgetOptions as $option) {
+                    if (is_numeric($option->value)) {
+                        $widgetProperties[] = $option->option.'=='. $option->value;
+                    } else {
+                        $widgetProperties[] = $option->option.'===' . '\'' . $option->value. '\'';
+                    }
+                }
+
+                $isTestCondition = true;
+                try {
+                    $module = $this->moduleFactory->getByType($widget->type, $isTestCondition, $widgetProperties);
+                } catch (NotFoundException $notFoundException) {
+                   // var_dump('Module not found for widget: ');
+                    $this->getLog()->error('Module not found for widget: ' . $widget->type);
+                    continue;
+                }
+
+                $widget->type = $module->type;
+
+                // Does this module type exist?
+                if (!array_key_exists($widget->type, $modules)) {
+                    $this->getLog()->error(sprintf('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules))));
+                    continue;
                 }
 
                 // convert old sub-playlist Widget options to the new way we handle them
@@ -1361,6 +1378,29 @@ class LayoutFactory extends BaseFactory
 
         $widgets = $layout->getAllWidgets();
         $this->getLog()->debug('Layout has ' . count($widgets) . ' widgets');
+
+        // Go through all the widgets and upgrade
+        foreach ($widgets as $widget) {
+            // Load the widget
+            $widget->load();
+
+            $module = $this->moduleFactory->getByType($widget->type);
+            if ($module->isWidgetCompatibilityAvailable()) {
+                // Grab a widget compatibility interface, if there is one
+                $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
+                if ($widgetCompatibilityInterface !== null) {
+                    try {
+                        $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
+                        if ($widget->schemaVersion == 1) {
+                            $widget->schemaVersion = 2;
+                        }
+                        $widget->save(['alwaysUpdate'=>true]);
+                    } catch (\Exception $e) {
+                        $this->getLog()->error('Error upgrading widget '. $e->getMessage());
+                    }
+                }
+            }
+        }
 
         $this->getLog()->debug('Process mapping.json file.');
 

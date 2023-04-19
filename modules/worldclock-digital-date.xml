@@ -27,7 +27,7 @@
     <compatibilityClass>\Xibo\Widget\Compatibility\WorldClockWidgetCompatibility</compatibilityClass>
     <type>worldclock-digital-date</type>
     <group id="worldclock" icon="world">World Clock</group>
-    <legacyType condition="templateId == 'worldclock2'">worldclock</legacyType>
+    <legacyType condition="templateId==='worldclock2'">worldclock</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>

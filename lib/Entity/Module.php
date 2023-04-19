@@ -28,6 +28,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Widget\Definition\LegacyType;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -74,7 +75,7 @@ class Module implements \JsonSerializable
 
     /**
      * @SWG\Property(description="Legacy type codes for this module")
-     * @var string[]
+     * @var LegacyType[]
      */
     public $legacyTypes;
 

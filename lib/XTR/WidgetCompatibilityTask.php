@@ -100,11 +100,8 @@ class WidgetCompatibilityTask implements TaskInterface
 
                 try {
                     // Get the layout of the widget and set it to rebuild.
-                    $playlist = $this->playlistFactory->getById($widget->playlistId)[0];
-                    if (!in_array($playlist->layoutId, $this->layoutCache)) {
-                        $playlist->notifyLayouts();
-                        $this->layoutCache[] = $playlist->layoutId;
-                    }
+                    $playlist = $this->playlistFactory->getById($widget->playlistId);
+                    $playlist->notifyLayouts();
                 } catch (\Exception $e) {
                     $this->log->error('Failed to set layout rebuild for widgetId: ' . $widget->widgetId .
                         ', message: ' . $e->getMessage());

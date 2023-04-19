@@ -267,7 +267,7 @@ class ModuleFactory extends BaseFactory
      * @return Module
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getByType(string $type): Module
+    public function getByType(string $type, bool $isTestCondition = false, array $properties = []): Module
     {
         $modules = $this->load();
         usort($modules, function ($a, $b) {
@@ -286,11 +286,18 @@ class ModuleFactory extends BaseFactory
         foreach ($modules as $module) {
             // get the name of the legacytypes
             $legacyTypes = [];
+            $legacyConditions = [];
             if (count($module->legacyTypes) > 0) {
                 $legacyTypes = array_column($module->legacyTypes, 'name');
+                $legacyConditions = array_column($module->legacyTypes, 'condition');
             }
+
             if (in_array($type, $legacyTypes)) {
-                return $module;
+                foreach ($properties as $value) {
+                    if (in_array($value, $legacyConditions)) {
+                        return $module;
+                    }
+                }
             }
         }
 
