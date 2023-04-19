@@ -122,7 +122,7 @@
           searchDelay: 3000,
           order: [[0, 'desc']],
           ajax: {
-            url: '{{ url_for("schedule.grid.data") }}',
+            url: '{{ url_for("schedule.search") }}',
             data: function (d) {
               $.extend(d, $("#schedule-grid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
             }
