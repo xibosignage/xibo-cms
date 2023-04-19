@@ -88,7 +88,7 @@ $app->post('/tfa', ['\Xibo\Controller\Login' , 'twoFactorAuthValidate'])->setNam
  *  description="Schedule"
  * )
  */
-$app->get('/schedule/grid/data', ['\Xibo\Controller\Schedule','grid'])->setName('schedule.grid.data');
+$app->get('/schedule', ['\Xibo\Controller\Schedule','grid'])->setName('schedule.search');
 $app->get('/schedule/data/events', ['\Xibo\Controller\Schedule','eventData'])->setName('schedule.calendar.data');
 $app->get('/schedule/{id}/events', ['\Xibo\Controller\Schedule','eventList'])->setName('schedule.events');
 

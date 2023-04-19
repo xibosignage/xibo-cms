@@ -27,6 +27,7 @@ use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Parsedown;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -3259,7 +3260,17 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    public function createFullScreenLayout(Request $request, Response $response)
+    /**
+     * Create a Layout with full screen Region with Media/Playlist specific Widget
+     * This is called as a first step when scheduling Media/Playlist eventType
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function createFullScreenLayout(Request $request, Response $response): Response|ResponseInterface
     {
         $params = $this->getSanitizer($request->getParams());
         $type = $params->getString('type');
@@ -3268,7 +3279,7 @@ class Layout extends Base
         $playlistItems = [];
 
         if (empty($params->getInt('id'))) {
-            throw new InvalidArgumentException('Please select ' . ucfirst($type));
+            throw new InvalidArgumentException(sprintf(__('Please select %s'), ucfirst($type)));
         }
 
         if ($type === 'media') {
