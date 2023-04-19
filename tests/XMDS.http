@@ -100,7 +100,7 @@ Content-Type: application/xml
     <tns:GetData>
       <serverKey xsi:type="xsd:string">{{serverKey}}</serverKey>
       <hardwareKey xsi:type="xsd:string">{{hardwareKey}}</hardwareKey>
-      <widgetId xsi:type="xsd:int">21</widgetId>
+      <widgetId xsi:type="xsd:int">{{testWidgetId}}</widgetId>
     </tns:GetData>
   </soap:Body>
 </soap:Envelope>
