@@ -47,6 +47,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
@@ -1451,6 +1452,7 @@ class Layout extends Base
             'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
+            'campaignType' => 'list',
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
@@ -3334,6 +3336,7 @@ class Layout extends Base
 
         $layout->setUnmatchedProperty('type', $type);
         $layout->autoApplyTransitions = 0;
+        $layout->schemaVersion = Environment::$XLF_VERSION;
         $layout->folderId = ($type === 'media') ? $media->folderId : $playlist->folderId;
 
         $layout->save();
