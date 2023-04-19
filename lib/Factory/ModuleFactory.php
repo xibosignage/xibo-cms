@@ -264,10 +264,11 @@ class ModuleFactory extends BaseFactory
      * Get module by Type
      * this should return the first module enabled by the type specified.
      * @param string $type
+     * @param array $properties
      * @return Module
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getByType(string $type, bool $isTestCondition = false, array $properties = []): Module
+    public function getByType(string $type, array $properties = []): Module
     {
         $modules = $this->load();
         usort($modules, function ($a, $b) {
@@ -298,6 +299,8 @@ class ModuleFactory extends BaseFactory
                         return $module;
                     }
                 }
+
+                return $module;
             }
         }
 

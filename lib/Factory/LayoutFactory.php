@@ -1037,9 +1037,8 @@ class LayoutFactory extends BaseFactory
                     }
                 }
 
-                $isTestCondition = true;
                 try {
-                    $module = $this->moduleFactory->getByType($widget->type, $isTestCondition, $widgetProperties);
+                    $module = $this->moduleFactory->getByType($widget->type, $widgetProperties);
                 } catch (NotFoundException $notFoundException) {
                    // var_dump('Module not found for widget: ');
                     $this->getLog()->error('Module not found for widget: ' . $widget->type);
@@ -1379,7 +1378,7 @@ class LayoutFactory extends BaseFactory
         $widgets = $layout->getAllWidgets();
         $this->getLog()->debug('Layout has ' . count($widgets) . ' widgets');
 
-        // Go through all the widgets and upgrade
+        // Go through all the widgets and upgrade from v3 to v4
         foreach ($widgets as $widget) {
             // Load the widget
             $widget->load();
