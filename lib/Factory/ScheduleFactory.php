@@ -298,6 +298,24 @@ class ScheduleFactory extends BaseFactory
         $entries = [];
         $params = [];
 
+        if (is_array($sortOrder)) {
+            $newSortOrder = [];
+            foreach ($sortOrder as $sort) {
+                if ($sort == '`recurringEvent`') {
+                    $newSortOrder[] = '`recurrence_type`';
+                    continue;
+                }
+
+                if ($sort == '`recurringEvent` DESC') {
+                    $newSortOrder[] = '`recurrence_type` DESC';
+                    continue;
+                }
+
+                $newSortOrder[] = $sort;
+            }
+            $sortOrder = $newSortOrder;
+        }
+
         $select = '
         SELECT `schedule`.eventId, 
             `schedule`.eventTypeId,
@@ -486,13 +504,18 @@ class ScheduleFactory extends BaseFactory
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder)) {
+        if ($parsedFilter->getInt('gridFilter') === 1 && $sortOrder === null) {
+            $order = ' ORDER BY
+                            CASE WHEN `schedule`.fromDt = 0 THEN 0
+                                 WHEN `schedule`.recurrence_type <> \'\' THEN 1
+                                 ELSE 2 END,
+                            eventId';
+        } else if (is_array($sortOrder) && !empty($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
         }
 
         // Paging
         $limit = '';
-        // Paging
         if ($parsedFilter->hasParam('start') && $parsedFilter->hasParam('length')) {
             $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0])
                 . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
