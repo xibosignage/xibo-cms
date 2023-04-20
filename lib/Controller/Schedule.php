@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ScheduleReminder;
@@ -824,7 +825,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
+     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
      *      type="integer",
      *      required=true
      *  ),
@@ -832,6 +833,13 @@ class Schedule extends Base
      *      name="campaignId",
      *      in="formData",
      *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="fullScreenCampaignId",
+     *      in="formData",
+     *      description="For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event. This needs to be the Layout created with layout/fullscreen function",
      *      type="integer",
      *      required=false
      *  ),
@@ -1980,6 +1988,11 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Return Schedule eventTypeId based on the grid the requests is coming from
+     * @param $from
+     * @return int
+     */
     private function getEventTypeId($from)
     {
         return match ($from) {
@@ -1990,6 +2003,14 @@ class Schedule extends Base
         };
     }
 
+    /**
+     * Schedule grid page view
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     */
     public function gridPage(Request $request, Response $response)
     {
         // Call to render the template
@@ -2000,6 +2021,79 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Generates the Schedule events grid
+     *
+     * @SWG\Get(
+     *  path="/schedule",
+     *  operationId="scheduleSearch",
+     *  tags={"schedule"},
+     *  @SWG\Parameter(
+     *      name="eventTypeId",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Filter grid by eventTypeId. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      required=false,
+     *      type="string",
+     *      description="From Date in Y-m-d H:i:s format"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      required=false,
+     *      type="string",
+     *      description="To Date in Y-m-d H:i:s format"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="geoAware",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Flag (0-1), whether to return events using Geo Location"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="recurring",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Flag (0-1), whether to return Recurring events"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Filter events by specific campaignId"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayGroupIds",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      description="Filter events by an array of Display Group Ids"
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Schedule")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
     public function grid(Request $request, Response $response)
     {
         $params = $this->getSanitizer($request->getParams());
@@ -2225,6 +2319,11 @@ class Schedule extends Base
         return json_encode($geoJson);
     }
 
+    /**
+     * Check if this is event is using full screen schedule with Media or Playlist
+     * @param $eventTypeId
+     * @return bool
+     */
     private function isFullScreenSchedule($eventTypeId)
     {
         return in_array($eventTypeId, [\Xibo\Entity\Schedule::$MEDIA_EVENT, \Xibo\Entity\Schedule::$PLAYLIST_EVENT]);

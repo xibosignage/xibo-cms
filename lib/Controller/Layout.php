@@ -3263,6 +3263,58 @@ class Layout extends Base
     /**
      * Create a Layout with full screen Region with Media/Playlist specific Widget
      * This is called as a first step when scheduling Media/Playlist eventType
+     * @SWG\Post(
+     *  path="/layout/fullscreen",
+     *  operationId="layoutAddFullScreen",
+     *  tags={"layout"},
+     *  summary="Add a Full Screen Layout",
+     *  description="Add a new full screen Layout with specified Media/Playlist",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="formData",
+     *      description="The Media or Playlist ID that should be added to this Layout",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The type of Layout to be created = media or playlist",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="formData",
+     *      description="The Id of the resolution for this Layout, defaults to 1080p for playlist and closest resolution match for Media",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this Layout. Default is black #000",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="layoutDuration",
+     *      in="formData",
+     *      description="Use with media type, to specify the duration this Media should play in one loop",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @return Response|ResponseInterface
