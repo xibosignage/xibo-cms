@@ -3,7 +3,8 @@
         <li class="sidebar-main"><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
 
         {% if currentUser.featureEnabled("schedule.view") %}
-            <li class="sidebar-list"><a href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a></li>
+            <li class="sidebar-list"><a href="{{ url_for("schedule.view") }}">{% trans "Calendar" %}</a></li>
+            <li class="sidebar-list"><a href="{{ url_for("schedule.grid.view") }}">{% trans "Schedule" %}</a></li>
         {% endif %}
 
         {% if currentUser.featureEnabled("daypart.view") %}

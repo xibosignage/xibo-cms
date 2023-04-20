@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -87,6 +87,10 @@ $app->get('/login/ping', ['\Xibo\Controller\Login','PingPong'])->setName('ping')
 $app->get('/schedule/view', ['\Xibo\Controller\Schedule','displayPage'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.view']))
     ->setName('schedule.view');
+
+$app->get('/schedule/grid/view', ['\Xibo\Controller\Schedule','gridPage'])
+    ->add(new FeatureAuth($app->getContainer(), ['schedule.view']))
+    ->setName('schedule.grid.view');
 
 $app->get('/schedule/form/add', ['\Xibo\Controller\Schedule','addForm'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.add']))

@@ -331,6 +331,11 @@ class Playlist extends Base
                 }
             }
 
+
+            if ($sanitizedParams->getCheckbox('fullScreenScheduleCheck')) {
+                $playlist->setUnmatchedProperty('hasFullScreenLayout', $this->hasFullScreenLayout($playlist));
+            }
+
             if ($this->isApi($request)) {
                 continue;
             }
@@ -510,6 +515,22 @@ class Playlist extends Base
                     'url' => $this->urlFor($request, 'playlist.usage.form', ['id' => $playlist->playlistId]),
                     'text' => __('Usage Report')
                 );
+            }
+
+            // Schedule Now
+            if ($this->getUser()->featureEnabled('schedule.now')
+                && ($this->getUser()->checkEditable($playlist)
+                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
+            ) {
+                $playlist->buttons[] = [
+                    'id' => 'playlist_button_schedulenow',
+                    'url' => $this->urlFor(
+                        $request,
+                        'schedule.now.form',
+                        ['id' => $playlist->playlistId, 'from' => 'Playlist']
+                    ),
+                    'text' => __('Schedule Now')
+                ];
             }
         }
 
@@ -1897,5 +1918,15 @@ class Playlist extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Check if we already have a full screen Layout for this Playlist
+     * @param \Xibo\Entity\Playlist $playlist
+     * @return bool
+     */
+    private function hasFullScreenLayout(\Xibo\Entity\Playlist $playlist): bool
+    {
+        return !empty($this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId));
     }
 }

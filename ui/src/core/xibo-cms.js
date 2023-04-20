@@ -157,6 +157,7 @@ function XiboInitialise(scope, options) {
         $(this).find('.XiboFilter form input').on('keyup', filterRefresh);
         $(this).find('.XiboFilter form input[type="checkbox"]').on('change', filterRefresh);
         $(this).find('.XiboFilter form select').on('change', filterRefresh);
+        $(this).find('.XiboFilter form input.dateControl').on('change', filterRefresh);
 
         // Folder navigation relies on triggering the change event on this hidden field.
         $(this).find('.XiboFilter form #folderId').on('change', filterRefresh);
@@ -3006,6 +3007,13 @@ function makePagedSelect(element, parent) {
 
                     if ($element.data("thumbnail") !== undefined) {
                         result.thumbnail = el[$element.data("thumbnail")];
+                    }
+
+                    if ($element.data('additionalProperty') !== undefined) {
+                        const additionalProperties = $element.data('additionalProperty').split(',');
+                        $.each(additionalProperties, function(index, property) {
+                            result[property] = el[property];
+                        })
                     }
 
                     results.push(result);

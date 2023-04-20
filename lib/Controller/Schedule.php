@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ScheduleReminder;
@@ -32,6 +33,8 @@ use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
@@ -92,6 +95,8 @@ class Schedule extends Base
 
     /** @var  DayPartFactory */
     private $dayPartFactory;
+    private MediaFactory $mediaFactory;
+    private PlaylistFactory $playlistFactory;
 
     /**
      * Set common dependencies.
@@ -107,8 +112,20 @@ class Schedule extends Base
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
 
-    public function __construct($session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
-    {
+    public function __construct(
+        $session,
+        $scheduleFactory,
+        $displayGroupFactory,
+        $campaignFactory,
+        $commandFactory,
+        $displayFactory,
+        $layoutFactory,
+        $dayPartFactory,
+        $scheduleReminderFactory,
+        $scheduleExclusionFactory,
+        MediaFactory $mediaFactory,
+        PlaylistFactory $playlistFactory
+    ) {
         $this->session = $session;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -119,6 +136,8 @@ class Schedule extends Base
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
         $this->scheduleExclusionFactory = $scheduleExclusionFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     /**
@@ -730,12 +749,18 @@ class Schedule extends Base
     {
         // Get the display groups added to the session (if there are some)
         $displayGroupIds = $this->session->get('displayGroupIds');
+
+        if (!is_array($displayGroupIds)) {
+            $displayGroupIds = [];
+        }
+
         $displayGroups = [];
 
         if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
-                if ($displayGroupId == -1)
+                if ($displayGroupId == -1) {
                     continue;
+                }
 
                 $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
@@ -759,7 +784,8 @@ class Schedule extends Base
             'help' => $this->getHelp()->link('Schedule', 'Add'),
             'reminders' => [],
             'defaultLat' => $defaultLat,
-            'defaultLong' => $defaultLong
+            'defaultLong' => $defaultLong,
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
         ]);
 
         return $this->render($request, $response);
@@ -799,7 +825,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
+     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
      *      type="integer",
      *      required=true
      *  ),
@@ -807,6 +833,13 @@ class Schedule extends Base
      *      name="campaignId",
      *      in="formData",
      *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="fullScreenCampaignId",
+     *      in="formData",
+     *      description="For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event. This needs to be the Layout created with layout/fullscreen function",
      *      type="integer",
      *      required=false
      *  ),
@@ -986,7 +1019,9 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->createEmpty();
         $schedule->userId = $this->getUser()->userId;
         $schedule->eventTypeId = $sanitizedParams->getInt('eventTypeId');
-        $schedule->campaignId = $sanitizedParams->getInt('campaignId');
+        $schedule->campaignId = $this->isFullScreenSchedule($schedule->eventTypeId)
+                ? $sanitizedParams->getInt('fullScreenCampaignId')
+                : $sanitizedParams->getInt('campaignId');
         $schedule->commandId = $sanitizedParams->getInt('commandId');
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
@@ -1228,6 +1263,16 @@ class Schedule extends Base
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
+        $media = null;
+        $playlist = null;
+        if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
+            if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT) {
+                $media = $this->mediaFactory->getByCampaignId($schedule->campaignId)[0];
+            } else if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$PLAYLIST_EVENT) {
+                $playlist = $this->playlistFactory->getByCampaignId($schedule->campaignId)[0];
+            }
+        }
+
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
@@ -1247,6 +1292,9 @@ class Schedule extends Base
             'recurringEvent' => ($schedule->recurrenceType != '') ? true : false,
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
+            'media' => $media,
+            'playlist' => $playlist
         ]);
 
         return $this->render($request, $response);
@@ -1926,14 +1974,210 @@ class Schedule extends Base
     {
         $this->getState()->template = 'schedule-form-now';
         $this->getState()->setData([
-            'eventTypeId' => (($from == 'Campaign') ? \Xibo\Entity\Schedule::$CAMPAIGN_EVENT : \Xibo\Entity\Schedule::$LAYOUT_EVENT),
+            'eventTypeId' => $this->getEventTypeId($from),
             'campaign' => (($from == 'Campaign' || $from == 'Layout') ? $this->campaignFactory->getById($id) : null),
             'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
             'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
             'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
+            'media' => (($from === 'Library') ? $this->mediaFactory->getById($id) : null),
+            'playlist' => (($from === 'Playlist') ? $this->playlistFactory->getById($id) : null),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Return Schedule eventTypeId based on the grid the requests is coming from
+     * @param $from
+     * @return int
+     */
+    private function getEventTypeId($from)
+    {
+        return match ($from) {
+            'Campaign' => \Xibo\Entity\Schedule::$CAMPAIGN_EVENT,
+            'Library' => \Xibo\Entity\Schedule::$MEDIA_EVENT,
+            'Playlist' => \Xibo\Entity\Schedule::$PLAYLIST_EVENT,
+            default => \Xibo\Entity\Schedule::$LAYOUT_EVENT
+        };
+    }
+
+    /**
+     * Schedule grid page view
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     */
+    public function gridPage(Request $request, Response $response)
+    {
+        // Call to render the template
+        $this->getState()->template = 'schedule-grid-page';
+        $this->getState()->setData([
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes()
+        ]);
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Generates the Schedule events grid
+     *
+     * @SWG\Get(
+     *  path="/schedule",
+     *  operationId="scheduleSearch",
+     *  tags={"schedule"},
+     *  @SWG\Parameter(
+     *      name="eventTypeId",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Filter grid by eventTypeId. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      required=false,
+     *      type="string",
+     *      description="From Date in Y-m-d H:i:s format"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      required=false,
+     *      type="string",
+     *      description="To Date in Y-m-d H:i:s format"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="geoAware",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Flag (0-1), whether to return events using Geo Location"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="recurring",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Flag (0-1), whether to return Recurring events"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="query",
+     *      required=false,
+     *      type="integer",
+     *      description="Filter events by specific campaignId"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayGroupIds",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      description="Filter events by an array of Display Group Ids"
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Schedule")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function grid(Request $request, Response $response)
+    {
+        $params = $this->getSanitizer($request->getParams());
+
+        $events = $this->scheduleFactory->query(
+            $this->gridRenderSort($params),
+            $this->gridRenderFilter([
+                'eventTypeId' => $params->getInt('filterEventTypeId'),
+                'toDt' => $params->getDate('toDt')?->format('U'),
+                'fromDt' => $params->getDate('fromDt')?->format('U'),
+                'geoAware' => $params->getInt('geoAware'),
+                'recurring' => $params->getInt('recurring'),
+                'campaignId' => $params->getInt('filterCampaignId'),
+                'displayGroupIds' => $params->getIntArray('filterDisplayGroupIds')
+            ], $params)
+        );
+
+        foreach ($events as $event) {
+            $event->load();
+
+            if (count($event->displayGroups) > 0) {
+                $array = array_map(function ($object) {
+                    return $object->displayGroup;
+                }, $event->displayGroups);
+                $displayGroupList = implode(', ', $array);
+            } else {
+                $displayGroupList = '';
+            }
+
+            $eventTypes = \Xibo\Entity\Schedule::getEventTypes();
+            foreach ($eventTypes as $eventType) {
+                if ($eventType['eventTypeId'] === $event->eventTypeId) {
+                    $event->setUnmatchedProperty('eventTypeName', $eventType['eventTypeName']);
+                }
+            }
+            $event->setUnmatchedProperty('displayGroupList', $displayGroupList);
+            $event->setUnmatchedProperty('recurringEvent', !empty($event->recurrenceType));
+
+            if ($this->isApi($request)) {
+                continue;
+            }
+
+            $event->includeProperty('buttons');
+
+            if ($this->isEventEditable($event)) {
+                $event->buttons[] = [
+                    'id' => 'schedule_button_edit',
+                    'url' => $this->urlFor(
+                        $request,
+                        'schedule.edit.form',
+                        ['id' => $event->eventId]
+                    ),
+                    'dataAttributes' => [
+                        ['name' => 'event-id', 'value' => $event->eventId],
+                        ['name' => 'event-start', 'value' => $event->fromDt*1000],
+                        ['name' => 'event-end', 'value' => $event->toDt*1000]
+                    ],
+                    'text' => __('Edit')
+                ];
+
+                $event->buttons[] = [
+                    'id' => 'schedule_button_delete',
+                    'url' => $this->urlFor($request, 'schedule.delete.form', ['id' => $event->eventId]),
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor($request, 'schedule.delete', ['id' => $event->eventId])
+                        ],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'schedule_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $event->eventId]
+                    ]
+                ];
+            }
+        }
+
+        // Store the table rows
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->scheduleFactory->countLast();
+        $this->getState()->setData($events);
 
         return $this->render($request, $response);
     }
@@ -2073,6 +2317,16 @@ class Schedule extends Base
         ];
 
         return json_encode($geoJson);
+    }
+
+    /**
+     * Check if this is event is using full screen schedule with Media or Playlist
+     * @param $eventTypeId
+     * @return bool
+     */
+    private function isFullScreenSchedule($eventTypeId)
+    {
+        return in_array($eventTypeId, [\Xibo\Entity\Schedule::$MEDIA_EVENT, \Xibo\Entity\Schedule::$PLAYLIST_EVENT]);
     }
 }
 

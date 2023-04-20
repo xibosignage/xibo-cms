@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use Xibo\Event\PlaylistDeleteEvent;
 use Xibo\Event\SubPlaylistDurationEvent;
 use Xibo\Event\SubPlaylistWidgetsEvent;
 use Xibo\Factory\ModuleFactory;
@@ -665,6 +666,13 @@ class Playlist implements \JsonSerializable
                 'regionId'
             );
         }
+
+        // dispatch Playlist Delete Event, this will delete any full screen Layout linked to this Playlist
+        if (empty($this->regionId)) {
+            $event = new PlaylistDeleteEvent($this);
+            $this->getDispatcher()->dispatch($event, $event->getName());
+        }
+
         // Notify we're going to delete
         // we do this here, because once we've deleted we lose the references for the storage query
         $this->notifyLayouts();
@@ -678,14 +686,12 @@ class Playlist implements \JsonSerializable
             foreach ($parent->widgets as $widget) {
                 if ($widget->type === 'subplaylist') {
                     $isWidgetSaveRequired = false;
-                    /** @var $module SubPlaylist **/
-                    $module = $this->moduleFactory->createWithWidget($widget);
                     // we get an array with all subplaylists assigned to the parent
-                    $subPlaylistItems = $module->getAssignedPlaylists();
+                    $subPlaylistItems = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
                     $i = 0;
                     foreach ($subPlaylistItems as $subPlaylistItem) {
                         // find the matching playlistId to the playlistId we want to delete
-                        if ($subPlaylistItem->playlistId == $this->playlistId) {
+                        if ($subPlaylistItem['playlistId'] == $this->playlistId) {
                             // if there is only one playlistItem in subPlaylists option then remove the widget
                             if (count($subPlaylistItems) === 1) {
                                 $widget->delete(['notify' => false]);
@@ -706,20 +712,14 @@ class Playlist implements \JsonSerializable
                         // make sure spots and spotLength are saved as string if empty
                         $j = 1;
                         foreach ($subPlaylistItems as $subPlaylistItem) {
-                            $subPlaylistItem->rowNo = $j;
-                            $subPlaylistItem->spots = $subPlaylistItem->spots ?? '';
-                            $subPlaylistItem->spotLength = $subPlaylistItem->spotLength ?? '';
+                            $subPlaylistItem['rowNo'] = $j;
+                            $subPlaylistItem['spots'] = $subPlaylistItem['spots'] ?? '';
+                            $subPlaylistItem['spotLength'] = $subPlaylistItem['spotLength'] ?? '';
                             $j++;
                         }
 
                         // update subPlaylists Widget option
                         $widget->setOptionValue('subPlaylists', 'attrib', json_encode(array_values($subPlaylistItems)));
-
-                        // Tidy up any old options
-                        if ($module->getOption('subPlaylistIds') !== null) {
-                            $widget->setOptionValue('subPlaylistIds', 'attrib', null);
-                            $widget->setOptionValue('subPlaylistOptions', 'attrib', null);
-                        }
                         $widget->save();
                     }
                 }

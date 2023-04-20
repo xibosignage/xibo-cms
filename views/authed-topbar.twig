@@ -34,7 +34,8 @@
             <li class="nav-item">
         {% endif %}
                 {% if currentUser.featureEnabled("schedule.view") %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% if countViewable > 1 %}{% trans "Calendar" %}{% else %}{% trans "Calendar" %}{% endif %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.grid.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a>
                 {% endif %}
                 {% if currentUser.featureEnabled("daypart.view") %}
                     <a class="{{ groupElementClass }}" href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a>

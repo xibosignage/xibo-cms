@@ -521,7 +521,9 @@ class Soap
                         $schedule->eventTypeId == Schedule::$LAYOUT_EVENT ||
                         $schedule->eventTypeId == Schedule::$OVERLAY_EVENT ||
                         $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT ||
-                        $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT
+                        $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
+                        $schedule->eventTypeId == Schedule::$MEDIA_EVENT ||
+                        $schedule->eventTypeId == Schedule::$PLAYLIST_EVENT
                     )
                 ) {
                     $layouts[] = $layoutId;
@@ -1218,7 +1220,12 @@ class Soap
                     $scheduleId = $row['eventId'];
                     $is_priority = $parsedRow->getInt('isPriority');
 
-                    if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT || $eventTypeId == Schedule::$CAMPAIGN_EVENT) {
+                    if ($eventTypeId == Schedule::$LAYOUT_EVENT ||
+                        $eventTypeId == Schedule::$INTERRUPT_EVENT ||
+                        $eventTypeId == Schedule::$CAMPAIGN_EVENT ||
+                        $eventTypeId == Schedule::$MEDIA_EVENT ||
+                        $eventTypeId == Schedule::$PLAYLIST_EVENT
+                    ) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
