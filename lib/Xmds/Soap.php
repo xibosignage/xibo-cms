@@ -1011,7 +1011,12 @@ class Soap
         }
 
         // Set any remaining required files to have 0 bytes requested (as we've generated a new nonce)
-        $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
+        $this->getStore()->update('
+            UPDATE `requiredfile`
+                SET `bytesRequested` = 0
+              WHERE `displayId` = :displayId
+                AND `type` NOT IN (\'W\', \'D\')
+        ', [
             'displayId' => $this->display->displayId
         ]);
 

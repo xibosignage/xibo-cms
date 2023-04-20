@@ -115,7 +115,8 @@ class Soap7 extends Soap6
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget(
                 $this->display->displayId,
-                $widgetId
+                $widgetId,
+                'D',
             );
 
             $widget = $this->widgetFactory->loadByWidgetId($widgetId);
@@ -161,9 +162,6 @@ class Soap7 extends Soap6
                     ]) as $row) {
                         $media[$row['mediaId']] = $row['storedAs'];
                     }
-
-                    $this->getLog()->debug('Get Data');
-                    $this->getLog()->debug(json_encode($dataProvider->getData()));
 
                     $resource = json_encode([
                         'data' => $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media),
