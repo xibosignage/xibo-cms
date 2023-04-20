@@ -23,6 +23,7 @@
 namespace Xibo\XTR;
 
 use Xibo\Entity\Task;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class WidgetCompatibilityTask
@@ -79,7 +80,21 @@ class WidgetCompatibilityTask implements TaskInterface
             // Load the widget
             $widget->load();
 
-            $module = $this->moduleFactory->getByType($widget->type);
+            // Form conditions from the widget's option and value, e.g, templateId==worldclock1
+            $widgetConditionMatch = [];
+            foreach ($widget->widgetOptions as $option) {
+                $widgetConditionMatch[] = $option->option . '==' . $option->value;
+            }
+
+            // Get module
+            try {
+                $module = $this->moduleFactory->getByType($widget->type, $widgetConditionMatch);
+            } catch (NotFoundException $notFoundException) {
+                $this->log->error('Module not found for widget: ' . $widget->type);
+                $this->appendRunMessage('Upgrade widget error for widgetId: : '. $widget->widgetId);
+                continue;
+            }
+
             if ($module->isWidgetCompatibilityAvailable()) {
                 $countWidgets++;
 
@@ -88,9 +103,11 @@ class WidgetCompatibilityTask implements TaskInterface
                 if ($widgetCompatibilityInterface !== null) {
                     $this->log->debug('WidgetCompatibilityTask: widgetId ' . $widget->widgetId);
                     try {
-                        $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
-                        $widget->schemaVersion = 2;
-                        $widget->save(['alwaysUpdate'=>true]);
+                        $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
+                        if ($upgraded) {
+                            $widget->schemaVersion = 2;
+                            $widget->save(['alwaysUpdate'=>true]);
+                        }
                     } catch (\Exception $e) {
                         $this->log->error('Failed to upgrade for widgetId: ' . $widget->widgetId .
                             ', message: ' . $e->getMessage());

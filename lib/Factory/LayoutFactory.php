@@ -983,7 +983,7 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode['useDuration'];
                 $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
-                $widget->schemaVersion = (int)$mediaNode['schemaVersion']; // Todo we get an `undefined array key` error here
+                $widget->schemaVersion = $mediaNode['schemaVersion'] ? (int)$mediaNode['schemaVersion'] : 1;
 
                 // Widget from/to dates.
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
@@ -1028,23 +1028,21 @@ class LayoutFactory extends BaseFactory
                     }
                 }
 
-                $widgetProperties = [];
+                // Form conditions from the widget's option and value, e.g, templateId==worldclock1
+                $widgetConditionMatch = [];
                 foreach ($widget->widgetOptions as $option) {
-                    if (is_numeric($option->value)) {
-                        $widgetProperties[] = $option->option.'=='. $option->value;
-                    } else {
-                        $widgetProperties[] = $option->option.'===' . '\'' . $option->value. '\'';
-                    }
+                    $widgetConditionMatch[] = $option->option . '==' . $option->value;
                 }
 
+                // Get module
                 try {
-                    $module = $this->moduleFactory->getByType($widget->type, $widgetProperties);
+                    $module = $this->moduleFactory->getByType($widget->type, $widgetConditionMatch);
                 } catch (NotFoundException $notFoundException) {
-                   // var_dump('Module not found for widget: ');
                     $this->getLog()->error('Module not found for widget: ' . $widget->type);
                     continue;
                 }
 
+                // Set the widget type
                 $widget->type = $module->type;
 
                 // Does this module type exist?
@@ -1389,11 +1387,11 @@ class LayoutFactory extends BaseFactory
                 $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
                 if ($widgetCompatibilityInterface !== null) {
                     try {
-                        $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
-                        if ($widget->schemaVersion == 1) {
+                        $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
+                        if ($upgraded) {
                             $widget->schemaVersion = 2;
+                            $widget->save(['alwaysUpdate'=>true]);
                         }
-                        $widget->save(['alwaysUpdate'=>true]);
                     } catch (\Exception $e) {
                         $this->getLog()->error('Error upgrading widget '. $e->getMessage());
                     }

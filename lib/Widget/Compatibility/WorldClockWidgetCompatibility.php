@@ -35,7 +35,7 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
 
     /** @inheritdoc
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
@@ -62,8 +62,10 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
                     default:
                         break;
                 }
+                return true;
             }
         }
+        return false;
     }
 
     public function saveTemplate(string $template, string $fileName): bool

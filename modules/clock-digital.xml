@@ -27,7 +27,7 @@
     <compatibilityClass>\Xibo\Widget\Compatibility\ClockWidgetCompatibility</compatibilityClass>
     <type>clock-digital</type>
     <group id="clock" icon="clock">Clock</group>
-    <legacyType>clock</legacyType>
+    <legacyType condition="clockTypeId==2">countdown</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>

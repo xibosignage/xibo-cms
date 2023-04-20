@@ -46,9 +46,9 @@ interface WidgetCompatibilityInterface
      * @param Widget $widget The widget model to upgrade.
      * @param int $fromSchema The version of the schema the widget is currently using.
      * @param int $toSchema The version of the schema to upgrade the widget to.
-     * @return void
+     * @return bool Whether the upgrade was successful
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void;
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool;
 
     /**
      * Save the given widget template to the templates/ subfolder.

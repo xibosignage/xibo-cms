@@ -264,11 +264,11 @@ class ModuleFactory extends BaseFactory
      * Get module by Type
      * this should return the first module enabled by the type specified.
      * @param string $type
-     * @param array $properties
+     * @param array $conditions Conditions that are created based on the widget's option and value, e.g, templateId==worldclock1
      * @return Module
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getByType(string $type, array $properties = []): Module
+    public function getByType(string $type, array $conditions = []): Module
     {
         $modules = $this->load();
         usort($modules, function ($a, $b) {
@@ -294,7 +294,7 @@ class ModuleFactory extends BaseFactory
             }
 
             if (in_array($type, $legacyTypes)) {
-                foreach ($properties as $value) {
+                foreach ($conditions as $value) {
                     if (in_array($value, $legacyConditions)) {
                         return $module;
                     }
