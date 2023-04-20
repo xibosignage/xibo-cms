@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,13 +18,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
-use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -61,70 +59,15 @@ class Soap7 extends Soap6
      * @param $hardwareKey
      * @param $fileType
      * @param $id
+     * @param $chunkOffset
+     * @param $chunkSize
      * @return string
      * @throws NotFoundException
      * @throws \SoapFault
      */
-    public function GetDependency($serverKey, $hardwareKey, $fileType, $id)
+    public function GetDependency($serverKey, $hardwareKey, $fileType, $id, $chunkOffset, $chunkSize)
     {
-        $sanitizer = $this->getSanitizer([
-            'serverKey' => $serverKey,
-            'hardwareKey' => $hardwareKey,
-            'fileType' => $fileType,
-            'id' => $id,
-        ]);
-        $serverKey = $sanitizer->getString('serverKey');
-        $hardwareKey = $sanitizer->getString('hardwareKey');
-        $fileType = $sanitizer->getString('fileType');
-        $id = $sanitizer->getInt('id');
-
-        // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault(
-                'Sender',
-                'The Server key you entered does not match with the server key at this address'
-            );
-        }
-
-        // Authenticate this request...
-        if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', 'This Display is not authorised.');
-        }
-
-        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
-        }
-
-        // Validate the nonce
-        $requiredFile = $this->requiredFileFactory->getByDisplayAndDependency(
-            $this->display->displayId,
-            $fileType,
-            $id
-        );
-
-        // File is valid, see if we can return it.
-        $event = new XmdsDependencyRequestEvent($requiredFile);
-        $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
-
-        $path = $event->getFullPath();
-        if (empty($path)) {
-            throw new NotFoundException(__('File not found'));
-        }
-
-        $file = file_get_contents($path);
-        if (!$file) {
-            throw new \SoapFault('Sender', 'Dependency not found');
-        }
-
-        $size = strlen($file);
-
-        $requiredFile->bytesRequested = $requiredFile->bytesRequested + $size;
-        $requiredFile->save();
-
-        $this->logBandwidth($this->display->displayId, Bandwidth::$GET_DEPENDENCY, $size);
-
-        return $file;
+        return $this->GetFile($serverKey, $hardwareKey, $id, $fileType, $chunkOffset, $chunkSize, true);
     }
 
     /**
@@ -138,16 +81,17 @@ class Soap7 extends Soap6
      */
     public function GetData($serverKey, $hardwareKey, $widgetId)
     {
-        $this->logProcessor->setRoute('GetResource');
+        $this->logProcessor->setRoute('GetData');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey,
+            'widgetId' => $widgetId,
         ]);
 
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
-        $widgetId = $sanitizer->getString('widgetId');
+        $widgetId = $sanitizer->getInt('widgetId');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -180,7 +124,7 @@ class Soap7 extends Soap6
 
             // We just want the data.
             $dataModule = $this->moduleFactory->getByType($widget->type);
-            if ($dataModule->isDataProviderExpected()) {
+            if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
                 // We only ever return cache.
                 $dataProvider = $module->createDataProvider($widget);
 
@@ -197,22 +141,18 @@ class Soap7 extends Soap6
                     $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
 
                     // We do not pass a modifiedDt in here because we always expect to be cached.
-                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null)) {
+                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null, false)) {
                         throw new NotFoundException('Cache not ready');
                     }
 
                     // Get media references
                     $media = [];
                     $sql = '
-                        SELECT mediaId, storedAs
+                        SELECT `media`.`mediaId`, `media`.`storedAs`
                           FROM `media`
-                            INNER JOIN `lkmediadisplaygroup`
-                            ON `lkmediadisplaygroup`.mediaId = `media`.mediaId
-                            INNER JOIN `lkdgdg`
-                            ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
-                            INNER JOIN `lkdisplaydg`
-                            ON lkdisplaydg.displayGroupId = `lkdgdg`.childId
-                         WHERE lkdisplaydg.displayId = :displayId
+                            INNER JOIN `display_media`
+                            ON `display_media`.mediaid = `media`.mediaId
+                         WHERE `display_media`.displayId = :displayId
                     ';
 
                     // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
@@ -220,7 +160,10 @@ class Soap7 extends Soap6
                         'displayId' => $this->display->displayId
                     ]) as $row) {
                         $media[$row['mediaId']] = $row['storedAs'];
-                    };
+                    }
+
+                    $this->getLog()->debug('Get Data');
+                    $this->getLog()->debug(json_encode($dataProvider->getData()));
 
                     $resource = json_encode([
                         'data' => $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media),
@@ -239,9 +182,11 @@ class Soap7 extends Soap6
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
         } catch (NotFoundException $notEx) {
+            $this->getLog()->error('Unknown error during getResource. E = ' . $notEx->getMessage());
+            $this->getLog()->debug($notEx->getTraceAsString());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         } catch (\Exception $e) {
-            $this->getLog()->error('Unknown error during getResource. E = ' . $e->getMessage());
+            $this->getLog()->error('Unknown error during getData. E = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }

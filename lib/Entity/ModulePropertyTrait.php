@@ -58,14 +58,49 @@ trait ModulePropertyTrait
     }
 
     /**
-     * @param bool $decorateForOutput true if we should decorate for output to either the preview or player
+     * @param array $properties
+     * @param bool $includeDefaults
      * @return array
      */
-    public function getPropertyValues(bool $decorateForOutput = true): array
+    public function decoratePropertiesByArray(array $properties, bool $includeDefaults = false): array
+    {
+        $decoratedProperties = [];
+        foreach ($this->properties as $property) {
+            $decoratedProperty = [
+                'id' => $property->id,
+                'value' => $properties[$property->id] ?? null
+            ];
+
+            // Should we include defaults?
+            if ($includeDefaults && $decoratedProperty['value'] === null) {
+                $decoratedProperty['value'] = $property->default;
+            }
+
+            if ($property->type === 'integer' && $decoratedProperty['value'] !== null) {
+                $decoratedProperty['value'] = intval($decoratedProperty['value']);
+            } else if ($property->type === 'double' && $decoratedProperty['value'] !== null) {
+                $decoratedProperty['value'] = intval($decoratedProperty['value']);
+            }
+
+            if ($property->variant === 'uri' && !empty($value)) {
+                $decoratedProperty['value'] = urldecode($decoratedProperty['value']);
+            }
+
+            $decoratedProperties[] = $decoratedProperty;
+        }
+        return $decoratedProperties;
+    }
+
+    /**
+     * @param bool $decorateForOutput true if we should decorate for output to either the preview or player
+     * @param array|null $overrideValues a key/value array of values to use instead the stored property values
+     * @return array
+     */
+    public function getPropertyValues(bool $decorateForOutput = true, ?array $overrideValues = null): array
     {
         $properties = [];
         foreach ($this->properties as $property) {
-            $value = $property->value;
+            $value = $overrideValues !== null ? $overrideValues[$property->id] ?? null : $property->value;
 
             // TODO: should we cast values to their appropriate field formats.
             if ($decorateForOutput) {
@@ -99,7 +134,7 @@ trait ModulePropertyTrait
     }
 
     /**
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException|\Xibo\Support\Exception\ValueTooLargeException
      */
     public function validateProperties(): void
     {

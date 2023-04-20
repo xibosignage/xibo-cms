@@ -468,10 +468,35 @@ class WidgetHtmlRenderer
             }
 
             // Include elements/element groups - they will already be JSON encoded.
-            $twig['elements'][] = $widget->getOptionValue('elements', null);
+            $widgetElements = $widget->getOptionValue('elements', null);
+            if (!empty($widgetElements)) {
+                // Elements will be JSON
+                $widgetElements = json_decode($widgetElements, true);
+
+                // Join together the template properties for this element, and the element properties
+                foreach ($widgetElements as $widgetIndex => $widgetElement) {
+                    foreach (($widgetElement['elements'] ?? []) as $elementIndex => $element) {
+                        foreach ($moduleTemplates as $moduleTemplate) {
+                            if ($moduleTemplate->templateId === $element['id']) {
+                                // Merge the properties on the element with the properties on the template.
+                                $widgetElements[$widgetIndex]['elements'][$elementIndex]['properties'] =
+                                    $moduleTemplate->getPropertyValues(
+                                        true,
+                                        $moduleTemplate->decoratePropertiesByArray(
+                                            $element['properties'] ?? [],
+                                            true
+                                        )
+                                    );
+                            }
+                        }
+                    }
+                }
+
+                $twig['elements'][] = json_encode($widgetElements);
+            }
         }
 
-        // Grab and global elements in our templates
+        // Grab any global elements in our templates
         $globalElements = [];
         foreach ($moduleTemplates as $moduleTemplate) {
             if ($moduleTemplate->type === 'element') {

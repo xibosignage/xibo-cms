@@ -289,7 +289,7 @@
         <type>element</type>
         <dataType>event</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>event-description</thumbnail>
+        <thumbnail>event-startDate</thumbnail>
         <startWidth>360</startWidth>
         <startHeight>80</startHeight>
         <properties>

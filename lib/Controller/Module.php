@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -250,8 +250,10 @@ class Module extends Base
      */
     public function clearCache(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createById((int)$id);
-        $module->dumpCacheForModule();
+        $module = $this->moduleFactory->getById($id);
+        if ($module->isDataProviderExpected()) {
+            $this->moduleFactory->clearCacheForDataType($module->dataType);
+        }
 
         $this->getState()->hydrate([
             'message' => __('Cleared the Cache')

@@ -862,6 +862,10 @@ class Soap
                                 $dataFile = $requiredFilesXml->createElement('file');
                                 $dataFile->setAttribute('type', 'widget');
                                 $dataFile->setAttribute('id', $widget->widgetId);
+                                $dataFile->setAttribute(
+                                    'updateInterval',
+                                    $widget->getOptionValue('updateInterval', 120)
+                                );
                                 $fileElements->appendChild($dataFile);
 
                                 $getDataRf = $this->requiredFileFactory
@@ -2274,7 +2278,7 @@ class Soap
                             );
 
                             // We do not pass a modifiedDt in here because we always expect to be cached.
-                            if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null)) {
+                            if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null, false)) {
                                 throw new NotFoundException('Cache not ready');
                             }
 
@@ -2730,7 +2734,7 @@ class Soap
             ->createForGetDependency(
                 $this->display->displayId,
                 $dependency->fileType,
-                ($isSupportsDependency ? $dependency->id : $dependency->legacyId),
+                $dependency->legacyId,
                 $dependency->id,
                 $dependencyBasePath
             )
