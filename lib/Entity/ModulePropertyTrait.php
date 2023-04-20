@@ -46,8 +46,10 @@ trait ModulePropertyTrait
 
             if ($property->type === 'integer' && $property->value !== null) {
                 $property->value = intval($property->value);
-            } else if ($property->type === 'double' && $property->value !== null) {
-                $property->value = intval($property->value);
+            } else if (($property->type === 'double' || $property->type === 'number')
+                && $property->value !== null
+            ) {
+                $property->value = doubleval($property->value);
             }
 
             if ($property->variant === 'uri' && !empty($value)) {
@@ -64,29 +66,34 @@ trait ModulePropertyTrait
      */
     public function decoratePropertiesByArray(array $properties, bool $includeDefaults = false): array
     {
+        // Flatten the properties array so that we can reference it by key.
+        $keyedProperties = [];
+        foreach ($properties as $property) {
+            $keyedProperties[$property['id']] = $property['value'];
+        }
+
         $decoratedProperties = [];
         foreach ($this->properties as $property) {
-            $decoratedProperty = [
-                'id' => $property->id,
-                'value' => $properties[$property->id] ?? null
-            ];
+            $decoratedProperty = $keyedProperties[$property->id] ?? null;
 
             // Should we include defaults?
-            if ($includeDefaults && $decoratedProperty['value'] === null) {
-                $decoratedProperty['value'] = $property->default;
+            if ($includeDefaults && $decoratedProperty === null) {
+                $decoratedProperty = $property->default;
             }
 
-            if ($property->type === 'integer' && $decoratedProperty['value'] !== null) {
-                $decoratedProperty['value'] = intval($decoratedProperty['value']);
-            } else if ($property->type === 'double' && $decoratedProperty['value'] !== null) {
-                $decoratedProperty['value'] = intval($decoratedProperty['value']);
+            if ($property->type === 'integer' && $decoratedProperty !== null) {
+                $decoratedProperty = intval($decoratedProperty);
+            } else if (($property->type === 'double' || $property->type === 'number')
+                && $decoratedProperty !== null
+            ) {
+                $decoratedProperty = doubleval($decoratedProperty);
             }
 
             if ($property->variant === 'uri' && !empty($value)) {
-                $decoratedProperty['value'] = urldecode($decoratedProperty['value']);
+                $decoratedProperty = urldecode($decoratedProperty);
             }
 
-            $decoratedProperties[] = $decoratedProperty;
+            $decoratedProperties[$property->id] = $decoratedProperty;
         }
         return $decoratedProperties;
     }
@@ -100,7 +107,7 @@ trait ModulePropertyTrait
     {
         $properties = [];
         foreach ($this->properties as $property) {
-            $value = $overrideValues !== null ? $overrideValues[$property->id] ?? null : $property->value;
+            $value = $overrideValues !== null ? ($overrideValues[$property->id] ?? null) : $property->value;
 
             // TODO: should we cast values to their appropriate field formats.
             if ($decorateForOutput) {

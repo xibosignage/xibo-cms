@@ -32,7 +32,6 @@ use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\RequiredFile;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
@@ -284,16 +283,43 @@ class Display extends Base
         }
 
         // Zero out some variables
+        $dependencies = [];
         $layouts = [];
         $widgets = [];
+        $widgetData = [];
         $media = [];
         $totalCount = 0;
         $completeCount = 0;
         $totalSize = 0;
         $completeSize = 0;
 
+        // Show 4 widgets
+        // Dependencies
+        $sql = '
+          SELECT `requiredfile`.*
+              FROM `requiredfile`
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY fileType, path
+        ';
 
-        // Show 3 widgets
+        foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'P']) as $row) {
+            $totalCount++;
+            if (intval($row['complete']) === 1) {
+                $completeCount = $completeCount + 1;
+            }
+
+            $row = $this->getSanitizer($row);
+
+            $dependencies[] = [
+                'path' => $row->getString('path'),
+                'fileType' => $row->getString('fileType'),
+                'bytesRequested' => $row->getInt('bytesRequested'),
+                'complete' => $row->getInt('complete'),
+            ];
+        }
+
+        // Layouts
         $sql = '
           SELECT layoutId, layout, `requiredfile`.*
               FROM `layout`
@@ -305,7 +331,6 @@ class Display extends Base
         ';
 
         foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'L']) as $row) {
-            /** @var RequiredFile $rf */
             $rf = $this->requiredFileFactory->getByDisplayAndLayout($id, $row['layoutId']);
 
             $totalCount++;
@@ -331,7 +356,6 @@ class Display extends Base
         ';
 
         foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'M']) as $row) {
-            /** @var RequiredFile $rf */
             $rf = $this->requiredFileFactory->getByDisplayAndMedia($id, $row['mediaId']);
 
             $totalSize = $totalSize + $row['fileSize'];
@@ -362,25 +386,32 @@ class Display extends Base
                 LEFT OUTER JOIN `widgetoption`
                 ON `widgetoption`.widgetId = `widget`.widgetId
                   AND `widgetoption`.option = \'name\'
-           WHERE `requiredfile`.displayId = :displayId 
-            AND `requiredfile`.type = :type
+           WHERE `requiredfile`.`displayId` = :displayId 
+            AND `requiredfile`.`type` IN (\'W\', \'D\')
           ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
         ';
 
-        foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'W']) as $row) {
-            /** @var RequiredFile $rf */
-            $rf = $this->requiredFileFactory->getByDisplayAndWidget($id, $row['widgetId']);
+        foreach ($this->store->select($sql, ['displayId' => $id]) as $row) {
+            $row = $this->getSanitizer($row);
+            $entry = [];
+            $entry['type'] = $row->getString('widgetType');
+            $entry['widgetName'] = $row->getString('widgetName');
 
-            $totalCount++;
+            if ($row->getString('type') === 'W') {
+                $rf = $this->requiredFileFactory->getByDisplayAndWidget($id, $row->getInt('widgetId'));
 
-            if ($rf->complete) {
-                $completeCount = $completeCount + 1;
+                $totalCount++;
+
+                if ($rf->complete) {
+                    $completeCount = $completeCount + 1;
+                }
+
+                $widgets[] = array_merge($entry, $rf->toArray());
+            } else {
+                $entry['widgetId'] = $row->getInt('widgetId');
+                $entry['bytesRequested'] = $row->getInt('bytesRequested');
+                $widgetData[] = $entry;
             }
-
-            $rf = $rf->toArray();
-            $rf['type'] = $row['widgetType'];
-            $rf['widgetName'] = $row['widgetName'];
-            $widgets[] = $rf;
         }
 
         // Widget for file status
@@ -392,7 +423,7 @@ class Display extends Base
             $base = 0;
         }
 
-        $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
+        $units = $suffixes[$base] ?? '';
         $this->getLog()->debug(sprintf('Base for size is %d and suffix is %s', $base, $units));
 
 
@@ -409,9 +440,11 @@ class Display extends Base
                 'toDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]),
             'inventory' => [
+                'dependencies' => $dependencies,
                 'layouts' => $layouts,
                 'media' => $media,
-                'widgets' => $widgets
+                'widgets' => $widgets,
+                'widgetData' => $widgetData,
             ],
             'status' => [
                 'units' => $units,

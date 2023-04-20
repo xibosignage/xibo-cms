@@ -170,8 +170,27 @@ class WidgetHtmlRenderer
         array $widgets,
         array $moduleTemplates
     ): string {
-        // For caching purposes we always take only the first widget
-        $widget = $widgets[0];
+        // HTML is cached per widget for regions of type zone/frame and playlist.
+        // HTML is cached per region for regions of type canvas.
+        $widget = null;
+        $widgetModifiedDt = 0;
+
+        if ($region->type === 'canvas') {
+            foreach ($widgets as $item) {
+                $widgetModifiedDt = max($widgetModifiedDt, $item->modifiedDt);
+                if ($item->type === 'global') {
+                    $widget = $item;
+                }
+            }
+
+            // If we don't have a global widget, just grab the first one.
+            if ($widget === null) {
+                $widget = $widgets[0];
+            }
+        } else {
+            $widget = $widgets[0];
+            $widgetModifiedDt = $widget->modifiedDt;
+        }
 
         if (!file_exists($this->cachePath)) {
             mkdir($this->cachePath, 0777, true);
@@ -190,7 +209,7 @@ class WidgetHtmlRenderer
             . '.html';
 
         // Have we changed since we last cached this widget
-        $modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
+        $modifiedDt = Carbon::createFromTimestamp($widgetModifiedDt);
         $cachedDt = Carbon::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
 
         $this->getLog()->debug('Cache details - modifiedDt: '
@@ -310,7 +329,9 @@ class WidgetHtmlRenderer
                 $output = str_replace('[[' . $match . ']]', $replace, $output);
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
-                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]]) ? json_encode($data[$value[1]]) : '{"data":[], "meta":[]}', $output);
+                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]])
+                    ? json_encode($data[$value[1]])
+                    : '{"data":[], "meta":[]}', $output);
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
