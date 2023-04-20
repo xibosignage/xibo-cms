@@ -7,6 +7,11 @@
     data-template-id="{{templateId}}"
     data-template-start-width="{{startWidth}}"
     data-template-start-height="{{startHeight}}"
+    {{#with extends as | extend |}}
+        data-extends-template="{{extend.template}}"
+        data-extends-override="{{extend.override}}"
+        data-extends-with="{{extend.with}}"
+    {{/with}}
     >
 
 {{#if thumbnail}}
