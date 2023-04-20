@@ -310,7 +310,7 @@ class Schedule extends Base
             }
         }
 
-        foreach ($this->scheduleFactory->query('FromDT', $filter) as $row) {
+        foreach ($this->scheduleFactory->query(['FromDT'], $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
@@ -2016,7 +2016,11 @@ class Schedule extends Base
         // Call to render the template
         $this->getState()->template = 'schedule-grid-page';
         $this->getState()->setData([
-            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes()
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
+            'defaults' => [
+                'fromDate' => Carbon::now()->startOfMonth()->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->startOfMonth()->addMonth()->format(DateFormatHelper::getSystemFormat()),
+            ],
         ]);
         return $this->render($request, $response);
     }
@@ -2107,7 +2111,8 @@ class Schedule extends Base
                 'geoAware' => $params->getInt('geoAware'),
                 'recurring' => $params->getInt('recurring'),
                 'campaignId' => $params->getInt('filterCampaignId'),
-                'displayGroupIds' => $params->getIntArray('filterDisplayGroupIds')
+                'displayGroupIds' => $params->getIntArray('filterDisplayGroupIds'),
+                'gridFilter' => 1
             ], $params)
         );
 

@@ -138,7 +138,7 @@
 
                         {{ forms.hidden('fullScreenCampaignId') }}
 
-                        {% set title %}{% trans "Layout Duration" %}{% endset %}
+                        {% set title %}{% trans "Duration in Loop" %}{% endset %}
                         {% set helpText %}{% trans "For long should this Media be displayed in each loop? If left empty it will default to Media duration" %}{% endset %}
                         {{ forms.number('layoutDuration', title, "", helpText, 'media-control no-full-screen-layout') }}
 

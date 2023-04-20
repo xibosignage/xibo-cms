@@ -20,10 +20,10 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans 'From Date' %}{% endset %}
-                            {{ inline.dateTime("fromDt", title, "", "", "", "", "") }}
+                            {{ inline.dateTime("fromDt", title, defaults.fromDate, "", "", "", "") }}
 
                             {% set title %}{% trans 'To Date' %}{% endset %}
-                            {{ inline.dateTime("toDt", title, "", "", "", "", "") }}
+                            {{ inline.dateTime("toDt", title, defaults.toDate, "", "", "", "") }}
 
                             {% set title %}{% trans 'Event Type' %}{% endset %}
                             {{ inline.dropdown("filterEventTypeId", "single", title, "", [{id: null, value: ""}]|merge(eventTypes), "eventTypeId", "eventTypeName") }}
@@ -120,7 +120,7 @@
           stateSaveCallback: dataTableStateSaveCallback,
           filter: false,
           searchDelay: 3000,
-          order: [[0, 'desc']],
+          order: [],
           ajax: {
             url: '{{ url_for("schedule.search") }}',
             data: function (d) {
@@ -130,7 +130,8 @@
           columns: [
             {
               data: 'eventId',
-              responsivePriority: 2
+              responsivePriority: 5,
+              className: 'none',
             },
             {
               name: 'eventTypeId',
@@ -167,11 +168,13 @@
             },
             {
               data: 'campaignId',
-              responsivePriority: 3,
+              responsivePriority: 5,
+              className: 'none',
             },
             {
               name: 'displayGroups',
               responsivePriority: 2,
+              sortable: false,
               data: function (data) {
                 if (data.displayGroups.length > 1) {
                   return '<span class="badge" style="background-color: green; color: white" ' +
@@ -258,7 +261,7 @@
           $('[data-toggle="popover"]').popover();
         });
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#schedule-grid_wrapper').find('.dataTables_buttons'));
+        dataTableAddButtons(table, $('#schedule-grid_wrapper').find('.dataTables_buttons'), true, true);
       });
     </script>
 {% endblock %}
