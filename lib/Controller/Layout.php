@@ -27,6 +27,7 @@ use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Parsedown;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -40,11 +41,14 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
@@ -56,6 +60,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\Render\WidgetDownloader;
+use Xibo\Widget\SubPlaylistItem;
 
 /**
  * Class Layout
@@ -118,6 +123,8 @@ class Layout extends Base
 
     /** @var MediaServiceInterface */
     private $mediaService;
+    private WidgetFactory $widgetFactory;
+    private PlaylistFactory $playlistFactory;
 
     /**
      * Set common dependencies.
@@ -133,8 +140,23 @@ class Layout extends Base
      * @param CampaignFactory $campaignFactory
      * @param $displayGroupFactory
      */
-    public function __construct($session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, $pool, MediaServiceInterface $mediaService)
-    {
+    public function __construct(
+        $session,
+        $userFactory,
+        $resolutionFactory,
+        $layoutFactory,
+        $moduleFactory,
+        $userGroupFactory,
+        $tagFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $campaignFactory,
+        $displayGroupFactory,
+        $pool,
+        MediaServiceInterface $mediaService,
+        WidgetFactory $widgetFactory,
+        PlaylistFactory $playlistFactory,
+    ) {
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->resolutionFactory = $resolutionFactory;
@@ -148,6 +170,8 @@ class Layout extends Base
         $this->displayGroupFactory = $displayGroupFactory;
         $this->pool = $pool;
         $this->mediaService = $mediaService;
+        $this->widgetFactory = $widgetFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     /**
@@ -1429,6 +1453,7 @@ class Layout extends Base
             'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts'),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
+            'campaignType' => 'list',
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
@@ -2550,8 +2575,8 @@ class Layout extends Base
             'dataSetFactory' => $this->getDataSetFactory(),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'layout.import'),
-            'upload_url' => $this->urlFor($request,'layout.import'),
+            'script_url' => $this->urlFor($request, 'layout.import'),
+            'upload_url' => $this->urlFor($request, 'layout.import'),
             'image_versions' => [],
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
@@ -3232,6 +3257,221 @@ class Layout extends Base
         }
 
         $this->setNoOutput();
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Create a Layout with full screen Region with Media/Playlist specific Widget
+     * This is called as a first step when scheduling Media/Playlist eventType
+     * @SWG\Post(
+     *  path="/layout/fullscreen",
+     *  operationId="layoutAddFullScreen",
+     *  tags={"layout"},
+     *  summary="Add a Full Screen Layout",
+     *  description="Add a new full screen Layout with specified Media/Playlist",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="formData",
+     *      description="The Media or Playlist ID that should be added to this Layout",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The type of Layout to be created = media or playlist",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="formData",
+     *      description="The Id of the resolution for this Layout, defaults to 1080p for playlist and closest resolution match for Media",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this Layout. Default is black #000",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="layoutDuration",
+     *      in="formData",
+     *      description="Use with media type, to specify the duration this Media should play in one loop",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function createFullScreenLayout(Request $request, Response $response): Response|ResponseInterface
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $type = $params->getString('type');
+        $media = null;
+        $playlist = null;
+        $playlistItems = [];
+
+        if (empty($params->getInt('id'))) {
+            throw new InvalidArgumentException(sprintf(__('Please select %s'), ucfirst($type)));
+        }
+
+        if ($type === 'media') {
+            $media = $this->mediaFactory->getById($params->getInt('id'));
+            // do we already have a full screen layout with this media?
+            $layoutExists = $this->layoutFactory->getLinkedFullScreenLayout('media', $media->mediaId);
+        } else if ($type === 'playlist') {
+            $playlist = $this->playlistFactory->getById($params->getInt('id'));
+            $playlist->load();
+            // do we already have a full screen layout with this playlist?
+            $layoutExists = $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId);
+        }
+
+        if (!empty($layoutExists)) {
+            // Return
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => sprintf(__('Fetched %s'), $layoutExists->layout),
+                'data' => $layoutExists
+            ]);
+
+            return $this->render($request, $response);
+        }
+
+        $resolutionId = $params->getInt('resolutionId');
+
+        if (empty($resolutionId)) {
+            if ($type === 'media') {
+                $resolutionId = $this->resolutionFactory->getClosestMatchingResolution(
+                    $media->width,
+                    $media->height
+                )->resolutionId;
+            } else if ($type === 'playlist') {
+                $resolutionId = $this->resolutionFactory->getByDimensions(
+                    1920,
+                    1080
+                )->resolutionId;
+            }
+        }
+
+        $layout = $this->layoutFactory->createFromResolution(
+            $resolutionId,
+            $this->getUser()->userId,
+            $type . '_' .
+            ($type === 'media' ? $media->name : $playlist->name) .
+            '_' . ($type === 'media' ? $media->mediaId : $playlist->playlistId),
+            'Full Screen Layout created from ' . ($type === 'media' ? $media->name : $playlist->name),
+            '',
+            '',
+            false
+        );
+
+        if (!empty($params->getString('backgroundColor'))) {
+            $layout->backgroundColor = $params->getString('backgroundColor');
+        }
+
+        $this->layoutFactory->addRegion(
+            $layout,
+            $type === 'media' ? 'frame' : 'playlist',
+            $layout->width,
+            $layout->height,
+            0,
+            0
+        );
+
+        $layout->setUnmatchedProperty('type', $type);
+        $layout->autoApplyTransitions = 0;
+        $layout->schemaVersion = Environment::$XLF_VERSION;
+        $layout->folderId = ($type === 'media') ? $media->folderId : $playlist->folderId;
+
+        $layout->save();
+
+        $layout = $this->layoutFactory->checkoutLayout($layout);
+
+        $region = $layout->regions[0];
+
+        // Create a module
+        $module = $this->moduleFactory->getByType($type === 'media' ? $media->mediaType : 'subplaylist');
+
+        // Determine the duration
+        // if we have a duration provided, then use it, otherwise use the duration recorded on the
+        // library item/playlist already
+        $itemDuration = $params->getInt(
+            'layoutDuration',
+            ['default' => $type === 'media' ? $media->duration : $playlist->duration]
+        );
+
+        // If the library item duration (or provided duration) is 0, then default to the Module Default
+        // Duration as configured in settings.
+        $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
+
+        // Create a widget
+        $widget = $this->widgetFactory->create(
+            $this->getUser()->userId,
+            $region->getPlaylist()->playlistId,
+            $type === 'media' ? $media->mediaType : 'subplaylist',
+            $itemDuration
+        );
+
+        if ($type === 'playlist') {
+            // save here, simulate add Widget
+            // next save (with playlist) will edit and save the Widget and dispatch event that manages closure table.
+            $widget->save();
+            $item = new SubPlaylistItem();
+            $item->rowNo = 1;
+            $item->playlistId = $playlist->playlistId;
+            $item->spotFill = 'repeat';
+            $item->spotLength =  '';
+            $item->spots = '';
+
+            $playlistItems[] = $item;
+            $widget->setOptionValue('subPlaylists', 'attrib', json_encode($playlistItems));
+        } else {
+            $widget->useDuration = 1;
+            $widget->assignMedia($media->mediaId);
+        }
+
+        // Calculate the duration
+        $widget->calculateDuration($module);
+
+        // Assign the widget to the playlist
+        $region->getPlaylist()->assignWidget($widget);
+        // Save the playlist
+        $region->getPlaylist()->save();
+        $region->save();
+
+        $layout->publishDraft();
+        $layout->load();
+
+        // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
+        // error message
+        $layout->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'message' => sprintf(__('Created %s'), $layout->layout),
+            'data' => $layout
+        ]);
+
         return $this->render($request, $response);
     }
 }

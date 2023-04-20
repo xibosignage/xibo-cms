@@ -2311,10 +2311,9 @@ class Layout implements \JsonSerializable
         // we do not add a campaign record for draft layouts.
         if ($this->parentId === null) {
             $campaign = $this->campaignFactory->create(
-                'list',
+                $this->getUnmatchedProperty('type', 'list'),
                 $this->layout,
                 $this->getOwnerId(),
-                '',
                 ($this->folderId == null) ? 1 : $this->folderId
             );
             $campaign->isLayoutSpecific = 1;

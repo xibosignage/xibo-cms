@@ -128,16 +128,16 @@ class WidgetDataProviderCache
             // Clear the data provider and add the cached items back to it.
             $dataProvider->clearData();
             $dataProvider->clearMeta();
-            $dataProvider->addItems($data['data'] ?? []);
+            $dataProvider->addItems($data->data ?? []);
 
-            foreach (($data['meta'] ?? []) as $key => $item) {
+            foreach (($data->meta ?? []) as $key => $item) {
                 $dataProvider->addOrUpdateMeta($key, $item);
             }
             $dataProvider->addOrUpdateMeta('cacheDt', $this->cache->getCreation()->format('c'));
             $dataProvider->addOrUpdateMeta('expireDt', $this->cache->getExpiration()->format('c'));
 
             // Record any cached mediaIds
-            $this->cachedMediaIds = $data['media'] ?? [];
+            $this->cachedMediaIds = $data->media ?? [];
             return true;
         }
     }
@@ -159,11 +159,11 @@ class WidgetDataProviderCache
             Carbon::now()->addSeconds($dataProvider->getCacheTtl())->format('c')
         );
 
-        $cached = $this->cache->set([
-            'data' => $dataProvider->getData(),
-            'meta' => $dataProvider->getMeta(),
-            'media' => $dataProvider->getImageIds()
-        ]);
+        $object = new \stdClass();
+        $object->data = $dataProvider->getData();
+        $object->meta = $dataProvider->getMeta();
+        $object->media = $dataProvider->getImageIds();
+        $cached = $this->cache->set($object);
 
         if (!$cached) {
             throw new GeneralException('Cache failure');

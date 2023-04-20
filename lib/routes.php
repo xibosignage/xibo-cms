@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -88,6 +88,7 @@ $app->post('/tfa', ['\Xibo\Controller\Login' , 'twoFactorAuthValidate'])->setNam
  *  description="Schedule"
  * )
  */
+$app->get('/schedule', ['\Xibo\Controller\Schedule','grid'])->setName('schedule.search');
 $app->get('/schedule/data/events', ['\Xibo\Controller\Schedule','eventData'])->setName('schedule.calendar.data');
 $app->get('/schedule/{id}/events', ['\Xibo\Controller\Schedule','eventList'])->setName('schedule.events');
 
@@ -141,6 +142,7 @@ $app->put('/layout/lock/release/{id}', ['\Xibo\Controller\Layout', 'releaseLock'
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/layout', ['\Xibo\Controller\Layout', 'add'])->setName('layout.add');
+    $group->post('/layout/fullscreen', ['\Xibo\Controller\Layout', 'createFullScreenLayout'])->setName('layout.add.full.screen.schedule');
     $group->post('/layout/copy/{id}', ['\Xibo\Controller\Layout','copy'])->setName('layout.copy');
 
     // TODO: why commented out? Layout Import

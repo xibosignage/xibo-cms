@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -366,6 +366,19 @@ class ScheduleFactory extends BaseFactory
         if ($parsedFilter->getInt('adCampaignsOnly') === 1) {
             $sql .= ' AND `schedule`.parentCampaignId IS NOT NULL AND `schedule`.eventTypeId = :eventTypeId ';
             $params['eventTypeId'] = Schedule::$INTERRUPT_EVENT;
+        }
+
+        if ($parsedFilter->getInt('recurring') !== null) {
+            if ($parsedFilter->getInt('recurring') === 1) {
+                $sql .= ' AND `schedule`.recurrence_type IS NOT NULL ';
+            } else if ($parsedFilter->getInt('recurring') === 0) {
+                $sql .= ' AND `schedule`.recurrence_type IS NULL ';
+            }
+        }
+
+        if ($parsedFilter->getInt('geoAware') !== null) {
+            $sql .= ' AND `schedule`.isGeoAware = :geoAware ';
+            $params['geoAware'] = $parsedFilter->getInt('geoAware');
         }
 
         if ($parsedFilter->getInt('ownerId') !== null) {
