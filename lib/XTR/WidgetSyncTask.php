@@ -310,10 +310,16 @@ class WidgetSyncTask implements TaskInterface
             $this->displayFactory->getDisplayNotifyService()->collectLater()->notifyByDisplayId($displayId);
 
             foreach ($mediaIds as $mediaId) {
-                $this->store->update($sql, [
-                    'displayId' => $displayId,
-                    'mediaId' => $mediaId
-                ]);
+                try {
+                    $this->store->update($sql, [
+                        'displayId' => $displayId,
+                        'mediaId' => $mediaId
+                    ]);
+                } catch (\PDOException $e) {
+                    // We link what we can, and log any failures.
+                    $this->getLogger()->error('linkDisplays: unable to link displayId: ' . $displayId
+                        . ' to mediaId: ' . $mediaId . ', most likely the media has since gone');
+                }
             }
         }
     }
