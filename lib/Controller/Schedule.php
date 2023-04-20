@@ -2016,7 +2016,11 @@ class Schedule extends Base
         // Call to render the template
         $this->getState()->template = 'schedule-grid-page';
         $this->getState()->setData([
-            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes()
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
+            'defaults' => [
+                'fromDate' => Carbon::now()->startOfMonth()->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->startOfMonth()->addMonth()->format(DateFormatHelper::getSystemFormat()),
+            ],
         ]);
         return $this->render($request, $response);
     }

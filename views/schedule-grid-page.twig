@@ -20,10 +20,10 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans 'From Date' %}{% endset %}
-                            {{ inline.dateTime("fromDt", title, "", "", "", "", "") }}
+                            {{ inline.dateTime("fromDt", title, defaults.fromDate, "", "", "", "") }}
 
                             {% set title %}{% trans 'To Date' %}{% endset %}
-                            {{ inline.dateTime("toDt", title, "", "", "", "", "") }}
+                            {{ inline.dateTime("toDt", title, defaults.toDate, "", "", "", "") }}
 
                             {% set title %}{% trans 'Event Type' %}{% endset %}
                             {{ inline.dropdown("filterEventTypeId", "single", title, "", [{id: null, value: ""}]|merge(eventTypes), "eventTypeId", "eventTypeName") }}
@@ -130,7 +130,8 @@
           columns: [
             {
               data: 'eventId',
-              responsivePriority: 2
+              responsivePriority: 5,
+              className: 'none',
             },
             {
               name: 'eventTypeId',
@@ -167,7 +168,8 @@
             },
             {
               data: 'campaignId',
-              responsivePriority: 3,
+              responsivePriority: 5,
+              className: 'none',
             },
             {
               name: 'displayGroups',
