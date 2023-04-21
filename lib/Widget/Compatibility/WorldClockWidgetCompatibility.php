@@ -39,6 +39,8 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
+        $upgraded = false;
+        $widgetType = null;
         foreach ($widget->widgetOptions as $option) {
             $clockType = $widget->getOptionValue('clockType', 1);
             $templateId = $widget->getOptionValue('templateId', '');
@@ -47,30 +49,34 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
                 switch ($clockType) {
                     case 1:
                         if ($templateId === 'worldclock1') {
-                            $widget->type = 'worldclock-digital-text';
+                            $widgetType = 'worldclock-digital-text';
                         } elseif ($templateId === 'worldclock2') {
-                            $widget->type = 'worldclock-digital-date';
+                            $widgetType = 'worldclock-digital-date';
                         } else {
-                            $widget->type = 'worldclock-digital-custom';
+                            $widgetType = 'worldclock-digital-custom';
                         }
                         break;
 
                     case 2:
-                        $widget->type = 'worldclock-analogue';
+                        $widgetType = 'worldclock-analogue';
                         break;
 
                     default:
                         break;
                 }
-                return true;
+
+                if (!empty($widgetType)) {
+                    $widget->type = $widgetType;
+                    $upgraded = true;
+                }
             }
         }
-        return false;
+
+        return $upgraded;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
     {
         return false;
     }
-
 }

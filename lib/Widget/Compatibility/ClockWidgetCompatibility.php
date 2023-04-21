@@ -35,37 +35,45 @@ class ClockWidgetCompatibility implements WidgetCompatibilityInterface
 
     /** @inheritdoc
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
+        $upgraded = false;
+        $widgetType = null;
         foreach ($widget->widgetOptions as $option) {
             $clockTypeId = $widget->getOptionValue('clockTypeId', 1);
 
             if ($option->option === 'clockTypeId') {
                 switch ($clockTypeId) {
                     case 1:
-                        $widget->type = 'clock-analogue';
+                        $widgetType = 'clock-analogue';
                         break;
 
                     case 2:
-                        $widget->type = 'clock-digital';
+                        $widgetType = 'clock-digital';
                         break;
 
                     case 3:
-                        $widget->type = 'clock-flip';
+                        $widgetType = 'clock-flip';
                         break;
 
                     default:
                         break;
                 }
+
+                if (!empty($widgetType)) {
+                    $widget->type = $widgetType;
+                    $upgraded = true;
+                }
             }
         }
+
+        return $upgraded;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
     {
         return false;
     }
-
 }

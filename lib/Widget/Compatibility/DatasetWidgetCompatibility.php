@@ -35,57 +35,65 @@ class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
 
     /** @inheritdoc
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
+        $upgraded = false;
+        $newTemplateId = null;
         foreach ($widget->widgetOptions as $option) {
             $templateId = $widget->getOptionValue('templateId', '');
 
             if ($option->option === 'templateId') {
                 switch ($templateId) {
                     case 'empty':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_1');
+                        $newTemplateId = 'dataset_table_1';
                         break;
 
                     case 'light-green':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_2');
+                        $newTemplateId = 'dataset_table_2';
                         break;
 
                     case 'simple-round':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_3');
+                        $newTemplateId = 'dataset_table_3';
                         break;
 
                     case 'transparent-blue':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_4');
+                        $newTemplateId = 'dataset_table_4';
                         break;
 
                     case 'orange-grey-striped':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_5');
+                        $newTemplateId = 'dataset_table_5';
                         break;
 
                     case 'split-rows':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_6');
+                        $newTemplateId = 'dataset_table_6';
                         break;
 
                     case 'dark-round':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_7');
+                        $newTemplateId = 'dataset_table_7';
                         break;
 
                     case 'pill-colored':
-                        $widget->setOptionValue('templateId', 'attrib', 'dataset_table_8');
+                        $newTemplateId = 'dataset_table_8';
                         break;
 
                     default:
                         break;
                 }
+
+                if (!empty($newTemplateId)) {
+                    $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
+                    $upgraded = true;
+                }
             }
         }
+
+        return $upgraded;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
     {
         return false;
     }
-
 }
