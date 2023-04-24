@@ -1425,7 +1425,7 @@ class LayoutFactory extends BaseFactory
                         $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
                         if ($upgraded) {
                             $widget->schemaVersion = 2;
-                            $widget->save(['alwaysUpdate'=>true, notifyDisplays => false]);
+                            $widget->save(['alwaysUpdate'=>true, 'notifyDisplays' => false]);
                         }
                     } catch (\Exception $e) {
                         $this->getLog()->error('Error upgrading widget '. $e->getMessage());
