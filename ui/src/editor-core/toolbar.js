@@ -54,6 +54,9 @@ const Toolbar = function(
   // Custom actions
   this.customActions = customActions;
 
+  // Is the toolbar a playlist toolbar?
+  this.isPlaylist = isPlaylist;
+
   // Initialize toolbar
   this.init({
     isPlaylist: isPlaylist,
@@ -2017,9 +2020,12 @@ Toolbar.prototype.loadTemplates = function(
             el.thumbnailLoaded = true;
           }
 
-          if (el.type === 'element') {
+          // Save templates to respective groups
+          // and don't show elements and stencils if
+          // we are in playlist editor
+          if (el.type === 'element' && !self.isPlaylist) {
             elements.push(el);
-          } else if (el.type === 'element-group') {
+          } else if (el.type === 'element-group' && !self.isPlaylist) {
             stencils.push(el);
           } else if (el.type === 'static') {
             templates.push(el);

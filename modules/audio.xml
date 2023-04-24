@@ -23,7 +23,7 @@
     <name>Audio</name>
     <author>Core</author>
     <description>Upload Audio files to assign to Layouts</description>
-    <class></class>
+    <class>\Xibo\Widget\AudioProvider</class>
     <type>audio</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>

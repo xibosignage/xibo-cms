@@ -102,7 +102,7 @@ Element.prototype.getTemplate = function() {
   const self = this;
   return new Promise(function(resolve, reject) {
     // If the template is already loaded, resolve the promise
-    if (self.template.id != undefined) {
+    if (self.template.templateId != undefined) {
       resolve(self.template);
     } else {
       lD.templateManager.getTemplateById(
@@ -112,8 +112,70 @@ Element.prototype.getTemplate = function() {
         // Save the template
         self.template = template;
 
-        // Resolve the promise
-        resolve(template);
+        // If template is an extention of another template
+        // load the parent template
+        if (template.extends) {
+          lD.templateManager.getTemplateById(
+            template.extends.template,
+            'global',
+          ).then((parentTemplate) => {
+            // Merge the parent template properties with the template properties
+            // (if the template has a property with the same id as the parent
+            // template, use the template's property instead)
+            self.template.parent = parentTemplate;
+            const newProperties = [];
+
+            // Loop through parent template properties
+            for (let i = 0; i < parentTemplate.properties.length; i++) {
+              const parentProperty = parentTemplate.properties[i];
+              let found = false;
+
+              // If property is the one in overrides, don't add it
+              if (template.extends?.override == parentProperty.id) {
+                continue;
+              }
+
+              // Loop through template properties
+              for (let j = 0; j < template.properties.length; j++) {
+                const property = template.properties[j];
+
+                // If we have a property with the same id, use the template's
+                if (property.id === parentProperty.id) {
+                  found = true;
+                  break;
+                }
+              }
+
+              // If we didn't find a property with the same id, add it
+              if (!found) {
+                newProperties.push(parentProperty);
+              }
+            }
+
+            // Add the new properties to the template
+            self.template.properties =
+              newProperties.concat(template.properties);
+
+            // If template doesn't have onTemplateRender, use parent's
+            if (!template.onTemplateRender) {
+              template.onTemplateRender = parentTemplate.onTemplateRender;
+            } else {
+              // If onTemplateRender has the "callParent" placeholder,
+              // replace it with the parent's onTemplateRender
+              if (
+                template.onTemplateRender &&
+                template.onTemplateRender.includes('callParent')) {
+                template.onTemplateRender = template.onTemplateRender
+                  .replace('%callParent%', parentTemplate.onTemplateRender);
+              }
+            }
+
+            return resolve(self.template);
+          });
+        } else {
+          // Resolve the promise
+          resolve(template);
+        }
       });
     }
   });

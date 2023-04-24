@@ -298,7 +298,25 @@ class ScheduleFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        $sql = '
+        if (is_array($sortOrder)) {
+            $newSortOrder = [];
+            foreach ($sortOrder as $sort) {
+                if ($sort == '`recurringEvent`') {
+                    $newSortOrder[] = '`recurrence_type`';
+                    continue;
+                }
+
+                if ($sort == '`recurringEvent` DESC') {
+                    $newSortOrder[] = '`recurrence_type` DESC';
+                    continue;
+                }
+
+                $newSortOrder[] = $sort;
+            }
+            $sortOrder = $newSortOrder;
+        }
+
+        $select = '
         SELECT `schedule`.eventId, 
             `schedule`.eventTypeId,
             `schedule`.fromDt,
@@ -331,7 +349,9 @@ class ScheduleFactory extends BaseFactory
             `schedule`.parentCampaignId,
             `daypart`.isAlways,
             `daypart`.isCustom
-          FROM `schedule`
+        ';
+
+        $body = ' FROM `schedule`
             INNER JOIN `daypart`
             ON `daypart`.dayPartId = `schedule`.dayPartId
             LEFT OUTER JOIN `campaign`
@@ -340,99 +360,98 @@ class ScheduleFactory extends BaseFactory
             ON parentCampaign.campaignId = `schedule`.parentCampaignId
             LEFT OUTER JOIN `command`
             ON `command`.commandId = `schedule`.commandId
-          WHERE 1 = 1
-        ';
+          WHERE 1 = 1';
 
         if ($parsedFilter->getInt('eventId') !== null) {
-            $sql .= ' AND `schedule`.eventId = :eventId ';
+            $body .= ' AND `schedule`.eventId = :eventId ';
             $params['eventId'] = $parsedFilter->getInt('eventId');
         }
 
         if ($parsedFilter->getInt('eventTypeId') !== null) {
-            $sql .= ' AND `schedule`.eventTypeId = :eventTypeId ';
+            $body .= ' AND `schedule`.eventTypeId = :eventTypeId ';
             $params['eventTypeId'] = $parsedFilter->getInt('eventTypeId');
         }
 
         if ($parsedFilter->getInt('campaignId') !== null) {
-            $sql .= ' AND `schedule`.campaignId = :campaignId ';
+            $body .= ' AND `schedule`.campaignId = :campaignId ';
             $params['campaignId'] = $parsedFilter->getInt('campaignId');
         }
 
         if ($parsedFilter->getInt('parentCampaignId') !== null) {
-            $sql .= ' AND `schedule`.parentCampaignId = :parentCampaignId ';
+            $body .= ' AND `schedule`.parentCampaignId = :parentCampaignId ';
             $params['parentCampaignId'] = $parsedFilter->getInt('parentCampaignId');
         }
 
         if ($parsedFilter->getInt('adCampaignsOnly') === 1) {
-            $sql .= ' AND `schedule`.parentCampaignId IS NOT NULL AND `schedule`.eventTypeId = :eventTypeId ';
+            $body .= ' AND `schedule`.parentCampaignId IS NOT NULL AND `schedule`.eventTypeId = :eventTypeId ';
             $params['eventTypeId'] = Schedule::$INTERRUPT_EVENT;
         }
 
         if ($parsedFilter->getInt('recurring') !== null) {
             if ($parsedFilter->getInt('recurring') === 1) {
-                $sql .= ' AND `schedule`.recurrence_type IS NOT NULL ';
+                $body .= ' AND `schedule`.recurrence_type IS NOT NULL ';
             } else if ($parsedFilter->getInt('recurring') === 0) {
-                $sql .= ' AND `schedule`.recurrence_type IS NULL ';
+                $body .= ' AND `schedule`.recurrence_type IS NULL ';
             }
         }
 
         if ($parsedFilter->getInt('geoAware') !== null) {
-            $sql .= ' AND `schedule`.isGeoAware = :geoAware ';
+            $body .= ' AND `schedule`.isGeoAware = :geoAware ';
             $params['geoAware'] = $parsedFilter->getInt('geoAware');
         }
 
         if ($parsedFilter->getInt('ownerId') !== null) {
-            $sql .= ' AND `schedule`.userId = :ownerId ';
+            $body .= ' AND `schedule`.userId = :ownerId ';
             $params['ownerId'] = $parsedFilter->getInt('ownerId');
         }
 
         if ($parsedFilter->getInt('dayPartId') !== null) {
-            $sql .= ' AND `schedule`.dayPartId = :dayPartId ';
+            $body .= ' AND `schedule`.dayPartId = :dayPartId ';
             $params['dayPartId'] = $parsedFilter->getInt('dayPartId');
         }
 
         // Only 1 date
         if ($parsedFilter->getInt('fromDt') !== null && $parsedFilter->getInt('toDt') === null) {
-            $sql .= ' AND schedule.fromDt > :fromDt ';
+            $body .= ' AND schedule.fromDt > :fromDt ';
             $params['fromDt'] = $parsedFilter->getInt('fromDt');
         }
 
         if ($parsedFilter->getInt('toDt') !== null && $parsedFilter->getInt('fromDt') === null) {
-            $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
+            $body .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
             $params['toDt'] = $parsedFilter->getInt('toDt');
         }
         // End only 1 date
 
         // Both dates
         if ($parsedFilter->getInt('fromDt') !== null && $parsedFilter->getInt('toDt') !== null) {
-            $sql .= ' AND schedule.fromDt < :toDt ';
-            $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) >= :fromDt ';
+            $body .= ' AND schedule.fromDt < :toDt ';
+            $body .= ' AND IFNULL(schedule.toDt, schedule.fromDt) >= :fromDt ';
             $params['fromDt'] = $parsedFilter->getInt('fromDt');
             $params['toDt'] = $parsedFilter->getInt('toDt');
         }
         // End both dates
 
         if ($parsedFilter->getIntArray('displayGroupIds') != null) {
-            $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) ';
+            $body .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) ';
         }
 
         // Future schedules?
         if ($parsedFilter->getInt('futureSchedulesFrom') !== null && $parsedFilter->getInt('futureSchedulesTo') === null) {
             // Get schedules that end after this date, or that recur after this date
-            $sql .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0) AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ';
+            $body .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0) AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ';
             $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
         }
 
         if ($parsedFilter->getInt('futureSchedulesFrom') !== null && $parsedFilter->getInt('futureSchedulesTo') !== null) {
             // Get schedules that end after this date, or that recur after this date
-            $sql .= ' AND ((schedule.fromDt < :futureSchedulesTo AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom) OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
+            $body .= ' AND ((schedule.fromDt < :futureSchedulesTo AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom) OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
             $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
             $params['futureSchedulesTo'] = $parsedFilter->getInt('futureSchedulesTo');
         }
 
         // Restrict to mediaId - meaning layout schedules of which the layouts contain the selected mediaId
         if ($parsedFilter->getInt('mediaId') !== null) {
-            $sql .= '
+            $body .= '
                 AND schedule.campaignId IN (
                     SELECT `lkcampaignlayout`.campaignId
                       FROM `lkwidgetmedia`
@@ -462,8 +481,7 @@ class ScheduleFactory extends BaseFactory
 
         // Restrict to playlistId - meaning layout schedules of which the layouts contain the selected playlistId
         if ($parsedFilter->getInt('playlistId') !== null) {
-
-            $sql .= '
+            $body .= '
                 AND schedule.campaignId IN (
                     SELECT `lkcampaignlayout`.campaignId
                       FROM `lkplaylistplaylist` 
@@ -485,8 +503,25 @@ class ScheduleFactory extends BaseFactory
         }
 
         // Sorting?
-        if (is_array($sortOrder))
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+        $order = '';
+        if ($parsedFilter->getInt('gridFilter') === 1 && $sortOrder === null) {
+            $order = ' ORDER BY
+                            CASE WHEN `schedule`.fromDt = 0 THEN 0
+                                 WHEN `schedule`.recurrence_type <> \'\' THEN 1
+                                 ELSE 2 END,
+                            eventId';
+        } else if (is_array($sortOrder) && !empty($sortOrder)) {
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
+
+        // Paging
+        $limit = '';
+        if ($parsedFilter->hasParam('start') && $parsedFilter->hasParam('length')) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0])
+                . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
@@ -501,6 +536,12 @@ class ScheduleFactory extends BaseFactory
                     'maxPlaysPerHour',
                 ]
             ]);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;
