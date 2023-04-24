@@ -1017,7 +1017,7 @@ class LayoutFactory extends BaseFactory
                 $widget->duration = $mediaNode['duration'];
                 $widget->useDuration = $mediaNode['useDuration'];
                 $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
-                $widget->tempWidgetId = $mediaNode['widgetId'];                
+                $widget->tempWidgetId = $mediaNode['widgetId'];
                 $widget->schemaVersion = isset($mediaNode['schemaVersion']) ? (int)$mediaNode['schemaVersion'] : 1;
 
                 // Widget from/to dates.
@@ -1425,7 +1425,7 @@ class LayoutFactory extends BaseFactory
                         $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
                         if ($upgraded) {
                             $widget->schemaVersion = 2;
-                            $widget->save(['alwaysUpdate'=>true]);
+                            $widget->save(['alwaysUpdate'=>true, notifyDisplays => false]);
                         }
                     } catch (\Exception $e) {
                         $this->getLog()->error('Error upgrading widget '. $e->getMessage());
