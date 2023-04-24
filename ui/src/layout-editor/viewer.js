@@ -957,6 +957,28 @@ Viewer.prototype.renderElementContent = function(
   // Get element template ( most of the time
   // template will be already loaded/chached )
   element.getTemplate().then((template) => {
+    // Create and render HBS template from template
+    const stencil = template.parent ?
+      template.parent.stencil : template.stencil;
+    let hbsTemplate = Handlebars.compile(stencil.hbs);
+
+    // If element dimensions are not set, set them
+    // to the extended template, if it exists
+    // or to hardcoded values
+    if (!element.width || !element.height) {
+      if (template.parent) {
+        element.width = template.parent.startWidth;
+        element.height = template.parent.startHeight;
+      } else {
+        element.width = 100;
+        element.height = 100;
+      }
+
+      // Render element again
+      self.renderElement(element, lD.layout.canvas);
+      return;
+    }
+
     // Render element with template
     $elementContainer.html($(viewerElementContentTemplate({
       element: element,
@@ -965,9 +987,6 @@ Viewer.prototype.renderElementContent = function(
       originalWidth: element.width,
       originalHeight: element.height,
     })));
-
-    // Create and render HBS template from template
-    const hbsTemplate = Handlebars.compile(template.stencil.hbs);
 
     // Get element properties
     element.getProperties().then((properties) => {
@@ -981,6 +1000,15 @@ Viewer.prototype.renderElementContent = function(
           convertedProperties[property.id] = (property.value == undefined) ?
             property.default : property.value;
         }
+      }
+
+      // Handle override property values
+      if (template.extends?.override && template.extends?.with) {
+        const replacedStencil = stencil.hbs.replace(
+          '{{' + template.extends.override + '}}',
+          '{{' + template.extends.with + '}}',
+        );
+        hbsTemplate = Handlebars.compile(replacedStencil);
       }
 
       // Get element data from widget
@@ -1013,7 +1041,7 @@ Viewer.prototype.renderElementContent = function(
             window['onTemplateRender_' + element.elementId];
 
           // Call on template render on element creation
-          onTemplateRender(element.properties);
+          onTemplateRender && onTemplateRender(convertedProperties);
         }
 
         // Call callback if it exists

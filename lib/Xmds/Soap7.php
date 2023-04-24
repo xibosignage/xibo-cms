@@ -196,4 +196,40 @@ class Soap7 extends Soap6
 
         return $resource;
     }
+
+    /**
+     * Get Weather data for Display
+     * @param $serverKey
+     * @param $hardwareKey
+     * @return string
+     * @throws \SoapFault
+     */
+    public function GetWeather($serverKey, $hardwareKey): string
+    {
+        $this->logProcessor->setRoute('GetWeather');
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+        ]);
+
+        // Sanitize
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
+
+        // Check the serverKey matches
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
+        }
+
+        // Auth this request...
+        if (!$this->authDisplay($hardwareKey)) {
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
+        }
+
+        // TODO actually get the Weather with Display lat/long
+        return '{}';
+    }
 }

@@ -696,11 +696,25 @@ Widget.prototype.removeElement = function(
 
   // Check if there's no more elements in widget and remove it
   if (Object.keys(this.elements).length == 0) {
+    // Check if parent region is canvas and it only has 1 widget
+    // If so, remove region as well
+    const removeRegion = (
+      this.parent.subType == 'canvas' &&
+      Object.keys(this.parent.widgets).length == 1
+    );
+
+    // Remove widget
     app.layout.deleteElement('widget', this.widgetId).then(() => {
-      // Reload layout
-      app.reloadData(app.layout, true);
-    }).catch((error) => {
-      console.error(error);
+      // Remove region if it's empty
+      if (removeRegion) {
+        app.layout.deleteElement('region', this.parent.regionId).then(() => {
+          // Reload layout
+          app.reloadData(app.layout, true);
+        });
+      } else {
+        // Reload layout
+        app.reloadData(app.layout, true);
+      }
     });
   }
 };
@@ -718,38 +732,57 @@ Widget.prototype.getData = function() {
       .replace(':id', this.widgetId)
       .replace(':regionId', this.regionId.split('region_')[1]);
 
-  return new Promise(function(resolve, reject) {
-    // If element already has data, use cached data
-    if (
-      !$.isEmptyObject(self.cachedData)
-    ) {
-      resolve(self.cachedData);
-    } else {
-      $.ajax({
-        url: requestPath,
-        type: linkToAPI.type,
-        dataType: 'json',
-      }).done((data) => {
-        if (!data.data) {
-          // Show sample data
-          for (let i = 0; i < modulesList.length; i++) {
-            if (modulesList[i].type === self.subType) {
-              self.cachedData = modulesList[i].sampleData[0];
-              resolve(self.cachedData);
-            }
-          }
-        } else if (data.data.length > 0) {
-          // Return just first item
-          self.cachedData = data.data[0];
-        }
+  // If data request is already in progress, return cached promise
+  if (self.cachedDataPromise) {
+    return self.cachedDataPromise;
+  }
 
-        // Resolve the promise with the data
-        resolve(self.cachedData);
-      }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.error('getData', jqXHR, textStatus, errorThrown);
-      });
-    }
+  // If widget already has data, use cached data
+  if (
+    !$.isEmptyObject(self.cachedData)
+  ) {
+    // Clear cached promise
+    self.cachedDataPromise = null;
+
+    // Resolve the promise with the data
+    return Promise.resolve(self.cachedData);
+  }
+
+  self.cachedDataPromise = new Promise(function(resolve, reject) {
+    $.ajax({
+      url: requestPath,
+      type: linkToAPI.type,
+      dataType: 'json',
+    }).done((data) => {
+      if (!data.data) {
+        // Show sample data
+        for (let i = 0; i < modulesList.length; i++) {
+          if (modulesList[i].type === self.subType) {
+            // Clear cached promise
+            self.cachedDataPromise = null;
+
+            // Resolve the promise with the data
+            self.cachedData = modulesList[i].sampleData[0];
+            resolve(self.cachedData);
+          }
+        }
+      } else if (data.data.length > 0) {
+        // Return just first item
+        self.cachedData = data.data[0];
+      }
+
+      // Clear cached promise
+      self.cachedDataPromise = null;
+
+      // Resolve the promise with the data
+      resolve(self.cachedData);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      console.error('getData', jqXHR, textStatus, errorThrown);
+    });
   });
+
+  // Return promise
+  return self.cachedDataPromise;
 };
 
 module.exports = Widget;

@@ -1567,72 +1567,76 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddButtons(table, filter, allButtons) {
+function dataTableAddButtons(table, filter, allButtons, resetSort) {
     allButtons = (allButtons === undefined) ? true : allButtons;
+    resetSort = (resetSort === undefined) ? false : resetSort;
+
+    let buttons = [
+        {
+            extend: 'colvis',
+            columns: ':not(.rowMenu)',
+            text: function (dt, button, config) {
+                return dt.i18n('buttons.colvis');
+            }
+        },
+    ];
+
+    if (resetSort) {
+        buttons.push(
+          {
+              text: translations.defaultSorting,
+              action: function ( e, dt, node, config ) {
+                  table.order([]).draw();
+              }
+          }
+        )
+    }
 
     if (allButtons) {
-        var colVis = new $.fn.dataTable.Buttons(table, {
-            buttons: [
-                {
-                    extend: 'colvis',
-                    columns: ':not(.rowMenu)',
-                    text: function (dt, button, config) {
-                        return dt.i18n('buttons.colvis');
-                    }
-                },
-                {
-                    extend: 'print',
-                    text: function (dt, button, config) {
-                        return dt.i18n('buttons.print');
-                    },
-                    exportOptions: {
-                        orthogonal: 'export',
-                        format: {
-                            body: function (data, row, column, node) {
-                                if (data === null || data === "" || data === "null")
-                                    return "";
-                                else
-                                    return data;
-                            }
-                        }
-                    },
-                  customize: function (win) {
-                    let table = $(win.document.body).find('table');
-                    table.removeClass('nowrap responsive dataTable no-footer dtr-inline');
-                    if (table.find('th').length > 16) {
+        buttons.push(
+          {
+              extend: 'print',
+              text: function (dt, button, config) {
+                  return dt.i18n('buttons.print');
+              },
+              exportOptions: {
+                  orthogonal: 'export',
+                  format: {
+                      body: function (data, row, column, node) {
+                          if (data === null || data === "" || data === "null")
+                              return "";
+                          else
+                              return data;
+                      }
+                  }
+              },
+              customize: function (win) {
+                  let table = $(win.document.body).find('table');
+                  table.removeClass('nowrap responsive dataTable no-footer dtr-inline');
+                  if (table.find('th').length > 16) {
                       table.addClass('table-sm');
                       table.css('font-size', '6px');
-                    }
                   }
-                },
-                {
-                    extend: 'csv',
-                    exportOptions: {
-                        orthogonal: 'export',
-                        format: {
-                            body: function (data, row, column, node) {
-                                if (data === null || data === "")
-                                    return "";
-                                else
-                                    return data;
-                            }
-                        }
-                    }
-                }
-            ]
-        });
-    } else {
-        var colVis = new $.fn.dataTable.Buttons(table, {
-            buttons: [
-                {
-                    extend: 'colvis',
-                    text: function (dt, button, config) {
-                        return dt.i18n('buttons.colvis');
-                    }
-                }
-            ]
-        });
+              }
+          },
+          {
+              extend: 'csv',
+              exportOptions: {
+                  orthogonal: 'export',
+                  format: {
+                      body: function (data, row, column, node) {
+                          if (data === null || data === "")
+                              return "";
+                          else
+                              return data;
+                      }
+                  }
+              }
+          },
+        )
     }
+
+    new $.fn.dataTable.Buttons(table, {buttons: buttons});
 
     table.buttons( 0, null ).container().prependTo(filter);
     $(filter).addClass('text-right');

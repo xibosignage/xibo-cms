@@ -1417,6 +1417,15 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         rotation: 0,
       };
 
+      // Check if the element is extending a template
+      if (draggableData.extendsTemplate) {
+        element.extends = {
+          templateId: draggableData.extendsTemplate,
+          override: draggableData.extendsOverride,
+          overrideId: draggableData.extendsOverrideId,
+        };
+      }
+
       // Check if we have a canvas widget with
       // subtype equal to the draggableSubType
       // If we do, add the element to that widget
