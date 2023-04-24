@@ -387,6 +387,35 @@ class WidgetHtmlRenderer
         $duration = 0;
         $numItems = 0;
 
+        // Grab any global elements in our templates
+        $globalElements = [];
+        foreach ($moduleTemplates as $moduleTemplate) {
+            if ($moduleTemplate->type === 'element' && $moduleTemplate->dataType === 'global') {
+                // Add global elements to an array of extendable elements
+                $globalElements[$moduleTemplate->templateId] = $moduleTemplate;
+            }
+        }
+
+        $this->getLog()->debug('render: there are ' . count($globalElements) . ' global elements');
+
+        // Extend any elements which need to be extended.
+        foreach ($moduleTemplates as $moduleTemplate) {
+            if ($moduleTemplate->type === 'element' && $moduleTemplate->dataType !== 'global'
+                && !empty($moduleTemplate->extends)
+                && array_key_exists($moduleTemplate->extends->template, $globalElements)
+            ) {
+                $extends = $globalElements[$moduleTemplate->extends->template];
+
+                $this->getLog()->debug('render: extending template ' . $moduleTemplate->templateId);
+
+                // Merge properties
+                $moduleTemplate->properties = array_merge($extends->properties, $moduleTemplate->properties);
+
+                // Store on the object to use when we output the stencil
+                $moduleTemplate->setUnmatchedProperty('extends', $extends);
+            }
+        }
+
         // Render each widget out into the html
         foreach ($widgets as $widget) {
             $this->getLog()->debug('render: widget to process is widgetId: ' . $widget->widgetId);
@@ -447,7 +476,7 @@ class WidgetHtmlRenderer
                         $moduleTemplate->decorateProperties($widget, true);
                         $widgetData['templateProperties'] = $moduleTemplate->getPropertyValues();
 
-                        $this->getLog()->debug('Static template to include: ' . $moduleTemplate->templateId);
+                        $this->getLog()->debug('render: Static template to include: ' . $moduleTemplate->templateId);
                         if ($moduleTemplate->stencil !== null) {
                             if ($moduleTemplate->stencil->twig !== null) {
                                 $twig['twig'][] = $this->twig->fetchFromString(
@@ -491,14 +520,22 @@ class WidgetHtmlRenderer
             // Include elements/element groups - they will already be JSON encoded.
             $widgetElements = $widget->getOptionValue('elements', null);
             if (!empty($widgetElements)) {
+                $this->getLog()->debug('render: there are elements to include');
+
                 // Elements will be JSON
                 $widgetElements = json_decode($widgetElements, true);
 
                 // Join together the template properties for this element, and the element properties
                 foreach ($widgetElements as $widgetIndex => $widgetElement) {
                     foreach (($widgetElement['elements'] ?? []) as $elementIndex => $element) {
+                        $this->getLog()->debug('render: elements: processing widget index ' . $widgetIndex
+                            . ', element index ' . $elementIndex . ' with id ' . $element['id']);
+
                         foreach ($moduleTemplates as $moduleTemplate) {
                             if ($moduleTemplate->templateId === $element['id']) {
+                                $this->getLog()->debug('render: elements: found template for element '
+                                    . $element['id']);
+
                                 // Merge the properties on the element with the properties on the template.
                                 $widgetElements[$widgetIndex]['elements'][$elementIndex]['properties'] =
                                     $moduleTemplate->getPropertyValues(
@@ -517,30 +554,20 @@ class WidgetHtmlRenderer
             }
         }
 
-        // Grab any global elements in our templates
-        $globalElements = [];
-        foreach ($moduleTemplates as $moduleTemplate) {
-            if ($moduleTemplate->type === 'element') {
-                $globalElements[$moduleTemplate->templateId] = $moduleTemplate;
-            }
-        }
-
         // Render out HBS from templates
         foreach ($moduleTemplates as $moduleTemplate) {
             // Handle extends.
-            $extension = null;
-            if (!empty($moduleTemplate->extends)
-                && array_key_exists($moduleTemplate->extends->template, $globalElements)
-            ) {
-                // Pull the template we're extending
-                $extension = $globalElements[$moduleTemplate->extends->template];
-            }
+            $extension = $moduleTemplate->getUnmatchedProperty('extends');
 
             // Render out any hbs
             if ($moduleTemplate->stencil !== null && $moduleTemplate->stencil->hbs !== null) {
                 // If we have an extension then look for %parent% and insert it.
                 if ($extension !== null && Str::contains('%parent%', $module->stencil->hbs)) {
-                    $module->stencil->hbs = str_replace('%parent%', $extension->stencil->hbs, $module->stencil->hbs);
+                    $moduleTemplate->stencil->hbs = str_replace(
+                        '%parent%',
+                        $extension->stencil->hbs,
+                        $moduleTemplate->stencil->hbs
+                    );
                 }
 
                 // Output the hbs

@@ -113,7 +113,6 @@ if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
-
     // Check send file mode is enabled
     $sendFileMode = $container->get('configService')->getSetting('SENDFILE_MODE');
 

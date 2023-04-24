@@ -101,8 +101,8 @@
                         <tr>
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Type" %}</th>
-                            <th>{% trans "Downloaded" %}</th>
                             <th>{% trans "Complete" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -110,10 +110,10 @@
                                 <tr>
                                     <td>{{ item.path }}</td>
                                     <td>{{ item.fileType }}</td>
-                                    <td>{{ item.bytesRequested|byteFormat }}</td>
                                     <td>
                                         <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
                                     </td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -206,7 +206,6 @@
                         <tr>
                             <th>{% trans "ID" %}</th>
                             <th>{% trans "Name" %}</th>
-                            <th>{% trans "Type" %}</th>
                             <th>{% trans "Complete" %}</th>
                             <th>{% trans "Downloaded" %}</th>
                         </tr>
@@ -216,7 +215,6 @@
                             <tr>
                                 <td>{{ item.itemId }}</td>
                                 <td>{{ item.widgetName }}</td>
-                                <td>{{ item.type }}</td>
                                 <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
                                     <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
                                 </td>
@@ -244,7 +242,7 @@
                         <tbody>
                         {% for item in inventory.widgetData %}
                             <tr>
-                                <td>{{ item.itemId }}</td>
+                                <td>{{ item.widgetId }}</td>
                                 <td>{{ item.widgetName }}</td>
                                 <td>{{ item.type }}</td>
                                 <td>{{ item.bytesRequested|byteFormat }}</td>
