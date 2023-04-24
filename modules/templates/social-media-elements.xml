@@ -1,0 +1,96 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>profile_photo</id>
+        <extends override="url" with="data.userProfileImage">global-image</extends>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <title>Profile Photo</title>
+        <thumbnail>social-media-profile-photo</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="social-media-profile-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/social-media-profile-photo.png" />
+        </assets>
+    </template>
+    <template>
+        <id>social_media_description</id>
+        <extends override="text" with="data.text">text</extends>
+        <title>Description</title>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>social-media-description</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="social-media-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-description.png" />
+        </assets>
+    </template>
+    <template>
+        <id>social_media_username</id>
+        <extends override="text" with="data.user">text</extends>
+        <title>Username</title>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>social-media-username</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="social-media-username" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
+        </assets>
+    </template>
+    <template>
+        <id>social_media_date</id>
+        <extends override="date" with="data.date">date</extends>
+        <title>Date</title>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>date-thumb</thumbnail>
+        <startWidth>450</startWidth>
+        <startHeight>80</startHeight>
+        <assets>
+            <asset id="date-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+    <template>
+        <id>tweet1</id>
+        <type>element-group</type>
+        <dataType>social-media</dataType>
+        <title>Tweet</title>
+        <stencil>
+            <width></width>
+            <height></height>
+            <elements>
+                <element id="profile-photo">
+                    <top>150</top>
+                    <left>350</left>
+                    <defaultProperties>
+                        <property id=""></property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+    </template>
+</templates>

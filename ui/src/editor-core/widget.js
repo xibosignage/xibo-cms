@@ -144,6 +144,9 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   // Interactive actions
   this.actions = data.actions;
 
+  // Cached data
+  this.cachedData = {};
+
   /**
    * Get transitions from options
    * @return {object} transitions
@@ -609,6 +612,7 @@ Widget.prototype.saveElements = function(
     const elementObject = {
       id: element.id,
       elementId: element.elementId,
+      type: element.elementType,
       left: element.left,
       top: element.top,
       width: element.width,
@@ -672,6 +676,8 @@ Widget.prototype.removeElement = function(
   elementId,
   save,
 ) {
+  const app = this.editorObject;
+
   // Remove element from DOM
   $(`#${elementId}`).remove();
 
@@ -687,6 +693,96 @@ Widget.prototype.removeElement = function(
       reloadViewer: true,
     });
   }
+
+  // Check if there's no more elements in widget and remove it
+  if (Object.keys(this.elements).length == 0) {
+    // Check if parent region is canvas and it only has 1 widget
+    // If so, remove region as well
+    const removeRegion = (
+      this.parent.subType == 'canvas' &&
+      Object.keys(this.parent.widgets).length == 1
+    );
+
+    // Remove widget
+    app.layout.deleteElement('widget', this.widgetId).then(() => {
+      // Remove region if it's empty
+      if (removeRegion) {
+        app.layout.deleteElement('region', this.parent.regionId).then(() => {
+          // Reload layout
+          app.reloadData(app.layout, true);
+        });
+      } else {
+        // Reload layout
+        app.reloadData(app.layout, true);
+      }
+    });
+  }
+};
+
+
+/**
+ * Get widget data
+  * @return {Promise} - Promise with widget data
+ */
+Widget.prototype.getData = function() {
+  const self = this;
+  const linkToAPI = urlsForApi.module.getData;
+  const requestPath =
+    linkToAPI.url
+      .replace(':id', this.widgetId)
+      .replace(':regionId', this.regionId.split('region_')[1]);
+
+  // If data request is already in progress, return cached promise
+  if (self.cachedDataPromise) {
+    return self.cachedDataPromise;
+  }
+
+  // If widget already has data, use cached data
+  if (
+    !$.isEmptyObject(self.cachedData)
+  ) {
+    // Clear cached promise
+    self.cachedDataPromise = null;
+
+    // Resolve the promise with the data
+    return Promise.resolve(self.cachedData);
+  }
+
+  self.cachedDataPromise = new Promise(function(resolve, reject) {
+    $.ajax({
+      url: requestPath,
+      type: linkToAPI.type,
+      dataType: 'json',
+    }).done((data) => {
+      if (!data.data) {
+        // Show sample data
+        for (let i = 0; i < modulesList.length; i++) {
+          if (modulesList[i].type === self.subType) {
+            // Clear cached promise
+            self.cachedDataPromise = null;
+
+            // Resolve the promise with the data
+            self.cachedData = modulesList[i].sampleData[0];
+            resolve(self.cachedData);
+          }
+        }
+      } else if (data.data.length > 0) {
+        // Return just first item
+        self.cachedData = data.data[0];
+      }
+
+      // Clear cached promise
+      self.cachedDataPromise = null;
+
+      // Resolve the promise with the data
+      resolve(self.cachedData);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      console.error('getData', jqXHR, textStatus, errorThrown);
+    });
+  });
+
+  // Return promise
+  return self.cachedDataPromise;
 };
 
 module.exports = Widget;

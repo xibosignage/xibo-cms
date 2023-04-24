@@ -46,11 +46,13 @@ trait ModulePropertyTrait
 
             if ($property->type === 'integer' && $property->value !== null) {
                 $property->value = intval($property->value);
-            } else if ($property->type === 'double' && $property->value !== null) {
-                $property->value = intval($property->value);
+            } else if (($property->type === 'double' || $property->type === 'number')
+                && $property->value !== null
+            ) {
+                $property->value = doubleval($property->value);
             }
 
-            if ($property->variant === 'uri') {
+            if ($property->variant === 'uri' && !empty($value)) {
                 $property->value = urldecode($property->value);
             }
         }
@@ -58,14 +60,54 @@ trait ModulePropertyTrait
     }
 
     /**
-     * @param bool $decorateForOutput true if we should decorate for output to either the preview or player
+     * @param array $properties
+     * @param bool $includeDefaults
      * @return array
      */
-    public function getPropertyValues(bool $decorateForOutput = true): array
+    public function decoratePropertiesByArray(array $properties, bool $includeDefaults = false): array
+    {
+        // Flatten the properties array so that we can reference it by key.
+        $keyedProperties = [];
+        foreach ($properties as $property) {
+            $keyedProperties[$property['id']] = $property['value'];
+        }
+
+        $decoratedProperties = [];
+        foreach ($this->properties as $property) {
+            $decoratedProperty = $keyedProperties[$property->id] ?? null;
+
+            // Should we include defaults?
+            if ($includeDefaults && $decoratedProperty === null) {
+                $decoratedProperty = $property->default;
+            }
+
+            if ($property->type === 'integer' && $decoratedProperty !== null) {
+                $decoratedProperty = intval($decoratedProperty);
+            } else if (($property->type === 'double' || $property->type === 'number')
+                && $decoratedProperty !== null
+            ) {
+                $decoratedProperty = doubleval($decoratedProperty);
+            }
+
+            if ($property->variant === 'uri' && !empty($value)) {
+                $decoratedProperty = urldecode($decoratedProperty);
+            }
+
+            $decoratedProperties[$property->id] = $decoratedProperty;
+        }
+        return $decoratedProperties;
+    }
+
+    /**
+     * @param bool $decorateForOutput true if we should decorate for output to either the preview or player
+     * @param array|null $overrideValues a key/value array of values to use instead the stored property values
+     * @return array
+     */
+    public function getPropertyValues(bool $decorateForOutput = true, ?array $overrideValues = null): array
     {
         $properties = [];
         foreach ($this->properties as $property) {
-            $value = $property->value;
+            $value = $overrideValues !== null ? ($overrideValues[$property->id] ?? null) : $property->value;
 
             // TODO: should we cast values to their appropriate field formats.
             if ($decorateForOutput) {
@@ -85,7 +127,7 @@ trait ModulePropertyTrait
                     }
                 }
 
-                if ($property->variant === 'dateFormat') {
+                if ($property->variant === 'dateFormat' && !empty($value)) {
                     $value = DateFormatHelper::convertPhpToMomentFormat($value);
                 }
 
@@ -99,7 +141,7 @@ trait ModulePropertyTrait
     }
 
     /**
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException|\Xibo\Support\Exception\ValueTooLargeException
      */
     public function validateProperties(): void
     {

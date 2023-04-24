@@ -623,6 +623,10 @@ class Library extends Base
                     );
             }
 
+            if ($parsedQueryParams->getCheckbox('fullScreenScheduleCheck')) {
+                $media->setUnmatchedProperty('hasFullScreenLayout', $this->hasFullScreenLayout($media));
+            }
+
             $media->buttons = [];
 
             // Buttons
@@ -750,6 +754,22 @@ class Library extends Base
                     'url' => $this->urlFor($request, 'library.usage.form', ['id' => $media->mediaId]),
                     'text' => __('Usage Report')
                 );
+            }
+
+            // Schedule Now
+            if ($this->getUser()->featureEnabled('schedule.now')
+                && ($this->getUser()->checkEditable($media)
+                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
+            ) {
+                $media->buttons[] = [
+                    'id' => 'library_button_schedulenow',
+                    'url' => $this->urlFor(
+                        $request,
+                        'schedule.now.form',
+                        ['id' => $media->mediaId, 'from' => 'Library']
+                    ),
+                    'text' => __('Schedule Now')
+                ];
             }
         }
 
@@ -2781,5 +2801,15 @@ class Library extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Check if we already have a full screen Layout for this Media
+     * @param Media $media
+     * @return bool
+     */
+    private function hasFullScreenLayout(Media $media): bool
+    {
+        return !empty($this->layoutFactory->getLinkedFullScreenLayout('media', $media->mediaId));
     }
 }

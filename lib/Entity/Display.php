@@ -658,11 +658,16 @@ class Display implements \JsonSerializable
      * Is this display auditing?
      * return bool
      */
-    public function isAuditing()
+    public function isAuditing(): bool
     {
-        $this->getLog()->debug(sprintf('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, Carbon::now()->format('U')));
+        $this->getLog()->debug(sprintf(
+            'Testing whether this display is auditing. %d vs %d.',
+            $this->auditingUntil,
+            Carbon::now()->format('U')
+        ));
+
         // Test $this->auditingUntil against the current date.
-        return ($this->auditingUntil >= Carbon::now()->format('U'));
+        return (!empty($this->auditingUntil) && $this->auditingUntil >= Carbon::now()->format('U'));
     }
 
     /**

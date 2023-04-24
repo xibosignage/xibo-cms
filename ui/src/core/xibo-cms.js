@@ -157,6 +157,7 @@ function XiboInitialise(scope, options) {
         $(this).find('.XiboFilter form input').on('keyup', filterRefresh);
         $(this).find('.XiboFilter form input[type="checkbox"]').on('change', filterRefresh);
         $(this).find('.XiboFilter form select').on('change', filterRefresh);
+        $(this).find('.XiboFilter form input.dateControl').on('change', filterRefresh);
 
         // Folder navigation relies on triggering the change event on this hidden field.
         $(this).find('.XiboFilter form #folderId').on('change', filterRefresh);
@@ -1566,72 +1567,76 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddButtons(table, filter, allButtons) {
+function dataTableAddButtons(table, filter, allButtons, resetSort) {
     allButtons = (allButtons === undefined) ? true : allButtons;
+    resetSort = (resetSort === undefined) ? false : resetSort;
+
+    let buttons = [
+        {
+            extend: 'colvis',
+            columns: ':not(.rowMenu)',
+            text: function (dt, button, config) {
+                return dt.i18n('buttons.colvis');
+            }
+        },
+    ];
+
+    if (resetSort) {
+        buttons.push(
+          {
+              text: translations.defaultSorting,
+              action: function ( e, dt, node, config ) {
+                  table.order([]).draw();
+              }
+          }
+        )
+    }
 
     if (allButtons) {
-        var colVis = new $.fn.dataTable.Buttons(table, {
-            buttons: [
-                {
-                    extend: 'colvis',
-                    columns: ':not(.rowMenu)',
-                    text: function (dt, button, config) {
-                        return dt.i18n('buttons.colvis');
-                    }
-                },
-                {
-                    extend: 'print',
-                    text: function (dt, button, config) {
-                        return dt.i18n('buttons.print');
-                    },
-                    exportOptions: {
-                        orthogonal: 'export',
-                        format: {
-                            body: function (data, row, column, node) {
-                                if (data === null || data === "" || data === "null")
-                                    return "";
-                                else
-                                    return data;
-                            }
-                        }
-                    },
-                  customize: function (win) {
-                    let table = $(win.document.body).find('table');
-                    table.removeClass('nowrap responsive dataTable no-footer dtr-inline');
-                    if (table.find('th').length > 16) {
+        buttons.push(
+          {
+              extend: 'print',
+              text: function (dt, button, config) {
+                  return dt.i18n('buttons.print');
+              },
+              exportOptions: {
+                  orthogonal: 'export',
+                  format: {
+                      body: function (data, row, column, node) {
+                          if (data === null || data === "" || data === "null")
+                              return "";
+                          else
+                              return data;
+                      }
+                  }
+              },
+              customize: function (win) {
+                  let table = $(win.document.body).find('table');
+                  table.removeClass('nowrap responsive dataTable no-footer dtr-inline');
+                  if (table.find('th').length > 16) {
                       table.addClass('table-sm');
                       table.css('font-size', '6px');
-                    }
                   }
-                },
-                {
-                    extend: 'csv',
-                    exportOptions: {
-                        orthogonal: 'export',
-                        format: {
-                            body: function (data, row, column, node) {
-                                if (data === null || data === "")
-                                    return "";
-                                else
-                                    return data;
-                            }
-                        }
-                    }
-                }
-            ]
-        });
-    } else {
-        var colVis = new $.fn.dataTable.Buttons(table, {
-            buttons: [
-                {
-                    extend: 'colvis',
-                    text: function (dt, button, config) {
-                        return dt.i18n('buttons.colvis');
-                    }
-                }
-            ]
-        });
+              }
+          },
+          {
+              extend: 'csv',
+              exportOptions: {
+                  orthogonal: 'export',
+                  format: {
+                      body: function (data, row, column, node) {
+                          if (data === null || data === "")
+                              return "";
+                          else
+                              return data;
+                      }
+                  }
+              }
+          },
+        )
     }
+
+    new $.fn.dataTable.Buttons(table, {buttons: buttons});
 
     table.buttons( 0, null ).container().prependTo(filter);
     $(filter).addClass('text-right');
@@ -3006,6 +3011,13 @@ function makePagedSelect(element, parent) {
 
                     if ($element.data("thumbnail") !== undefined) {
                         result.thumbnail = el[$element.data("thumbnail")];
+                    }
+
+                    if ($element.data('additionalProperty') !== undefined) {
+                        const additionalProperties = $element.data('additionalProperty').split(',');
+                        $.each(additionalProperties, function(index, property) {
+                            result[property] = el[property];
+                        })
                     }
 
                     results.push(result);

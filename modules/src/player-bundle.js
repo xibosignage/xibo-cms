@@ -46,6 +46,7 @@ import './xibo-text-render';
 import './xibo-dataset-render';
 import './xibo-webpage-render';
 import './xibo-worldclock-render';
+import './xibo-elements-render';
 import './editor-render';
 import './player';
 

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -101,6 +101,16 @@ class PlaylistFactory extends BaseFactory
         }
 
         return $playlists[0];
+    }
+
+    /**
+     * @param $campaignId
+     * @return Playlist[]
+     * @throws NotFoundException
+     */
+    public function getByCampaignId($campaignId): array
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
     }
 
     /**
@@ -296,6 +306,26 @@ class PlaylistFactory extends BaseFactory
                         WHERE region.layoutId = :layoutId
                 )';
             $params['layoutId'] = $parsedFilter->getInt('layoutId', $filterBy);
+        }
+
+        if ($parsedFilter->getInt('campaignId') !== null) {
+            $body .= '
+                AND `playlist`.playlistId IN (
+                    SELECT `lkplaylistplaylist`.childId
+                    FROM region
+                    INNER JOIN playlist
+                        ON `playlist`.regionId = `region`.regionId
+                    INNER JOIN lkplaylistplaylist
+                        ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
+                    INNER JOIN widget
+                        ON `widget`.playlistId = `lkplaylistplaylist`.childId
+                    INNER JOIN lkwidgetmedia
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId        
+                    INNER JOIN `lkcampaignlayout` lkcl
+                            ON lkcl.layoutid = region.layoutid
+                            AND lkcl.CampaignID = :campaignId
+            )';
+            $params['campaignId'] = $parsedFilter->getInt('campaignId');
         }
 
         // Playlist Like

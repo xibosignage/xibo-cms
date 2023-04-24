@@ -310,6 +310,18 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
+     * @return \Xibo\Entity\Media[]
+     */
+    public function getImageIds(): array
+    {
+        $mediaIds = [];
+        foreach ($this->getImages() as $media) {
+            $mediaIds[] = $media->mediaId;
+        }
+        return $mediaIds;
+    }
+
+    /**
      * @inheritDoc
      */
     public function clearData(): DataProviderInterface

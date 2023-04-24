@@ -126,7 +126,7 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public function getByDisplayAndDependency($displayId, $fileType, $id)
+    public function getByDisplayAndDependency($displayId, $fileType, $id, bool $isUseRealId = true)
     {
         $result = $this->getStore()->select('
             SELECT * 
@@ -134,7 +134,7 @@ class RequiredFileFactory extends BaseFactory
              WHERE `displayId` = :displayId
                 AND `type` = :type 
                 AND `fileType` = :fileType
-                AND `realId` = :itemId
+                AND `' . ($isUseRealId ? 'realId' : 'itemId') . '` = :itemId
         ', [
             'displayId' => $displayId,
             'type' => 'P',

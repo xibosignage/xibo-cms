@@ -1,11 +1,17 @@
 <div class="toolbar-card toolbar-card-element {{#if thumbnail}}has-thumb{{/if}}" 
     data-toggle="tooltip" 
     data-type="{{type}}" 
-    data-sub-type="{{dataType}}"
+    data-sub-type="{{#if subType}}{{subType}}{{else}}{{dataType}}{{/if}}"
+    data-data-type="{{dataType}}"
     data-target="{{#if target}}{{target}}{{else}}layout{{/if}}"
     data-template-id="{{templateId}}"
     data-template-start-width="{{startWidth}}"
     data-template-start-height="{{startHeight}}"
+    {{#with extends as | extend |}}
+        data-extends-template="{{extend.template}}"
+        data-extends-override="{{extend.override}}"
+        data-extends-with="{{extend.with}}"
+    {{/with}}
     >
 
 {{#if thumbnail}}

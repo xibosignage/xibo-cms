@@ -32,6 +32,7 @@ use Stash\Item;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\ObjectVars;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
 
 /**
@@ -50,6 +51,11 @@ class WidgetDataProviderCache
 
     /** @var Item */
     private $cache;
+
+    /** @var string The cache key */
+    private $key;
+
+    private $cachedMediaIds;
 
     /**
      * @param \Stash\Interfaces\PoolInterface $pool
@@ -83,36 +89,55 @@ class WidgetDataProviderCache
 
     /**
      * Decorate this data provider with cache
-     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @param DataProvider $dataProvider
      * @param string $cacheKey
-     * @param \Carbon\Carbon|null $dataModifiedDt The date any associated data was modified.
+     * @param Carbon|null $dataModifiedDt The date any associated data was modified.
+     * @param bool $isLockIfMiss Should the cache be locked if it's a miss? Defaults to true.
      * @return bool
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function decorateWithCache(
-        DataProviderInterface $dataProvider,
+        DataProvider $dataProvider,
         string $cacheKey,
-        ?Carbon $dataModifiedDt
+        ?Carbon $dataModifiedDt,
+        bool $isLockIfMiss = true
     ): bool {
-        $this->cache = $this->pool->getItem('/widget/html/' . md5($cacheKey));
+        // Construct a key
+        $this->key = '/widget/' . $dataProvider->getDataType() . '/' . md5($cacheKey);
+
+        $this->getLog()->debug('decorateWithCache: key is ' . $this->key);
+
+        $this->cache = $this->pool->getItem($this->key);
         $data = $this->cache->get();
+
+        // Hit or miss?
         if ($this->cache->isMiss()
             || $data === null
             || ($dataModifiedDt !== null && $dataModifiedDt->isAfter($this->cache->getCreation()))
         ) {
+            $this->getLog()->debug('decorateWithCache: miss.');
+
             // Lock it up
-            $this->concurrentRequestLock();
+            if ($isLockIfMiss) {
+                $this->concurrentRequestLock();
+            }
             return false;
         } else {
+            $this->getLog()->debug('decorateWithCache: hit.');
+
+            // Clear the data provider and add the cached items back to it.
             $dataProvider->clearData();
             $dataProvider->clearMeta();
-            $dataProvider->addItems($data['data'] ?? []);
+            $dataProvider->addItems($data->data ?? []);
 
-            foreach (($data['meta'] ?? []) as $key => $item) {
+            foreach (($data->meta ?? []) as $key => $item) {
                 $dataProvider->addOrUpdateMeta($key, $item);
             }
             $dataProvider->addOrUpdateMeta('cacheDt', $this->cache->getCreation()->format('c'));
             $dataProvider->addOrUpdateMeta('expireDt', $this->cache->getExpiration()->format('c'));
+
+            // Record any cached mediaIds
+            $this->cachedMediaIds = $data->media ?? [];
             return true;
         }
     }
@@ -134,16 +159,22 @@ class WidgetDataProviderCache
             Carbon::now()->addSeconds($dataProvider->getCacheTtl())->format('c')
         );
 
-        $this->cache->set([
-            'data' => $dataProvider->getData(),
-            'meta' => $dataProvider->getMeta(),
-        ]);
+        $object = new \stdClass();
+        $object->data = $dataProvider->getData();
+        $object->meta = $dataProvider->getMeta();
+        $object->media = $dataProvider->getImageIds();
+        $cached = $this->cache->set($object);
+
+        if (!$cached) {
+            throw new GeneralException('Cache failure');
+        }
         $this->cache->expiresAfter($dataProvider->getCacheTtl());
 
         // Save to the pool
         $this->pool->save($this->cache);
 
-        $this->getLog()->debug('Cached for ' . $dataProvider->getCacheTtl() . ' seconds');
+        $this->getLog()->debug('saveToCache: cached ' . $this->key
+            . ' for ' . $dataProvider->getCacheTtl() . ' seconds');
     }
 
     /**
@@ -152,6 +183,15 @@ class WidgetDataProviderCache
     public function finaliseCache(): void
     {
         $this->concurrentRequestRelease();
+    }
+
+    /**
+     * Return any cached mediaIds
+     * @return array
+     */
+    public function getCachedMediaIds(): array
+    {
+        return $this->cachedMediaIds ?? [];
     }
 
     /**
@@ -184,7 +224,7 @@ class WidgetDataProviderCache
     /**
      * @param callable $urlFor
      * @param string|null $data
-     * @return string
+     * @return string|null
      */
     private function decorateMediaForPreview(callable $urlFor, ?string $data): ?string
     {

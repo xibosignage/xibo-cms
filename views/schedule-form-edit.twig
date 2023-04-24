@@ -52,26 +52,13 @@
                   data-add-url="{{ url_for("schedule.add") }}"
                   data-duplicated-message="{% trans "Duplicate form loaded, make adjustments and press save." %}"
                   data-default-lat="{{ defaultLat }}"
-                  data-default-long="{{ defaultLong }}">
+                  data-default-long="{{ defaultLong }}"
+                  data-full-screen-url="{{ url_for('layout.add.full.screen.schedule') }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Event Type" %}{% endset %}
                         {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
-                        {% set layoutEventType %}{% trans "Layout" %}{% endset %}
-                        {% set campaignEventType %}{% trans "Campaign" %}{% endset %}
-                        {% set commandEventType %}{% trans "Command" %}{% endset %}
-                        {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
-                        {% set interruptEventType %}{% trans "Interrupt Layout" %}{% endset %}
-                        {% set actionEventType %}{% trans "Action" %}{% endset %}
-                        {% set eventTypes = [
-                            {id: 1, label: layoutEventType},
-                            {id: 5, label: campaignEventType},
-                            {id: 2, label: commandEventType},
-                            {id: 3, label: overlayEventType},
-                            {id: 4, label: interruptEventType},
-                            {id: 6, label: actionEventType}
-                        ] %}
-                        {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "id", "label", helpText) }}
+                        {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "eventTypeId", "eventTypeName", helpText) }}
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
@@ -121,6 +108,55 @@
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
 
+                        {% set title %}{% trans "Media" %}{% endset %}
+                        {% set helpText %}{% trans "Select a Media from Library - a full screen Layout containing this Media will be created and scheduled in one step" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("library.search") ~ "?fullScreenScheduleCheck=true" },
+                            { name: "data-search-term", value: "media" },
+                            { name: "data-id-property", value: "mediaId" },
+                            { name: "data-text-property", value: "name" },
+                            { name: "data-additional-property", value: "hasFullScreenLayout" },
+                            { name: "data-initial-key", value: "mediaId"},
+                            { name: "data-initial-value", value: media.mediaId}
+                        ] %}
+                        {{ forms.dropdown("mediaId", "single", title, media.mediaId, [media], "mediaId", "name", helpText, "pagedSelect media-control", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Playlist" %}{% endset %}
+                        {% set helpText %}{% trans "Select a Playlist - a full screen Layout containing this Playlist will be created and scheduled in one step" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("playlist.search") ~ "?fullScreenScheduleCheck=true" },
+                            { name: "data-search-term", value: "name" },
+                            { name: "data-id-property", value: "playlistId" },
+                            { name: "data-text-property", value: "name" },
+                            { name: "data-additional-property", value: "hasFullScreenLayout" },
+                            { name: "data-initial-key", value: "playlistId"},
+                            { name: "data-initial-value", value: playlist.playlistId}
+                        ] %}
+                        {{ forms.dropdown("playlistId", "single", title, playlist.playlistId, [playlist], "playlistId", "name", helpText, "pagedSelect playlist-control", "", "", "", attributes) }}
+
+                        {{ forms.hidden('fullScreenCampaignId') }}
+
+                        {% set title %}{% trans "Duration in Loop" %}{% endset %}
+                        {% set helpText %}{% trans "For long should this Media be displayed in each loop? If left empty it will default to Media duration" %}{% endset %}
+                        {{ forms.number('layoutDuration', title, "", helpText, 'media-control no-full-screen-layout') }}
+
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally select a Resolution for this Full screen Layout, if left empty it will default to existing resolution matching the Media size the closest" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value: url_for("resolution.search") },
+                            { name: "data-search-term", value: "resolution" },
+                            { name: "data-id-property", value: "resolutionId" },
+                            { name: "data-text-property", value: "resolution" },
+                            { name: "data-trans-media-help-text", value: "Optionally select a Resolution for Full screen Layout containing selected Media, if left empty it will default to existing resolution closest in size to selected Media"|trans },
+                            { name: "data-trans-playlist-help-text", value: "Optionally select a Resolution for Full screen Layout containing this Playlist, if left empty it will default to 1080p Resolution"|trans },
+                        ] %}
+                        {{ forms.dropdown("resolutionId", "single", title, "", null, "resolutionId", "resolution", helpText, "pagedSelect media-playlist-control resolution-control no-full-screen-layout", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally use the colour picker to select the Layout background colour" %}{% endset %}
+                        {{ forms.colorPicker("backgroundColor", title, '#000', helpText, 'media-playlist-control no-full-screen-layout') }}
                         <div class="form-group row preview-button-container">
                             <div class="offset-md-2 col-md-10">
                                 <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>

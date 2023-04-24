@@ -474,13 +474,19 @@ class WidgetFactory extends BaseFactory
 
                     $templates[] = $template;
                 }
+            }
 
-                // Does this widget have elements?
-                $elements = $widget->getOptionValue('elements', null);
-                if ($elements !== null) {
-                    // Get all templates used by this widget
-                    $uniqueElements = [];
-                    foreach ($elements['elements'] as $element) {
+            // Does this widget have elements?
+            $widgetElements = $widget->getOptionValue('elements', null);
+            if (!empty($widgetElements)) {
+                // Elements will be JSON
+                $widgetElements = json_decode($widgetElements, true);
+
+                // Get all templates used by this widget
+                $uniqueElements = [];
+
+                foreach ($widgetElements as $widgetElement) {
+                    foreach ($widgetElement['elements'] ?? [] as $element) {
                         if (!array_key_exists($element['id'], $uniqueElements)) {
                             $uniqueElements[$element['id']] = $element;
                         }
@@ -488,8 +494,8 @@ class WidgetFactory extends BaseFactory
 
                     foreach ($uniqueElements as $templateId => $element) {
                         try {
-                            $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
-                                $module->dataType,
+                            $templates[] = $this->moduleTemplateFactory->getByTypeAndId(
+                                'element',
                                 $templateId
                             );
                         } catch (NotFoundException $notFoundException) {
@@ -499,6 +505,9 @@ class WidgetFactory extends BaseFactory
                 }
             }
         }
+
+        $this->getLog()->debug('getTemplatesForWidgets: ' . count($templates) . ' templates returned.');
+
         return $templates;
     }
 }

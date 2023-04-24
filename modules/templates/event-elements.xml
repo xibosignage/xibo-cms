@@ -1,0 +1,64 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>event_summary</id>
+        <extends override="text" with="data.summary">text</extends>
+        <title>Summary</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>event-summary</thumbnail>
+        <startWidth>300</startWidth>
+        <startHeight>80</startHeight>
+        <assets>
+            <asset id="event-summary" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-summary.png" />
+        </assets>
+    </template>
+    <template>
+        <id>event_description</id>
+        <extends override="text" with="data.description">text</extends>
+        <title>Description</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>event-description</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="event-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
+        </assets>
+    </template>
+    <template>
+        <id>event_startDate</id>
+        <extends override="date" with="data.startDate">date</extends>
+        <title>Start Date</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>date-thumb</thumbnail>
+        <startWidth>450</startWidth>
+        <startHeight>80</startHeight>
+        <assets>
+            <asset id="date-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+</templates>

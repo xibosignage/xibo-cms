@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -192,7 +192,7 @@ class ContainerFactory
                 $composite = new Composite(['drivers' => $drivers]);
 
                 $pool = new Pool($composite);
-                $pool->setLogger($c->get('logService'));
+                $pool->setLogger($c->get('logService')->getLoggerInterface());
                 $pool->setNamespace($c->get('configService')->getCacheNamespace());
                 $c->get('configService')->setPool($pool);
                 return $pool;

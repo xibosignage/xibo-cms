@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 namespace Xibo\Widget\Render;
@@ -36,6 +35,7 @@ use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -170,8 +170,27 @@ class WidgetHtmlRenderer
         array $widgets,
         array $moduleTemplates
     ): string {
-        // For caching purposes we always take only the first widget
-        $widget = $widgets[0];
+        // HTML is cached per widget for regions of type zone/frame and playlist.
+        // HTML is cached per region for regions of type canvas.
+        $widget = null;
+        $widgetModifiedDt = 0;
+
+        if ($region->type === 'canvas') {
+            foreach ($widgets as $item) {
+                $widgetModifiedDt = max($widgetModifiedDt, $item->modifiedDt);
+                if ($item->type === 'global') {
+                    $widget = $item;
+                }
+            }
+
+            // If we don't have a global widget, just grab the first one.
+            if ($widget === null) {
+                $widget = $widgets[0];
+            }
+        } else {
+            $widget = $widgets[0];
+            $widgetModifiedDt = $widget->modifiedDt;
+        }
 
         if (!file_exists($this->cachePath)) {
             mkdir($this->cachePath, 0777, true);
@@ -190,7 +209,7 @@ class WidgetHtmlRenderer
             . '.html';
 
         // Have we changed since we last cached this widget
-        $modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
+        $modifiedDt = Carbon::createFromTimestamp($widgetModifiedDt);
         $cachedDt = Carbon::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
 
         $this->getLog()->debug('Cache details - modifiedDt: '
@@ -310,7 +329,9 @@ class WidgetHtmlRenderer
                 $output = str_replace('[[' . $match . ']]', $replace, $output);
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
-                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]]) ? json_encode($data[$value[1]]) : '{"data":[], "meta":[]}', $output);
+                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]])
+                    ? json_encode($data[$value[1]])
+                    : '{"data":[], "meta":[]}', $output);
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
@@ -468,10 +489,35 @@ class WidgetHtmlRenderer
             }
 
             // Include elements/element groups - they will already be JSON encoded.
-            $twig['elements'][] = $widget->getOptionValue('elements', null);
+            $widgetElements = $widget->getOptionValue('elements', null);
+            if (!empty($widgetElements)) {
+                // Elements will be JSON
+                $widgetElements = json_decode($widgetElements, true);
+
+                // Join together the template properties for this element, and the element properties
+                foreach ($widgetElements as $widgetIndex => $widgetElement) {
+                    foreach (($widgetElement['elements'] ?? []) as $elementIndex => $element) {
+                        foreach ($moduleTemplates as $moduleTemplate) {
+                            if ($moduleTemplate->templateId === $element['id']) {
+                                // Merge the properties on the element with the properties on the template.
+                                $widgetElements[$widgetIndex]['elements'][$elementIndex]['properties'] =
+                                    $moduleTemplate->getPropertyValues(
+                                        true,
+                                        $moduleTemplate->decoratePropertiesByArray(
+                                            $element['properties'] ?? [],
+                                            true
+                                        )
+                                    );
+                            }
+                        }
+                    }
+                }
+
+                $twig['elements'][] = json_encode($widgetElements);
+            }
         }
 
-        // Grab and global elements in our templates
+        // Grab any global elements in our templates
         $globalElements = [];
         foreach ($moduleTemplates as $moduleTemplate) {
             if ($moduleTemplate->type === 'element') {

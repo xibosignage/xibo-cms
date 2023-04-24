@@ -104,11 +104,11 @@
         
         var regionDimensions = app.layout.regions[app.selectedObject.id].dimensions;
 
-        form.find('[name="top"]').val(regionDimensions.top);
-        form.find('[name="left"]').val(regionDimensions.left);
+        form.find('[name="top"]').val(parseInt(regionDimensions.top));
+        form.find('[name="left"]').val(parseInt(regionDimensions.left));
 
         // Set dimensions values to be the same as the layout's
-        form.find('[name="width"]').val(regionDimensions.width);
-        form.find('[name="height"]').val(regionDimensions.height);
+        form.find('[name="width"]').val(parseInt(regionDimensions.width));
+        form.find('[name="height"]').val(parseInt(regionDimensions.height));
     }
 </script>

@@ -245,7 +245,9 @@ class Controllers
                     $c->get('campaignFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('pool'),
-                    $c->get('mediaService')
+                    $c->get('mediaService'),
+                    $c->get('widgetFactory'),
+                    $c->get('playlistFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -468,7 +470,9 @@ class Controllers
                     $c->get('layoutFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('scheduleReminderFactory'),
-                    $c->get('scheduleExclusionFactory')
+                    $c->get('scheduleExclusionFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('playlistFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

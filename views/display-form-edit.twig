@@ -284,7 +284,7 @@
                         {% set title %}{% trans "Auditing until" %}{% endset %}
                         {% set helpText %}{% trans "Collect auditing from this Player. Should only be used if there is a problem with the display." %}{% endset %}
                         {% if display.isAuditing() %}
-                            {% set auditing = display.auditingUntilIso %}
+                            {% set auditing = display.getUnmatchedProperty("auditingUntilIso") %}
                         {% else %}
                             {% set auditing = "" %}
                         {% endif %}

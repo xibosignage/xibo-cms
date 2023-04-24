@@ -26,7 +26,7 @@
     <class>\Xibo\Widget\MastodonProvider</class>
     <type>mastodon</type>
     <dataType>social-media</dataType>
-    <dataCacheKey>%searchTerm%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%</dataCacheKey>
+    <dataCacheKey>%hashtag%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -42,6 +42,11 @@
             <title>Cache Period for Images</title>
             <helpText>Please enter the number of hours you would like to cache mastodon images.</helpText>
             <default>24</default>
+        </property>
+        <property id="cachePeriod" type="number">
+            <title>Cache Period</title>
+            <helpText>Please enter the number of seconds you would like to cache mastodon search results.</helpText>
+            <default>3600</default>
         </property>
     </settings>
     <properties>

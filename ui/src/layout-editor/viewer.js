@@ -924,9 +924,61 @@ Viewer.prototype.renderElementContent = function(
   // Get element container
   const $elementContainer = this.DOMObject.find(`#${element.elementId}`);
 
+  const macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
+
+  // TODO: Copied from player.js, to be added to a library so it can be reused
+  const composeUTCDateFromMacro = (macroStr) => {
+    const utcFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+    const dateNow = moment().utc();
+    // Check if input has the correct format
+    const dateStr = String(macroStr);
+
+    if (dateStr.length === 0 ||
+        dateStr.match(macroRegex) === null
+    ) {
+      return dateNow.format(utcFormat);
+    }
+
+    // Trim the macro date string
+    const dateOffsetStr = dateStr.replaceAll('%', '');
+    const params = (op) => dateOffsetStr.replace(op, '')
+      .split(/(\d+)/).filter(Boolean);
+    const addRegex = /^\+/g;
+    const subtractRegex = /^\-/g;
+
+    // Check if it's add or subtract offset and return composed date
+    if (dateOffsetStr.match(addRegex) !== null) {
+      return dateNow.add(...params(addRegex)).format(utcFormat);
+    } else if (dateOffsetStr.match(subtractRegex) !== null) {
+      return dateNow.subtract(...params(subtractRegex)).format(utcFormat);
+    }
+  };
+
   // Get element template ( most of the time
   // template will be already loaded/chached )
   element.getTemplate().then((template) => {
+    // Create and render HBS template from template
+    const stencil = template.parent ?
+      template.parent.stencil : template.stencil;
+    let hbsTemplate = Handlebars.compile(stencil.hbs);
+
+    // If element dimensions are not set, set them
+    // to the extended template, if it exists
+    // or to hardcoded values
+    if (!element.width || !element.height) {
+      if (template.parent) {
+        element.width = template.parent.startWidth;
+        element.height = template.parent.startHeight;
+      } else {
+        element.width = 100;
+        element.height = 100;
+      }
+
+      // Render element again
+      self.renderElement(element, lD.layout.canvas);
+      return;
+    }
+
     // Render element with template
     $elementContainer.html($(viewerElementContentTemplate({
       element: element,
@@ -935,9 +987,6 @@ Viewer.prototype.renderElementContent = function(
       originalWidth: element.width,
       originalHeight: element.height,
     })));
-
-    // Create and render HBS template from template
-    const hbsTemplate = Handlebars.compile(template.stencil.hbs);
 
     // Get element properties
     element.getProperties().then((properties) => {
@@ -953,25 +1002,53 @@ Viewer.prototype.renderElementContent = function(
         }
       }
 
-      // Compile hbs template with data
-      const hbsHtml = hbsTemplate(convertedProperties);
-
-      // Append hbs html to the element
-      $elementContainer.find('.element-content').html(hbsHtml);
-
-      // Call on template render if it exists
-      if (template.onTemplateRender) {
-        const onTemplateRender =
-          window['onTemplateRender_' + element.elementId];
-
-        // Call on template render on element creation
-        onTemplateRender(element.properties);
+      // Handle override property values
+      if (template.extends?.override && template.extends?.with) {
+        const replacedStencil = stencil.hbs.replace(
+          '{{' + template.extends.override + '}}',
+          '{{' + template.extends.with + '}}',
+        );
+        hbsTemplate = Handlebars.compile(replacedStencil);
       }
 
-      // Call callback if it exists
-      if (callback) {
-        callback();
-      }
+      // Get element data from widget
+      element.getData().then((widgetData) => {
+        // Check all data elements and make replacements
+        for (const key in widgetData) {
+          if (widgetData.hasOwnProperty(key)) {
+            const data = widgetData[key];
+
+            // Check if data needs to be replaced
+            if (data && data.match(macroRegex) !== null) {
+              // Replace macro with current date
+              widgetData[key] = composeUTCDateFromMacro(data);
+            }
+          }
+        }
+
+        // Add widget data to properties
+        convertedProperties.data = widgetData;
+
+        // Compile hbs template with data
+        const hbsHtml = hbsTemplate(convertedProperties);
+
+        // Append hbs html to the element
+        $elementContainer.find('.element-content').html(hbsHtml);
+
+        // Call on template render if it exists
+        if (template.onTemplateRender) {
+          const onTemplateRender =
+            window['onTemplateRender_' + element.elementId];
+
+          // Call on template render on element creation
+          onTemplateRender && onTemplateRender(convertedProperties);
+        }
+
+        // Call callback if it exists
+        if (callback) {
+          callback();
+        }
+      });
     });
   });
 };
@@ -1018,24 +1095,32 @@ Viewer.prototype.initMoveable = function() {
  * @param {object} region - Region object
  * @param {boolean} updateRegion - Update region rendering
  * @param {boolean} hasMoved - Has region moved
+ * @param {boolean} hasScaled - Has region scaled
  */
   const saveRegionProperties = function(
     region,
     updateRegion = true,
     hasMoved = false,
+    hasScaled = false,
   ) {
     const scale = self.containerElementDimensions.scale;
     const regionId = $(region).attr('id');
-    const transform = {
-      width: parseInt($(region).width() / scale),
-      height: parseInt($(region).height() / scale),
-    };
+    const transform = {};
     const regionObject = lD.layout.regions[regionId];
+
+    // Only change width/height if region has scaled
+    if (hasScaled) {
+      transform.width = parseFloat($(region).width() / scale);
+      transform.height = parseFloat($(region).height() / scale);
+    } else {
+      transform.width = regionObject.dimensions.width;
+      transform.height = regionObject.dimensions.height;
+    }
 
     // Only change top/left if region has moved
     if (hasMoved) {
-      transform.top = parseInt($(region).position().top / scale);
-      transform.left = parseInt($(region).position().left / scale);
+      transform.top = parseFloat($(region).position().top / scale);
+      transform.left = parseFloat($(region).position().left / scale);
     } else {
       transform.top = regionObject.dimensions.top;
       transform.left = regionObject.dimensions.left;
@@ -1120,7 +1205,7 @@ Viewer.prototype.initMoveable = function() {
     if (e.isDrag) {
       // Save region properties
       (lD.selectedObject.type == 'region') &&
-        saveRegionProperties(e.target, true, true);
+        saveRegionProperties(e.target, true, true, false);
 
       // Save element properties
       (lD.selectedObject.type == 'element') &&
@@ -1142,8 +1227,8 @@ Viewer.prototype.initMoveable = function() {
 
     // Update element dimension properties
     lD.selectedObject.transform({
-      width: parseInt(e.width / self.containerElementDimensions.scale),
-      height: parseInt(e.height / self.containerElementDimensions.scale),
+      width: parseFloat(e.width / self.containerElementDimensions.scale),
+      height: parseFloat(e.height / self.containerElementDimensions.scale),
     }, false);
 
     // Update target object
@@ -1174,7 +1259,7 @@ Viewer.prototype.initMoveable = function() {
 
     // Save region properties
     (lD.selectedObject.type == 'region') &&
-      saveRegionProperties(e.target, true, moved);
+      saveRegionProperties(e.target, true, moved, true);
 
     // Save element properties
     (lD.selectedObject.type == 'element') &&

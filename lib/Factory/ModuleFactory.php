@@ -180,6 +180,17 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
+     * @param string $dataType
+     * @return void
+     */
+    public function clearCacheForDataType(string $dataType): void
+    {
+        $this->getLog()->debug('clearCacheForDataType: /widget/' . $dataType);
+
+        $this->pool->deleteItem('/widget/' . $dataType);
+    }
+
+    /**
      * @return \Xibo\Entity\Module[]
      */
     public function getKeyedArrayOfModules(): array

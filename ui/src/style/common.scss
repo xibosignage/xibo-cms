@@ -141,6 +141,7 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
 .loading-overlay.loading {
     display: block;
     z-index: $loading-overlay-z-index;
+    @include transparent-object(40);
 }
 
 .loading-overlay.loading .loading-icon {

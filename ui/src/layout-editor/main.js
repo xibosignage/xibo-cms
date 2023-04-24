@@ -302,8 +302,8 @@ $(() => {
       // Refresh the designer containers
       lD.refreshEditor(true, true);
 
-      // Load preferences
-      lD.loadPrefs();
+      // TODO: Load preferences (not being used at the moment)
+      // lD.loadPrefs();
     } else {
       // Login Form needed?
       if (res.login) {
@@ -465,10 +465,13 @@ lD.selectObject =
           case 'element':
             const parentRegion = this.selectedObject.regionId;
             const parentWidget = this.selectedObject.widgetId;
-
-            const element = this.layout.canvas.widgets[
+            const parentWidgetObj = this.layout.canvas.widgets[
               'widget_' + parentRegion + '_' + parentWidget
-            ].elements[this.selectedObject.elementId];
+            ];
+
+            const element = (parentWidgetObj) ?
+              parentWidgetObj.elements[this.selectedObject.elementId] :
+              null;
 
             if (element) {
               element.selected = false;
@@ -1034,7 +1037,7 @@ lD.deleteObject = function(
         objectType,
         objectId,
         options,
-      ).then((res) => { // Success
+      ).then((res) => {
         // Behavior if successful
         toastr.success(res.message);
         lD.reloadData(lD.layout, true);
@@ -1405,6 +1408,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       const element =
       {
         id: draggableData.templateId,
+        type: draggableData.dataType,
         left: dropPosition.left,
         top: dropPosition.top,
         width: draggableData.templateStartWidth,
@@ -1412,6 +1416,15 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         layer: 0,
         rotation: 0,
       };
+
+      // Check if the element is extending a template
+      if (draggableData.extendsTemplate) {
+        element.extends = {
+          templateId: draggableData.extendsTemplate,
+          override: draggableData.extendsOverride,
+          overrideId: draggableData.extendsOverrideId,
+        };
+      }
 
       // Check if we have a canvas widget with
       // subtype equal to the draggableSubType
@@ -1656,7 +1669,12 @@ lD.addModuleToPlaylist = function(
     }
 
     // Set template if if exists
-    if (moduleData.templateId) {
+    // for elements, we use the elements template
+    if (moduleData.type === 'element') {
+      addOptions = addOptions || {};
+      addOptions.templateId = 'elements';
+    } else if (moduleData.templateId) {
+      // For other modules, we use the template id
       addOptions = addOptions || {};
       addOptions.templateId = moduleData.templateId;
     }
@@ -1676,8 +1694,8 @@ lD.addModuleToPlaylist = function(
         },
       },
     ).then((res) => { // Success
-      // Check if we added a element ( global widget )
-      if (res.data.type === 'global') {
+      // Check if we added a element
+      if (moduleData.type === 'element') {
         // Hide loading screen
         lD.common.hideLoadingScreen('addModuleToPlaylist');
 
@@ -1726,6 +1744,9 @@ lD.addModuleToPlaylist = function(
       }
 
       lD.common.hideLoadingScreen('addModuleToPlaylist');
+
+      // Return the promise with the data
+      return res;
     }).catch((error) => { // Fail/error
       lD.common.hideLoadingScreen('addModuleToPlaylist');
 

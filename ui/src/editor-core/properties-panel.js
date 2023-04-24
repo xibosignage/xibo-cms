@@ -58,15 +58,21 @@ PropertiesPanel.prototype.save = function(target) {
   // If target is element, call saveElement function
   // and switch the target to be the widget of that element
   if (target.type === 'element') {
-    this.saveElement(
-      target,
-      form.find('[name].element-property'),
-    );
+    const oldTarget = target;
 
     target = app.getElementByTypeAndId(
       'widget',
-      'widget_' + target.regionId + '_' + target.widgetId,
+      'widget_' + oldTarget.regionId + '_' + oldTarget.widgetId,
       'canvas',
+    );
+
+    // Reset element's parent widget data
+    // So it can be reloaded in all elements
+    target.cachedData = {};
+
+    this.saveElement(
+      oldTarget,
+      form.find('[name].element-property'),
     );
 
     savingElement = true;
@@ -177,6 +183,14 @@ PropertiesPanel.prototype.save = function(target) {
       // Reload data if we're not saving an element
       if (!savingElement) {
         reloadData();
+      } else {
+        // If we're saving an element, reload all elements
+        // from the widget that the element is in
+        for (element in target.elements) {
+          if (Object.prototype.hasOwnProperty.call(target.elements, element)) {
+            app.viewer.renderElementContent(target.elements[element]);
+          }
+        }
       }
     }).catch((error) => { // Fail/error
       app.common.hideLoadingScreen();
@@ -504,6 +518,7 @@ PropertiesPanel.prototype.render = function(
       // If we have a template for the widget, create the fields
       if (
         res.data.template != undefined &&
+        res.data.template != 'elements' &&
         res.data.template.properties.length > 0
       ) {
         forms.createFields(

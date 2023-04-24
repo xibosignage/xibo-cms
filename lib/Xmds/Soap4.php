@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 namespace Xibo\Xmds;
 
@@ -278,7 +277,7 @@ class Soap4 extends Soap
 
         // Audit our return
         $this->getLog()->debug($returnXml);
-        
+
         // Phone Home?
         $this->phoneHome();
 
@@ -313,7 +312,7 @@ class Soap4 extends Soap
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
+    function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize, $isDependency = false)
     {
         $this->logProcessor->setRoute('GetFile');
 
@@ -329,7 +328,11 @@ class Soap4 extends Soap
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
-        $fileId = $sanitizer->getInt('fileId');
+        if ($isDependency) {
+            $fileId = $sanitizer->getString('fileId');
+        } else {
+            $fileId = $sanitizer->getInt('fileId');
+        }
         $fileType = $sanitizer->getString('fileType');
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
@@ -360,7 +363,44 @@ class Soap4 extends Soap
         }
 
         try {
-            if ($fileType == 'layout') {
+            if ($isDependency || ($fileType == 'media' && $fileId < 0)) {
+                // Validate the nonce
+                // If we are an older player downloading as media using a faux fileId, then this lookup
+                // should be performed against the `itemId`
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndDependency(
+                    $this->display->displayId,
+                    $fileType,
+                    $fileId,
+                    !($fileType == 'media' && $fileId < 0)
+                );
+
+                // File is valid, see if we can return it.
+                $event = new XmdsDependencyRequestEvent($requiredFile);
+                $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
+
+                $path = $event->getFullPath();
+                if (empty($path)) {
+                    throw new NotFoundException(__('File not found'));
+                }
+
+                $f = fopen($path, 'r');
+                if (!$f) {
+                    throw new NotFoundException(__('Unable to get file pointer'));
+                }
+
+                fseek($f, $chunkOffset);
+                $file = fread($f, $chunkSize);
+
+                // Store file size for bandwidth log
+                $chunkSize = strlen($file);
+
+                if ($chunkSize === 0) {
+                    throw new NotFoundException(__('Empty file'));
+                }
+
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->save();
+            } else if ($fileType == 'layout') {
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
@@ -378,42 +418,21 @@ class Soap4 extends Soap
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
             } else if ($fileType == 'media') {
-                // Is the ID negative?
-                if ($fileId < 0) {
-                    // Expect a dependency.
-                    $requiredFile = $this->requiredFileFactory->getByDisplayAndDependencyId(
-                        $this->display->displayId,
-                        $fileId
-                    );
+                // A normal media file.
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
+                    $this->display->displayId,
+                    $fileId
+                );
 
-                    // use the path we saved in required files to work out which type of dependency we are.
-                    $event = new XmdsDependencyRequestEvent($requiredFile);
-                    $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
+                $media = $this->mediaFactory->getById($fileId);
+                $this->getLog()->debug(json_encode($media));
 
-                    $path = $event->getFullPath();
-
-                    if (empty($path)) {
-                        throw new NotFoundException(__('File not found'));
-                    }
-
-                    $f = fopen($path, 'r');
-                } else {
-                    // A normal media file.
-                    $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
-                        $this->display->displayId,
-                        $fileId
-                    );
-
-                    $media = $this->mediaFactory->getById($fileId);
-                    $this->getLog()->debug(json_encode($media));
-
-                    if (!file_exists($libraryLocation . $media->storedAs)) {
-                        throw new NotFoundException(__('Media exists but file missing from library.'));
-                    }
-
-                    // Return the Chunk size specified
-                    $f = fopen($libraryLocation . $media->storedAs, 'r');
+                if (!file_exists($libraryLocation . $media->storedAs)) {
+                    throw new NotFoundException(__('Media exists but file missing from library.'));
                 }
+
+                // Return the Chunk size specified
+                $f = fopen($libraryLocation . $media->storedAs, 'r');
 
                 if (!$f) {
                     throw new NotFoundException(__('Unable to get file pointer'));
@@ -442,7 +461,11 @@ class Soap4 extends Soap
         }
 
         // Log Bandwidth
-        $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, $chunkSize);
+        if ($isDependency) {
+            $this->logBandwidth($this->display->displayId, Bandwidth::$GET_DEPENDENCY, $chunkSize);
+        } else {
+            $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, $chunkSize);
+        }
 
         return $file;
     }

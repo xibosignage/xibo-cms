@@ -1357,7 +1357,7 @@ class Layout implements \JsonSerializable
                 $moduleStatus = Status::$STATUS_VALID;
                 try {
                     $module
-                        ->decorateProperties($widget)
+                        ->decorateProperties($widget, true)
                         ->validateProperties();
 
                     // Is this module file based? If so, check its released status
@@ -1640,27 +1640,24 @@ class Layout implements \JsonSerializable
                 // Tracker whether we have an updateInterval configured.
                 $hasUpdatedInterval = false;
 
-                foreach ($widget->widgetOptions as $option) {
-                    /* @var WidgetOption $option */
-                    if (trim($option->value) === '') {
-                        continue;
-                    }
-
-                    if ($option->type == 'cdata') {
-                        $optionNode = $document->createElement($option->option);
-                        $cdata = $document->createCDATASection($option->value);
+                // Output all properties belonging to the module
+                foreach ($module->properties as $property) {
+                    if ($property->isCData()) {
+                        $optionNode = $document->createElement($property->id);
+                        $cdata = $document->createCDATASection($property->value);
                         $optionNode->appendChild($cdata);
                         $rawNode->appendChild($optionNode);
-                    } else if ($option->type == 'attrib' || $option->type == 'attribute') {
-                        if ($uriInjected && $option->option == 'uri') {
+                    } else {
+                        // Skip any property named "uri" if we've already injected a special node for that.
+                        if ($uriInjected && $property->id == 'uri') {
                             continue;
                         }
 
-                        $optionNode = $document->createElement($option->option, $option->value ?? '');
+                        $optionNode = $document->createElement($property->id, $property->value ?? '');
                         $optionsNode->appendChild($optionNode);
                     }
 
-                    if ($option->option === 'updateInterval') {
+                    if ($property->id === 'updateInterval') {
                         $hasUpdatedInterval = true;
                     }
                 }
@@ -2314,10 +2311,9 @@ class Layout implements \JsonSerializable
         // we do not add a campaign record for draft layouts.
         if ($this->parentId === null) {
             $campaign = $this->campaignFactory->create(
-                'list',
+                $this->getUnmatchedProperty('type', 'list'),
                 $this->layout,
                 $this->getOwnerId(),
-                '',
                 ($this->folderId == null) ? 1 : $this->folderId
             );
             $campaign->isLayoutSpecific = 1;
