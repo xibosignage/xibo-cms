@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,7 +24,6 @@
 namespace Xibo\XTR;
 use Carbon\Carbon;
 use Xibo\Controller\Display;
-use Xibo\Entity\Schedule;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\DisplayFactory;
@@ -359,14 +358,13 @@ class MaintenanceRegularTask implements TaskInterface
               ON display.displayId = requiredfile.displayId
            WHERE `bytesRequested` > 0
               AND `requiredfile`.bytesRequested >= `requiredfile`.`size` * :factor
-              AND `requiredfile`.type <> :excludedType
+              AND `requiredfile`.type NOT IN (\'W\', \'D\')
               AND display.lastAccessed > :lastAccessed
               AND `requiredfile`.complete = 0
             GROUP BY display.displayId, display.display
         ', [
             'factor' => 3,
-            'excludedType' => 'W',
-            'lastAccessed' => Carbon::now()->subDay()->format('U')
+            'lastAccessed' => Carbon::now()->subDay()->format('U'),
         ]);
 
         foreach ($items as $item) {

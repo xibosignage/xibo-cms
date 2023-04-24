@@ -388,7 +388,7 @@ class Display extends Base
                   AND `widgetoption`.option = \'name\'
            WHERE `requiredfile`.`displayId` = :displayId 
             AND `requiredfile`.`type` IN (\'W\', \'D\')
-          ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
+          ORDER BY IFNULL(`widgetoption`.value, `widget`.type), `requiredfile`.itemId
         ';
 
         foreach ($this->store->select($sql, ['displayId' => $id]) as $row) {

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -26,12 +26,10 @@ window.moment = require('moment');
 require('moment-timezone');
 window.Handlebars = require('handlebars/dist/handlebars.min.js');
 
-// Module specific
-// most likely this can be done more efficiently.
-require('chart.js');
+// Include HLS.js
 window.Hls = require('hls.js');
-window.pdfjsLib = require('pdfjs-dist/legacy/build/pdf.min.js');
 
+// Our own imports
 import '../vendor/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
 import './xibo-countdown-render';
@@ -55,4 +53,3 @@ require('../vendor/flipclock.min.js');
 require('../vendor/flipclock.css');
 require('../vendor/jquery-cycle-2.1.6.min.js');
 require('../vendor/jquery.marquee.min.js');
-

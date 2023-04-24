@@ -449,31 +449,18 @@ class WidgetFactory extends BaseFactory
                 // Do we have a static one?
                 $templateId = $widget->getOptionValue('templateId', null);
                 if ($templateId !== null && $templateId !== 'elements') {
-                    $template = $this->moduleTemplateFactory->getByDataTypeAndId(
+                    $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
                         $module->dataType,
                         $templateId
                     );
-
-                    // Does this template extend a global template
-                    if (!empty($template->extends)) {
-                        try {
-                            $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
-                                'global',
-                                $template->extends->template
-                            );
-                        } catch (\Exception $e) {
-                            $this->getLog()->error('getTemplatesForWidgets: ' . $templateId
-                                . ' extends another template which does not exist.');
-                        }
-                    }
-
-                    $templates[] = $template;
                 }
             }
 
             // Does this widget have elements?
             $widgetElements = $widget->getOptionValue('elements', null);
             if (!empty($widgetElements)) {
+                $this->getLog()->debug('getTemplatesForWidgets: there are elements to include');
+
                 // Elements will be JSON
                 $widgetElements = json_decode($widgetElements, true);
 
@@ -489,12 +476,28 @@ class WidgetFactory extends BaseFactory
 
                     foreach ($uniqueElements as $templateId => $element) {
                         try {
-                            $templates[] = $this->moduleTemplateFactory->getByTypeAndId(
+                            $template = $this->moduleTemplateFactory->getByTypeAndId(
                                 'element',
                                 $templateId
                             );
+
+                            // Does this template extend a global template
+                            if (!empty($template->extends)) {
+                                try {
+                                    $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
+                                        'global',
+                                        $template->extends->template
+                                    );
+                                } catch (\Exception $e) {
+                                    $this->getLog()->error('getTemplatesForWidgets: ' . $templateId
+                                        . ' extends another template which does not exist.');
+                                }
+                            }
+
+                            $templates[] = $template;
                         } catch (NotFoundException $notFoundException) {
-                            $this->getLog()->error('templateId: ' . $templateId . ' not found');
+                            $this->getLog()->error('getTemplatesForWidgets: templateId ' . $templateId
+                                . ' not found');
                         }
                     }
                 }
