@@ -983,6 +983,7 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode['useDuration'];
                 $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
+                
                 $widget->schemaVersion = $mediaNode['schemaVersion'] ? (int)$mediaNode['schemaVersion'] : 1;
 
                 // Widget from/to dates.
