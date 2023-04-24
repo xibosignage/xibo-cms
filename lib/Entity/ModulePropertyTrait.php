@@ -69,7 +69,7 @@ trait ModulePropertyTrait
         // Flatten the properties array so that we can reference it by key.
         $keyedProperties = [];
         foreach ($properties as $property) {
-            $keyedProperties[$property['id']] = $property['value'];
+            $keyedProperties[$property['id']] = $property['value'] ?? null;
         }
 
         $decoratedProperties = [];
