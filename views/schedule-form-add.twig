@@ -105,10 +105,10 @@
 
 
                         {% set title %}{% trans "Media" %}{% endset %}
-                        {% set helpText %}{% trans "Select a Media from Library - a full screen Layout containing this Media will be created and scheduled in one step" %}{% endset %}
+                        {% set helpText %}{% trans "Choose a media item on the library you want shown full screen" %}{% endset %}
                         {% set attributes = [
                             { name: "data-width", value: "100%" },
-                            { name: "data-search-url", value: url_for("library.search") ~ "?fullScreenScheduleCheck=true" },
+                            { name: "data-search-url", value: url_for("library.search") ~ "?fullScreenScheduleCheck=true&types[]=image&types[]=video" },
                             { name: "data-search-term", value: "media" },
                             { name: "data-id-property", value: "mediaId" },
                             { name: "data-text-property", value: "name" },
@@ -117,7 +117,7 @@
                         {{ forms.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "pagedSelect media-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Playlist" %}{% endset %}
-                        {% set helpText %}{% trans "Select a Playlist - a full screen Layout containing this Playlist will be created and scheduled in one step" %}{% endset %}
+                        {% set helpText %}{% trans "Choose a Playlist you want shown full screen" %}{% endset %}
                         {% set attributes = [
                             { name: "data-width", value: "100%" },
                             { name: "data-search-url", value: url_for("playlist.search") ~ "?fullScreenScheduleCheck=true" },
@@ -130,24 +130,24 @@
 
                         {{ forms.hidden('fullScreenCampaignId') }}
 
-                        {% set title %}{% trans "Duration in Loop" %}{% endset %}
-                        {% set helpText %}{% trans "For long should this Media be displayed in each loop? If left empty it will default to Media duration" %}{% endset %}
+                        {% set title %}{% trans "Duration in loop" %}{% endset %}
+                        {% set helpText %}{% trans "Set how long this item should be shown each time it appears in the schedule. Leave blank to use the Media Duration set in the Library" %}{% endset %}
                         {{ forms.number('layoutDuration', title, "", helpText, 'media-control no-full-screen-layout') }}
 
                         {% set title %}{% trans "Resolution" %}{% endset %}
-                        {% set helpText %}{% trans "Optionally select a Resolution for this Full screen Layout, if left empty it will default to existing resolution matching the Media size the closest" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media." %}{% endset %}
                         {% set attributes = [
                             { name: "data-search-url", value: url_for("resolution.search") },
                             { name: "data-search-term", value: "resolution" },
                             { name: "data-id-property", value: "resolutionId" },
                             { name: "data-text-property", value: "resolution" },
-                            { name: "data-trans-media-help-text", value: "Optionally select a Resolution for Full screen Layout containing selected Media, if left empty it will default to existing resolution closest in size to selected Media"|trans },
-                            { name: "data-trans-playlist-help-text", value: "Optionally select a Resolution for Full screen Layout containing this Playlist, if left empty it will default to 1080p Resolution"|trans },
+                            { name: "data-trans-media-help-text", value: "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media."|trans },
+                            { name: "data-trans-playlist-help-text", value: "Optionally select a Resolution to use for the selected Playlist. Leave blank to default to a 1080p Resolution"|trans },
                         ] %}
                         {{ forms.dropdown("resolutionId", "single", title, "", null, "resolutionId", "resolution", helpText, "pagedSelect media-playlist-control resolution-control no-full-screen-layout", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Optionally use the colour picker to select the Layout background colour" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally set a colour to use as a background for if the item selected does not fill the entire screen" %}{% endset %}
                         {{ forms.colorPicker("backgroundColor", title, '#000', helpText, 'media-playlist-control no-full-screen-layout') }}
 
                         <div class="form-group row preview-button-container">
