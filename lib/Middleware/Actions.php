@@ -50,6 +50,11 @@ class Actions implements Middleware
 
     public function process(Request $request, RequestHandler $handler): Response
     {
+        // Do not proceed unless we have completed an upgrade
+        if (Environment::migrationPending()) {
+            return $handler->handle($request);
+        }
+
         $app = $this->app;
         $container = $app->getContainer();
 
@@ -62,11 +67,6 @@ class Actions implements Middleware
         // Do we have a user set?
         /** @var User $user */
         $user = $container->get('user');
-
-        // Do not proceed unless we have completed an upgrade
-        if (Environment::migrationPending()) {
-            return $handler->handle($request);
-        }
 
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {
