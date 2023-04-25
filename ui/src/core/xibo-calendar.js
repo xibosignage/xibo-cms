@@ -746,8 +746,12 @@ var beforeSubmitScheduleForm = function(form) {
           .then(
             (response) => {
                 if (!response.success) {
-                    SystemMessage((response.message == '') ? translation.failure : response.message, false);
+                    SystemMessageInline(
+                      (response.message === '') ? translations.failure : response.message,
+                      form.closest('.modal'),
+                    );
                 }
+
                 form.find('#fullScreenCampaignId').val(response.data.campaignId);
                 form.submit();
             }, (xhr) => {
