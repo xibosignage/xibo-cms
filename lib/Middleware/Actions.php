@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,20 +22,16 @@
 
 namespace Xibo\Middleware;
 
-use Carbon\Carbon;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
-use Xibo\Entity\Font;
 use Xibo\Entity\User;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
-use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Actions
@@ -54,6 +50,11 @@ class Actions implements Middleware
 
     public function process(Request $request, RequestHandler $handler): Response
     {
+        // Do not proceed unless we have completed an upgrade
+        if (Environment::migrationPending()) {
+            return $handler->handle($request);
+        }
+
         $app = $this->app;
         $container = $app->getContainer();
 
@@ -66,96 +67,6 @@ class Actions implements Middleware
         // Do we have a user set?
         /** @var User $user */
         $user = $container->get('user');
-
-        // Import the default layout, if we're a super admin (and we're logged in)
-        // TODO: consider if we can remove this entirely in v4.
-        if (!Environment::migrationPending()
-            && $container->get('configService')->getSetting('DEFAULTS_IMPORTED') == 0
-            && $user->isSuperAdmin()
-        ) {
-            $folder = $container->get('configService')->uri('layouts', true);
-
-            foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-                if (stripos($file, '.zip')) {
-                    try {
-                        /** @var \Xibo\Entity\Layout $layout */
-                        $layout = $container->get('layoutFactory')->createFromZip(
-                            $folder . '/' . $file,
-                            null,
-                            $user->getId(),
-                            false,
-                            false,
-                            true,
-                            false,
-                            true,
-                            $container->get('dataSetFactory'),
-                            null,
-                            $container->get('mediaService'),
-                            1
-                        );
-                        $layout->save([
-                            'audit' => false,
-                            'import' => true
-                        ]);
-
-                        try {
-                            $container->get('layoutFactory')->getById($container->get('configService')->getSetting('DEFAULT_LAYOUT'));
-                        } catch (NotFoundException $exception) {
-                            $container->get('configService')->changeSetting('DEFAULT_LAYOUT', $layout->layoutId);
-                        }
-                    } catch (\Exception $e) {
-                        $container->get('logService')->error('Unable to import layout: ' . $file . '. E = ' . $e->getMessage());
-                        $container->get('logService')->debug($e->getTraceAsString());
-                    }
-                }
-            }
-
-            // install fonts from the theme folder
-            $fontFolder =  $container->get('configService')->uri('fonts', true);
-            $fontAdded = false;
-            foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
-                // check if we already have this font file
-                if (count($container->get('fontFactory')->getByFileName($file)) <= 0) {
-                    // if we don't, add it
-                    $filePath = $fontFolder . DIRECTORY_SEPARATOR . $file;
-                    $fontLib = \FontLib\Font::load($filePath);
-
-                    // check embed flag, just in case
-                    $embed = intval($fontLib->getData('OS/2', 'fsType'));
-                    // if it's not embeddable, log error and skip it
-                    if ($embed != 0 && $embed != 8) {
-                        $container->get('logService')->error('Unable to install default Font: ' . $file . ' . Font file is not embeddable due to its permissions');
-                        continue;
-                    }
-
-                    /** @var Font $font */
-                    $font = $container->get('fontFactory')->createEmpty();
-                    $font->modifiedBy = $user->userName;
-                    $font->name = $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily();
-                    $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
-                    $font->fileName = $file;
-                    $font->size = filesize($filePath);
-                    $font->md5 = md5_file($filePath);
-                    $font->save();
-
-                    copy($filePath, $container->get('configService')->getSetting('LIBRARY_LOCATION') . 'fonts/' . $file);
-                    $fontAdded = true;
-                }
-            }
-
-            // if we added any fonts here fonts.css file
-            if ($fontAdded) {
-                $container->get('mediaService')->setUser($container->get('user'))->updateFontsCss();
-            }
-
-            // Layouts and fonts imported
-            $container->get('configService')->changeSetting('DEFAULTS_IMPORTED', 1);
-        }
-
-        // Do not proceed unless we have completed an upgrade
-        if (Environment::migrationPending()) {
-            return $handler->handle($request);
-        }
 
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {

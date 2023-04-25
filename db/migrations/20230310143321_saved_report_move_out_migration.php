@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -41,24 +41,31 @@ class SavedReportMoveOutMigration extends AbstractMigration
             ->save();
 
         // create savedreport sub-folder in the library location
-        $libraryLocation = $this->fetchRow('SELECT `setting`.value FROM `setting` WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0];
-        if (!file_exists($libraryLocation . 'savedreport')) {
-            mkdir($libraryLocation . 'savedreport', 0777, true);
-        }
+        $libraryLocation = $this->fetchRow('
+            SELECT `setting`.value
+              FROM `setting`
+             WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0] ?? null;
 
-        // get all existing savedreport records in media table and convert them
-        foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize FROM `media` WHERE media.type = \'savedreport\'') as $savedreportMedia) {
-            $this->execute('UPDATE `saved_report` SET fileName = \''.$savedreportMedia['storedAs']. '\',
-                                    size = '.$savedreportMedia['fileSize']. ',
-                                    md5 = \''.$savedreportMedia['md5']. '\'
+        // New installs won't have a library location yet (if they are non-docker).
+        if (!empty($libraryLocation)) {
+            if (!file_exists($libraryLocation . 'savedreport')) {
+                mkdir($libraryLocation . 'savedreport', 0777, true);
+            }
+
+            // get all existing savedreport records in media table and convert them
+            foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize FROM `media` WHERE media.type = \'savedreport\'') as $savedreportMedia) {
+                $this->execute('UPDATE `saved_report` SET fileName = \'' . $savedreportMedia['storedAs'] . '\',
+                                    size = ' . $savedreportMedia['fileSize'] . ',
+                                    md5 = \'' . $savedreportMedia['md5'] . '\'
                                 WHERE `saved_report`.mediaId = ' . $savedreportMedia['mediaId']);
 
-            // move the stored files with new id to savedreport folder
-            rename($libraryLocation . $savedreportMedia['storedAs'], $libraryLocation . 'savedreport/' . $savedreportMedia['storedAs']);
+                // move the stored files with new id to savedreport folder
+                rename($libraryLocation . $savedreportMedia['storedAs'], $libraryLocation . 'savedreport/' . $savedreportMedia['storedAs']);
 
-            // remove any potential tagLinks from savedreport media files
-            // unlikely that there will be any, but just in case.
-            $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $savedreportMedia['mediaId']);
+                // remove any potential tagLinks from savedreport media files
+                // unlikely that there will be any, but just in case.
+                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $savedreportMedia['mediaId']);
+            }
         }
 
         // we are finally done
