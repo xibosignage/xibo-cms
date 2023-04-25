@@ -26,7 +26,7 @@
                             {{ inline.dateTime("toDt", title, defaults.toDate, "", "", "", "") }}
 
                             {% set title %}{% trans 'Event Type' %}{% endset %}
-                            {{ inline.dropdown("filterEventTypeId", "single", title, "", [{id: null, value: ""}]|merge(eventTypes), "eventTypeId", "eventTypeName") }}
+                            {{ inline.dropdown("filterEventTypeId", "single", title, "", [{eventTypeId: null, eventTypeName: "All"}]|merge(eventTypes), "eventTypeId", "eventTypeName") }}
 
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
@@ -58,7 +58,7 @@
 
                             {% set title %}{% trans 'Geo Aware?' %}{% endset %}
                             {% set options = [
-                                { id: null, name: ""|trans },
+                                { id: null, name: "Both"|trans },
                                 { id: 0, name: "No"|trans },
                                 { id: 1, name: "Yes"|trans }
                             ] %}
@@ -66,7 +66,7 @@
 
                             {% set title %}{% trans 'Recurring?' %}{% endset %}
                             {% set options = [
-                                { id: null, name: "" },
+                                { id: null, name: "Both" },
                                 { id: 0, name: "No"|trans },
                                 { id: 1, name: "Yes"|trans }
                             ] %}
@@ -86,6 +86,7 @@
                             <th>{% trans 'Campaign ID' %}</th>
                             <th>{% trans 'Display Groups' %}</th>
                             <th>{% trans 'SoV' %}</th>
+                            <th>{% trans 'Max Plays per Hour' %}</th>
                             <th>{% trans 'Geo Aware?' %}</th>
                             <th>{% trans 'Recurring?' %}</th>
                             <th>{% trans 'Recurrence Type' %}</th>
@@ -191,6 +192,17 @@
               responsivePriority: 4,
             },
             {
+              name:'maxPlaysPerHour',
+              responsivePriority: 4,
+              data: function (data) {
+                if (data.maxPlaysPerHour === 0) {
+                  return translations.unlimited;
+                } else {
+                  return data.maxPlaysPerHour;
+                }
+              }
+            },
+            {
               data:'isGeoAware',
               responsivePriority: 4,
               "render": dataTableTickCrossColumn,
@@ -237,7 +249,7 @@
               name: 'recurrenceRange',
               responsivePriority: 4,
               data: function(data) {
-                if (data.recurringEvent) {
+                if (data.recurringEvent && data.recurrenceRange !== null) {
                   return moment(data.recurrenceRange, 'X').format(jsDateFormat)
                 } else {
                   return ''

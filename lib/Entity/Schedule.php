@@ -1732,8 +1732,8 @@ class Schedule implements \JsonSerializable
             ['eventTypeId' => self::$INTERRUPT_EVENT, 'eventTypeName' => __('Interrupt Layout')],
             ['eventTypeId' => self::$CAMPAIGN_EVENT, 'eventTypeName' => __('Campaign')],
             ['eventTypeId' => self::$ACTION_EVENT, 'eventTypeName' => __('Action')],
-            ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Library Media')],
-            ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Playlist')],
+            ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Full Screen Video/Image')],
+            ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Full Screen Playlist')],
         ];
     }
 }

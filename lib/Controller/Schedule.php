@@ -1089,7 +1089,7 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
 
-        foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
@@ -1666,7 +1666,7 @@ class Schedule extends Base
             $schedule->dayPartId = $this->dayPartFactory->getCustomDayPart()->dayPartId;
         }
 
-        foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
