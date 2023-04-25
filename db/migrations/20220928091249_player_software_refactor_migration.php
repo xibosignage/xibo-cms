@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -44,53 +44,60 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
             ->save();
 
         // create playersoftware sub-folder in the library location
-        $libraryLocation = $this->fetchRow('SELECT `setting`.value FROM `setting` WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0];
-        if (!file_exists($libraryLocation . 'playersoftware')) {
-            mkdir($libraryLocation . 'playersoftware', 0777, true);
-        }
+        $libraryLocation = $this->fetchRow('
+            SELECT `setting`.value
+              FROM `setting`
+             WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0] ?? null;
 
-        // get all existing playersoftware records in media table and convert them
-        foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'playersoftware\'') as $playersoftwareMedia) {
-            $this->execute('UPDATE `player_software` SET createdAt = \''.$playersoftwareMedia['createdDt'].'\',
-                                    modifiedAt = \''.$playersoftwareMedia['modifiedDt']. '\',
-                                    fileName = \''.$playersoftwareMedia['originalFileName']. '\',
-                                    size = '.$playersoftwareMedia['fileSize']. ',
-                                    md5 = \''.$playersoftwareMedia['md5']. '\'
+        // New installs won't have a library location yet (if they are non-docker).
+        if (!empty($libraryLocation)) {
+            if (!file_exists($libraryLocation . 'playersoftware')) {
+                mkdir($libraryLocation . 'playersoftware', 0777, true);
+            }
+
+            // get all existing playersoftware records in media table and convert them
+            foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'playersoftware\'') as $playersoftwareMedia) {
+                $this->execute('UPDATE `player_software` SET createdAt = \'' . $playersoftwareMedia['createdDt'] . '\',
+                                    modifiedAt = \'' . $playersoftwareMedia['modifiedDt'] . '\',
+                                    fileName = \'' . $playersoftwareMedia['originalFileName'] . '\',
+                                    size = ' . $playersoftwareMedia['fileSize'] . ',
+                                    md5 = \'' . $playersoftwareMedia['md5'] . '\'
                                 WHERE `player_software`.mediaId = ' . $playersoftwareMedia['mediaId']);
 
-            // move the stored files with new id to fonts folder
-            rename($libraryLocation . $playersoftwareMedia['storedAs'], $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']);
+                // move the stored files with new id to fonts folder
+                rename($libraryLocation . $playersoftwareMedia['storedAs'], $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']);
 
-            // remove any potential tagLinks from playersoftware media files
-            // unlikely that there will be any, but just in case.
-            $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $playersoftwareMedia['mediaId']);
-        }
+                // remove any potential tagLinks from playersoftware media files
+                // unlikely that there will be any, but just in case.
+                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $playersoftwareMedia['mediaId']);
+            }
 
-        // update versionMediaId in displayProfiles config
-        foreach ($this->fetchAll('SELECT displayProfileId, config FROM `displayprofile`') as $displayProfile) {
-            // check if there is anything in the config
-            if (!empty($displayProfile['config']) && $displayProfile['config'] !== '[]') {
-                $config = json_decode($displayProfile['config'], true);
-                for ($i = 0; $i < count($config); $i++) {
-                    if ($config[$i]['name'] === 'versionMediaId') {
-                        $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId ='.$config[$i]['value']);
-                        $config[$i]['value'] = $row['versionId'];
-                        $this->execute('UPDATE `displayprofile` SET config = \'' . json_encode($config). '\' WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']);
+            // update versionMediaId in displayProfiles config
+            foreach ($this->fetchAll('SELECT displayProfileId, config FROM `displayprofile`') as $displayProfile) {
+                // check if there is anything in the config
+                if (!empty($displayProfile['config']) && $displayProfile['config'] !== '[]') {
+                    $config = json_decode($displayProfile['config'], true);
+                    for ($i = 0; $i < count($config); $i++) {
+                        if ($config[$i]['name'] === 'versionMediaId') {
+                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $config[$i]['value']);
+                            $config[$i]['value'] = $row['versionId'];
+                            $this->execute('UPDATE `displayprofile` SET config = \'' . json_encode($config) . '\' WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']);
+                        }
                     }
                 }
             }
-        }
 
-        // update versionMediaId in display overrideConfig
-        foreach ($this->fetchAll('SELECT displayId, overrideConfig FROM `display`') as $display) {
-            // check if there is anything in the config
-            if (!empty($display['overrideConfig']) && $display['overrideConfig'] !== '[]') {
-                $overrideConfig = json_decode($display['overrideConfig'], true);
-                for ($i = 0; $i < count($overrideConfig); $i++) {
-                    if ($overrideConfig[$i]['name'] === 'versionMediaId') {
-                        $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId ='.$overrideConfig[$i]['value']);
-                        $overrideConfig[$i]['value'] = $row['versionId'];
-                        $this->execute('UPDATE `display` SET overrideConfig = \'' . json_encode($overrideConfig) . '\' WHERE `display`.displayId =' . $display['displayId']);
+            // update versionMediaId in display overrideConfig
+            foreach ($this->fetchAll('SELECT displayId, overrideConfig FROM `display`') as $display) {
+                // check if there is anything in the config
+                if (!empty($display['overrideConfig']) && $display['overrideConfig'] !== '[]') {
+                    $overrideConfig = json_decode($display['overrideConfig'], true);
+                    for ($i = 0; $i < count($overrideConfig); $i++) {
+                        if ($overrideConfig[$i]['name'] === 'versionMediaId') {
+                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $overrideConfig[$i]['value']);
+                            $overrideConfig[$i]['value'] = $row['versionId'];
+                            $this->execute('UPDATE `display` SET overrideConfig = \'' . json_encode($overrideConfig) . '\' WHERE `display`.displayId =' . $display['displayId']);
+                        }
                     }
                 }
             }

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Carbon\Carbon;
 use Phinx\Migration\AbstractMigration;
-use Xibo\Helper\DateFormatHelper;
 
 /**
  * Add new table for fonts
@@ -45,43 +43,55 @@ class AddFontsTableMigration extends AbstractMigration
             ->addColumn('name', 'string')
             ->addColumn('fileName', 'string')
             ->addColumn('familyName', 'string')
-            ->addColumn('size', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
+            ->addColumn('size', 'integer', [
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG,
+                'default' => null,
+                'null' => true,
+            ])
             ->addColumn('md5', 'string', ['limit' => 32, 'default' => null, 'null' => true])
             ->create();
 
         // create fonts sub-folder in the library location
-        $libraryLocation = $this->fetchRow('SELECT `setting`.value FROM `setting` WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0];
-        if (!file_exists($libraryLocation . 'fonts')) {
-            mkdir($libraryLocation . 'fonts', 0777, true);
+        $libraryLocation = $this->fetchRow('
+            SELECT `setting`.value
+              FROM `setting`
+             WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0] ?? null;
+
+        // New installs won't have a library location yet (if they are non-docker).
+        if (!empty($libraryLocation)) {
+            if (!file_exists($libraryLocation . 'fonts')) {
+                mkdir($libraryLocation . 'fonts', 0777, true);
+            }
+
+            // Fix any potential incorrect dates in modifiedDt
+            $this->execute('UPDATE `media` SET `media`.modifiedDt = `media`.createdDt WHERE `media`.modifiedDt < \'2000-01-01\'');
+
+            // get all existing font records in media table and convert them
+            foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'font\'') as $fontMedia) {
+                $table
+                    ->insert([
+                        'createdAt' => $fontMedia['createdDt'],
+                        'modifiedAt' => $fontMedia['modifiedDt'],
+                        'name' => $fontMedia['name'],
+                        'fileName' => $fontMedia['originalFileName'],
+                        'familyName' => strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $fontMedia['name']))),
+                        'size' => $fontMedia['fileSize'],
+                        'md5' => $fontMedia['md5']
+                    ])
+                    ->save();
+
+                // move the stored files with new id to fonts folder
+                rename($libraryLocation . $fontMedia['storedAs'], $libraryLocation . 'fonts/' . $fontMedia['originalFileName']);
+
+                // remove any potential tagLinks from font media files
+                // otherwise we risk failing the migration on the next step when we remove records from media table.
+                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $fontMedia['mediaId']);
+            }
+
+            // delete font records from media table
+            $this->execute('DELETE FROM `media` WHERE media.type = \'font\'');
         }
 
-        // Fix any potential incorrect dates in modifiedDt
-        $this->execute('UPDATE `media` SET `media`.modifiedDt = `media`.createdDt WHERE `media`.modifiedDt < \'2000-01-01\'');
-
-        // get all existing font records in media table and convert them
-        foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'font\'') as $fontMedia) {
-            $table
-                ->insert([
-                    'createdAt' => $fontMedia['createdDt'],
-                    'modifiedAt' => $fontMedia['modifiedDt'],
-                    'name' => $fontMedia['name'],
-                    'fileName' => $fontMedia['originalFileName'],
-                    'familyName' => strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $fontMedia['name']))),
-                    'size'=> $fontMedia['fileSize'],
-                    'md5' => $fontMedia['md5']
-                ])
-                ->save();
-
-            // move the stored files with new id to fonts folder
-            rename($libraryLocation . $fontMedia['storedAs'], $libraryLocation . 'fonts/' . $fontMedia['originalFileName']);
-
-            // remove any potential tagLinks from font media files
-            // otherwise we risk failing the migration on the next step when we remove records from media table.
-            $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $fontMedia['mediaId']);
-        }
-
-        // delete font records from media table
-        $this->execute('DELETE FROM `media` WHERE media.type = \'font\'');
         // delete "module" record for fonts
         $this->execute('DELETE FROM `module` WHERE `module`.moduleId = \'core-font\'');
 

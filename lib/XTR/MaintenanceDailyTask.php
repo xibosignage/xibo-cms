@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -141,6 +141,10 @@ class MaintenanceDailyTask implements TaskInterface
         $this->runMessage .= '## ' . __('Import Layouts and Fonts') . PHP_EOL;
 
         if ($this->config->getSetting('DEFAULTS_IMPORTED') == 0) {
+            // Make sure the library exists
+            $this->mediaService->initLibrary();
+
+            // Import any layouts
             $folder = $this->config->uri('layouts', true);
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
@@ -179,6 +183,7 @@ class MaintenanceDailyTask implements TaskInterface
             }
 
             // install fonts from the theme folder
+            $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
             $fontFolder =  $this->config->uri('fonts', true);
             $fontsAdded = false;
             foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
@@ -192,7 +197,8 @@ class MaintenanceDailyTask implements TaskInterface
                     $embed = intval($fontLib->getData('OS/2', 'fsType'));
                     // if it's not embeddable, log error and skip it
                     if ($embed != 0 && $embed != 8) {
-                        $this->log->error('Unable to install default Font: ' . $file . ' . Font file is not embeddable due to its permissions');
+                        $this->log->error('Unable to install default Font: ' . $file
+                            . ' . Font file is not embeddable due to its permissions');
                         continue;
                     }
 
@@ -207,7 +213,10 @@ class MaintenanceDailyTask implements TaskInterface
                     $font->save();
 
                     $fontsAdded = true;
-                    copy($filePath, $this->config->getSetting('LIBRARY_LOCATION') . 'fonts/' . $file);
+                    $copied = copy($filePath, $libraryLocation . 'fonts/' . $file);
+                    if (!$copied) {
+                        $this->getLogger()->error('importLayouts: Unable to copy fonts to ' . $libraryLocation);
+                    }
                 }
             }
 
