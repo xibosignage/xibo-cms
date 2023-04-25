@@ -983,6 +983,11 @@ body {
     position: relative;
     min-height: 1px;
 }
+
+.social-col.user {
+    width: fit-content;
+    overflow-y: hidden;
+}
 </style>
             ]]></twig>
         </stencil>
@@ -1178,6 +1183,11 @@ body {
     float: left;
     position: relative;
     min-height: 1px;
+}
+
+.social-col.user {
+    width: fit-content;
+    overflow-y: hidden;
 }
 </style>
             ]]></twig>
@@ -1380,6 +1390,11 @@ body {
     overflow: hidden;
     min-height: 1px;
 }
+
+.social-col.user {
+    width: fit-content;
+    overflow-y: hidden;
+}
 </style>
             ]]></twig>
         </stencil>
@@ -1567,6 +1582,11 @@ body {
     min-height: 1px;
     margin-left: 8px;
     width: 38px;
+}
+
+.social-col.user {
+    width: fit-content;
+    overflow-y: hidden;
 }
 </style>
             ]]></twig>
@@ -1758,6 +1778,11 @@ body {
     min-height: 1px;
     margin-left: 12px;
     width: 38px;
+}
+
+.social-col.user {
+    width: fit-content;
+    overflow-y: hidden;
 }
 
 .img-responsive {
@@ -2093,6 +2118,11 @@ body {
     float: left;
     position: relative;
     min-height: 1px;
+}
+
+.social-col.user {
+    width: fit-content;
+    overflow-y: hidden;
 }
 
 .social {
