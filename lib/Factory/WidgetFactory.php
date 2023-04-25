@@ -337,6 +337,11 @@ class WidgetFactory extends BaseFactory
             $params['widgetId'] = $sanitizedFilter->getInt('widgetId');
         }
 
+        if ($sanitizedFilter->getInt('schemaVersion') !== null) {
+            $body .= ' AND `widget`.schemaVersion = :schemaVersion';
+            $params['schemaVersion'] = $sanitizedFilter->getInt('schemaVersion');
+        }
+
         if ($sanitizedFilter->getString('type') !== null) {
             $body .= ' AND `widget`.type = :type';
             $params['type'] = $sanitizedFilter->getString('type');

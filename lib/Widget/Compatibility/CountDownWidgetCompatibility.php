@@ -35,41 +35,49 @@ class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
 
     /** @inheritdoc
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
+        $upgraded = false;
+        $widgetType = null;
         foreach ($widget->widgetOptions as $option) {
             $countdownType = $widget->getOptionValue('countdownType', 1);
 
             if ($option->option === 'countdownType') {
                 switch ($countdownType) {
                     case 1:
-                        $widget->type = 'countdown-text';
+                        $widgetType = 'countdown-text';
                         break;
 
                     case 2:
-                        $widget->type = 'countdown-clock';
+                        $widgetType = 'countdown-clock';
                         break;
 
                     case 3:
-                        $widget->type = 'countdown-table';
+                        $widgetType = 'countdown-table';
                         break;
 
                     case 4:
-                        $widget->type = 'countdown-days';
+                        $widgetType = 'countdown-days';
                         break;
 
                     default:
                         break;
                 }
+
+                if (!empty($widgetType)) {
+                    $widget->type = $widgetType;
+                    $upgraded = true;
+                }
             }
         }
+
+        return $upgraded;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
     {
         return false;
     }
-
 }

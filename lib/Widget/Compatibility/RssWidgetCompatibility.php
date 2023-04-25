@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\Widget\Compatibility;
+
 use Xibo\Entity\Widget;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetCompatibilityTrait;
@@ -34,45 +35,87 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
 
     /** @inheritdoc
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
+        $upgraded = false;
+        $widgetChangeOption = null;
+        $newTemplateId = null;
         foreach ($widget->widgetOptions as $option) {
             switch ($option->option) {
                 case 'background-color':
-                    $widget->changeOption($option->option, 'itemBackgroundColor');
+                    $widgetChangeOption = 'itemBackgroundColor';
                     break;
 
                 case 'title-color':
-                    $widget->changeOption($option->option, 'itemTitleColor');
+                    $widgetChangeOption = 'itemTitleColor';
                     break;
 
                 case 'name-color':
-                    $widget->changeOption($option->option, 'itemNameColor');
+                    $widgetChangeOption = 'itemNameColor';
                     break;
 
                 case 'description-color':
-                    $widget->changeOption($option->option, 'itemDescriptionColor');
+                    $widgetChangeOption = 'itemDescriptionColor';
                     break;
 
                 case 'font-size':
-                    $widget->changeOption($option->option, 'itemFontSize');
+                    $widgetChangeOption = 'itemFontSize';
                     break;
 
                 case 'image-fit':
-                    $widget->changeOption($option->option, 'itemImageFit');
+                    $widgetChangeOption = 'itemImageFit';
+                    break;
+
+                case 'templateId':
+                    $templateId = $widget->getOptionValue('templateId', '');
+                    switch ($templateId) {
+                        case 'media-rss-image-only':
+                            $newTemplateId = 'article_image_only';
+                            break;
+
+                        case 'media-rss-with-left-hand-text':
+                            $newTemplateId = 'article_with_left_hand_text';
+                            break;
+
+                        case 'media-rss-with-title':
+                            $newTemplateId = 'article_with_title';
+                            break;
+
+                        case 'prominent-title-with-desc-and-name-separator':
+                            $newTemplateId = 'article_with_desc_and_name_separator';
+                            break;
+
+                        case 'title-only':
+                            $newTemplateId = 'article_title_only';
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    if (!empty($newTemplateId)) {
+                        $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
+                        $upgraded = true;
+                    }
                     break;
 
                 default:
                     break;
             }
+
+            if (!empty($widgetChangeOption)) {
+                $widget->changeOption($option->option, $widgetChangeOption);
+                $upgraded = true;
+            }
         }
+
+        return $upgraded;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
     {
         return false;
     }
-
 }

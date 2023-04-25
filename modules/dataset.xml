@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Display DataSet content</description>
     <class>\Xibo\Widget\DataSetProvider</class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\DatasetWidgetCompatibility</compatibilityClass>
     <dataCacheKey>%dataSetId%_%lowerLimit%_%lowerLimit%_%numItems%_%orderClauses%_%useOrderingClause%_%ordering%_%filterClauses%_%useFilteringClause%_%filter%</dataCacheKey>
     <type>dataset</type>
     <dataType>dataset</dataType>

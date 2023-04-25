@@ -293,7 +293,7 @@ trait ModuleXmlTrait
 
     /**
      * @param \DOMNodeList $legacyTypeNodes
-     * @return \Xibo\Widget\Definition\Property[]
+     * @return \Xibo\Widget\Definition\LegacyType[]
      */
     private function parseLegacyTypes(\DOMNodeList $legacyTypeNodes): array
     {

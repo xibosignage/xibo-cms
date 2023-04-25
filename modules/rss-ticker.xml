@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Display articles from an RSS feed</description>
     <class>\Xibo\Widget\RssProvider</class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\RssWidgetCompatibility</compatibilityClass>
     <type>rss-ticker</type>
     <legacyType>ticker</legacyType>
     <dataType>article</dataType>

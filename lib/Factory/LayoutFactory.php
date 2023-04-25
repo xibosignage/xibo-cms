@@ -1028,15 +1028,6 @@ class LayoutFactory extends BaseFactory
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
-                // Does this module type exist?
-                if (!array_key_exists($widget->type, $modules)) {
-                    $this->getLog()->error(sprintf('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules))));
-                    continue;
-                }
-
-                /* @var \Xibo\Entity\Module $module */
-                $module = $modules[$widget->type];
-
                 //
                 // Get all widget options
                 //
@@ -1070,6 +1061,29 @@ class LayoutFactory extends BaseFactory
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
                     }
+                }
+
+                // Form conditions from the widget's option and value, e.g, templateId==worldclock1
+                $widgetConditionMatch = [];
+                foreach ($widget->widgetOptions as $option) {
+                    $widgetConditionMatch[] = $option->option . '==' . $option->value;
+                }
+
+                // Get module
+                try {
+                    $module = $this->moduleFactory->getByType($widget->type, $widgetConditionMatch);
+                } catch (NotFoundException $notFoundException) {
+                    $this->getLog()->error('Module not found for widget: ' . $widget->type);
+                    continue;
+                }
+
+                // Set the widget type
+                $widget->type = $module->type;
+
+                // Does this module type exist?
+                if (!array_key_exists($widget->type, $modules)) {
+                    $this->getLog()->error(sprintf('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules))));
+                    continue;
                 }
 
                 // convert old sub-playlist Widget options to the new way we handle them
@@ -1396,6 +1410,29 @@ class LayoutFactory extends BaseFactory
 
         $widgets = $layout->getAllWidgets();
         $this->getLog()->debug('Layout has ' . count($widgets) . ' widgets');
+
+        // Go through all the widgets and upgrade from v3 to v4
+        foreach ($widgets as $widget) {
+            // Load the widget
+            $widget->load();
+
+            $module = $this->moduleFactory->getByType($widget->type);
+            if ($module->isWidgetCompatibilityAvailable()) {
+                // Grab a widget compatibility interface, if there is one
+                $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
+                if ($widgetCompatibilityInterface !== null) {
+                    try {
+                        $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
+                        if ($upgraded) {
+                            $widget->schemaVersion = 2;
+                            $widget->save(['alwaysUpdate'=>true, 'notifyDisplays' => false]);
+                        }
+                    } catch (\Exception $e) {
+                        $this->getLog()->error('Error upgrading widget '. $e->getMessage());
+                    }
+                }
+            }
+        }
 
         $this->getLog()->debug('Process mapping.json file.');
 

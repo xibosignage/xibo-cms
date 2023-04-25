@@ -24,9 +24,10 @@
     <author>Core</author>
     <description>A module for displaying a Countdown timer with Simple Text</description>
     <class></class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\CountDownWidgetCompatibility</compatibilityClass>
     <type>countdown-text</type>
     <group id="countdown" icon="countdown">Countdown</group>
-    <legacyType>countdown</legacyType>
+    <legacyType condition="templateId==countdown1">countdown</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>

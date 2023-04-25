@@ -35,97 +35,105 @@ class WeatherWidgetCompatibility implements WidgetCompatibilityInterface
 
     /** @inheritdoc
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
+        $upgraded = false;
+        $newTemplateId = null;
         foreach ($widget->widgetOptions as $option) {
             $templateId = $widget->getOptionValue('templateId', '');
 
             if ($option->option === 'templateId') {
                 switch ($templateId) {
                     case 'weather-module0-5day':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_1');
+                        $newTemplateId = 'weather_1';
                         break;
 
                     case 'weather-module0-singleday':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_2');
+                        $newTemplateId = 'weather_2';
                         break;
 
                     case 'weather-module0-singleday2':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_3');
+                        $newTemplateId = 'weather_3';
                         break;
 
                     case 'weather-module1l':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_4');
+                        $newTemplateId = 'weather_4';
                         break;
 
                     case 'weather-module1p':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_5');
+                        $newTemplateId = 'weather_5';
                         break;
 
                     case 'weather-module2l':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_6');
+                        $newTemplateId = 'weather_6';
                         break;
 
                     case 'weather-module2p':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_7');
+                        $newTemplateId = 'weather_7';
                         break;
 
                     case 'weather-module3l':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_8');
+                        $newTemplateId = 'weather_8';
                         break;
 
                     case 'weather-module3p':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_9');
+                        $newTemplateId = 'weather_9';
                         break;
 
                     case 'weather-module4l':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_10');
+                        $newTemplateId = 'weather_10';
                         break;
 
                     case 'weather-module4p':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_11');
+                        $newTemplateId = 'weather_11';
                         break;
 
                     case 'weather-module5l':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_12');
+                        $newTemplateId = 'weather_12';
                         break;
 
                     case 'weather-module6h':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_13');
+                        $newTemplateId = 'weather_13';
                         break;
 
                     case 'weather-module6v':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_14');
+                        $newTemplateId = 'weather_14';
                         break;
 
                     case 'weather-module-7s':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_15');
+                        $newTemplateId = 'weather_15';
                         break;
 
                     case 'weather-module-8s':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_16');
+                        $newTemplateId = 'weather_16';
                         break;
 
                     case 'weather-module-9':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_17');
+                        $newTemplateId = 'weather_17';
                         break;
 
                     case 'weather-module-10l':
-                        $widget->setOptionValue('templateId', 'attrib', 'weather_18');
+                        $newTemplateId = 'weather_18';
                         break;
 
                     default:
                         break;
                 }
+
+                if (!empty($newTemplateId)) {
+                    $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
+                    $upgraded = true;
+                }
             }
         }
+
+        return $upgraded;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
     {
         return false;
     }
-
 }

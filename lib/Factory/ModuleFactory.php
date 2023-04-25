@@ -275,10 +275,11 @@ class ModuleFactory extends BaseFactory
      * Get module by Type
      * this should return the first module enabled by the type specified.
      * @param string $type
+     * @param array $conditions Conditions that are created based on the widget's option and value, e.g, templateId==worldclock1
      * @return Module
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getByType(string $type): Module
+    public function getByType(string $type, array $conditions = []): Module
     {
         $modules = $this->load();
         usort($modules, function ($a, $b) {
@@ -297,10 +298,19 @@ class ModuleFactory extends BaseFactory
         foreach ($modules as $module) {
             // get the name of the legacytypes
             $legacyTypes = [];
+            $legacyConditions = [];
             if (count($module->legacyTypes) > 0) {
                 $legacyTypes = array_column($module->legacyTypes, 'name');
+                $legacyConditions = array_column($module->legacyTypes, 'condition');
             }
+
             if (in_array($type, $legacyTypes)) {
+                foreach ($conditions as $value) {
+                    if (in_array($value, $legacyConditions)) {
+                        return $module;
+                    }
+                }
+
                 return $module;
             }
         }
@@ -488,6 +498,18 @@ class ModuleFactory extends BaseFactory
                         $class = $module->class;
                         $module->setWidgetProvider(new $class());
                     }
+
+                    // Create a widget compatibility if necessary
+                    // Take our module and see if it has a class associated with it
+                    if (!empty($module->compatibilityClass)) {
+                        // We create a module specific provider
+                        if (!class_exists($module->compatibilityClass)) {
+                            $module->errors[] = 'Module compatibilityClass not found: ' . $module->compatibilityClass;
+                        }
+                        $compatibilityClass = $module->compatibilityClass;
+                        $module->setWidgetCompatibility(new $compatibilityClass());
+                    }
+
 
                     // Set error state
                     $module->isError = $module->errors !== null && count($module->errors) > 0;

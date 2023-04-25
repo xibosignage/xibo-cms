@@ -35,73 +35,81 @@ class SocialMediaWidgetCompatibility implements WidgetCompatibilityInterface
 
     /** @inheritdoc
      */
-    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): void
+    public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
+        $upgraded = false;
+        $newTemplateId = null;
         foreach ($widget->widgetOptions as $option) {
             $templateId = $widget->getOptionValue('templateId', '');
 
             if ($option->option === 'templateId') {
                 switch ($templateId) {
                     case 'full-timeline-np':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_1');
+                        $newTemplateId = 'social_media_static_1';
                         break;
 
                     case 'full-timeline':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_2');
+                        $newTemplateId = 'social_media_static_2';
                         break;
 
                     case 'tweet-only':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_3');
+                        $newTemplateId = 'social_media_static_3';
                         break;
 
                     case 'tweet-with-profileimage-left':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_4');
+                        $newTemplateId = 'social_media_static_4';
                         break;
 
                     case 'tweet-with-profileimage-right':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_5');
+                        $newTemplateId = 'social_media_static_5';
                         break;
 
                     case 'tweet-1':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_6');
+                        $newTemplateId = 'social_media_static_6';
                         break;
 
                     case 'tweet-2':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_7');
+                        $newTemplateId = 'social_media_static_7';
                         break;
 
                     case 'tweet-4':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_8');
+                        $newTemplateId = 'social_media_static_8';
                         break;
 
                     case 'tweet-6NP':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_9');
+                        $newTemplateId = 'social_media_static_9';
                         break;
 
                     case 'tweet-6PL':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_10');
+                        $newTemplateId = 'social_media_static_10';
                         break;
 
                     case 'tweet-7':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_11');
+                        $newTemplateId = 'social_media_static_11';
                         break;
 
                     case 'tweet-8':
-                        $widget->setOptionValue('templateId', 'attrib', 'social_media_static_12');
+                        $newTemplateId = 'social_media_static_12';
                         break;
 
                     default:
                         break;
                 }
+
+                if (!empty($newTemplateId)) {
+                    $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
+                    $upgraded = true;
+                }
             }
         }
+
+        return $upgraded;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
     {
         return false;
     }
-
 }
