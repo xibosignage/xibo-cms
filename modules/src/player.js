@@ -253,7 +253,7 @@ $(function() {
       typeof window['onTemplateRender_' + widget.templateId] === 'function'
     ) { // Custom scaler
       window.onTemplateRender =
-          window['onTemplateRender_' + widget.templateId];
+        window['onTemplateRender_' + widget.templateId];
     }
 
     // Create global render array of functions
@@ -364,16 +364,26 @@ $(function() {
   // Parse out the template with elements.
   $.each(elements, function(_key, widgetElements) {
     if (widgetElements?.length > 0) {
+      const $target = $('body');
       const $content = $('#content');
 
       $.each(widgetElements, function(_widgetElemKey, widgetElement) {
         if (widgetElement?.elements?.length > 0) {
           $.each(widgetElement.elements, function(_elemKey, element) {
+            const elementCopy = JSON.parse(JSON.stringify(element));
+
+            if (Object.keys(elementCopy).length > 0 &&
+              elementCopy.hasOwnProperty('properties')
+            ) {
+              delete elementCopy.properties;
+            }
+
             // Check if we have template from templateId or module
             // and set it as the template
             let $template = null;
-            if ($('#hbs-' + element.id).length > 0) {
-              $template = $('#hbs-' + element.id);
+            const templateSelector = `#hbs-${elementCopy.id}`;
+            if ($(templateSelector).length > 0) {
+              $template = $(templateSelector);
             }
 
             let hbs = null;
@@ -383,52 +393,64 @@ $(function() {
               hbs = Handlebars.compile($template.html());
             }
 
-            const elementProperties = {};
-            if (element.properties?.length > 0) {
-              // Map properties as key:value pair.
-              $.each(element.properties, function(_idx, property) {
-                if (!elementProperties.hasOwnProperty(property.id)) {
-                  elementProperties[property.id] = property.value;
-                }
-              });
-            }
-
-            let templateData = Object.assign({}, elementProperties);
+            const elementProperties = element?.properties || {};
             const renderElement = (data) => {
               const hbsTemplate = hbs(
                 Object.assign(data, globalOptions),
               );
 
-              $content.append($(hbsTemplate).first().xiboElementsRender(
-                Object.assign(elementProperties, element, globalOptions),
-              ).prop('outerHTML'));
+              $content.append($(hbsTemplate).first()
+                .attr('id', data.elementId)
+                .addClass(`${data.id}--item`)
+                .css({
+                  height: data.height,
+                  width: data.width,
+                  position: 'absolute',
+                  top: data.top,
+                  left: data.left,
+                  'z-index': data.layer,
+                }).prop('outerHTML'));
             };
+            const templateData = Object.assign(
+              {}, elementProperties, elementCopy, globalOptions,
+            );
 
             // Get widget info if exists.
             if (Object.keys(elementsWidget).length > 0 &&
               elementsWidget.hasOwnProperty(widgetElement.widgetId)
             ) {
               const widgetInfo = elementsWidget[widgetElement.widgetId];
+              const renderData = Object.assign(
+                widgetInfo.properties,
+                globalOptions,
+                {
+                  duration: widgetInfo.duration,
+                  marqueeInlineSelector: `.${templateData.id}--item`,
+                },
+              );
               getWidgetData(widgetInfo)
                 .then(function(data) {
                   const {
                     dataItems,
                   } = composeFinalData(widgetInfo, data);
 
-                  if (dataItems.length > 0) {
-                    templateData = Object.assign(
-                      templateData, {data: dataItems[0]},
-                    );
-                  }
+                  // For each data item, parse it and add it to the content;
+                  let templateAlreadyAdded = false;
+                  $.each(dataItems, function(_key, item) {
+                    (hbs) && renderElement(Object.assign(templateData, item));
 
-                  if (hbs) {
-                    renderElement(templateData);
+                    templateAlreadyAdded = true;
+                  });
+
+                  if (templateAlreadyAdded) {
+                    $target.xiboElementsRender(
+                      renderData,
+                      $content.find(`.${templateData.id}--item`),
+                    );
                   }
                 });
             } else {
-              if (hbs) {
-                renderElement(templateData);
-              }
+              (hbs) && renderElement(templateData);
             }
           });
         }
