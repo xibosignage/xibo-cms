@@ -23,6 +23,8 @@ $(function() {
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
 
+  const Element = require('./editor/element.js');
+
   // Defaut scaler function
   const defaultScaler = function(
     _id,
@@ -405,11 +407,8 @@ $(function() {
                 .css({
                   height: data.height,
                   width: data.width,
-                  position: 'absolute',
-                  top: data.top,
-                  left: data.left,
-                  'z-index': data.layer,
-                }).prop('outerHTML'));
+                })
+                .prop('outerHTML'));
             };
             const templateData = Object.assign(
               {}, elementProperties, elementCopy, globalOptions,
@@ -420,12 +419,25 @@ $(function() {
               elementsWidget.hasOwnProperty(widgetElement.widgetId)
             ) {
               const widgetInfo = elementsWidget[widgetElement.widgetId];
+              // const globalElement = new Element(
+              //   element,
+              //   widgetElement.widgetId,
+              //   null,
+              // );
+
+              // globalElement.getTemplate().then(function(template) {
+              //   console.log({template});
+              // });
+
               const renderData = Object.assign(
+                {},
                 widgetInfo.properties,
+                elementCopy,
                 globalOptions,
                 {
                   duration: widgetInfo.duration,
                   marqueeInlineSelector: `.${templateData.id}--item`,
+                  parentId: elementCopy.elementId,
                 },
               );
               getWidgetData(widgetInfo)
@@ -437,6 +449,7 @@ $(function() {
                   // For each data item, parse it and add it to the content;
                   let templateAlreadyAdded = false;
                   $.each(dataItems, function(_key, item) {
+                    console.log({item});
                     (hbs) && renderElement(Object.assign(templateData, item));
 
                     templateAlreadyAdded = true;

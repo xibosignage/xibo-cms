@@ -62,6 +62,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",
+    "@glidejs/glide": "^3.6.0",
     "@mapbox/leaflet-pip": "^1.1.0",
     "ajax-bootstrap-select": "^1.4.5",
     "ajv": "^6.12.2",
