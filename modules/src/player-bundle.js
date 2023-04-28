@@ -29,9 +29,6 @@ window.Handlebars = require('handlebars/dist/handlebars.min.js');
 // Include HLS.js
 window.Hls = require('hls.js');
 
-// Plugin imports
-import Glide from '@glidejs/glide/dist/glide.min.js';
-
 // Our own imports
 import '../vendor/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
@@ -56,4 +53,3 @@ require('../vendor/flipclock.min.js');
 require('../vendor/flipclock.css');
 require('../vendor/jquery-cycle-2.1.6.min.js');
 require('../vendor/jquery.marquee.min.js');
-require('@glidejs/glide/dist/css/glide.core.min.css');
