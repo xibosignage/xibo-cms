@@ -394,18 +394,29 @@ $(function() {
             }
 
             const elementProperties = element?.properties || {};
-            const renderElement = (data) => {
+            const renderElement = (data, isStatic) => {
               const hbsTemplate = hbs(
                 Object.assign(data, globalOptions),
               );
+              let cssStyles = {
+                height: data.height,
+                width: data.width,
+              };
+
+              if (isStatic) {
+                cssStyles = {
+                  ...cssStyles,
+                  position: 'absolute',
+                  top: data.top,
+                  left: data.left,
+                  'z-index': data.layer,
+                };
+              }
 
               $content.append($(hbsTemplate).first()
                 .attr('id', data.elementId)
                 .addClass(`${data.id}--item`)
-                .css({
-                  height: data.height,
-                  width: data.width,
-                })
+                .css(cssStyles)
                 .prop('outerHTML'));
             };
             const templateData = Object.assign(
@@ -451,7 +462,7 @@ $(function() {
                   }
                 });
             } else {
-              (hbs) && renderElement(templateData);
+              (hbs) && renderElement(templateData, true);
             }
           });
         }
