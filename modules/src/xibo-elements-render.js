@@ -19,40 +19,83 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 jQuery.fn.extend({
-  xiboElementsRender: function(options) {
+  xiboElementsRender: function(options, items) {
     const $this = $(this);
     const defaults = {
-      width: 0,
-      height: 0,
-      layer: 0,
-      top: 0,
-      left: 0,
-      elementId: '',
+      effect: 'none',
+      pauseEffectOnStart: true,
+      duration: 50,
+      durationIsPerItem: false,
+      numItems: 0,
+      takeItemsFrom: 'start',
+      reverseOrder: 0,
+      itemsPerPage: 1,
+      speed: 2,
       previewWidth: 0,
       previewHeight: 0,
       scaleOverride: 0,
+      randomiseItems: 0,
+      marqueeInlineSelector: '.elements-render-item',
+      alignmentV: 'top',
+      displayDirection: 0,
+      parentId: '',
     };
 
     options = $.extend({}, defaults, options);
 
-    // Calculate the dimensions of this item
-    let width = options.width;
-    let height = options.height;
-    if (options.scaleOverride !== 0) {
-      width = options.width / options.scaleOverride;
-      height = options.height / options.scaleOverride;
+    const elementWrapper = $('<div class="element-wrapper"></div>');
+
+    if (options.parentId) {
+      elementWrapper
+        .addClass(`element-wrapper--${options.parentId}`)
+        .css({
+          width: options.width,
+          height: options.height,
+          position: 'absolute',
+          top: options.top,
+          left: options.left,
+          'z-index': options.layer,
+        });
     }
 
-    $this
-      .attr('id', options.elementId)
-      .css({
-        height: height,
-        width: width,
-        position: 'absolute',
-        top: options.top,
-        left: options.left,
-        'z-index': options.layer,
+    if (items?.length > 0) {
+      elementWrapper.append(items);
+    }
+
+    if ($this.find(`#content .element-wrapper--${options.parentId}`)
+      .length === 0) {
+      $this.find('#content').prepend(elementWrapper);
+    }
+
+    const cycleElement = `#content .element-wrapper--${options.parentId}`;
+
+    if ($this.find(cycleElement).length) {
+      // Make sure the speed is something sensible
+      options.speed = (options.speed <= 200) ? 1000 : options.speed;
+
+      const numberOfSlides = options.numItems;
+      const duration = (options.durationIsPerItem) ?
+        options.duration :
+        options.duration / numberOfSlides;
+      let timeout = duration * 1000;
+      const noTransitionSpeed = 10;
+
+      if (options.effect !== 'noTransition') {
+        timeout = timeout - options.speed;
+      } else {
+        timeout = timeout - noTransitionSpeed;
+      }
+
+      $(cycleElement).addClass('anim-cycle').cycle({
+        fx: (options.effect === 'noTransition') ? 'none' : options.effect,
+        speed: (options.effect === 'noTransition') ?
+          noTransitionSpeed : options.speed,
+        timeout: timeout,
+        slides: `> .${options.id}--item`,
+        autoHeight: false,
+        delay: 0,
       });
+    }
 
     return $this;
   },

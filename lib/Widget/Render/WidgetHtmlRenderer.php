@@ -576,6 +576,10 @@ class WidgetHtmlRenderer
                     'width' => $moduleTemplate->stencil->width,
                     'height' => $moduleTemplate->stencil->height,
                     'gapBetweenHbs' => $moduleTemplate->stencil->gapBetweenHbs,
+                    'extends' => [
+                        'override' => $moduleTemplate->extends?->override,
+                        'with' => $moduleTemplate->extends?->with,
+                    ],
                 ];
             } else if ($extension !== null) {
                 // Output the extension HBS instead
@@ -584,6 +588,10 @@ class WidgetHtmlRenderer
                     'width' => $extension->stencil->width,
                     'height' => $extension->stencil->height,
                     'gapBetweenHbs' => $extension->stencil->gapBetweenHbs,
+                    'extends' => [
+                        'override' => $moduleTemplate->extends?->override,
+                        'with' => $moduleTemplate->extends?->with,
+                    ],
                 ];
             }
 
