@@ -390,6 +390,28 @@ $(function() {
 
             // Compile the template if it exists
             if ($template && $template.length > 0) {
+              const dataOverride = $template?.data('extends-override');
+              const dataOverrideWith = $template?.data('extends-with');
+
+              console.log({tmpl: $template, dataOverride, dataOverrideWith});
+
+              // Check if template is extended and get values
+              if ((dataOverride !== 'undefined' &&
+                  dataOverrideWith !== 'undefined') &&
+                  (String(dataOverride).length > 0 &&
+                  String(dataOverrideWith).length > 0)
+              ) {
+                if ($template.html().includes(`{{${dataOverride}}}`)) {
+                  $template.html(
+                    $template.html()
+                      .replaceAll(
+                        `{{${dataOverride}}}`,
+                        `{{${dataOverrideWith}}}`,
+                      ),
+                  );
+                }
+              }
+
               hbs = Handlebars.compile($template.html());
             }
 
@@ -449,7 +471,10 @@ $(function() {
                   // For each data item, parse it and add it to the content;
                   let templateAlreadyAdded = false;
                   $.each(dataItems, function(_key, item) {
-                    (hbs) && renderElement(Object.assign(templateData, item));
+                    (hbs) && renderElement(Object.assign(
+                      templateData,
+                      {data: item},
+                    ));
 
                     templateAlreadyAdded = true;
                   });

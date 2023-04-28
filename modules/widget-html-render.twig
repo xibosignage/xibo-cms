@@ -72,7 +72,13 @@
         {% endfor %}
     </script>
 {% for id, item in hbs %}
-    <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}" data-gap="{{ item.gapBetweenHbs }}">{{ item.content|raw }}</script>
+    <script type="text/x-handlebars-template" id="hbs-{{ id }}"
+            data-width="{{ item.width }}"
+            data-height="{{ item.height }}"
+            data-gap="{{ item.gapBetweenHbs }}"
+            data-extends-override="{{ item.extends.override }}"
+            data-extends-with="{{ item.extends.with }}"
+    >{{ item.content|raw }}</script>
 {% endfor %}
 {% for widgetId, parser in onInitialize %}
     <script type="text/javascript" id="onInitialize-{{ widgetId }}">
