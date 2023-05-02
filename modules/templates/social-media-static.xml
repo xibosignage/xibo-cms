@@ -2120,11 +2120,6 @@ body {
     min-height: 1px;
 }
 
-.social-col.user {
-    width: fit-content;
-    overflow-y: hidden;
-}
-
 .social {
     overflow: hidden;
     border: 1px solid #ddd;
