@@ -75,22 +75,90 @@
         </assets>
     </template>
     <template>
-        <id>tweet1</id>
+        <id>post_horizontal</id>
         <type>element-group</type>
         <dataType>social-media</dataType>
-        <title>Tweet</title>
+        <title>Post</title>
+        <thumbnail>social-media-post-horizontal</thumbnail>
         <stencil>
-            <width></width>
-            <height></height>
+            <hbs></hbs>
+            <startWidth>800</startWidth>
+            <startHeight>200</startHeight>
             <elements>
-                <element id="profile-photo">
-                    <top>150</top>
-                    <left>350</left>
+                <element id="rectangle">
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>800</width>
+                    <height>200</height>
                     <defaultProperties>
-                        <property id=""></property>
+                        <property id="backgroundColor">#f4f8ff</property>
+                        <property id="outlineColor">#3c3ad3</property>
+                        <property id="outlineWidth">4</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">10</property>
+                    </defaultProperties>
+                </element>
+                <element id="profile_photo">
+                    <top>20</top>
+                    <left>20</left>
+                    <width>160</width>
+                    <height>160</height>
+                    <rotation>0</rotation>
+                    <layer>1</layer>
+                </element>
+                <element id="social_media_username">
+                    <top>20</top>
+                    <left>190</left>
+                    <layer>1</layer>
+                    <width>400</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontFace">Open Sans</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">24</property>
+                        <property id="fontColor">#3c3ad3</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="social_media_date">
+                    <top>20</top>
+                    <left>590</left>
+                    <layer>1</layer>
+                    <width>190</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="dateFormat">HH:mm - DD/MM/YYYY</property>
+                        <property id="fontFamily">linear regular</property>
+                        <property id="fontSize">20</property>
+                        <property id="fontColor">#3c3ad3</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="social_media_description">
+                    <top>60</top>
+                    <left>190</left>
+                    <layer>1</layer>
+                    <width>590</width>
+                    <height>120</height>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontSize">20</property>
+                        <property id="fontColor">#3c3ad3</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-start</property>
+                        <property id="showOverflow">0</property>
                     </defaultProperties>
                 </element>
             </elements>
         </stencil>
+        <assets>
+            <asset id="social-media-post-horizontal" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-horizontal.png" />
+        </assets>
     </template>
 </templates>

@@ -71,7 +71,6 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
-        <!-- TODO: Move the next fields to a new tab -->
         <property type="header">
             <title>Analogue Clock Settings</title>
         </property>

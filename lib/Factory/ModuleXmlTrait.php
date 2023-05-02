@@ -277,10 +277,14 @@ trait ModuleXmlTrait
                         } else if ($childNode->nodeName === 'rotation') {
                             $element->rotation = intval($childNode->textContent);
                         } else if ($childNode->nodeName === 'defaultProperties') {
-                            $element->properties[] = [
-                                'id' => $childNode->getAttribute('id'),
-                                'value' => $childNode->textContent
-                            ];
+                            foreach ($childNode->childNodes as $defaultPropertyNode) {
+                                if ($defaultPropertyNode instanceof \DOMElement) {
+                                    $element->properties[] = [
+                                        'id' => $defaultPropertyNode->getAttribute('id'),
+                                        'value' => trim($defaultPropertyNode->textContent)
+                                    ];
+                                }
+                            }
                         }
                     }
                 }

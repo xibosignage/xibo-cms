@@ -38,6 +38,7 @@ const EXPIRE_STATUS_ICON_MAP = [
 ];
 
 const Element = require('../editor-core/element.js');
+const ElementGroup = require('../editor-core/element-group.js');
 
 /**
  * Widget contructor
@@ -56,8 +57,9 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
     this.id = 'widget_' + id; // widget_widgetID
   }
 
-  // Widget elements
+  // Widget elements and groups
   this.elements = {};
+  this.elementGroups = {};
 
   this.widgetName = data.name;
 
@@ -611,6 +613,8 @@ Widget.prototype.saveElements = function(
 
     const elementObject = {
       id: element.id,
+      groupId: element.groupId,
+      groupProperties: element.groupProperties,
       elementId: element.elementId,
       type: element.elementType,
       left: element.left,
@@ -662,6 +666,27 @@ Widget.prototype.addElement = function(
     this.widgetId,
     this.regionId,
   );
+
+  // If we have a groupId, add or assign it to the group
+  if (element.groupId != undefined) {
+    if (this.elementGroups[element.groupId] == undefined) {
+      this.elementGroups[element.groupId] = new ElementGroup(
+        Object.assign(
+          element.groupProperties,
+          {
+            id: element.groupId,
+          },
+        ),
+        this.widgetId,
+        this.regionId,
+      );
+    }
+
+    // Add element to group
+    this.elementGroups[element.groupId]
+      .elements[element.elementId] =
+        this.elements[element.elementId];
+  }
 
   // Save changes to widget
   (save) && this.saveElements();
@@ -719,6 +744,46 @@ Widget.prototype.removeElement = function(
   }
 };
 
+/**
+ * Remove element group
+ * @param {string} groupId - id of the group to remove
+ */
+Widget.prototype.removeElementGroup = function(
+  groupId,
+) {
+  const self = this;
+  // Get element group
+  const elementGroup = this.elementGroups[groupId];
+
+  // Loop through elements in group to remove them
+  // and only save on the last element
+  Object.values(elementGroup.elements)
+    .forEach((element) => {
+      // Check if it's the last element
+      const lastElement = (
+        Object.keys(elementGroup.elements).length == 1
+      );
+
+      // Delete element from widget
+      self.removeElement(
+        element.elementId,
+        lastElement,
+      );
+    });
+
+  // Delete element group from widget
+  this.elementGroups[elementGroup.id] = null;
+
+  // If object is selected, remove it from selection
+  if (this.editorObject.selectedObject.id == groupId) {
+    this.editorObject.selectObject({
+      reloadViewer: true,
+    });
+  }
+
+  // Remove element from the DOM
+  $(`#${groupId}`).remove();
+};
 
 /**
  * Get widget data
