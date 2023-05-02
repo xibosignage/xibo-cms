@@ -387,13 +387,13 @@ $(function() {
             }
 
             let hbs = null;
+            let dataOverride = null;
+            let dataOverrideWith = null;
 
             // Compile the template if it exists
             if ($template && $template.length > 0) {
-              const dataOverride = $template?.data('extends-override');
-              const dataOverrideWith = $template?.data('extends-with');
-
-              console.log({tmpl: $template, dataOverride, dataOverrideWith});
+              dataOverride = $template?.data('extends-override');
+              dataOverrideWith = $template?.data('extends-with');
 
               // Check if template is extended and get values
               if ((dataOverride !== 'undefined' &&
@@ -484,6 +484,24 @@ $(function() {
                       renderData,
                       $content.find(`.${templateData.id}--item`),
                     );
+
+                    // Handle the rendering of the template
+                    if (dataOverride &&
+                      typeof window[
+                        `onTemplateRender_${dataOverride}`
+                      ] === 'function'
+                    ) {
+                      const onTemplateRender = window[
+                        `onTemplateRender_${dataOverride}`];
+
+                      onTemplateRender && onTemplateRender(
+                        elementCopy.elementId,
+                        $target,
+                        $content.find(`.${templateData.id}--item`),
+                        element?.properties,
+                        widgetInfo?.meta,
+                      );
+                    }
                   }
                 });
             } else {
