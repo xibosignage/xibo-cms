@@ -53,7 +53,8 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
-use Xibo\Helper\Random;
+use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Status;
 use Xibo\Service\ConfigServiceInterface;
@@ -92,7 +93,7 @@ class Soap
     protected $logProcessor;
 
     /** @var  PoolInterface */
-    private $pool;
+    protected $pool;
 
     /** @var  StorageServiceInterface */
     private $store;
@@ -363,14 +364,7 @@ class Soap
 
         $output = $cache->get();
 
-        // Required Files caching operates in lockstep with nonce caching
-        //  - required files are cached for 4 hours
-        //  - nonces have an expiry of 1 day
-        //  - nonces are marked "used" when they get used
-        //  - nonce use/expiry is not checked for XMDS served files (getfile, getresource)
-        //  - nonce use/expiry is checked for HTTP served files (media, layouts)
-        //  - Each time a nonce is used through HTTP, the required files cache is invalidated so that new nonces
-        //    are generated for the next request.
+        // Required files are cached for 4 hours
         if ($cache->isHit()) {
             $this->getLog()->info('Returning required files from Cache for display ' . $this->display->display);
 
@@ -383,13 +377,6 @@ class Soap
         // We need to regenerate
         // Lock the cache
         $cache->lock(120);
-
-        // Generate a new nonce for this player and store it in the cache.
-        $playerNonce = Random::generateString(32);
-        $playerNonceCache = $this->pool->getItem('/display/nonce/' . $this->display->displayId);
-        $playerNonceCache->set($playerNonce);
-        $playerNonceCache->expiresAfter(86400);
-        $this->pool->saveDeferred($playerNonceCache);
 
         // Get all required files for this display.
         // we will use this to drop items from the requirefile table if they are no longer in required files
@@ -427,7 +414,6 @@ class Soap
             $newRfIds[] = $this->addDependency(
                 $requiredFilesXml,
                 $fileElements,
-                $playerNonce,
                 $httpDownloads,
                 $isSupportsDependency,
                 $dependency
@@ -694,7 +680,7 @@ class Soap
 
                 if ($httpDownloads) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('M', $id, $playerNonce));
+                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('M', $id, $path));
                     $file->setAttribute('saveAs', $path);
                     $file->setAttribute('download', 'http');
                 } else {
@@ -777,7 +763,7 @@ class Soap
 
                 if ($httpDownloads && $supportsHttpLayouts) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
+                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('L', $layoutId, $fileName));
                     $file->setAttribute('saveAs', $fileName);
                     $file->setAttribute('download', 'http');
                 } else {
@@ -800,8 +786,6 @@ class Soap
                     // TODO: canvas region or not?
                     //  if this is a canvas region we should only send the first widget as a resource
                     //  but all widgets with data
-                    //  HOW do we manage the lifecycle of widgets with data that changes overtime?
-
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
 
@@ -925,7 +909,6 @@ class Soap
                                             $newRfIds[] = $this->addDependency(
                                                 $requiredFilesXml,
                                                 $fileElements,
-                                                $playerNonce,
                                                 $httpDownloads,
                                                 $isSupportsDependency,
                                                 $asset->getDependency()
@@ -2133,10 +2116,7 @@ class Soap
 
             // If we are complete, then drop the player nonce cache
             if ($this->display->mediaInventoryStatus == 1) {
-                $this->getLog()->debug('Media Inventory tells us that all downloads are complete,'
-                    . ' clearing the nonce for this display');
-
-                $this->pool->deleteItem('/display/nonce/' . $this->display->displayId);
+                $this->getLog()->debug('Media Inventory tells us that all downloads are complete');
             }
 
             $this->display->saveMediaInventoryStatus();
@@ -2296,9 +2276,10 @@ class Soap
 
                             $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
                         } catch (GeneralException $exception) {
-                            // We ignore this.
+                            // No data cached yet, exception
                             $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
                                 . ', e: ' . $exception->getMessage());
+                            throw new \SoapFault('Receiver', 'Cache not ready');
                         }
 
                         $data[$widget->widgetId] = [
@@ -2643,14 +2624,15 @@ class Soap
      * Generate a file download path for HTTP downloads, taking into account the precence of a CDN.
      * @param $type
      * @param $itemId
-     * @param $nonce
+     * @param string $storedAs
      * @param string|null $fileType
      * @return string
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    protected function generateRequiredFileDownloadPath($type, $itemId, $nonce, $fileType = null)
+    protected function generateRequiredFileDownloadPath($type, $itemId, string $storedAs, string $fileType = null)
     {
         $saveAsPath = Wsdl::getRoot()
-            . '?file=' . $nonce
+            . '?file=' . $storedAs
             . '&displayId=' . $this->display->displayId
             . '&type=' . $type
             . '&itemId=' . $itemId;
@@ -2659,6 +2641,13 @@ class Soap
             $saveAsPath .= '&fileType=' . $fileType;
         }
 
+        $saveAsPath .= '&' . LinkSigner::getSignature(
+            (new HttpsDetect())->getHost(),
+            $storedAs,
+            time() + ($this->display->getSetting('collectionInterval', 300) * 2),
+            $this->configService->getApiKeyDetails()['encryptionKey'],
+        );
+
         // CDN?
         $cdnUrl = $this->configService->getSetting('CDN_URL');
         if ($cdnUrl != '') {
@@ -2666,7 +2655,8 @@ class Soap
             return 'http' . (
                 (
                     (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
-                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
+                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+                        && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
                 ) ? 's' : '')
                 . '://' . $cdnUrl . urlencode($saveAsPath);
         } else {
@@ -2682,12 +2672,12 @@ class Soap
     private function addDependency(
         \DOMDocument $requiredFilesXml,
         \DOMElement $fileElements,
-        string $playerNonce,
         bool $httpDownloads,
         bool $isSupportsDependency,
         Dependency $dependency
     ): int {
         $file = $requiredFilesXml->createElement('file');
+        $dependencyBasePath = basename($dependency->path);
 
         // HTTP downloads?
         // 3) some dependencies don't support HTTP downloads because they aren't in the library
@@ -2696,8 +2686,8 @@ class Soap
             $httpFilePath = $this->generateRequiredFileDownloadPath(
                 RequiredFile::$TYPE_DEPENDENCY,
                 $dependency->id,
-                $playerNonce,
-                $dependency->fileType
+                $dependencyBasePath,
+                $dependency->fileType,
             );
 
             $file->setAttribute('download', 'http');
@@ -2705,7 +2695,6 @@ class Soap
             $file->setAttribute('download', 'xmds');
         }
 
-        $dependencyBasePath = basename($dependency->path);
         $file->setAttribute('size', $dependency->size);
         $file->setAttribute('md5', $dependency->md5);
         $file->setAttribute('saveAs', $dependencyBasePath);

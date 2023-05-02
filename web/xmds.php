@@ -25,6 +25,7 @@ use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
@@ -124,7 +125,6 @@ if (isset($_GET['file'])) {
 
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
-        /** @var \Xibo\Entity\RequiredFile $file */
         if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId'])) {
             throw new NotFoundException(__('Missing params'));
         }
@@ -132,17 +132,24 @@ if (isset($_GET['file'])) {
         $displayId = intval($_REQUEST['displayId']);
         $itemId = intval($_REQUEST['itemId']);
 
-        // Get the player nonce from the cache
-        /** @var \Stash\Item $nonce */
-        $nonce = $container->get('pool')->getItem('/display/nonce/' . $displayId);
-
-        if ($nonce->isMiss()) {
-            throw new NotFoundException(__('No nonce cache'));
+        // Has the URL expired
+        if (time() > $_REQUEST['X-Amz-Expires']) {
+            throw new NotFoundException(__('Expired') . var_export($_REQUEST, true));
         }
 
-        // Check the nonce against the nonce we received
-        if ($nonce->get() != $_REQUEST['file']) {
-            throw new NotFoundException(__('Nonce mismatch'));
+        // Validate the URL.
+        $signature = $_REQUEST['X-Amz-Signature'];
+        $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
+            (new HttpsDetect())->getHost(),
+            $_GET['file'],
+            $_REQUEST['X-Amz-Expires'],
+            $container->get('configService')->getApiKeyDetails()['encryptionKey'],
+            $_REQUEST['X-Amz-Date'],
+            true,
+        );
+
+        if ($signature !== $calculatedSignature) {
+            throw new NotFoundException(__('Invalid URL'));
         }
 
         /** @var \Xibo\Factory\RequiredFileFactory $requiredFileFactory */
