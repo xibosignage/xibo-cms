@@ -461,6 +461,15 @@ Viewer.prototype.handleInteractions = function() {
                 target: $(e.target),
               });
               self.selectElement($(e.target));
+            } else if (
+              $(e.target).hasClass('group-select-overlay') &&
+              !$(e.target).parent().hasClass('selected')
+            ) {
+              // Select element if exists
+              lD.selectObject({
+                target: $(e.target).parent(),
+              });
+              self.selectElement($(e.target).parent());
             }
           }, 200);
         } else {
@@ -488,6 +497,12 @@ Viewer.prototype.handleInteractions = function() {
       // Cancel default click
       e.stopPropagation();
     }).contextmenu(function(ev) {
+      // If target has class group-select-overlay
+      // set target to the parent
+      if ($(ev.target).hasClass('group-select-overlay')) {
+        ev.target = $(ev.target).parent()[0];
+      }
+
       // Context menu
       if (
         $(ev.target).is('.editable, .deletable, .permissionsModifiable') &&
@@ -886,11 +901,57 @@ Viewer.prototype.renderElement = function(
     layer: element.layer < 0 ? 0 : element.layer,
   };
 
+  // If element belongs to a group, adjust top and left
+  if (element.groupId) {
+    elementRenderDimensions.left -=
+      element.groupProperties.left * viewerScale;
+
+    elementRenderDimensions.top -=
+      element.groupProperties.top * viewerScale;
+  }
+
   // Render element container
   const $newElement = $(viewerElementTemplate({
     element: element,
     dimensions: elementRenderDimensions,
   }));
+
+  // If elements has a group, get group container
+  let $groupContainer;
+  if (element.groupId) {
+    // Create group container if it doesn't exist
+    if (
+      $canvasRegionContainer.find(`#${element.groupId}`).length == 0
+    ) {
+      $canvasRegionContainer.append(
+        `<div id="${element.groupId}" class="designer-element-group editable"
+            data-type="element-group"
+            data-region-id="${element.regionId}"
+            data-widget-id="${element.widgetId}"
+            >
+          <div class="group-select-overlay viewer-element-select">
+          </div>
+        </div>`,
+      );
+    }
+
+    // Get group container
+    $groupContainer = $canvasRegionContainer.find(
+      `#${element.groupId}`,
+    );
+
+    // Get group object
+    const group = lD.getElementByTypeAndId(
+      'element-group',
+      element.groupId,
+      'widget_' + element.regionId + '_' + element.widgetId,
+    );
+
+    // If group is selected, add selected class
+    if (group.selected) {
+      this.selectElement($groupContainer);
+    }
+  }
 
   // Append element html to the canvas region container
   // if it doesn't exist, otherwise replace it
@@ -898,7 +959,39 @@ Viewer.prototype.renderElement = function(
     $canvasRegionContainer.find(`#${element.elementId}`)
       .replaceWith($newElement);
   } else {
-    $newElement.appendTo($canvasRegionContainer);
+    // If element has group, append it to the group container
+    if (element.groupId) {
+      // Add element to group container
+      $groupContainer.append($newElement);
+    } else {
+      // Otherwise append it to the canvas region container
+      $canvasRegionContainer.append($newElement);
+    }
+  }
+
+  // If we have a group container, set its dimensions
+  if (element.groupId && $groupContainer) {
+    // Set dimensions
+    $groupContainer.css({
+      position: 'absolute',
+      height: element.groupProperties.height * viewerScale,
+      left: element.groupProperties.left * viewerScale,
+      top: element.groupProperties.top * viewerScale,
+      width: element.groupProperties.width * viewerScale,
+    });
+
+    // Check if element ::after layer is equal or greater than group layer
+    // If so, set group layer to element layer + 1
+    if (
+      $groupContainer.find('.group-select-overlay').css('z-index') == 'auto' ||
+      element.layer >=
+        Number($groupContainer.find('.group-select-overlay').css('z-index'))
+    ) {
+      $groupContainer.find('.group-select-overlay').css(
+        'z-index',
+        element.layer + 1,
+      );
+    }
   }
 
   // Render element content and handle interactions after
@@ -996,6 +1089,11 @@ Viewer.prototype.renderElementContent = function(
         if (properties.hasOwnProperty(key)) {
           const property = properties[key];
 
+          // Convert checkbox values to boolean
+          if (property.type === 'checkbox') {
+            property.value = Boolean(Number(property.value));
+          }
+
           // Add property to properties object
           convertedProperties[property.id] = (property.value == undefined) ?
             property.default : property.value;
@@ -1030,7 +1128,19 @@ Viewer.prototype.renderElementContent = function(
         convertedProperties.data = widgetData;
 
         // Compile hbs template with data
-        const hbsHtml = hbsTemplate(convertedProperties);
+        let hbsHtml = hbsTemplate(convertedProperties);
+
+        // Replace 123 with urls for [[assetID=123]] with asset url
+        const assetRegex = /\[\[assetId=(\D+)\]\]/gi;
+
+        // Replace [[assetID=123]] with asset url
+        hbsHtml.match(assetRegex)?.forEach((match) => {
+          const assetId = match.split('[[assetId=')[1].split(']]')[0];
+          const assetUrl = assetDownloadUrl.replace(':assetId', assetId);
+
+          // Replace asset id with asset url
+          hbsHtml = hbsHtml.replace(match, assetUrl);
+        });
 
         // Append hbs html to the element
         $elementContainer.find('.element-content').html(hbsHtml);
@@ -1141,6 +1251,8 @@ Viewer.prototype.initMoveable = function() {
   const saveElementProperties = function(
     element,
     hasMoved = false,
+    groupPosition = false,
+    save = true,
   ) {
     const scale = self.containerElementDimensions.scale;
 
@@ -1158,14 +1270,49 @@ Viewer.prototype.initMoveable = function() {
     elementObject.width = parseInt($element.width() / scale);
     elementObject.height = parseInt($element.height() / scale);
 
-    // Only change top/left if element has moved
-    if (hasMoved) {
-      elementObject.top = parseInt($element.position().top / scale);
-      elementObject.left = parseInt($element.position().left / scale);
+    // If we have group position, we also need to update groupProperties
+    if (groupPosition) {
+      elementObject.groupProperties.top =
+        parseInt(groupPosition.top / scale);
+      elementObject.groupProperties.left =
+        parseInt(groupPosition.left / scale);
     }
 
-    // Save element
-    parentWidget.saveElements();
+    // Only change top/left if element has moved
+    if (hasMoved) {
+      elementObject.top = (groupPosition && groupPosition.top) ?
+        parseInt(($element.position().top + groupPosition.top) / scale) :
+        parseInt($element.position().top / scale);
+      elementObject.left = (groupPosition && groupPosition.left) ?
+        parseInt(($element.position().left + groupPosition.left) / scale) :
+        parseInt($element.position().left / scale);
+    }
+
+    // Save elements
+    if (save) {
+      parentWidget.saveElements();
+    }
+  };
+
+  const saveElementGroupProperties = function(
+    elementGroup,
+  ) {
+    // Get group position
+    const $elementGroup = $(elementGroup);
+    const groupPosition = $elementGroup.position();
+
+    // Get group elements
+    const $groupElements = $elementGroup.find('.designer-element');
+
+    // Calculate group elements position, but only save on the last element
+    $groupElements.each(function(_key, el) {
+      saveElementProperties(
+        el,
+        true,
+        groupPosition,
+        _key == $groupElements.length - 1,
+      );
+    });
   };
 
   // Create moveable
@@ -1210,6 +1357,10 @@ Viewer.prototype.initMoveable = function() {
       // Save element properties
       (lD.selectedObject.type == 'element') &&
         saveElementProperties(e.target, true);
+
+      // Save element group properties
+      (lD.selectedObject.type == 'element-group') &&
+        saveElementGroupProperties(e.target, true);
     }
   });
 
@@ -1296,10 +1447,21 @@ Viewer.prototype.updateMoveable = function() {
     $selectedElement &&
     (
       $selectedElement.hasClass('designer-region') ||
-      $selectedElement.hasClass('designer-element')
+      $selectedElement.hasClass('designer-element') ||
+      $selectedElement.hasClass('designer-element-group')
     ) &&
     $.contains(document, $selectedElement[0])
   ) {
+    // If target is designer-element-group, don't allow resizing
+    if ($selectedElement.hasClass('designer-element-group')) {
+      this.moveable.resizable = false;
+      this.moveable.dragTarget =
+        $selectedElement.find('.group-select-overlay')[0];
+    } else {
+      this.moveable.resizable = true;
+      this.moveable.dragTarget = undefined;
+    }
+
     this.moveable.target = $selectedElement[0];
     this.moveable.updateRect();
   } else {

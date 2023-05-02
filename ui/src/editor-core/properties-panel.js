@@ -40,12 +40,14 @@ const PropertiesPanel = function(parent, container) {
 /**
  * Save properties from the panel form
  * @param {object} target - the element that the form relates to
+ * @return {boolean} - false if form is invalid
  */
 PropertiesPanel.prototype.save = function(target) {
   const app = this.parent;
   const self = this;
   const form = $(this.DOMObject).find('form');
   let savingElement = false;
+  let savingElementGroup = false;
 
   // If main container has inline editing class, remove it
   app.editorContainer.removeClass('inline-edit-mode');
@@ -76,6 +78,15 @@ PropertiesPanel.prototype.save = function(target) {
     );
 
     savingElement = true;
+  }
+
+  // If we're saving a widget, but the selected object is an element group
+  if (target.type === 'widget' && app.selectedObject.type === 'element-group') {
+    // Reset element's parent widget data
+    // So it can be reloaded in all elements
+    target.cachedData = {};
+
+    savingElementGroup = true;
   }
 
   // Run form submit module optional function
@@ -181,7 +192,7 @@ PropertiesPanel.prototype.save = function(target) {
       };
 
       // Reload data if we're not saving an element
-      if (!savingElement) {
+      if (!savingElement && !savingElementGroup) {
         reloadData();
       } else {
         // If we're saving an element, reload all elements
@@ -360,6 +371,13 @@ PropertiesPanel.prototype.render = function(
 
     // Set renderElements to true
     renderElements = true;
+  } else if (target.type === 'element-group') {
+    // Get widget and set it as target
+    target = app.getElementByTypeAndId(
+      'widget',
+      'widget_' + target.regionId + '_' + target.widgetId,
+      'canvas',
+    );
   }
 
   // Show a message if the module is disabled for a widget rendering

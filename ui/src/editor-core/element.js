@@ -10,6 +10,12 @@
 const Element = function(data, widgetId, regionId) {
   this.widgetId = widgetId;
   this.regionId = regionId;
+  this.groupId = data.groupId;
+
+  // If group id is set, grab group properties
+  if (this.groupId) {
+    this.groupProperties = data.groupProperties;
+  }
 
   this.id = data.id;
   this.elementId = data.elementId;

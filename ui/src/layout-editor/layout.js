@@ -3,6 +3,7 @@ const Region = require('../layout-editor/region.js');
 const Canvas = require('../layout-editor/canvas.js');
 const Widget = require('../editor-core/widget.js');
 const Element = require('../editor-core/element.js');
+const ElementGroup = require('../editor-core/element-group.js');
 
 /**
  * Layout contructor
@@ -159,11 +160,35 @@ Layout.prototype.createDataStructure = function(data) {
                   'element_' + Math.floor(Math.random() * 1000000);
               }
 
-              newWidget.elements[element.elementId] = new Element(
-                element,
-                newWidget.widgetId,
-                data.regions[region].regionId,
-              );
+              const newElement = newWidget.elements[element.elementId] =
+                new Element(
+                  element,
+                  newWidget.widgetId,
+                  data.regions[region].regionId,
+                );
+
+              // If we have a groupId, add or assign it to the group
+              if (newElement.groupId != undefined) {
+                if (newWidget.elementGroups[newElement.groupId] == undefined) {
+                  newWidget.elementGroups[newElement.groupId] =
+                    new ElementGroup(
+                      Object.assign(
+                        newElement.groupProperties,
+                        {
+                          id: newElement.groupId,
+                        },
+                      ),
+                      newWidget.widgetId,
+                      data.regions[region].regionId,
+                    );
+                }
+
+                // Add element to group
+                newWidget
+                  .elementGroups[newElement.groupId]
+                  .elements[newElement.elementId] =
+                    newElement;
+              }
             }
           }
 

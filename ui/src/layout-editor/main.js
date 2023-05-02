@@ -433,52 +433,7 @@ lD.selectObject =
 
       // Unselect the previous selectedObject object if still selected
       if (this.selectedObject.selected) {
-        switch (this.selectedObject.type) {
-          case 'region':
-            if (this.layout.regions[this.selectedObject.id]) {
-              this.layout.regions[this.selectedObject.id].selected = false;
-            }
-            break;
-
-          case 'widget':
-            if (this.selectedObject.drawerWidget) {
-              if (
-                this.layout.drawer.widgets[this.selectedObject.id]
-              ) {
-                this.layout.drawer.widgets[this.selectedObject.id]
-                  .selected = false;
-              }
-            } else {
-              if (
-                this.layout.regions[this.selectedObject.regionId] &&
-                this.layout.regions[this.selectedObject.regionId]
-                  .widgets[this.selectedObject.id]
-              ) {
-                this.layout.regions[this.selectedObject.regionId]
-                  .widgets[this.selectedObject.id]
-                  .selected = false;
-              }
-            }
-
-            break;
-
-          case 'element':
-            const parentRegion = this.selectedObject.regionId;
-            const parentWidget = this.selectedObject.widgetId;
-            const parentWidgetObj = this.layout.canvas.widgets[
-              'widget_' + parentRegion + '_' + parentWidget
-            ];
-
-            const element = (parentWidgetObj) ?
-              parentWidgetObj.elements[this.selectedObject.elementId] :
-              null;
-
-            if (element) {
-              element.selected = false;
-            }
-          default:
-            break;
-        }
+        this.selectedObject.selected = false;
       }
 
       // Set to the default object
@@ -516,6 +471,16 @@ lD.selectObject =
           const element = this.layout.canvas.widgets[
             'widget_' + parentRegion + '_' + parentWidget
           ].elements[newSelectedId];
+
+          element.selected = true;
+          this.selectedObject = element;
+        } else if (newSelectedType === 'element-group') {
+          const parentRegion = target.data('regionId');
+          const parentWidget = target.data('widgetId');
+
+          const element = this.layout.canvas.widgets[
+            'widget_' + parentRegion + '_' + parentWidget
+          ].elementGroups[newSelectedId];
 
           element.selected = true;
           this.selectedObject = element;
@@ -989,6 +954,14 @@ lD.deleteSelectedObject = function(
       'widget_' + lD.selectedObject.regionId + '_' + lD.selectedObject.widgetId,
       showConfirmModal,
     );
+  } else if (lD.selectedObject.type === 'element-group') {
+    // Delete element group
+    lD.deleteObject(
+      lD.selectedObject.type,
+      lD.selectedObject.id,
+      'widget_' + lD.selectedObject.regionId + '_' + lD.selectedObject.widgetId,
+      showConfirmModal,
+    );
   }
 };
 
@@ -1030,6 +1003,17 @@ lD.deleteObject = function(
         objectId,
         true,
       );
+    } else if (objectType === 'element-group') {
+      // For element groups, we delete all elements in the group
+      // Get parent widget
+      const widget = lD.getElementByTypeAndId(
+        'widget',
+        objectAuxId,
+        'canvas',
+      );
+
+      // Delete element from widget
+      widget.removeElementGroup(objectId);
     } else {
       lD.common.showLoadingScreen('deleteObject');
 
@@ -1191,7 +1175,7 @@ lD.deleteObject = function(
           console.error(jqXHR, textStatus, errorThrown);
         });
     }
-  } else if (objectType === 'element') {
+  } else if (objectType === 'element' || objectType === 'element-group') {
     if (showConfirmModal) {
       createDeleteModal(objectType, objectId);
     } else {
@@ -1364,104 +1348,229 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       target: targetType,
       targetId: targetId,
     });
-  } else if (draggableType == 'element') {
+  } else if (
+    draggableType == 'element' ||
+    draggableType == 'element-group'
+  ) {
+    const isGroup = (draggableType == 'element-group');
+    const self = this;
+
     // Get canvas
     this.layout.getCanvas().then((canvas) => {
-      // Add element to widget
-      const addElementToWidget = function(
-        element,
+      // Add elements to widget
+      const addElementsToWidget = function(
+        elements,
         widget,
       ) {
-        // Create a unique id for the element
-        element.elementId =
-          'element_' + element.id + '_' +
-          Math.floor(Math.random() * 1000000);
+        // Loop through elements
+        elements.forEach((element) => {
+          // Create a unique id for the element
+          element.elementId =
+            'element_' + element.id + '_' +
+            Math.floor(Math.random() * 1000000);
 
-        // Add element to the widget
-        widget.addElement(element, false);
+          // Add element to the widget
+          widget.addElement(element, false);
+        });
 
         // Save JSON with new element into the widget
         widget.saveElements().then((_res) => {
-          // Save a temporary element to the layout
-          // so we can select it when the data reloads
-          lD.layout.temporaryElement = element;
+          const firstElement = elements[0];
 
-          // Save the new element as temporary
-          lD.viewer.saveTemporaryObject(
-            element.elementId,
-            'element',
-            {
-              type: 'element',
-              parentType: 'widget',
-              widgetId: widget.widgetId,
-              regionId: widget.regionId.split('_')[1],
-            },
-          );
+          // If it's group, save it as temporary object
+          if (isGroup) {
+            lD.viewer.saveTemporaryObject(
+              firstElement.groupId,
+              'element-group',
+              {
+                type: 'element-group',
+                parentType: 'widget',
+                widgetId: widget.widgetId,
+                regionId: widget.regionId.split('_')[1],
+              },
+            );
+          } else {
+            // Save the first element as a temporary object
+            lD.viewer.saveTemporaryObject(
+              firstElement.elementId,
+              'element',
+              {
+                type: 'element',
+                parentType: 'widget',
+                widgetId: widget.widgetId,
+                regionId: widget.regionId.split('_')[1],
+              },
+            );
+          }
 
           // Reload data and select element when data reloads
           lD.reloadData(lD.layout, true, true);
         });
       };
 
+      // Create element
+      const createElement = function({
+        id,
+        type,
+        left,
+        top,
+        width,
+        height,
+        layer,
+        rotation,
+        extendsTemplate,
+        extendsOverride,
+        extendsOverrideId,
+        groupId,
+        properties,
+        groupProperties,
+      } = {},
+      ) {
+        // Create element object
+        const element =
+        {
+          id: id,
+          type: type,
+          left: left,
+          top: top,
+          width: width,
+          height: height,
+          properties: properties,
+          layer: layer,
+          rotation: rotation,
+        };
 
-      // Create element object
-      const element =
-      {
-        id: draggableData.templateId,
-        type: draggableData.dataType,
-        left: dropPosition.left,
-        top: dropPosition.top,
-        width: draggableData.templateStartWidth,
-        height: draggableData.templateStartHeight,
-        layer: 0,
-        rotation: 0,
+        // Add group id if it belongs to a group
+        if (groupId) {
+          element.groupId = groupId;
+          element.groupProperties = groupProperties;
+        }
+
+        // Check if the element is extending a template
+        if (extendsTemplate) {
+          element.extends = {
+            templateId: extendsTemplate,
+            override: extendsOverride,
+            overrideId: extendsOverrideId,
+          };
+        }
+
+        return element;
       };
 
-      // Check if the element is extending a template
-      if (draggableData.extendsTemplate) {
-        element.extends = {
-          templateId: draggableData.extendsTemplate,
-          override: draggableData.extendsOverride,
-          overrideId: draggableData.extendsOverrideId,
-        };
-      }
+      const createWidgetAndAddElements = function(
+        elements,
+      ) {
+        // Check if we have a canvas widget with
+        // subtype equal to the draggableSubType
+        // If we do, add the element to that widget
+        // If we don't, create a new widget
+        const currentWidget = Object.values(canvas.widgets).find((w) => {
+          return w.subType === draggableSubType;
+        });
 
-      // Check if we have a canvas widget with
-      // subtype equal to the draggableSubType
-      // If we do, add the element to that widget
-      // If we don't, create a new widget
-      const currentWidget = Object.values(canvas.widgets).find((w) => {
-        return w.subType === draggableSubType;
-      });
-
-      // If we don't have a widget, create a new one
-      if (!currentWidget) {
-        lD.addModuleToPlaylist(
-          canvas.regionId,
-          canvas.playlists.playlistId,
-          draggableSubType,
-          draggableData,
-        ).then((res) => {
-          // Create new temporary widget for the elements
-          newWidget = new Widget(
-            res.data.widgetId,
-            res.data,
+        // If we don't have a widget, create a new one
+        // but don't reload data
+        if (!currentWidget) {
+          lD.addModuleToPlaylist(
             canvas.regionId,
-            this,
-          );
+            canvas.playlists.playlistId,
+            draggableSubType,
+            draggableData,
+            null,
+            false,
+            false,
+            false,
+          ).then((res) => {
+            // Create new temporary widget for the elements
+            newWidget = new Widget(
+              res.data.widgetId,
+              res.data,
+              canvas.regionId,
+              self,
+            );
 
-          // Add element to the new widget
-          addElementToWidget(
-            element,
-            newWidget,
+            // Add element to the new widget
+            addElementsToWidget(
+              elements,
+              newWidget,
+            );
+          });
+        } else {
+          // Add element to the current widget
+          addElementsToWidget(
+            elements,
+            currentWidget,
           );
+        }
+      };
+
+      // Elements to add
+      const elements = [];
+
+      // If group, get all elements by templates and overrides
+      if (isGroup) {
+        // Generate a random group id
+        const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+        // Get template
+        lD.templateManager.getTemplateById(
+          draggableData.templateId,
+          draggableData.dataType,
+        ).then((template) => {
+          // Check if we have elements in stencil
+          if (template?.stencil?.elements) {
+            // Loop through elements
+            template.stencil.elements.forEach((element) => {
+              // Create element
+              const newElement = createElement({
+                id: element.id,
+                type: draggableData.dataType,
+                left: dropPosition.left + element.left,
+                top: dropPosition.top + element.top,
+                width: element.width,
+                height: element.height,
+                layer: element.layer,
+                rotation: element.rotation,
+                properties: element.properties,
+                groupId: groupId,
+                groupProperties: {
+                  width: draggableData.templateStartWidth,
+                  height: draggableData.templateStartHeight,
+                  top: dropPosition.top,
+                  left: dropPosition.left,
+                },
+              });
+
+              // Add element to elements array
+              elements.push(newElement);
+            });
+
+            // Create widget and add elements
+            createWidgetAndAddElements(elements);
+          }
         });
       } else {
-        // Add element to the current widget
-        addElementToWidget(
-          element,
-          currentWidget,
-        );
+        // Create element
+        const element = createElement({
+          id: draggableData.templateId,
+          type: draggableData.dataType,
+          left: dropPosition.left,
+          top: dropPosition.top,
+          width: draggableData.templateStartWidth,
+          height: draggableData.templateStartHeight,
+          layer: 0,
+          rotation: 0,
+          extendsTemplate: draggableData.extendsTemplate,
+          extendsOverride: draggableData.extendsOverride,
+          extendsOverrideId: draggableData.extendsOverrideId,
+        });
+
+        // Add element to elements array
+        elements.push(element);
+
+        // Create widget and add elements
+        createWidgetAndAddElements(elements);
       }
     });
   } else {
@@ -1556,6 +1665,7 @@ lD.getUploadDialogClassName = function() {
  * @param {number=} addToPosition
  * @param {boolean} drawerWidget If the widget is in the drawer
  * @param {boolean} zoneWidget If the widget is in a zone
+ * @param {boolean} reloadData If the layout should be reloaded
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
@@ -1566,6 +1676,7 @@ lD.addModuleToPlaylist = function(
   addToPosition = null,
   drawerWidget = false,
   zoneWidget = false,
+  reloadData = true,
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     const validExt = moduleData.validExt.replace(/,/g, '|');
@@ -1583,11 +1694,11 @@ lD.addModuleToPlaylist = function(
           regionId,
         ).then(() => {
           // Reload data ( and viewer )
-          lD.reloadData(lD.layout, true);
+          (reloadData) && lD.reloadData(lD.layout, true);
         });
       } else {
         // Reload data ( and viewer )
-        lD.reloadData(lD.layout, true);
+        (reloadData) && lD.reloadData(lD.layout, true);
       }
     };
 
@@ -1670,7 +1781,10 @@ lD.addModuleToPlaylist = function(
 
     // Set template if if exists
     // for elements, we use the elements template
-    if (moduleData.type === 'element') {
+    if (
+      moduleData.type === 'element' ||
+      moduleData.type === 'element-group'
+    ) {
       addOptions = addOptions || {};
       addOptions.templateId = 'elements';
     } else if (moduleData.templateId) {
@@ -1719,11 +1833,11 @@ lD.addModuleToPlaylist = function(
 
       if (!drawerWidget) {
         // Reload data ( and viewer )
-        lD.reloadData(lD.layout, true);
+        (reloadData) && lD.reloadData(lD.layout, true);
       } else {
         const newWidgetId = res.data.widgetId;
         // Reload data ( and viewer )
-        lD.reloadData(
+        (reloadData) && lD.reloadData(
           lD.layout,
           false,
           false,
@@ -1940,6 +2054,8 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
     element = lD.layout.canvas;
   } else if (type === 'element') {
     element = lD.layout.canvas.widgets[auxId].elements[id];
+  } else if (type === 'element-group') {
+    element = lD.layout.canvas.widgets[auxId].elementGroups[id];
   } else if (type === 'widget') {
     if (
       lD.layout.drawer.id != undefined &&
@@ -2116,7 +2232,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
   if (objType == 'widget') {
     objAuxId = $(obj).data('widgetRegion');
-  } else if (objType == 'element') {
+  } else if (objType == 'element' || objType == 'element-group') {
     objAuxId =
       'widget_' + $(obj).data('regionId') + '_' + $(obj).data('widgetId');
   }
@@ -2166,7 +2282,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       let auxId = null;
 
       // Delete element
-      if (objType == 'element') {
+      if (objType == 'element' || objType == 'element-group') {
         auxId = objAuxId;
       } else {
         if (objAuxId != null) {
@@ -2174,11 +2290,15 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         }
       }
 
+      // If layoutObject[objType + 'Id'] is null, use objId
+      const newObjId = layoutObject[objType + 'Id'] || objId;
+
       lD.deleteObject(
         objType,
-        layoutObject[objType + 'Id'],
+        newObjId,
         auxId,
-        (objType != 'element'), // don't show confirm modal for elements
+        // don't show confirm modal for elements and groups
+        (objType != 'element' && objType != 'element-group'),
       );
     } else if (target.data('action') == 'Move') {
       // Move widget in the timeline
