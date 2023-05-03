@@ -147,6 +147,7 @@ class Soap7 extends Soap6
                     }
 
                     // Get media references
+                    $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
                     $media = [];
                     $requiredFiles = [];
                     $sql = '
@@ -166,6 +167,11 @@ class Soap7 extends Soap6
                     foreach ($this->getStore()->select($sql, [
                         'displayId' => $this->display->displayId
                     ]) as $row) {
+                        // Only media we're interested in.
+                        if (!in_array($row['mediaId'], $mediaIds)) {
+                            continue;
+                        }
+
                         $media[$row['mediaId']] = $row['storedAs'];
 
                         // Output required file nodes for any media used in get data.
