@@ -53,7 +53,6 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
-use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Status;
@@ -874,7 +873,6 @@ class Soap
                                     $newRfIds[] = $this->addDependency(
                                         $requiredFilesXml,
                                         $fileElements,
-                                        $playerNonce,
                                         $httpDownloads,
                                         $isSupportsDependency,
                                         $asset->getDependency()
@@ -2629,9 +2627,14 @@ class Soap
      * @return string
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    protected function generateRequiredFileDownloadPath($type, $itemId, string $storedAs, string $fileType = null)
-    {
-        $saveAsPath = Wsdl::getRoot()
+    protected function generateRequiredFileDownloadPath(
+        $type,
+        $itemId,
+        string $storedAs,
+        string $fileType = null
+    ): string {
+        $xmdsRoot = Wsdl::getRoot();
+        $saveAsPath = $xmdsRoot
             . '?file=' . $storedAs
             . '&displayId=' . $this->display->displayId
             . '&type=' . $type
@@ -2642,7 +2645,7 @@ class Soap
         }
 
         $saveAsPath .= '&' . LinkSigner::getSignature(
-            (new HttpsDetect())->getHost(),
+            parse_url($xmdsRoot, PHP_URL_HOST),
             $storedAs,
             time() + ($this->display->getSetting('collectionInterval', 300) * 2),
             $this->configService->getApiKeyDetails()['encryptionKey'],
