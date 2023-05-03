@@ -168,6 +168,11 @@ body {
 // Clear the content container
 $(target).find('#content').empty();
 
+// If we don't have meta data, we can't render anything
+if (!meta || !meta.mapping) {
+    return;
+}
+
 // Randomise the order of the items
 if (properties.randomiseItems) {
     items = items.sort(function () {
