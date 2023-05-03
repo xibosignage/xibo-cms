@@ -1584,6 +1584,9 @@ window.forms = {
           url: requestPath,
           success: function(response) {
             if (response && response.fields && response.fields.length > 0) {
+              // Clear select options
+              $select.empty();
+
               // Add data to the select options
               $.each(response.fields, function(_index, element) {
                 $select.append(
@@ -1791,15 +1794,11 @@ window.forms = {
             // value of the dependency to the target data attribute
             $target.data('depends-on-value', valueToSet);
 
-            if (forms.fieldsInitialized === false) {
-              // Reset the target form field
-              forms.initFields(container, $target, targetId);
-            }
+            // Reset the target form field
+            forms.initFields(container, $target, targetId);
           }
         });
       });
-
-      this.fieldsInitialized = true;
     }
   },
   /**
@@ -1979,6 +1978,4 @@ window.forms = {
       }, 500));
     });
   },
-
-  fieldsInitialized: false,
 };
