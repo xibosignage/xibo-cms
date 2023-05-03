@@ -367,6 +367,32 @@ class Soap
         if ($cache->isHit()) {
             $this->getLog()->info('Returning required files from Cache for display ' . $this->display->display);
 
+            // Resign HTTP links and extend expiry
+            $document = new \DOMDocument('1.0');
+            $document->loadXML($output);
+
+            foreach ($document->documentElement->childNodes as $node) {
+                if ($node instanceof \DOMElement) {
+                    if ($node->getAttribute('download') === 'http') {
+                        $type = match ($node->getAttribute('type')) {
+                            'layout' => 'L',
+                            'media' => 'M',
+                            default => 'P',
+                        };
+                        $newUrl = $this->generateRequiredFileDownloadPath(
+                            $type,
+                            $node->getAttribute('id'),
+                            $node->getAttribute('saveAs'),
+                            $node->getAttribute('fileType'),
+                        );
+
+                        $node->setAttribute('path', $newUrl);
+                    }
+                }
+            }
+
+            $output = $document->saveXML();
+
             // Log Bandwidth
             $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
 
@@ -2655,6 +2681,7 @@ class Soap
         $cdnUrl = $this->configService->getSetting('CDN_URL');
         if ($cdnUrl != '') {
             // Serve a link to the CDN
+            // CDN_URL has a `?dl=` parameter on the end already, so we just encode our string and concatenate it
             return 'http' . (
                 (
                     (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||

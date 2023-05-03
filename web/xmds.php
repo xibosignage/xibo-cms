@@ -227,7 +227,7 @@ if (isset($_GET['cdn'])) {
             throw new \Xibo\Support\Exception\ConfigurationException('Missing CDN config');
         }
 
-        if (!isset($_GET['cdnPsk']) || $_GET['cdnPsk'] !== CDN_PSK) {
+        if (!array_key_exists('HTTP_X_CDN_PSK', $_SERVER) || $_SERVER['HTTP_X_CDN_PSK'] !== CDN_PSK) {
             throw new NotFoundException('Invalid Token');
         }
 
@@ -236,9 +236,6 @@ if (isset($_GET['cdn'])) {
         $file = $requiredFileFactory->resolveRequiredFileFromRequest($_REQUEST);
 
         $container->get('logService')->info('CDN bandwidth request for ' . $file->path);
-
-        // Log bandwidth here if we are a CDN
-        $logBandwidth = ($container->get('configService')->getSetting('CDN_URL') != '');
 
         // Do we have a usage amount provided?
         if (array_key_exists('HTTP_X_CDN_BW', $_SERVER) && is_numeric($_SERVER['HTTP_X_CDN_BW'])) {
