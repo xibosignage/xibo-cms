@@ -1243,7 +1243,7 @@ class LayoutFactory extends BaseFactory
             $intendedMediaName = $file['name'];
 
             // Validate the file name
-            $fileName = basename($file['name']);
+            $fileName = basename($file['file']);
             if (empty($fileName) || $fileName == '.') {
                 $this->getLog()->error('Skipping file on import due to invalid filename. ' . $fileName);
                 continue;
