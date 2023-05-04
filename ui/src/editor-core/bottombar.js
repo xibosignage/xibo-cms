@@ -104,8 +104,11 @@ Bottombar.prototype.render = function(element) {
         trashActive: trashBinActive,
       },
     ));
-  } else if (element.type == 'element') {
-    // Render element toolbar
+  } else if (
+    element.type == 'element' ||
+    element.type == 'element-group'
+  ) {
+    // Render element and element group toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
         trans: newBottomBarTrans,
