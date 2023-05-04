@@ -217,18 +217,20 @@ Viewer.prototype.render = function(forceReload = false) {
     linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
 
     $viewerContainer.find('.viewer-element')
-      .css(
-        'background',
-        'url(\'' + linkToAPI + '?preview=1&width=' +
-        (lD.layout.width * this.containerElementDimensions.scale) +
-        '&height=' +
-        (
-          lD.layout.height *
-          this.containerElementDimensions.scale
-        ) +
-        '&proportional=0&layoutBackgroundId=' +
-        lD.layout.backgroundImage + '\') top center no-repeat',
-      );
+      .css({
+        background:
+          'url(\'' + linkToAPI + '?preview=1&width=' +
+          (lD.layout.width * this.containerElementDimensions.scale) +
+          '&height=' +
+          (
+            lD.layout.height *
+            this.containerElementDimensions.scale
+          ) +
+          '&proportional=0&layoutBackgroundId=' +
+          lD.layout.backgroundImage + '\') top center no-repeat',
+        backgroundSize: '100% 100%',
+        backgroundColor: lD.layout.backgroundColor,
+      });
   }
 
   // Render preview regions/widgets
