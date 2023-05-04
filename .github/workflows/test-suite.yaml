@@ -5,7 +5,7 @@ on: [pull_request]
 jobs:
   test-suite:
     name: Build Containers and Run Tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v1
