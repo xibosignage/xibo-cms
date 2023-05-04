@@ -1016,7 +1016,7 @@ class LayoutFactory extends BaseFactory
                             }
                         }
                     }
-                    
+
                     $combined = array_combine($oldIds, $newIds);
 
                     $playlists = $this->createNestedPlaylistWidgets($widgets, $combined, $playlists);
@@ -1241,14 +1241,22 @@ class LayoutFactory extends BaseFactory
         foreach ($mappings as $file) {
             // Import the Media File
             $intendedMediaName = $file['name'];
-            $temporaryFileName = $libraryLocation . $file['file'];
+
+            // Validate the file name
+            $fileName = basename($file['name']);
+            if (empty($fileName) || $fileName == '.') {
+                $this->getLog()->error('Skipping file on import due to invalid filename. ' . $fileName);
+                continue;
+            }
+
+            $temporaryFileName = $libraryLocation . $fileName;
 
             // Get the file from the ZIP
-            $fileStream = $zip->getStream('library/' . $file['file']);
+            $fileStream = $zip->getStream('library/' . $fileName);
 
             if ($fileStream === false) {
                 // Log out the entire ZIP file and all entries.
-                $log = 'Problem getting library/' . $file['file'] . '. Files: ';
+                $log = 'Problem getting library/' . $fileName . '. Files: ';
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $log .= $zip->getNameIndex($i) . ', ';
                 }
@@ -1287,9 +1295,9 @@ class LayoutFactory extends BaseFactory
                 }
             } catch (NotFoundException $e) {
                 // Create it instead
-                $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
+                $this->getLog()->debug('Media does not exist in Library, add it ' .  $fileName);
 
-                $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+                $media = $this->mediaFactory->create($intendedMediaName, $fileName, $file['type'], $userId, $file['duration']);
 
                 if ($importTags && isset($file['tags'])) {
                     foreach ($file['tags'] as $tagNode) {
@@ -1444,7 +1452,7 @@ class LayoutFactory extends BaseFactory
                 $columnWithImages = [];
                 // We must null the ID so that we don't try to load the dataset when we assign columns
                 $dataSet->dataSetId = null;
-                
+
                 // Hydrate the columns
                 foreach ($item['columns'] as $columnItem) {
                     $this->getLog()->debug(sprintf('Assigning column: %s', json_encode($columnItem)));
