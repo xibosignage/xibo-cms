@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -357,8 +357,18 @@ class DisplayFactory extends BaseFactory
         // Filter by map bound?
         if ($parsedBody->getString('bounds') !== null) {
             $coordinates = explode(',', $parsedBody->getString('bounds'));
-            $body .= ' AND IFNULL( ' . $functionPrefix . 'X(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LAT'). ')  BETWEEN ' . $coordinates['1'] . ' AND ' . $coordinates['3'] .
-                ' AND IFNULL( ' . $functionPrefix . 'Y(display.GeoLocation), ' . $this->config->getSetting('DEFAULT_LONG'). ')  BETWEEN  ' . $coordinates['0'] . ' AND ' . $coordinates['2'] . ' ';
+            $defaultLat = $this->config->getSetting('DEFAULT_LAT');
+            $defaultLng = $this->config->getSetting('DEFAULT_LONG');
+
+            $body .= ' AND IFNULL( ' . $functionPrefix . 'X(display.GeoLocation), ' . $defaultLat
+                . ')  BETWEEN :coordinates_1 AND :coordinates_3 '
+                . ' AND IFNULL( ' . $functionPrefix . 'Y(display.GeoLocation), ' . $defaultLng
+                . ')  BETWEEN :coordinates_0 AND :coordinates_2 ';
+
+            $params['coordinates_0'] = $coordinates[0];
+            $params['coordinates_1'] = $coordinates[1];
+            $params['coordinates_2'] = $coordinates[2];
+            $params['coordinates_3'] = $coordinates[3];
         }
 
         // Filter by Display ID?

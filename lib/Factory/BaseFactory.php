@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -387,6 +387,12 @@ class BaseFactory
             // Discard any incompatible
             if ($searchName === '-' || empty($searchName)) {
                 continue;
+            }
+
+            // Validate the logical operator
+            if (!in_array($logicalOperator, ['AND', 'OR'])) {
+                $this->getLog()->error('Invalid logical operator ' . $logicalOperator);
+                return;
             }
 
             // Not like, or like?

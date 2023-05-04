@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -319,7 +319,8 @@ class Base
             try {
                 $response = $this->getView()->render($response, $state->template . '.twig', $data);
             } catch (LoaderError | RuntimeError | SyntaxError $e) {
-                throw new GeneralException(__('Twig Error ') . $e->getMessage());
+                $this->getLog()->error('Twig Error' . $e->getMessage());
+                throw new GeneralException(__('Unable to view this page'));
             }
         }
         $this->rendered = true;
@@ -345,7 +346,8 @@ class Base
         try {
             $view = $this->getView()->render($response, $state->template . '.twig', $data);
         } catch (LoaderError | RuntimeError | SyntaxError $e) {
-            throw new GeneralException(__('Twig Error ') . $e->getMessage());
+            $this->getLog()->error('Twig Error' . $e->getMessage());
+            throw new GeneralException(__('Unable to view this page'));
         }
 
         $view = $view->getBody();
