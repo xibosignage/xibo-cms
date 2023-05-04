@@ -86,40 +86,46 @@ $(function() {
    * @return {object}
    */
   function composeFinalData(widget, data) {
-    let dataItems = [];
-    let isSampleData = false;
-    const isArray = Array.isArray(data);
+    const finalData = {
+      isSampleData: false,
+      dataItems: [],
+      isArray: Array.isArray(data),
+      showError: false,
+    };
+    const composeSampleData = (sampleData) => {
+      finalData.isSampleData = true;
 
-    // If the request failed, and we're in preview, show the error message
-    if ((!widget.isValid ||
-        (!isArray && data.success === false)
-    ) && isPreview) {
-      if (widget.sample) {
-        isSampleData = true;
-        // If data is empty, use sample data instead
-        // Add single element or array of elements
-        dataItems = (Array.isArray(widget.sample)) ?
-          widget.sample.slice(0) : [widget.sample];
+      // If data is empty, use sample data instead
+      // Add single element or array of elements
+      finalData.dataItems = (Array.isArray(widget.sample)) ?
+        widget.sample.slice(0) : [widget.sample];
 
-        dataItems = dataItems.reduce((data, item) => {
-          Object.keys(item).forEach((itemKey) => {
-            if (String(item[itemKey]).match(macroRegex) !== null) {
-              item[itemKey] = composeUTCDateFromMacro(item[itemKey]);
-            }
-          });
+      return finalData.dataItems.reduce((data, item) => {
+        Object.keys(item).forEach((itemKey) => {
+          if (String(item[itemKey]).match(macroRegex) !== null) {
+            item[itemKey] = composeUTCDateFromMacro(item[itemKey]);
+          }
+        });
 
-          return [...data, {...item}];
-        }, []);
+        return [...data, {...item}];
+      }, []);
+    };
+
+    if (isPreview && widget.sample) {
+      if ((finalData.isArray && (!widget.isValid || widget.isValid)) ||
+        (!finalData.isArray && data?.success === false)
+      ) {
+        finalData.dataItems = composeSampleData(widget.sample);
       }
     } else {
-      dataItems = data?.data || [];
+      finalData.dataItems = data?.data || data || [];
     }
 
-    return {
-      isSampleData,
-      dataItems,
-      isArray,
-    };
+    if (finalData.isSampleData && data?.success === false) {
+      finalData.showError = true;
+    }
+
+    return finalData;
   }
 
   /**
@@ -129,27 +135,45 @@ $(function() {
    */
   function getWidgetData(widget) {
     return new Promise(function(resolve) {
-      // if we have data on the widget (for older players),
-      // or if we are not in preview and have empty data on Widget (like text)
-      // do not run ajax use that data instead
-      if (
-        (widget.data.data !== undefined && widget.data.data.length > 0) ||
-        (widget.data.length == 0 && !isPreview)
-      ) {
-        resolve(widget.data);
-      } else {
-        // else get data from widget.url,
-        // this will be either getData for preview
-        // or new json file for v4 players
+      const widgetRequest = (callbackData) => {
         $.ajax({
           method: 'GET',
           url: widget.url,
         }).done(function(data) {
-          resolve(data);
+          console.log({data});
+          if (data?.success === false) {
+            resolve(data);
+          } else {
+            resolve(callbackData);
+          }
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.log(jqXHR, textStatus, errorThrown);
         });
+      };
+      // if we have data on the widget (for older players),
+      // or if we are not in preview and have empty data on Widget (like text)
+      // do not run ajax use that data instead
+      if (!isPreview) {
+        if (widget.data?.data !== undefined) {
+          resolve(widget.data);
+        } else {
+          // else get data from widget.url,
+          // this will be either getData for preview
+          // or new json file for v4 players
+          widgetRequest(widget.data);
+        }
+      } else {
+        widgetRequest(widget.sample);
       }
+      // if (
+      //   (widget.data.data !== undefined && widget.data.data.length > 0) ||
+      //   (widget.data.length == 0 && !isPreview)
+      // ) {
+      //   resolve(widget.data);
+      // } else if (isPreview && Array(widget.sample).length > 0) {
+      //   resolve(widget.sample);
+      // } else {
+      // }
     });
   }
 
@@ -174,11 +198,11 @@ $(function() {
     const $target = $('body');
     const {
       isArray,
-      isSampleData,
       dataItems,
+      showError,
     } = composeFinalData(widget, data);
 
-    if (isSampleData) {
+    if (showError) {
       $target.append(
         '<div class="error-message" role="alert">' +
         data.message +
