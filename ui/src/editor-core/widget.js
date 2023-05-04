@@ -764,6 +764,9 @@ Widget.prototype.removeElementGroup = function(
         Object.keys(elementGroup.elements).length == 1
       );
 
+      // Remove element from group
+      delete elementGroup.elements[element.elementId];
+
       // Delete element from widget
       self.removeElement(
         element.elementId,

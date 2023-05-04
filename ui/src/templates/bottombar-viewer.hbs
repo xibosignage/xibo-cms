@@ -88,13 +88,19 @@
         {{else eq element.type "element"}}
             <div class="info d-inline">
                 <span class="label-name align-middle" title="{{element.name}}">
-                    {{element.elementType}} - {{element.id}} ({{element.type}})
+                    {{element.elementType}} - "{{element.id}}"" ({{trans.element}})
+                </span>
+            </div>
+        {{else eq element.type "element-group"}}
+            <div class="info d-inline">
+                <span class="label-name align-middle" title="{{element.name}}">
+                    {{element.id}} ({{trans.elementGroup}})
                 </span>
             </div>
         {{else}}
             <div class="info d-inline">
                 <span class="label-name align-middle" title="{{element.name}}">
-                    "{{element.name}}" ({{element.type}})
+                    "{{element.name}}" ({{lookup trans element.type}})
                 </span>
             </div>
         {{/eq}}
