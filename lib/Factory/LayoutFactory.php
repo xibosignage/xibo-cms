@@ -641,14 +641,22 @@ class LayoutFactory extends BaseFactory
         foreach ($mappings as $file) {
             // Import the Media File
             $intendedMediaName = $file['name'];
-            $temporaryFileName = $libraryLocation . $file['file'];
+
+            // Validate the file name
+            $fileName = basename($file['file']);
+            if (empty($fileName) || $fileName == '.') {
+                $this->getLog()->error('Skipping file on import due to invalid filename. ' . $fileName);
+                continue;
+            }
+
+            $temporaryFileName = $libraryLocation . $fileName;
 
             // Get the file from the ZIP
-            $fileStream = $zip->getStream('library/' . $file['file']);
+            $fileStream = $zip->getStream('library/' . $fileName);
 
             if ($fileStream === false) {
                 // Log out the entire ZIP file and all entries.
-                $log = 'Problem getting library/' . $file['file'] . '. Files: ';
+                $log = 'Problem getting library/' . $fileName . '. Files: ';
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $log .= $zip->getNameIndex($i) . ', ';
                 }
@@ -687,9 +695,9 @@ class LayoutFactory extends BaseFactory
 
             } catch (NotFoundException $e) {
                 // Create it instead
-                $this->getLog()->debug('Media does not exist in Library, add it. %s', $file['file']);
+                $this->getLog()->debug('Media does not exist in Library, add it. %s', $fileName);
 
-                $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+                $media = $this->mediaFactory->create($intendedMediaName, $fileName, $file['type'], $userId, $file['duration']);
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
                 $media->save();
 
@@ -764,7 +772,7 @@ class LayoutFactory extends BaseFactory
 
                 // We must null the ID so that we don't try to load the dataset when we assign columns
                 $dataSet->dataSetId = null;
-                
+
                 // Hydrate the columns
                 foreach ($item['columns'] as $columnItem) {
                     $this->getLog()->debug('Assigning column: %s', json_encode($columnItem));
@@ -891,7 +899,7 @@ class LayoutFactory extends BaseFactory
                                 $widget->setOptionValue('columns', 'attrib', $columns);
 
                                 $this->getLog()->debug('Replaced columns with %s', $columns);
-                                
+
                             } else if ($widget->type == 'ticker') {
                                 // Get the template option
                                 $template = $widget->getOptionValue('template', '');
