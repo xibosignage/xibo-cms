@@ -1446,6 +1446,11 @@ class LayoutFactory extends BaseFactory
 
             // Validate the file name
             $fileName = basename($file['file']);
+            if (empty($fileName) || $fileName == '.') {
+                $this->getLog()->error('Skipping file on import due to invalid filename. ' . $fileName);
+                continue;
+            }
+            
             $temporaryFileName = $libraryLocation . $fileName;
 
             // Get the file from the ZIP
