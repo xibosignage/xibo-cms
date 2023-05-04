@@ -526,7 +526,7 @@ class DataSet implements \JsonSerializable
                     continue;
                 }
 
-                $formula = str_replace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
+                $formula = str_ireplace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
                 $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
@@ -545,7 +545,7 @@ class DataSet implements \JsonSerializable
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
-            $filter = str_replace($this->blackList, '', $filter);
+            $filter = str_ireplace($this->blackList, '', $filter);
 
             $body .= ' AND ' . $filter;
         }
