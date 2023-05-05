@@ -1443,14 +1443,22 @@ class LayoutFactory extends BaseFactory
         foreach ($mappings as $file) {
             // Import the Media File
             $intendedMediaName = $file['name'];
-            $temporaryFileName = $libraryLocation . $file['file'];
+
+            // Validate the file name
+            $fileName = basename($file['file']);
+            if (empty($fileName) || $fileName == '.') {
+                $this->getLog()->error('Skipping file on import due to invalid filename. ' . $fileName);
+                continue;
+            }
+            
+            $temporaryFileName = $libraryLocation . $fileName;
 
             // Get the file from the ZIP
-            $fileStream = $zip->getStream('library/' . $file['file']);
+            $fileStream = $zip->getStream('library/' . $fileName);
 
             if ($fileStream === false) {
                 // Log out the entire ZIP file and all entries.
-                $log = 'Problem getting library/' . $file['file'] . '. Files: ';
+                $log = 'Problem getting library/' . $fileName . '. Files: ';
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $log .= $zip->getNameIndex($i) . ', ';
                 }
@@ -1485,7 +1493,7 @@ class LayoutFactory extends BaseFactory
                     }
                     $this->getLog()->debug('Font already exists with name: ' . $intendedMediaName);
                 } catch (NotFoundException $exception) {
-                    $this->getLog()->debug('Font does not exist in Library, add it ' . $file['file']);
+                    $this->getLog()->debug('Font does not exist in Library, add it ' . $fileName);
                     // Add the Font
                     $font = $this->fontFactory->createEmpty();
                     $fontLib = \FontLib\Font::load($temporaryFileName);
@@ -1500,7 +1508,7 @@ class LayoutFactory extends BaseFactory
                     $font->modifiedBy = $this->getUserFactory()->getById($userId)->userName;
                     $font->name = $file['name'];
                     $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily())));
-                    $font->fileName = $file['file'];
+                    $font->fileName = $fileName;
                     $font->size = filesize($temporaryFileName);
                     $font->md5 = md5_file($temporaryFileName);
                     $font->save();
@@ -1521,11 +1529,11 @@ class LayoutFactory extends BaseFactory
                     }
                 } catch (NotFoundException $e) {
                     // Create it instead
-                    $this->getLog()->debug('Media does not exist in Library, add it ' . $file['file']);
+                    $this->getLog()->debug('Media does not exist in Library, add it ' . $fileName);
 
                     $media = $this->mediaFactory->create(
                         $intendedMediaName,
-                        $file['file'],
+                        $fileName,
                         $file['type'],
                         $userId,
                         $file['duration']

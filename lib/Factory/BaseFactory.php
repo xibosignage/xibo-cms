@@ -383,6 +383,12 @@ class BaseFactory
                 continue;
             }
 
+            // Validate the logical operator
+            if (!in_array($logicalOperator, ['AND', 'OR'])) {
+                $this->getLog()->error('Invalid logical operator ' . $logicalOperator);
+                return;
+            }
+
             // Not like, or like?
             if (substr($searchName, 0, 1) == '-') {
                 if ($i === 1) {

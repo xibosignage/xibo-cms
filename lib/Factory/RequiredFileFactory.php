@@ -24,6 +24,7 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\RequiredFile;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -319,5 +320,48 @@ class RequiredFileFactory extends BaseFactory
         $requiredFile->path = $path;
         $requiredFile->released = $released;
         return $requiredFile;
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function resolveRequiredFileFromRequest($request): RequiredFile
+    {
+        $params = $this->getSanitizer($request);
+        $displayId = $params->getInt('displayId');
+        $itemId = $params->getInt('itemId');
+
+        switch ($params->getString('type')) {
+            case 'L':
+                $file = $this->getByDisplayAndLayout($displayId, $itemId);
+                break;
+
+            case 'M':
+                $file = $this->getByDisplayAndMedia($displayId, $itemId);
+                break;
+
+            case 'P':
+                $fileType = $params->getString('fileType');
+                if (empty($fileType)) {
+                    throw new NotFoundException(__('Missing fileType'));
+                }
+                $file = $this->getByDisplayAndDependency($displayId, $fileType, $itemId);
+
+                // Update $file->path with the path on disk (likely /dependencies/$fileType/$itemId)
+                $event = new XmdsDependencyRequestEvent($file);
+                $this->getDispatcher()->dispatch($event, XmdsDependencyRequestEvent::$NAME);
+
+                // Path should be set - we only want the relative path here.
+                $file->path = $event->getRelativePath();
+                if (empty($file->path)) {
+                    throw new NotFoundException(__('File not found'));
+                }
+                break;
+
+            default:
+                throw new NotFoundException(__('Unknown type'));
+        }
+
+        return $file;
     }
 }

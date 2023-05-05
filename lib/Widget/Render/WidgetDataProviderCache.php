@@ -55,6 +55,9 @@ class WidgetDataProviderCache
     /** @var string The cache key */
     private $key;
 
+    /** @var bool Is the cache a miss or old */
+    private $isMissOrOld = true;
+
     private $cachedMediaIds;
 
     /**
@@ -100,22 +103,24 @@ class WidgetDataProviderCache
         DataProvider $dataProvider,
         string $cacheKey,
         ?Carbon $dataModifiedDt,
-        bool $isLockIfMiss = true
+        bool $isLockIfMiss = true,
     ): bool {
         // Construct a key
         $this->key = '/widget/' . $dataProvider->getDataType() . '/' . md5($cacheKey);
 
         $this->getLog()->debug('decorateWithCache: key is ' . $this->key);
 
+        // Get the cache
         $this->cache = $this->pool->getItem($this->key);
-        $data = $this->cache->get();
+        $this->cache->setInvalidationMethod(Invalidation::OLD);
 
-        // Hit or miss?
-        if ($this->cache->isMiss()
-            || $data === null
-            || ($dataModifiedDt !== null && $dataModifiedDt->isAfter($this->cache->getCreation()))
-        ) {
-            $this->getLog()->debug('decorateWithCache: miss.');
+        // Get the data (this might be OLD data)
+        $data = $this->cache->get();
+        $cacheCreationDt = $this->cache->getCreation();
+
+        // Does the cache have data?
+        if ($data === null) {
+            $this->getLog()->debug('decorateWithCache: miss, no data');
 
             // Lock it up
             if ($isLockIfMiss) {
@@ -123,7 +128,13 @@ class WidgetDataProviderCache
             }
             return false;
         } else {
-            $this->getLog()->debug('decorateWithCache: hit.');
+            // Determine if the cache returned is a miss or older than the modified date
+            $this->isMissOrOld = $this->cache->isMiss() || (
+                $dataModifiedDt !== null && $cacheCreationDt !== false && $dataModifiedDt->isAfter($cacheCreationDt)
+            );
+
+            $this->getLog()->debug('decorateWithCache: cache has data, is miss or old: '
+                . var_export($this->isMissOrOld, true));
 
             // Clear the data provider and add the cached items back to it.
             $dataProvider->clearData();
@@ -140,6 +151,15 @@ class WidgetDataProviderCache
             $this->cachedMediaIds = $data->media ?? [];
             return true;
         }
+    }
+
+    /**
+     * Is the cache a miss, or old data.
+     * @return bool
+     */
+    public function isCacheMissOrOld(): bool
+    {
+        return $this->isMissOrOld;
     }
 
     /**

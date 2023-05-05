@@ -1047,7 +1047,9 @@ class Widget extends Base
         }
 
         // Use the cache if we can.
-        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)) {
+        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
+            || !$widgetDataProviderCache->isCacheMissOrOld()
+        ) {
             $this->getLog()->debug('Pulling fresh data');
 
             try {

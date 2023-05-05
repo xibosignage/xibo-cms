@@ -108,4 +108,20 @@
 // Start effects for this widget
 $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
+    <sampleData><![CDATA[
+[{
+    "NameShort": "USD",
+    "RawLastTradePriceOnly": "54.89",
+    "ChangeStyle": "value-up",
+    "ChangePercentage": "3",
+    "ChangeIcon": "up-arrow"
+},
+{
+    "NameShort": "GBP",
+    "RawLastTradePriceOnly": "69.10",
+    "ChangeStyle": "value-up",
+    "ChangePercentage": "5",
+    "ChangeIcon": "up-arrow"
+}]
+]]></sampleData>
 </module>

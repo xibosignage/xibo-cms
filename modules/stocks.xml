@@ -109,4 +109,24 @@
 // Start effects for this widget
 $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
+    <sampleData><![CDATA[
+[{
+    "SymbolTrimmed": "GOOGL",
+    "NameTrimmed": "GOOGL",
+    "LastTradePriceOnly": "105.41",
+    "CurrencyUpper": "",
+    "ChangeStyle": "value-down",
+    "ChangePercentage": "-0.11",
+    "ChangeIcon": "down-arrow"
+},
+{
+    "SymbolTrimmed": "AMAZN",
+    "NameTrimmed": "AMAZN",
+    "LastTradePriceOnly": "201.11",
+    "CurrencyUpper": "",
+    "ChangeStyle": "value-up",
+    "ChangePercentage": "2.11",
+    "ChangeIcon": "up-arrow"
+}]
+]]></sampleData>
 </module>

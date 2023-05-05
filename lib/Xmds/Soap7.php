@@ -147,9 +147,16 @@ class Soap7 extends Soap6
                     }
 
                     // Get media references
+                    $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
                     $media = [];
+                    $requiredFiles = [];
                     $sql = '
-                        SELECT `media`.`mediaId`, `media`.`storedAs`
+                        SELECT `media`.`mediaId`,
+                               `media`.`storedAs`,
+                               `media`.storedAs,
+                               `media`.fileSize,
+                               `media`.released,
+                               `media`.md5
                           FROM `media`
                             INNER JOIN `display_media`
                             ON `display_media`.mediaid = `media`.mediaId
@@ -160,20 +167,58 @@ class Soap7 extends Soap6
                     foreach ($this->getStore()->select($sql, [
                         'displayId' => $this->display->displayId
                     ]) as $row) {
+                        // Only media we're interested in.
+                        if (!in_array($row['mediaId'], $mediaIds)) {
+                            continue;
+                        }
+
                         $media[$row['mediaId']] = $row['storedAs'];
+
+                        // Output required file nodes for any media used in get data.
+                        // these will appear in required files as well, and may already be downloaded.
+                        $released = intval($row['released']);
+                        $this->requiredFileFactory
+                            ->createForMedia(
+                                $this->display->displayId,
+                                $row['mediaId'],
+                                $row['fileSize'],
+                                $row['storedAs'],
+                                $released
+                            )
+                            ->save();
+
+                        // skip media which has released == 0 or 2
+                        if ($released == 0 || $released == 2) {
+                            continue;
+                        }
+
+                        // Add the file node
+                        $requiredFiles[] = [
+                            'id' => intval($row['mediaId']),
+                            'size' => intval($row['fileSize']),
+                            'md5' => $row['md5'],
+                            'saveAs' => $row['storedAs'],
+                            'path' => $this->generateRequiredFileDownloadPath(
+                                'M',
+                                intval($row['mediaId']),
+                                $row['storedAs'],
+                            ),
+                        ];
                     }
 
                     $resource = json_encode([
                         'data' => $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media),
                         'meta' => $dataProvider->getMeta(),
+                        'files' => $requiredFiles,
                     ]);
                 } catch (GeneralException $exception) {
-                    // We ignore this.
-                    $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId);
-                    $resource = '{"data":[], "meta": {}}';
+                    $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
+                        . ', e = ' . $exception->getMessage());
+                    throw new \SoapFault('Receiver', 'Cache not ready');
                 }
             } else {
-                $resource = '{"data":[], "meta": {}}';
+                // No data cached yet, exception
+                throw new \SoapFault('Receiver', 'Cache not ready');
             }
 
             // Log bandwidth
@@ -186,7 +231,12 @@ class Soap7 extends Soap6
         } catch (\Exception $e) {
             $this->getLog()->error('Unknown error during getData. E = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
-            throw new \SoapFault('Receiver', 'Unable to get the media resource');
+
+            if ($e instanceof \SoapFault) {
+                return $e;
+            } else {
+                throw new \SoapFault('Receiver', 'Unable to get the media resource');
+            }
         }
 
         // Log Bandwidth

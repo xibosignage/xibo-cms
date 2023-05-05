@@ -224,7 +224,9 @@ class WidgetSyncTask implements TaskInterface
             }
         }
 
-        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)) {
+        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
+            || !$widgetDataProviderCache->isCacheMissOrOld()
+        ) {
             $this->getLogger()->debug('Cache expired, pulling fresh: key: ' . $cacheKey);
 
             try {
