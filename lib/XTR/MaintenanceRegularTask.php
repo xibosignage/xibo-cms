@@ -431,7 +431,9 @@ class MaintenanceRegularTask implements TaskInterface
         if (count($layouts) > 0) {
             foreach ($layouts as $layout) {
                 // check if the layout should be published now according to the date
-                if (Carbon::createFromTimestamp($layout->publishedDate)->format('U') < Carbon::now()->format('U')) {
+                if (Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $layout->publishedDate)
+                    ->isBefore(Carbon::now()->format(DateFormatHelper::getSystemFormat()))
+                ) {
                     try {
                         // publish the layout
                         $layout = $this->layoutFactory->concurrentRequestLock($layout, true);
