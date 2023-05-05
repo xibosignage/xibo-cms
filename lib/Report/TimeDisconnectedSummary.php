@@ -1,4 +1,24 @@
 <?php
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Report;
 
@@ -375,6 +395,8 @@ class TimeDisconnectedSummary implements ReportInterface
             $divisor = 60;
         }
 
+        // Tabular Data
+        $disconnectedDisplays = [];
         foreach ($this->store->select($sql, $params) as $row) {
             $sanitizedRow = $this->sanitizer->getSanitizer($row);
 
@@ -386,6 +408,105 @@ class TimeDisconnectedSummary implements ReportInterface
             $entry['postUnits'] = $postUnits;
 
             $rows[] = $entry;
+            $disconnectedDisplays[] = $entry['displayId'];
+        }
+
+        $displaySelect = '
+            SELECT display.display, display.displayId ';
+
+        if ($tags != '') {
+            $displaySelect .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
+              FROM tag
+                INNER JOIN lktagdisplaygroup
+                  ON lktagdisplaygroup.tagId = tag.tagId
+                WHERE lktagdisplaygroup.displayGroupId = displaygroup.DisplayGroupID
+                GROUP BY lktagdisplaygroup.displayGroupId) AS tags ';
+        }
+
+        $displayBody = 'FROM `display` ';
+
+        if ($tags != '') {
+            $displayBody .= 'INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup`
+                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
+                         AND `displaygroup`.isDisplaySpecific = 1 ';
+        }
+        $displayBody .= 'WHERE 1 = 1 ';
+
+        if (count($displayIds) > 0) {
+            $displayBody .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
+
+        if ($tags != '') {
+            if (trim($tags) === '--no-tag') {
+                $displayBody .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                     FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                    )
+                ';
+            } else {
+                $operator = $sanitizedParams->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
+                $displayBody .= " AND `displaygroup`.displaygroupId IN (
+                SELECT `lktagdisplaygroup`.displaygroupId
+                  FROM tag
+                    INNER JOIN `lktagdisplaygroup`
+                    ON `lktagdisplaygroup`.tagId = tag.tagId
+                ";
+                $i = 0;
+
+                foreach (explode(',', $tags) as $tag) {
+                    $i++;
+
+                    if ($i == 1) {
+                        $displayBody .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    } else {
+                        $displayBody .= ' OR `tag` ' . $operator . ' :tags' . $i;
+                    }
+
+                    if ($operator === '=') {
+                        $params['tags' . $i] = $tag;
+                    } else {
+                        $params['tags' . $i] = '%' . $tag . '%';
+                    }
+                }
+
+                $displayBody .= " ) ";
+            }
+        }
+
+        if ($onlyLoggedIn) {
+            $displayBody .= ' AND `display`.loggedIn = 1 ';
+        }
+
+        $displayBody .= '
+            GROUP BY display.display, display.displayId
+        ';
+
+        // Get a list of displays by filters
+        $displaySql = $displaySelect . $displayBody;
+
+        //
+        $displays = [];
+        foreach ($this->store->select($displaySql, $params) as $displayRow) {
+            $sanitizedDisplayRow = $this->sanitizer->getSanitizer($displayRow);
+            $displays[$sanitizedDisplayRow->getInt(('displayId'))] = $sanitizedDisplayRow->getString(('display'));
+        }
+
+        // Add displays that are not disconnected
+        foreach ($displays as $displayId => $display) {
+            if (!in_array($displayId, $disconnectedDisplays)) {
+                $entry = [];
+                $entry['displayId'] = $displayId;
+                $entry['display'] = $display;
+                $entry['timeDisconnected'] =  0;
+                $entry['timeConnected'] = ($toDt->format('U') - $fromDt->format('U')) / $divisor;
+                $entry['postUnits'] = $postUnits;
+                $rows[] = $entry;
+            }
         }
 
         // Paging
