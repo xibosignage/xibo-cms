@@ -129,6 +129,10 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndDependency($displayId, $fileType, $id, bool $isUseRealId = true)
     {
+        if (!$isUseRealId && $id < 0) {
+            $fileType = self::getLegacyFileType($id);
+        }
+
         $result = $this->getStore()->select('
             SELECT * 
               FROM `requiredfile` 
@@ -148,6 +152,21 @@ class RequiredFileFactory extends BaseFactory
         }
 
         return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+    }
+
+    /**
+    * Return the fileType depending on the legacyId range
+    * @param $id
+    * @return string
+    */
+    private static function getLegacyFileType($id): string
+    {
+        return match (true) {
+            $id < 0 && $id > -100000000 => 'bundle',
+            $id < -100000000 && $id > -200000000 => 'font',
+            $id < -200000000 && $id > -300000000 => 'playersoftware',
+            $id < -300000000 => 'asset',
+        };
     }
 
     /**
@@ -345,7 +364,12 @@ class RequiredFileFactory extends BaseFactory
                 if (empty($fileType)) {
                     throw new NotFoundException(__('Missing fileType'));
                 }
-                $file = $this->getByDisplayAndDependency($displayId, $fileType, $itemId);
+                $file = $this->getByDisplayAndDependency(
+                    $displayId,
+                    $fileType,
+                    $itemId,
+                    !($fileType == 'media' && $itemId < 0)
+                );
 
                 // Update $file->path with the path on disk (likely /dependencies/$fileType/$itemId)
                 $event = new XmdsDependencyRequestEvent($file);

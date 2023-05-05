@@ -379,6 +379,11 @@ class Soap
                             'media' => 'M',
                             default => 'P',
                         };
+
+                        if ($node->getAttribute('id') < 0 && $type === 'M') {
+                            $type = 'P';
+                        }
+
                         $newUrl = $this->generateRequiredFileDownloadPath(
                             $type,
                             $node->getAttribute('id'),
@@ -2755,6 +2760,7 @@ class Soap
                 $file->setAttribute('path', $dependencyBasePath);
             }
             $file->setAttribute('id', $dependency->legacyId);
+            $file->setAttribute('fileType', 'media');
         }
 
         // Add our node
