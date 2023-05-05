@@ -453,7 +453,7 @@ Viewer.prototype.handleInteractions = function() {
               lD.selectObject({
                 target: $(e.target).find('.designer-widget'),
               });
-              self.selectElement($(e.target).find('.designer-widget'));
+              self.selectElement($(e.target));
             } else if (
               $(e.target).hasClass('designer-element') &&
               !$(e.target).hasClass('selected')
@@ -479,8 +479,16 @@ Viewer.prototype.handleInteractions = function() {
           clearTimeout(timer);
           clicks = 0;
 
-          // Select region ( if not selected )
-          if (!$(e.target).hasClass('selected')) {
+          if (
+            $(e.target).hasClass('group-select-overlay') &&
+            !$(e.target).parent().hasClass('selected')
+          ) {
+            // TODO Open edit group, but select group for now
+          } else if (
+            $(e.target).hasClass('designer-region') &&
+            !$(e.target).hasClass('selected')
+          ) {
+            // Select region
             lD.selectObject({
               target: $(e.target),
             });
@@ -700,6 +708,11 @@ Viewer.prototype.renderRegion = function(
 
     // Append layout html to the container div
     $container.html(html);
+
+    // If widget is selected, update moveable for the region
+    if (widget.selected) {
+      this.selectElement($container);
+    }
 
     // Select droppables in the region
     let $droppables = $container.find('.droppable');
@@ -1202,120 +1215,6 @@ Viewer.prototype.toggleFullscreen = function() {
  */
 Viewer.prototype.initMoveable = function() {
   const self = this;
-  /**
- * Save the new position of the region
- * @param {object} region - Region object
- * @param {boolean} updateRegion - Update region rendering
- * @param {boolean} hasMoved - Has region moved
- * @param {boolean} hasScaled - Has region scaled
- */
-  const saveRegionProperties = function(
-    region,
-    updateRegion = true,
-    hasMoved = false,
-    hasScaled = false,
-  ) {
-    const scale = self.containerElementDimensions.scale;
-    const regionId = $(region).attr('id');
-    const transform = {};
-    const regionObject = lD.layout.regions[regionId];
-
-    // Only change width/height if region has scaled
-    if (hasScaled) {
-      transform.width = parseFloat($(region).width() / scale);
-      transform.height = parseFloat($(region).height() / scale);
-    } else {
-      transform.width = regionObject.dimensions.width;
-      transform.height = regionObject.dimensions.height;
-    }
-
-    // Only change top/left if region has moved
-    if (hasMoved) {
-      transform.top = parseFloat($(region).position().top / scale);
-      transform.left = parseFloat($(region).position().left / scale);
-    } else {
-      transform.top = regionObject.dimensions.top;
-      transform.left = regionObject.dimensions.left;
-    }
-
-    if (regionId == lD.selectedObject.id) {
-      regionObject.transform(transform, false);
-
-      if (typeof window.regionChangesForm === 'function') {
-        window.regionChangesForm();
-        lD.propertiesPanel.saveRegion();
-        (updateRegion) &&
-          lD.viewer.updateRegion(regionObject);
-      }
-    }
-  };
-
-  const saveElementProperties = function(
-    element,
-    hasMoved = false,
-    groupPosition = false,
-    save = true,
-  ) {
-    const scale = self.containerElementDimensions.scale;
-
-    const $element = $(element);
-    const elementId = $element.attr('id');
-    const parentWidget = lD.getElementByTypeAndId(
-      'widget',
-      'widget_' + $element.data('regionId') + '_' + $element.data('widgetId'),
-      'canvas',
-    );
-
-    const elementObject = parentWidget.elements[elementId];
-
-    // Save dimensions
-    elementObject.width = parseInt($element.width() / scale);
-    elementObject.height = parseInt($element.height() / scale);
-
-    // If we have group position, we also need to update groupProperties
-    if (groupPosition) {
-      elementObject.groupProperties.top =
-        parseInt(groupPosition.top / scale);
-      elementObject.groupProperties.left =
-        parseInt(groupPosition.left / scale);
-    }
-
-    // Only change top/left if element has moved
-    if (hasMoved) {
-      elementObject.top = (groupPosition && groupPosition.top) ?
-        parseInt(($element.position().top + groupPosition.top) / scale) :
-        parseInt($element.position().top / scale);
-      elementObject.left = (groupPosition && groupPosition.left) ?
-        parseInt(($element.position().left + groupPosition.left) / scale) :
-        parseInt($element.position().left / scale);
-    }
-
-    // Save elements
-    if (save) {
-      parentWidget.saveElements();
-    }
-  };
-
-  const saveElementGroupProperties = function(
-    elementGroup,
-  ) {
-    // Get group position
-    const $elementGroup = $(elementGroup);
-    const groupPosition = $elementGroup.position();
-
-    // Get group elements
-    const $groupElements = $elementGroup.find('.designer-element');
-
-    // Calculate group elements position, but only save on the last element
-    $groupElements.each(function(_key, el) {
-      saveElementProperties(
-        el,
-        true,
-        groupPosition,
-        _key == $groupElements.length - 1,
-      );
-    });
-  };
 
   // Create moveable
   this.moveable = new Moveable(document.body, {
@@ -1353,16 +1252,19 @@ Viewer.prototype.initMoveable = function() {
   }).on('dragEnd', (e) => {
     if (e.isDrag) {
       // Save region properties
-      (lD.selectedObject.type == 'region') &&
-        saveRegionProperties(e.target, true, true, false);
+      (
+        (lD.selectedObject.type == 'region') ||
+        (lD.selectedObject.type == 'widget')
+      ) &&
+        self.saveRegionProperties(e.target, true, true, false);
 
       // Save element properties
       (lD.selectedObject.type == 'element') &&
-        saveElementProperties(e.target, true);
+        self.saveElementProperties(e.target, true);
 
       // Save element group properties
       (lD.selectedObject.type == 'element-group') &&
-        saveElementGroupProperties(e.target, true);
+        self.saveElementGroupProperties(e.target);
     }
   });
 
@@ -1378,19 +1280,23 @@ Viewer.prototype.initMoveable = function() {
     e.target.style.transform =
       `translate(${beforeTranslate[0]}px, ${beforeTranslate[1]}px)`;
 
+    // If selected object is a widget, get parent instead
+    const selectedObject = (lD.selectedObject.type == 'widget') ?
+      lD.selectedObject.parent : lD.selectedObject;
+
     // Update element dimension properties
-    lD.selectedObject.transform({
+    selectedObject.transform({
       width: parseFloat(e.width / self.containerElementDimensions.scale),
       height: parseFloat(e.height / self.containerElementDimensions.scale),
     }, false);
 
     // Update target object
-    if (lD.selectedObject.type == 'region') {
+    if (selectedObject.type == 'region') {
       // Update region
-      self.updateRegion(lD.selectedObject, true);
-    } else if (lD.selectedObject.type == 'element') {
+      self.updateRegion(selectedObject, true);
+    } else if (selectedObject.type == 'element') {
       // Update element
-      self.updateElement(lD.selectedObject, true);
+      self.updateElement(selectedObject, true);
     }
   }).on('resizeEnd', (e) => {
     // Change transform translate to the new position
@@ -1411,12 +1317,188 @@ Viewer.prototype.initMoveable = function() {
     );
 
     // Save region properties
-    (lD.selectedObject.type == 'region') &&
-      saveRegionProperties(e.target, true, moved, true);
+    (
+      (lD.selectedObject.type == 'region') ||
+      (lD.selectedObject.type == 'widget')
+    ) &&
+      self.saveRegionProperties(e.target, true, moved, true);
 
     // Save element properties
     (lD.selectedObject.type == 'element') &&
-      saveElementProperties(e.target, moved);
+      self.saveElementProperties(e.target, moved);
+  });
+};
+
+/**
+ * Save the new position of the region
+ * @param {object} region - Region object
+ * @param {boolean} updateRegion - Update region rendering
+ * @param {boolean} hasMoved - Has region moved
+ * @param {boolean} hasScaled - Has region scaled
+ */
+Viewer.prototype.saveRegionProperties = function(
+  region,
+  updateRegion = true,
+  hasMoved = false,
+  hasScaled = false,
+) {
+  const self = this;
+  const scale = self.containerElementDimensions.scale;
+  const regionId = $(region).attr('id');
+  const transform = {};
+  const regionObject = lD.layout.regions[regionId];
+
+  // Only change width/height if region has scaled
+  if (hasScaled) {
+    transform.width = parseFloat($(region).width() / scale);
+    transform.height = parseFloat($(region).height() / scale);
+  } else {
+    transform.width = regionObject.dimensions.width;
+    transform.height = regionObject.dimensions.height;
+  }
+
+  // Only change top/left if region has moved
+  if (hasMoved) {
+    transform.top = parseFloat($(region).position().top / scale);
+    transform.left = parseFloat($(region).position().left / scale);
+  } else {
+    transform.top = regionObject.dimensions.top;
+    transform.left = regionObject.dimensions.left;
+  }
+
+  // If we're saving the region, update it
+  if (regionId == lD.selectedObject.id) {
+    regionObject.transform(transform, false);
+
+    if (typeof window.regionChangesForm === 'function') {
+      window.regionChangesForm();
+
+      // Save region form
+      lD.propertiesPanel.saveRegion();
+      (updateRegion) &&
+        lD.viewer.updateRegion(regionObject);
+    }
+  } else if (regionId == lD.selectedObject.parent.id) {
+    // If we're saving the region through the widget
+    // update parent region and update the position values on the form
+    regionObject.transform(transform, false);
+
+    // Update position form values
+    lD.propertiesPanel.updatePositionForm(transform);
+
+    // Save region but just the position properties
+    lD.propertiesPanel.saveRegion(true);
+    (updateRegion) &&
+      lD.viewer.updateRegion(regionObject);
+  }
+};
+
+/**
+ * Save element properties
+ * @param {*} element - Element object
+ * @param {*} hasMoved
+ * @param {*} groupPosition
+ * @param {*} save
+ */
+Viewer.prototype.saveElementProperties = function(
+  element,
+  hasMoved = false,
+  groupPosition = false,
+  save = true,
+) {
+  const self = this;
+  const scale = self.containerElementDimensions.scale;
+
+  const $element = $(element);
+  const elementId = $element.attr('id');
+  const parentWidget = lD.getElementByTypeAndId(
+    'widget',
+    'widget_' + $element.data('regionId') + '_' + $element.data('widgetId'),
+    'canvas',
+  );
+
+  const elementObject = parentWidget.elements[elementId];
+
+  // Save dimensions
+  elementObject.width = Math.round($element.width() / scale);
+  elementObject.height = Math.round($element.height() / scale);
+
+  // If we have group position, we also need to update groupProperties
+  if (groupPosition) {
+    elementObject.groupProperties.top =
+      Math.round(groupPosition.top / scale);
+    elementObject.groupProperties.left =
+      Math.round(groupPosition.left / scale);
+  }
+
+  // Only change top/left if element has moved
+  if (hasMoved) {
+    elementObject.top = (groupPosition && groupPosition.top) ?
+      Math.round(($element.position().top + groupPosition.top) / scale) :
+      Math.round($element.position().top / scale);
+    elementObject.left = (groupPosition && groupPosition.left) ?
+      Math.round(($element.position().left + groupPosition.left) / scale) :
+      Math.round($element.position().left / scale);
+  }
+
+  // If we're not saving through a group
+  // Update position form values
+  if (!groupPosition) {
+    lD.propertiesPanel.updatePositionForm({
+      top: elementObject.top,
+      left: elementObject.left,
+      width: elementObject.width,
+      height: elementObject.height,
+    });
+  }
+
+  // Save elements
+  if (save) {
+    parentWidget.saveElements();
+  }
+};
+
+/**
+ * Save element group properties
+ * @param {*} elementGroup
+ */
+Viewer.prototype.saveElementGroupProperties = function(
+  elementGroup,
+) {
+  const self = this;
+  const scale = self.containerElementDimensions.scale;
+
+  // Get group position
+  const $elementGroup = $(elementGroup);
+  const groupPosition = $elementGroup.position();
+  const groupObject = lD.getElementByTypeAndId(
+    'element-group',
+    $elementGroup.attr('id'),
+    'widget_' + $elementGroup.data('regionId') + '_' +
+      $elementGroup.data('widgetId'),
+  );
+
+  // Get group elements
+  const $groupElements = $elementGroup.find('.designer-element');
+
+  // Calculate group elements position, but only save on the last element
+  $groupElements.each(function(_key, el) {
+    self.saveElementProperties(
+      el,
+      true,
+      groupPosition,
+      _key == $groupElements.length - 1,
+    );
+  });
+
+  // Save position for the group object
+  groupObject.top = Math.round(groupPosition.top / scale);
+  groupObject.left = Math.round(groupPosition.left / scale);
+
+  // Update position form values
+  lD.propertiesPanel.updatePositionForm({
+    top: groupObject.top,
+    left: groupObject.left,
   });
 };
 
@@ -1447,11 +1529,6 @@ Viewer.prototype.updateMoveable = function() {
   // Update moveable if region is selected and belongs to the DOM
   if (
     $selectedElement &&
-    (
-      $selectedElement.hasClass('designer-region') ||
-      $selectedElement.hasClass('designer-element') ||
-      $selectedElement.hasClass('designer-element-group')
-    ) &&
     $.contains(document, $selectedElement[0])
   ) {
     // If target is designer-element-group, don't allow resizing
