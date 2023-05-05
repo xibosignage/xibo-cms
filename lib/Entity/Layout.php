@@ -1653,8 +1653,10 @@ class Layout implements \JsonSerializable
                             continue;
                         }
 
-                        $optionNode = $document->createElement($property->id, $property->value ?? '');
-                        $optionsNode->appendChild($optionNode);
+                        if (!empty($property->id)) {
+                            $optionNode = $document->createElement($property->id, $property->value ?? '');
+                            $optionsNode->appendChild($optionNode);
+                        }
                     }
 
                     if ($property->id === 'updateInterval') {
