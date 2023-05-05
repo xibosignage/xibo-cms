@@ -89,11 +89,16 @@ $(function() {
     const finalData = {
       isSampleData: false,
       dataItems: [],
-      isArray: Array.isArray(data),
+      isArray: Array.isArray(data?.data),
       showError: false,
     };
-    const composeSampleData = (sampleData) => {
+    const composeSampleData = () => {
       finalData.isSampleData = true;
+
+      if (widget.sample === null) {
+        finalData.dataItems = [];
+        return [];
+      }
 
       // If data is empty, use sample data instead
       // Add single element or array of elements
@@ -111,17 +116,21 @@ $(function() {
       }, []);
     };
 
-    if (isPreview && widget.sample) {
-      if ((finalData.isArray && (!widget.isValid || widget.isValid)) ||
-        (!finalData.isArray && data?.success === false)
-      ) {
-        finalData.dataItems = composeSampleData(widget.sample);
+    if (isPreview) {
+      if (finalData.isArray) {
+        if (data?.data?.length > 0) {
+          finalData.dataItems = data?.data;
+        } else if (widget.sample && Array.isArray(widget.sample)) {
+          finalData.dataItems = composeSampleData();
+        }
+      } else if (data?.success === false || !widget.isValid) {
+        finalData.dataItems = composeSampleData();
       }
     } else {
-      finalData.dataItems = data?.data || data || [];
+      finalData.dataItems = data?.data || [];
     }
 
-    if (finalData.isSampleData && data?.success === false) {
+    if (data?.success === false || !widget.isValid) {
       finalData.showError = true;
     }
 
@@ -135,45 +144,25 @@ $(function() {
    */
   function getWidgetData(widget) {
     return new Promise(function(resolve) {
-      const widgetRequest = (callbackData) => {
+      // if we have data on the widget (for older players),
+      // or if we are not in preview and have empty data on Widget (like text)
+      // do not run ajax use that data instead
+      // if (!isPreview) {
+      if (widget.data?.data !== undefined) {
+        resolve(widget.data);
+      } else {
+        // else get data from widget.url,
+        // this will be either getData for preview
+        // or new json file for v4 players
         $.ajax({
           method: 'GET',
           url: widget.url,
         }).done(function(data) {
-          console.log({data});
-          if (data?.success === false) {
-            resolve(data);
-          } else {
-            resolve(callbackData);
-          }
+          resolve(data);
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.log(jqXHR, textStatus, errorThrown);
         });
-      };
-      // if we have data on the widget (for older players),
-      // or if we are not in preview and have empty data on Widget (like text)
-      // do not run ajax use that data instead
-      if (!isPreview) {
-        if (widget.data?.data !== undefined) {
-          resolve(widget.data);
-        } else {
-          // else get data from widget.url,
-          // this will be either getData for preview
-          // or new json file for v4 players
-          widgetRequest(widget.data);
-        }
-      } else {
-        widgetRequest(widget.sample);
       }
-      // if (
-      //   (widget.data.data !== undefined && widget.data.data.length > 0) ||
-      //   (widget.data.length == 0 && !isPreview)
-      // ) {
-      //   resolve(widget.data);
-      // } else if (isPreview && Array(widget.sample).length > 0) {
-      //   resolve(widget.sample);
-      // } else {
-      // }
     });
   }
 
@@ -202,7 +191,7 @@ $(function() {
       showError,
     } = composeFinalData(widget, data);
 
-    if (showError) {
+    if (showError && data?.message) {
       $target.append(
         '<div class="error-message" role="alert">' +
         data.message +
@@ -385,155 +374,157 @@ $(function() {
     });
   });
 
-  // Parse out the template with elements.
-  $.each(elements, function(_key, widgetElements) {
-    if (widgetElements?.length > 0) {
-      const $target = $('body');
-      const $content = $('#content');
+  if (typeof elements !== 'undefined') {
+    // Parse out the template with elements.
+    $.each(elements, function(_key, widgetElements) {
+      if (widgetElements?.length > 0) {
+        const $target = $('body');
+        const $content = $('#content');
 
-      $.each(widgetElements, function(_widgetElemKey, widgetElement) {
-        if (widgetElement?.elements?.length > 0) {
-          $.each(widgetElement.elements, function(_elemKey, element) {
-            const elementCopy = JSON.parse(JSON.stringify(element));
+        $.each(widgetElements, function(_widgetElemKey, widgetElement) {
+          if (widgetElement?.elements?.length > 0) {
+            $.each(widgetElement.elements, function(_elemKey, element) {
+              const elementCopy = JSON.parse(JSON.stringify(element));
 
-            if (Object.keys(elementCopy).length > 0 &&
-              elementCopy.hasOwnProperty('properties')
-            ) {
-              delete elementCopy.properties;
-            }
-
-            // Check if we have template from templateId or module
-            // and set it as the template
-            let $template = null;
-            const templateSelector = `#hbs-${elementCopy.id}`;
-            if ($(templateSelector).length > 0) {
-              $template = $(templateSelector);
-            }
-
-            let hbs = null;
-            let dataOverride = null;
-            let dataOverrideWith = null;
-
-            // Compile the template if it exists
-            if ($template && $template.length > 0) {
-              dataOverride = $template?.data('extends-override');
-              dataOverrideWith = $template?.data('extends-with');
-
-              // Check if template is extended and get values
-              if ((dataOverride !== 'undefined' &&
-                  dataOverrideWith !== 'undefined') &&
-                  (String(dataOverride).length > 0 &&
-                  String(dataOverrideWith).length > 0)
+              if (Object.keys(elementCopy).length > 0 &&
+                elementCopy.hasOwnProperty('properties')
               ) {
-                if ($template.html().includes(`{{${dataOverride}}}`)) {
-                  $template.html(
-                    $template.html()
-                      .replaceAll(
-                        `{{${dataOverride}}}`,
-                        `{{${dataOverrideWith}}}`,
-                      ),
-                  );
-                }
+                delete elementCopy.properties;
               }
 
-              hbs = Handlebars.compile($template.html());
-            }
-
-            const elementProperties = element?.properties || {};
-            const renderElement = (data, isStatic) => {
-              const hbsTemplate = hbs(
-                Object.assign(data, globalOptions),
-              );
-              let cssStyles = {
-                height: data.height,
-                width: data.width,
-              };
-
-              if (isStatic) {
-                cssStyles = {
-                  ...cssStyles,
-                  position: 'absolute',
-                  top: data.top,
-                  left: data.left,
-                  'z-index': data.layer,
-                };
+              // Check if we have template from templateId or module
+              // and set it as the template
+              let $template = null;
+              const templateSelector = `#hbs-${elementCopy.id}`;
+              if ($(templateSelector).length > 0) {
+                $template = $(templateSelector);
               }
 
-              $content.append($(hbsTemplate).first()
-                .attr('id', data.elementId)
-                .addClass(`${data.id}--item`)
-                .css(cssStyles)
-                .prop('outerHTML'));
-            };
-            const templateData = Object.assign(
-              {}, elementProperties, elementCopy, globalOptions,
-            );
+              let hbs = null;
+              let dataOverride = null;
+              let dataOverrideWith = null;
 
-            // Get widget info if exists.
-            if (Object.keys(elementsWidget).length > 0 &&
-              elementsWidget.hasOwnProperty(widgetElement.widgetId)
-            ) {
-              const widgetInfo = elementsWidget[widgetElement.widgetId];
+              // Compile the template if it exists
+              if ($template && $template.length > 0) {
+                dataOverride = $template?.data('extends-override');
+                dataOverrideWith = $template?.data('extends-with');
 
-              const renderData = Object.assign(
-                {},
-                widgetInfo.properties,
-                elementCopy,
-                globalOptions,
-                {
-                  duration: widgetInfo.duration,
-                  marqueeInlineSelector: `.${templateData.id}--item`,
-                  parentId: elementCopy.elementId,
-                },
-              );
-              getWidgetData(widgetInfo)
-                .then(function(data) {
-                  const {
-                    dataItems,
-                  } = composeFinalData(widgetInfo, data);
-
-                  // For each data item, parse it and add it to the content;
-                  let templateAlreadyAdded = false;
-                  $.each(dataItems, function(_key, item) {
-                    (hbs) && renderElement(Object.assign(
-                      templateData,
-                      {data: item},
-                    ));
-
-                    templateAlreadyAdded = true;
-                  });
-
-                  if (templateAlreadyAdded) {
-                    $target.xiboElementsRender(
-                      renderData,
-                      $content.find(`.${templateData.id}--item`),
+                // Check if template is extended and get values
+                if ((dataOverride !== 'undefined' &&
+                    dataOverrideWith !== 'undefined') &&
+                    (String(dataOverride).length > 0 &&
+                    String(dataOverrideWith).length > 0)
+                ) {
+                  if ($template.html().includes(`{{${dataOverride}}}`)) {
+                    $template.html(
+                      $template.html()
+                        .replaceAll(
+                          `{{${dataOverride}}}`,
+                          `{{${dataOverrideWith}}}`,
+                        ),
                     );
-
-                    // Handle the rendering of the template
-                    if (dataOverride &&
-                      typeof window[
-                        `onTemplateRender_${dataOverride}`
-                      ] === 'function'
-                    ) {
-                      const onTemplateRender = window[
-                        `onTemplateRender_${dataOverride}`];
-
-                      onTemplateRender && onTemplateRender(
-                        elementCopy.elementId,
-                        $target,
-                        $content.find(`.${templateData.id}--item`),
-                        element?.properties,
-                        widgetInfo?.meta,
-                      );
-                    }
                   }
-                });
-            } else {
-              (hbs) && renderElement(templateData, true);
-            }
-          });
-        }
-      });
-    }
-  });
+                }
+
+                hbs = Handlebars.compile($template.html());
+              }
+
+              const elementProperties = element?.properties || {};
+              const renderElement = (data, isStatic) => {
+                const hbsTemplate = hbs(
+                  Object.assign(data, globalOptions),
+                );
+                let cssStyles = {
+                  height: data.height,
+                  width: data.width,
+                };
+
+                if (isStatic) {
+                  cssStyles = {
+                    ...cssStyles,
+                    position: 'absolute',
+                    top: data.top,
+                    left: data.left,
+                    'z-index': data.layer,
+                  };
+                }
+
+                $content.append($(hbsTemplate).first()
+                  .attr('id', data.elementId)
+                  .addClass(`${data.id}--item`)
+                  .css(cssStyles)
+                  .prop('outerHTML'));
+              };
+              const templateData = Object.assign(
+                {}, elementProperties, elementCopy, globalOptions,
+              );
+
+              // Get widget info if exists.
+              if (Object.keys(elementsWidget).length > 0 &&
+                elementsWidget.hasOwnProperty(widgetElement.widgetId)
+              ) {
+                const widgetInfo = elementsWidget[widgetElement.widgetId];
+
+                const renderData = Object.assign(
+                  {},
+                  widgetInfo.properties,
+                  elementCopy,
+                  globalOptions,
+                  {
+                    duration: widgetInfo.duration,
+                    marqueeInlineSelector: `.${templateData.id}--item`,
+                    parentId: elementCopy.elementId,
+                  },
+                );
+                getWidgetData(widgetInfo)
+                  .then(function(data) {
+                    const {
+                      dataItems,
+                    } = composeFinalData(widgetInfo, data);
+
+                    // For each data item, parse it and add it to the content;
+                    let templateAlreadyAdded = false;
+                    $.each(dataItems, function(_key, item) {
+                      (hbs) && renderElement(Object.assign(
+                        templateData,
+                        {data: item},
+                      ));
+
+                      templateAlreadyAdded = true;
+                    });
+
+                    if (templateAlreadyAdded) {
+                      $target.xiboElementsRender(
+                        renderData,
+                        $content.find(`.${templateData.id}--item`),
+                      );
+
+                      // Handle the rendering of the template
+                      if (dataOverride &&
+                        typeof window[
+                          `onTemplateRender_${dataOverride}`
+                        ] === 'function'
+                      ) {
+                        const onTemplateRender = window[
+                          `onTemplateRender_${dataOverride}`];
+
+                        onTemplateRender && onTemplateRender(
+                          elementCopy.elementId,
+                          $target,
+                          $content.find(`.${templateData.id}--item`),
+                          element?.properties,
+                          widgetInfo?.meta,
+                        );
+                      }
+                    }
+                  });
+              } else {
+                (hbs) && renderElement(templateData, true);
+              }
+            });
+          }
+        });
+      }
+    });
+  }
 });
