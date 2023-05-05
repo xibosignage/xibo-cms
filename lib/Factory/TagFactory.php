@@ -69,7 +69,7 @@ class TagFactory extends BaseFactory
         $tagLink = $this->createEmptyLink();
         $tagLink->tag = trim($tag);
         $tagLink->tagId = $tagId;
-        $tagLink->value = trim($value);
+        $tagLink->value = trim($value ?? '');
 
         return $tagLink;
     }
