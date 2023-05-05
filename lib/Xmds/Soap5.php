@@ -424,6 +424,8 @@ class Soap5 extends Soap4
             }
 
             $display->commercialLicence = $commercialLicence;
+            $node = $return->createElement('commercialLicence', $commercialLicenceString);
+            $displayElement->appendChild($node);
         }
 
         // commercial licence not applicable for Windows and Linux players.
