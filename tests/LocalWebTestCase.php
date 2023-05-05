@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022-2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -226,7 +226,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * Create a global container for all tests to share.
      * @throws \Exception
      */
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
 
@@ -516,7 +516,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * @inheritDoc
      * @throws \Exception
      */
-    public function setUp()
+    public function setUp(): void
     {
         self::getLogger()->debug('LocalWebTestCase: setUp');
         parent::setUp();
@@ -529,7 +529,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * @inheritDoc
      * @throws \Exception
      */
-    public function tearDown()
+    public function tearDown(): void
     {
         self::getLogger()->debug('LocalWebTestCase: tearDown');
 
