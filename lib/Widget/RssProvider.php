@@ -162,7 +162,7 @@ class RssProvider implements WidgetProviderInterface
                     $link = $item->getEnclosureUrl();
 
                     if (!(empty($link))) {
-                        $article->image = $dataProvider->addImage('ticker_ ' . md5($link), $link, $expiresImage);
+                        $article->image = $dataProvider->addImage('ticker_' . md5($link), $link, $expiresImage);
                     } else {
                         $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
                     }
@@ -187,7 +187,7 @@ class RssProvider implements WidgetProviderInterface
 
                 // Return articles based on the value of numItems
                 if ($dataProvider->getProperty('numItems') == $countItems) {
-                   break;
+                    break;
                 }
 
                 $countItems++;
