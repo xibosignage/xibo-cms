@@ -16,6 +16,7 @@ const formTemplates = {
   widget: require('../templates/forms/widget.hbs'),
   region: require('../templates/forms/region.hbs'),
   layout: require('../templates/forms/layout.hbs'),
+  position: require('../templates/forms/position.hbs'),
 };
 
 /**
@@ -118,9 +119,14 @@ PropertiesPanel.prototype.save = function(target) {
   }
 
   // Get form data to save based on the target type
-  const formFieldsToSave = (savingElement) ?
+  let formFieldsToSave = (savingElement) ?
     form.find('[name]:not(.element-property)') :
     form.find('[name]');
+
+
+  // Filter out position related fields
+  formFieldsToSave =
+    formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
   // If form is valid, submit it ( add change )
   if (formFieldsToSave.valid()) {
@@ -341,6 +347,7 @@ PropertiesPanel.prototype.render = function(
   const app = this.parent;
   let targetAux;
   let renderElements = false;
+  let isElementGroup = false;
 
   // Hide panel if no target element is passed
   if (target == undefined || $.isEmptyObject(target)) {
@@ -372,12 +379,17 @@ PropertiesPanel.prototype.render = function(
     // Set renderElements to true
     renderElements = true;
   } else if (target.type === 'element-group') {
+    // Save element group in targetAux
+    targetAux = target;
+
     // Get widget and set it as target
     target = app.getElementByTypeAndId(
       'widget',
       'widget_' + target.regionId + '_' + target.widgetId,
       'canvas',
     );
+
+    isElementGroup = true;
   }
 
   // Show a message if the module is disabled for a widget rendering
@@ -639,6 +651,108 @@ PropertiesPanel.prototype.render = function(
       }
     }
 
+    // If target is a widget or element
+    // render position tab with region or element position
+    if (target.type === 'widget' || isElementGroup) {
+      // Get position
+      let positionProperties = {};
+      if (isElementGroup) {
+        positionProperties = {
+          type: 'element-group',
+          top: targetAux.top,
+          left: targetAux.left,
+        };
+      } else if (targetAux?.type === 'element') {
+        positionProperties = {
+          type: 'element',
+          top: targetAux.top,
+          left: targetAux.left,
+          width: targetAux.width,
+          height: targetAux.height,
+          zIndex: targetAux.layer,
+        };
+      } else {
+        positionProperties = {
+          type: 'region',
+          regionType: target.parent.subType,
+          regionName: target.parent.name,
+          top: target.parent.dimensions.top,
+          left: target.parent.dimensions.left,
+          width: target.parent.dimensions.width,
+          height: target.parent.dimensions.height,
+          zIndex: target.parent.zIndex,
+        };
+      }
+
+      // Get position template
+      const positionTemplate = formTemplates.position;
+
+      // Add position tab after advanced tab
+      self.DOMObject.find('[href="#advancedTab"]').parent()
+        .after('<li class="nav-item">' +
+          '<a class="nav-link" href="#positionTab" data-toggle="tab">' +
+          '<i class="fas fa-border-none"></i></a></li>');
+
+      // Add position tab content after advanced tab content
+      self.DOMObject.find('#advancedTab').after(
+        positionTemplate(positionProperties),
+      );
+
+      // If we change any input, update the target position
+      self.DOMObject.find('#positionTab [name]').on('change', function(ev) {
+        const viewerScale = lD.viewer.containerElementDimensions.scale;
+        const form = $(ev.currentTarget).parents('#positionTab');
+
+        if (targetAux == undefined) {
+          // Widget
+          const regionId = target.parent.id;
+
+          lD.layout.regions[regionId].transform({
+            width: form.find('[name="width"]').val(),
+            height: form.find('[name="height"]').val(),
+            top: form.find('[name="top"]').val(),
+            left: form.find('[name="left"]').val(),
+          }, true);
+
+          lD.viewer.updateRegion(lD.layout.regions[regionId]);
+        } else if (targetAux?.type == 'element') {
+          // Element
+          const $targetElement = $('#' + targetAux.elementId);
+
+          // Move element
+          $targetElement.css({
+            width: form.find('[name="width"]').val() * viewerScale,
+            height: form.find('[name="height"]').val() * viewerScale,
+            top: form.find('[name="top"]').val() * viewerScale,
+            left: form.find('[name="left"]').val() * viewerScale,
+          });
+
+          // Save properties
+          lD.viewer.saveElementProperties($targetElement, true);
+
+          // Update element
+          lD.viewer.updateElement(targetAux, true);
+        } else if (targetAux?.type == 'element-group') {
+          // Element group
+          const $targetElementGroup = $('#' + targetAux.id);
+
+          // Move element group
+          $targetElementGroup.css({
+            width: form.find('[name="width"]').val() * viewerScale,
+            height: form.find('[name="height"]').val() * viewerScale,
+            top: form.find('[name="top"]').val() * viewerScale,
+            left: form.find('[name="left"]').val() * viewerScale,
+          });
+
+          // Save properties
+          lD.viewer.saveElementGroupProperties($targetElementGroup, true);
+
+          // Update moveable
+          lD.viewer.updateMoveable();
+        }
+      });
+    }
+
     // Init fields
     self.initFields(target, res.data, actionEditMode);
   }).fail(function(data) {
@@ -709,14 +823,15 @@ PropertiesPanel.prototype.initFields = function(
   // If we're not in read only mode
   if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
     // Handle buttons
-    self.DOMObject.find('.properties-panel-btn').off().click(function(e) {
-      if ($(e.target).data('action')) {
-        self[$(e.target).data('action')](
-          target,
-          $(e.target).data('subAction'),
-        );
-      }
-    });
+    self.DOMObject.find('.properties-panel-btn:not(.inline-btn)')
+      .off().click(function(e) {
+        if ($(e.target).data('action')) {
+          self[$(e.target).data('action')](
+            target,
+            $(e.target).data('subAction'),
+          );
+        }
+      });
 
     // Handle back button based on form page
     if (
@@ -803,19 +918,26 @@ PropertiesPanel.prototype.initFields = function(
 
 /**
  * Save Region
+ * @param {Boolean} savePositionForm - if we want to save only the position form
  * @return {boolean} false if unsuccessful
  */
-PropertiesPanel.prototype.saveRegion = function() {
+PropertiesPanel.prototype.saveRegion = function(
+  savePositionForm = false,
+) {
   const app = this.parent;
   const self = this;
-  const form = $(self.DOMObject).find('form');
+  const form = (savePositionForm) ?
+    $(this.DOMObject).find('form #positionTab [name]') :
+    $(self.DOMObject).find('form');
 
   // If form not loaded, prevent changes
   if (form.length == 0) {
     return false;
   }
 
-  const element = app.selectedObject;
+  const element = (savePositionForm) ?
+    app.selectedObject.parent :
+    app.selectedObject;
   const formNewData = form.serialize();
   const requestPath =
     urlsForApi.region.saveForm.url.replace(':id', element[element.type + 'Id']);
@@ -1255,6 +1377,25 @@ PropertiesPanel.prototype.detachActionsForm = function() {
 PropertiesPanel.prototype.attachActionsForm = function() {
   // Re-attach form to the tab content
   this.DOMObject.find('.tab-content').append(this.actionForm);
+};
+
+/**
+ * Update position form
+ * @param {object} properties
+ */
+PropertiesPanel.prototype.updatePositionForm = function(properties) {
+  const $positionTab = this.DOMObject.find('form #positionTab');
+
+  // Loop properties
+  $.each(properties, function(key, value) {
+    // If value is a number, round it
+    if (typeof value == 'number') {
+      value = Math.round(value);
+    }
+
+    // Change value in the form field
+    $positionTab.find('[name="' + key + '"]').val(value);
+  });
 };
 
 module.exports = PropertiesPanel;

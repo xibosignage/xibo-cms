@@ -1,0 +1,26 @@
+<div class="tab-pane" id="positionTab">
+    {{#eq type 'region'}}
+        {{> inputs/hidden id="type" value=regionType customClass="position-input" }}
+        {{> inputs/hidden id="name" value=regionName customClass="position-input" }}
+    {{/eq}}
+
+    {{#ifCond top '!=' undefined}}
+        {{> inputs/number value=top id="top" title="Top" helpText="The top position" customClass="position-input" }}
+    {{/ifCond}}
+
+    {{#ifCond left '!=' undefined}}
+        {{> inputs/number value=left id="left" title="Left" helpText="The left position" customClass="position-input" }}
+    {{/ifCond}}
+
+    {{#ifCond width '!=' undefined}}
+        {{> inputs/number value=width id="width" title="Width" helpText="The width" customClass="position-input" }}
+    {{/ifCond}}
+
+    {{#ifCond height '!=' undefined}}
+        {{> inputs/number value=height id="height" title="Height" helpText="The height" customClass="position-input" }}
+    {{/ifCond}}
+
+    {{#ifCond zIndex '!=' undefined}}
+        {{> inputs/number value=zIndex id="zIndex" title="Layer" helpText="The z-index" customClass="position-input" }}
+    {{/ifCond}}
+</div>
