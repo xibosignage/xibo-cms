@@ -728,7 +728,7 @@ class Display extends Base
             }
 
             $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
-            $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
+            $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://device.webkeyapp.com/phone?publicid=' . $display->webkeySerial : '';
 
             // Is a transfer to another CMS in progress?
             $display->isCmsTransferInProgress = (!empty($display->newCmsAddress));
