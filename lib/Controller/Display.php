@@ -780,7 +780,7 @@ class Display extends Base
             $display->setUnmatchedProperty(
                 'webkeyLink',
                 (!empty($display->webkeySerial))
-                    ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial
+                    ? 'https://device.webkeyapp.com/phone?publicid=' . $display->webkeySerial
                     : ''
             );
 
