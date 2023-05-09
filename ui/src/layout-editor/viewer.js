@@ -710,7 +710,7 @@ Viewer.prototype.renderRegion = function(
     $container.html(html);
 
     // If widget is selected, update moveable for the region
-    if (widget.selected) {
+    if (widget && widget.selected) {
       this.selectElement($container);
     }
 
