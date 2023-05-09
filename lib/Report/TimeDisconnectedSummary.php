@@ -417,19 +417,13 @@ class TimeDisconnectedSummary implements ReportInterface
         // Get a list of displays by filters
         $displaySql = $displaySelect . $displayBody . $order;
 
-        // Displays by filter
-        $displays = [];
+        // Retrieve the disconnected/connected time from the $disconnectedDisplays array into displays
         foreach ($this->store->select($displaySql, $params) as $displayRow) {
             $sanitizedDisplayRow = $this->sanitizer->getSanitizer($displayRow);
-            $displays[$sanitizedDisplayRow->getInt(('displayId'))] = $sanitizedDisplayRow->getString(('display'));
-        }
-
-        // Add displays that are not disconnected
-        foreach ($displays as $displayId => $display) {
-            if (!in_array($displayId, $disconnectedDisplays)) {
+            if (!in_array($sanitizedDisplayRow->getInt(('displayId')), $disconnectedDisplays)) {
                 $entry = [];
-                $entry['displayId'] = $displayId;
-                $entry['display'] = $display;
+                $entry['displayId'] = $sanitizedDisplayRow->getInt(('displayId'));
+                $entry['display'] = $sanitizedDisplayRow->getString(('display'));
                 $entry['timeDisconnected'] =  0;
                 $entry['timeConnected'] = ($toDt->format('U') - $fromDt->format('U')) / $divisor;
                 $entry['postUnits'] = $postUnits;
