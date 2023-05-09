@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\RequiredFile;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Xmds\Entity\Dependency;
 
 /**
  * Class RequiredFileFactory
@@ -162,10 +163,11 @@ class RequiredFileFactory extends BaseFactory
     private static function getLegacyFileType($id): string
     {
         return match (true) {
-            $id < 0 && $id > -100000000 => 'bundle',
-            $id < -100000000 && $id > -200000000 => 'font',
-            $id < -200000000 && $id > -300000000 => 'playersoftware',
-            $id < -300000000 => 'asset',
+            $id < 0 && $id > Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'bundle',
+            $id === Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'fontCss',
+            $id < Dependency::LEGACY_ID_OFFSET_FONT * -1 && $id > Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'font',
+            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 && $id > Dependency::LEGACY_ID_OFFSET_ASSET * -1 => 'playersoftware',
+            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'asset',
         };
     }
 
