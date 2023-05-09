@@ -270,78 +270,21 @@ class TimeDisconnectedSummary implements ReportInterface
             'end' => $toDt->format('U')
         );
 
+        // Disconnected Displays Query
         $select = '
             SELECT display.display, display.displayId,
             SUM(LEAST(IFNULL(`end`, :end), :end) - GREATEST(`start`, :start)) AS duration,
             :end - :start as filter ';
 
-        if ($tags != '') {
-            $select .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
-              FROM tag
-                INNER JOIN lktagdisplaygroup
-                  ON lktagdisplaygroup.tagId = tag.tagId
-                WHERE lktagdisplaygroup.displayGroupId = displaygroup.DisplayGroupID
-                GROUP BY lktagdisplaygroup.displayGroupId) AS tags ';
-        }
-
         $body = 'FROM `displayevent`
                 INNER JOIN `display`
-                ON display.displayId = `displayevent`.displayId ';
-
-        if ($tags != '') {
-            $body .= 'INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayID = display.displayid
-                     INNER JOIN `displaygroup`
-                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
-                         AND `displaygroup`.isDisplaySpecific = 1 ';
-        }
-
-        $body .= 'WHERE `start` <= :end
+                ON display.displayId = `displayevent`.displayId 
+                WHERE `start` <= :end
                   AND IFNULL(`end`, :end) >= :start
                   AND :end <= UNIX_TIMESTAMP(NOW()) ';
 
         if (count($displayIds) > 0) {
             $body .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
-        }
-
-        if ($tags != '') {
-            if (trim($tags) === '--no-tag') {
-                $body .= ' AND `displaygroup`.displaygroupId NOT IN (
-                    SELECT `lktagdisplaygroup`.displaygroupId
-                     FROM tag
-                        INNER JOIN `lktagdisplaygroup`
-                        ON `lktagdisplaygroup`.tagId = tag.tagId
-                    )
-                ';
-            } else {
-                $operator = $sanitizedParams->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `displaygroup`.displaygroupId IN (
-                SELECT `lktagdisplaygroup`.displaygroupId
-                  FROM tag
-                    INNER JOIN `lktagdisplaygroup`
-                    ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
-                $i = 0;
-
-                foreach (explode(',', $tags) as $tag) {
-                    $i++;
-
-                    if ($i == 1) {
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    } else {
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-                    }
-
-                    if ($operator === '=') {
-                        $params['tags' . $i] = $tag;
-                    } else {
-                        $params['tags' . $i] = '%' . $tag . '%';
-                    }
-                }
-
-                $body .= " ) ";
-            }
         }
 
         if ($onlyLoggedIn) {
@@ -352,31 +295,7 @@ class TimeDisconnectedSummary implements ReportInterface
             GROUP BY display.display, display.displayId
         ';
 
-        $filter = [
-            'tags' => $sanitizedParams->getString('tags'),
-            'onlyLoggedIn' => $sanitizedParams->getCheckbox('onlyLoggedIn') == 1,
-            'exactTags' => $sanitizedParams->getCheckbox('exactTags')
-        ];
-
-        // Sorting?
-        $filterBy = $this->gridRenderFilter($filter);
-        $sortOrder = $this->gridRenderSort($sanitizedParams);
-
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
-
-        $limit = '';
-
-        // Paging
-        $filterBy = $this->sanitizer->getSanitizer($filterBy);
-        if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
-            $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
-                . $filterBy->getInt('length', ['default' => 10]);
-        }
-
-        $sql = $select . $body . $order . $limit;
+        $sql = $select . $body;
         $maxDuration = 0;
         $rows = [];
 
@@ -411,6 +330,7 @@ class TimeDisconnectedSummary implements ReportInterface
             $disconnectedDisplays[] = $entry['displayId'];
         }
 
+        // Displays with filters such as tags
         $displaySelect = '
             SELECT display.display, display.displayId ';
 
@@ -450,12 +370,12 @@ class TimeDisconnectedSummary implements ReportInterface
             } else {
                 $operator = $sanitizedParams->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
-                $displayBody .= " AND `displaygroup`.displaygroupId IN (
+                $displayBody .= ' AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
+                ';
                 $i = 0;
 
                 foreach (explode(',', $tags) as $tag) {
@@ -474,7 +394,7 @@ class TimeDisconnectedSummary implements ReportInterface
                     }
                 }
 
-                $displayBody .= " ) ";
+                $displayBody .= ' ) ';
             }
         }
 
@@ -486,10 +406,18 @@ class TimeDisconnectedSummary implements ReportInterface
             GROUP BY display.display, display.displayId
         ';
 
-        // Get a list of displays by filters
-        $displaySql = $displaySelect . $displayBody;
+        // Sorting?
+        $sortOrder = $this->gridRenderSort($sanitizedParams);
 
-        //
+        $order = '';
+        if (is_array($sortOrder)) {
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
+
+        // Get a list of displays by filters
+        $displaySql = $displaySelect . $displayBody . $order;
+
+        // Displays by filter
         $displays = [];
         foreach ($this->store->select($displaySql, $params) as $displayRow) {
             $sanitizedDisplayRow = $this->sanitizer->getSanitizer($displayRow);
@@ -509,13 +437,6 @@ class TimeDisconnectedSummary implements ReportInterface
             }
         }
 
-        // Paging
-        $recordsTotal = 0;
-        if ($limit != '' && count($rows) > 0) {
-            $results = $this->store->select($select . $body, $params);
-            $recordsTotal = count($results);
-        }
-
         //
         // Output Results
         // --------------
@@ -523,7 +444,7 @@ class TimeDisconnectedSummary implements ReportInterface
         $availabilityData = [];
         $availabilityDataConnected = [];
         $availabilityLabels = [];
-        $postUnits = "";
+        $postUnits = '';
 
         foreach ($rows as $row) {
             $availabilityData[] = $row['timeDisconnected'];
@@ -586,7 +507,7 @@ class TimeDisconnectedSummary implements ReportInterface
         return new ReportResult(
             $metadata,
             $rows,
-            $recordsTotal,
+            count($rows),
             $chart
         );
     }
