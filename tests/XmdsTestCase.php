@@ -31,9 +31,6 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Stash\Driver\Composite;
-use Stash\Interfaces\PoolInterface;
-use Stash\Pool;
 
 class xmdsTestCase extends TestCase
 {
@@ -56,19 +53,6 @@ class xmdsTestCase extends TestCase
         }
 
         return $this->client;
-    }
-
-    public function getPool() : PoolInterface
-    {
-        $drivers[] = new \Stash\Driver\FileSystem(['path' => '/var/www/cms/library/cache']);
-        // Create a composite driver
-        $composite = new Composite(['drivers' => $drivers]);
-
-        $pool = new Pool($composite);
-        $pool->setLogger($this->getLogger());
-        $pool->setNamespace('Xibo');
-
-        return $pool;
     }
 
     /**

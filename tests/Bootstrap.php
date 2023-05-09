@@ -28,7 +28,7 @@ define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 require_once PROJECT_ROOT . '/vendor/autoload.php';
 require_once PROJECT_ROOT . '/tests/LocalWebTestCase.php';
-require_once PROJECT_ROOT . '/tests/xmdsTestCase.php';
+require_once PROJECT_ROOT . '/tests/XmdsTestCase.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');

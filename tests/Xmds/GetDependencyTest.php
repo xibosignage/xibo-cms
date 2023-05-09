@@ -25,13 +25,13 @@ namespace Xibo\Tests\Xmds;
 use DOMDocument;
 use DOMXPath;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Xibo\Tests\xmdsTestCase;
+use Xibo\Tests\XmdsTestCase;
 
 /**
  * @property string $requiredFilesXml
  * @property string $requiredFilesXmlv6
  */
-class GetDependencyTest extends xmdsTestCase
+class GetDependencyTest extends XmdsTestCase
 {
     public function setUp(): void
     {

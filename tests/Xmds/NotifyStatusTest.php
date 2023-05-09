@@ -23,14 +23,14 @@
 namespace Xibo\Tests\Xmds;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use Xibo\Tests\xmdsTestCase;
+use Xibo\Tests\XmdsTestCase;
 
 /**
  * @property string $currentLayoutXml
  * @property string $geoLocationXml
  * @property string $orientationXml
  */
-final class NotifyStatusTest extends xmdsTestCase
+final class NotifyStatusTest extends XmdsTestCase
 {
     public function setUp(): void
     {

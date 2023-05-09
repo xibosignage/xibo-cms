@@ -23,12 +23,12 @@
 namespace Xibo\Tests\Xmds;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use Xibo\Tests\xmdsTestCase;
+use Xibo\Tests\XmdsTestCase;
 
 /**
  * @property string $xmlRequest
  */
-final class ReportFaultsTest extends xmdsTestCase
+final class ReportFaultsTest extends XmdsTestCase
 {
     public function setUp(): void
     {

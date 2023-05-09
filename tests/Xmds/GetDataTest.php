@@ -24,14 +24,14 @@ namespace Xibo\Tests\Xmds;
 
 use DOMDocument;
 use DOMXPath;
-use Xibo\Tests\xmdsTestCase;
+use Xibo\Tests\XmdsTestCase;
 
 /**
  * @property string $dataSetXml
  * @property string $requiredFilesXml
  * @property string $requiredFilesXmlv6
  */
-class GetDataTest extends xmdsTestCase
+class GetDataTest extends XmdsTestCase
 {
     public function setUp(): void
     {

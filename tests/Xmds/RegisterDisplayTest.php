@@ -24,13 +24,13 @@ namespace Xibo\Tests\Xmds;
 
 use DOMDocument;
 use DOMXPath;
-use Xibo\Tests\xmdsTestCase;
+use Xibo\Tests\XmdsTestCase;
 
 /**
  * @property string $registerWindowsXml
  * @property string $registerAndroidXml
  */
-class RegisterDisplayTest extends xmdsTestCase
+class RegisterDisplayTest extends XmdsTestCase
 {
     public function setUp(): void
     {
