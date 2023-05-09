@@ -111,8 +111,8 @@ $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{
-    "SymbolTrimmed": "GOOGL",
-    "NameTrimmed": "GOOGL",
+    "SymbolTrimmed": "Sample Stock 1",
+    "NameTrimmed": "Sample Stock 1",
     "LastTradePriceOnly": "105.41",
     "CurrencyUpper": "",
     "ChangeStyle": "value-down",
@@ -120,8 +120,8 @@ $(target).xiboLayoutAnimate(properties);
     "ChangeIcon": "down-arrow"
 },
 {
-    "SymbolTrimmed": "AMAZN",
-    "NameTrimmed": "AMAZN",
+    "SymbolTrimmed": "Sample Stock 2",
+    "NameTrimmed": "Sample Stock 2",
     "LastTradePriceOnly": "201.11",
     "CurrencyUpper": "",
     "ChangeStyle": "value-up",

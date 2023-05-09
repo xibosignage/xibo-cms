@@ -110,14 +110,14 @@ $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{
-    "NameShort": "USD",
+    "NameShort": "Sample Currency 1",
     "RawLastTradePriceOnly": "54.89",
     "ChangeStyle": "value-up",
     "ChangePercentage": "3",
     "ChangeIcon": "up-arrow"
 },
 {
-    "NameShort": "GBP",
+    "NameShort": "Sample Currency 2",
     "RawLastTradePriceOnly": "69.10",
     "ChangeStyle": "value-up",
     "ChangePercentage": "5",
