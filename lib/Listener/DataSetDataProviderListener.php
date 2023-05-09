@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -267,10 +267,13 @@ class DataSetDataProviderListener
 
             // Add the mapping we've generated to the metadata
             $dataProvider->addOrUpdateMeta('mapping', $mappings);
+            $dataProvider->setIsHandled();
         } catch (\Exception $exception) {
             $this->getLogger()->debug('onDataRequest: ' . $exception->getTraceAsString());
             $this->getLogger()->error('onDataRequest: unable to get data for dataSetId ' . $dataSet->dataSetId
                 . ' e: ' . $exception->getMessage());
+
+            $dataProvider->addError(__('DataSet Invalid'));
         }
     }
 

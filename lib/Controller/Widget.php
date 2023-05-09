@@ -1083,9 +1083,15 @@ class Widget extends Base
                 }
 
                 // Save to cache
-                // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
-                if (count($dataProvider->getData()) > 0) {
+                if ($dataProvider->isHandled()) {
                     $widgetDataProviderCache->saveToCache($dataProvider);
+                } else {
+                    // Unhandled data provider.
+                    $message = null;
+                    foreach ($dataProvider->getErrors() as $error) {
+                        $message .= $error . PHP_EOL;
+                    }
+                    throw new ConfigurationException($message ?? __('No data providers configured'));
                 }
             } finally {
                 $widgetDataProviderCache->finaliseCache();

@@ -30,7 +30,6 @@ use PicoFeed\Parser\Item;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Xibo\Helper\Environment;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\DataType\Article;
 use Xibo\Widget\Provider\DataProviderInterface;
@@ -195,11 +194,12 @@ class RssProvider implements WidgetProviderInterface
                 // Add the article.
                 $dataProvider->addItem($article);
             }
+            $dataProvider->setIsHandled();
         } catch (RequestException $requestException) {
             // Log and return empty?
             $this->getLog()->error('Unable to get feed: ' . $uri
                 . ', e: ' . $requestException->getMessage());
-            throw new ConfigurationException(__('Unable to download feed'));
+            $dataProvider->addError(__('Unable to download feed'));
         } catch (PicoFeedException $picoFeedException) {
             // Output any PicoFeed logs
             if ($picoFeedLoggingEnabled) {
@@ -212,6 +212,7 @@ class RssProvider implements WidgetProviderInterface
             // Log and return empty?
             $this->getLog()->error('Unable to parse feed: ' . $picoFeedException->getMessage());
             $this->getLog()->debug($picoFeedException->getTraceAsString());
+            $dataProvider->addError(__('Unable to parse feed'));
         }
 
         // Output any PicoFeed logs

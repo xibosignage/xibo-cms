@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 namespace Xibo\Connector;
 
@@ -30,7 +29,6 @@ use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Event\XmdsConnectorFileEvent;
 use Xibo\Event\XmdsConnectorTokenEvent;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -501,15 +499,29 @@ class XiboDashboardConnector implements ConnectorInterface
 
     public function onDataRequest(DashboardDataRequestEvent $event, $eventName, EventDispatcherInterface $dispatcher)
     {
-        // Always generate a token
-        $tokenEvent = new XmdsConnectorTokenEvent();
-        $tokenEvent->setTargets($event->getDataProvider()->getDisplayId(), $event->getDataProvider()->getWidgetId());
-        $tokenEvent->setTtl(3600 * 24 * 2);
-        $dispatcher->dispatch($tokenEvent, XmdsConnectorTokenEvent::$NAME);
-        $token = $tokenEvent->getToken();
+        $this->getLogger()->debug('onDataRequest');
 
-        if (empty($token)) {
-            throw new ConfigurationException(__('No token returned'));
+        // Validate that we're configured.
+        if (empty($this->getSetting('apiKey'))) {
+            $event->getDataProvider()->addError(__('Dashboard Connector not configured'));
+            return;
+        }
+
+        // Always generate a token
+        try {
+            $tokenEvent = new XmdsConnectorTokenEvent();
+            $tokenEvent->setTargets($event->getDataProvider()->getDisplayId(), $event->getDataProvider()->getWidgetId());
+            $tokenEvent->setTtl(3600 * 24 * 2);
+            $dispatcher->dispatch($tokenEvent, XmdsConnectorTokenEvent::$NAME);
+            $token = $tokenEvent->getToken();
+
+            if (empty($token)) {
+                $event->getDataProvider()->addError(__('No token returned'));
+                return;
+            }
+        } catch (\Exception $e) {
+            $this->getLogger()->error('onDataRequest: Failed to get token. e = ' . $e->getMessage());
+            $event->getDataProvider()->addError(__('No token returned'));
         }
 
         if ($event->getDataProvider()->isPreview()) {
@@ -527,6 +539,7 @@ class XiboDashboardConnector implements ConnectorInterface
         $item['spinner'] = $this->getSpinner();
 
         $event->getDataProvider()->addItem($item);
+        $event->getDataProvider()->setIsHandled();
     }
 
     private function getSpinner(): string

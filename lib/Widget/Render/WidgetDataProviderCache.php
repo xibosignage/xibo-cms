@@ -106,7 +106,9 @@ class WidgetDataProviderCache
         bool $isLockIfMiss = true,
     ): bool {
         // Construct a key
-        $this->key = '/widget/' . $dataProvider->getDataType() . '/' . md5($cacheKey);
+        $this->key = '/widget/'
+            . ($dataProvider->getDataType() ?: $dataProvider->getDataSource())
+            . '/' . md5($cacheKey);
 
         $this->getLog()->debug('decorateWithCache: key is ' . $this->key);
 

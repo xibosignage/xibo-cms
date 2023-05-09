@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -125,6 +125,20 @@ interface DataProviderInterface
      * @return \Carbon\Carbon|null
      */
     public function getWidgetModifiedDt(): ?Carbon;
+
+    /**
+     * Indicate that this data provider has been handled.
+     * @return DataProviderInterface
+     */
+    public function setIsHandled(): DataProviderInterface;
+
+    /**
+     * Add an error to this data provider, if no other data providers handle this request, the error will be
+     * thrown as a configuration error.
+     * @param string $errorMessage
+     * @return DataProviderInterface
+     */
+    public function addError(string $errorMessage): DataProviderInterface;
 
     /**
      * Add an item to the provider

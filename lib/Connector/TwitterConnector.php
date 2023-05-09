@@ -155,12 +155,14 @@ class TwitterConnector implements ConnectorInterface
         if ($event->getDataProvider()->getDataSource() === 'twitter') {
             if (empty($this->getSetting('apiKey')) || empty($this->getSetting('apiSecret'))) {
                 $this->getLogger()->debug('onDataRequest: twitter not configured.');
+                $event->getDataProvider()->addError(__('Twitter not configured'));
                 return;
             }
 
             $delegated = $this->getSetting('delegated');
             if ($delegated && empty($this->getSetting('oAuthToken'))) {
                 $this->getLogger()->debug('onDataRequest: twitter not configured.');
+                $event->getDataProvider()->addError(__('Twitter not configured'));
                 return;
             }
 
@@ -243,8 +245,10 @@ class TwitterConnector implements ConnectorInterface
 
                 // If we've got data, then set our cache period.
                 $event->getDataProvider()->setCacheTtl($this->getSetting('cachePeriod', 3600));
+                $event->getDataProvider()->setIsHandled();
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onDataRequest: Failed to get feed. e = ' . $exception->getMessage());
+                $event->getDataProvider()->addError(__('Unable to get Tweets'));
             }
         }
     }

@@ -24,8 +24,6 @@ namespace Xibo\Widget;
 
 use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
-use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\DataType\SocialMedia;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
@@ -132,15 +130,17 @@ class MastodonProvider implements WidgetProviderInterface
 
             // If we've got data, then set our cache period.
             $dataProvider->setCacheTtl($dataProvider->getSetting('cachePeriod', 3600));
+            $dataProvider->setIsHandled();
         } catch (RequestException $requestException) {
             // Log and return empty?
             $this->getLog()->error('Mastodon: Unable to get posts: ' . $uri
                 . ', e: ' . $requestException->getMessage());
-            throw new ConfigurationException(__('Unable to download posts'));
+            $dataProvider->addError(__('Unable to download posts'));
         } catch (\Exception $exception) {
             // Log and return empty?
             $this->getLog()->error('Mastodon: ' . $exception->getMessage());
             $this->getLog()->debug($exception->getTraceAsString());
+            $dataProvider->addError(__('Unknown issue getting posts'));
         }
 
         return $this;
