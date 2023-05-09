@@ -45,6 +45,12 @@ class DataProvider implements DataProviderInterface
     /** @var boolean should we use the event? */
     private $isUseEvent = false;
 
+    /** @var bool Is this data provider handled? */
+    private $isHandled = false;
+
+    /** @var array errors */
+    private $errors = [];
+
     /** @var array the data */
     private $data = [];
 
@@ -206,11 +212,29 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
+     * Is this data provider handled?
+     * @return bool
+     */
+    public function isHandled(): bool
+    {
+        return $this->isHandled;
+    }
+
+    /**
      * @inheritDoc
      */
     public function setIsUseEvent(): DataProviderInterface
     {
         $this->isUseEvent = true;
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setIsHandled(): DataProviderInterface
+    {
+        $this->isHandled = true;
         return $this;
     }
 
@@ -231,11 +255,29 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
+     * Get any errors recorded on this provider
+     * @return array
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    /**
      * @inheritDoc
      */
     public function getWidgetModifiedDt(): ?Carbon
     {
         return Carbon::createFromTimestamp($this->widget->modifiedDt);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addError(string $errorMessage): DataProviderInterface
+    {
+        $this->errors[] = $errorMessage;
+        return $this;
     }
 
     /**

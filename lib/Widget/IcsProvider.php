@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -141,11 +141,13 @@ class IcsProvider implements WidgetProviderInterface
                     $this->getLog()->error('Unable to parse event. ' . var_export($event, true));
                 }
             }
+            
+            $dataProvider->setIsHandled();
         } catch (\Exception $exception) {
             $this->getLog()->error($exception->getMessage());
             $this->getLog()->debug($exception->getTraceAsString());
 
-            throw new ConfigurationException(__('The iCal provided is not valid, please choose a valid feed'));
+            $dataProvider->addError(__('The iCal provided is not valid, please choose a valid feed'));
         }
 
         return $this;

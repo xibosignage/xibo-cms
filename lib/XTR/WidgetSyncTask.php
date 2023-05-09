@@ -264,8 +264,7 @@ class WidgetSyncTask implements TaskInterface
                 }
 
                 // Save to cache
-                // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
-                if (count($dataProvider->getData()) > 0) {
+                if ($dataProvider->isHandled()) {
                     $widgetDataProviderCache->saveToCache($dataProvider);
                 }
             } finally {

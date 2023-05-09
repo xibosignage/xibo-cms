@@ -2,8 +2,8 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
- *  
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
@@ -100,5 +100,7 @@ class NotificationDataProviderListener
 
             $dataProvider->addItem($item);
         }
+        
+        $dataProvider->setIsHandled();
     }
 }

@@ -131,8 +131,10 @@ class OpenWeatherMapConnector implements ConnectorInterface
 
                 // If we've got data, then set our cache period.
                 $event->getDataProvider()->setCacheTtl($this->getSetting('cachePeriod', 3600));
+                $event->getDataProvider()->setIsHandled();
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
+                $event->getDataProvider()->addError(__('Unable to get weather results.'));
             }
         }
     }

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -110,8 +110,10 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 // If we've got data, then set our cache period.
                 $event->getDataProvider()->setCacheTtl($this->getSetting('cachePeriod', 3600));
+                $dataProvider->setIsHandled();
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
+                $dataProvider->addError(__('Unable to contact the AlphaVantage API'));
             }
         }
     }
