@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -644,7 +644,7 @@ class ModuleFactory extends BaseFactory
                 viewPath,
                `class`,
                 `defaultDuration`,
-                IFNULL(`installName`, `module`) AS installName
+                `installName`
             ';
 
         $body = '

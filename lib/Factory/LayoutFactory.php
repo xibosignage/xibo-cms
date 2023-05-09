@@ -1244,7 +1244,7 @@ class LayoutFactory extends BaseFactory
 
             // Validate the file name
             $fileName = basename($file['file']);
-            if (empty($fileName) || $fileName == '.') {
+            if (empty($fileName) || $fileName == '.' || $fileName == '..') {
                 $this->getLog()->error('Skipping file on import due to invalid filename. ' . $fileName);
                 continue;
             }
