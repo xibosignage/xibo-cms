@@ -229,6 +229,9 @@ class WidgetSyncTask implements TaskInterface
         ) {
             $this->getLogger()->debug('Cache expired, pulling fresh: key: ' . $cacheKey);
 
+            $dataProvider->clearData();
+            $dataProvider->clearMeta();
+
             try {
                 if ($widgetInterface !== null) {
                     $widgetInterface->fetchData($dataProvider);

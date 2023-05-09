@@ -121,12 +121,7 @@ class WidgetDataProviderCache
         // Does the cache have data?
         if ($data === null) {
             $this->getLog()->debug('decorateWithCache: miss, no data');
-
-            // Lock it up
-            if ($isLockIfMiss) {
-                $this->concurrentRequestLock();
-            }
-            return false;
+            $hasData = false;
         } else {
             // Determine if the cache returned is a miss or older than the modified date
             $this->isMissOrOld = $this->cache->isMiss() || (
@@ -149,8 +144,16 @@ class WidgetDataProviderCache
 
             // Record any cached mediaIds
             $this->cachedMediaIds = $data->media ?? [];
-            return true;
+            $hasData = true;
         }
+
+        // If we do not have data/we're old/missed cache, and we have requested a lock, then we will be refreshing
+        // the cache, so lock the record
+        if ($isLockIfMiss && (!$hasData || $this->isMissOrOld)) {
+            $this->concurrentRequestLock();
+        }
+
+        return $hasData;
     }
 
     /**

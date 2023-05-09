@@ -1052,6 +1052,9 @@ class Widget extends Base
         ) {
             $this->getLog()->debug('Pulling fresh data');
 
+            $dataProvider->clearData();
+            $dataProvider->clearMeta();
+
             try {
                 if ($widgetInterface !== null) {
                     $widgetInterface->fetchData($dataProvider);
