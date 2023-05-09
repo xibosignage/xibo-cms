@@ -74,10 +74,14 @@ class GetDependencyTest extends XmdsTestCase
     public static function successCasesFont(): array
     {
         return [
-            [7],
-            [6],
-            [5],
-            [4],
+            [7, 'Aileron-Heavy.otf'],
+            [7, 'fonts.css'],
+            [6, 'Aileron-Heavy.otf'],
+            [6, 'fonts.css'],
+            [5, 'Aileron-Heavy.otf'],
+            [5, 'fonts.css'],
+            [4, 'Aileron-Heavy.otf'],
+            [4, 'fonts.css'],
         ];
     }
 
@@ -91,7 +95,7 @@ class GetDependencyTest extends XmdsTestCase
     }
 
     #[DataProvider('successCasesFont')]
-    public function testGetFont($version)
+    public function testGetFont($version, $fileName)
     {
         if ($version === 7) {
             $rf = $this->sendRequest('POST', $this->requiredFilesXml, $version);
@@ -111,7 +115,7 @@ class GetDependencyTest extends XmdsTestCase
         foreach ($array as $item) {
             foreach ($item as $file) {
                 if (!empty($file['@attributes'])) {
-                    if ($file['@attributes']['saveAs'] === 'Aileron-Heavy.otf') {
+                    if ($file['@attributes']['saveAs'] === $fileName) {
                         if ($version === 7) {
                             $this->assertSame('dependency', $file['@attributes']['type']);
                         } else {
