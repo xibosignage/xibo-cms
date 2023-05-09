@@ -1146,7 +1146,7 @@ class Library extends Base
         // Get Valid Extensions
         if ($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]) !== null) {
             $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]));
-            $oldFolderId = $media->folderId;
+            $folderId = $media->folderId;
             $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType, 'allowMediaTypeChange' => $options['allowMediaTypeChange']]);
         } else {
             $validExt = $this->moduleFactory->getValidExtensions();

@@ -1,9 +1,10 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * This file (UserFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,6 +28,7 @@ define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 require_once PROJECT_ROOT . '/vendor/autoload.php';
 require_once PROJECT_ROOT . '/tests/LocalWebTestCase.php';
+require_once PROJECT_ROOT . '/tests/XmdsTestCase.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');

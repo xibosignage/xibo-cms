@@ -1,8 +1,26 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
 <phpunit bootstrap="tests/Bootstrap.php"
-         colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true">
+         colors="true">
       <testsuites>
         <testsuite name="Xibo Integration Test Suite">
             <directory suffix="Test.php">tests/integration/</directory>
@@ -12,19 +30,22 @@
         <testsuite name="Xibo Unit-Test Suite">
             <directory suffix="Test.php">tests/Widget/</directory>
         </testsuite>
+        <testsuite name="Xibo XMDS Test Suite">
+            <directory suffix="Test.php">tests/xmds/</directory>
+        </testsuite>
       </testsuites>
     <groups>
       <exclude>
         <group>broken</group>
       </exclude>
     </groups>
-    <filter>
-        <whitelist>
+    <coverage>
+        <include>
             <directory>lib</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </coverage>
     <logging>
-        <log type="junit" target="results.xml" logIncompleteSkipped="true"/>
+        <junit outputFile="results.xml"/>
     </logging>
     <php>
         <ini name="memory_limit" value="-1" />

@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
-use Xibo\Entity\User;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -137,7 +136,10 @@ class UserGroup extends Base
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
 
-            $group->libraryQuotaFormatted = ByteFormatter::format($group->libraryQuota * 1024);
+            $group->setUnmatchedProperty(
+                'libraryQuotaFormatted',
+                ByteFormatter::format($group->libraryQuota * 1024)
+            );
 
             if ($this->isApi($request)) {
                 continue;

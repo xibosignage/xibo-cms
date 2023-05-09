@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\RequiredFile;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Xmds\Entity\Dependency;
 
 /**
  * Class RequiredFileFactory
@@ -129,6 +130,10 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndDependency($displayId, $fileType, $id, bool $isUseRealId = true)
     {
+        if (!$isUseRealId && $id < 0) {
+            $fileType = self::getLegacyFileType($id);
+        }
+
         $result = $this->getStore()->select('
             SELECT * 
               FROM `requiredfile` 
@@ -148,6 +153,22 @@ class RequiredFileFactory extends BaseFactory
         }
 
         return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+    }
+
+    /**
+    * Return the fileType depending on the legacyId range
+    * @param $id
+    * @return string
+    */
+    private static function getLegacyFileType($id): string
+    {
+        return match (true) {
+            $id < 0 && $id > Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'bundle',
+            $id === Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'fontCss',
+            $id < Dependency::LEGACY_ID_OFFSET_FONT * -1 && $id > Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'font',
+            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 && $id > Dependency::LEGACY_ID_OFFSET_ASSET * -1 => 'playersoftware',
+            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'asset',
+        };
     }
 
     /**
@@ -345,7 +366,12 @@ class RequiredFileFactory extends BaseFactory
                 if (empty($fileType)) {
                     throw new NotFoundException(__('Missing fileType'));
                 }
-                $file = $this->getByDisplayAndDependency($displayId, $fileType, $itemId);
+                $file = $this->getByDisplayAndDependency(
+                    $displayId,
+                    $fileType,
+                    $itemId,
+                    !($fileType == 'media' && $itemId < 0)
+                );
 
                 // Update $file->path with the path on disk (likely /dependencies/$fileType/$itemId)
                 $event = new XmdsDependencyRequestEvent($file);
