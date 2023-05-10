@@ -420,7 +420,7 @@ class TimeDisconnectedSummary implements ReportInterface
             $entry['displayId'] = $displayId;
             $entry['display'] = $sanitizedDisplayRow->getString(('display'));
             $entry['timeDisconnected'] = $disconnectedDisplays[$displayId]['timeDisconnected'] ?? 0 ;
-            $entry['timeConnected'] = $disconnectedDisplays[$displayId]['timeConnected'] ?? round(($toDt->format('U') - $fromDt->format('U')) / $divisor);
+            $entry['timeConnected'] = $disconnectedDisplays[$displayId]['timeConnected'] ?? round(($toDt->format('U') - $fromDt->format('U')) / $divisor, 2);
             $entry['postUnits'] = $postUnits;
             $rows[] = $entry;
         }
