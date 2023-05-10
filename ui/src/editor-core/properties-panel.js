@@ -652,8 +652,15 @@ PropertiesPanel.prototype.render = function(
     }
 
     // If target is a widget or element
+    // and we are in the Layout Editor
     // render position tab with region or element position
-    if (target.type === 'widget' || isElementGroup) {
+    if (
+      app.mainObjectType === 'layout' &&
+      (
+        target.type === 'widget' ||
+        isElementGroup
+      )
+    ) {
       // Get position
       let positionProperties = {};
       if (isElementGroup) {

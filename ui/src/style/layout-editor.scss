@@ -448,6 +448,11 @@
                 }
             }
         }
+
+        .designer-region-zone {
+            outline: 2px dashed $xibo-color-region-hover;
+            outline-offset: -4px;
+        }
     }
 
     /* Viewer fullscreen */
@@ -941,7 +946,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            outline: 2px dotted $xibo-color-accent;
+            outline: 2px dotted $xibo-color-primary;
             outline-offset: 1px;
         }
 
@@ -968,16 +973,30 @@
                 background: darken($xibo-color-region-hover, 20%) !important;
             }
 
+            .widget-preview[data-type="playlist"] {
+                color: $xibo-color-neutral-0 !important;
+            }
+
             * {
-                visibility: hidden;
+                opacity: 0.8;
             }
         }
 
+        .designer-region:not(.designer-region-playlist) .designer-widget.ui-droppable-active,
         .widget-preview.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
             background: $xibo-color-widget-hover !important;
             width: 100%;
             height: 100%;
+
+            &::after {
+                content: ' ';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
 
             &.ui-droppable-hover,
             &:hover {
@@ -985,7 +1004,7 @@
             }
 
             * {
-                visibility: hidden;
+                opacity: 0.5;
             }
         }
 

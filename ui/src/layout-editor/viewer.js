@@ -402,7 +402,8 @@ Viewer.prototype.handleInteractions = function() {
       } else if (
         (
           $(e.target).hasClass('designer-region-zone') ||
-          $(e.target).hasClass('designer-region-playlist')
+          $(e.target).hasClass('designer-region-playlist') ||
+          $(e.target).hasClass('designer-widget')
         ) &&
         $(e.target).hasClass('ui-droppable-active')
       ) {

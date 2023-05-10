@@ -43,8 +43,8 @@ $xibo-color-layout-selected: $xibo-color-primary-l30;
 $xibo-color-region-hover: $xibo-color-accent;
 $xibo-color-region-selected: lighten($xibo-color-accent, 15%);
 
-$xibo-color-widget-hover: $xibo-color-primary;
-$xibo-color-widget-selected: lighten($xibo-color-primary, 15%);
+$xibo-color-widget-hover: lighten($xibo-color-semantic-success, 15%);
+$xibo-color-widget-selected: lighten($xibo-color-semantic-success, 15%);
 
 $xibo-color-action-target: #D07CEE;
 $xibo-color-action-target-light: #EFDDF5;
