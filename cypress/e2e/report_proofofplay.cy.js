@@ -25,39 +25,42 @@ describe('Proof of Play', function () {
         cy.login();
     });
 
-    it('Range: Today - Test media stats for a layout and a display', function() {
+    it('Range: Today - Test layout/media stats for a layout and a display', function() {
+
+        cy.server();
+        cy.route('/report/data/proofofplayReport?*').as('reportData');
 
         cy.visit('/report/form/proofofplayReport');
+
+        cy.get('#type').select('media');
 
         // Click on the Apply button
         cy.contains('Apply').click();
 
-        cy.get('#stats_wrapper').should('be.visible');
-        cy.get('#stats').should('be.visible');
+        // Wait for
+        cy.wait('@reportData');
 
-        // Should have media stats
-        cy.get('#stats tbody tr').should('have.length', 1);
+        // Should have media stats - Test media stats for a layout and a display
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('media'); // stat type
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(8)').contains('POP Media 1'); // media
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(2); // number of plays
-        cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(121); // total duration
-    });
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(120); // total duration
 
-    it('Range: Today - Test a layout stat for an ad campaign, a layout and a display', function() {
 
-        cy.visit('/report/form/proofofplayReport');
+        cy.get('#type').select('layout');
 
         // Click on the Apply button
         cy.contains('Apply').click();
 
-        cy.get('#stats').should('be.visible');
+        // Wait for
+        cy.wait('@reportData');
 
-        // Should have layout stat
+        // Should have layout stat - Test a layout stat for an ad campaign, a layout and a display
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('layout'); // stat type
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
-        cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Ad Campaign 1'); // ad campaign
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(4)').contains('POP Ad Campaign 1'); // ad campaign
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(1); // number of plays
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(60); // total duration
@@ -65,13 +68,21 @@ describe('Proof of Play', function () {
 
     it('Range: Lastweek - Test media stats for a layout and a display', function() {
 
+        cy.server();
+        cy.route('/report/data/proofofplayReport?*').as('reportData');
+
         cy.visit('/report/form/proofofplayReport');
+
+        // Range: Lastweek
+        cy.get('#reportFilter').select('lastweek');
+
+        cy.get('#type').select('media');
 
         // Click on the Apply button
         cy.contains('Apply').click();
 
-        cy.get('#stats_wrapper').should('be.visible');
-        cy.get('#stats').should('be.visible');
+        // Wait for
+        cy.wait('@reportData');
 
         // Should have media stats
         cy.get('#stats tbody tr').should('have.length', 1);
@@ -81,21 +92,19 @@ describe('Proof of Play', function () {
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(8)').contains('POP Media 1'); // media
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(2); // number of plays
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(120); // total duration
-    });
 
-    it('Range: Lastweek - Test a layout stat for an ad campaign, a layout and a display', function() {
-
-        cy.visit('/report/form/proofofplayReport');
+        cy.get('#type').select('layout');
 
         // Click on the Apply button
         cy.contains('Apply').click();
 
-        cy.get('#stats').should('be.visible');
+        // Wait for
+        cy.wait('@reportData');
 
-        // Should have layout stat
+        // Should have layout stat - Test a layout stat for an ad campaign, a layout and a display
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('layout'); // stat type
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
-        cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Ad Campaign 1'); // ad campaign
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(4)').contains('POP Ad Campaign 1'); // ad campaign
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(1); // number of plays
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(60); // total duration

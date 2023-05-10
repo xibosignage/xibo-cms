@@ -66,6 +66,25 @@ describe('Summary by Layout, Media or Event', function () {
         cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(1)').contains('12:00 PM'); // Period
         cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(2)').contains(60); // Duration
         cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(3)').contains(1); // Count
+    });
+
+    it('Create/Delete a Daily Summary Report Schedule', () => {
+        cy.visit('/report/form/summaryReport');
+
+        // Create and alias for load layout
+        cy.server();
+        cy.route('/display?start=0&length=10').as('loadDisplays');
+        cy.route('/layout?start=0&length=10').as('loadLayout');
+
+        // Click on the select2 selection
+        cy.get('#layoutId + span .select2-selection').click();
+
+        // Wait for layout to load
+        cy.wait('@loadLayout');
+
+        // Type the layout name
+        cy.get('.select2-container--open input[type="search"]').type('POP Layout 1');
+        cy.get('.select2-container--open .select2-results > ul').contains('POP Layout 1').click();
 
         // ------
         // ------
