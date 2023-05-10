@@ -363,6 +363,8 @@ lD.selectObject =
     if (!$.isEmptyObject(this.toolbar.selectedCard)) {
       // Get card object
       const card = this.toolbar.selectedCard[0];
+      // Check if droppable is active
+      const activeDroppable = target.hasClass('ui-droppable-active');
 
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
@@ -372,6 +374,10 @@ lD.selectObject =
         this.dropItemAdd(target, card, clickPosition);
       } else if (
         ['drawer', 'zone', 'playlist'].includes(target.data('subType')) ||
+        (
+          target.hasClass('designer-widget') &&
+          activeDroppable
+        ) ||
         target.hasClass('ui-droppable-actions-target')
       ) {
         // Simulate drop item add
@@ -1201,6 +1207,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
   const droppableIsZone = ($(droppable).data('subType') === 'zone');
   const droppableIsPlaylist =($(droppable).data('subType') === 'playlist');
+  const droppableIsWidget = $(droppable).hasClass('designer-widget');
 
   /**
    * Import from provider or add media from library
@@ -1573,6 +1580,70 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         createWidgetAndAddElements(elements);
       }
     });
+  } else if (
+    draggableSubType === 'playlist' &&
+    (
+      droppableIsWidget ||
+      droppableIsZone
+    )
+  ) {
+    // TODO: Convert region to playlist
+    const regionId = (droppableIsWidget) ?
+      $(droppable).data('widgetRegion') :
+      $(droppable).attr('id');
+
+    const region =
+      lD.getElementByTypeAndId(
+        'region',
+        regionId,
+      );
+
+    console.log('Convert region ' + regionId + ' to playlist!');
+    console.log(region);
+
+    region.subType = 'playlist';
+
+    let requestPath = urlsForApi.region.saveForm.url;
+    requestPath = requestPath.replace(
+      ':id',
+      region['regionId'],
+    );
+
+    $.ajax({
+      url: requestPath,
+      type: urlsForApi.region.saveForm.type,
+      data: jQuery.param({
+        type: region.subType,
+        name: region.name,
+        top: region.dimensions.top,
+        left: region.dimensions.left,
+        width: region.dimensions.width,
+        height: region.dimensions.height,
+        zIndex: region.zIndex,
+      }),
+      contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+    }).done(function(res) {
+      if (!res.success) {
+        // Login Form needed?
+        if (res.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else {
+          // Just an error we dont know about
+          if (res.message == undefined) {
+            console.error(res);
+          } else {
+            console.error(res.message);
+          }
+        }
+      } else {
+        // Reload Data
+        lD.reloadData(lD.layout, true);
+      }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Output error to console
+      console.error(jqXHR, textStatus, errorThrown);
+    });
   } else {
     // Adding a module
     // Check if the module has data type, if not
@@ -1594,7 +1665,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         null,
         true,
       );
-    } if (droppableIsZone || droppableIsPlaylist) {
+    } else if (droppableIsZone || droppableIsPlaylist) {
       // Get zone region
       const region =
       lD.getElementByTypeAndId(

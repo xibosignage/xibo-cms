@@ -1076,13 +1076,28 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       // Drop to layout wrapper and layout
       selectorBuild.push('.layout-wrapper.droppable');
       selectorBuild.push('.layout.droppable');
-    } else if (app.common.hasTarget(draggable, 'widget')) {
+    }
+
+    if (app.common.hasTarget(draggable, 'widget')) {
       // Drop to widget
       selectorBuild.push('.designer-widget.droppable');
-    } else if (app.common.hasTarget(draggable, 'frame')) {
-      // Drop to region
+    }
+
+    if (app.common.hasTarget(draggable, 'frame')) {
+      // Drop to frame region
       selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
     }
+
+    if (app.common.hasTarget(draggable, 'frame')) {
+      // Drop to frame region
+      selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
+    }
+
+    if (app.common.hasTarget(draggable, 'zone')) {
+      // Drop to frame region
+      selectorBuild.push('.designer-region[data-sub-type="zone"].droppable');
+    }
+
     // Playlist editor droppables
     // and layout editor droppables
     if (app.common.hasTarget(draggable, 'playlist')) {
