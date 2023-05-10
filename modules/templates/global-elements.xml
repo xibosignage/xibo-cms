@@ -65,6 +65,16 @@
                 <helpText>Should the text wrap to the next line?</helpText>
                 <default>1</default>
             </property>
+            <property id="justify" type="checkbox">
+                <title>Justify</title>
+                <helpText>Should the text be justified?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="textWrap" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showOverflow" type="checkbox">
                 <title>Show Overflow</title>
                 <helpText>Should the widget overflow the region?</helpText>
@@ -141,7 +151,21 @@
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
     {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if horizontalAlign}}
+        justify-content: {{horizontalAlign}};
+    {{/if}}
+    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}
+        white-space: break-spaces;
+        {{#if justify}}
+            text-align: justify;
+        {{/if}}
+    {{else}}
+        white-space: nowrap;
+    {{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
     {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
