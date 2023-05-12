@@ -51,7 +51,8 @@ class SubPlaylistWidgetCompatibility implements WidgetCompatibilityInterface
             }
 
             if ($option->option === 'subPlaylistIds') {
-                $playlistIds = json_decode($widget->getOptionValue('subPlaylistIds', '[]'), true); }
+                $playlistIds = json_decode($widget->getOptionValue('subPlaylistIds', '[]'), true);
+            }
 
             if ($option->option === 'subPlaylistOptions') {
                 $subPlaylistOptions = json_decode($widget->getOptionValue('subPlaylistOptions', '[]'), true);
@@ -83,9 +84,10 @@ class SubPlaylistWidgetCompatibility implements WidgetCompatibilityInterface
                 $playlistItems[] = $item;
             }
 
-            $upgraded = true;
-            $widget->setOptionValue('subPlaylists', 'attrib', json_encode($playlistItems));
-
+            if (count($playlistItems) > 0) {
+                $widget->setOptionValue('subPlaylists', 'attrib', json_encode($playlistItems));
+                $upgraded = true;
+            }
         }
 
         return $upgraded;
