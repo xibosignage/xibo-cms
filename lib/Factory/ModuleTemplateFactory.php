@@ -190,6 +190,7 @@ class ModuleTemplateFactory extends BaseFactory
         $template->hasDimensions = $this->getFirstValueOrDefaultFromXmlNode($xml, 'hasDimensions', 'true') === 'true';
         $template->canRotate = $this->getFirstValueOrDefaultFromXmlNode($xml, 'canRotate', 'false') === 'true';
         $template->onTemplateRender = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onTemplateRender');
+        $template->showIn = $this->getFirstValueOrDefaultFromXmlNode($xml, 'showIn') ?? 'both';
         if (!empty($template->onTemplateRender)) {
             $template->onTemplateRender = trim($template->onTemplateRender);
         }
