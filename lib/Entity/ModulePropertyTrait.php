@@ -127,10 +127,23 @@ trait ModulePropertyTrait
                     }
                 }
 
+                // Do we need to parse out any translations? We only do this on output.
+                if ($property->parseTranslations) {
+                    $matches = [];
+                    preg_match_all('/\|\|.*?\|\|/', $value, $matches);
+
+                    foreach ($matches[0] as $sub) {
+                        // Parse out the translatable string and substitute
+                        $value = str_replace($sub, __(str_replace('||', '', $sub)), $value);
+                    }
+                }
+
+                // Date format
                 if ($property->variant === 'dateFormat' && !empty($value)) {
                     $value = DateFormatHelper::convertPhpToMomentFormat($value);
                 }
 
+                // Media selector
                 if ($property->type === 'mediaSelector') {
                     $value = (!$value) ? '' : '[[mediaId=' . $value . ']]';
                 }
