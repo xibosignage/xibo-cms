@@ -44,7 +44,6 @@ class SubPlaylistWidgetCompatibility implements WidgetCompatibilityInterface
         $playlists = [];
         $playlistIds = [];
 
-        $this->getLog()->debug('GG: widgetOptions ' . json_encode($widget->widgetOptions));
         foreach ($widget->widgetOptions as $option) {
             if ($option->option === 'subPlaylists') {
                 $playlists = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
