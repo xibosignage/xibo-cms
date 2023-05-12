@@ -37,6 +37,10 @@
         <property type="header" variant="main">
             <title>Configuration</title>
         </property>
+        <property id="searchSymbol" type="connectorProperties">
+            <title>Search Stock Symbol</title>
+            <helpText>Begin typing a character to start searching for a stock.</helpText>
+        </property>
         <property id="items" type="text">
             <title>Stock Symbols</title>
             <helpText>A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.</helpText>
