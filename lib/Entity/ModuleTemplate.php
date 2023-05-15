@@ -70,6 +70,12 @@ class ModuleTemplate implements \JsonSerializable
     /** @var bool Can this template be rotated? */
     public $canRotate;
 
+    /**
+     * @SWG\Property(description="A flag indicating whether the template should be excluded from the Layout Editor")
+     * @var string
+     */
+    public $showIn = 'both';
+
     /** @var \Xibo\Widget\Definition\Property[]|null */
     public $properties;
 
