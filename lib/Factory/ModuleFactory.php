@@ -107,7 +107,7 @@ class ModuleFactory extends BaseFactory
      */
     public function createWidgetHtmlRenderer(): WidgetHtmlRenderer
     {
-        return (new WidgetHtmlRenderer($this->cachePath, $this->twig, $this->config))
+        return (new WidgetHtmlRenderer($this->cachePath, $this->twig, $this->config, $this))
             ->useLogger($this->getLog()->getLoggerInterface());
     }
 
