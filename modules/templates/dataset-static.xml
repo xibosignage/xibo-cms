@@ -2262,4 +2262,132 @@ $datasetTableContainer.dataSetRender(properties);
             <asset id="pill-colored" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
         </assets>
     </template>
+    <template>
+        <id>dataset_custom_html</id>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <showIn>none</showIn>
+        <properties>
+            <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
+                <title>Sample sheet</title>
+            </property>
+        </properties>
+        <stencil>
+        <twig><![CDATA[
+<div class="DataSetTableContainer"></div>
+<style>
+{{styleSheet|raw}}
+
+/* Table display CSS fix */
+table.DataSetTable.cycle-slide {
+    display: table !important;
+}
+
+/* If we are going to cycle between pages, make sure we hide all of the tables initially */
+{% if rowsPerPage > 0 %}
+table.DataSetTable {visibility:hidden;}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Columns to be shown in the table
+var columnIndex = JSON.parse(properties.columns);
+var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
+    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+}) : [];
+
+// Get table element
+var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+
+// Clear the table container
+$datasetTableContainer.empty();
+
+// Calculate number of pages
+var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
+
+// Set the number of pages to the table
+$datasetTableContainer.data('totalPages', totalPages);
+
+// Create a table for each page
+for (var i = 0; i < totalPages; i++) {
+    // Create a new table
+    var $newTable = properties.rowsPerPage > 0 ?
+        $('<table class="DataSetTable" data-page="' + i + '">') :
+        $('<table class="DataSetTable">');
+
+    // Show the table headings if required
+    if (properties.showHeadings === 1) {
+        // Build the headings
+        var headings = columns.map(function (column, colIdx) {
+            return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
+        });
+
+        // Add the headings to the table
+        $newTable.append(
+            $('<thead>')
+                .append(
+                    $('<tr class="HeaderRow">')
+                        .append(headings)
+                )
+        );
+    }
+
+    // Append table body
+    $newTable.append(
+        $('<tbody>')
+    );
+
+    // Add the table to the container
+    $datasetTableContainer.append($newTable);
+}
+
+// Add rows to the tables per page
+for (var i = 0; i < items.length; i++) {
+    // Get the table for this row
+    var $table = (properties.rowsPerPage > 0) ?
+        $datasetTableContainer.find('.DataSetTable[data-page="' + Math.floor(i / properties.rowsPerPage) + '"]') :
+        $datasetTableContainer.find('.DataSetTable');
+
+    // Build the row content based on the columns
+    var rowContent = columns.map(function (column, colIdx) {
+        var value = items[i][column.heading];
+
+        // If this is an image column, wrap it in an image tag
+        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
+            value = value ? '<img src="' + value + '" />' : '';
+        }
+
+        // Empty string if value is null
+        if (value === null) {
+            value = '';
+        }
+
+        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
+    }).join('');
+
+    // Add the row to the table's body
+    $table.find('tbody').append(
+        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
+        rowContent +
+        '</tr>'
+    );
+}
+
+// Move table container into content
+$datasetTableContainer.appendTo($(target).find('#content'));
+
+// Scale the layout
+$(target).xiboLayoutScaler(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
+
+// Call render
+$datasetTableContainer.dataSetRender(properties);
+        ]]></onTemplateRender>
+        <assets>
+            <asset id="pill-colored" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
+        </assets>
+    </template>
 </templates>

@@ -418,7 +418,7 @@ Viewer.prototype.handleInteractions = function() {
       ) {
         // Clear selected object
         lD.selectObject({
-          target: null,
+          target: 'layout',
           reloadViewer: false,
           clickPosition: $(e.target).hasClass('layout') ? clickPosition : null,
         });

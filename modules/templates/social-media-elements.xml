@@ -43,7 +43,7 @@
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
         <assets>
-            <asset id="social-media-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-description.png" />
+            <asset id="social-media-description" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-description.png" />
         </assets>
     </template>
     <template>
@@ -57,7 +57,7 @@
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
         <assets>
-            <asset id="social-media-username" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
+            <asset id="social-media-username" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
         </assets>
     </template>
     <template>
@@ -71,7 +71,7 @@
         <startWidth>450</startWidth>
         <startHeight>80</startHeight>
         <assets>
-            <asset id="date-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
     </template>
     <template>
@@ -158,7 +158,7 @@
             </elements>
         </stencil>
         <assets>
-            <asset id="social-media-post-horizontal" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-horizontal.png" />
+            <asset id="social-media-post-horizontal" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-horizontal.png" />
         </assets>
     </template>
 </templates>

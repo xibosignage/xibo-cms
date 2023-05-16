@@ -2036,14 +2036,24 @@ Toolbar.prototype.loadTemplates = function(
           }
 
           // Save templates to respective groups
-          // and don't show elements and stencils if
-          // we are in playlist editor
-          if (el.type === 'element' && !self.isPlaylist) {
-            elements.push(el);
-          } else if (el.type === 'element-group' && !self.isPlaylist) {
-            stencils.push(el);
-          } else if (el.type === 'static') {
-            templates.push(el);
+          // don't show items based on showIn property
+          // or elements and stencils if we are in playlist editor
+          if (
+            el.showIn == 'playlist' && !isPlaylist ||
+            el.showIn == 'layout' && isPlaylist ||
+            el.showIn == 'none' ||
+            el.type === 'element' && self.isPlaylist ||
+            el.type === 'element-group' && self.isPlaylist
+          ) {
+            continue;
+          } else {
+            if (el.type === 'element') {
+              elements.push(el);
+            } else if (el.type === 'element-group') {
+              stencils.push(el);
+            } else if (el.type === 'static') {
+              templates.push(el);
+            }
           }
         }
 

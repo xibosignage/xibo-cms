@@ -213,6 +213,6 @@ $contentContainer.xiboCountdownRender(
 );
     ]]></onRender>
     <assets>
-        <asset id="countdown-text-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/countdown/countdown-text-thumb.png" />
+        <asset id="countdown-text-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/countdown/countdown-text-thumb.png" />
     </assets>
 </module>

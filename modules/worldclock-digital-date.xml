@@ -154,6 +154,6 @@ if (typeof $(target).data('analogueClockRendered') === 'undefined') {
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
     <assets>
-        <asset id="worldclock-date-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-date-thumb.png" />
+        <asset id="worldclock-date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-date-thumb.png" />
     </assets>
 </module>

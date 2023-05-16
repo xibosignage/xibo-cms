@@ -128,7 +128,7 @@ trait ModulePropertyTrait
                 }
 
                 // Do we need to parse out any translations? We only do this on output.
-                if ($property->parseTranslations) {
+                if ($property->parseTranslations && !empty($value)) {
                     $matches = [];
                     preg_match_all('/\|\|.*?\|\|/', $value, $matches);
 

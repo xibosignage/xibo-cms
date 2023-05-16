@@ -242,7 +242,7 @@ $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="article_image_only" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-only.png" />
+            <asset id="article_image_only" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-only.png" />
         </assets>
     </template>
     <template>
@@ -441,7 +441,7 @@ $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="article_with_left_hand_text" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-with-left-hand-text.png" />
+            <asset id="article_with_left_hand_text" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-with-left-hand-text.png" />
         </assets>
     </template>
     <template>
@@ -624,7 +624,7 @@ $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="article_with_title" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-with-title.png" />
+            <asset id="article_with_title" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-with-title.png" />
         </assets>
     </template>
     <template>
@@ -788,7 +788,7 @@ $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .article, #content > .copyright'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="article_with_desc_and_name_separator" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-description-name.png" />
+            <asset id="article_with_desc_and_name_separator" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-description-name.png" />
         </assets>
     </template>
     <template>
@@ -926,7 +926,7 @@ $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .article, #content > .copyright'));
         ]]></onTemplateRender>
         <assets>
-            <asset id="article_title_only" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-only.png" />
+            <asset id="article_title_only" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-only.png" />
         </assets>
     </template>
 </templates>

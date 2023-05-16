@@ -176,7 +176,7 @@
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="text-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/text.png" />
+            <asset id="text-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/text.png" />
         </assets>
     </template>
     <template>
@@ -328,7 +328,7 @@ $('.date').each(function(_idx, dateEl){
 });
         ]]></onTemplateRender>
         <assets>
-            <asset id="date-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
     </template>
     <template>
@@ -394,7 +394,7 @@ $('.date').each(function(_idx, dateEl){
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="square-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/square.png" />
+            <asset id="square-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/square.png" />
         </assets>
     </template>
     <template>
@@ -482,7 +482,7 @@ $('.date').each(function(_idx, dateEl){
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="image" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/global/image.png" />
+            <asset id="image" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
     </template>
 </templates>

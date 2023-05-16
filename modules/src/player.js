@@ -186,7 +186,6 @@ $(function() {
     widget.items = [];
     const $target = $('body');
     const {
-      isArray,
       dataItems,
       showError,
     } = composeFinalData(widget, data);
@@ -199,7 +198,7 @@ $(function() {
     }
 
     // Add meta to the widget if it exists
-    if (!isArray && data.meta) {
+    if (data?.meta) {
       widget.meta = data.meta;
     }
 
@@ -243,9 +242,12 @@ $(function() {
 
     // Save template height and width if exists to global options
     if ($template && $template.length > 0) {
-      globalOptions.widgetDesignWidth = $template.data('width');
-      globalOptions.widgetDesignHeight = $template.data('height');
-      globalOptions.widgetDesignGap = $template.data('gap');
+      $template.data('width') &&
+        (globalOptions.widgetDesignWidth = $template.data('width'));
+      $template.data('height') &&
+        (globalOptions.widgetDesignHeight = $template.data('height'));
+      $template.data('gap') &&
+        (globalOptions.widgetDesignGap = $template.data('gap'));
     }
 
     // Save template properties to widget properties
@@ -253,6 +255,15 @@ $(function() {
       if (widget.templateProperties.hasOwnProperty(key)) {
         widget.properties[key] = widget.templateProperties[key];
       }
+    }
+
+    // Check if we have a custom template
+    let customTemplate = false;
+    if (
+      widget.properties['customTemplate'] &&
+      widget.properties['customTemplate'] == 1
+    ) {
+      customTemplate = true;
     }
 
     // Run the onRender function if it exists
@@ -288,7 +299,25 @@ $(function() {
       window.renders.push(defaultScaler);
     }
 
-    // Run all render functions
+    // If we have a custom template, run the legacy template render first
+    if (customTemplate) {
+      const newOptions =
+        $('body').xiboLegacyTemplateRender(
+          Object.assign(
+            widget.properties,
+            globalOptions,
+          ),
+          widget,
+        ).options;
+
+      // Merge new options with globalOptions
+      globalOptions = Object.assign(
+        globalOptions,
+        newOptions,
+      );
+    }
+
+    // Options for the render functions
     const optionsForRendering = Object.assign(
       widget.properties,
       globalOptions,
@@ -296,6 +325,8 @@ $(function() {
         duration: widget.duration,
       },
     );
+
+    // Run the render functions
     $.each(window.renders, function(_key, render) {
       render(
         widget.widgetId,

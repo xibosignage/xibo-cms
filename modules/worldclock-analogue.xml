@@ -538,6 +538,6 @@ if (typeof $(target).data('analogueClockRendered') === 'undefined') {
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
     <assets>
-        <asset id="worldclock-analogue-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-analogue-thumb.png" />
+        <asset id="worldclock-analogue-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-analogue-thumb.png" />
     </assets>
 </module>
