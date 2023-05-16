@@ -39,6 +39,11 @@ use Xibo\Widget\Definition\Stencil;
 trait ModuleXmlTrait
 {
     /**
+     * @var array cache of already loaded assets - id => asset
+     */
+    private $assetCache = [];
+
+    /**
      * Get stencils from a DOM node list
      * @param \DOMNodeList $nodes
      * @return Stencil[]
@@ -336,13 +341,20 @@ trait ModuleXmlTrait
         foreach ($assetNodes as $node) {
             if ($node->nodeType === XML_ELEMENT_NODE) {
                 /** @var \DOMElement $node */
-                $asset = new Asset();
-                $asset->id = $node->getAttribute('id');
-                $asset->path = $node->getAttribute('path');
-                $asset->mimeType = $node->getAttribute('mimeType');
-                $asset->type = $node->getAttribute('type');
-                $asset->cmsOnly = $node->getAttribute('cmsOnly');
-                $assets[] = $asset;
+                $assetId = $node->getAttribute('id');
+
+                if (!array_key_exists($assetId, $this->assetCache)) {
+                    $asset = new Asset();
+                    $asset->id = $assetId;
+                    $asset->path = $node->getAttribute('path');
+                    $asset->mimeType = $node->getAttribute('mimeType');
+                    $asset->type = $node->getAttribute('type');
+                    $asset->cmsOnly = $node->getAttribute('cmsOnly');
+                    $asset->assetNo = count($this->assetCache) + 1;
+                    $this->assetCache[$assetId] = $asset;
+                }
+
+                $assets[] = $this->assetCache[$assetId];
             }
         }
 

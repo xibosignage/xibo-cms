@@ -1332,8 +1332,40 @@ class Layout implements \JsonSerializable
             // Store region look to work out duration calc
             $regionLoop = $region->getOptionValue('loop', 0);
 
+            // Canvas Regions
+            // --------------
+            // These are special regions containing multiple widgets which are all rendered by the same HTML.
+            // we should get the "global" widget inside this region and only add that to the XLF.
+            if ($region->type === 'canvas') {
+                $widget = null;
+                $widgetDuration = 0;
+                foreach ($region->getPlaylist()->setModuleFactory($this->moduleFactory)->widgets as $item) {
+                    if ($item->type === 'global') {
+                        $widget = $item;
+                    }
+                    $widgetDuration = max($widgetDuration, $widget->calculatedDuration);
+
+                    // Validate all canvas widget properties.
+                    $this->assessWidgetStatus($this->moduleFactory->getByType($widget->type), $widget, $status);
+                }
+
+                // If we don't have a global widget then we fail with an empty region
+                if ($widget === null) {
+                    $widgets = [];
+                } else {
+                    // Force use duration and pick the highest duration from inside.
+                    $widget->useDuration = 1;
+                    $widget->duration = $widgetDuration;
+                    $widget->calculatedDuration = $widgetDuration;
+
+                    // Add this widget only
+                    $widgets = [$widget];
+                }
+            } else {
+                $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
+            }
+
             // Get a count of widgets in this region
-            $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
             $countWidgets = count($widgets);
 
             // Check for empty Region, exclude Drawers from this check.
@@ -1354,35 +1386,7 @@ class Layout implements \JsonSerializable
                 $module = $this->moduleFactory->getByType($widget->type);
 
                 // Set the Layout Status
-                $moduleStatus = Status::$STATUS_VALID;
-                try {
-                    $module
-                        ->decorateProperties($widget, true)
-                        ->validateProperties();
-
-                    // Is this module file based? If so, check its released status
-                    if ($module->regionSpecific == 0 && $widget->getPrimaryMediaId() != 0) {
-                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        if ($media->released == 0) {
-                            throw new GeneralException(sprintf(
-                                __('%s is pending conversion'),
-                                $media->name
-                            ));
-                        } else if ($media->released == 2) {
-                            throw new GeneralException(sprintf(
-                                __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
-                                $media->name
-                            ));
-                        }
-                    }
-                } catch (GeneralException $xiboException) {
-                    $moduleStatus = Status::$STATUS_INVALID;
-
-                    // Include the exception on
-                    $this->pushStatusMessage($xiboException->getMessage());
-                }
-
-                $status = ($moduleStatus > $status) ? $moduleStatus : $status;
+                $this->assessWidgetStatus($module, $widget, $status);
 
                 // Determine the duration of this widget
                 // the calculated duration contains the best guess at this duration from the playlist's perspective
@@ -1437,7 +1441,7 @@ class Layout implements \JsonSerializable
                 $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
 
                 // to make the xml cleaner, add those nodes only on Widgets that were grouped in a subPlaylist Widget.
-                if ($widget->tempId != $widget->widgetId) {
+                if (!empty($widget->tempId) && $widget->tempId != $widget->widgetId) {
                     $mediaNode->setAttribute('playlist', $widget->playlist);
                     $mediaNode->setAttribute('displayOrder', $widget->displayOrder);
                     // parentWidgetId is the Sub-playlist WidgetId,
@@ -1734,6 +1738,46 @@ class Layout implements \JsonSerializable
 
         Profiler::end('Layout::toXlf', $this->getLog());
         return $document->saveXML();
+    }
+
+    /**
+     * Assess the status of the provided widget
+     * @param Module $module
+     * @param Widget $widget
+     * @param int $status
+     * @return void
+     */
+    private function assessWidgetStatus(Module $module, Widget $widget, int &$status): void
+    {
+        $moduleStatus = Status::$STATUS_VALID;
+        try {
+            $module
+                ->decorateProperties($widget, true)
+                ->validateProperties();
+
+            // Is this module file based? If so, check its released status
+            if ($module->regionSpecific == 0 && $widget->getPrimaryMediaId() != 0) {
+                $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                if ($media->released == 0) {
+                    throw new GeneralException(sprintf(
+                        __('%s is pending conversion'),
+                        $media->name
+                    ));
+                } else if ($media->released == 2) {
+                    throw new GeneralException(sprintf(
+                        __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
+                        $media->name
+                    ));
+                }
+            }
+        } catch (GeneralException $xiboException) {
+            $moduleStatus = Status::$STATUS_INVALID;
+
+            // Include the exception on
+            $this->pushStatusMessage($xiboException->getMessage());
+        }
+
+        $status = ($moduleStatus > $status) ? $moduleStatus : $status;
     }
 
     /**

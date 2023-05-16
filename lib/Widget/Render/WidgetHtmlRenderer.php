@@ -32,6 +32,7 @@ use Xibo\Entity\Module;
 use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
@@ -55,16 +56,25 @@ class WidgetHtmlRenderer
     /** @var \Xibo\Service\ConfigServiceInterface */
     private $config;
 
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
     /**
      * @param string $cachePath
-     * @param \Slim\Views\Twig $twig
-     * @param \Xibo\Service\ConfigServiceInterface $config
+     * @param Twig $twig
+     * @param ConfigServiceInterface $config
+     * @param ModuleFactory $moduleFactory
      */
-    public function __construct(string $cachePath, Twig $twig, ConfigServiceInterface $config)
-    {
+    public function __construct(
+        string $cachePath,
+        Twig $twig,
+        ConfigServiceInterface $config,
+        ModuleFactory $moduleFactory
+    ) {
         $this->cachePath = $cachePath;
         $this->twig = $twig;
         $this->config = $config;
+        $this->moduleFactory = $moduleFactory;
     }
 
     /**
@@ -165,14 +175,12 @@ class WidgetHtmlRenderer
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function renderOrCache(
-        Module $module,
         Region $region,
         array $widgets,
         array $moduleTemplates
     ): string {
         // HTML is cached per widget for regions of type zone/frame and playlist.
         // HTML is cached per region for regions of type canvas.
-        $widget = null;
         $widgetModifiedDt = 0;
 
         if ($region->type === 'canvas') {
@@ -184,9 +192,7 @@ class WidgetHtmlRenderer
             }
 
             // If we don't have a global widget, just grab the first one.
-            if ($widget === null) {
-                $widget = $widgets[0];
-            }
+            $widget = $widget ?? $widgets[0];
         } else {
             $widget = $widgets[0];
             $widgetModifiedDt = $widget->modifiedDt;
@@ -230,7 +236,7 @@ class WidgetHtmlRenderer
             }
 
             // Render
-            $output = $this->render($module, $region, $widgets, $moduleTemplates);
+            $output = $this->render($region, $widgets, $moduleTemplates);
 
             // Cache to the library
             file_put_contents($cachePath, $output);
@@ -331,7 +337,7 @@ class WidgetHtmlRenderer
                 $value = explode('=', $match);
                 $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]])
                     ? json_encode($data[$value[1]])
-                    : '{"data":[], "meta":[]}', $output);
+                    : 'null', $output);
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
@@ -361,7 +367,6 @@ class WidgetHtmlRenderer
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function render(
-        Module $module,
         Region $region,
         array $widgets,
         array $moduleTemplates
@@ -422,6 +427,9 @@ class WidgetHtmlRenderer
             $this->getLog()->debug('render: ' . count($widgets) . ' widgets, '
                 . count($moduleTemplates) . ' templates');
 
+            // Get the module.
+            $module = $this->moduleFactory->getByType($widget->type);
+
             // Decorate our module with the saved widget properties
             // we include the defaults.
             $module->decorateProperties($widget, true);
@@ -443,7 +451,7 @@ class WidgetHtmlRenderer
                 'url' => '[[dataUrl=' . $widget->widgetId . ']]',
                 'data' => '[[data=' . $widget->widgetId . ']]',
                 'templateId' => $templateId,
-                'sample' => $module->sampleData, //TODO decorate for player/preview [[sampleData=]]
+                'sample' => $module->sampleData,
                 'properties' => $module->getPropertyValues(),
                 'isValid' => $widget->isValid === 1,
                 'duration' => $widget->duration,

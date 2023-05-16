@@ -901,13 +901,17 @@ class Soap
 
                                 // Add a new required file for this.
                                 try {
-                                    $newRfIds[] = $this->addDependency(
+                                    $newRfId = $this->addDependency(
                                         $requiredFilesXml,
                                         $fileElements,
                                         $httpDownloads,
                                         $isSupportsDependency,
                                         $asset->getDependency()
                                     );
+
+                                    if (!in_array($newRfId, $newRfIds)) {
+                                        $newRfIds[] = $newRfId;
+                                    }
                                 } catch (\Exception $exception) {
                                     $this->getLog()->error('Invalid asset: ' . $exception->getMessage());
                                 }
@@ -935,13 +939,17 @@ class Soap
 
                                         // Add a new required file for this.
                                         try {
-                                            $newRfIds[] = $this->addDependency(
+                                            $newRfId = $this->addDependency(
                                                 $requiredFilesXml,
                                                 $fileElements,
                                                 $httpDownloads,
                                                 $isSupportsDependency,
                                                 $asset->getDependency()
                                             );
+
+                                            if (!in_array($newRfId, $newRfIds)) {
+                                                $newRfIds[] = $newRfId;
+                                            }
                                         } catch (\Exception $exception) {
                                             $this->getLog()->error('Invalid asset: ' . $exception->getMessage());
                                         }
@@ -2243,7 +2251,6 @@ class Soap
 
             $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
             $resource = $renderer->renderOrCache(
-                $module,
                 $region,
                 $widgets,
                 $templates
@@ -2711,6 +2718,8 @@ class Soap
         bool $isSupportsDependency,
         Dependency $dependency
     ): int {
+        $this->getLog()->debug('addDependency: ' . $dependency->id);
+
         $file = $requiredFilesXml->createElement('file');
         $dependencyBasePath = basename($dependency->path);
 
@@ -2773,7 +2782,8 @@ class Soap
                 $dependency->fileType,
                 $dependency->legacyId,
                 $dependency->id,
-                $dependencyBasePath
+                $dependencyBasePath,
+                false
             )
             ->save()->rfId;
     }

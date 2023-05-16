@@ -298,12 +298,19 @@ class RequiredFileFactory extends BaseFactory
      * @param $id
      * @param string|int $realId
      * @param $path
+     * @param bool $isUseRealId
      * @return RequiredFile
      */
-    public function createForGetDependency($displayId, $fileType, $id, $realId, $path): RequiredFile
-    {
+    public function createForGetDependency(
+        $displayId,
+        $fileType,
+        $id,
+        $realId,
+        $path,
+        bool $isUseRealId = true
+    ): RequiredFile {
         try {
-            $requiredFile = $this->getByDisplayAndDependency($displayId, $fileType, $id);
+            $requiredFile = $this->getByDisplayAndDependency($displayId, $fileType, $id, $isUseRealId);
         } catch (NotFoundException $e) {
             $requiredFile = $this->createEmpty();
         }
