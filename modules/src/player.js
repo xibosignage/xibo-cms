@@ -150,7 +150,7 @@ $(function() {
       // if (!isPreview) {
       if (widget.data?.data !== undefined) {
         resolve(widget.data);
-      } else {
+      } else if (widget.url) {
         // else get data from widget.url,
         // this will be either getData for preview
         // or new json file for v4 players
@@ -162,6 +162,8 @@ $(function() {
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.log(jqXHR, textStatus, errorThrown);
         });
+      } else {
+        resolve(null);
       }
     });
   }
