@@ -2711,6 +2711,8 @@ class Soap
         bool $isSupportsDependency,
         Dependency $dependency
     ): int {
+        $this->getLog()->debug('addDependency: ' . $dependency->id);
+
         $file = $requiredFilesXml->createElement('file');
         $dependencyBasePath = basename($dependency->path);
 
@@ -2773,7 +2775,8 @@ class Soap
                 $dependency->fileType,
                 $dependency->legacyId,
                 $dependency->id,
-                $dependencyBasePath
+                $dependencyBasePath,
+                false
             )
             ->save()->rfId;
     }
