@@ -331,7 +331,7 @@ class WidgetHtmlRenderer
                 $value = explode('=', $match);
                 $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]])
                     ? json_encode($data[$value[1]])
-                    : '{"data":[], "meta":[]}', $output);
+                    : 'null', $output);
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
