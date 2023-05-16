@@ -1182,7 +1182,6 @@ class Widget extends Base
         try {
             $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
             $resource = $renderer->renderOrCache(
-                $module,
                 $region,
                 $widgets,
                 $templates
