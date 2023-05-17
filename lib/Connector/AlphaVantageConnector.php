@@ -177,12 +177,10 @@ class AlphaVantageConnector implements ConnectorInterface
         try {
             $this->getLogger()->debug('AlphaVantage Connector : getSearchResults is served from the API.');
 
-            // $request = $this->getClient()->request('GET', 'https://www.alphavantage.co/query', [
             $request = $this->getClient()->request('GET', 'https://avg.signcdn.com/query', [
                 'query' => [
                     'function' => 'SYMBOL_SEARCH',
                     'keywords' => $keywords,
-                    // 'apikey' => $this->getSetting('apiKey')
                 ]
             ]);
 
