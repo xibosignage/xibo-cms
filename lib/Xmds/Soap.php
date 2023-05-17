@@ -814,9 +814,6 @@ class Soap
                 // If layouts are set to expire immediately, the new layout will use the old resources if
                 // the layout is downloaded first.
                 foreach ($allRegions as $region) {
-                    // TODO: canvas region or not?
-                    //  if this is a canvas region we should only send the first widget as a resource
-                    //  but all widgets with data
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
 
@@ -831,12 +828,10 @@ class Soap
                             continue;
                         }
 
-                        if ($widget->type == 'ticker' ||
-                            $widget->type == 'text' ||
-                            $widget->type == 'datasetview' ||
-                            $widget->type == 'webpage' ||
-                            $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
+                        // Any global widgets, html based widgets or region specific widgets
+                        if ($widget->type === 'global'
+                            || $modules[$widget->type]->renderAs === 'html'
+                            || $modules[$widget->type]->regionSpecific == 1
                         ) {
                             // If we've already parsed this widget in this region, then don't bother doing it again
                             // we will only generate the same details.
@@ -847,31 +842,35 @@ class Soap
                             // We've added this widget already
                             $resourcesAdded[] = $widget->widgetId;
 
-                            // Add nonce
-                            $getResourceRf = $this->requiredFileFactory
-                                ->createForGetResource($this->display->displayId, $widget->widgetId)
-                                ->save();
-                            $newRfIds[] = $getResourceRf->rfId;
+                            // If this is a canvas region, then only send the data, unless we're the global
+                            // widget
+                            if ($region->type !== 'canvas' || $widget->type === 'global') {
+                                // Add nonce
+                                $getResourceRf = $this->requiredFileFactory
+                                    ->createForGetResource($this->display->displayId, $widget->widgetId)
+                                    ->save();
+                                $newRfIds[] = $getResourceRf->rfId;
 
-                            // Get the widget modified date
-                            // we will use the latter of this vs the layout modified date as the updated attribute on
-                            // required files
-                            $widgetModifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
+                                // Get the widget modified date
+                                // we will use the latter of this vs the layout modified date as the updated attribute
+                                // on required files
+                                $widgetModifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
 
-                            // Updated date is the greatest of layout/widget modified date
-                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt))
-                                ? $layoutModifiedDt
-                                : $widgetModifiedDt;
+                                // Updated date is the greatest of layout/widget modified date
+                                $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt))
+                                    ? $layoutModifiedDt
+                                    : $widgetModifiedDt;
 
-                            // Append this item to required files
-                            $resourceFile = $requiredFilesXml->createElement('file');
-                            $resourceFile->setAttribute('type', 'resource');
-                            $resourceFile->setAttribute('id', $widget->widgetId);
-                            $resourceFile->setAttribute('layoutid', $layoutId);
-                            $resourceFile->setAttribute('regionid', $region->regionId);
-                            $resourceFile->setAttribute('mediaid', $widget->widgetId);
-                            $resourceFile->setAttribute('updated', $updatedDt->format('U'));
-                            $fileElements->appendChild($resourceFile);
+                                // Append this item to required files
+                                $resourceFile = $requiredFilesXml->createElement('file');
+                                $resourceFile->setAttribute('type', 'resource');
+                                $resourceFile->setAttribute('id', $widget->widgetId);
+                                $resourceFile->setAttribute('layoutid', $layoutId);
+                                $resourceFile->setAttribute('regionid', $region->regionId);
+                                $resourceFile->setAttribute('mediaid', $widget->widgetId);
+                                $resourceFile->setAttribute('updated', $updatedDt->format('U'));
+                                $fileElements->appendChild($resourceFile);
+                            }
 
                             // Does this also have an associated data file?
                             if ($isSupportsDataUrl && $modules[$widget->type]->isDataProviderExpected()) {
