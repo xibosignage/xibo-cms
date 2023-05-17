@@ -364,26 +364,29 @@ lD.selectObject =
       // Get card object
       const card = this.toolbar.selectedCard[0];
       // Check if droppable is active
-      const activeDroppable = (target == 'layout') ?
-        true:
-        target.hasClass('ui-droppable-active');
+      const activeDroppable = (target) ?
+        target.hasClass('ui-droppable-active') :
+        true;
 
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
-      // No target - add to layout
-      if (target == 'layout') {
-        // Simulate drop item add
-        this.dropItemAdd(null, card, clickPosition);
-      } else if (
-        ['drawer', 'zone', 'playlist'].includes(target.data('subType')) ||
+
+      if (
+        target &&
         (
-          target.hasClass('designer-widget') &&
-          activeDroppable
-        ) ||
-        target.hasClass('ui-droppable-actions-target')
+          ['drawer', 'zone', 'playlist'].includes(target.data('subType')) ||
+          (
+            target.hasClass('designer-widget') &&
+            activeDroppable
+          ) ||
+          target.hasClass('ui-droppable-actions-target')
+        )
       ) {
         // Simulate drop item add
         this.dropItemAdd(target, card);
+      } else {
+        // No target - add to layout
+        this.dropItemAdd(null, card, clickPosition);
       }
     } else if (
       !$.isEmptyObject(this.toolbar.selectedQueue)
