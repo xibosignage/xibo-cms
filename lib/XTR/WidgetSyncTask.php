@@ -225,9 +225,9 @@ class WidgetSyncTask implements TaskInterface
         }
 
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
-            || !$widgetDataProviderCache->isCacheMissOrOld()
+            || $widgetDataProviderCache->isCacheMissOrOld()
         ) {
-            $this->getLogger()->debug('Cache expired, pulling fresh: key: ' . $cacheKey);
+            $this->getLogger()->debug('cache: Cache expired, pulling fresh: key: ' . $cacheKey);
 
             $dataProvider->clearData();
             $dataProvider->clearMeta();
@@ -255,7 +255,7 @@ class WidgetSyncTask implements TaskInterface
                         // Success
                         // We don't need to do anything else, references to mediaId will be built when we decorate
                         // the HTML.
-                        $this->getLogger()->debug('Successfully downloaded ' . $media->mediaId);
+                        $this->getLogger()->debug('cache: Successfully downloaded ' . $media->mediaId);
 
                         if (!in_array($media->mediaId, $mediaIds)) {
                             $mediaIds[] = $media->mediaId;
@@ -271,7 +271,7 @@ class WidgetSyncTask implements TaskInterface
                 $widgetDataProviderCache->finaliseCache();
             }
         } else {
-            $this->getLogger()->debug('Cache still valid, key: ' . $cacheKey);
+            $this->getLogger()->debug('cache: Cache still valid, key: ' . $cacheKey);
 
             // Get the existing mediaIds so that we can maintain the links to displays.
             $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
