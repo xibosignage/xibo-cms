@@ -27,9 +27,11 @@ use GuzzleHttp\Exception\GuzzleException;
 use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\Provider\DataProviderInterface;
 
@@ -42,6 +44,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
+        $dispatcher->addListener(WidgetEditOptionRequestEvent::$NAME, [$this, 'onWidgetEditOption']);
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
         return $this;
     }
@@ -115,6 +118,91 @@ class AlphaVantageConnector implements ConnectorInterface
                 $this->getLogger()->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
                 $dataProvider->addError(__('Unable to contact the AlphaVantage API'));
             }
+        }
+    }
+
+    public function onWidgetEditOption(WidgetEditOptionRequestEvent $event)
+    {
+        $this->getLogger()->debug('onWidgetEditOption');
+
+        // Pull the widget we're working with.
+        $widget = $event->getWidget();
+        if ($widget === null) {
+            throw new NotFoundException();
+        }
+
+        // We handle the stocks widget and the property with id="items"
+        if ($widget->type === 'stocks' && $event->getPropertyId() === 'items') {
+            if (empty($this->getSetting('apiKey'))) {
+                $this->getLogger()->debug('onWidgetEditOption: AlphaVantage API not configured.');
+                return;
+            }
+
+            try {
+                $results = [];
+                $bestMatches = $this->getSearchResults($event->getPropertyValue() ?? '');
+
+                if ($bestMatches === false) {
+                    $results[] = [
+                        'name'  => strtoupper($event->getPropertyValue()),
+                        'type'  => strtoupper(trim($event->getPropertyValue())),
+                        'id'    => $event->getPropertyId(),
+                    ];
+                } else if (count($bestMatches) > 0) {
+                    foreach($bestMatches as $match) {
+                        $results[] = [
+                            'name'  => implode(' ', [$match['1. symbol'], $match['2. name']]),
+                            'type'  => $match['1. symbol'],
+                            'id'    => $event->getPropertyId(),
+                        ];
+                    }
+                }
+
+                $event->setOptions($results);
+            } catch (\Exception $exception) {
+                $this->getLogger()->error('onWidgetEditOption: Failed to get symbol search results. e = ' . $exception->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Get Stocks data through symbol search
+     *
+     * @param string $keywords
+     * @return array|bool
+     * @throws GeneralException
+     */
+    private function getSearchResults(string $keywords): array|bool
+    {
+        try {
+            $this->getLogger()->debug('AlphaVantage Connector : getSearchResults is served from the API.');
+
+            $request = $this->getClient()->request('GET', 'https://avg.signcdn.com/query', [
+                'query' => [
+                    'function' => 'SYMBOL_SEARCH',
+                    'keywords' => $keywords,
+                ]
+            ]);
+
+            $data = json_decode($request->getBody(), true);
+
+            if (array_key_exists('bestMatches', $data)) {
+                return $data['bestMatches'];
+            }
+
+            if (array_key_exists('Note', $data)) {
+                return false;
+            }
+
+            return [];
+
+        } catch (GuzzleException $guzzleException) {
+            throw new GeneralException(
+                'Guzzle exception getting Stocks data . E = '
+                . $guzzleException->getMessage(),
+                $guzzleException->getCode(),
+                $guzzleException
+            );
         }
     }
 

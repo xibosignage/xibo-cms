@@ -1546,16 +1546,20 @@ class Widget extends Base
         // Load the widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
 
-        // Which property is this for?
-        $property = $params->getString('propertyId', [
+        // Sanitizer options
+        $sanitizerOptions = [
             'throw' => function () {
                 throw new InvalidArgumentException(__('Please supply a propertyId'), 'propertyId');
             },
-            'rules' => ['notEmpty'],
-        ]);
+            'rules' => ['notEmpty' => []],
+        ];
+
+        // Which property is this for?
+        $propertyId = $params->getString('propertyId', $sanitizerOptions);
+        $propertyValue = $params->getString($propertyId);
 
         // Dispatch an event to service this widget.
-        $event = new WidgetEditOptionRequestEvent($widget, $property, $params->getString($property));
+        $event = new WidgetEditOptionRequestEvent($widget, $propertyId, $propertyValue);
         $this->getDispatcher()->dispatch($event, $event::$NAME);
 
         // Return the options.

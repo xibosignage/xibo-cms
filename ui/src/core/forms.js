@@ -180,6 +180,11 @@ window.forms = {
           property.id = targetId + '_' + property.id;
         }
 
+        // Check if variant="autocomplete" exists and create isAutocomplete prop
+        if (property.variant && property.variant === 'autocomplete') {
+          property.isAutoComplete = true;
+        }
+
         // Append the property to the target container
         if (templates.forms.hasOwnProperty(property.type)) {
           // New field
