@@ -2727,10 +2727,10 @@ class Soap
             ->createForGetDependency(
                 $this->display->displayId,
                 $dependency->fileType,
-                $dependency->legacyId,
+                $isSupportsDependency ? $dependency->id : $dependency->legacyId,
                 $dependency->id,
                 $dependencyBasePath,
-                false
+                $isSupportsDependency
             )
             ->save()->rfId;
 
