@@ -131,9 +131,8 @@ class AlphaVantageConnector implements ConnectorInterface
             throw new NotFoundException();
         }
 
-        // We handle the twitter widget and the property with id="type"
-        if ($widget->type === 'stocks' && $event->getPropertyId() === 'searchSymbol') {
-
+        // We handle the stocks widget and the property with id="items"
+        if ($widget->type === 'stocks' && $event->getPropertyId() === 'items') {
             if (empty($this->getSetting('apiKey'))) {
                 $this->getLogger()->debug('onWidgetEditOption: AlphaVantage API not configured.');
                 return;
@@ -141,14 +140,20 @@ class AlphaVantageConnector implements ConnectorInterface
 
             try {
                 $results = [];
-                $bestMatches = $this->getSearchResults($event->getPropertyValue());
+                $bestMatches = $this->getSearchResults($event->getPropertyValue() ?? '');
 
-                if (count($bestMatches) > 0) {
+                if ($bestMatches === false) {
+                    $results[] = [
+                        'name'  => strtoupper($event->getPropertyValue()),
+                        'type'  => strtoupper(trim($event->getPropertyValue())),
+                        'id'    => $event->getPropertyId(),
+                    ];
+                } else if (count($bestMatches) > 0) {
                     foreach($bestMatches as $match) {
                         $results[] = [
-                            'name' => implode(' ', [$match['1. symbol'], $match['2. name']]),
-                            'type' => $match['1. symbol'],
-                            'id' => $event->getPropertyId(),
+                            'name'  => implode(' ', [$match['1. symbol'], $match['2. name']]),
+                            'type'  => $match['1. symbol'],
+                            'id'    => $event->getPropertyId(),
                         ];
                     }
                 }
@@ -164,19 +169,20 @@ class AlphaVantageConnector implements ConnectorInterface
      * Get Stocks data through symbol search
      *
      * @param string $keywords
-     * @return array
+     * @return array|bool
      * @throws GeneralException
      */
-    private function getSearchResults(string $keywords): array
+    private function getSearchResults(string $keywords): array|bool
     {
         try {
             $this->getLogger()->debug('AlphaVantage Connector : getSearchResults is served from the API.');
 
-            $request = $this->getClient()->request('GET', 'https://www.alphavantage.co/query', [
+            // $request = $this->getClient()->request('GET', 'https://www.alphavantage.co/query', [
+            $request = $this->getClient()->request('GET', 'https://avg.signcdn.com/query', [
                 'query' => [
                     'function' => 'SYMBOL_SEARCH',
-                    'keywords' => urlencode($keywords),
-                    'apikey' => $this->getSetting('apiKey')
+                    'keywords' => $keywords,
+                    // 'apikey' => $this->getSetting('apiKey')
                 ]
             ]);
 
@@ -186,12 +192,16 @@ class AlphaVantageConnector implements ConnectorInterface
                 return $data['bestMatches'];
             }
 
+            if (array_key_exists('Note', $data)) {
+                return false;
+            }
+
             return [];
 
         } catch (GuzzleException $guzzleException) {
             throw new GeneralException(
-                'Guzzle exception getting Stocks data . E = ' .
-                $guzzleException->getMessage(),
+                'Guzzle exception getting Stocks data . E = '
+                . $guzzleException->getMessage(),
                 $guzzleException->getCode(),
                 $guzzleException
             );

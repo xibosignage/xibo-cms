@@ -1557,7 +1557,7 @@ class Widget extends Base
 
         // Which property is this for?
         $propertyId = $params->getString('propertyId', $sanitizerOptions);
-        $propertyValue = $params->getString('name', $sanitizerOptions);
+        $propertyValue = $params->getString($propertyId);
 
         // Dispatch an event to service this widget.
         $event = new WidgetEditOptionRequestEvent($widget, $propertyId, $propertyValue);
