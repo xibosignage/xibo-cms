@@ -44,6 +44,8 @@ class SubPlaylistWidgetCompatibility implements WidgetCompatibilityInterface
         $playlists = [];
         $playlistIds = [];
 
+        // subPlaylistOptions and subPlaylistIds are no longer in use from 2.3
+        // we need to capture these options to support Layout with sub-playlist import from older CMS
         foreach ($widget->widgetOptions as $option) {
             if ($option->option === 'subPlaylists') {
                 $playlists = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
@@ -76,15 +78,17 @@ class SubPlaylistWidgetCompatibility implements WidgetCompatibilityInterface
                 $item = new SubPlaylistItem();
                 $item->rowNo = intval($playlist['rowNo']);
                 $item->playlistId = $playlist['playlistId'];
-                $item->spotFill = $playlist['spotFill'] ?? null;
-                $item->spotLength =  $playlist['spotLength'] !== '' ? intval($playlist['spotLength']) : null;
-                $item->spots = $playlist['spots'] !== '' ? intval($playlist['spots']) : null;
+                $item->spotFill = $playlist['spotFill'] ?? '';
+                $item->spotLength =  $playlist['spotLength'] !== '' ? intval($playlist['spotLength']) : '';
+                $item->spots = $playlist['spots'] !== '' ? intval($playlist['spots']) : '';
 
                 $playlistItems[] = $item;
             }
 
             if (count($playlistItems) > 0) {
                 $widget->setOptionValue('subPlaylists', 'attrib', json_encode($playlistItems));
+                $widget->removeOption('subPlaylistIds');
+                $widget->removeOption('subPlaylistOptions');
                 $upgraded = true;
             }
         }
