@@ -327,11 +327,9 @@ class WidgetHtmlRenderer
             } else if ($match === 'ViewPortWidth') {
                 // Player does this itself.
                 continue;
-            } else if ($match === 'Data') {
-                $output = str_replace('[[Data]]', json_encode($data), $output);
             } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
-                $replace = $isSupportsDataUrl ? $value[1] . '.json' : $value[1] . '.htm';
+                $replace = $isSupportsDataUrl ? $value[1] . '.json' : 'null';
                 $output = str_replace('[[' . $match . ']]', $replace, $output);
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
@@ -448,8 +446,6 @@ class WidgetHtmlRenderer
             // Output some sample data and a data url.
             $widgetData = [
                 'widgetId' => $widget->widgetId,
-                'url' => '[[dataUrl=' . $widget->widgetId . ']]',
-                'data' => '[[data=' . $widget->widgetId . ']]',
                 'templateId' => $templateId,
                 'sample' => $module->sampleData,
                 'properties' => $module->getPropertyValues(),
@@ -457,6 +453,15 @@ class WidgetHtmlRenderer
                 'duration' => $widget->duration,
                 'calculatedDuration' => $widget->calculatedDuration,
             ];
+
+            // Should we expect data?
+            if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+                $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
+                $widgetData['data'] = '[[data=' . $widget->widgetId . ']]';
+            } else {
+                $widgetData['url'] = null;
+                $widgetData['data'] = null;
+            }
 
             // Do we have a library file with this module?
             if ($module->regionSpecific == 0) {

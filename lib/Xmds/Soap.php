@@ -441,7 +441,8 @@ class Soap
         // 2) Each dependency returned needs to be added to RF.
         foreach ($dependencyListEvent->getDependencies() as $dependency) {
             // Add a new required file for this.
-            $newRfIds[] = $this->addDependency(
+            $this->addDependency(
+                $newRfIds,
                 $requiredFilesXml,
                 $fileElements,
                 $httpDownloads,
@@ -901,17 +902,14 @@ class Soap
 
                                 // Add a new required file for this.
                                 try {
-                                    $newRfId = $this->addDependency(
+                                    $this->addDependency(
+                                        $newRfIds,
                                         $requiredFilesXml,
                                         $fileElements,
                                         $httpDownloads,
                                         $isSupportsDependency,
                                         $asset->getDependency()
                                     );
-
-                                    if (!in_array($newRfId, $newRfIds)) {
-                                        $newRfIds[] = $newRfId;
-                                    }
                                 } catch (\Exception $exception) {
                                     $this->getLog()->error('Invalid asset: ' . $exception->getMessage());
                                 }
@@ -939,17 +937,14 @@ class Soap
 
                                         // Add a new required file for this.
                                         try {
-                                            $newRfId = $this->addDependency(
+                                            $this->addDependency(
+                                                $newRfIds,
                                                 $requiredFilesXml,
                                                 $fileElements,
                                                 $httpDownloads,
                                                 $isSupportsDependency,
                                                 $asset->getDependency()
                                             );
-
-                                            if (!in_array($newRfId, $newRfIds)) {
-                                                $newRfIds[] = $newRfId;
-                                            }
                                         } catch (\Exception $exception) {
                                             $this->getLog()->error('Invalid asset: ' . $exception->getMessage());
                                         }
@@ -2709,19 +2704,47 @@ class Soap
 
     /**
      * Add a dependency to the provided DOM element
+     * @param array $rfIds
+     * @param \DOMDocument $requiredFilesXml
+     * @param \DOMElement $fileElements
+     * @param bool $httpDownloads
+     * @param bool $isSupportsDependency
+     * @param Dependency $dependency
+     * @throws NotFoundException
      * @throws \DOMException
      */
     private function addDependency(
+        array &$rfIds,
         \DOMDocument $requiredFilesXml,
         \DOMElement $fileElements,
         bool $httpDownloads,
         bool $isSupportsDependency,
         Dependency $dependency
-    ): int {
-        $this->getLog()->debug('addDependency: ' . $dependency->id);
-
-        $file = $requiredFilesXml->createElement('file');
+    ): void {
+        // Create a required file for this dependency
         $dependencyBasePath = basename($dependency->path);
+        $rfId = $this->requiredFileFactory
+            ->createForGetDependency(
+                $this->display->displayId,
+                $dependency->fileType,
+                $dependency->legacyId,
+                $dependency->id,
+                $dependencyBasePath,
+                false
+            )
+            ->save()->rfId;
+
+        // Make sure we do not already have it.
+        if (in_array($rfId, $rfIds)) {
+            $this->getLog()->debug('addDependency: ' . $dependency->id . ' already added to XML');
+            return;
+        }
+
+        // Record this required file's ID as a new one.
+        $rfIds[] = $rfId;
+
+        // Add to RF XML
+        $file = $requiredFilesXml->createElement('file');
 
         // HTTP downloads?
         // 3) some dependencies don't support HTTP downloads because they aren't in the library
@@ -2774,18 +2797,6 @@ class Soap
 
         // Add our node
         $fileElements->appendChild($file);
-
-        // Add a new required file for this.
-        return $this->requiredFileFactory
-            ->createForGetDependency(
-                $this->display->displayId,
-                $dependency->fileType,
-                $dependency->legacyId,
-                $dependency->id,
-                $dependencyBasePath,
-                false
-            )
-            ->save()->rfId;
     }
 
     /**
