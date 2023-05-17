@@ -43,7 +43,7 @@
             <title>Clocks</title>
         </property>
         <property id="worldClocks" type="worldClock"></property>
-        <property id="template_html" type="richText" allowLibraryRefs="true" variant="html">
+        <property id="template_html" allowLibraryRefs="true" variant="html">
             <title>Template - HTML</title>
             <helpText>Enter text or HTML in the box below. Use squared brackets for elements to be replaced (e.g. [HH:mm] for time, or [label] to show the timezone name</helpText>
             <default><![CDATA[
@@ -150,6 +150,6 @@ if (typeof $(target).data('customClockRendered') === 'undefined') {
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
     <assets>
-        <asset id="worldclock-custom-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-custom-thumb.png" />
+        <asset id="worldclock-custom-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-custom-thumb.png" />
     </assets>
 </module>

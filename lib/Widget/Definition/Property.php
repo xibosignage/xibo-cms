@@ -60,6 +60,9 @@ class Property implements \JsonSerializable
     /** @var bool Should asset refs be permitted in the value? */
     public $allowAssetRefs = false;
 
+    /** @var bool Should translations be parsed in the value? */
+    public $parseTranslations = false;
+
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatibility;
 
@@ -101,6 +104,8 @@ class Property implements \JsonSerializable
             'playerCompatibility' => $this->playerCompatibility,
             'visibility' => $this->visibility,
             'allowLibraryRefs' => $this->allowLibraryRefs,
+            'allowAssetRefs' => $this->allowAssetRefs,
+            'parseTranslations' => $this->parseTranslations,
             'dependsOn' => $this->dependsOn,
         ];
     }

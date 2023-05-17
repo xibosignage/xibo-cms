@@ -19,6 +19,81 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <templates>
+<template>
+        <id>weather_custom_html</id>
+        <type>static</type>
+        <dataType>forecast</dataType>
+        <showIn>none</showIn>
+        <properties>
+            <property id="customTemplate" type="hidden">
+                <default>1</default>
+            </property>
+            <property id="moduleType" type="hidden">
+                <default>forecast</default>
+            </property>
+            <property id="widgetDesignWidth" type="number">
+                <title>widgetDesignWidth</title>
+            </property>
+            <property id="widgetDesignHeight" type="number">
+                <title>widgetDesignHeight</title>
+            </property>
+            <property id="currentTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
+                <title>currentTemplate</title>
+            </property>
+            <property id="dailyTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
+                <title>dailyTemplate</title>
+            </property>
+            <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
+                <title>styleSheet</title>
+            </property>
+        </properties>
+        <stencil>
+            <hbs></hbs>
+            <twig><![CDATA[
+{% if attribute(_context, 'background-image') != 'none' %}
+<div class="bg-div bg-[icon]"></div>
+{% endif %}
+
+<div class="current-day-template" style="display: none;">
+{{currentTemplate|raw}}
+</div>
+
+<div class="forecast-day-template" style="display: none;">
+{{dailyTemplate|raw}}
+</div>
+
+<style>
+{{styleSheet|raw}}
+
+{% import "forecastio-css-generator.twig" as generateForecastCSS %}
+
+{{ generateForecastCSS.backgrounds(
+    attribute(_context, 'background-image'),
+    attribute(_context, 'cloudy-image'),
+    attribute(_context, 'day-cloudy-image'),
+    attribute(_context, 'day-clear-image'),
+    attribute(_context, 'fog-image'),
+    attribute(_context, 'hail-image'),
+    attribute(_context, 'night-clear-image'),
+    attribute(_context, 'night-partly-cloudy-image'),
+    attribute(_context, 'rain-image'),
+    attribute(_context, 'snow-image'),
+    attribute(_context, 'windy-image')
+) }}
+
+{{ generateForecastCSS.colors(
+    attribute(_context, 'background-color'),
+    attribute(_context, 'text-color'),
+    attribute(_context, 'icons-color'),
+    null,
+    null,
+    null,
+    attribute(_context, 'shadow-color')
+) }}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
     <template>
         <id>weather_1</id>
         <type>static</type>

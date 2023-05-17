@@ -19,24 +19,23 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <module>
-    <id>core-countdown-clock</id>
-    <name>Countdown - Clock</name>
+    <id>core-countdown-custom</id>
+    <name>Countdown - Custom</name>
     <author>Core</author>
-    <description>A module for displaying a Countdown timer as a clock</description>
+    <description>A module for displaying a custom Countdown timer</description>
     <class></class>
-    <compatibilityClass>\Xibo\Widget\Compatibility\CountDownWidgetCompatibility</compatibilityClass>
-    <type>countdown-clock</type>
+    <showIn>none</showIn>
+    <type>countdown-custom</type>
     <group id="countdown" icon="countdown">Countdown</group>
-    <legacyType condition="templateId==countdown2">countdown</legacyType>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
-    <thumbnail>countdown-clock-thumb</thumbnail>
-    <startWidth>300</startWidth>
-    <startHeight>180</startHeight>
+    <thumbnail>countdown-custom-thumb</thumbnail>
+    <startWidth>400</startWidth>
+    <startHeight>150</startHeight>
     <settings></settings>
     <properties>
         <property id="countdownType" type="dropdown" mode="single">
@@ -90,6 +89,24 @@
                 </test>
             </visibility>
         </property>
+        <property id="customTemplate" type="hidden">
+            <default>1</default>
+        </property>
+        <property id="moduleType" type="hidden">
+            <default>countdown</default>
+        </property>
+        <property id="widgetDesignWidth" type="number">
+            <title>widgetDesignWidth</title>
+        </property>
+        <property id="widgetDesignHeight" type="number">
+            <title>widgetDesignHeight</title>
+        </property>
+        <property id="mainTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
+            <title>mainTemplate</title>
+        </property>
+        <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
+            <title>styleSheet</title>
+        </property>
         <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>
             <helpText>How should this widget be horizontally aligned?</helpText>
@@ -113,69 +130,13 @@
     </properties>
     <preview></preview>
     <stencil>
-        <width id="width">640</width>
-        <height id="height">360</height>
-        <hbs><![CDATA[
-<div class="countdown-container">
-    <div id="clockdiv">
-        <div>[mm]
-            <div class="smalltext">||Minutes||</div>
-        </div>
-        <div>[ss]
-            <div class="smalltext">||Seconds||</div>
-        </div>
-    </div>
-</div>
-        ]]></hbs>
+        <hbs></hbs>
         <twig><![CDATA[
+<div class="countdown-container">
+{{mainTemplate|raw}}
+</div>
 <style>
-body {
-    width: 640px !important;
-    height: 360px !important;
-    text-align: center;
-    font-family: sans-serif;
-    font-weight: 100;
-}
-
-#clockdiv {
-    font-family: sans-serif;
-    color: #fff;
-    display: inline-block;
-    font-weight: 100;
-    text-align: center;
-    font-size: 178px;
-}
-
-#clockdiv>div {
-    padding: 10px 15px;
-    border-radius: 4px;
-    background: #00BF96;
-    display: inline-block;
-    width: 250px;
-    margin: 10px 0;
-}
-
-#clockdiv div>span {
-    text-align: center;
-    padding: 15px 0;
-    width: 240px;
-    border-radius: 4px;
-    background: #00816A;
-    display: inline-block;
-}
-
-.smalltext {
-    padding-top: 5px;
-    font-size: 64px;
-}
-
-.warning>#clockdiv>div {
-    background: darkred;
-}
-
-.warning>#clockdiv>div>span {
-    background: red;
-}
+{{styleSheet|raw}}
 </style>
         ]]></twig>
     </stencil>
@@ -185,6 +146,9 @@ const $countdownContainer = $('.countdown-container', target);
 
 // Get countdown container html
 let countdownHTML = $countdownContainer.html();
+
+// Move countdown container to content
+$countdownContainer.appendTo($('#content'));
 
 // Make replacements
 let text = countdownHTML;
@@ -247,6 +211,6 @@ $contentContainer.xiboCountdownRender(
 );
     ]]></onRender>
     <assets>
-        <asset id="countdown-clock-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/countdown/countdown-clock-thumb.png" />
+        <asset id="countdown-custom-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/countdown/countdown-custom-thumb.png" />
     </assets>
 </module>

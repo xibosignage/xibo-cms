@@ -41,28 +41,33 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
 
         $upgraded = false;
         $widgetType = null;
+        $clockType = $widget->getOptionValue('clockType', 1);
+        $templateId = $widget->getOptionValue('templateId', '');
+        $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
+
         foreach ($widget->widgetOptions as $option) {
-            $clockType = $widget->getOptionValue('clockType', 1);
-            $templateId = $widget->getOptionValue('templateId', '');
-
             if ($option->option === 'clockType') {
-                switch ($clockType) {
-                    case 1:
-                        if ($templateId === 'worldclock1') {
-                            $widgetType = 'worldclock-digital-text';
-                        } elseif ($templateId === 'worldclock2') {
-                            $widgetType = 'worldclock-digital-date';
-                        } else {
-                            $widgetType = 'worldclock-digital-custom';
-                        }
-                        break;
+                if ($overrideTemplate == 0) {
+                    switch ($clockType) {
+                        case 1:
+                            if ($templateId === 'worldclock1') {
+                                $widgetType = 'worldclock-digital-text';
+                            } elseif ($templateId === 'worldclock2') {
+                                $widgetType = 'worldclock-digital-date';
+                            } else {
+                                $widgetType = 'worldclock-digital-custom';
+                            }
+                            break;
 
-                    case 2:
-                        $widgetType = 'worldclock-analogue';
-                        break;
+                        case 2:
+                            $widgetType = 'worldclock-analogue';
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
+                } else {
+                    $widgetType = 'worldclock-digital-custom';
                 }
 
                 if (!empty($widgetType)) {
@@ -70,6 +75,16 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
                     $upgraded = true;
                 }
             }
+        }
+
+        // If overriden, we need to tranlate the legacy options to the new values
+        if ($overrideTemplate == 1) {
+            $widget->setOptionValue('template_html', 'cdata', $widget->getOptionValue('mainTemplate', ''));
+            $widget->setOptionValue('template_style', 'cdata', $widget->getOptionValue('styleSheet', ''));
+            $widget->setOptionValue('numCols', 'attr', $widget->getOptionValue('clockCols', 1));
+            $widget->setOptionValue('numRows', 'attr', $widget->getOptionValue('clockRows', 1));
+            $widget->setOptionValue('widgetDesignWidth', 'attr', $widget->getOptionValue('widgetOriginalWidth', '250'));
+            $widget->setOptionValue('widgetDesignHeight', 'attr', $widget->getOptionValue('widgetOriginalHeight', '250'));
         }
 
         return $upgraded;

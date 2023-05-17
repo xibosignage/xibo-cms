@@ -30,7 +30,7 @@
         <startWidth>300</startWidth>
         <startHeight>80</startHeight>
         <assets>
-            <asset id="event-summary" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-summary.png" />
+            <asset id="event-summary" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-summary.png" />
         </assets>
     </template>
     <template>
@@ -44,7 +44,7 @@
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
         <assets>
-            <asset id="event-description" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
+            <asset id="event-description" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
         </assets>
     </template>
     <template>
@@ -58,7 +58,7 @@
         <startWidth>450</startWidth>
         <startHeight>80</startHeight>
         <assets>
-            <asset id="date-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
     </template>
 </templates>

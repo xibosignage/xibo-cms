@@ -215,6 +215,8 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
             // If we can't parse the JSON, just set the value as a string
             options[currOption.option] = currOption.value;
           }
+        } else if (currOption.type === 'cdata') {
+          options[currOption.option] = currOption.value;
         }
       }
     }

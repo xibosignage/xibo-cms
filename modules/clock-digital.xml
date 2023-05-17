@@ -104,6 +104,6 @@ if (typeof updateClock === 'function') {
 }
     ]]></onVisible>
     <assets>
-        <asset id="clock-digital-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-digital-thumb.png" />
+        <asset id="clock-digital-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-digital-thumb.png" />
     </assets>
 </module>

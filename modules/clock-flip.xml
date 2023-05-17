@@ -207,6 +207,6 @@ if (properties.clockFace === "TwelveHourClock" || properties.clockFace === "Twen
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
     <assets>
-        <asset id="clock-flip-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-flip-thumb.png" />
+        <asset id="clock-flip-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-flip-thumb.png" />
     </assets>
 </module>

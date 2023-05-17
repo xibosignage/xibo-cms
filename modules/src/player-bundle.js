@@ -35,6 +35,7 @@ import './xibo-calendar-render';
 import './xibo-countdown-render';
 import './xibo-finance-render';
 import './xibo-image-render';
+import './xibo-legacy-template-render';
 import './xibo-layout-animate.js';
 import './xibo-layout-scaler';
 import './xibo-menuboard-render';

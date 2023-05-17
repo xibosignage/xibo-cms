@@ -20,6 +20,102 @@
   -->
 <templates>
     <template>
+        <id>currencies_custom_html</id>
+        <type>static</type>
+        <dataType>currency</dataType>
+        <showIn>none</showIn>
+        <title>Currencies Custom HTML</title>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
+            <property id="maxItemsPerPage" type="number">
+                <title>Items per Page</title>
+                <helpText>This is the intended number of items on each page.</helpText>
+                <default>4</default>
+            </property>
+            <property id="customTemplate" type="hidden">
+                <default>1</default>
+            </property>
+            <property id="moduleType" type="hidden">
+                <default>currencies</default>
+            </property>
+            <property id="widgetDesignWidth" type="number">
+                <title>widgetDesignWidth</title>
+            </property>
+            <property id="widgetDesignHeight" type="number">
+                <title>widgetDesignHeight</title>
+            </property>
+            <property id="mainTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
+                <title>mainTemplate</title>
+            </property>
+            <property id="itemTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
+                <title>itemTemplate</title>
+            </property>
+            <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
+                <title>styleSheet</title>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+<div class="template-container" style="display: none;">
+{{mainTemplate|raw}}
+</div>
+
+<div class="item-template" style="display: none;">
+{{itemTemplate|raw}}
+</div>
+
+<div class="sample-image" style="display: none;">
+  <div class="img-circle center-block flag-icon-container">
+    <img src="[[assetId=flags]]" class="flag-icon flag-icon-[NameShort]">
+  </div>
+</div>
+
+<link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen">
+
+<style>
+{{styleSheet|raw}}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Template renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+$(target).find('img').xiboImageRender(properties);
+$(target).xiboLayoutScaler(properties);
+
+// Get body
+var body = $(target).find('.template-container > div');
+
+// Get items
+var templateItems = $(target).find('#content > .template-item');
+
+// Run only if there are items
+if (templateItems.length > 0) {
+    // Render items
+    $(target).find('#content').xiboFinanceRender(properties, templateItems, body);
+} else {
+    // Hide container
+    $(body).hide();
+}
+        ]]></onTemplateRender>
+        <assets>
+            <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>
+            <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css"></asset>
+        </assets>
+    </template>
+    <template>
         <id>currencies1</id>
         <type>static</type>
         <dataType>currency</dataType>
