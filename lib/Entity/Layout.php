@@ -1346,7 +1346,7 @@ class Layout implements \JsonSerializable
                     $widgetDuration = max($widgetDuration, $widget->calculatedDuration);
 
                     // Validate all canvas widget properties.
-                    $this->assessWidgetStatus($this->moduleFactory->getByType($widget->type), $widget, $status);
+                    $this->assessWidgetStatus($this->moduleFactory->getByType($item->type), $item, $status);
                 }
 
                 // If we don't have a global widget then we fail with an empty region
