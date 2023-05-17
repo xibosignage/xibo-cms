@@ -122,6 +122,12 @@ class Asset implements \JsonSerializable
         }
     }
 
+    /**
+     * Get Legacy ID for this asset on older players
+     *  there is a risk that this ID will change as modules/templates with assets are added/removed in the system
+     *  however, we have mitigated by ensuring that only one instance of any required file is added to rf return
+     * @return int
+     */
     private function getLegacyId(): int
     {
         return (Dependency::LEGACY_ID_OFFSET_ASSET + $this->assetNo) * -1;

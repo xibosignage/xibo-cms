@@ -841,12 +841,19 @@ class Display implements \JsonSerializable
     {
         $this->load();
 
-        // Delete incidential references
-        $this->getStore()->update('DELETE FROM `requiredfile` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        // Delete references
+        $this->getStore()->update('DELETE FROM `display_media` WHERE displayId = :displayId', [
+            'displayId' => $this->displayId
+        ]);
+        $this->getStore()->update('DELETE FROM `requiredfile` WHERE displayId = :displayId', [
+            'displayId' => $this->displayId
+        ]);
+        $this->getStore()->update('DELETE FROM `player_faults` WHERE displayId = :displayId', [
+            'displayId' => $this->displayId
+        ]);
 
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
             $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
             $displayGroup->load();
             $displayGroup->unassignDisplay($this);
@@ -859,10 +866,14 @@ class Display implements \JsonSerializable
         $displayGroup->delete();
 
         // Delete the display
-        $this->getStore()->update('DELETE FROM `player_faults` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
-        $this->getStore()->update('DELETE FROM `display` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        $this->getStore()->update('DELETE FROM `display` WHERE displayId = :displayId', [
+            'displayId' => $this->displayId
+        ]);
 
-        $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
+        $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', [
+            'displayId' => $this->displayId,
+            'display' => $this->display,
+        ]);
     }
 
     /**
