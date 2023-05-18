@@ -25,13 +25,13 @@ const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
+const ToolbarCardLayoutTemplateTemplate =
+  require('../templates/toolbar-card-layout-template.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
 const ToolbarSearchFormTemplate =
   require('../templates/toolbar-search-form.hbs');
 const ToolbarContentMediaTemplate =
   require('../templates/toolbar-content-media.hbs');
-const ToolbarContentLayoutTemplateTemplate =
-  require('../templates/toolbar-content-layout-template.hbs');
 const ToolbarContentSubmenuTemplate =
   require('../templates/toolbar-content-submenu.hbs');
 const ToolbarContentSubmenuCardsTemplate =
@@ -1623,7 +1623,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
             }
 
             // Get template and add
-            const $card = $(ToolbarContentLayoutTemplateTemplate(el));
+            const $card = $(ToolbarCardLayoutTemplateTemplate(el));
 
             // Add data object to card
             if ($card.hasClass('from-provider')) {

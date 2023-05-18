@@ -1,4 +1,4 @@
-<div class="toolbar-card {{#if thumbnail}}has-thumb{{/if}} {{#if provider}}from-provider{{/if}}"
+<div class="toolbar-card {{#if thumbnail}}has-thumb{{/if}} {{#if provider}}from-provider{{/if}} hide-content"
     data-type="layout_template"
     data-template-id="{{id}}"
     data-data-type="{{dataType}}"
@@ -6,9 +6,7 @@
     data-download="{{download}}">
 
     <div class="toolbar-card-preview">
-        <div class="toolbar-card-thumb">
-            <img class="thumb" src="{{thumbnail}}" alt="{{title}}">
-        </div>
+        <img class="thumb" src="{{thumbnail}}" alt="{{title}}">
 
         {{#if provider}}
             <a class="provider" href="{{provider.link}}" target="_blank" rel="noopener noreferrer">
@@ -29,6 +27,5 @@
             </div>
         {{/if}}
     </div>
-
     <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{title}}" data-placement="right">{{title}}</span>
 </div>
