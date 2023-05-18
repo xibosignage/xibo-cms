@@ -39,7 +39,7 @@
 
 {% endblock %}
 
-    {% block javaScript %} 
+    {% block javaScript %}
         {# Add common file #}
         {% include "common.twig" %}
 
@@ -54,6 +54,7 @@
                     back: "{% trans "Back" %}",
                     exit: "{% trans "Exit" %}",
                     toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
+                    newTitle: "{% trans "New" %}",
                     publishTitle: "{% trans "Publish layout" %}",
                     discardTitle: "{% trans "Discard draft" %}",
                     deleteTitle: "{% trans "Delete layout" %}",
@@ -359,6 +360,10 @@
             }
 
             function layoutPublishFormOpen() {
+            }
+
+            function layoutEditFormSaved() {
+              lD.reloadData(lD.layout.layoutId, true);
             }
         </script>
 

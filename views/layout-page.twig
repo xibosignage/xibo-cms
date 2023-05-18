@@ -6,7 +6,11 @@
 {% block actionMenu %}
     {% if currentUser.featureEnabled("layout.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" data-modal-size="extra-large" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</button>
+        <button class="btn btn-success layout-add-button"
+                title="{% trans "Add a new Layout and jump to the layout designer." %}"
+                href="{{ url_for("layout.add") }}">
+            <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}
+        </button>
         <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
     </div>
     {% endif %}
@@ -120,7 +124,7 @@
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    
+
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="layouts" class="table table-striped responsive nowrap" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="layoutGrid" style="width: 100%;">
@@ -341,6 +345,31 @@
             });
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.dataTables_buttons'));
+
+            // Bind to the layout add button
+            $('button.layout-add-button').on('click', function() {
+                // Submit the URL provided as a POST request.
+                $.ajax({
+                    type: 'POST',
+                    url: $(this).attr('href'),
+                    cache: false,
+                    dataType: 'json',
+                    success: function(response, textStatus, error) {
+                        if (response.success && response.id) {
+                            XiboRedirect('{{ url_for("layout.designer", {id: ':id'}) }}'.replace(':id', response.id));
+                        } else {
+                            if (response.login) {
+                                LoginBox(response.message);
+                            } else {
+                                SystemMessage(response.message ?? '{{ "Unknown Error"|trans }}', false);
+                            }
+                        }
+                    },
+                    error: function(xhr, textStatus, errorThrown) {
+                        SystemMessage(xhr.responseText, false);
+                    },
+                });
+            });
         });
 
         $("#layoutUploadForm").click(function(e) {
@@ -722,6 +751,9 @@
           // Nothing to do here, but we use the same form on the layout designer and have a callback registered there
         }
 
+        function layoutEditFormSaved() {
+          // Nothing to do here.
+        }
     </script>
 {% endblock %}
 

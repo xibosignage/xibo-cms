@@ -1,5 +1,4 @@
-/* eslint-disable prefer-promise-reject-errors */
-/**
+/*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
@@ -20,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* eslint-disable prefer-promise-reject-errors */
 // Include public path for webpack
 require('../../public_path');
 
@@ -172,6 +172,16 @@ $(() => {
         // Custom dropdown options
         [
           {
+            id: 'newLayout',
+            title: layoutEditorTrans.newTitle,
+            logo: 'fa-file',
+            action: lD.addLayout,
+            inactiveCheck: function() {
+              return false;
+            },
+            inactiveCheckClass: 'd-none',
+          },
+          {
             id: 'publishLayout',
             title: layoutEditorTrans.publishTitle,
             logo: 'fa-check-square-o',
@@ -186,7 +196,6 @@ $(() => {
             id: 'checkoutLayout',
             title: layoutEditorTrans.checkoutTitle,
             logo: 'fa-edit',
-            class: 'btn-success',
             action: lD.layout.checkout,
             inactiveCheck: function() {
               return (lD.layout.editable == true);
@@ -700,6 +709,43 @@ lD.showCheckoutScreen = function() {
       },
     },
   }).attr('data-test', 'checkoutModal');
+};
+
+/**
+ * Layout new button
+ */
+lD.addLayout = function() {
+  lD.selectObject();
+  lD.common.showLoadingScreen();
+  $.ajax({
+    type: urlsForApi.layout.add.type,
+    url: urlsForApi.layout.add.url,
+    cache: false,
+    dataType: 'json',
+    success: function(response, textStatus, error) {
+      lD.common.hideLoadingScreen();
+
+      if (response.success && response.id) {
+        // eslint-disable-next-line new-cap
+        XiboRedirect(urlsForApi.layout.designer.url
+          .replace(':id', response.id));
+      } else {
+        if (response.login) {
+          // eslint-disable-next-line new-cap
+          LoginBox(response.message);
+        } else {
+          // eslint-disable-next-line new-cap
+          SystemMessage(response.message, false);
+        }
+      }
+    },
+    error: function(xhr, textStatus, errorThrown) {
+      lD.common.hideLoadingScreen();
+
+      // eslint-disable-next-line new-cap
+      SystemMessage(xhr.responseText, false);
+    },
+  });
 };
 
 /**

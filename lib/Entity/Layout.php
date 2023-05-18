@@ -873,11 +873,12 @@ class Layout implements \JsonSerializable
             'validate' => true,
             'notify' => true,
             'audit' => true,
-            'import' => false
+            'import' => false,
+            'appendCountOnDuplicate' => false,
         ], $options);
 
         if ($options['validate']) {
-            $this->validate();
+            $this->validate($options);
         }
 
         if ($options['setBuildRequired']) {
@@ -1056,7 +1057,7 @@ class Layout implements \JsonSerializable
      * Validate this layout
      * @throws GeneralException
      */
-    public function validate()
+    public function validate($options)
     {
         // We must provide either a template or a resolution
         if ($this->width == 0 || $this->height == 0) {
@@ -1064,12 +1065,18 @@ class Layout implements \JsonSerializable
         }
 
         // Validation
-        if (strlen($this->layout) > 50 || strlen($this->layout) < 1) {
-            throw new InvalidArgumentException(__("Layout Name must be between 1 and 50 characters"), 'name');
+        if (empty($this->layout) || strlen($this->layout) > 50 || strlen($this->layout) < 1) {
+            throw new InvalidArgumentException(
+                __('Layout Name must be between 1 and 50 characters'),
+                'name'
+            );
         }
 
-        if (strlen($this->description) > 254) {
-            throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
+        if (!empty($this->description) && strlen($this->description) > 254) {
+            throw new InvalidArgumentException(
+                __('Description can not be longer than 254 characters'),
+                'description'
+            );
         }
 
         // Check for duplicates
@@ -1082,8 +1089,16 @@ class Layout implements \JsonSerializable
             'excludeTemplates' => -1
         ]);
 
-        if (count($duplicates) > 0) {
-            throw new DuplicateEntityException(sprintf(__("You already own a Layout called '%s'. Please choose another name."), $this->layout));
+        $duplicateCount = count($duplicates);
+        if ($duplicateCount > 0) {
+            if ($options['appendCountOnDuplicate']) {
+                $this->layout = $this->layout . ' #' . ($duplicateCount + 1);
+            } else {
+                throw new DuplicateEntityException(sprintf(
+                    __("You already own a Layout called '%s'. Please choose another name."),
+                    $this->layout
+                ));
+            }
         }
 
         // Check zindex is positive

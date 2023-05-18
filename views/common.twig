@@ -1,8 +1,8 @@
-{# 
+{#
     Common files ( translations and other common variables )
         Add by including in another twig file javaScript block: {% include "common.twig" %}
 #}
-{% block javaScript %} 
+{% block javaScript %}
     <script type="text/javascript">
 
         // COMMON VARIABLES
@@ -11,6 +11,7 @@
         var libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ url_for("library.search.all") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
+        var templateSearchUrl = "{{ url_for("template.search.all") }}";
         var defaultThumbnailUrl = '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
@@ -18,7 +19,7 @@
         var tooltipDelay = {'show': 250, 'hide': 0};
         var playlistEditorUrl = "{{ url_for("playlist.timeline.form", {id:':id'}) }}";
         var timezones = {{ timeZones|json_encode|raw }};
-        
+
         // Save navbar position
         var navbarPosition = 'vertical';
         {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
@@ -49,8 +50,16 @@
                     url: "{{ url_for("layout.search") }}",
                     type: 'GET'
                 },
+                add: {
+                    url: "{{ url_for("layout.add") }}",
+                    type: 'POST'
+                },
                 getForm: {
                     url: "{{ url_for("layout.background.form", {id: ':id'}) }}",
+                    type: 'GET'
+                },
+                editForm: {
+                    url: "{{ url_for("layout.edit.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 saveForm: {
@@ -83,6 +92,10 @@
                 },
                 unlock: {
                     url: "{{ url_for("layout.lock.release", {id: ':id'}) }}",
+                    type: 'PUT'
+                },
+                applyTemplate: {
+                    url: "{{ url_for("layout.apply.template", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 list: {
@@ -338,7 +351,13 @@
                     url: "{{ url_for("widget.edit.options", {id: ':id'}) }}",
                     type: 'GET'
                 }
-            }
+            },
+            layoutTemplates: {
+                search: {
+                    url: "{{ url_for("template.search") }}",
+                    type: 'GET',
+                }
+            },
         };
 
         {% autoescape "js" %}
@@ -535,6 +554,8 @@
                     libraryTitle: "{{ "Library other media search"|trans }}",
                     actionsName: "{{ "Actions" |trans }}",
                     actionsTitle: "{{ "Interactive actions"|trans }}",
+                    layoutTemplateName: "{{ "Layout Templates" |trans }}",
+                    layoutTemplateTitle: "{{ "Search for Layout Templates"|trans }}",
                 },
                 window: {
                     drag: "{{ "Move Window" |trans }}",
@@ -623,7 +644,7 @@
                 widgetToDtMessage: "{{ "Select the end time for this widget" |trans }}",
                 deleteOnExpiry: "{{ "Delete on Expiry" |trans }}",
                 deleteOnExpiryMessage: "{{ "When the End Time for this Widget passes should the Widget be removed from the Playlist?" |trans }}",
-                
+
             };
 
             var errorMessagesTrans = {
