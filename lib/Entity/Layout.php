@@ -1340,13 +1340,16 @@ class Layout implements \JsonSerializable
                 $widget = null;
                 $widgetDuration = 0;
                 foreach ($region->getPlaylist()->setModuleFactory($this->moduleFactory)->widgets as $item) {
+                    // Pull out the global widget, if we have one (we should)
                     if ($item->type === 'global') {
                         $widget = $item;
                     }
-                    $widgetDuration = max($widgetDuration, $widget->calculatedDuration);
+
+                    // Get the highest duration.
+                    $widgetDuration = max($widgetDuration, $item->calculatedDuration);
 
                     // Validate all canvas widget properties.
-                    $this->assessWidgetStatus($this->moduleFactory->getByType($widget->type), $widget, $status);
+                    $this->assessWidgetStatus($this->moduleFactory->getByType($item->type), $item, $status);
                 }
 
                 // If we don't have a global widget then we fail with an empty region

@@ -25,6 +25,7 @@ require('babel-polyfill');
 window.moment = require('moment');
 require('moment-timezone');
 window.Handlebars = require('handlebars/dist/handlebars.min.js');
+require('./handlebars-helpers.js');
 
 // Include HLS.js
 window.Hls = require('hls.js');

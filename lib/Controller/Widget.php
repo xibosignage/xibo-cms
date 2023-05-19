@@ -1034,7 +1034,7 @@ class Widget extends Base
             $widgetInterface
         );
 
-        $this->getLog()->debug('cacheKey: ' . $cacheKey);
+        $this->getLog()->debug('getData: cacheKey is ' . $cacheKey);
 
         // Get the data modified date
         $dataModifiedDt = null;
@@ -1048,9 +1048,9 @@ class Widget extends Base
 
         // Use the cache if we can.
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
-            || !$widgetDataProviderCache->isCacheMissOrOld()
+            || $widgetDataProviderCache->isCacheMissOrOld()
         ) {
-            $this->getLog()->debug('Pulling fresh data');
+            $this->getLog()->debug('getData: Pulling fresh data');
 
             $dataProvider->clearData();
             $dataProvider->clearMeta();
@@ -1078,7 +1078,7 @@ class Widget extends Base
                         // We don't need to do anything else, references to mediaId will be built when we decorate
                         // the HTML.
                         // Nothing is linked to a display when in preview mode.
-                        $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+                        $this->getLog()->debug('getData: Successfully downloaded ' . $media->mediaId);
                     });
                 }
 
@@ -1097,7 +1097,7 @@ class Widget extends Base
                 $widgetDataProviderCache->finaliseCache();
             }
         } else {
-            $this->getLog()->debug('Returning cache');
+            $this->getLog()->debug('getData: Returning cache');
         }
 
         // Decorate for output.
@@ -1546,16 +1546,20 @@ class Widget extends Base
         // Load the widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
 
-        // Which property is this for?
-        $property = $params->getString('propertyId', [
+        // Sanitizer options
+        $sanitizerOptions = [
             'throw' => function () {
                 throw new InvalidArgumentException(__('Please supply a propertyId'), 'propertyId');
             },
-            'rules' => ['notEmpty'],
-        ]);
+            'rules' => ['notEmpty' => []],
+        ];
+
+        // Which property is this for?
+        $propertyId = $params->getString('propertyId', $sanitizerOptions);
+        $propertyValue = $params->getString($propertyId);
 
         // Dispatch an event to service this widget.
-        $event = new WidgetEditOptionRequestEvent($widget, $property, $params->getString($property));
+        $event = new WidgetEditOptionRequestEvent($widget, $propertyId, $propertyValue);
         $this->getDispatcher()->dispatch($event, $event::$NAME);
 
         // Return the options.

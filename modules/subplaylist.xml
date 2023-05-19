@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Display widgets from one or more Playlists</description>
     <class></class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\SubPlaylistWidgetCompatibility</compatibilityClass>
     <showIn>playlist</showIn>
     <dataCacheKey></dataCacheKey>
     <type>subplaylist</type>

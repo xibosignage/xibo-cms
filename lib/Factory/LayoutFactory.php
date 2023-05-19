@@ -29,6 +29,7 @@ use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Folder;
 use Xibo\Entity\Layout;
+use Xibo\Entity\Module;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
@@ -1028,68 +1029,8 @@ class LayoutFactory extends BaseFactory
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
-                //
-                // Get all widget options
-                //
-                $subPlaylistsOption = [];
-                foreach ($mediaNode['widgetOptions'] as $optionsNode) {
-                    // subPlaylistOptions and subPlaylistIds are no longer in use from 2.3
-                    // we need to capture these options to support Layout with sub-playlist import from older CMS
-                    // we use continue for those 2 options, as we do not need to create widgetOption for them
-                    if ($optionsNode['option'] == 'subPlaylistOptions') {
-                        $oldSubPlaylistOptions = json_decode($optionsNode['value'], true);
-                        continue;
-                    }
-
-                    if ($optionsNode['option'] == 'subPlaylistIds') {
-                        $oldSubPlaylistIds = json_decode($optionsNode['value'], true);
-                        continue;
-                    }
-
-                    if ($optionsNode['option'] == 'subPlaylists') {
-                        $subPlaylistsOption = json_decode($optionsNode['value'], true);
-                    }
-
-                    $widgetOption = $this->widgetOptionFactory->createEmpty();
-                    $widgetOption->type = $optionsNode['type'];
-                    $widgetOption->option = $optionsNode['option'];
-                    $widgetOption->value = $optionsNode['value'];
-
-                    $widget->widgetOptions[] = $widgetOption;
-
-                    // Convert the module type of known legacy widgets
-                    if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
-                        $widget->type = 'datasetticker';
-                    }
-                }
-
-                // Form conditions from the widget's option and value, e.g, templateId==worldclock1
-                $widgetConditionMatch = [];
-                foreach ($widget->widgetOptions as $option) {
-                    $widgetConditionMatch[] = $option->option . '==' . $option->value;
-                }
-
-                // Get module
-                try {
-                    $module = $this->moduleFactory->getByType($widget->type, $widgetConditionMatch);
-                } catch (NotFoundException $notFoundException) {
-                    $this->getLog()->error('Module not found for widget: ' . $widget->type);
-                    continue;
-                }
-
-                // Set the widget type
-                $widget->type = $module->type;
-
-                // Does this module type exist?
-                if (!array_key_exists($widget->type, $modules)) {
-                    $this->getLog()->error(sprintf('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules))));
-                    continue;
-                }
-
-                // convert old sub-playlist Widget options to the new way we handle them
-                if (isset($oldSubPlaylistIds) && isset($oldSubPlaylistOptions)) {
-                    $subPlaylistsOption = $this->convertOldPlaylistOptions($oldSubPlaylistIds, $oldSubPlaylistOptions);
-                }
+                // Prepare widget options, check legacy types from conditions, set widget type and upgrade
+                $module = $this->prepareWidgetAndGetModule($widget, $mediaNode['widgetOptions']);
 
                 //
                 // Get the MediaId associated with this widget
@@ -1120,6 +1061,9 @@ class LayoutFactory extends BaseFactory
                 if ($widget->type == 'subplaylist') {
                     $widgets = [];
                     $this->getLog()->debug('Layout import, creating layout Playlists from JSON, there are ' . count($playlistJson) . ' Playlists to create');
+
+                    // Get the subplaylists from widget option
+                    $subPlaylistsOption = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
 
                     foreach ($playlistJson as $playlistDetail) {
                         $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($playlistDetail);
@@ -1410,30 +1354,6 @@ class LayoutFactory extends BaseFactory
 
         $widgets = $layout->getAllWidgets();
         $this->getLog()->debug('Layout has ' . count($widgets) . ' widgets');
-
-        // Go through all the widgets and upgrade from v3 to v4
-        foreach ($widgets as $widget) {
-            // Load the widget
-            $widget->load();
-
-            $module = $this->moduleFactory->getByType($widget->type);
-            if ($module->isWidgetCompatibilityAvailable()) {
-                // Grab a widget compatibility interface, if there is one
-                $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
-                if ($widgetCompatibilityInterface !== null) {
-                    try {
-                        $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
-                        if ($upgraded) {
-                            $widget->schemaVersion = 2;
-                            $widget->save(['alwaysUpdate'=>true, 'notifyDisplays' => false]);
-                        }
-                    } catch (\Exception $e) {
-                        $this->getLog()->error('Error upgrading widget '. $e->getMessage());
-                    }
-                }
-            }
-        }
-
         $this->getLog()->debug('Process mapping.json file.');
 
         // Go through each region and add the media (updating the media ids)
@@ -1988,45 +1908,15 @@ class LayoutFactory extends BaseFactory
                 $playlistWidget->tempId = $widgetsDetail['tempId'];
                 $playlistWidget->mediaIds = $widgetsDetail['mediaIds'];
                 $playlistWidget->widgetOptions = [];
+                $playlistWidget->schemaVersion = isset($widgetsDetail['schemaVersion']) ? (int)$widgetsDetail['schemaVersion'] : 1;
 
-                $nestedSubPlaylists = [];
-
-                foreach ($widgetsDetail['widgetOptions'] as $widgetOptionE) {
-                    if ($playlistWidget->type == 'subplaylist') {
-                        // subPlaylistOptions and subPlaylistIds are no longer in use from 2.3
-                        // we need to capture these options to support Layout with sub-playlist import from older CMS
-                        // we use continue for those 2 options, as we do not need to create widgetOption for them
-                        if ($widgetOptionE['option'] == 'subPlaylistOptions') {
-                            $oldNestedSubPlaylistOptions = json_decode($widgetOptionE['value'], true);
-                            continue;
-                        }
-
-                        if ($widgetOptionE['option'] == 'subPlaylistIds') {
-                            $oldNestedSubPlaylistIds = json_decode($widgetOptionE['value'], true);
-                            continue;
-                        }
-
-                        if ($widgetOptionE['option'] == 'subPlaylists') {
-                            $nestedSubPlaylists = json_decode($widgetOptionE['value'], true);
-                        }
-                    }
-
-                    $widgetOption = $this->widgetOptionFactory->createEmpty();
-                    $widgetOption->type = $widgetOptionE['type'];
-                    $widgetOption->option = $widgetOptionE['option'];
-                    $widgetOption->value = $widgetOptionE['value'];
-
-                    $playlistWidget->widgetOptions[] = $widgetOption;
-                }
-
-                // convert old sub-playlist Widget options to the new way we handle them
-                if (isset($oldNestedSubPlaylistIds) && isset($oldNestedSubPlaylistOptions)) {
-                    $nestedSubPlaylists = $this->convertOldPlaylistOptions($oldNestedSubPlaylistIds, $oldNestedSubPlaylistOptions);
-                }
-
-                $module = $modules[$playlistWidget->type];
+                // Prepare widget options, check legacy types from conditions, set widget type and upgrade
+                $module = $this->prepareWidgetAndGetModule($playlistWidget, $widgetsDetail['widgetOptions']);
 
                 if ($playlistWidget->type == 'subplaylist') {
+                    // Get the subplaylists from widget option
+                    $nestedSubPlaylists = json_decode($playlistWidget->getOptionValue('subPlaylists', '[]'), true);
+
                     $updatedSubPlaylists = [];
                     foreach ($combined as $old => $new) {
                         foreach ($nestedSubPlaylists as $subPlaylistItem) {
@@ -2987,6 +2877,62 @@ class LayoutFactory extends BaseFactory
         }
 
         return $convertedPlaylistOption;
+    }
+
+    /**
+     * Prepare widget options, check legacy types from conditions, set widget type and upgrade
+     * @throws NotFoundException
+     */
+    private function prepareWidgetAndGetModule(Widget $widget, array $widgetOptions): Module
+    {
+        // Get all widget options
+        foreach ($widgetOptions as $optionsNode) {
+            $widgetOption = $this->widgetOptionFactory->createEmpty();
+            $widgetOption->type = $optionsNode['type'];
+            $widgetOption->option = $optionsNode['option'];
+            $widgetOption->value = $optionsNode['value'];
+            $widget->widgetOptions[] = $widgetOption;
+        }
+
+        // Form conditions from the widget's option and value, e.g, templateId==worldclock1
+        $widgetConditionMatch = [];
+        foreach ($widget->widgetOptions as $option) {
+            $widgetConditionMatch[] = $option->option . '==' . $option->value;
+        }
+
+        // Get module
+        try {
+            $module = $this->moduleFactory->getByType($widget->type, $widgetConditionMatch);
+        } catch (NotFoundException $notFoundException) {
+            throw new NotFoundException(__('Module not found'));
+        }
+
+        // Set the widget type
+        $widget->type = $module->type;
+
+        // Upgrade if necessary
+        if ($module->isWidgetCompatibilityAvailable()) {
+            // Grab a widget compatibility interface, if there is one
+            $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
+            if ($widgetCompatibilityInterface !== null) {
+                try {
+                    // We will leave the widget save for later
+                    $upgraded = $widgetCompatibilityInterface->upgradeWidget(
+                        $widget,
+                        $widget->schemaVersion,
+                        2
+                    );
+
+                    if ($upgraded) {
+                        $widget->schemaVersion = 2;
+                    }
+                } catch (\Exception $e) {
+                    $this->getLog()->error('Error upgrading widget '. $e->getMessage());
+                }
+            }
+        }
+
+        return $module;
     }
 
     // </editor-fold>

@@ -376,10 +376,10 @@ class Display extends Base
 
         // Widgets
         $sql = '
-          SELECT `widget`.type AS widgetType,
-                IFNULL(`widgetoption`.value, `widget`.type) AS widgetName,
-                `widget`.widgetId,
-                 `requiredfile`.*
+          SELECT `widget`.`type` AS widgetType,
+                `widgetoption`.`value` AS widgetName,
+                `widget`.`widgetId`,
+                `requiredfile`.*
               FROM `widget`
                 INNER JOIN `requiredfile`
                 ON `requiredfile`.itemId = `widget`.widgetId
@@ -388,7 +388,7 @@ class Display extends Base
                   AND `widgetoption`.option = \'name\'
            WHERE `requiredfile`.`displayId` = :displayId 
             AND `requiredfile`.`type` IN (\'W\', \'D\')
-          ORDER BY IFNULL(`widgetoption`.value, `widget`.type), `requiredfile`.itemId
+          ORDER BY `widgetoption`.value, `widget`.type, `widget`.widgetId
         ';
 
         foreach ($this->store->select($sql, ['displayId' => $id]) as $row) {
@@ -396,6 +396,7 @@ class Display extends Base
             $entry = [];
             $entry['type'] = $row->getString('widgetType');
             $entry['widgetName'] = $row->getString('widgetName');
+            $entry['widgetType'] = $row->getString('widgetType');
 
             if ($row->getString('type') === 'W') {
                 $rf = $this->requiredFileFactory->getByDisplayAndWidget($id, $row->getInt('widgetId'));
