@@ -29,7 +29,7 @@ use Xibo\Widget\Provider\WidgetCompatibilityTrait;
 /**
  * Convert widget from an old schema to a new schema
  */
-class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
+class StocksWidgetCompatibility implements WidgetCompatibilityInterface
 {
     use WidgetCompatibilityTrait;
 
@@ -40,49 +40,16 @@ class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         $upgraded = false;
-        $widgetType = null;
-        $countdownType = $widget->getOptionValue('countdownType', 1);
         $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
 
-        foreach ($widget->widgetOptions as $option) {
-            if ($option->option === 'countdownType') {
-                if( $overrideTemplate == 0) {
-                    switch ($countdownType) {
-                        case 1:
-                            $widgetType = 'countdown-text';
-                            break;
-
-                        case 2:
-                            $widgetType = 'countdown-clock';
-                            break;
-
-                        case 3:
-                            $widgetType = 'countdown-table';
-                            break;
-
-                        case 4:
-                            $widgetType = 'countdown-days';
-                            break;
-
-                        default:
-                            break;
-                    }
-                } else {
-                    $widgetType = 'countdown-custom';
-                }
-
-                if (!empty($widgetType)) {
-                    $widget->type = $widgetType;
-                    $upgraded = true;
-                }
-            }
-        }
-
-        // If overriden, we need to tranlate the legacy options to the new values
+        // If the widget has override template
         if ($overrideTemplate == 1) {
+            $widget->setOptionValue('templateId', 'attrib', 'stocks_custom_html');
+            $upgraded = true;
+
+            // We need to tranlate the legacy options to the new values
             $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
             $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
-            $widget->removeOption('templateId');
         }
 
         return $upgraded;
@@ -93,3 +60,4 @@ class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
         return false;
     }
 }
+

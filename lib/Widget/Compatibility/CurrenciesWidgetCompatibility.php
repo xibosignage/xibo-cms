@@ -48,8 +48,8 @@ class CurrenciesWidgetCompatibility implements WidgetCompatibilityInterface
             $upgraded = true;
 
             // We need to tranlate the legacy options to the new values
-            $widget->setOptionValue('widgetDesignWidth', 'attr', $widget->getOptionValue('widgetOriginalWidth', '250'));
-            $widget->setOptionValue('widgetDesignHeight', 'attr', $widget->getOptionValue('widgetOriginalHeight', '250'));
+            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
+            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
         }
 
         return $upgraded;

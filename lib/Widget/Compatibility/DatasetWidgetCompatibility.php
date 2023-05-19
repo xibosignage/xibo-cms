@@ -41,45 +41,50 @@ class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
 
         $upgraded = false;
         $newTemplateId = null;
+        $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
+        $templateId = $widget->getOptionValue('templateId', '');
+
         foreach ($widget->widgetOptions as $option) {
-            $templateId = $widget->getOptionValue('templateId', '');
-
             if ($option->option === 'templateId') {
-                switch ($templateId) {
-                    case 'empty':
-                        $newTemplateId = 'dataset_table_1';
-                        break;
+                if ($overrideTemplate == 0) {
+                    switch ($templateId) {
+                        case 'empty':
+                            $newTemplateId = 'dataset_table_1';
+                            break;
 
-                    case 'light-green':
-                        $newTemplateId = 'dataset_table_2';
-                        break;
+                        case 'light-green':
+                            $newTemplateId = 'dataset_table_2';
+                            break;
 
-                    case 'simple-round':
-                        $newTemplateId = 'dataset_table_3';
-                        break;
+                        case 'simple-round':
+                            $newTemplateId = 'dataset_table_3';
+                            break;
 
-                    case 'transparent-blue':
-                        $newTemplateId = 'dataset_table_4';
-                        break;
+                        case 'transparent-blue':
+                            $newTemplateId = 'dataset_table_4';
+                            break;
 
-                    case 'orange-grey-striped':
-                        $newTemplateId = 'dataset_table_5';
-                        break;
+                        case 'orange-grey-striped':
+                            $newTemplateId = 'dataset_table_5';
+                            break;
 
-                    case 'split-rows':
-                        $newTemplateId = 'dataset_table_6';
-                        break;
+                        case 'split-rows':
+                            $newTemplateId = 'dataset_table_6';
+                            break;
 
-                    case 'dark-round':
-                        $newTemplateId = 'dataset_table_7';
-                        break;
+                        case 'dark-round':
+                            $newTemplateId = 'dataset_table_7';
+                            break;
 
-                    case 'pill-colored':
-                        $newTemplateId = 'dataset_table_8';
-                        break;
+                        case 'pill-colored':
+                            $newTemplateId = 'dataset_table_8';
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
+                } else {
+                    $newTemplateId = 'dataset_table_custom_html';
                 }
 
                 if (!empty($newTemplateId)) {
@@ -87,6 +92,10 @@ class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
                     $upgraded = true;
                 }
             }
+        }
+
+        if ($overrideTemplate == 1) {
+            $widget->setOptionValue('columns', 'attrib', '[' . $widget->getOptionValue('columns', '') . ']');
         }
 
         return $upgraded;

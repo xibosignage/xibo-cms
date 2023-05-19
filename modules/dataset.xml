@@ -50,15 +50,6 @@
                 </test>
             </visibility>
         </property>
-        <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
-            <title>Optional JavaScript</title>
-            <visibility>
-                <test>
-                    <condition field="dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
-
         <property type="header" variant="main">
             <title>Configuration</title>
             <visibility>

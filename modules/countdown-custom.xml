@@ -96,10 +96,12 @@
             <default>countdown</default>
         </property>
         <property id="widgetDesignWidth" type="number">
-            <title>widgetDesignWidth</title>
+            <title>Original Width</title>
+            <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
         </property>
         <property id="widgetDesignHeight" type="number">
-            <title>widgetDesignHeight</title>
+            <title>Original Height</title>
+            <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
         </property>
         <property id="mainTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
             <title>mainTemplate</title>

@@ -40,9 +40,12 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
         $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
 
         $upgraded = false;
-        $widgetChangeOption = null;
         $newTemplateId = null;
+        $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
+
         foreach ($widget->widgetOptions as $option) {
+            $widgetChangeOption = null;
+
             switch ($option->option) {
                 case 'background-color':
                     $widgetChangeOption = 'itemBackgroundColor';
@@ -67,32 +70,35 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
                 case 'image-fit':
                     $widgetChangeOption = 'itemImageFit';
                     break;
-
                 case 'templateId':
-                    $templateId = $widget->getOptionValue('templateId', '');
-                    switch ($templateId) {
-                        case 'media-rss-image-only':
-                            $newTemplateId = 'article_image_only';
-                            break;
+                    if ($overrideTemplate == 0) {
+                        $templateId = $widget->getOptionValue('templateId', '');
+                        switch ($templateId) {
+                            case 'media-rss-image-only':
+                                $newTemplateId = 'article_image_only';
+                                break;
 
-                        case 'media-rss-with-left-hand-text':
-                            $newTemplateId = 'article_with_left_hand_text';
-                            break;
+                            case 'media-rss-with-left-hand-text':
+                                $newTemplateId = 'article_with_left_hand_text';
+                                break;
 
-                        case 'media-rss-with-title':
-                            $newTemplateId = 'article_with_title';
-                            break;
+                            case 'media-rss-with-title':
+                                $newTemplateId = 'article_with_title';
+                                break;
 
-                        case 'prominent-title-with-desc-and-name-separator':
-                            $newTemplateId = 'article_with_desc_and_name_separator';
-                            break;
+                            case 'prominent-title-with-desc-and-name-separator':
+                                $newTemplateId = 'article_with_desc_and_name_separator';
+                                break;
 
-                        case 'title-only':
-                            $newTemplateId = 'article_title_only';
-                            break;
+                            case 'title-only':
+                                $newTemplateId = 'article_title_only';
+                                break;
 
-                        default:
-                            break;
+                            default:
+                                break;
+                        }
+                    } else {
+                        $newTemplateId = 'article_custom_html';
                     }
 
                     if (!empty($newTemplateId)) {
@@ -109,6 +115,11 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
                 $widget->changeOption($option->option, $widgetChangeOption);
                 $upgraded = true;
             }
+        }
+
+        if ($overrideTemplate == 1) {
+            // Decode URL
+            $widget->setOptionValue('uri', 'attrib', urldecode($widget->getOptionValue('uri', '')));
         }
 
         return $upgraded;
