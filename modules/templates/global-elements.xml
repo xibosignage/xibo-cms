@@ -485,4 +485,189 @@ $('.date').each(function(_idx, dateEl){
             <asset id="image" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
     </template>
+    <template>
+        <id>line</id>
+        <title>Line</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <thumbnail>line-thumb</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="lineWidth" type="number">
+                <title>Width</title>
+                <default>5</default>
+            </property>
+            <property id="lineColor" type="color">
+                <title>Color</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="lineStyle" type="dropdown" mode="single">
+                <title>Style</title>
+                <default>solid</default>
+                <options>
+                    <option name="solid">Solid</option>
+                    <option name="dotted">Dotted</option>
+                    <option name="dashed">Dashed</option>
+                    <option name="double">Double</option>
+                </options>
+            </property>
+            <property id="orientation" type="dropdown" mode="single">
+                <title>Orientation</title>
+                <default>horizontal</default>
+                <options>
+                    <option name="horizontal">Horizontal</option>
+                    <option name="vertical">Vertical</option>
+                </options>
+            </property>
+            <property id="tip1Type" type="dropdown" mode="single">
+                <title>Tip1 Type</title>
+                <default>squared</default>
+                <options>
+                    <option name="squared">Squared</option>
+                    <option name="diamond">Diamond</option>
+                    <option name="line-arrow">Line Arrow</option>
+                    <option name="solid-arrow">Solid Arrow</option>
+                    <option name="circle">Circle</option>
+                </options>
+            </property>
+            <property id="tip2Type" type="dropdown" mode="single">
+                <title>Tip2 Type</title>
+                <default>squared</default>
+                <options>
+                    <option name="squared">Squared</option>
+                    <option name="diamond">Diamond</option>
+                    <option name="line-arrow">Line Arrow</option>
+                    <option name="solid-arrow">Solid Arrow</option>
+                    <option name="circle">Circle</option>
+                </options>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <hbs><![CDATA[
+<div class="line-container" style="display: flex;align-items:center;height: 100%;
+    {{# if orientation }}
+        {{#eq orientation "vertical"}}flex-direction: column;{{/eq}}
+    {{/if}}
+    ">
+    <div class="line-tip1" style="
+        {{#if tip1Type }}
+            {{#eq tip1Type "squared"}}display:none;{{/eq}}
+            {{#eq tip1Type "circle"}}
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
+                border-radius: 50%;
+                transform-origin: top left;
+                transform: translate(0, calc({{lineWidth}}px / 2));
+            {{/eq}}
+            {{#eq tip1Type "solid-arrow"}}
+                {{#eq orientation "horizontal"}}
+                    border-top: calc({{lineWidth}}px * 2) solid transparent;
+                    border-bottom: calc({{lineWidth}}px * 2) solid transparent;
+                    border-right: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                {{else}}
+                    border-bottom: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                    border-left: calc({{lineWidth}}px * 2) solid transparent;
+                    border-right: calc({{lineWidth}}px * 2) solid transparent;
+                {{/eq}}
+            {{/eq}}
+            {{#eq tip1Type "diamond"}}
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
+                {{#eq orientation "vertical"}}
+                    transform: translate(calc(calc({{lineWidth}}px * 3)/1.6),calc(-{{lineWidth}}px / 1.6)) rotate(45deg);
+                    transform-origin: top left;
+                {{else}}
+                    transform: rotate(45deg);
+                {{/eq}}
+            {{/eq}}
+            {{#eq tip1Type "line-arrow"}}
+                width: calc({{lineWidth}}px * 4);
+                height: calc({{lineWidth}}px * 4);
+                transform-origin: 50% 50%;
+                {{#eq orientation "horizontal"}}
+                    transform:  translate(90%, calc({{lineWidth}}px / 2)) rotate(-135deg);
+                {{else}}
+                    transform:  translate(1px, 90%) rotate(-45deg);
+                {{/eq}}
+                box-shadow: inset -{{lineWidth}}px {{lineWidth}}px 0 0 {{lineColor}};
+                border-radius: 0 calc({{lineWidth}}px*0.15) 0 0;
+            {{/eq}}
+        {{/if}}
+    "></div>
+    <div class="line"
+        style="border-color: {{lineColor}};
+        {{#if lineStyle }}border-style: {{lineStyle}};{{/if}}
+        {{#if orientation }}
+            {{#eq orientation "horizontal"}}
+                height: {{lineWidth}}px;
+                width: 100%;
+                border-width: {{lineWidth}}px 0 0 0;
+                transform: translateY(calc({{lineWidth}}px / 2));
+            {{/eq}}
+            {{#eq orientation "vertical"}}
+                width: {{lineWidth}}px;
+                height: 100%;
+                border-width: 0 {{lineWidth}}px 0 0;
+                transform: translateX(calc({{lineWidth}}px / 2));
+            {{/eq}}
+        {{/if}}"
+    ></div>
+    <div class="line-tip2" style="
+        {{#if tip2Type }}
+            {{#eq tip2Type "squared"}}display: none;{{/eq}}
+            {{#eq tip2Type "circle"}}
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
+                border-radius: 50%;
+                transform-origin: top left;
+                transform: translate(0, calc({{lineWidth}}px / 2));
+            {{/eq}}
+            {{#eq tip2Type "solid-arrow"}}
+                {{#eq orientation "horizontal"}}
+                    border-top: calc({{lineWidth}}px * 2) solid transparent;
+                    border-bottom: calc({{lineWidth}}px * 2) solid transparent;
+                    border-left: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                {{else}}
+                    border-top: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                    border-right: calc({{lineWidth}}px * 2) solid transparent;
+                    border-left: calc({{lineWidth}}px * 2) solid transparent;
+                {{/eq}}
+            {{/eq}}
+            {{#eq tip2Type "diamond"}}
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
+                {{#eq orientation "vertical"}}
+                    transform: translate(calc(calc({{lineWidth}}px * 3)/1.6),calc(-{{lineWidth}}px / 1.6)) rotate(45deg);
+                    transform-origin: top left;
+                {{else}}
+                    transform: rotate(45deg);
+                {{/eq}}
+            {{/eq}}
+            {{#eq tip2Type "line-arrow"}}
+                width: calc({{lineWidth}}px * 4);
+                height: calc({{lineWidth}}px * 4);
+                transform-origin: 50% 50%;
+                {{#eq orientation "horizontal"}}
+                    transform:  translate(-85%, calc({{lineWidth}}px / 2)) rotate(45deg);
+                {{else}}
+                    transform:  translate(2px, -90%) rotate(135deg);
+                {{/eq}}
+                box-shadow: inset -{{lineWidth}}px {{lineWidth}}px 0 0 {{lineColor}};
+                border-radius: 0 calc({{lineWidth}}px*0.15) 0 0;
+            {{/eq}}
+        {{/if}}
+    "></div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="line-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/line.png" />
+        </assets>
+    </template>
 </templates>
