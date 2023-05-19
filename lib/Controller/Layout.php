@@ -895,8 +895,7 @@ class Layout extends Base
         // for remote source, we import the Layout and save the thumbnail to temporary file
         // after save we can move the image to correct library folder, as we have campaignId
         if ($source === 'remote' && !empty($layout->getUnmatchedProperty('thumbnail'))) {
-            $campaignThumb = $template->getThumbnailUri();
-            rename($layout->getUnmatchedProperty('thumbnail'), $campaignThumb);
+            rename($layout->getUnmatchedProperty('thumbnail'), $template->getThumbnailUri());
         }
 
         // Return

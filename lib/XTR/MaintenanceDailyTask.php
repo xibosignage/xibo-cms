@@ -170,6 +170,10 @@ class MaintenanceDailyTask implements TaskInterface
                             'import' => true
                         ]);
 
+                        if (!empty($layout->getUnmatchedProperty('thumbnail'))) {
+                            rename($layout->getUnmatchedProperty('thumbnail'), $layout->getThumbnailUri());
+                        }
+
                         try {
                             $this->layoutFactory->getById($this->config->getSetting('DEFAULT_LAYOUT'));
                         } catch (NotFoundException $exception) {

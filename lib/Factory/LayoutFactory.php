@@ -1223,7 +1223,7 @@ class LayoutFactory extends BaseFactory
         if (!$layoutJson) {
             throw new InvalidArgumentException(__('Unable to read layout details from ZIP'));
         }
-        
+
         $layoutDetails = json_decode($layoutJson, true);
 
         // Get the Playlist details
@@ -1847,8 +1847,10 @@ class LayoutFactory extends BaseFactory
             }
         }
 
+        // Save the thumbnail to a temporary location.
         $image_path = $zip->getFromName('library/thumbs/campaign_thumb.png');
         if ($image_path !== false) {
+            // $libraryLocation has temp on it already.
             $temporaryLayoutThumb = $libraryLocation . $layout->layout . '-campaign_thumb.png';
             $layout->setUnmatchedProperty('thumbnail', $temporaryLayoutThumb);
             $image = imagecreatefromstring($image_path);
