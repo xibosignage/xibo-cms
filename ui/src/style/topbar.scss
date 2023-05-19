@@ -70,6 +70,10 @@
             white-space: nowrap;
             max-width: 300px;
             float: left;
+
+            &:hover {
+                border-bottom: 1px solid black;
+            }
         }
 
         #layout-info-status {
