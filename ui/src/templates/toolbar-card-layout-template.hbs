@@ -1,4 +1,4 @@
-<div class="toolbar-card {{#if thumbnail}}has-thumb{{/if}} {{#if provider}}from-provider{{/if}} hide-content"
+<div class="toolbar-card {{#if provider}}from-provider{{/if}} hide-content"
     data-type="layout_template"
     data-target="layout"
     data-template-id="{{id}}"
@@ -16,13 +16,6 @@
             </a>
         {{/if}}
 
-        {{#if orientation}}
-            <span class="badge badge-pill badge-primary">{{orientation}}</span>
-        {{/if}}
-        {{#each tags}}
-            <span class="badge badge-pill badge-info">{{this}}</span>
-        {{/each}}
-
         {{#if duration}}
             <div class="media-duration" data-title="{{trans.duration}}" data-toggle="tooltip" data-placement="top">
                 {{duration}}
@@ -30,4 +23,11 @@
         {{/if}}
     </div>
     <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{title}}" data-placement="right">{{title}}</span>
+
+    {{#if orientation}}
+        <span class="badge badge-pill badge-primary">{{orientation}}</span>
+    {{/if}}
+    {{#each tags}}
+        <span class="badge badge-pill badge-info">{{this}}</span>
+    {{/each}}
 </div>
