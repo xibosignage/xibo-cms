@@ -756,34 +756,3 @@
         }
     </script>
 {% endblock %}
-
-{% block javaScriptTemplates %}
-    {{ parent() }}
-
-    {% verbatim %}
-    <script type="text/x-handlebars-template" id="template-layout-add-template-cards">
-        <div class="template-card w-25 p-2">
-            <div class="card" data-layout-id="{{ id }}" data-source="{{ source }}" data-download="{{ download }}">
-                {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
-                <div class="card-body">
-                    <h5 class="card-title">{{ title }}</h5>
-                    {{#if description}}<p class="card-text" style="max-height:200px; overflow-y: auto"><span class="text-muted">{{{description}}}</span></p>{{/if}}
-                </div>
-                {{#if showFooter }}
-                <div class="card-footer">
-                    {{#if orientation}}
-                        <span class="badge badge-pill badge-primary">{{orientation}}</span>
-                    {{/if}}
-                    {{#each tags}}
-                        <span class="badge badge-pill badge-info">{{this}}</span>
-                    {{/each}}
-                    {{#if provider.logoUrl}}
-                        <img class="provider-image" src="{% endverbatim %}{{ theme.rootUri() }}{% verbatim %}{{ provider.logoUrl }}" alt="{{ provider.message }}">
-                    {{/if}}
-                </div>
-                {{/if}}
-            </div>
-        </div>
-    </script>
-    {% endverbatim %}
-{% endblock %}

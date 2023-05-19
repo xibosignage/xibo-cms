@@ -1695,6 +1695,35 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       // Output error to console
       console.error(jqXHR, textStatus, errorThrown);
     });
+  } else if (draggableType === 'layout_template') {
+    // Call the replace function and reload on success.
+    $.ajax({
+      method: urlsForApi.layout.applyTemplate.type,
+      url: urlsForApi.layout.applyTemplate.url
+        .replace(':id', lD.layout.layoutId),
+      cache: false,
+      dataType: 'json',
+      data: {
+        templateId: draggableData?.templateId,
+        source: draggableData?.source,
+        download: draggableData?.download,
+      },
+      success: function(response) {
+        if (response.success && response.id) {
+          // eslint-disable-next-line new-cap
+          lD.reloadData(response.data, true);
+        } else if (response.login) {
+          // eslint-disable-next-line new-cap
+          LoginBox();
+        } else {
+          // eslint-disable-next-line new-cap
+          SystemMessage(response.message || errorMessagesTrans.unknown);
+        }
+      },
+      error: function(xhr) {
+        console.error(xhr);
+      },
+    });
   } else {
     // Adding a module
     // Check if the module has data type, if not

@@ -1224,6 +1224,7 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     menuIndex: menu,
     filters: this.menuItems[menu].filters,
     trans: toolbarTrans,
+    formClass: 'media-search-form',
   });
 
   // Append template to the search main div
@@ -1524,21 +1525,24 @@ Toolbar.prototype.elementsContentCreateWindow = function(menu) {
  */
 Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
   const self = this;
-  const $container =
-    self.DOMObject.find('#layout_templates-container-' + menu);
 
   // Deselect previous selections
   self.deselectCardsAndDropZones();
 
-  // Add search form before the elements container
-  const $searchForm = $(ToolbarSearchFormTemplate({
-    trans: toolbarTrans,
+  // Render template
+  const html = ToolbarContentMediaTemplate({
+    menuIndex: menu,
     filters: this.menuItems[menu].filters,
-  }));
-  $container.before($searchForm);
+    trans: toolbarTrans,
+    formClass: 'layout_tempates-search-form',
+    headerMessage: toolbarTrans.layoutTemplatesMessage,
+  });
+
+  // Append template to the search main div
+  self.DOMObject.find('#layout_templates-container-' + menu).html(html);
 
   // Load content
-  this.layoutTemplatesContentPopulate(menu, $container);
+  this.layoutTemplatesContentPopulate(menu);
 };
 
 /**
@@ -1547,9 +1551,9 @@ Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
  */
 Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
   const self = this;
-  const app = this.parent;
   const filters = self.menuItems[menu].filters;
   const $container = self.DOMObject.find('#layout_templates-container-' + menu);
+  const $content = self.DOMObject.find('#media-content-' + menu);
   const $searchForm = $container.parent().find('.toolbar-search-form');
 
   // Load template data
@@ -1563,12 +1567,12 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
       self.deselectCardsAndDropZones();
 
       // Empty content
-      $container.empty();
+      $content.empty();
       self.menuItems[menu].itemCount = 0;
     }
 
     // Show loading
-    $container.before(
+    $content.before(
       `<div class="loading-container-toolbar w-100 text-center">
         <span class="loading fa fa-cog fa-spin"></span>
       </div>`);
@@ -1577,12 +1581,12 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
     $searchForm.find('.no-results-message').remove();
 
     // If there's no masonry sizer, add it
-    if ($container.find('.toolbar-card-sizer').length === 0) {
-      $container.append('<div class="toolbar-card-sizer"></div>');
+    if ($content.find('.toolbar-card-sizer').length === 0) {
+      $content.append('<div class="toolbar-card-sizer"></div>');
     }
 
     // Init masonry
-    $container.masonry({
+    $content.masonry({
       itemSelector: '.toolbar-card',
       columnWidth: '.toolbar-card-sizer',
       percentPosition: true,
@@ -1622,6 +1626,10 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
                 .attr('content') + el.provider.logoUrl;
             }
 
+            if (el.provider && !el.provider.link) {
+              el.provider.link = '#';
+            }
+
             // Get template and add
             const $card = $(ToolbarCardLayoutTemplateTemplate(el));
 
@@ -1631,18 +1639,18 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
             }
 
             // Append to container
-            $container.append($card).masonry('appended', $card);
+            $content.append($card).masonry('appended', $card);
 
             self.menuItems[menu].itemCount++;
           });
 
           // Layout masonry after images are loaded
-          $container.imagesLoaded(function() {
+          $content.imagesLoaded(function() {
             // Recalculate masonry layout
-            $container.masonry('layout');
+            $content.masonry('layout');
 
             // Show content in widgets
-            $container.find('.toolbar-card').removeClass('hide-content');
+            $content.find('.toolbar-card').removeClass('hide-content');
 
             // Show more button
             if (response.data.length > 0) {
@@ -1650,7 +1658,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
                 $('<button class="btn btn-block btn-white show-more">' +
                   toolbarTrans.showMore +
                   '</button>');
-              $container.after($showMoreBtn);
+              $content.after($showMoreBtn);
 
               $showMoreBtn.off('click').on('click', function() {
                 loadData(false);
@@ -1664,16 +1672,18 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
             }
 
             // Fix for scrollbar
-            const $parent = $container.parent();
+            const $parent = $content.parent();
             $parent.toggleClass(
               'scroll',
               ($parent.width() < $parent[0].scrollHeight),
             );
+
+            self.handleCardsBehaviour();
           });
         } else if (response.login) {
           window.location.href = window.location.href;
           location.reload();
-        } else if ($container.find('.toolbar-card').length === 0) {
+        } else if ($content.find('.toolbar-card').length === 0) {
           $searchForm.append(
             '<div class="no-results-message">' +
             toolbarTrans.noMediaToShow +

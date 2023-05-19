@@ -834,8 +834,8 @@ class Layout extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
 
-        // TODO: The goal here is to replace the draft of this layout
-        //  I am not convinced this is the right way to do this!
+        // Discard the current draft and replace it
+        $layout->discardDraft(false);
 
         // Is the source remote (undocumented as it should only be via WEB)
         $source = $sanitizedParams->getString('source');
@@ -878,29 +878,32 @@ class Layout extends Base
             $templateId = $sanitizedParams->getInt('templateId');
             $this->getLog()->debug('add: loading template for clone operation. templateId: ' . $templateId);
 
-            // Load the template
-            $template = $this->layoutFactory->loadById($templateId);
+            // Clone the template
+            $template = clone $this->layoutFactory->loadById($templateId);
+
+            // Overwrite our new properties
+            $template->layout = $layout->layout;
+            $template->setOwner($layout->ownerId);
         }
 
-        $layout->save();
+        // Persist the parentId
+        $template->parentId = $layout->parentId;
+        $template->campaignId = $layout->campaignId;
+        $template->publishedStatusId = 2;
+        $template->save(['validate' => false]);
 
         // for remote source, we import the Layout and save the thumbnail to temporary file
         // after save we can move the image to correct library folder, as we have campaignId
         if ($source === 'remote' && !empty($layout->getUnmatchedProperty('thumbnail'))) {
-            $campaignThumb = $layout->getThumbnailUri();
+            $campaignThumb = $template->getThumbnailUri();
             rename($layout->getUnmatchedProperty('thumbnail'), $campaignThumb);
-        }
-
-        // After checkout, if we imported remote sourced Layout, copy the thumb
-        if ($source === 'remote' && !empty($campaignThumb)) {
-            copy($campaignThumb, $layout->getThumbnailUri());
         }
 
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $layout->layout),
-            'id' => $layout->layoutId,
-            'data' => $layout
+            'id' => $template->layoutId,
+            'data' => $template,
         ]);
 
         return $this->render($request, $response);

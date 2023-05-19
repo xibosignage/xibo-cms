@@ -1,8 +1,10 @@
 <div class="toolbar-card {{#if thumbnail}}has-thumb{{/if}} {{#if provider}}from-provider{{/if}} hide-content"
     data-type="layout_template"
+    data-target="layout"
     data-template-id="{{id}}"
     data-data-type="{{dataType}}"
     data-title="{{title}}"
+    data-source="{{#if provider}}remote{{else}}local{{/if}}"
     data-download="{{download}}">
 
     <div class="toolbar-card-preview">

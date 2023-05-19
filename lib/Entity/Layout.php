@@ -2315,7 +2315,7 @@ class Layout implements \JsonSerializable
      * Discard the Draft
      * @throws GeneralException
      */
-    public function discardDraft()
+    public function discardDraft(bool $isShouldUpdateParent = true)
     {
         // We are the draft - make sure we have a parent
         if (!$this->isChild()) {
@@ -2327,11 +2327,13 @@ class Layout implements \JsonSerializable
         $this->delete();
 
         // We also need to update the parent so that it is no longer draft
-        $parent = $this->layoutFactory->getById($this->parentId);
-        $parent->publishedStatusId = 1;
-        $parent->save([
-            self::$saveOptionsMinimum
-        ]);
+        if ($isShouldUpdateParent) {
+            $parent = $this->layoutFactory->getById($this->parentId);
+            $parent->publishedStatusId = 1;
+            $parent->save([
+                self::$saveOptionsMinimum
+            ]);
+        }
     }
 
     //
