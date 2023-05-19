@@ -490,15 +490,15 @@ $('.date').each(function(_idx, dateEl){
         <title>Line</title>
         <type>element</type>
         <dataType>global</dataType>
-        <thumbnail>square-thumb</thumbnail>
+        <thumbnail>line-thumb</thumbnail>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
         <properties>
-            <property id="borderWidth" type="number">
+            <property id="lineWidth" type="number">
                 <title>Width</title>
                 <default>5</default>
             </property>
-            <property id="borderColor" type="color">
+            <property id="lineColor" type="color">
                 <title>Color</title>
                 <default>%THEME_COLOR%</default>
             </property>
@@ -553,79 +553,113 @@ $('.date').each(function(_idx, dateEl){
     ">
     <div class="line-tip1" style="
         {{#if tip1Type }}
-            {{#eq tip1Type "squared"}}
-                background-color: {{borderColor}};
-                width: {{borderWidth}}px;
-                height: {{borderWidth}}px;
-            {{/eq}}
+            {{#eq tip1Type "squared"}}display:none;{{/eq}}
             {{#eq tip1Type "circle"}}
-                background-color: {{borderColor}};
-                width: calc({{borderWidth}}px * 3);
-                height: calc({{borderWidth}}px * 3);
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
                 border-radius: 50%;
+                transform-origin: top left;
+                transform: translate(0, calc({{lineWidth}}px / 2));
             {{/eq}}
             {{#eq tip1Type "solid-arrow"}}
-                border-top: calc({{borderWidth}}px * 2) solid transparent;
-                border-bottom: calc({{borderWidth}}px * 2) solid transparent;
-                border-right: calc({{borderWidth}}px * 4) solid {{borderColor}};
+                {{#eq orientation "horizontal"}}
+                    border-top: calc({{lineWidth}}px * 2) solid transparent;
+                    border-bottom: calc({{lineWidth}}px * 2) solid transparent;
+                    border-right: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                {{else}}
+                    border-bottom: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                    border-left: calc({{lineWidth}}px * 2) solid transparent;
+                    border-right: calc({{lineWidth}}px * 2) solid transparent;
+                {{/eq}}
             {{/eq}}
             {{#eq tip1Type "diamond"}}
-                background-color: {{borderColor}};
-                width: calc({{borderWidth}}px * 3);
-                height: calc({{borderWidth}}px * 3);
-                transform: rotate(45deg);
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
+                {{#eq orientation "vertical"}}
+                    transform: translate(calc(calc({{lineWidth}}px * 3)/1.6),calc(-{{lineWidth}}px / 1.6)) rotate(45deg);
+                    transform-origin: top left;
+                {{else}}
+                    transform: rotate(45deg);
+                {{/eq}}
             {{/eq}}
             {{#eq tip1Type "line-arrow"}}
-                width: calc({{borderWidth}}px * 4);
-                height: calc({{borderWidth}}px * 4);
+                width: calc({{lineWidth}}px * 4);
+                height: calc({{lineWidth}}px * 4);
                 transform-origin: 50% 50%;
-                transform:  translate(90%, calc({{borderWidth}}px / 2)) rotate(-135deg);
-                box-shadow: inset -{{borderWidth}}px {{borderWidth}}px 0 0 {{borderColor}};
-                border-radius: 0 calc({{borderWidth}}px*0.15) 0 0;
+                {{#eq orientation "horizontal"}}
+                    transform:  translate(90%, calc({{lineWidth}}px / 2)) rotate(-135deg);
+                {{else}}
+                    transform:  translate(1px, 90%) rotate(-45deg);
+                {{/eq}}
+                box-shadow: inset -{{lineWidth}}px {{lineWidth}}px 0 0 {{lineColor}};
+                border-radius: 0 calc({{lineWidth}}px*0.15) 0 0;
             {{/eq}}
         {{/if}}
     "></div>
     <div class="line"
-        style="border-color: {{borderColor}};
+        style="border-color: {{lineColor}};
         {{#if lineStyle }}border-style: {{lineStyle}};{{/if}}
         {{#if orientation }}
             {{#eq orientation "horizontal"}}
-                height: {{borderWidth}}px;
+                height: {{lineWidth}}px;
                 width: 100%;
-                border-width: {{borderWidth}}px 0 0 0;
-                transform: translateY(calc({{borderWidth}}px / 2));
+                border-width: {{lineWidth}}px 0 0 0;
+                transform: translateY(calc({{lineWidth}}px / 2));
             {{/eq}}
             {{#eq orientation "vertical"}}
-                width: {{borderWidth}}px;
+                width: {{lineWidth}}px;
                 height: 100%;
-                border-width: 0 0 0 {{borderWidth}}px;
-                transform: translateX(calc({{borderWidth}}px / 2));
+                border-width: 0 {{lineWidth}}px 0 0;
+                transform: translateX(calc({{lineWidth}}px / 2));
             {{/eq}}
         {{/if}}"
     ></div>
     <div class="line-tip2" style="
         {{#if tip2Type }}
-            {{#eq tip2Type "squared"}}
-                background-color: {{borderColor}};
-                width: {{borderWidth}}px;
-                height: {{borderWidth}}px;
-            {{/eq}}
+            {{#eq tip2Type "squared"}}display: none;{{/eq}}
             {{#eq tip2Type "circle"}}
-                background-color: {{borderColor}};
-                width: calc({{borderWidth}}px * 3);
-                height: calc({{borderWidth}}px * 3);
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
                 border-radius: 50%;
+                transform-origin: top left;
+                transform: translate(0, calc({{lineWidth}}px / 2));
             {{/eq}}
             {{#eq tip2Type "solid-arrow"}}
-                border-top: calc({{borderWidth}}px * 2) solid transparent;
-                border-bottom: calc({{borderWidth}}px * 2) solid transparent;
-                border-left: calc({{borderWidth}}px * 4) solid {{borderColor}};
+                {{#eq orientation "horizontal"}}
+                    border-top: calc({{lineWidth}}px * 2) solid transparent;
+                    border-bottom: calc({{lineWidth}}px * 2) solid transparent;
+                    border-left: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                {{else}}
+                    border-top: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                    border-right: calc({{lineWidth}}px * 2) solid transparent;
+                    border-left: calc({{lineWidth}}px * 2) solid transparent;
+                {{/eq}}
             {{/eq}}
             {{#eq tip2Type "diamond"}}
-                background-color: {{borderColor}};
-                width: calc({{borderWidth}}px * 3);
-                height: calc({{borderWidth}}px * 3);
-                transform: rotate(45deg);
+                background-color: {{lineColor}};
+                width: calc({{lineWidth}}px * 3);
+                height: calc({{lineWidth}}px * 3);
+                {{#eq orientation "vertical"}}
+                    transform: translate(calc(calc({{lineWidth}}px * 3)/1.6),calc(-{{lineWidth}}px / 1.6)) rotate(45deg);
+                    transform-origin: top left;
+                {{else}}
+                    transform: rotate(45deg);
+                {{/eq}}
+            {{/eq}}
+            {{#eq tip2Type "line-arrow"}}
+                width: calc({{lineWidth}}px * 4);
+                height: calc({{lineWidth}}px * 4);
+                transform-origin: 50% 50%;
+                {{#eq orientation "horizontal"}}
+                    transform:  translate(-85%, calc({{lineWidth}}px / 2)) rotate(45deg);
+                {{else}}
+                    transform:  translate(2px, -90%) rotate(135deg);
+                {{/eq}}
+                box-shadow: inset -{{lineWidth}}px {{lineWidth}}px 0 0 {{lineColor}};
+                border-radius: 0 calc({{lineWidth}}px*0.15) 0 0;
             {{/eq}}
         {{/if}}
     "></div>
@@ -633,7 +667,7 @@ $('.date').each(function(_idx, dateEl){
             ]]></hbs>
         </stencil>
         <assets>
-            <asset id="square-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/square.png" />
+            <asset id="line-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/line.png" />
         </assets>
     </template>
 </templates>
