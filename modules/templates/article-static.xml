@@ -23,8 +23,15 @@
         <id>article_custom_html</id>
         <type>static</type>
         <dataType>article</dataType>
+        <showIn>none</showIn>
         <title>Articles shown with custom HTML</title>
         <properties>
+            <property id="customTemplate" type="hidden">
+                <default>1</default>
+            </property>
+            <property id="moduleType" type="hidden">
+                <default>article</default>
+            </property>
             <property id="effect" type="effectSelector" variant="all">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
@@ -64,7 +71,7 @@
                     <option name="rtl">Right to Left (RTL)</option>
                 </options>
             </property>
-            <property id="template" type="richText" allowLibraryRefs="true" variant="html">
+            <property id="template" type="code" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
             </property>
@@ -72,7 +79,7 @@
                 <title>Snippets</title>
                 <helpText>Choose element to add to template</helpText>
             </property>
-            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
             </property>

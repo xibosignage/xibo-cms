@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>A module for showing Stock quotes</description>
     <class></class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\StocksWidgetCompatibility</compatibilityClass>
     <type>stocks</type>
     <dataType>stock</dataType>
     <dataCacheKey>%items%</dataCacheKey>

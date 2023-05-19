@@ -137,8 +137,8 @@ class WeatherWidgetCompatibility implements WidgetCompatibilityInterface
 
         // If overriden, we need to tranlate the legacy options to the new values
         if ($overrideTemplate == 1) {
-            $widget->setOptionValue('widgetDesignWidth', 'attr', $widget->getOptionValue('widgetOriginalWidth', '250'));
-            $widget->setOptionValue('widgetDesignHeight', 'attr', $widget->getOptionValue('widgetOriginalHeight', '250'));
+            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
+            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
         }
 
         return $upgraded;

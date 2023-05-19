@@ -144,6 +144,11 @@ class ModulesTableVerFourMigration extends AbstractMigration
             INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
               (\'core-mastodon\', \'1\', \'1\', \'60\', \'[]\');
             ');
+
+            $this->execute('
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
+              (\'core-countdown-custom\', \'1\', \'1\', \'60\', \'[]\');
+            ');
         } catch (Exception $e) {
             // Keep the old module table around for diagnosis and just continue on.
         }

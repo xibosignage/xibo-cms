@@ -81,10 +81,10 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
         if ($overrideTemplate == 1) {
             $widget->setOptionValue('template_html', 'cdata', $widget->getOptionValue('mainTemplate', ''));
             $widget->setOptionValue('template_style', 'cdata', $widget->getOptionValue('styleSheet', ''));
-            $widget->setOptionValue('numCols', 'attr', $widget->getOptionValue('clockCols', 1));
-            $widget->setOptionValue('numRows', 'attr', $widget->getOptionValue('clockRows', 1));
-            $widget->setOptionValue('widgetDesignWidth', 'attr', $widget->getOptionValue('widgetOriginalWidth', '250'));
-            $widget->setOptionValue('widgetDesignHeight', 'attr', $widget->getOptionValue('widgetOriginalHeight', '250'));
+            $widget->setOptionValue('numCols', 'attrib', $widget->getOptionValue('clockCols', 1));
+            $widget->setOptionValue('numRows', 'attrib', $widget->getOptionValue('clockRows', 1));
+            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
+            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
         }
 
         return $upgraded;

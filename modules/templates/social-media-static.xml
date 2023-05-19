@@ -20,6 +20,163 @@
   -->
 <templates>
     <template>
+        <id>social_media_custom_html</id>
+        <type>static</type>
+        <dataType>social-media</dataType>
+        <showIn>none</showIn>
+        <properties>
+            <property id="customTemplate" type="hidden">
+                <default>1</default>
+            </property>
+            <property id="moduleType" type="hidden">
+                <default>social-media</default>
+            </property>
+            <property id="widgetDesignWidth" type="number">
+                <title>Original Width</title>
+                <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            </property>
+            <property id="widgetDesignHeight" type="number">
+                <title>Original Height</title>
+                <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
+            </property>
+            <property id="widgetDesignGap" type="number">
+                <title>Original Padding</title>
+                <helpText>This is the intended padding of the template and is used to position the Widget within its region when the template is applied.</helpText>
+            </property>
+            <property id="template" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
+                <title>Main Template</title>
+            </property>
+            <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
+                <title>Optional Stylesheet Template</title>
+            </property>
+            <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
+                <title>Optional JavaScript</title>
+            </property>
+            <property id="resultContent" type="dropdown" mode="single">
+                <default>1</default>
+                <title>Content Type</title>
+                <helpText>This is the intended tweet content type.</helpText>
+                <options>
+                    <option name="0">All Posts</option>
+                    <option name="1">Posts with text only content</option>
+                    <option name="2">Posts with text and image content</option>
+                </options>
+            </property>
+            <property id="itemsPerPage" type="number">
+                <title>Items Per Page</title>
+                <helpText>The number of items to show per page (default = 5).</helpText>
+                <default>5</default>
+            </property>
+            <property id="displayDirection" type="dropdown" mode="single">
+                <title>Items direction</title>
+                <helpText>The display order if there's more than one item.</helpText>
+                <default>0</default>
+                <options>
+                    <option name="0"></option>
+                    <option name="1">Horizontal</option>
+                    <option name="2">Vertical</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="itemsPerPage" type="gt">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
+                <visibility>
+                    <test>
+                        <condition field="effect" type="neq">none</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="alignmentH" type="dropdown" mode="single">
+                <title>Horizontal Align</title>
+                <helpText>How should this widget be aligned?</helpText>
+                <default>center</default>
+                <options>
+                    <option name="left">Left</option>
+                    <option name="center">Center</option>
+                    <option name="right">Right</option>
+                </options>
+            </property>
+            <property id="alignmentV" type="dropdown" mode="single">
+                <title>Vertical Align</title>
+                <helpText>How should this widget be vertically aligned?</helpText>
+                <default>middle</default>
+                <options>
+                    <option name="top">Top</option>
+                    <option name="middle">Middle</option>
+                    <option name="bottom">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
+
+<div class="item-template" style="display: none;">
+{{template|raw}}
+</div>
+
+<div class="twitter-white-logo" data-url="[[assetId=providerLogoWhite]]" style="display: none;">
+<div class="twitter-blue-logo" data-url="[[assetId=providerLogo]]" style="display: none;">
+
+<style>
+/* Legacy properties from bootstrap */
+.social-media-item {
+    float: left;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+*, :after, :before {
+    box-sizing: border-box;
+}
+
+.container:after, .container:before {
+    clear: both;
+    display: table;
+    content: " ";
+}
+
+body {
+    font-size: 14px;
+}
+
+{{styleSheet|raw}}
+</style>
+            ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+$(target).xiboLayoutScaler(properties);
+$(target).find('img').xiboImageRender(properties);
+$(target).xiboTextRender(properties, $(target).find('#content > .social-media-item'));
+        ]]></onTemplateRender>
+        <assets>
+            <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
+        </assets>
+    </template>
+    <template>
         <id>social_media_static_1</id>
         <type>static</type>
         <dataType>social-media</dataType>

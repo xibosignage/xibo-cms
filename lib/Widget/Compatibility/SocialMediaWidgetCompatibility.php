@@ -41,61 +41,66 @@ class SocialMediaWidgetCompatibility implements WidgetCompatibilityInterface
 
         $upgraded = false;
         $newTemplateId = null;
+        $templateId = $widget->getOptionValue('templateId', '');
+        $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
+
         foreach ($widget->widgetOptions as $option) {
-            $templateId = $widget->getOptionValue('templateId', '');
-
             if ($option->option === 'templateId') {
-                switch ($templateId) {
-                    case 'full-timeline-np':
-                        $newTemplateId = 'social_media_static_1';
-                        break;
+                if ($overrideTemplate == 0) {
+                    switch ($templateId) {
+                        case 'full-timeline-np':
+                            $newTemplateId = 'social_media_static_1';
+                            break;
 
-                    case 'full-timeline':
-                        $newTemplateId = 'social_media_static_2';
-                        break;
+                        case 'full-timeline':
+                            $newTemplateId = 'social_media_static_2';
+                            break;
 
-                    case 'tweet-only':
-                        $newTemplateId = 'social_media_static_3';
-                        break;
+                        case 'tweet-only':
+                            $newTemplateId = 'social_media_static_3';
+                            break;
 
-                    case 'tweet-with-profileimage-left':
-                        $newTemplateId = 'social_media_static_4';
-                        break;
+                        case 'tweet-with-profileimage-left':
+                            $newTemplateId = 'social_media_static_4';
+                            break;
 
-                    case 'tweet-with-profileimage-right':
-                        $newTemplateId = 'social_media_static_5';
-                        break;
+                        case 'tweet-with-profileimage-right':
+                            $newTemplateId = 'social_media_static_5';
+                            break;
 
-                    case 'tweet-1':
-                        $newTemplateId = 'social_media_static_6';
-                        break;
+                        case 'tweet-1':
+                            $newTemplateId = 'social_media_static_6';
+                            break;
 
-                    case 'tweet-2':
-                        $newTemplateId = 'social_media_static_7';
-                        break;
+                        case 'tweet-2':
+                            $newTemplateId = 'social_media_static_7';
+                            break;
 
-                    case 'tweet-4':
-                        $newTemplateId = 'social_media_static_8';
-                        break;
+                        case 'tweet-4':
+                            $newTemplateId = 'social_media_static_8';
+                            break;
 
-                    case 'tweet-6NP':
-                        $newTemplateId = 'social_media_static_9';
-                        break;
+                        case 'tweet-6NP':
+                            $newTemplateId = 'social_media_static_9';
+                            break;
 
-                    case 'tweet-6PL':
-                        $newTemplateId = 'social_media_static_10';
-                        break;
+                        case 'tweet-6PL':
+                            $newTemplateId = 'social_media_static_10';
+                            break;
 
-                    case 'tweet-7':
-                        $newTemplateId = 'social_media_static_11';
-                        break;
+                        case 'tweet-7':
+                            $newTemplateId = 'social_media_static_11';
+                            break;
 
-                    case 'tweet-8':
-                        $newTemplateId = 'social_media_static_12';
-                        break;
+                        case 'tweet-8':
+                            $newTemplateId = 'social_media_static_12';
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
+                } else {
+                    $newTemplateId = 'social_media_custom_html';
                 }
 
                 if (!empty($newTemplateId)) {
@@ -103,6 +108,13 @@ class SocialMediaWidgetCompatibility implements WidgetCompatibilityInterface
                     $upgraded = true;
                 }
             }
+        }
+
+        // If overriden, we need to tranlate the legacy options to the new values
+        if ($overrideTemplate == 1) {
+            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
+            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
+            $widget->setOptionValue('widgetDesignGap', 'attrib', $widget->getOptionValue('widgetOriginalPadding', '0'));
         }
 
         return $upgraded;

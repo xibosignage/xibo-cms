@@ -19,7 +19,7 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <templates>
-<template>
+    <template>
         <id>weather_custom_html</id>
         <type>static</type>
         <dataType>forecast</dataType>
@@ -32,24 +32,31 @@
                 <default>forecast</default>
             </property>
             <property id="widgetDesignWidth" type="number">
-                <title>widgetDesignWidth</title>
+                <title>Original Width</title>
+                <helpText>This is the intended width of the template and is used to scale the Widget within its region when the template is applied.</helpText>
             </property>
             <property id="widgetDesignHeight" type="number">
-                <title>widgetDesignHeight</title>
+                <title>Original Height</title>
+                <helpText>This is the intended height of the template and is used to scale the Widget within its region when the template is applied.</helpText>
             </property>
             <property id="currentTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
-                <title>currentTemplate</title>
+                <title>Current Forecast Template</title>
             </property>
             <property id="dailyTemplate" type="code" allowLibraryRefs="true" parseTranslations="true" variant="html">
-                <title>dailyTemplate</title>
+                <title>Daily Forecast Template</title>
             </property>
             <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
-                <title>styleSheet</title>
+                <title>CSS Style Sheet</title>
+            </property>
+            <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
+                <title>Optional JavaScript</title>
             </property>
         </properties>
         <stencil>
             <hbs></hbs>
             <twig><![CDATA[
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
+
 {% if attribute(_context, 'background-image') != 'none' %}
 <div class="bg-div bg-[icon]"></div>
 {% endif %}
