@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022-2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 
@@ -821,7 +820,12 @@ class DataSet implements \JsonSerializable
      */
     public function save($options = [])
     {
-        $options = array_merge(['validate' => true, 'saveColumns' => true], $options);
+        $options = array_merge([
+            'validate' => true,
+            'saveColumns' => true,
+            'activate' => true,
+            'notify' => true,
+        ], $options);
 
         if ($options['validate']) {
             $this->validate();
@@ -843,10 +847,14 @@ class DataSet implements \JsonSerializable
         }
 
         // We've been touched
-        $this->setActive();
+        if ($options['activate']) {
+            $this->setActive();
+        }
 
         // Notify Displays?
-        $this->notify();
+        if ($options['notify']) {
+            $this->notify();
+        }
     }
 
     /**

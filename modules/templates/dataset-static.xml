@@ -19,7 +19,7 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <templates>
-<template>
+    <template>
         <id>dataset_table_custom_html</id>
         <type>static</type>
         <dataType>dataset</dataType>
