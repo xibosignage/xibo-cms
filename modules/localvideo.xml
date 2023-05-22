@@ -1,0 +1,71 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-localvideo</id>
+    <name>Local Video</name>
+    <author>Core</author>
+    <description>Display Video that only exists on the Display by providing a local file path or URL</description>
+    <class></class>
+    <type>localvideo</type>
+    <dataType></dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>native</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings>
+        <property id="defaultMute" type="checkbox">
+            <title>Default Mute?</title>
+            <helpText>Should new widgets default to Muted?</helpText>
+            <default>1</default>
+        </property>
+    </settings>
+    <properties>
+        <property id="uri" type="text">
+            <title>Video Path</title>
+            <helpText>A local file path or URL to the video. This can be a RTSP stream.</helpText>
+            <rule>required</rule>
+        </property>
+        <property id="scaleType" type="dropdown" mode="single">
+            <title>Scale type</title>
+            <helpText>How should this video be scaled?</helpText>
+            <default>aspect</default>
+            <options>
+                <option name="aspect">Aspect</option>
+                <option name="stretch">Stretch</option>
+            </options>
+            <playerCompatibility windows="v2 R253+"></playerCompatibility>
+        </property>
+        <property id="mute" type="checkbox">
+            <title>Mute?</title>
+            <helpText>Should the video be muted?</helpText>
+            <default>%defaultMute%</default>
+        </property>
+        <property id="showFullScreen" type="checkbox">
+            <title>Show Full Screen?</title>
+            <helpText>Should the video expand over the top of existing content and show in full screen?</helpText>
+            <default>0</default>
+        </property>
+        <property type="message">
+            <title>Please note that video scaling and video streaming via RTSP is only supported by Android, webOS and Linux players at the current time. The HLS streaming Widget can be used to show compatible video streams on Windows.</title>
+        </property>
+    </properties>
+</module>
