@@ -433,6 +433,19 @@ class Soap5 extends Soap4
             $display->commercialLicence = 3;
         }
 
+        if (!empty($display->syncGroupId)) {
+            $syncGroup = $this->syncGroupFactory->getById($display->syncGroupId);
+
+            if ($syncGroup->leadDisplayId === $display->displayId) {
+                $nodeValue = 'lead';
+            } else {
+                $leadDisplay = $this->syncGroupFactory->getLeadDisplay($syncGroup->leadDisplayId);
+                $nodeValue = $leadDisplay->lanIpAddress;
+            }
+
+            $displayElement->setAttribute('syncGroup', $nodeValue);
+        }
+
         $display->save(Display::$saveOptionsMinimum);
 
         // cache checks

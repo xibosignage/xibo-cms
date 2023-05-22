@@ -47,6 +47,7 @@ use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\SyncGroupFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
@@ -154,6 +155,9 @@ class Soap
     /** @var  PlayerVersionFactory */
     protected $playerVersionFactory;
 
+    /** @var \Xibo\Factory\SyncGroupFactory */
+    protected $syncGroupFactory;
+
     /**
      * @var EventDispatcher
      */
@@ -188,6 +192,7 @@ class Soap
      * @param PlayerVersionFactory $playerVersionFactory
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\CampaignFactory $campaignFactory
+     * @param SyncGroupFactory $syncGroupFactory
      */
     public function __construct(
         $logProcessor,
@@ -213,7 +218,8 @@ class Soap
         $dayPartFactory,
         $playerVersionFactory,
         $dispatcher,
-        $campaignFactory
+        $campaignFactory,
+        $syncGroupFactory
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -239,6 +245,7 @@ class Soap
         $this->playerVersionFactory = $playerVersionFactory;
         $this->dispatcher = $dispatcher;
         $this->campaignFactory = $campaignFactory;
+        $this->syncGroupFactory = $syncGroupFactory;
     }
 
     /**
@@ -531,7 +538,10 @@ class Soap
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
-                $layoutId = $parsedRow->getInt('layoutId');
+                $layoutId = ($schedule->eventTypeId == Schedule::$SYNC_EVENT)
+                    ? $parsedRow->getInt('syncLayoutId')
+                    : $parsedRow->getInt('layoutId');
+
                 $layoutCode = $parsedRow->getString('actionLayoutCode');
                 if ($layoutId != null &&
                     (
@@ -540,7 +550,8 @@ class Soap
                         $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT ||
                         $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
                         $schedule->eventTypeId == Schedule::$MEDIA_EVENT ||
-                        $schedule->eventTypeId == Schedule::$PLAYLIST_EVENT
+                        $schedule->eventTypeId == Schedule::$PLAYLIST_EVENT ||
+                        $schedule->eventTypeId == Schedule::$SYNC_EVENT
                     )
                 ) {
                     $layouts[] = $layoutId;
@@ -1152,22 +1163,13 @@ class Soap
                 $layoutIds[] = $defaultLayoutId;
             }
 
-            // Calculate a sync key
-            $syncKey = [];
-
             // Preparse events
             foreach ($events as $event) {
-                if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds)) {
-                    $layoutIds[] = $event['layoutId'];
-                }
-
-                // Are we a sync event?
-                if (intval($event['syncEvent']) == 1) {
-                    $syncKey[] = $event['eventId'];
+                $layoutId = ($event['eventTypeId'] == Schedule::$SYNC_EVENT) ? $event['syncLayoutId'] : $event['layoutId'];
+                if (!empty($layoutId) && !in_array($layoutId, $layoutIds)) {
+                    $layoutIds[] = $layoutId;
                 }
             }
-
-            $syncKey = (count($syncKey) > 0) ? implode('-', $syncKey) : '';
 
             $SQL = '
                 SELECT DISTINCT `region`.layoutId, `media`.storedAs
@@ -1222,7 +1224,15 @@ class Soap
 
                 foreach ($scheduleEvents as $scheduleEvent) {
                     $eventTypeId = $row['eventTypeId'];
-                    $layoutId = $row['layoutId'];
+                    $layoutId = ($row['eventTypeId'] == Schedule::$SYNC_EVENT)
+                        ? $row['syncLayoutId']
+                        : $row['layoutId'];
+                    $status = ($row['eventTypeId'] == Schedule::$SYNC_EVENT)
+                        ? intval($row['syncLayoutStatus'])
+                        : intval($row['status']);
+                    $duration = ($row['eventTypeId'] == Schedule::$SYNC_EVENT)
+                        ? $row['syncLayoutDuration']
+                        : $row['duration'];
                     $commandCode = $row['code'];
 
                     // Handle the from/to date of the events we have been returned (they are all returned with respect to
@@ -1243,7 +1253,8 @@ class Soap
                         $eventTypeId == Schedule::$INTERRUPT_EVENT ||
                         $eventTypeId == Schedule::$CAMPAIGN_EVENT ||
                         $eventTypeId == Schedule::$MEDIA_EVENT ||
-                        $eventTypeId == Schedule::$PLAYLIST_EVENT
+                        $eventTypeId == Schedule::$PLAYLIST_EVENT ||
+                        $eventTypeId == Schedule::$SYNC_EVENT
                     ) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
@@ -1254,7 +1265,7 @@ class Soap
 
                         // Check the layout status
                         // https://github.com/xibosignage/xibo/issues/743
-                        if (intval($row['status']) > 3) {
+                        if ($status > 3) {
                             $this->getLog()->info(sprintf('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId));
                             continue;
                         }
@@ -1266,9 +1277,9 @@ class Soap
                         $layout->setAttribute('todt', $toDt);
                         $layout->setAttribute('scheduleid', $scheduleId);
                         $layout->setAttribute('priority', $is_priority);
-                        $layout->setAttribute('syncEvent', $syncKey);
+                        $layout->setAttribute('syncEvent', ($row['eventTypeId'] == Schedule::$SYNC_EVENT) ? 1 : 0);
                         $layout->setAttribute('shareOfVoice', $row['shareOfVoice'] ?? 0);
-                        $layout->setAttribute('duration', $row['duration'] ?? 0);
+                        $layout->setAttribute('duration', $duration ?? 0);
                         $layout->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
                         $layout->setAttribute('geoLocation', $row['geoLocation'] ?? null);
                         $layout->setAttribute('cyclePlayback', $row['cyclePlayback'] ?? 0);
@@ -1346,7 +1357,6 @@ class Soap
                         $action->setAttribute('duration', $row['duration'] ?? 0);
                         $action->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
                         $action->setAttribute('geoLocation', $row['geoLocation'] ?? null);
-                        $action->setAttribute('syncEvent', $syncKey);
                         $action->setAttribute('triggerCode', $row['actionTriggerCode']);
                         $action->setAttribute('actionType', $row['actionType']);
                         $action->setAttribute('layoutCode', $row['actionLayoutCode']);
