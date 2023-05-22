@@ -1,3 +1,5 @@
-{{> toolbar-search-form trans=trans filters=filters class="media-search-form" autocomplete="off"}}
+{{> toolbar-search-form trans=trans filters=filters class=formClass autocomplete="off"}}
+
+{{#if headerMessage }}<p>{{headerMessage}}</p>{{/if}}
 
 <div id="media-content-{{menuIndex}}" class="toolbar-pane-content"></div>

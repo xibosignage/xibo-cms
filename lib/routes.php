@@ -154,6 +154,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/layout/{id}', ['\Xibo\Controller\Layout','edit'])->setName('layout.edit');
     $group->delete('/layout/{id}', ['\Xibo\Controller\Layout','delete'])->setName('layout.delete');
+    $group->put('/layout/applyTemplate/{id}', ['\Xibo\Controller\Layout', 'applyTemplate'])
+        ->setName('layout.apply.template');
     $group->put('/layout/background/{id}', ['\Xibo\Controller\Layout','editBackground'])->setName('layout.edit.background');
     $group->put('/layout/publish/{id}', ['\Xibo\Controller\Layout','publish'])->setName('layout.publish');
     $group->put('/layout/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
