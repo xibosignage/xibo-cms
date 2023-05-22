@@ -35,8 +35,6 @@ describe('Folders', function () {
         cy.contains('Rename').type('Folder123{enter}');
     });
 
-    // TODO Seed a folder name ChildFolder
-    // TODO Seed an image child_folder_media
     it('Moving an image from Root Folder to another folder', () => {
         // Go to library
         cy.visit('/library/view');
@@ -74,27 +72,22 @@ describe('Folders', function () {
 
         cy.contains('London').rightclick();
         cy.get('ul.jstree-contextmenu >li:nth-child(6) > a').click(); // Click on Share Link
-        cy.get('#name').type('xibo_user2');
+        cy.get('#name').type('folder_user');
 
         cy.wait('@permissionsFolders');
 
         cy.get('#permissionsTable tbody tr').should('have.length', 1);
-        cy.get('#permissionsTable tbody tr:nth-child(1) td:nth-child(1)').contains('xibo_user2');
+        cy.get('#permissionsTable tbody tr:nth-child(1) td:nth-child(1)').contains('folder_user');
         cy.get('#permissionsTable tbody tr:nth-child(1) td:nth-child(2)> input').click();
         cy.get('.save-button').click();
     });
 
-
-
-    // TODO SEED a user folder_home_user
-    // TODO SEED a folder name `FolderHome`
     it('Set Home Folders for a user', () => {
-
         cy.server();
         cy.visit('/user/view');
         // Create and alias for load users
         cy.route('/user*').as('loadUsers');
-        cy.get('#userName').type('xibo_user2'); // TODO
+        cy.get('#userName').type('folder_user'); // TODO
 
         cy.wait('@loadUsers');
         cy.get('#users tbody tr').should('have.length', 1);
@@ -107,17 +100,15 @@ describe('Folders', function () {
         // Check
         cy.visit('/user/view');
         cy.get('#userName').clear();
-        cy.get('#userName').type('xibo_user2');
+        cy.get('#userName').type('folder_user');
 
         cy.wait('@loadUsers');
         cy.get('#users tbody tr').should('have.length', 1);
-        cy.get('#users tbody tr:nth-child(1) td:nth-child(1)').contains('xibo_user2');
+        cy.get('#users tbody tr:nth-child(1) td:nth-child(1)').contains('folder_user');
         cy.get('#users tbody tr:nth-child(1) td:nth-child(3)').contains('FolderHome');
     });
 
-    // TODO Seed a folder name EmptyFolder
     it('Remove an empty folder', () => {
-
         cy.visit('/folders/view');
         cy.contains('EmptyFolder').rightclick();
         cy.contains('Remove').click();
@@ -132,7 +123,6 @@ describe('Folders', function () {
         cy.contains('EmptyFolder').should('not.exist');
     });
 
-    // TODO SEED a folder FolderWithContent and an image media_for_not_empty_folder
     it('Remove a folder with content', () => {
         cy.visit('/folders/view');
         cy.contains('FolderWithContent').rightclick();
@@ -150,11 +140,7 @@ describe('Folders', function () {
         cy.contains('FolderWithContent').should('exist');
     });
 
-    // Todo SEED a folder FolderWithImage and an image media_for_search_in_folder
-    // Todo SEED a folder FolderWithImage and an image media_for_search_in_folder
-    // TODO FolderWithImage should have an image called media_for_search_in_folder
-    // Search a media in a folder
-    it('Folder Search', () => {
+    it('search a media in a folder', () => {
         // Go to library
         cy.visit('/library/view');
 
@@ -175,7 +161,6 @@ describe('Folders', function () {
         cy.get('#libraryItems tbody tr:nth-child(1) td:nth-child(2)').contains('media_for_search_in_folder');
     });
 
-    // Hide Folder tree
     it('Hide Folder tree', () => {
         // Go to library
         cy.visit('/library/view');
@@ -185,14 +170,11 @@ describe('Folders', function () {
         cy.get('#grid-folder-filter').should('have.css', 'display', 'none');
     });
 
-    // Seed a folder MoveToFolder with an image test12
-    // Seed another folder MoveFromFolder with an image test34
-    // Move folder MoveFromFolder to MoveToFolder
-    it('Move Folders and Merge', () => {
-
-        // Create and alias for load folders
+    it('Move folders and Merge', () => {
+        // Move a folder (MoveFromFolder) to another (MoveToFolder) and merge
         cy.server();
         cy.route('/library?*').as('mediaLoad');
+        // Create and alias for load folders
         cy.route('/folders').as('loadFolders');
 
         cy.visit('/folders/view');
