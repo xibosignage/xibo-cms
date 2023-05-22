@@ -169,6 +169,7 @@
                     <li class="event-interrupt"><span class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
                     <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
                     <li class="event-action"><span class="fa fa-paper-plane "></span> {% trans "Interactive Action" %}</li>
+                    <li class="event-sync"><span class="fa fa-refresh"></span> {% trans "Synchronised Schedule" %}</li>
                 </ul>
             </div>
         </div>
@@ -434,6 +435,10 @@
                         eventIcon = "fa-paper-plane";
                     }
 
+                    if (event.event.eventTypeId == 9) {
+                        eventIcon = "fa-refresh";
+                    }
+
                     if (!event.editable) {
                     event.url = null;
                     eventIcon = "fa-lock";
@@ -525,6 +530,10 @@
 
             if (event.event.eventTypeId == 6) {
                 eventIcon = "fa-paper-plane";
+            }
+
+            if (event.event.eventTypeId == 9) {
+                eventIcon = "fa-refresh";
             }
 
             if (!event.editable) {
@@ -929,6 +938,31 @@
                     <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
                 </div>
             </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="syncEventContentSelector">
+        {{#each displays}}
+            <tr>
+                <td>{{displayId}} {{#eq displayId leadDisplayId}}{% endverbatim %}({% trans "Lead" %}){% verbatim %}{{/eq}}</td>
+                <td>{{display}}</td>
+                <td>
+                   <div class="form-group pagedSelect">
+                       <select class="form-control syncContentSelect single-select" name="layoutId_{{displayId}}" id="layoutId_{{displayId}}" data-search-url="/layout"
+                       data-search-term="layout" data-width="100%" data-id-property="layoutId" data-text-property="layout" data-anchor-element="#contentSelectorTable"
+                       data-initial-key="layoutId" data-initial-value="{{layoutId}}" data-display-id="{{displayId}}" data-lead-display-id="{{leadDisplayId}}">
+                       <option></option>
+                       </select>
+                   </div>
+                {{#eq displayId leadDisplayId}}
+                <button data-display-id="{{displayId}}" id="setMirrorContent" type="button" class="btn btn-success d-none"
+                 title="{% endverbatim %}{% trans "Set The same Layout on all displays?" %}{% verbatim %}">
+                    {% endverbatim %}{% trans "Mirror" %}{% verbatim %}
+                </button>
+                {{/eq}}
+                <input name="displayGroupIds[]" type="hidden" id="displayGroupIds[]" value="{{displayGroupId}}">
+                </td>
+            </tr>
+        {{/each}}
         </script>
 
         {% endverbatim %}

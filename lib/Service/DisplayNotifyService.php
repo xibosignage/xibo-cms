@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -315,6 +315,23 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                 INNER JOIN `lkcampaignlayout`
                 ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
+             WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
+            UNION
+            SELECT `schedule_sync`.displayId,
+                schedule.eventId,
+                schedule.fromDt,
+                schedule.toDt,
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
+                schedule.dayPartId
+             FROM `schedule`
+                INNER JOIN `schedule_sync`
+                    ON `schedule_sync`.eventId = `schedule`.eventId
+                INNER JOIN `lkcampaignlayout`
+                    ON `lkcampaignlayout`.layoutId = `schedule_sync`.layoutId
              WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
         ';
 

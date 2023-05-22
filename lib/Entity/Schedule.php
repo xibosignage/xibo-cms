@@ -60,6 +60,7 @@ class Schedule implements \JsonSerializable
 
     public static $MEDIA_EVENT = 7;
     public static $PLAYLIST_EVENT = 8;
+    public static $SYNC_EVENT = 9;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -297,6 +298,12 @@ class Schedule implements \JsonSerializable
     public $parentCampaignId;
 
     /**
+     * @SWG\Property(description="For sync events, the id the the sync group")
+     * @var int
+     */
+    public $syncGroupId;
+
+    /**
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
@@ -530,7 +537,7 @@ class Schedule implements \JsonSerializable
      */
     public function validate()
     {
-        if (count($this->displayGroups) <= 0) {
+        if (count($this->displayGroups) <= 0 && $this->eventTypeId !== Schedule::$SYNC_EVENT) {
             throw new InvalidArgumentException(__('No display groups selected'), 'displayGroups');
         }
 
@@ -598,6 +605,17 @@ class Schedule implements \JsonSerializable
                 $this->commandId = null;
             }
             $this->campaignId = null;
+        } else if ($this->eventTypeId === Schedule::$SYNC_EVENT) {
+            if (!v::intType()->notEmpty()->validate($this->syncGroupId)) {
+                throw new InvalidArgumentException(__('Please select a Sync Group for this event.'), 'syncGroupId');
+            }
+
+            if ($this->isCustomDayPart()) {
+                // validate the dates
+                if ($this->toDt <= $this->fromDt) {
+                    throw new InvalidArgumentException(__('Can not have an end time earlier than your start time'), 'start/end');
+                }
+            }
         } else {
             // No event type selected
             throw new InvalidArgumentException(__('Please select the Event Type'), 'eventTypeId');
@@ -727,6 +745,12 @@ class Schedule implements \JsonSerializable
             }
         }
 
+        if ($this->eventTypeId === self::$SYNC_EVENT) {
+            $this->getStore()->update('DELETE FROM `schedule_sync` WHERE eventId = :eventId',[
+                'eventId' => $this->eventId
+            ]);
+        }
+
         // Delete the event itself
         $this->getStore()->update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
 
@@ -780,7 +804,8 @@ class Schedule implements \JsonSerializable
                 `actionTriggerCode`,
                 `actionLayoutCode`,
                 `maxPlaysPerHour`,
-                `parentCampaignId`
+                `parentCampaignId`,
+                `syncGroupId`
             )
             VALUES (
                 :eventTypeId,
@@ -806,7 +831,8 @@ class Schedule implements \JsonSerializable
                 :actionTriggerCode,
                 :actionLayoutCode,
                 :maxPlaysPerHour,
-                :parentCampaignId
+                :parentCampaignId,
+                :syncGroupId
             )
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -835,6 +861,7 @@ class Schedule implements \JsonSerializable
             'actionLayoutCode' => $this->actionLayoutCode,
             'maxPlaysPerHour' => $this->maxPlaysPerHour,
             'parentCampaignId' => $this->parentCampaignId == 0 ? null : $this->parentCampaignId,
+            'syncGroupId' => $this->syncGroupId == 0 ? null : $this->syncGroupId,
         ]);
     }
 
@@ -868,7 +895,8 @@ class Schedule implements \JsonSerializable
             `actionTriggerCode` = :actionTriggerCode,
             `actionLayoutCode` = :actionLayoutCode,
             `maxPlaysPerHour` = :maxPlaysPerHour,
-            `parentCampaignId` = :parentCampaignId
+            `parentCampaignId` = :parentCampaignId,
+            `syncGroupId` = :syncGroupId
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -895,6 +923,7 @@ class Schedule implements \JsonSerializable
             'actionLayoutCode' => $this->actionLayoutCode,
             'maxPlaysPerHour' => $this->maxPlaysPerHour,
             'parentCampaignId' => $this->parentCampaignId == 0 ? null : $this->parentCampaignId,
+            'syncGroupId' => $this->syncGroupId == 0 ? null : $this->syncGroupId,
             'eventId' => $this->eventId,
         ]);
     }
@@ -1723,7 +1752,7 @@ class Schedule implements \JsonSerializable
         return $changedProperties;
     }
 
-    public static function getEventTypes()
+    public static function getEventTypesForm()
     {
         return [
             ['eventTypeId' => self::$LAYOUT_EVENT, 'eventTypeName' => __('Layout')],
@@ -1735,5 +1764,13 @@ class Schedule implements \JsonSerializable
             ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Full Screen Video/Image')],
             ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Full Screen Playlist')],
         ];
+    }
+
+    public static function getEventTypesGrid()
+    {
+        $events = self::getEventTypesForm();
+        $events[] = ['eventTypeId' => self::$SYNC_EVENT, 'eventTypeName' => __('Synchronised Event')];
+
+        return $events;
     }
 }
