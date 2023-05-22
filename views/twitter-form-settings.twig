@@ -26,8 +26,13 @@
 
 {% block connectorFormFields %}
     <h3>Twitter</h3>
+    <p>Recent changes to Twitter mean that this API will only work for users with existing API keys and will
+    cease to function completely in an unspecified time.</p>
+    <p>We <strong>do not</strong> recommend this connector.</p>
 
-    {% if not platformProvidesSettings %}
+    {% if interface.isProviderSetting("apiKey") %}
+        <p>{{ "Your platform provider has configured this connector for you."|trans }}</p>
+    {% else %}
         {% set title %}{% trans "API Key" %}{% endset %}
         {% set helpText %}{% trans "Enter your API Key from Twitter." %}{% endset %}
         {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
@@ -41,14 +46,13 @@
         {{ forms.checkbox("delegated", title, interface.getSetting("delegated"), helpText) }}
 
         {{ forms.message("If you change the user authentication option please save and reopen this to complete authorisation."|trans) }}
+
+        {% set title %}{% trans "Cache Period" %}{% endset %}
+        {% set helpText %}{% trans "Enter the number of seconds you would like to cache twitter search results." %}{% endset %}
+        {{ forms.input("cachePeriod", title, interface.getSetting("cachePeriod", 3600), helpText) }}
+
+        {% set title %}{% trans "Cache Period for Images" %}{% endset %}
+        {% set helpText %}{% trans "Enter the number of hours you would like to cache twitter images." %}{% endset %}
+        {{ forms.input("cachePeriodImages", title, interface.getSetting("cachePeriodImages", 24), helpText) }}
     {% endif %}
-
-    {% set title %}{% trans "Cache Period" %}{% endset %}
-    {% set helpText %}{% trans "Enter the number of seconds you would like to cache twitter search results." %}{% endset %}
-    {{ forms.input("cachePeriod", title, interface.getSetting("cachePeriod", 3600), helpText) }}
-
-    {% set title %}{% trans "Cache Period for Images" %}{% endset %}
-    {% set helpText %}{% trans "Enter the number of hours you would like to cache twitter images." %}{% endset %}
-    {{ forms.input("cachePeriodImages", title, interface.getSetting("cachePeriodImages", 24), helpText) }}
-
 {% endblock %}

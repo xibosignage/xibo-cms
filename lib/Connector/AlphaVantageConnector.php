@@ -81,9 +81,11 @@ class AlphaVantageConnector implements ConnectorInterface
      */
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
-        $settings['apiKey'] = $params->getString('apiKey');
-        $settings['isPaidPlan'] = $params->getCheckbox('isPaidPlan');
-        $settings['cachePeriod'] = $params->getInt('cachePeriod');
+        if (!$this->isProviderSetting('apiKey')) {
+            $settings['apiKey'] = $params->getString('apiKey');
+            $settings['isPaidPlan'] = $params->getCheckbox('isPaidPlan');
+            $settings['cachePeriod'] = $params->getInt('cachePeriod');
+        }
         return $settings;
     }
 

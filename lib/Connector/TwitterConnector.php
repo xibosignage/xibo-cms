@@ -75,11 +75,13 @@ class TwitterConnector implements ConnectorInterface
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
-        $settings['delegated'] = $params->getCheckbox('delegated');
-        $settings['apiKey'] = $params->getString('apiKey');
-        $settings['apiSecret'] = $params->getString('apiSecret');
-        $settings['cachePeriod'] = $params->getInt('cachePeriod');
-        $settings['cachePeriodImages'] = $params->getInt('cachePeriodImages');
+        if (!$this->isProviderSetting('apiKey')) {
+            $settings['delegated'] = $params->getCheckbox('delegated');
+            $settings['apiKey'] = $params->getString('apiKey');
+            $settings['apiSecret'] = $params->getString('apiSecret');
+            $settings['cachePeriod'] = $params->getInt('cachePeriod');
+            $settings['cachePeriodImages'] = $params->getInt('cachePeriodImages');
+        }
         return $settings;
     }
 
@@ -95,7 +97,6 @@ class TwitterConnector implements ConnectorInterface
 
         // We handle the twitter widget and the property with id="type"
         if ($widget->type === 'twitter' && $event->getPropertyId() === 'language') {
-
             if (empty($this->getSetting('apiKey')) || empty($this->getSetting('apiSecret'))) {
                 $this->getLogger()->debug('onWidgetEditOption: twitter not configured.');
                 return;
