@@ -935,7 +935,7 @@ class LayoutFactory extends BaseFactory
 
         // Populate Region Nodes
         foreach ($allRegions as $regionJson) {
-            $this->getLog()->debug('Found Region ' . json_encode($regionJson));
+            $this->getLog()->debug('Found Region');
 
             // Get the ownerId
             $regionOwnerId = $regionJson['ownerId'];
@@ -1680,7 +1680,12 @@ class LayoutFactory extends BaseFactory
                     $existingDataSet->folderId = $folder->id;
                     $existingDataSet->permissionsFolderId =
                         ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
-                    $existingDataSet->save();
+
+                    // Save to get the IDs created
+                    $existingDataSet->save([
+                        'activate' => false,
+                        'notify' => false,
+                    ]);
 
                     // Do we need to add data
                     if ($importDataSetData) {
@@ -1735,15 +1740,15 @@ class LayoutFactory extends BaseFactory
                     if (count($diff) > 0) {
                         throw new InvalidArgumentException(__('DataSets have different column names'));
                     }
+                }
 
-                    // Set the prior dataSetColumnId on each column.
-                    foreach ($existingDataSet->columns as $column) {
-                        // Lookup the matching column in the external dataSet definition.
-                        foreach ($dataSet->columns as $externalColumn) {
-                            if ($externalColumn->heading == $column->heading) {
-                                $column->priorDatasetColumnId = $externalColumn->dataSetColumnId;
-                                break;
-                            }
+                // Set the prior dataSetColumnId on each column.
+                foreach ($existingDataSet->columns as $column) {
+                    // Lookup the matching column in the external dataSet definition.
+                    foreach ($dataSet->columns as $externalColumn) {
+                        if ($externalColumn->heading == $column->heading) {
+                            $column->priorDatasetColumnId = $externalColumn->dataSetColumnId;
+                            break;
                         }
                     }
                 }
@@ -1752,11 +1757,7 @@ class LayoutFactory extends BaseFactory
                 // dataSet or one we've added above.
                 // Also make sure we replace the columnId's with the columnId's in the new "existing" DataSet.
                 foreach ($widgets as $widget) {
-                    /* @var Widget $widget */
-                    if ($widget->type == 'datasetview'
-                        || $widget->type == 'datasetticker'
-                        || $widget->type == 'chart'
-                    ) {
+                    if ($widget->type == 'dataset') {
                         $widgetDataSetId = $widget->getOptionValue('dataSetId', 0);
 
                         if ($widgetDataSetId != 0 && $widgetDataSetId == $dataSetId) {
@@ -1766,37 +1767,39 @@ class LayoutFactory extends BaseFactory
                             // Check for and replace column references.
                             // We are looking in the "columns" option for datasetview
                             // and the "template" option for datasetticker
-                            // and the "config" option for chart
-                            if ($widget->type == 'datasetview') {
+                            // DataSetView (now just dataset)
+                            $existingColumns = $widget->getOptionValue('columns', '');
+                            if (!empty($existingColumns)) {
                                 // Get the columns option
-                                $columns = explode(',', $widget->getOptionValue('columns', ''));
+                                $columns = json_decode($existingColumns, true);
 
                                 $this->getLog()->debug(sprintf(
                                     'Looking to replace columns from %s',
-                                    json_encode($columns)
+                                    $existingColumns
                                 ));
 
                                 foreach ($existingDataSet->columns as $column) {
                                     foreach ($columns as $index => $col) {
                                         if ($col == $column->priorDatasetColumnId) {
-                                            $columns[$index] = $column->dataSetColumnId;
+                                            // This must be a string
+                                            $columns[$index] = '' . $column->dataSetColumnId;
                                         }
                                     }
                                 }
 
-                                $columns = implode(',', $columns);
-
+                                $columns = json_encode($columns);
                                 $widget->setOptionValue('columns', 'attrib', $columns);
 
                                 $this->getLog()->debug(sprintf('Replaced columns with %s', $columns));
-                            } else if ($widget->type == 'datasetticker') {
-                                // Get the template option
-                                $template = $widget->getOptionValue('template', '');
+                            }
 
+                            // DataSetTicker (now just dataset)
+                            $template = $widget->getOptionValue('template', '');
+                            if (!empty($template)) {
                                 $this->getLog()->debug(sprintf('Looking to replace columns from %s', $template));
 
                                 foreach ($existingDataSet->columns as $column) {
-                                    // We replace with the |%d] so that we dont experience double replacements
+                                    // We replace with the |%d] so that we don't experience double replacements
                                     $template = str_replace(
                                         '|' . $column->priorDatasetColumnId . ']',
                                         '|' . $column->dataSetColumnId . ']',
@@ -1807,34 +1810,6 @@ class LayoutFactory extends BaseFactory
                                 $widget->setOptionValue('template', 'cdata', $template);
 
                                 $this->getLog()->debug(sprintf('Replaced columns with %s', $template));
-                            } else if ($widget->type == 'chart') {
-                                // get the config for the chart widget
-                                $oldConfig = json_decode($widget->getOptionValue('config', '[]'), true);
-                                $newConfig = [];
-                                $this->getLog()->debug(sprintf(
-                                    'Looking to replace config from %s',
-                                    json_encode($oldConfig)
-                                ));
-
-                                // go through the chart config and our dataSet
-                                foreach ($oldConfig as $config) {
-                                    foreach ($existingDataSet->columns as $column) {
-                                        // replace with this condition to avoid double replacements
-                                        if ($config['dataSetColumnId'] == $column->priorDatasetColumnId) {
-                                            // create our new config, with replaced dataSetColumnIds
-                                            $newConfig[] = [
-                                                'columnType' => $config['columnType'],
-                                                'dataSetColumnId' => $column->dataSetColumnId
-                                            ];
-                                        }
-                                    }
-                                }
-
-                                $this->getLog()->debug(sprintf('Replaced config with %s', json_encode($newConfig)));
-
-                                // json encode our newConfig and set it as config attribute in the imported chart
-                                // widget.
-                                $widget->setOptionValue('config', 'attrib', json_encode($newConfig));
                             }
                         }
 

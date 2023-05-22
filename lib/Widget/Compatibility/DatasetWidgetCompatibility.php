@@ -94,8 +94,11 @@ class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
             }
         }
 
-        if ($overrideTemplate == 1) {
-            $widget->setOptionValue('columns', 'attrib', '[' . $widget->getOptionValue('columns', '') . ']');
+        // We have changed the format of columns to be an array in v4.
+        $columns = $widget->getOptionValue('columns', '');
+        if (!empty($columns)) {
+            $widget->setOptionValue('columns', 'attrib', '[' . $columns . ']');
+            $upgraded = true;
         }
 
         return $upgraded;
