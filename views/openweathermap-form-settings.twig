@@ -26,8 +26,14 @@
 
 {% block connectorFormFields %}
     <h3>Open Weather Map</h3>
+    <p>Weather forecasts, nowcasts and history in a fast and elegant way</p>
+    <p>Weather data provided by <a href="https://openweathermap.org/" target="_blank">OpenWeather</a> is provided under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC-BY-SA 4.0</a>
+        and <a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbl</a>.</p>
 
-    {% if not platformProvidesSettings %}
+    {% if interface.isProviderSetting("owmApiKey") %}
+        <p>{{ "Your platform provider has configured this connector for you."|trans }}</p>
+    {% else %}
         {% set title %}
             Open Weather Map have added a new "One Call API 3.0" option to their suite of products. Unfortunately a credit
             card is required to activate this service. Older API keys are not compatible with the new API and therefore
@@ -50,18 +56,9 @@
             { id: "3.0", value: "3.0" },
         ] %}
         {{ forms.dropdown("owmApiVersion", "single", title, interface.getSetting("owmApiVersion", "2.5"), options, "id", "value", helpText) }}
+
+        {% set title %}{% trans "Cache Period" %}{% endset %}
+        {% set helpText %}{% trans "This module uses 3rd party data. Please enter the number of seconds you would like to cache results." %}{% endset %}
+        {{ forms.input("cachePeriod", title, interface.getSetting("cachePeriod", 3600), helpText) }}
     {% endif %}
-
-    <div class="row">
-        <div class="col-sm-10 offset-sm-2">
-            <p>Weather data provided by <a href="https://openweathermap.org/" target="_blank">OpenWeather</a> is provided under
-                <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC-BY-SA 4.0</a>
-                and <a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbl</a>.</p>
-        </div>
-    </div>
-
-    {% set title %}{% trans "Cache Period" %}{% endset %}
-    {% set helpText %}{% trans "This module uses 3rd party data. Please enter the number of seconds you would like to cache results." %}{% endset %}
-    {{ forms.input("cachePeriod", title, interface.getSetting("cachePeriod", 3600), helpText) }}
-
 {% endblock %}
