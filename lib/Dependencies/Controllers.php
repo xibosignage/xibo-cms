@@ -452,6 +452,15 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\SyncGroup' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\SyncGroup(
+                    $c->get('syncGroupFactory'),
+                    $c->get('folderFactory')
+                );
+
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
             '\Xibo\Controller\Resolution' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Resolution(
                     $c->get('resolutionFactory')
