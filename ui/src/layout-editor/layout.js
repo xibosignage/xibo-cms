@@ -167,6 +167,12 @@ Layout.prototype.createDataStructure = function(data) {
                   data.regions[region].regionId,
                 );
 
+              // Update elements map for the widget
+              newWidget.updateElementMap(
+                newElement.elementType,
+                newElement.id,
+              );
+
               // If we have a groupId, add or assign it to the group
               if (newElement.groupId != undefined) {
                 if (newWidget.elementGroups[newElement.groupId] == undefined) {
@@ -188,6 +194,11 @@ Layout.prototype.createDataStructure = function(data) {
                   .elementGroups[newElement.groupId]
                   .elements[newElement.elementId] =
                     newElement;
+
+                // Update source on group
+                newWidget.elementGroups[newElement.groupId].updateSource(
+                  newElement.source,
+                );
               }
             }
           }

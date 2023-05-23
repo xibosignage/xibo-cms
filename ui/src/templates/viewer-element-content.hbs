@@ -7,6 +7,11 @@
         transform: scale({{scale}});
         transform-origin: top left;
     {{/if}}">
+</div>
+
+{{#if element.source}}
+<div class="source" title="{{trans.source}}">#<span>{{element.source}}</span></div>
+{{/if}}
 
 {{#with template}}
     {{#if onTemplateRender}}

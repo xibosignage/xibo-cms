@@ -123,7 +123,6 @@ PropertiesPanel.prototype.save = function(target) {
     form.find('[name]:not(.element-property)') :
     form.find('[name]');
 
-
   // Filter out position related fields
   formFieldsToSave =
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
@@ -514,14 +513,57 @@ PropertiesPanel.prototype.render = function(
     if (target.type === 'widget') {
       // Create configure tab if we have properties
       if (res.data.module.properties.length > 0) {
+        const widgetProperties = res.data.module.properties;
+
+        // if it's an element group and we have source
+        // add property to the top of configure tab
+        if (
+          isElementGroup &&
+          targetAux.source
+        ) {
+          widgetProperties.unshift({
+            id: 'source',
+            title: propertiesPanelTrans.source,
+            value: Number(targetAux.source),
+            type: 'number',
+            visibility: [],
+          });
+        }
+
         // Configure tab
         forms.createFields(
-          res.data.module.properties,
+          widgetProperties,
           self.DOMObject.find('#configureTab'),
           target.widgetId,
           target.playlistId,
           res.data.module.propertyGroups,
         );
+
+        // if we created a new source for element group input
+        // handle when changed
+        if (
+          isElementGroup &&
+          targetAux.source
+        ) {
+          self.DOMObject.find('[name="source"]')
+            .on('change', function(ev) {
+              const sourceValue = $(ev.currentTarget).val();
+
+              // update source for the group
+              targetAux.updateSource(sourceValue, true);
+
+              // save elements
+              target.saveElements();
+
+              // update value in the viewer
+              app.viewer.DOMObject
+                .find('#' + app.selectedObject.id)
+                .find('> .source span').html(sourceValue);
+
+              // Render canvas again
+              app.viewer.renderCanvas(app.layout.canvas);
+            });
+        }
       } else {
         // Remove configure tab
         self.DOMObject.find('[href="#configureTab"]').parent().remove();
@@ -574,14 +616,35 @@ PropertiesPanel.prototype.render = function(
           properties = JSON.parse(JSON.stringify(properties));
 
           // Create common fields
-          forms.createFields(
-            [{
+          const commonFields = [
+            {
               id: 'layer',
               title: propertiesPanelTrans.layer,
               value: targetAux.layer,
               type: 'number',
               visibility: [],
-            }],
+            },
+          ];
+
+          // if we have more than one element
+          // of the same type, show source field
+          if (
+            targetAux.elementType != 'global' &&
+            target.elementTypeMap[targetAux.elementType][targetAux.id] > 1
+          ) {
+            commonFields.push(
+              {
+                id: 'source',
+                title: propertiesPanelTrans.source,
+                value: Number(targetAux.source),
+                type: 'number',
+                visibility: [],
+              },
+            );
+          }
+
+          forms.createFields(
+            commonFields,
             self.DOMObject.find('#appearanceTab'),
             targetAux.elementId,
             null,

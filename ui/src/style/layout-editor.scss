@@ -924,7 +924,6 @@
     }
 
     .designer-element {
-
         &::after {
             content: '';
             position: absolute;
@@ -941,6 +940,24 @@
                 outline: none;
             }
         }
+
+        .source {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: $xibo-color-neutral-700;
+            color: $xibo-color-neutral-100;
+            padding: 1px 3px;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 100;
+            opacity: 0.3;
+        }
+
+        &:hover .source {
+            opacity: 0.8;
+            padding: 2px 5px;
+        }
     }
 
     .designer-element-group {
@@ -948,8 +965,8 @@
             width: 100%;
             height: 100%;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 2px;
+            left: 2px;
             outline: 2px dotted $xibo-color-primary;
             outline-offset: 1px;
         }
@@ -959,6 +976,28 @@
                 outline-width: 3px;
                 z-index: auto;
             }
+        }
+
+        .designer-element .source {
+            display: none;
+        }
+
+        & > .source {
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            background-color: $xibo-color-primary;
+            color: $xibo-color-neutral-100;
+            padding: 1px 3px;
+            font-weight: bold;
+            border-radius: 4px;
+            z-index: 100;
+            opacity: 0.3;
+        }
+
+        &:hover > .source {
+            opacity: 0.8;
+            padding: 2px 5px;
         }
     }
 
