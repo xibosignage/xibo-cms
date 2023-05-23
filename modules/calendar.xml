@@ -40,8 +40,12 @@
             <title>Feed URL</title>
             <helpText>The Link for the iCal Feed.</helpText>
             <default></default>
-            <rule>required</rule>
-            <rule>uri</rule>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                    <condition type="uri"></condition>
+                </test>
+            </rule>
         </property>
         <property id="excludeAllDay" type="checkbox">
             <title>Exclude all day events?</title>

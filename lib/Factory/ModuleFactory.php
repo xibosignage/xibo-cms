@@ -195,6 +195,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getKeyedArrayOfModules(): array
     {
+        $this->getLog()->debug('ModuleFactory: getKeyedArrayOfModules');
         $modules = [];
         foreach ($this->load() as $module) {
             $modules[$module->type] = $module;
@@ -207,6 +208,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getAssignableModules(): array
     {
+        $this->getLog()->debug('ModuleFactory: getAssignableModules');
         $modules = [];
         foreach ($this->load() as $module) {
             if ($module->enabled === 1 && $module->assignable === 1) {
@@ -221,6 +223,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getLibraryModules(): array
     {
+        $this->getLog()->debug('ModuleFactory: getLibraryModules');
         $modules = [];
         foreach ($this->load() as $module) {
             if ($module->enabled == 1 && $module->regionSpecific === 0) {
@@ -238,6 +241,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getById($moduleId): Module
     {
+        $this->getLog()->debug('ModuleFactory: getById');
         foreach ($this->load() as $module) {
             if ($module->moduleId === $moduleId) {
                 return $module;
@@ -253,6 +257,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getAll(): array
     {
+        $this->getLog()->debug('ModuleFactory: getAll');
         return $this->load();
     }
 
@@ -262,6 +267,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getEnabled(): array
     {
+        $this->getLog()->debug('ModuleFactory: getEnabled');
         $modules = [];
         foreach ($this->load() as $module) {
             if ($module->enabled == 1) {
@@ -281,6 +287,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getByType(string $type, array $conditions = []): Module
     {
+        $this->getLog()->debug('ModuleFactory: getByType');
         $modules = $this->load();
         usort($modules, function ($a, $b) {
             /** @var Module $a */
@@ -326,6 +333,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getByExtension(string $extension): Module
     {
+        $this->getLog()->debug('ModuleFactory: getByExtension');
         foreach ($this->load() as $module) {
             $validExtensions = $module->getSetting('validExtensions');
             if (!empty($validExtensions) && Str::contains($validExtensions, $extension)) {
@@ -343,6 +351,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getValidExtensions($filterBy = []): array
     {
+        $this->getLog()->debug('ModuleFactory: getValidExtensions');
         $filterBy = $this->getSanitizer($filterBy);
         $typeFilter = $filterBy->getString('type');
         $extensions = [];

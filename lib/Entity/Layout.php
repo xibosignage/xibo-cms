@@ -1781,7 +1781,7 @@ class Layout implements \JsonSerializable
             // Validate the module
             $module
                 ->decorateProperties($widget, true)
-                ->validateProperties();
+                ->validateProperties('status');
 
             // Also validate the module template
             $templateId = $widget->getOptionValue('templateId', null);
@@ -1789,7 +1789,7 @@ class Layout implements \JsonSerializable
                 $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
                 $template
                     ->decorateProperties($widget)
-                    ->validateProperties();
+                    ->validateProperties('status');
             }
 
             // If we have validator interfaces, then use it now

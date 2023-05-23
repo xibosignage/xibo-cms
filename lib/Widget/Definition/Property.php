@@ -38,8 +38,8 @@ class Property implements \JsonSerializable
     public $title;
     public $helpText;
 
-    /** @var string[] */
-    public $validation = [];
+    /** @var \Xibo\Widget\Definition\Rule  */
+    public $validation;
 
     public $default;
 
@@ -138,18 +138,7 @@ class Property implements \JsonSerializable
      */
     public function addVisibilityTest(string $type, array $conditions): Property
     {
-        $test = new Test();
-        $test->type = $type;
-
-        foreach ($conditions as $item) {
-            $condition = new Condition();
-            $condition->type = $item['type'];
-            $condition->field = $item['field'];
-            $condition->value = $item['value'];
-            $test->conditions[] = $condition;
-        }
-
-        $this->visibility[] = $test;
+        $this->visibility[] = $this->parseTest($type, $conditions);
         return $this;
     }
 
@@ -172,8 +161,11 @@ class Property implements \JsonSerializable
      * @return Property
      * @throws InvalidArgumentException
      */
-    public function setValueByType(SanitizerInterface $params, string $key = null, bool $ignoreDefault = false): Property
-    {
+    public function setValueByType(
+        SanitizerInterface $params,
+        string $key = null,
+        bool $ignoreDefault = false
+    ): Property {
         $value = $this->getByType($params, $key);
         if ($value !== $this->default || $ignoreDefault) {
             $this->value = $value;
@@ -182,58 +174,88 @@ class Property implements \JsonSerializable
     }
 
     /**
-     * @return \Xibo\Widget\Definition\Property
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ValueTooLargeException
+     * @param array $properties A key/value array of all properties for this entity (be it module or template)
+     * @param string $stage What stage are we at?
+     * @return Property
+     * @throws InvalidArgumentException
+     * @throws ValueTooLargeException
      */
-    public function validate(): Property
+    public function validate(array $properties, string $stage): Property
     {
         if (!empty($this->value) && strlen($this->value) > 67108864) {
             throw new ValueTooLargeException(sprintf(__('Value too large for %s'), $this->title), $this->id);
         }
 
-        foreach ($this->validation as $validation) {
-            switch ($validation) {
-                case 'required':
-                    if (empty($this->value)) {
-                        throw new InvalidArgumentException(
-                            sprintf(__('Missing required property %s'), $this->title),
-                            $this->id
-                        );
-                    }
-                    break;
+        // Skip if no validation.
+        if ($this->validation === null
+            || ($stage === 'save' && !$this->validation->onSave)
+            || ($stage === 'status' && !$this->validation->onStatus)
+        ) {
+            return $this;
+        }
 
-                case 'uri':
-                    if (!empty($this->value)
-                        && !v::url()->validate($this->value)
-                    ) {
-                        throw new InvalidArgumentException(
-                            sprintf(__('%s must be a valid URI'), $this->title),
-                            $this->id
-                        );
-                    }
-                    break;
+        foreach ($this->validation->tests as $test) {
+            // We have a test, evaulate its conditions.
+            foreach ($test->conditions as $condition) {
+                // What value are we testing against (only used by certain types)
+                if (empty($condition->field)) {
+                    $valueToTestAgainst = $condition->value;
+                } else {
+                    $valueToTestAgainst = $properties[$condition->field] ?? $condition->value;
+                }
 
-                case 'interval':
-                    if (!empty($this->value)) {
-                        // Try to create a date interval from it
-                        $dateInterval = \DateInterval::createFromDateString($this->value);
-
-                        // Use now and add the date interval to it
-                        $now = Carbon::now();
-                        $check = $now->copy()->add($dateInterval);
-
-                        if ($now->equalTo($check)) {
+                switch ($condition->type) {
+                    case 'required':
+                        if (empty($this->value)) {
                             throw new InvalidArgumentException(
-                                __('That is not a valid date interval, please use natural language such as 1 week'),
-                                'customInterval'
+                                sprintf(__('Missing required property %s'), $this->title),
+                                $this->id
                             );
                         }
-                    }
-                    break;
+                        break;
 
-                default:
-                    // Nothing to validate
+                    case 'uri':
+                        if (!empty($this->value)
+                            && !v::url()->validate($this->value)
+                        ) {
+                            throw new InvalidArgumentException(
+                                sprintf(__('%s must be a valid URI'), $this->title),
+                                $this->id
+                            );
+                        }
+                        break;
+
+                    case 'interval':
+                        if (!empty($this->value)) {
+                            // Try to create a date interval from it
+                            $dateInterval = \DateInterval::createFromDateString($this->value);
+
+                            // Use now and add the date interval to it
+                            $now = Carbon::now();
+                            $check = $now->copy()->add($dateInterval);
+
+                            if ($now->equalTo($check)) {
+                                throw new InvalidArgumentException(
+                                    __('That is not a valid date interval, please use natural language such as 1 week'),
+                                    $this->id
+                                );
+                            }
+                        }
+                        break;
+
+                    case 'lte':
+                        // Value must be <= to the condition value, or field value
+                        if ($valueToTestAgainst !== null && !($this->value <= $valueToTestAgainst)) {
+                            throw new InvalidArgumentException(
+                                __($this->validation->message),
+                                $this->id
+                            );
+                        }
+                        break;
+
+                    default:
+                        // Nothing to validate
+                }
             }
         }
         return $this;
@@ -335,5 +357,25 @@ class Property implements \JsonSerializable
     public function isCData(): bool
     {
         return $this->type === 'code' || $this->type === 'richText';
+    }
+
+    /**
+     * @param string $type
+     * @param array $conditions
+     * @return Test
+     */
+    public function parseTest(string $type, array $conditions): Test
+    {
+        $test = new Test();
+        $test->type = $type;
+
+        foreach ($conditions as $item) {
+            $condition = new Condition();
+            $condition->type = $item['type'];
+            $condition->field = $item['field'];
+            $condition->value = $item['value'];
+            $test->conditions[] = $condition;
+        }
+        return $test;
     }
 }

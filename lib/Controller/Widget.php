@@ -425,8 +425,11 @@ class Widget extends Base
             if ($property->type === 'message') {
                 continue;
             }
-            $property->setValueByType($params)->validate();
+            $property->setValueByType($params);
         }
+
+        // Once they are set, validate them.
+        $module->validateProperties('save', ['duration' => $widget->duration]);
 
         // Assert these properties on the widget.
         $widget->applyProperties($module->properties);
@@ -437,8 +440,11 @@ class Widget extends Base
                 if ($property->type === 'message') {
                     continue;
                 }
-                $property->setValueByType($params)->validate();
+                $property->setValueByType($params);
             }
+
+            $template->validateProperties('save', ['duration' => $widget->duration]);
+
             $widget->applyProperties($template->properties);
         }
 

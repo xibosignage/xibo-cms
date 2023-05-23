@@ -41,7 +41,11 @@
         <property id="items" type="connectorProperties" variant="autocomplete">
             <title>Stock Symbols</title>
             <helpText>A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.</helpText>
-            <rule>required</rule>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                </test>
+            </rule>
         </property>
         <property id="loop" type="checkbox">
             <title>Reverse conversion?</title>

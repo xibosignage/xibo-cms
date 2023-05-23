@@ -67,7 +67,11 @@
                     <condition field="countdownType" type="eq">3</condition>
                 </test>
             </visibility>
-            <rule>required</rule>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                </test>
+            </rule>
         </property>
         <property id="countdownWarningDuration" type="text">
             <title>Warning Duration</title>
@@ -79,6 +83,11 @@
                     <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
+            <rule message="Warning duration needs to be lower than the widget duration.">
+                <test type="and">
+                    <condition field="duration" type="lte"></condition>
+                </test>
+            </rule>
         </property>
         <property id="countdownWarningDate" type="date" format="DD/MM/YYYY HH:mm:ss" variant="dateTime">
             <title>Warning Date</title>

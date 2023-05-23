@@ -42,8 +42,12 @@
         <property id="uri" type="text" variant="uri">
             <title>Video Path</title>
             <helpText>A local file path or URL to the video. This can be a RTSP stream.</helpText>
-            <rule>required</rule>
-            <rule>uri</rule>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                    <condition type="uri"></condition>
+                </test>
+            </rule>
         </property>
         <property id="scaleType" type="dropdown" mode="single">
             <title>Scale type</title>

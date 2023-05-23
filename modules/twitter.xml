@@ -39,7 +39,11 @@
             <title>Search Term</title>
             <helpText>Search term. You can test your search term in the twitter.com search box first.</helpText>
             <default></default>
-            <rule>required</rule>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                </test>
+            </rule>
         </property>
         <property id="language" type="connectorProperties">
             <title>Language</title>
