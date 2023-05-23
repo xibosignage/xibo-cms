@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -31,7 +31,13 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
-    <settings></settings>
+    <settings>
+        <property id="defaultMute" type="checkbox">
+            <title>Default Mute?</title>
+            <helpText>Should new widgets default to Muted?</helpText>
+            <default>1</default>
+        </property>
+    </settings>
     <properties>
         <property id="uri" type="text">
             <title>Video Path</title>
@@ -40,7 +46,7 @@
         <property id="mute" type="checkbox">
             <title>Mute?</title>
             <helpText>Should the video be muted?</helpText>
-            <default>0</default>
+            <default>%defaultMute%</default>
         </property>
     </properties>
     <preview></preview>

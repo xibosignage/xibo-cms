@@ -505,6 +505,12 @@ class Display implements \JsonSerializable
      */
     public $lanIpAddress;
 
+    /**
+     * @SWG\Property(description="The Display Group ID this Display is synced to")
+     * @var int
+     */
+    public $syncGroupId;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -851,6 +857,9 @@ class Display implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `player_faults` WHERE displayId = :displayId', [
             'displayId' => $this->displayId
         ]);
+        $this->getStore()->update('DELETE FROM `schedule_sync` WHERE displayId = :displayId', [
+            'displayId' => $this->displayId
+        ]);
 
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
@@ -883,8 +892,8 @@ class Display implements \JsonSerializable
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence, lanIpAddress)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence, lanIpAddress, syncGroupId)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress, :syncGroupId)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
@@ -910,6 +919,7 @@ class Display implements \JsonSerializable
             'newCmsKey' => null,
             'commercialLicence' => $this->commercialLicence,
             'lanIpAddress' => empty($this->lanIpAddress) ? null : $this->lanIpAddress,
+            'syncGroupId' => empty($this->syncGroupId) ? null : $this->syncGroupId,
         ]);
 
 
@@ -989,7 +999,8 @@ class Display implements \JsonSerializable
                     `commercialLicence` = :commercialLicence,
                     `teamViewerSerial` = :teamViewerSerial,
                     `webkeySerial` = :webkeySerial,
-                    `lanIpAddress` = :lanIpAddress
+                    `lanIpAddress` = :lanIpAddress,
+                    `syncGroupId` = :syncGroupId
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -1046,6 +1057,7 @@ class Display implements \JsonSerializable
             'teamViewerSerial' => empty($this->teamViewerSerial) ? null : $this->teamViewerSerial,
             'webkeySerial' => empty($this->webkeySerial) ? null : $this->webkeySerial,
             'lanIpAddress' => empty($this->lanIpAddress) ? null : $this->lanIpAddress,
+            'syncGroupId' => empty($this->syncGroupId) ? null : $this->syncGroupId,
             'displayId' => $this->displayId
         ]);
 

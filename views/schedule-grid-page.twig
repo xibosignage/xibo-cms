@@ -6,6 +6,9 @@
 {% block actionMenu %}
     {% if currentUser.featureEnabled("schedule.add") %}
         <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("schedule.sync") %}
+            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Sync event" %}" href="{{ url_for("schedule.add.sync.form") }}"><span class="fa fa-plus"></span> {% trans "Add Synchronised Schedule" %}</button>
+        {% endif %}
             <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Scheduled event" %}" href="{{ url_for("schedule.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Event" %}</button>
         </div>
     {% endif %}
@@ -164,8 +167,15 @@
               }
             },
             {
-              data: 'campaign',
+              name: 'campaign',
               responsivePriority: 2,
+              data: function(data) {
+                if (data.eventTypeId !== 9) {
+                  return data.campaign;
+                } else {
+                  return data.syncType;
+                }
+              }
             },
             {
               data: 'campaignId',
@@ -177,7 +187,7 @@
               responsivePriority: 2,
               sortable: false,
               data: function (data) {
-                if (data.displayGroups.length > 1) {
+                if (data.displayGroups.length > 1 && data.eventTypeId !== 9) {
                   return '<span class="badge" style="background-color: green; color: white" ' +
                     'data-toggle="popover" data-trigger="click" data-placement="top" ' +
                     'data-content="'+data.displayGroupList+'">'+ (data.displayGroups.length) +
@@ -322,6 +332,31 @@
                     <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
                 </div>
             </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="syncEventContentSelector">
+        {{#each displays}}
+            <tr>
+                <td>{{displayId}} {{#eq displayId leadDisplayId}}{% endverbatim %}({% trans "Lead" %}){% verbatim %}{{/eq}}</td>
+                <td>{{display}}</td>
+                <td>
+                   <div class="form-group pagedSelect">
+                       <select class="form-control syncContentSelect single-select" name="layoutId_{{displayId}}" id="layoutId_{{displayId}}" data-search-url="/layout"
+                       data-search-term="layout" data-width="100%" data-id-property="layoutId" data-text-property="layout" data-anchor-element="#contentSelectorTable"
+                       data-initial-key="layoutId" data-initial-value="{{layoutId}}" data-display-id="{{displayId}}" data-lead-display-id="{{leadDisplayId}}">
+                       <option></option>
+                       </select>
+                   </div>
+                {{#eq displayId leadDisplayId}}
+                <button data-display-id="{{displayId}}" id="setMirrorContent" type="button" class="btn btn-success d-none"
+                 title="{% endverbatim %}{% trans "Set The same Layout on all displays?" %}{% verbatim %}">
+                    {% endverbatim %}{% trans "Mirror" %}{% verbatim %}
+                </button>
+                {{/eq}}
+                <input name="displayGroupIds[]" type="hidden" id="displayGroupIds[]" value="{{displayGroupId}}">
+                </td>
+            </tr>
+        {{/each}}
         </script>
     {% endverbatim %}
 {% endblock %}

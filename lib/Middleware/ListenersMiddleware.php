@@ -44,6 +44,7 @@ use Xibo\Listener\LayoutListener;
 use Xibo\Listener\MediaListener;
 use Xibo\Listener\NotificationDataProviderListener;
 use Xibo\Listener\PlaylistListener;
+use Xibo\Listener\SyncGroupListener;
 use Xibo\Listener\TaskListener;
 use Xibo\Listener\WidgetListener;
 use Xibo\Xmds\Listeners\XmdsAssetsListener;
@@ -127,6 +128,14 @@ class ListenersMiddleware implements MiddlewareInterface
         // Listen for event that affect Playlist
         (new PlaylistListener(
             $c->get('playlistFactory'),
+            $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for event that affect Sync Group
+        (new SyncGroupListener(
+            $c->get('syncGroupFactory'),
             $c->get('store')
         ))
             ->useLogger($c->get('logger'))

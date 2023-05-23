@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -439,6 +439,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'scheduling',
                     'title' => __('Add "Schedule Now" function to allow for the creation of short events to play immediately')
                 ],
+                'schedule.sync' => [
+                    'feature' => 'schedule.sync',
+                    'group' => 'scheduling',
+                    'title' => __('Allow creation of Synchronised Schedules')
+                ],
                 'daypart.view' => [
                     'feature' => 'daypart.view',
                     'group' => 'scheduling',
@@ -713,6 +718,21 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'command.view',
                     'group' => 'displays',
                     'title' => __('Page to view/add/edit/delete Commands')
+                ],
+                'display.syncView' => [
+                    'feature' => 'display.syncView',
+                    'group' => 'displays',
+                    'title' => __('Page which shows all Sync Groups added to the platform for the purposes of Sync Group Management')
+                ],
+                'display.syncAdd' => [
+                    'feature' => 'display.syncAdd',
+                    'group' => 'displays',
+                    'title' => __('Allow creation of Synchronised Groups')
+                ],
+                'display.syncModify' => [
+                    'feature' => 'display.syncModify',
+                    'group' => 'displays',
+                    'title' => __('Allow edits of Synchronised Groups')
                 ],
                 'fault.view' => [
                     'feature' => 'fault.view',

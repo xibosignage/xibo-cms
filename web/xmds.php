@@ -358,7 +358,8 @@ try {
         $container->get('dayPartFactory'),
         $container->get('playerVersionFactory'),
         $container->get('dispatcher'),
-        $container->get('campaignFactory')
+        $container->get('campaignFactory'),
+        $container->get('syncGroupFactory')
     );
 
     // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.

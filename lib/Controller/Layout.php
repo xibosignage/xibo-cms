@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
-use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Parsedown;
@@ -295,7 +294,7 @@ class Layout extends Base
      *      in="formData",
      *      description="The layout name",
      *      type="string",
-     *      required=true
+     *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="description",
@@ -380,6 +379,13 @@ class Layout extends Base
             $folderId = $this->getUser()->homeFolderId;
         }
 
+        // Name
+        if (empty($name)) {
+            // Create our own name for this layout.
+            $name = sprintf(__('Untitled %s'), Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        }
+
+        // Tags
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
         } else {
@@ -390,166 +396,47 @@ class Layout extends Base
         $resolutionId = $sanitizedParams->getInt('resolutionId');
         $template = null;
 
-        // Source?
-        $source = $sanitizedParams->getString('source');
-        if ($source === 'remote') {
-            // Hand off to the connector
-            $event = new TemplateProviderImportEvent(
-                $sanitizedParams->getString('download'),
-                $templateId,
-                $this->getConfig()->getSetting('LIBRARY_LOCATION')
-            );
+        // If we have a templateId provided then we create from there.
+        if (!empty($templateId)) {
+            $this->getLog()->debug('add: loading template for clone operation. templateId: ' . $templateId);
 
-            $this->getLog()->debug('Dispatching event. ' . $event->getName());
-            try {
-                $this->getDispatcher()->dispatch($event, $event->getName());
-            } catch (\Exception $exception) {
-                $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
-                $this->getLog()->debug($exception->getTraceAsString());
-            }
+            // Load the template
+            $template = $this->layoutFactory->loadById($templateId);
 
-            $layout = $this->getLayoutFactory()->createFromZip(
-                $event->getFilePath(),
-                $name,
-                $this->getUser()->userId,
-                0,
-                0,
-                0,
-                0,
-                1,
-                $this->getDataSetFactory(),
-                '',
-                $this->mediaService,
-                $folderId
-            );
+            // Empty all the ID's
+            $layout = clone $template;
 
-            $layout->managePlaylistClosureTable();
-            $layout->manageActions();
-
+            // Overwrite our new properties
+            $layout->layout = $name;
             $layout->description = $description;
             $layout->code = $code;
             $layout->updateTagLinks($tags);
 
-            @unlink($event->getFilePath());
+            $this->getLog()->debug('add: loaded and cloned, about to setOwner. templateId: ' . $templateId);
+
+            // Set the owner
+            $layout->setOwner($this->getUser()->userId, true);
         } else {
-            // Template or Resolution?
-            $isResolution = empty($templateId) || Str::startsWith($templateId, '0|');
+            $this->getLog()->debug('add: no template, using resolution: ' . $resolutionId);
 
-            if (!$isResolution) {
-                $this->getLog()->debug('add: loading template for clone operation. templateId: ' . $templateId);
+            // Empty template so we create a blank layout with the provided resolution
+            if (empty($resolutionId)) {
+                // Pick landscape
+                $resolution = $this->resolutionFactory->getByDimensions(1920, 1080);
+                $resolutionId = $resolution->resolutionId;
 
-                // Load the template
-                $template = $this->layoutFactory->loadById($templateId);
-
-                // Empty all the ID's
-                $layout = clone $template;
-
-                // Overwrite our new properties
-                $layout->layout = $name;
-                $layout->description = $description;
-                $layout->code = $code;
-                $layout->updateTagLinks($tags);
-
-                $this->getLog()->debug('add: loaded and cloned, about to setOwner. templateId: ' . $templateId);
-
-                // Set the owner
-                $layout->setOwner($this->getUser()->userId, true);
-            } else {
-                // Validate that a resolution has been selected.
-                if (empty($resolutionId)) {
-                    throw new InvalidArgumentException(__('Please select a resolution'), 'resolutionId');
-                }
-
-                $layout = $this->layoutFactory->createFromResolution(
-                    $resolutionId,
-                    $this->getUser()->userId,
-                    $name,
-                    $description,
-                    $tags,
-                    $code,
-                    false
-                );
-
-                // Handle our various templateId's
-                switch ($templateId) {
-                    case '0|blank':
-                        // Do nothing
-                        break;
-
-                    case '0|l-bar-left':
-                        // Main window - 80%
-                        $mainWidth = $layout->width * 0.8;
-                        $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion(
-                            $layout,
-                            'zone',
-                            $mainWidth,
-                            $mainHeight,
-                            0,
-                            $layout->width - $mainWidth
-                        );
-
-                        // Bottom bar
-                        $this->layoutFactory->addRegion(
-                            $layout,
-                            'zone',
-                            $layout->width,
-                            $layout->height - $mainHeight,
-                            $mainHeight,
-                            0
-                        );
-
-                        // Left bar
-                        $this->layoutFactory->addRegion(
-                            $layout,
-                            'zone',
-                            $layout->width - $mainWidth,
-                            $mainHeight,
-                            0,
-                            0
-                        );
-                        break;
-
-                    case '0|l-bar-right':
-                        // Main window - 80%
-                        $mainWidth = $layout->width * 0.8;
-                        $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion($layout, 'zone', $mainWidth, $mainHeight, 0, 0);
-
-                        // Bottom bar
-                        $this->layoutFactory->addRegion(
-                            $layout,
-                            'zone',
-                            $layout->width,
-                            $layout->height - $mainHeight,
-                            $mainHeight,
-                            0
-                        );
-
-                        // Right bar
-                        $this->layoutFactory->addRegion(
-                            $layout,
-                            'zone',
-                            $layout->width - $mainWidth,
-                            $mainHeight,
-                            0,
-                            $mainWidth
-                        );
-                        break;
-
-                    case '0|full-screen':
-                    default:
-                        // Maintain backwards compatibility by creating an empty full screen region
-                        $this->layoutFactory->addRegion(
-                            $layout,
-                            'zone',
-                            $layout->width,
-                            $layout->height,
-                            0,
-                            0
-                        );
-                }
+                $this->getLog()->debug('add: no resolution resolved: ' . $resolutionId);
             }
+
+            $layout = $this->layoutFactory->createFromResolution(
+                $resolutionId,
+                $this->getUser()->userId,
+                $name,
+                $description,
+                $tags,
+                $code,
+                false
+            );
         }
 
         // Set layout enableStat flag
@@ -562,14 +449,7 @@ class Layout extends Base
         $layout->folderId = $folderId;
 
         // Save
-        $layout->save();
-
-        // for remote source, we import the Layout and save the thumbnail to temporary file
-        // after save we can move the image to correct library folder, as we have campaignId
-        if ($source === 'remote' && !empty($layout->getUnmatchedProperty('thumbnail'))) {
-            $campaignThumb = $layout->getThumbnailUri();
-            rename($layout->getUnmatchedProperty('thumbnail'), $campaignThumb);
-        }
+        $layout->save(['appendCountOnDuplicate' => true]);
 
         if ($templateId != null && $template !== null) {
             $layout->copyActions($layout, $template);
@@ -580,7 +460,6 @@ class Layout extends Base
         $allRegions = array_merge($layout->regions, $layout->drawers);
         foreach ($allRegions as $region) {
             /* @var Region $region */
-
             if ($templateId != null && $template !== null) {
                 // Match our original region id to the id in the parent layout
                 $original = $template->getRegionOrDrawer($region->getOriginalValue('regionId'));
@@ -607,11 +486,6 @@ class Layout extends Base
 
         // Automatically checkout the new layout for edit
         $layout = $this->layoutFactory->checkoutLayout($layout, $sanitizedParams->getCheckbox('returnDraft'));
-
-        // After checkout, if we imported remote sourced Layout, copy the thumb
-        if ($source === 'remote' && !empty($campaignThumb)) {
-            copy($campaignThumb, $layout->getThumbnailUri());
-        }
 
         // Return
         $this->getState()->hydrate([
@@ -703,7 +577,7 @@ class Layout extends Base
      *  )
      * )
      */
-    function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id)
     {
         $layout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -905,6 +779,130 @@ class Layout extends Base
             'message' => sprintf(__('Edited %s'), $layout->layout),
             'id' => $layout->layoutId,
             'data' => $layout
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Apply a template to a Layout
+     * @SWG\Put(
+     *  path="/layout/applyTemplate/{layoutId}",
+     *  operationId="layoutApplyTemplate",
+     *  tags={"layout"},
+     *  summary="Apply Template",
+     *  description="Apply a new Template to an existing Layout, replacing it.",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      type="integer",
+     *      in="path",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="If the Layout should be created with a Template, provide the ID, otherwise don't provide",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function applyTemplate(Request $request, Response $response, $id): Response
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get the existing layout
+        $layout = $this->layoutFactory->getById($id);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Check that this Layout is a Draft
+        if (!$layout->isChild()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Discard the current draft and replace it
+        $layout->discardDraft(false);
+
+        // Is the source remote (undocumented as it should only be via WEB)
+        $source = $sanitizedParams->getString('source');
+        if ($source === 'remote') {
+            // Hand off to the connector
+            $event = new TemplateProviderImportEvent(
+                $sanitizedParams->getString('download'),
+                $sanitizedParams->getString('templateId'),
+                $this->getConfig()->getSetting('LIBRARY_LOCATION')
+            );
+
+            $this->getLog()->debug('Dispatching event. ' . $event->getName());
+            try {
+                $this->getDispatcher()->dispatch($event, $event->getName());
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
+
+            $template = $this->getLayoutFactory()->createFromZip(
+                $event->getFilePath(),
+                $layout->layout,
+                $this->getUser()->userId,
+                0,
+                0,
+                0,
+                0,
+                1,
+                $this->getDataSetFactory(),
+                '',
+                $this->mediaService,
+                $layout->folderId
+            );
+
+            $template->managePlaylistClosureTable();
+            $template->manageActions();
+
+            @unlink($event->getFilePath());
+        } else {
+            $templateId = $sanitizedParams->getInt('templateId');
+            $this->getLog()->debug('add: loading template for clone operation. templateId: ' . $templateId);
+
+            // Clone the template
+            $template = clone $this->layoutFactory->loadById($templateId);
+
+            // Overwrite our new properties
+            $template->layout = $layout->layout;
+            $template->setOwner($layout->ownerId);
+        }
+
+        // Persist the parentId
+        $template->parentId = $layout->parentId;
+        $template->campaignId = $layout->campaignId;
+        $template->publishedStatusId = 2;
+        $template->save(['validate' => false]);
+
+        // for remote source, we import the Layout and save the thumbnail to temporary file
+        // after save we can move the image to correct library folder, as we have campaignId
+        if ($source === 'remote' && !empty($layout->getUnmatchedProperty('thumbnail'))) {
+            rename($layout->getUnmatchedProperty('thumbnail'), $template->getThumbnailUri());
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $layout->layout),
+            'id' => $template->layoutId,
+            'data' => $template,
         ]);
 
         return $this->render($request, $response);
@@ -1911,25 +1909,6 @@ class Layout extends Base
     }
 
     /**
-     * Displays an Add/Edit form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'layout-form-add';
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('Layout', 'Add')
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Edit form
      * @param Request $request
      * @param Response $response
@@ -1940,7 +1919,7 @@ class Layout extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function editForm(Request $request, Response $response, $id)
+    public function editForm(Request $request, Response $response, $id)
     {
         // Get the layout
         $layout = $this->layoutFactory->getById($id);

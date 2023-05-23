@@ -91,18 +91,10 @@ class OpenWeatherMapConnector implements ConnectorInterface
     {
         if (!$this->isProviderSetting('owmApiKey')) {
             $settings['owmApiKey'] = $params->getString('owmApiKey');
-        }
-
-        if (!$this->isProviderSetting('owmApiVersion')) {
             $settings['owmApiVersion'] = $params->getString('owmApiVersion');
-        }
-
-        if (!$this->isProviderSetting('owmIsPaidPlan')) {
             $settings['owmIsPaidPlan'] = $params->getString('owmIsPaidPlan');
+            $settings['cachePeriod'] = $params->getInt('cachePeriod');
         }
-
-        $settings['cachePeriod'] = $params->getInt('cachePeriod');
-
         return $settings;
     }
 

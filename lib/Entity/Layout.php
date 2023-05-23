@@ -873,11 +873,12 @@ class Layout implements \JsonSerializable
             'validate' => true,
             'notify' => true,
             'audit' => true,
-            'import' => false
+            'import' => false,
+            'appendCountOnDuplicate' => false,
         ], $options);
 
         if ($options['validate']) {
-            $this->validate();
+            $this->validate($options);
         }
 
         if ($options['setBuildRequired']) {
@@ -1031,6 +1032,8 @@ class Layout implements \JsonSerializable
             // Remove any display group links
             $this->getStore()->update('DELETE FROM `lklayoutdisplaygroup` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
 
+            // Remove any display group links
+            $this->getStore()->update('DELETE FROM `schedule_sync` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
         } else {
             // Remove the draft from any Campaign assignments
             $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
@@ -1056,7 +1059,7 @@ class Layout implements \JsonSerializable
      * Validate this layout
      * @throws GeneralException
      */
-    public function validate()
+    public function validate($options)
     {
         // We must provide either a template or a resolution
         if ($this->width == 0 || $this->height == 0) {
@@ -1064,12 +1067,18 @@ class Layout implements \JsonSerializable
         }
 
         // Validation
-        if (strlen($this->layout) > 50 || strlen($this->layout) < 1) {
-            throw new InvalidArgumentException(__("Layout Name must be between 1 and 50 characters"), 'name');
+        if (empty($this->layout) || strlen($this->layout) > 50 || strlen($this->layout) < 1) {
+            throw new InvalidArgumentException(
+                __('Layout Name must be between 1 and 50 characters'),
+                'name'
+            );
         }
 
-        if (strlen($this->description) > 254) {
-            throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
+        if (!empty($this->description) && strlen($this->description) > 254) {
+            throw new InvalidArgumentException(
+                __('Description can not be longer than 254 characters'),
+                'description'
+            );
         }
 
         // Check for duplicates
@@ -1082,8 +1091,16 @@ class Layout implements \JsonSerializable
             'excludeTemplates' => -1
         ]);
 
-        if (count($duplicates) > 0) {
-            throw new DuplicateEntityException(sprintf(__("You already own a Layout called '%s'. Please choose another name."), $this->layout));
+        $duplicateCount = count($duplicates);
+        if ($duplicateCount > 0) {
+            if ($options['appendCountOnDuplicate']) {
+                $this->layout = $this->layout . ' #' . ($duplicateCount + 1);
+            } else {
+                throw new DuplicateEntityException(sprintf(
+                    __("You already own a Layout called '%s'. Please choose another name."),
+                    $this->layout
+                ));
+            }
         }
 
         // Check zindex is positive
@@ -2243,6 +2260,12 @@ class Layout implements \JsonSerializable
             'parentId' => $parent->layoutId
         ]);
 
+        // swap any schedule_sync links
+        $this->getStore()->update('UPDATE `schedule_sync` SET layoutId = :layoutId WHERE layoutId = :parentId', [
+            'layoutId' => $this->layoutId,
+            'parentId' => $parent->layoutId
+        ]);
+
         // If this is the global default layout, then add some special handling to make sure we swap the default over
         // to the incoming draft
         if ($this->parentId == $this->config->getSetting('DEFAULT_LAYOUT')) {
@@ -2300,7 +2323,7 @@ class Layout implements \JsonSerializable
      * Discard the Draft
      * @throws GeneralException
      */
-    public function discardDraft()
+    public function discardDraft(bool $isShouldUpdateParent = true)
     {
         // We are the draft - make sure we have a parent
         if (!$this->isChild()) {
@@ -2312,11 +2335,13 @@ class Layout implements \JsonSerializable
         $this->delete();
 
         // We also need to update the parent so that it is no longer draft
-        $parent = $this->layoutFactory->getById($this->parentId);
-        $parent->publishedStatusId = 1;
-        $parent->save([
-            self::$saveOptionsMinimum
-        ]);
+        if ($isShouldUpdateParent) {
+            $parent = $this->layoutFactory->getById($this->parentId);
+            $parent->publishedStatusId = 1;
+            $parent->save([
+                self::$saveOptionsMinimum
+            ]);
+        }
     }
 
     //

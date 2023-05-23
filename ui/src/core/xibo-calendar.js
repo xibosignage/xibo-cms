@@ -565,15 +565,15 @@ var setupScheduleForm = function(dialog) {
     // geo schedule
     var $geoAware = $('#isGeoAware');
     var isGeoAware = $geoAware.is(':checked');
+    let $form = dialog.find('form')
 
     if (isGeoAware) {
-
         // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
         $('.nav-tabs a').on('shown.bs.tab', function(event){
             if ($(event.target).text() === 'Geo Location') {
 
                 $('#geoScheduleMap').removeClass('d-none');
-                generateGeoMap();
+                generateGeoMap($form);
             }
         });
     }
@@ -584,7 +584,7 @@ var setupScheduleForm = function(dialog) {
 
         if (isGeoAware) {
             $('#geoScheduleMap').removeClass('d-none');
-            generateGeoMap();
+            generateGeoMap($form);
         } else {
             $('#geoScheduleMap').addClass('d-none');
         }
@@ -1147,14 +1147,14 @@ var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
 
 };
 
-var generateGeoMap = function () {
+var generateGeoMap = function ($form) {
 
     if (mymap !== undefined && mymap !== null) {
         mymap.remove();
     }
 
-    var defaultLat = $('#scheduleAddForm , #scheduleEditForm').data().defaultLat;
-    var defaultLong = $('#scheduleAddForm , #scheduleEditForm').data().defaultLong;
+    var defaultLat = $('#' + $form.attr('id')).data().defaultLat;
+    var defaultLong = $('#' + $form.attr('id')).data().defaultLong;
 
     // base map
     mymap = L.map('geoScheduleMap').setView([defaultLat, defaultLong], 13);
@@ -1521,5 +1521,56 @@ var setupSelectForSchedule = function (dialog) {
                 $('.no-full-screen-layout.media-playlist-control').css('display', '')
             }
         }
+    })
+
+    $('#syncGroupId', dialog).on('select2:select', function(event) {
+        $.ajax({
+            type: 'GET',
+            url: dialog.find('form').data().fetchSyncDisplays.replace(':id', $(this).select2('data')[0].id),
+            cache: false,
+            dataType: 'json',
+            data: {
+                eventId : dialog.find('form').data().eventId
+            }
+        })
+          .then(
+            (response) => {
+                if (!response.success) {
+                    SystemMessageInline(
+                      (response.message === '') ? translations.failure : response.message,
+                      form.closest('.modal'),
+                    );
+                }
+                const $contentSelector = $('#content-selector');
+                $contentSelector.removeClass('d-none')
+
+                let syncScheduleContent = Handlebars.compile($("#syncEventContentSelector").html());
+                dialog.find('#contentSelectorTable tbody').html('').append(syncScheduleContent(response.data))
+                let formId = dialog.find('form').attr('id');
+                dialog.find('.pagedSelect select.form-control.syncContentSelect').each(function() {
+                    makePagedSelect($(this), '#' + formId);
+                });
+
+                dialog.find('.pagedSelect select.form-control.syncContentSelect').on('select2:select', function() {
+                    if ($(this).data().displayId === $(this).data().leadDisplayId) {
+                        $('#setMirrorContent').removeClass('d-none')
+                    }
+                })
+
+                dialog.find('#setMirrorContent').on('click', function() {
+                    let leadDisplayId = $(this).data().displayId;
+                    let leadLayoutId = $('#layoutId_'+leadDisplayId).select2('data')[0].id;
+
+                    dialog
+                      .find('.pagedSelect select.form-control.syncContentSelect')
+                      .not('#layout_'+leadDisplayId)
+                      .each(function() {
+                          $(this).data().initialValue = leadLayoutId
+                          makePagedSelect($(this), '#' + formId);
+                      });
+                });
+            }, (xhr) => {
+                SystemMessage(xhr.responseText, false);
+            })
     })
 };

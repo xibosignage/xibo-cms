@@ -1,9 +1,32 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /* eslint-disable new-cap */
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
+const ToolbarCardLayoutTemplateTemplate =
+  require('../templates/toolbar-card-layout-template.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
 const ToolbarSearchFormTemplate =
   require('../templates/toolbar-search-form.hbs');
@@ -432,6 +455,25 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       state: '',
       itemCount: 0,
     },
+    {
+      name: 'layout_templates',
+      disabled: isPlaylist,
+      itemName: toolbarTrans.menuItems.layoutTemplateName,
+      itemIcon: 'object-group',
+      itemTitle: toolbarTrans.menuItems.layoutTemplateTitle,
+      contentType: 'layout_templates',
+      filters: {
+        name: {
+          value: '',
+          key: 'template',
+        },
+        provider: {
+          value: 'both',
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
   ];
 
   // Menu items
@@ -842,7 +884,6 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
     };
   }
 
-
   this.DOMObject.find('#content-' + menu + ', #btn-menu-' + menu)
     .addClass('active');
 
@@ -902,6 +943,8 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
     this.mediaContentCreateWindow(menu);
   } else if (content.contentType == 'elements') {
     this.elementsContentCreateWindow(menu);
+  } else if (content.contentType === 'layout_templates') {
+    this.layoutTemplatesContentCreateWindow(menu);
   } else {
     this.handleCardsBehaviour();
 
@@ -1181,6 +1224,7 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     menuIndex: menu,
     filters: this.menuItems[menu].filters,
     trans: toolbarTrans,
+    formClass: 'media-search-form',
   });
 
   // Append template to the search main div
@@ -1475,6 +1519,217 @@ Toolbar.prototype.elementsContentCreateWindow = function(menu) {
   );
 };
 
+/**
+ * Create layout templates window
+ * @param {number} menu - menu index
+ */
+Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
+  const self = this;
+
+  // Deselect previous selections
+  self.deselectCardsAndDropZones();
+
+  // Render template
+  const html = ToolbarContentMediaTemplate({
+    menuIndex: menu,
+    filters: this.menuItems[menu].filters,
+    trans: toolbarTrans,
+    formClass: 'layout_tempates-search-form',
+    headerMessage: toolbarTrans.layoutTemplatesMessage,
+  });
+
+  // Append template to the search main div
+  self.DOMObject.find('#layout_templates-container-' + menu).html(html);
+
+  // Load content
+  this.layoutTemplatesContentPopulate(menu);
+};
+
+/**
+ * Create content for layout templates
+ * @param {number} menu - menu index
+ */
+Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
+  const self = this;
+  const filters = self.menuItems[menu].filters;
+  const $container = self.DOMObject.find('#layout_templates-container-' + menu);
+  const $content = self.DOMObject.find('#media-content-' + menu);
+  const $searchForm = $container.parent().find('.toolbar-search-form');
+
+  // Load template data
+  const loadData = function(clear = true) {
+    // Remove show more button
+    $container.find('.show-more').remove();
+
+    // Empty content and reset item count
+    if (clear) {
+      // Clear selection
+      self.deselectCardsAndDropZones();
+
+      // Empty content
+      $content.empty();
+      self.menuItems[menu].itemCount = 0;
+    }
+
+    // Show loading
+    $content.before(
+      `<div class="loading-container-toolbar w-100 text-center">
+        <span class="loading fa fa-cog fa-spin"></span>
+      </div>`);
+
+    // Remove no media message if exists
+    $searchForm.find('.no-results-message').remove();
+
+    // If there's no masonry sizer, add it
+    if ($content.find('.toolbar-card-sizer').length === 0) {
+      $content.append('<div class="toolbar-card-sizer"></div>');
+    }
+
+    // Init masonry
+    $content.masonry({
+      itemSelector: '.toolbar-card',
+      columnWidth: '.toolbar-card-sizer',
+      percentPosition: true,
+      gutter: 8,
+    });
+
+    // Manage request length
+    const requestLength = 15;
+
+    // Filter start
+    const start = self.menuItems[menu].itemCount;
+
+    $.ajax({
+      method: 'GET',
+      url: templateSearchUrl,
+      data: $.extend({
+        start: start,
+        length: requestLength,
+        provider: 'both',
+      }, $searchForm.serializeObject()),
+      success: function(response) {
+        $container.parent().find('.loading-container-toolbar').remove();
+
+        if (response && response.data && response.data.length > 0) {
+          // Process each row returned
+          $.each(response.data, function(index, el) {
+            // Enhance with some properties
+            el.trans = toolbarTrans;
+            el.showFooter = el.orientation ||
+              (el.provider && el.provider.logoUrl) ||
+              (el.tags && el.tags.length > 0);
+            el.thumbnail = el.thumbnail || defaultThumbnailUrl;
+
+            // Provider logos do not have the root uri
+            if (el.provider && el.provider.logoUrl) {
+              el.provider.logoUrl = $('meta[name=public-path]')
+                .attr('content') + el.provider.logoUrl;
+            }
+
+            if (el.provider && !el.provider.link) {
+              el.provider.link = '#';
+            }
+
+            // Get template and add
+            const $card = $(ToolbarCardLayoutTemplateTemplate(el));
+
+            // Add data object to card
+            if ($card.hasClass('from-provider')) {
+              $card.data('providerData', response.data[index]);
+            }
+
+            // Append to container
+            $content.append($card).masonry('appended', $card);
+
+            self.menuItems[menu].itemCount++;
+          });
+
+          // Layout masonry after images are loaded
+          $content.imagesLoaded(function() {
+            // Recalculate masonry layout
+            $content.masonry('layout');
+
+            // Show content in widgets
+            $content.find('.toolbar-card').removeClass('hide-content');
+
+            // Show more button
+            if (response.data.length > 0) {
+              const $showMoreBtn =
+                $('<button class="btn btn-block btn-white show-more">' +
+                  toolbarTrans.showMore +
+                  '</button>');
+              $content.after($showMoreBtn);
+
+              $showMoreBtn.off('click').on('click', function() {
+                loadData(false);
+              });
+            } else {
+              toastr.info(
+                toolbarTrans.noShowMore,
+                null,
+                {positionClass: 'toast-bottom-center'},
+              );
+            }
+
+            // Fix for scrollbar
+            const $parent = $content.parent();
+            $parent.toggleClass(
+              'scroll',
+              ($parent.width() < $parent[0].scrollHeight),
+            );
+
+            self.handleCardsBehaviour();
+          });
+        } else if (response.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else if ($content.find('.toolbar-card').length === 0) {
+          $searchForm.append(
+            '<div class="no-results-message">' +
+            toolbarTrans.noMediaToShow +
+            '</div>');
+        }
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        $container.parent().find('.loading-container-toolbar').remove();
+        console.error(jqXHR);
+      },
+    });
+  };
+
+  // Refresh the results
+  const filterRefresh = function(filters) {
+    // Save filter options
+    for (const filter in filters) {
+      if (filters.hasOwnProperty(filter)) {
+        filters[filter].value =
+          self.DOMObject.find(
+            '#content-' +
+            menu +
+            ' .template-search-form #input-' + filter,
+          ).val();
+      }
+    }
+
+    // Reload data
+    loadData();
+
+    self.savePrefs();
+  };
+
+  // Prevent filter form submit and bind the change event to reload the table
+  $searchForm.on('submit', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // Bind search action to refresh the results
+  $searchForm.find('select, input[type="text"]').change(_.debounce(function() {
+    filterRefresh(filters);
+  }, 200));
+
+  loadData();
+};
 
 /**
  * Mark/Unmark as favourite

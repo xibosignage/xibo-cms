@@ -1,3 +1,24 @@
+/*!
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 @import "variables";
 @import "mixins";
 
@@ -14,7 +35,7 @@
     border-radius: 0;
 }
 
-@media (max-width: 768px) {    
+@media (max-width: 768px) {
     .editor-top-bar nav {
         .layout-info-duration, .layout-info-dimensions {
             display: none;
@@ -41,7 +62,7 @@
 
         .layout-info-icon {
             margin-right: 2px;
-        }   
+        }
 
         .layout-info-name {
             overflow: hidden;
@@ -49,6 +70,10 @@
             white-space: nowrap;
             max-width: 300px;
             float: left;
+
+            &:hover {
+                border-bottom: 1px solid black;
+            }
         }
 
         #layout-info-status {
@@ -68,7 +93,7 @@
         .popover {
             color: $xibo-color-neutral-900;
             min-width: 250px;
-            
+
             .popover-title {
                 padding: 4px;
                 font-weight: bold;
@@ -77,7 +102,7 @@
             }
 
             .popover-content {
-                padding: 3px 6px;  
+                padding: 3px 6px;
             }
 
             .popover-content .status-message {
@@ -89,11 +114,15 @@
             }
 
             .popover-content .status-title {
-                padding: 4px; 
+                padding: 4px;
                 font-weight: bold;
             }
         }
-    
+
+    }
+
+    .navbar-text.layout-info {
+        cursor: pointer;
     }
 
     .layout-action-menu {

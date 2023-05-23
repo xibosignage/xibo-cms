@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 // Load templates
 const topbarTemplate = require('../templates/topbar.hbs');
 const topbarLayoutJumpList =
@@ -86,6 +107,16 @@ Topbar.prototype.render = function() {
 
     return buttonInactive;
   };
+
+  // Setup layout edit form.
+  this.DOMObject.find('#layoutInfo').off().on('click', function() {
+    // Pop open the layout edit form.
+    // eslint-disable-next-line new-cap
+    XiboFormRender(urlsForApi.layout.editForm.url.replace(
+      ':id',
+      self.parent.layout.parentLayoutId || self.parent.layout.layoutId),
+    );
+  });
 
   // Handle custom dropwdown buttons
   if (this.customDropdownOptions != null) {

@@ -164,6 +164,16 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
+     * @param int $syncGroupId
+     * @return Display[]
+     * @throws NotFoundException
+     */
+    public function getBySyncGroupId(int $syncGroupId): array
+    {
+        return $this->query(null, ['syncGroupId' => $syncGroupId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return Display[]
@@ -285,6 +295,7 @@ class DisplayFactory extends BaseFactory
                   `display`.teamViewerSerial,
                   `display`.webkeySerial,
                   `display`.lanIpAddress,
+                  `display`.syncGroupId,
                   (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
                   (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                     FROM `permission`
@@ -586,6 +597,11 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getInt('folderId') !== null) {
             $body .= ' AND displaygroup.folderId = :folderId ';
             $params['folderId'] = $parsedBody->getInt('folderId');
+        }
+
+        if ($parsedBody->getInt('syncGroupId') !== null) {
+            $body .= ' AND `display`.syncGroupId = :syncGroupId ';
+            $params['syncGroupId'] = $parsedBody->getInt('syncGroupId');
         }
 
         $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
