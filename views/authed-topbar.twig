@@ -126,6 +126,10 @@
                 <a class="{{ groupElementClass }}" href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a>
             {% endif %}
 
+            {% if currentUser.featureEnabled("display.syncView") %}
+                <a class="{{ groupElementClass }}" href="{{ url_for("syncgroup.view") }}">{% trans "Sync Groups" %}</a>
+            {% endif %}
+
             {% if currentUser.featureEnabled("displayprofile.view") %}
                 <a class="{{ groupElementClass }}" href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a>
             {% endif %}

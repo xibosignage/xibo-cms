@@ -759,3 +759,16 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');
     $group->get('/fonts/{id}/form/delete', ['\Xibo\Controller\Font', 'deleteForm'])->setName('font.form.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/syncgroup/view', ['\Xibo\Controller\SyncGroup', 'displayPage'])->setName('syncgroup.view');
+    $group->get('/syncgroup/form/add', ['\Xibo\Controller\SyncGroup', 'addForm'])->setName('syncgroup.form.add');
+    $group->get('/syncgroup/form/{id}/members', ['\Xibo\Controller\SyncGroup', 'membersForm'])->setName('syncgroup.form.members');
+    $group->get('/syncgroup/form/{id}/edit', ['\Xibo\Controller\SyncGroup', 'editForm'])->setName('syncgroup.form.edit');
+    $group->get('/syncgroup/form/{id}/delete', ['\Xibo\Controller\SyncGroup', 'deleteForm'])->setName('syncgroup.form.delete');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.syncView']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/schedule/form/sync', ['\Xibo\Controller\Schedule', 'syncForm'])->setName('schedule.add.sync.form');
+    $group->get('/schedule/form/{id}/sync', ['\Xibo\Controller\Schedule', 'syncEditForm'])->setName('schedule.edit.sync.form');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['schedule.sync']));

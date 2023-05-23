@@ -166,6 +166,15 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
+     * @param $syncGroupId
+     * @return Schedule[]
+     */
+    public function getBySyncGroupId($syncGroupId): array
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'syncGroupId' => $syncGroupId]);
+    }
+
+    /**
      * @param int $displayId
      * @param Carbon $fromDt
      * @param Carbon $toDt
@@ -216,6 +225,7 @@ class ScheduleFactory extends BaseFactory
                 schedule.actionTriggerCode,
                 schedule.actionType,
                 schedule.actionLayoutCode,
+                schedule.syncGroupId,
                 `campaign`.campaign,
                 `campaign`.campaignId as groupKey,
                 `campaign`.cyclePlaybackEnabled as cyclePlayback,
@@ -223,7 +233,10 @@ class ScheduleFactory extends BaseFactory
                 `command`.command,
                 `lkscheduledisplaygroup`.displayGroupId,
                 `daypart`.isAlways,
-                `daypart`.isCustom
+                `daypart`.isCustom,
+                `syncLayout`.layoutId AS syncLayoutId,
+                `syncLayout`.status AS syncLayoutStatus, 
+                `syncLayout`.duration AS syncLayoutDuration
                FROM `schedule`
                 INNER JOIN `daypart`
                 ON `daypart`.dayPartId = `schedule`.dayPartId
@@ -254,6 +267,13 @@ class ScheduleFactory extends BaseFactory
                   AND layout.parentId IS NULL
                 LEFT OUTER JOIN `command`
                 ON `command`.commandId = `schedule`.commandId
+                LEFT OUTER JOIN `schedule_sync`
+                ON `schedule_sync`.eventId = `schedule`.eventId
+                  AND `schedule_sync`.displayId = :displayId
+                LEFT OUTER JOIN `layout` syncLayout
+                ON `syncLayout`.layoutId = `schedule_sync`.layoutId
+                  AND `syncLayout`.retired = 0 
+                  AND `syncLayout`.parentId IS NULL
         ';
 
         if ($options['useGroupId']) {
@@ -347,8 +367,10 @@ class ScheduleFactory extends BaseFactory
             `schedule`.actionType,
             `schedule`.actionLayoutCode,
             `schedule`.parentCampaignId,
+            `schedule`.syncGroupId,
             `daypart`.isAlways,
-            `daypart`.isCustom
+            `daypart`.isCustom,
+            `syncgroup`.name AS syncGroupName
         ';
 
         $body = ' FROM `schedule`
@@ -360,6 +382,8 @@ class ScheduleFactory extends BaseFactory
             ON parentCampaign.campaignId = `schedule`.parentCampaignId
             LEFT OUTER JOIN `command`
             ON `command`.commandId = `schedule`.commandId
+            LEFT OUTER JOIN `syncgroup`
+            ON `syncgroup`.syncGroupId = `schedule`.syncGroupId
           WHERE 1 = 1';
 
         if ($parsedFilter->getInt('eventId') !== null) {
@@ -500,6 +524,11 @@ class ScheduleFactory extends BaseFactory
 
             $params['playlistId'] = $parsedFilter->getInt('playlistId');
 
+        }
+
+        if ($parsedFilter->getInt('syncGroupId') !== null) {
+            $body .= ' AND `schedule`.syncGroupId = :syncGroupId ';
+            $params['syncGroupId'] = $parsedFilter->getInt('syncGroupId');
         }
 
         // Sorting?

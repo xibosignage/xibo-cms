@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,7 +24,7 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Schedule Event" %}
+    {% trans "Add Synchronised Event" %}
 {% endblock %}
 
 {% block callBack %}setupScheduleForm{% endblock %}
@@ -32,8 +32,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Next" %}, XiboDialogApply("#scheduleAddForm")
-    {% trans "Save" %}, beforeSubmitScheduleForm($("#scheduleAddForm"))
+    {% trans "Save" %}, beforeSubmitScheduleForm($("#scheduleAddSyncForm"))
 {% endblock %}
 
 {% block formHtml %}
@@ -47,22 +46,38 @@
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ url_for("schedule.add") }}" data-full-screen-url="{{ url_for('layout.add.full.screen.schedule') }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}" data-default-lat="{{ defaultLat }}" data-default-long = "{{ defaultLong }}">
+            <form id="scheduleAddSyncForm" autocomplete="off" class="XiboForm form-horizontal" method="post" action="{{ url_for("schedule.add") }}" data-full-screen-url="{{ url_for('layout.add.full.screen.schedule') }}" data-fetch-sync-displays="{{ url_for('syncgroup.fetch.displays', {id:':id'}) }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}" data-default-lat="{{ defaultLat }}" data-default-long = "{{ defaultLong }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                        {{ forms.hidden("eventTypeId", eventTypeId) }}
 
-                        {% set title %}{% trans "Event Type" %}{% endset %}
-                        {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
-                        {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "eventTypeId", "eventTypeName", helpText) }}
-
-                        {% set title %}{% trans "Display" %}{% endset %}
-                        {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                        {% set title %}{% trans "Sync Group" %}{% endset %}
+                        {% set helpText %}{% trans "Please select existing Sync Group" %}{% endset %}
                         {% set attributes = [
-                            { name: "data-search-url", value:  url_for("displayGroup.search") },
-                            { name: "data-trans-groups", value:  "Groups"|trans },
-                            { name: "data-trans-display", value:  "Display"|trans }
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("syncgroup.search") ~ "?hasLeadDisplay=1" },
+                            { name: "data-search-term", value: "name" },
+                            { name: "data-id-property", value: "syncGroupId" },
+                            { name: "data-text-property", value: "name" },
                         ] %}
-                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, displayGroups, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes) }}
+                        {{ forms.dropdown("syncGroupId", "single", title, "", null, "syncGroupId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                        <div id="content-selector" class="form-group col-sm-12 d-none" style="max-height: 40vh; overflow-y: auto">
+                            <div class="XiboData card">
+                                <table id="contentSelectorTable" class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Layout" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
@@ -88,117 +103,6 @@
                         {% set title %}{% trans "End Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
                         {{ forms.dateTime("toDt", title, "", helpText, "endtime-control", "required") }}
-
-                        {# Campaign / Layout list. We want to build two arrays for us to use. #}
-                        {% set attributes = [
-                            { name: "data-search-url", value:  url_for("campaign.search") ~ "?type=list" },
-                            { name: "data-search-is-layout-specific", value: -1 },
-                            { name: "data-trans-layout", value: "Layout"|trans },
-                            { name: "data-trans-layout-help-text", value: "Please select a Layout for this Event to show"|trans },
-                            { name: "data-trans-campaign", value: "Campaign"|trans },
-                            { name: "data-trans-campaign-help-text", value: "Please select a Campaign for this Event to show"|trans },
-                        ] %}
-
-                        {% set title %}{% trans "Layout" %}{% endset %}
-                        {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
-                        {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
-
-
-                        {% set title %}{% trans "Media" %}{% endset %}
-                        {% set helpText %}{% trans "Choose a media item on the library you want shown full screen" %}{% endset %}
-                        {% set attributes = [
-                            { name: "data-width", value: "100%" },
-                            { name: "data-search-url", value: url_for("library.search") ~ "?fullScreenScheduleCheck=true&types[]=image&types[]=video" },
-                            { name: "data-search-term", value: "media" },
-                            { name: "data-id-property", value: "mediaId" },
-                            { name: "data-text-property", value: "name" },
-                            { name: "data-additional-property", value: "hasFullScreenLayout" }
-                        ] %}
-                        {{ forms.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "pagedSelect media-control", "", "", "", attributes) }}
-
-                        {% set title %}{% trans "Playlist" %}{% endset %}
-                        {% set helpText %}{% trans "Choose a Playlist you want shown full screen" %}{% endset %}
-                        {% set attributes = [
-                            { name: "data-width", value: "100%" },
-                            { name: "data-search-url", value: url_for("playlist.search") ~ "?fullScreenScheduleCheck=true" },
-                            { name: "data-search-term", value: "name" },
-                            { name: "data-id-property", value: "playlistId" },
-                            { name: "data-text-property", value: "name" },
-                            { name: "data-additional-property", value: "hasFullScreenLayout" }
-                        ] %}
-                        {{ forms.dropdown("playlistId", "single", title, "", null, "playlistId", "name", helpText, "pagedSelect playlist-control", "", "", "", attributes) }}
-
-                        {{ forms.hidden('fullScreenCampaignId') }}
-
-                        {% set title %}{% trans "Duration in loop" %}{% endset %}
-                        {% set helpText %}{% trans "Set how long this item should be shown each time it appears in the schedule. Leave blank to use the Media Duration set in the Library" %}{% endset %}
-                        {{ forms.number('layoutDuration', title, "", helpText, 'media-control no-full-screen-layout') }}
-
-                        {% set title %}{% trans "Resolution" %}{% endset %}
-                        {% set helpText %}{% trans "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media." %}{% endset %}
-                        {% set attributes = [
-                            { name: "data-search-url", value: url_for("resolution.search") },
-                            { name: "data-search-term", value: "resolution" },
-                            { name: "data-id-property", value: "resolutionId" },
-                            { name: "data-text-property", value: "resolution" },
-                            { name: "data-trans-media-help-text", value: "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media."|trans },
-                            { name: "data-trans-playlist-help-text", value: "Optionally select a Resolution to use for the selected Playlist. Leave blank to default to a 1080p Resolution"|trans },
-                        ] %}
-                        {{ forms.dropdown("resolutionId", "single", title, "", null, "resolutionId", "resolution", helpText, "pagedSelect media-playlist-control resolution-control no-full-screen-layout", "", "", "", attributes) }}
-
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Optionally set a colour to use as a background for if the item selected does not fill the entire screen" %}{% endset %}
-                        {{ forms.colorPicker("backgroundColor", title, '#000', helpText, 'media-playlist-control no-full-screen-layout') }}
-
-                        <div class="form-group row preview-button-container">
-                            <div class="offset-md-2 col-md-10">
-                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
-                                <small class="form-text text-muted">{% trans "Preview your selection in a new tab" %}</small>
-                            </div>
-                        </div>
-
-                        <div class="form-group row interrupt-control" style="display: flex;">
-                            <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
-                            <div class="col-sm-5">
-                                <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="0" min="0" max="3600" step="1">
-                                <small class="form-text text-muted">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</small>
-                            </div>
-
-                            <div class="col-sm-5">
-                                <input class="form-control" name="shareOfVoicePercentage" type="number" id="shareOfVoicePercentage" value="">
-                                <small class="form-text text-muted">{% trans "As a percentage" %}</small>
-                            </div>
-                        </div>
-
-                        {% set title %}{% trans "Action Type" %}{% endset %}
-                        {% set helpText %}{% trans "Please select action Type" %}{% endset %}
-                        {% set navLayout %}{% trans "Navigate to Layout" %}{% endset %}
-                        {% set command %}{% trans "Command" %}{% endset %}
-                        {% set options = [
-                            { typeid: "navLayout", type: navLayout },
-                            { typeid: "command", type: command },
-                        ] %}
-                        {{ forms.dropdown("actionType", "single", title,"", options, "typeid","type", helpText, 'action-control') }}
-
-                        {% set title %}{% trans "Trigger Code" %}{% endset %}
-                        {% set helpText %}{% trans "Web hook trigger code for this Action" %}{% endset %}
-                        {{ forms.input("actionTriggerCode", title, "", helpText, 'action-control') }}
-
-                        {% set title %}{% trans "Layout Code" %}{% endset %}
-                        {% set helpText %}{% trans "Please select the Code identifier for the Layout that Player should navigate to when this Action is triggered." %}{% endset %}
-
-                        {% set attributes = [
-                            { name: "data-width", value: "100%" },
-                            { name: "data-search-url", value: url_for("layout.code.search") },
-                            { name: "data-search-term", value: "code" },
-                            { name: "data-id-property", value: "code" },
-                            { name: "data-text-property", value: "code" }
-                        ] %}
-                        {{ forms.dropdown("actionLayoutCode", "single", title, "", null, "code", "code", helpText, "pagedSelect action-control layout-code-control", "", "", "", attributes) }}
-
-                        {% set title %}{% trans "Command" %}{% endset %}
-                        {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
-                        {{ forms.dropdown("commandId", "single", title, "", [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
@@ -283,7 +187,6 @@
                         {% set helpText %}{% trans "Provide a date and time to end the Repeat for this Event. Leave empty to Repeat indefinitely." %}{% endset %}
                         {{ forms.dateTime("recurrenceRange", title, "", helpText, "repeat-control-group", "", "") }}
                     </div>
-
                     <div class="tab-pane" id="reminders">
                         {% set message %}{% trans "Use the form fields below to create a set of reminders for this event. New fields can be added by clicking on the + icon at the end of the row. Use the tick box to receive a notification by email alternatively reminders will be shown in the message center." %}{% endset %}
                         {{ forms.message(message) }}

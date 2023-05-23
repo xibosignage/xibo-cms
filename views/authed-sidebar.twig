@@ -62,6 +62,10 @@
                 <li class="sidebar-list"><a href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
+            {% if currentUser.featureEnabled("display.syncView") %}
+                <li class="sidebar-list"><a href="{{ url_for("syncgroup.view") }}">{% trans "Sync Groups" %}</a></li>
+            {% endif %}
+
             {% if currentUser.featureEnabled("displayprofile.view") %}
                 <li class="sidebar-list"><a href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
             {% endif %}

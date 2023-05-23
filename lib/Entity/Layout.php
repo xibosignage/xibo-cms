@@ -1032,6 +1032,8 @@ class Layout implements \JsonSerializable
             // Remove any display group links
             $this->getStore()->update('DELETE FROM `lklayoutdisplaygroup` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
 
+            // Remove any display group links
+            $this->getStore()->update('DELETE FROM `schedule_sync` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
         } else {
             // Remove the draft from any Campaign assignments
             $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
@@ -2254,6 +2256,12 @@ class Layout implements \JsonSerializable
 
         // Swap any display group links
         $this->getStore()->update('UPDATE `lklayoutdisplaygroup` SET layoutId = :layoutId WHERE layoutId = :parentId', [
+            'layoutId' => $this->layoutId,
+            'parentId' => $parent->layoutId
+        ]);
+
+        // swap any schedule_sync links
+        $this->getStore()->update('UPDATE `schedule_sync` SET layoutId = :layoutId WHERE layoutId = :parentId', [
             'layoutId' => $this->layoutId,
             'parentId' => $parent->layoutId
         ]);

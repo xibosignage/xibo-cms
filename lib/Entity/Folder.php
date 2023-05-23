@@ -376,6 +376,11 @@ class Folder
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
+
+        $this->getStore()->update('UPDATE `syncgroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
+            'permissionsFolderId' => $permissionFolderId,
+            'folderId' => $folderId
+        ]);
     }
 
     /**
