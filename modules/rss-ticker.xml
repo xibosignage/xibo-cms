@@ -39,6 +39,12 @@
             <title>Update Interval Images (mins)</title>
             <helpText>Please enter the update interval for images in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
             <default>240</default>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                    <condition type="gte">0</condition>
+                </test>
+            </rule>
         </property>
     </settings>
     <properties>

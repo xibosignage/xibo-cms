@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Definition;
 
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\ValueTooLargeException;
@@ -204,11 +205,14 @@ class Property implements \JsonSerializable
                     $valueToTestAgainst = $properties[$condition->field] ?? $condition->value;
                 }
 
+                // Do we have a message
+                $message = empty($this->validation->message) ? null : __($this->validation->message);
+
                 switch ($condition->type) {
                     case 'required':
                         if (empty($this->value)) {
                             throw new InvalidArgumentException(
-                                sprintf(__('Missing required property %s'), $this->title),
+                                $message ?? sprintf(__('Missing required property %s'), $this->title),
                                 $this->id
                             );
                         }
@@ -219,7 +223,7 @@ class Property implements \JsonSerializable
                             && !v::url()->validate($this->value)
                         ) {
                             throw new InvalidArgumentException(
-                                sprintf(__('%s must be a valid URI'), $this->title),
+                                $message ?? sprintf(__('%s must be a valid URI'), $this->title),
                                 $this->id
                             );
                         }
@@ -236,10 +240,29 @@ class Property implements \JsonSerializable
 
                             if ($now->equalTo($check)) {
                                 throw new InvalidArgumentException(
-                                    __('That is not a valid date interval, please use natural language such as 1 week'),
+                                    // phpcs:ignore Generic.Files.LineLength
+                                    $message ?? __('That is not a valid date interval, please use natural language such as 1 week'),
                                     $this->id
                                 );
                             }
+                        }
+                        break;
+
+                    case 'contains':
+                        if (!empty($this->value) && !Str::contains($this->value, $valueToTestAgainst)) {
+                            throw new InvalidArgumentException(
+                                $message ?? sprintf(__('%s must contain %s'), $this->title, $valueToTestAgainst),
+                                $this->id,
+                            );
+                        }
+                        break;
+
+                    case 'ncontains':
+                        if (!empty($this->value) && Str::contains($this->value, $valueToTestAgainst)) {
+                            throw new InvalidArgumentException(
+                                $message ?? sprintf(__('%s must not contain %s'), $this->title, $valueToTestAgainst),
+                                $this->id,
+                            );
                         }
                         break;
 
@@ -247,7 +270,19 @@ class Property implements \JsonSerializable
                         // Value must be <= to the condition value, or field value
                         if ($valueToTestAgainst !== null && !($this->value <= $valueToTestAgainst)) {
                             throw new InvalidArgumentException(
-                                __($this->validation->message),
+                                // phpcs:ignore Generic.Files.LineLength
+                                $message ?? sprintf(__('%s must be less than or equal to %s'), $this->title, $valueToTestAgainst),
+                                $this->id
+                            );
+                        }
+                        break;
+
+                    case 'gte':
+                        // Value must be >= to the condition value, or field value
+                        if ($valueToTestAgainst !== null && !($this->value >= $valueToTestAgainst)) {
+                            throw new InvalidArgumentException(
+                                // phpcs:ignore Generic.Files.LineLength
+                                $message ?? sprintf(__('%s must be greater than or equal to %s'), $this->title, $valueToTestAgainst),
                                 $this->id
                             );
                         }
@@ -367,7 +402,7 @@ class Property implements \JsonSerializable
     public function parseTest(string $type, array $conditions): Test
     {
         $test = new Test();
-        $test->type = $type;
+        $test->type = $type ?: 'and';
 
         foreach ($conditions as $item) {
             $condition = new Condition();
