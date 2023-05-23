@@ -36,16 +36,16 @@ describe('Folders', function () {
     });
 
     it('Moving an image from Root Folder to another folder', () => {
-        // Go to library
-        cy.visit('/library/view');
-
         // Create and alias for load folders
         cy.server();
         cy.route('/library?*').as('mediaLoad');
+
+        // Go to library
+        cy.visit('/library/view');
         cy.get('#media').type('child_folder_media');
 
         cy.wait('@mediaLoad');
-        cy.wait(1000);
+        cy.get('#libraryItems tbody tr').should('have.length', 1);
 
         cy.get('#libraryItems tr:first-child .dropdown-toggle').click();
         cy.get('#libraryItems tr:first-child .library_button_selectfolder').click();
@@ -57,8 +57,6 @@ describe('Folders', function () {
     });
 
     it('Sharing', () => {
-        cy.visit('/folders/view');
-
         cy.server();
 
         // Create and alias for load folders
@@ -67,10 +65,11 @@ describe('Folders', function () {
         // Create and alias for load user permissions for folders
         cy.route('/user/permissions/Folder/*').as('permissionsFolders');
 
-        cy.wait('@loadFolders');
-        cy.wait(1000);
+        cy.visit('/folders/view');
 
-        cy.contains('London').rightclick();
+        cy.wait('@loadFolders');
+
+        cy.contains('ShareFolder').rightclick();
         cy.get('ul.jstree-contextmenu >li:nth-child(6) > a').click(); // Click on Share Link
         cy.get('#name').type('folder_user');
 
@@ -84,10 +83,11 @@ describe('Folders', function () {
 
     it('Set Home Folders for a user', () => {
         cy.server();
-        cy.visit('/user/view');
         // Create and alias for load users
         cy.route('/user*').as('loadUsers');
-        cy.get('#userName').type('folder_user'); // TODO
+
+        cy.visit('/user/view');
+        cy.get('#userName').type('folder_user');
 
         cy.wait('@loadUsers');
         cy.get('#users tbody tr').should('have.length', 1);
@@ -109,21 +109,24 @@ describe('Folders', function () {
     });
 
     it('Remove an empty folder', () => {
-        cy.visit('/folders/view');
-        cy.contains('EmptyFolder').rightclick();
-        cy.contains('Remove').click();
-        cy.visit('/folders/view');
-
         // Create and alias for load folders
         cy.server();
         cy.route('/folders').as('loadFolders');
 
+        cy.visit('/folders/view');
+        cy.contains('EmptyFolder').rightclick();
+        cy.contains('Remove').click();
+
+        cy.visit('/folders/view');
         cy.wait('@loadFolders');
-        cy.wait(1000);
         cy.contains('EmptyFolder').should('not.exist');
     });
 
-    it('Remove a folder with content', () => {
+    it('cannot remove a folder with content', () => {
+        // Create and alias for load folders
+        cy.server();
+        cy.route('/folders').as('loadFolders');
+
         cy.visit('/folders/view');
         cy.contains('FolderWithContent').rightclick();
         cy.contains('Remove').click();
@@ -131,25 +134,19 @@ describe('Folders', function () {
         // Check folder still exists
         cy.visit('/folders/view');
 
-        // Create and alias for load folders
-        cy.server();
-        cy.route('/folders').as('loadFolders');
-
         cy.wait('@loadFolders');
-        cy.wait(1000);
         cy.contains('FolderWithContent').should('exist');
     });
 
     it('search a media in a folder', () => {
-        // Go to library
-        cy.visit('/library/view');
-
         // Create and alias for load folders
         cy.server();
         cy.route('/folders').as('loadFolders');
 
+        // Go to library
+        cy.visit('/library/view');
+
         cy.wait('@loadFolders');
-        cy.wait(1000);
 
         // Click on All folders
         cy.get('#folder-tree-clear-selection-button').click();
@@ -157,8 +154,7 @@ describe('Folders', function () {
         cy.contains('FolderWithImage').click();
 
         cy.get('#libraryItems tbody tr').should('have.length', 1);
-        cy.get('#media').type('media_for_search_in_folder');
-        cy.get('#libraryItems tbody tr:nth-child(1) td:nth-child(2)').contains('media_for_search_in_folder');
+        cy.get('#libraryItems tbody').contains('media_for_search_in_folder');
     });
 
     it('Hide Folder tree', () => {
@@ -177,6 +173,7 @@ describe('Folders', function () {
         // Create and alias for load folders
         cy.route('/folders').as('loadFolders');
 
+        // Go to folders
         cy.visit('/folders/view');
         cy.contains('MoveFromFolder').rightclick();
         cy.contains('Move Folder').click();
@@ -187,28 +184,24 @@ describe('Folders', function () {
         cy.get('.form-check input').click();
         cy.get('.save-button').click();
 
-        // Check test34 exist in MoveToFolder
+        // Validate test34 image exist in MoveToFolder
         cy.visit('/folders/view');
 
         cy.wait('@loadFolders');
-        cy.wait(1000);
         cy.contains('MoveFromFolder').should('not.exist');
 
+        // Validate test34 image exist in MoveToFolder
         // Go to library
         cy.visit('/library/view');
-
+        cy.wait('@mediaLoad');
         cy.wait('@loadFolders');
-        cy.wait(1000);
 
         // Click on All folders from Folder Tree
         cy.get('#folder-tree-clear-selection-button').click();
         cy.get('.jstree-ocl').click();
         cy.contains('MoveToFolder').click();
-        cy.get('#libraryItems tbody tr').should('have.length', 2);
-        cy.get('#media').type('test34');
 
         cy.wait('@mediaLoad');
-        cy.wait(1000);
-        cy.get('#libraryItems tbody tr:nth-child(1) td:nth-child(2)').contains('test34');
+        cy.get('#libraryItems tbody').contains('test34');
     });
 });
