@@ -32,6 +32,7 @@ use Xibo\Widget\Definition\LegacyType;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\WidgetCompatibilityInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
+use Xibo\Widget\Provider\WidgetValidatorInterface;
 
 /**
  * Class Module
@@ -157,6 +158,12 @@ class Module implements \JsonSerializable
      */
     public $class;
 
+    /**
+     * @SWG\Property(description="Validator class name including namespace")
+     * @var string[]
+     */
+    public $validatorClass = [];
+
     /** @var \Xibo\Widget\Definition\Stencil|null Stencil for this modules preview */
     public $preview;
 
@@ -260,6 +267,9 @@ class Module implements \JsonSerializable
 
     /**  @var WidgetCompatibilityInterface */
     private $widgetCompatibility;
+
+    /**  @var WidgetValidatorInterface[] */
+    private $widgetValidators = [];
 
     /**
      * Entity constructor.
@@ -387,9 +397,23 @@ class Module implements \JsonSerializable
     public function setWidgetCompatibility(WidgetCompatibilityInterface $widgetCompatibility): Module
     {
         $this->widgetCompatibility = $widgetCompatibility;
-        $this->widgetCompatibility
-            ->setLog($this->getLog()->getLoggerInterface());
+        $this->widgetCompatibility->setLog($this->getLog()->getLoggerInterface());
         return $this;
+    }
+
+    public function addWidgetValidator(WidgetValidatorInterface $widgetValidator): Module
+    {
+        $this->widgetValidators[] = $widgetValidator;
+        return $this;
+    }
+
+    /**
+     * Get this module's widget validators
+     * @return \Xibo\Widget\Provider\WidgetValidatorInterface[]
+     */
+    public function getWidgetValidators(): array
+    {
+        return $this->widgetValidators;
     }
 
     /**

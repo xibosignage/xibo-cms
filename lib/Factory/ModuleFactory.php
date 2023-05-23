@@ -494,22 +494,35 @@ class ModuleFactory extends BaseFactory
                         // We create a module specific provider
                         if (!class_exists($module->class)) {
                             $module->errors[] = 'Module class not found: ' . $module->class;
+                        } else {
+                            $class = $module->class;
+                            $module->setWidgetProvider(new $class());
                         }
-                        $class = $module->class;
-                        $module->setWidgetProvider(new $class());
                     }
 
                     // Create a widget compatibility if necessary
-                    // Take our module and see if it has a class associated with it
                     if (!empty($module->compatibilityClass)) {
                         // We create a module specific provider
                         if (!class_exists($module->compatibilityClass)) {
                             $module->errors[] = 'Module compatibilityClass not found: ' . $module->compatibilityClass;
+                        } else {
+                            $compatibilityClass = $module->compatibilityClass;
+                            $module->setWidgetCompatibility(new $compatibilityClass());
                         }
-                        $compatibilityClass = $module->compatibilityClass;
-                        $module->setWidgetCompatibility(new $compatibilityClass());
                     }
 
+                    // Create a widget validator if necessary
+                    foreach ($module->validatorClass as $validatorClass) {
+                        // We create a module specific provider
+                        if (!class_exists($validatorClass)) {
+                            $module->errors[] = 'Module validatorClass not found: ' . $validatorClass;
+                        } else {
+                            $module->addWidgetValidator(
+                                (new $validatorClass())
+                                    ->setLog($this->getLog()->getLoggerInterface())
+                            );
+                        }
+                    }
 
                     // Set error state
                     $module->isError = $module->errors !== null && count($module->errors) > 0;
@@ -578,6 +591,14 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
+
+        // Validator classes
+        foreach ($xml->getElementsByTagName('validatorClass') as $node) {
+            /** @var \DOMNode $node */
+            if ($node instanceof \DOMElement) {
+                $module->validatorClass[] = trim($node->textContent);
+            }
+        }
 
         // Event listeners
         $module->onInitialize = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onInitialize');

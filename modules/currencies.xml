@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -41,10 +41,12 @@
         <property id="items" type="text">
             <title>Currencies</title>
             <helpText>A comma separated list of Currency Acronyms/Abbreviations, e.g. GBP,USD,EUR. For the best results enter no more than 5 items.</helpText>
+            <rule>required</rule>
         </property>
         <property id="base" type="text">
             <title>Base</title>
             <helpText>The base currency.</helpText>
+            <rule>required</rule>
         </property>
         <property id="loop" type="checkbox">
             <title>Reverse conversion?</title>

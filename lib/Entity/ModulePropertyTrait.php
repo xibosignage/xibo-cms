@@ -52,9 +52,7 @@ trait ModulePropertyTrait
                 $property->value = doubleval($property->value);
             }
 
-            if ($property->variant === 'uri' && !empty($value)) {
-                $property->value = urldecode($property->value);
-            }
+            $property->reverseFilters();
         }
         return $this;
     }
@@ -89,10 +87,9 @@ trait ModulePropertyTrait
                 $decoratedProperty = doubleval($decoratedProperty);
             }
 
-            if ($property->variant === 'uri' && !empty($value)) {
-                $decoratedProperty = urldecode($decoratedProperty);
-            }
+            $decoratedProperty = $property->reverseFiltersOnValue($decoratedProperty);
 
+            // Add our decorated property
             $decoratedProperties[$property->id] = $decoratedProperty;
         }
         return $decoratedProperties;

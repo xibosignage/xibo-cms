@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Upload Video files to assign to Layouts</description>
     <class>\Xibo\Widget\VideoProvider</class>
+    <validatorClass>\Xibo\Widget\Validator\ZeroDurationValidator</validatorClass>
     <type>video</type>
     <dataType></dataType>
     <schemaVersion>2</schemaVersion>
@@ -68,7 +69,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="scaleTypeId" type="dropdown" mode="single">
+        <property id="scaleType" type="dropdown" mode="single">
             <title>Scale type</title>
             <helpText>How should this video be scaled?</helpText>
             <default>%defaultScaleType%</default>

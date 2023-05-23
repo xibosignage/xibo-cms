@@ -834,14 +834,11 @@ class Widget implements \JsonSerializable
             if ($property->value === null) {
                 $this->removeOption($property->id);
             } else {
-                $type = $property->isCData() ? 'cdata' : 'attrib';
+                // Apply filters
+                $property->applyFilters();
 
-                // Apply any filters on the data.
-                if ($property->type === 'input' && $property->variant === 'uri') {
-                    $property->value = urlencode($property->value);
-                }
-
-                $this->setOptionValue($property->id, $type, $property->value);
+                // Set the property for saving into the widget options
+                $this->setOptionValue($property->id, $property->isCData() ? 'cdata' : 'attrib', $property->value);
 
                 // If this property allows library references to be added, we parse them out here and assign
                 // the matching media to the widget.

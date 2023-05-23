@@ -23,7 +23,7 @@
     <name>Local Video</name>
     <author>Core</author>
     <description>Display Video that only exists on the Display by providing a local file path or URL</description>
-    <class></class>
+    <validatorClass>\Xibo\Widget\Validator\RemoteUrlsZeroDurationValidator</validatorClass>
     <type>localvideo</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
@@ -39,10 +39,11 @@
         </property>
     </settings>
     <properties>
-        <property id="uri" type="text">
+        <property id="uri" type="text" variant="uri">
             <title>Video Path</title>
             <helpText>A local file path or URL to the video. This can be a RTSP stream.</helpText>
             <rule>required</rule>
+            <rule>uri</rule>
         </property>
         <property id="scaleType" type="dropdown" mode="single">
             <title>Scale type</title>

@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -36,10 +36,12 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="uri" type="text">
+        <property id="uri" type="text" variant="uri">
             <title>Feed URL</title>
             <helpText>The Link for the iCal Feed.</helpText>
             <default></default>
+            <rule>required</rule>
+            <rule>uri</rule>
         </property>
         <property id="excludeAllDay" type="checkbox">
             <title>Exclude all day events?</title>

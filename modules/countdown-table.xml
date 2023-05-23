@@ -68,6 +68,7 @@
                     <condition field="countdownType" type="eq">3</condition>
                 </test>
             </visibility>
+            <rule>required</rule>
         </property>
         <property id="countdownWarningDuration" type="text">
             <title>Warning Duration</title>

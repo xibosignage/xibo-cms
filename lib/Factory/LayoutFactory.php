@@ -89,6 +89,11 @@ class LayoutFactory extends BaseFactory
     private $moduleFactory;
 
     /**
+     * @var ModuleTemplateFactory
+     */
+    private $moduleTemplateFactory;
+
+    /**
      * @var ResolutionFactory
      */
     private $resolutionFactory;
@@ -130,6 +135,7 @@ class LayoutFactory extends BaseFactory
      * @param CampaignFactory $campaignFactory
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
+     * @param ModuleTemplateFactory $moduleTemplateFactory
      * @param ResolutionFactory $resolutionFactory
      * @param WidgetFactory $widgetFactory
      * @param WidgetOptionFactory $widgetOptionFactory
@@ -149,6 +155,7 @@ class LayoutFactory extends BaseFactory
         $campaignFactory,
         $mediaFactory,
         $moduleFactory,
+        $moduleTemplateFactory,
         $resolutionFactory,
         $widgetFactory,
         $widgetOptionFactory,
@@ -166,6 +173,7 @@ class LayoutFactory extends BaseFactory
         $this->campaignFactory = $campaignFactory;
         $this->mediaFactory = $mediaFactory;
         $this->moduleFactory = $moduleFactory;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
         $this->resolutionFactory = $resolutionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->widgetOptionFactory = $widgetOptionFactory;
@@ -194,6 +202,7 @@ class LayoutFactory extends BaseFactory
             $this,
             $this->mediaFactory,
             $this->moduleFactory,
+            $this->moduleTemplateFactory,
             $this->playlistFactory,
             $this->actionFactory,
             $this->folderFactory,

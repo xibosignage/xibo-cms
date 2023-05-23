@@ -22,8 +22,9 @@
 
 namespace Xibo\Widget\Definition;
 
+use Carbon\Carbon;
+use Respect\Validation\Validator as v;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Exception\ValueTooLargeException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -188,23 +189,49 @@ class Property implements \JsonSerializable
     public function validate(): Property
     {
         if (!empty($this->value) && strlen($this->value) > 67108864) {
-            throw new ValueTooLargeException(__('Value too large for %s', $this->id), $this->id);
+            throw new ValueTooLargeException(sprintf(__('Value too large for %s'), $this->title), $this->id);
         }
 
         foreach ($this->validation as $validation) {
             switch ($validation) {
                 case 'required':
-                    try {
-                        if (empty($this->value)) {
-                            throw new NotFoundException();
-                        }
-                    } catch (NotFoundException $notFoundException) {
-                        throw new InvalidArgumentException(sprintf(
-                            __('Missing required property %s'),
+                    if (empty($this->value)) {
+                        throw new InvalidArgumentException(
+                            sprintf(__('Missing required property %s'), $this->title),
                             $this->id
-                        ));
+                        );
                     }
                     break;
+
+                case 'uri':
+                    if (!empty($this->value)
+                        && !v::url()->validate($this->value)
+                    ) {
+                        throw new InvalidArgumentException(
+                            sprintf(__('%s must be a valid URI'), $this->title),
+                            $this->id
+                        );
+                    }
+                    break;
+
+                case 'interval':
+                    if (!empty($this->value)) {
+                        // Try to create a date interval from it
+                        $dateInterval = \DateInterval::createFromDateString($this->value);
+
+                        // Use now and add the date interval to it
+                        $now = Carbon::now();
+                        $check = $now->copy()->add($dateInterval);
+
+                        if ($now->equalTo($check)) {
+                            throw new InvalidArgumentException(
+                                __('That is not a valid date interval, please use natural language such as 1 week'),
+                                'customInterval'
+                            );
+                        }
+                    }
+                    break;
+
                 default:
                     // Nothing to validate
             }
@@ -267,6 +294,38 @@ class Property implements \JsonSerializable
             default:
                 return $params->getString($key);
         }
+    }
+
+    /**
+     * Apply any filters on the data.
+     * @return void
+     */
+    public function applyFilters(): void
+    {
+        if ($this->type === 'input' && $this->variant === 'uri') {
+            $this->value = urlencode($this->value);
+        }
+    }
+
+    /**
+     * Reverse filters
+     * @return void
+     */
+    public function reverseFilters(): void
+    {
+        $this->value = $this->reverseFiltersOnValue($this->value);
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed|string
+     */
+    public function reverseFiltersOnValue(mixed $value): mixed
+    {
+        if ($this->variant === 'uri' && !empty($value)) {
+            $value = urldecode($value);
+        }
+        return $value;
     }
 
     /**

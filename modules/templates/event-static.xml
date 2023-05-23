@@ -30,6 +30,7 @@
               <title>Interval</title>
               <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
               <default></default>
+              <rule>interval</rule>
           </property>
           <property id="effect" type="effectSelector" variant="all">
               <title>Effect</title>
@@ -2788,6 +2789,7 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Interval</title>
                 <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
                 <default></default>
+                <rule>interval</rule>
             </property>
             <property id="useDateRange" type="checkbox">
                 <title>Select a Date range to return events instead?</title>
@@ -3123,6 +3125,7 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Interval</title>
                 <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
                 <default></default>
+                <rule>interval</rule>
             </property>
             <property id="useDateRange" type="checkbox">
                 <title>Select a Date range to return events instead?</title>

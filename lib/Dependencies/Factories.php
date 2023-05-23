@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -217,6 +217,7 @@ class Factories
                     $c->get('campaignFactory'),
                     $c->get('mediaFactory'),
                     $c->get('moduleFactory'),
+                    $c->get('moduleTemplateFactory'),
                     $c->get('resolutionFactory'),
                     $c->get('widgetFactory'),
                     $c->get('widgetOptionFactory'),

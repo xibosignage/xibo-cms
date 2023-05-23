@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -37,6 +37,8 @@
             <title>Link</title>
             <helpText>The Location (URL) of the webpage</helpText>
             <default></default>
+            <rule>required</rule>
+            <rule>uri</rule>
         </property>
         <property id="transparency" type="checkbox">
             <title>Background transparent?</title>
@@ -57,6 +59,7 @@
                 <option name="2">Manual Position</option>
                 <option name="3">Best Fit</option>
             </options>
+            <rule>required</rule>
         </property>
         <property id="pageWidth" type="number">
             <title>Page Width</title>

@@ -1510,14 +1510,9 @@ class Layout extends Base
                     }
 
                     if (in_array('widget_validity', $embed)) {
-                        try {
-                            $module
-                                ->decorateProperties($widget)
-                                ->validateProperties();
-                            $widget->isValid = 1;
-                        } catch (GeneralException $xiboException) {
-                            $widget->isValid = 0;
-                        }
+                        $status = 0;
+                        $layout->assessWidgetStatus($module, $widget, $status);
+                        $widget->isValid = $status;
                     }
 
                     // apply default transitions to a dynamic parameters on widget object.
