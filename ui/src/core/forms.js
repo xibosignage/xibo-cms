@@ -1882,6 +1882,16 @@ window.forms = {
           }),
         );
 
+        // Check if target element for condition exists
+        const isConditionTargetExists = function(test) {
+          if (test?.field && targetId) {
+            const $conditionTargetElem = $(container).find(
+              `#input_${targetId}_${test.field}`);
+
+            return $conditionTargetElem.length !== 0;
+          }
+        };
+
         // Handle a single condition
         const buildTest = function(test, $testContainer) {
           let testTargets = '';
@@ -1959,11 +1969,11 @@ window.forms = {
         if (Array.isArray(visibility)) {
           for (let i = 0; i < visibility.length; i++) {
             const test = visibility[i];
-            buildTest(test, $(el));
+            isConditionTargetExists(test) && buildTest(test, $(el));
           }
         } else {
           // Otherwise, process the single condition
-          buildTest({
+          isConditionTargetExists(visibility) && buildTest({
             conditions: [visibility],
             test: '',
           }, $(el));
