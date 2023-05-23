@@ -35,6 +35,7 @@ class ContentSyncMigration extends AbstractMigration
             ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('ownerId', 'integer')
+            ->addColumn('modifiedBy', 'integer', ['null' => true, 'default' => null])
             ->addColumn('syncPublisherPort', 'integer', ['default' => 9590])
             ->addColumn('leadDisplayId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('folderId', 'integer', ['default' => 1])

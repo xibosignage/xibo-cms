@@ -23,15 +23,11 @@
 namespace Xibo\Listener;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Entity\Schedule;
 use Xibo\Event\FolderMovingEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
-use Xibo\Event\ScheduleLoadEvent;
-use Xibo\Event\ScheduleSaveEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\SyncGroupFactory;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * SyncGroup events
@@ -63,8 +59,6 @@ class SyncGroupListener
         $dispatcher->addListener(UserDeleteEvent::$NAME, [$this, 'onUserDelete']);
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'syncGroup', [$this, 'onParsePermissions']);
         $dispatcher->addListener(FolderMovingEvent::$NAME, [$this, 'onFolderMoving']);
-        $dispatcher->addListener(ScheduleSaveEvent::$NAME, [$this, 'onScheduleSave']);
-        $dispatcher->addListener(ScheduleLoadEvent::$NAME, [$this, 'onScheduleLoad']);
 
         return $this;
     }
@@ -134,47 +128,6 @@ class SyncGroupListener
             $syncGroup->folderId = $newFolder->getId();
             $syncGroup->permissionsFolderId = $newFolder->getPermissionFolderIdOrThis();
             $syncGroup->updateFolders('syncgroup');
-        }
-    }
-
-    /**
-     * @param ScheduleSaveEvent $event
-     * @return void
-     * @throws NotFoundException
-     */
-    public function onScheduleSave(ScheduleSaveEvent $event): void
-    {
-        $scheduleEvent = $event->getEvent();
-        $params = $event->getParams();
-        if ($scheduleEvent->eventTypeId === Schedule::$SYNC_EVENT) {
-            $syncGroup = $this->syncGroupFactory->getById($scheduleEvent->syncGroupId);
-
-            foreach ($syncGroup->getSyncGroupMembers() as $display) {
-                $this->storageService->insert('INSERT INTO `schedule_sync` (`eventId`, `displayId`, `layoutId`)
-            VALUES(:eventId, :displayId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = :layoutId', [
-                    'eventId' => $scheduleEvent->eventId,
-                    'displayId' => $display->displayId,
-                    'layoutId' => $params->getInt('layoutId_' . $display->displayId)
-                ]);
-            }
-        }
-    }
-
-    public function onScheduleLoad(ScheduleLoadEvent $event)
-    {
-        $scheduleEvent = $event->getScheduleEvent();
-
-        if ($scheduleEvent->eventTypeId === Schedule::$SYNC_EVENT) {
-            $syncGroup = $this->syncGroupFactory->getById($scheduleEvent->syncGroupId);
-
-            $scheduleEvent->setUnmatchedProperty(
-                'displayGroupList',
-                $syncGroup->name
-            );
-            $scheduleEvent->setUnmatchedProperty(
-                'syncType',
-                $syncGroup->getEventSyncType($scheduleEvent->eventId)
-            );
         }
     }
 }

@@ -369,7 +369,8 @@ class ScheduleFactory extends BaseFactory
             `schedule`.parentCampaignId,
             `schedule`.syncGroupId,
             `daypart`.isAlways,
-            `daypart`.isCustom
+            `daypart`.isCustom,
+            `syncgroup`.name AS syncGroupName
         ';
 
         $body = ' FROM `schedule`
@@ -381,6 +382,8 @@ class ScheduleFactory extends BaseFactory
             ON parentCampaign.campaignId = `schedule`.parentCampaignId
             LEFT OUTER JOIN `command`
             ON `command`.commandId = `schedule`.commandId
+            LEFT OUTER JOIN `syncgroup`
+            ON `syncgroup`.syncGroupId = `schedule`.syncGroupId
           WHERE 1 = 1';
 
         if ($parsedFilter->getInt('eventId') !== null) {

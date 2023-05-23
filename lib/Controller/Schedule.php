@@ -27,8 +27,6 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ScheduleReminder;
-use Xibo\Event\ScheduleLoadEvent;
-use Xibo\Event\ScheduleSaveEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
@@ -40,6 +38,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
+use Xibo\Factory\SyncGroupFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Session;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -99,6 +98,7 @@ class Schedule extends Base
     private $dayPartFactory;
     private MediaFactory $mediaFactory;
     private PlaylistFactory $playlistFactory;
+    private SyncGroupFactory $syncGroupFactory;
 
     /**
      * Set common dependencies.
@@ -126,7 +126,8 @@ class Schedule extends Base
         $scheduleReminderFactory,
         $scheduleExclusionFactory,
         MediaFactory $mediaFactory,
-        PlaylistFactory $playlistFactory
+        PlaylistFactory $playlistFactory,
+        SyncGroupFactory $syncGroupFactory
     ) {
         $this->session = $session;
         $this->scheduleFactory = $scheduleFactory;
@@ -140,6 +141,7 @@ class Schedule extends Base
         $this->scheduleExclusionFactory = $scheduleExclusionFactory;
         $this->mediaFactory = $mediaFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->syncGroupFactory = $syncGroupFactory;
     }
 
     /**
@@ -347,11 +349,9 @@ class Schedule extends Base
 
             // Event Title
             if ($this->isSyncEvent($row->eventTypeId)) {
-                $this->getDispatcher()->dispatch(new ScheduleLoadEvent($row), ScheduleLoadEvent::$NAME);
                 $title = __(
-                    'Synchronised group %s scheduled as %s',
-                    $row->getUnmatchedProperty('displayGroupList'),
-                    $row->getUnmatchedProperty('syncType')
+                    'Synchronised group %s',
+                    $row->getUnmatchedProperty('syncGroupName')
                 );
             } else if ($row->campaignId == 0) {
                 // Command
@@ -1212,7 +1212,6 @@ class Schedule extends Base
 
         // We can get schedule reminders in an array
         if ($this->isApi($request)) {
-
             $schedule = $this->scheduleFactory->getById($schedule->eventId);
             $schedule->load([
                 'loadScheduleReminders' => in_array('scheduleReminders', $embed),
@@ -1220,10 +1219,8 @@ class Schedule extends Base
         }
 
         if ($this->isSyncEvent($schedule->eventTypeId)) {
-            $this->getDispatcher()->dispatch(
-                new ScheduleSaveEvent($schedule, $sanitizedParams),
-                ScheduleSaveEvent::$NAME
-            );
+            $syncGroup = $this->syncGroupFactory->getById($schedule->syncGroupId);
+            $schedule->updateSyncLinks($syncGroup, $sanitizedParams);
         }
 
         // Return
@@ -1746,10 +1743,8 @@ class Schedule extends Base
         $schedule->save();
 
         if ($this->isSyncEvent($schedule->eventTypeId)) {
-            $this->getDispatcher()->dispatch(
-                new ScheduleSaveEvent($schedule, $sanitizedParams),
-                ScheduleSaveEvent::$NAME
-            );
+            $syncGroup = $this->syncGroupFactory->getById($schedule->syncGroupId);
+            $schedule->updateSyncLinks($syncGroup, $sanitizedParams);
         }
 
         // Get form reminders
@@ -2167,7 +2162,14 @@ class Schedule extends Base
             $event->setUnmatchedProperty('recurringEvent', !empty($event->recurrenceType));
             
             if ($this->isSyncEvent($event->eventTypeId)) {
-                $this->getDispatcher()->dispatch(new ScheduleLoadEvent($event), ScheduleLoadEvent::$NAME);
+                $event->setUnmatchedProperty(
+                    'displayGroupList',
+                    $event->getUnmatchedProperty('syncGroupName')
+                );
+                $event->setUnmatchedProperty(
+                    'syncType',
+                    $event->getSyncTypeForEvent()
+                );
             }
 
             if (!$showLayoutName && !$this->getUser()->isSuperAdmin() && !empty($event->campaignId)) {

@@ -333,6 +333,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 INNER JOIN `lkcampaignlayout`
                     ON `lkcampaignlayout`.layoutId = `schedule_sync`.layoutId
              WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
+             AND (
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+              )
         ';
 
         $currentDate = Carbon::now();

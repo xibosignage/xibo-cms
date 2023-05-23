@@ -56,6 +56,16 @@ class SyncGroup implements \JsonSerializable
      */
     public $modifiedDt;
     /**
+     * @SWG\Property(description="The ID of the user that last modified this sync group")
+     * @var int
+     */
+    public $modifiedBy;
+    /**
+     * @SWG\Property(description="The name of the user that last modified this sync group")
+     * @var string
+     */
+    public $modifiedByName;
+    /**
      * @SWG\Property(description="The ID of the owner of this sync group")
      * @var int
      */
@@ -268,12 +278,13 @@ class SyncGroup implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->syncGroupId = $this->getStore()->insert('
-          INSERT INTO syncgroup (`name`, `createdDt`, `modifiedDt`, `ownerId`, `syncPublisherPort`, `folderId`, `permissionsFolderId`)
-            VALUES (:name, :createdDt, :modifiedDt, :ownerId, :syncPublisherPort, :folderId, :permissionsFolderId)
+          INSERT INTO syncgroup (`name`, `createdDt`, `modifiedDt`, `ownerId`, `modifiedBy`, `syncPublisherPort`, `folderId`, `permissionsFolderId`)
+            VALUES (:name, :createdDt, :modifiedDt, :ownerId, :modifiedBy, :syncPublisherPort, :folderId, :permissionsFolderId)
         ', [
             'name' => $this->name,
             'createdDt' => $time,
             'modifiedDt' => null,
+            'modifiedBy' => $this->modifiedBy,
             'ownerId' => $this->ownerId,
             'syncPublisherPort' => $this->syncPublisherPort,
             'folderId' => $this->folderId,
@@ -291,6 +302,7 @@ class SyncGroup implements \JsonSerializable
             SET `name` = :name,
               `modifiedDt` = :modifiedDt,
               `ownerId` = :ownerId,
+              `modifiedBy` = :modifiedBy,
               `syncPublisherPort` = :syncPublisherPort,
               `leadDisplayId` = :leadDisplayId,
               `folderId` = :folderId,
@@ -300,8 +312,9 @@ class SyncGroup implements \JsonSerializable
             'name' => $this->name,
             'modifiedDt' => $time,
             'ownerId' => $this->ownerId,
+            'modifiedBy' => $this->modifiedBy,
             'syncPublisherPort' => $this->syncPublisherPort,
-            'leadDisplayId' => $this->leadDisplayId,
+            'leadDisplayId' => $this->leadDisplayId == 0 ? null : $this->leadDisplayId,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId,
             'syncGroupId' => $this->syncGroupId,
@@ -351,7 +364,13 @@ class SyncGroup implements \JsonSerializable
 
                 $display->notify();
             } else if (!empty($display->syncGroupId) && $display->syncGroupId !== $this->syncGroupId) {
-                throw new InvalidArgumentException(sprintf(__('Display %s already belongs to a different sync group ID %d'), $display->display, $display->syncGroupId));
+                throw new InvalidArgumentException(
+                    sprintf(
+                        __('Display %s already belongs to a different sync group ID %d'),
+                        $display->display,
+                        $display->syncGroupId
+                    )
+                );
             }
         }
     }
@@ -370,20 +389,15 @@ class SyncGroup implements \JsonSerializable
                 $this->getStore()->update('UPDATE `display` SET `display`.syncGroupId = NULL WHERE `display`.displayId = :displayId', [
                     'displayId' => $display->displayId
                 ]);
+
+                $this->getStore()->update(' DELETE FROM `schedule_sync` WHERE `schedule_sync`.displayId = :displayId
+                    AND `schedule_sync`.eventId IN (SELECT eventId FROM schedule WHERE schedule.syncGroupId = :syncGroupId)', [
+                    'displayId' => $display->displayId,
+                    'syncGroupId' => $this->syncGroupId
+                    ]);
             }
 
             $display->notify();
         }
-    }
-
-    /**
-     * @param int $eventId
-     * @return string
-     */
-    public function getEventSyncType(int $eventId): string
-    {
-        return (count(array_unique($this->getLayoutIdForDisplay($eventId), SORT_REGULAR)) === 1)
-            ? __('Mirror')
-            : __('Wall');
     }
 }

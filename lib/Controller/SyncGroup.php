@@ -407,13 +407,15 @@ class SyncGroup extends Base
         }
 
         $syncGroup->unSetMembers($unSetDisplays);
+        $syncGroup->modifiedBy = $this->getUser()->userId;
 
         if (empty($syncGroup->getSyncGroupMembers()) ||
             in_array($syncGroup->leadDisplayId, $unSetDisplays)
         ) {
             $syncGroup->leadDisplayId = null;
-            $syncGroup->save(['validate' => false]);
         }
+
+        $syncGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -535,6 +537,7 @@ class SyncGroup extends Base
         $syncGroup->name = $params->getString('name');
         $syncGroup->syncPublisherPort = $params->getInt('syncPublisherPort');
         $syncGroup->leadDisplayId = $params->getInt('leadDisplayId');
+        $syncGroup->modifiedBy = $this->getUser()->userId;
 
         $syncGroup->save();
 

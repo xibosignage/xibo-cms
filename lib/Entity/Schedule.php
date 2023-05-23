@@ -40,6 +40,7 @@ use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Schedule
@@ -1772,5 +1773,39 @@ class Schedule implements \JsonSerializable
         $events[] = ['eventTypeId' => self::$SYNC_EVENT, 'eventTypeName' => __('Synchronised Event')];
 
         return $events;
+    }
+
+    /**
+     * @param $eventId
+     * @return string
+     */
+    public function getSyncTypeForEvent(): string
+    {
+        $layouts = $this->getStore()->select(
+            'SELECT `schedule_sync`.layoutId FROM `schedule_sync` WHERE `schedule_sync`.eventId = :eventId',
+            ['eventId' => $this->eventId]
+        );
+
+        return (count(array_unique($layouts, SORT_REGULAR)) === 1)
+            ? __('Mirror')
+            : __('Wall');
+    }
+
+    /**
+     * @param SyncGroup $syncGroup
+     * @param SanitizerInterface $sanitizer
+     * @return void
+     * @throws NotFoundException
+     */
+    public function updateSyncLinks(SyncGroup $syncGroup, SanitizerInterface $sanitizer): void
+    {
+        foreach ($syncGroup->getSyncGroupMembers() as $display) {
+            $this->getStore()->insert('INSERT INTO `schedule_sync` (`eventId`, `displayId`, `layoutId`)
+            VALUES(:eventId, :displayId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = :layoutId', [
+                'eventId' => $this->eventId,
+                'displayId' => $display->displayId,
+                'layoutId' => $sanitizer->getInt('layoutId_' . $display->displayId)
+            ]);
+        }
     }
 }

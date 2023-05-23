@@ -132,11 +132,13 @@ class SyncGroupFactory extends BaseFactory
                 `syncgroup`.createdDt,
                 `syncgroup`.modifiedDt,
                 `syncgroup`.ownerId,
+                `syncgroup`.modifiedBy,
                 `syncgroup`.syncPublisherPort,
                 `syncgroup`.leadDisplayId,
                 `syncgroup`.folderId,
                 `syncgroup`.permissionsFolderId,
                 `user`.userName as owner,
+                modifiedBy.userName AS modifiedByName,
                 (
                     SELECT GROUP_CONCAT(DISTINCT `group`.group)
                         FROM `permission`
@@ -156,6 +158,8 @@ class SyncGroupFactory extends BaseFactory
               FROM `syncgroup`
               INNER JOIN `user`
               ON `user`.userId = `syncgroup`.ownerId
+              LEFT OUTER JOIN `user` modifiedBy
+              ON modifiedBy.userId = `syncgroup`.modifiedBy 
               WHERE 1 = 1
         ';
 

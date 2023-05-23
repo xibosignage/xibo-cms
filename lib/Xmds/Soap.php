@@ -1224,15 +1224,17 @@ class Soap
 
                 foreach ($scheduleEvents as $scheduleEvent) {
                     $eventTypeId = $row['eventTypeId'];
-                    $layoutId = ($row['eventTypeId'] == Schedule::$SYNC_EVENT)
-                        ? $row['syncLayoutId']
-                        : $row['layoutId'];
-                    $status = ($row['eventTypeId'] == Schedule::$SYNC_EVENT)
-                        ? intval($row['syncLayoutStatus'])
-                        : intval($row['status']);
-                    $duration = ($row['eventTypeId'] == Schedule::$SYNC_EVENT)
-                        ? $row['syncLayoutDuration']
-                        : $row['duration'];
+
+                    if ($row['eventTypeId'] == Schedule::$SYNC_EVENT) {
+                        $layoutId = $row['syncLayoutId'];
+                        $status = intval($row['syncLayoutStatus']);
+                        $duration = $row['syncLayoutDuration'];
+                    } else {
+                        $layoutId = $row['layoutId'];
+                        $status = intval($row['status']);
+                        $duration = $row['duration'];
+                    }
+
                     $commandCode = $row['code'];
 
                     // Handle the from/to date of the events we have been returned (they are all returned with respect to
