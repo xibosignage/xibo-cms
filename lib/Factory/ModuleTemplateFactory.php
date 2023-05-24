@@ -121,6 +121,15 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * Get an array of all modules
+     * @return \Xibo\Entity\ModuleTemplate[]
+     */
+    public function getAll(): array
+    {
+        return $this->load();
+    }
+
+    /**
      * Load templates
      * @return \Xibo\Entity\ModuleTemplate[]
      */
