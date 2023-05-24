@@ -145,7 +145,7 @@
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
 }) : [];
 
 // Get table element
