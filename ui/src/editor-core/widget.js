@@ -60,6 +60,8 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   // Widget elements and groups
   this.elements = {};
   this.elementGroups = {};
+  this.elementTypeMap = {};
+  this.elementTypeMapMax = 0;
 
   this.widgetName = data.name;
 
@@ -626,6 +628,7 @@ Widget.prototype.saveElements = function(
       layer: element.layer,
       rotation: element.rotation,
       properties: element.properties,
+      source: element.source,
     };
     return elementObject;
   });
@@ -663,10 +666,16 @@ Widget.prototype.addElement = function(
   save = true,
 ) {
   // Add element to object
-  this.elements[element.elementId] = new Element(
+  const newElement = this.elements[element.elementId] = new Element(
     element,
     this.widgetId,
     this.regionId,
+  );
+
+  // Update elements map for the widget
+  this.elements[element.elementId].source = this.updateElementMap(
+    newElement.elementType,
+    newElement.id,
   );
 
   // If we have a groupId, add or assign it to the group
@@ -688,6 +697,11 @@ Widget.prototype.addElement = function(
     this.elementGroups[element.groupId]
       .elements[element.elementId] =
         this.elements[element.elementId];
+
+    // Update source on group
+    this.elementGroups[element.groupId].updateSource(
+      newElement.source,
+    );
   }
 
   // Save changes to widget
@@ -743,6 +757,8 @@ Widget.prototype.removeElement = function(
         app.reloadData(app.layout, true);
       }
     });
+  } else {
+    this.updateElementMap();
   }
 };
 
@@ -807,7 +823,7 @@ Widget.prototype.getData = function() {
     return self.cachedDataPromise;
   }
 
-  // If widget already has data, use cached data
+  // If widget already has data for that index, use cached data
   if (
     !$.isEmptyObject(self.cachedData)
   ) {
@@ -832,13 +848,13 @@ Widget.prototype.getData = function() {
             self.cachedDataPromise = null;
 
             // Resolve the promise with the data
-            self.cachedData = modulesList[i].sampleData[0];
+            self.cachedData = modulesList[i].sampleData;
             resolve(self.cachedData);
           }
         }
       } else if (data.data.length > 0) {
-        // Return just first item
-        self.cachedData = data.data[0];
+        // Return the item
+        self.cachedData = data.data;
       }
 
       // Clear cached promise
@@ -853,6 +869,59 @@ Widget.prototype.getData = function() {
 
   // Return promise
   return self.cachedDataPromise;
+};
+
+/**
+ * Update element map for this widget
+ * @param {string} [elementType]
+ * @param {string} [elementId]
+ * @return {number} number of elements of the added type
+ */
+Widget.prototype.updateElementMap = function(elementType, elementId) {
+  const self = this;
+  const addElementToMap = function(type, id) {
+    // if we don't have the type level, create it
+    if (!self.elementTypeMap[type]) {
+      self.elementTypeMap[type] = {};
+    }
+
+    // if we already have element of the same if, increment the value
+    // if not, create a new record with value 1
+    if (self.elementTypeMap[type][id]) {
+      self.elementTypeMap[type][id] += 1;
+    } else {
+      self.elementTypeMap[type][id] = 1;
+    }
+
+    // check if new value is the new max
+    if (self.elementTypeMapMax < self.elementTypeMap[type][id]) {
+      self.elementTypeMapMax = self.elementTypeMap[type][id];
+    }
+  };
+
+  // if element type is global (not data based)
+  // do nothing
+  if (elementType == 'global') {
+    return;
+  }
+
+  // If we don't pass the elementType or elementId
+  // just update the type map based on existing elements
+  if (
+    !elementType ||
+    !elementId
+  ) {
+    // Reset map
+    self.elementTypeMap = {};
+
+    // Go through all elements and add the records to the map
+    Object.values(this.elements).map((element) => {
+      addElementToMap(element.elementType, element.id);
+    });
+  } else {
+    addElementToMap(elementType, elementId);
+    return this.elementTypeMap[elementType][elementId];
+  }
 };
 
 module.exports = Widget;

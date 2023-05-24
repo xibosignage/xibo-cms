@@ -967,6 +967,22 @@ Viewer.prototype.renderElement = function(
     if (group.selected) {
       this.selectElement($groupContainer);
     }
+
+    // If group has source, add it to the container
+    // or update it
+    if (
+      group.source
+    ) {
+      const $source = $groupContainer.find('.source');
+      if ($source.length > 0) {
+        $source.find('span').html(group.source);
+      } else {
+        $groupContainer.append(
+          '<div class="source" title="' + propertiesPanelTrans.source + '">#' +
+          '<span>' + group.source + '</span>' +
+          '</div>');
+      }
+    }
   }
 
   // Append element html to the canvas region container
@@ -1095,6 +1111,7 @@ Viewer.prototype.renderElementContent = function(
       scale: self.containerElementDimensions.scale,
       originalWidth: element.width,
       originalHeight: element.height,
+      trans: propertiesPanelTrans,
     })));
 
     // Get element properties
@@ -1126,22 +1143,22 @@ Viewer.prototype.renderElementContent = function(
       }
 
       // Get element data from widget
-      element.getData().then((widgetData) => {
+      element.getData().then((elData) => {
         // Check all data elements and make replacements
-        for (const key in widgetData) {
-          if (widgetData.hasOwnProperty(key)) {
-            const data = widgetData[key];
+        for (const key in elData) {
+          if (elData.hasOwnProperty(key)) {
+            const data = elData[key];
 
             // Check if data needs to be replaced
             if (data && data.match(macroRegex) !== null) {
               // Replace macro with current date
-              widgetData[key] = composeUTCDateFromMacro(data);
+              elData[key] = composeUTCDateFromMacro(data);
             }
           }
         }
 
         // Add widget data to properties
-        convertedProperties.data = widgetData;
+        convertedProperties.data = elData;
 
         // Compile hbs template with data
         let hbsHtml = hbsTemplate(convertedProperties);

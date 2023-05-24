@@ -37,6 +37,9 @@ const Element = function(data, widgetId, regionId) {
 
   // Element template
   this.template = {};
+
+  // Data source index ( default = 1 )
+  this.source = data.source || null;
 };
 
 /**
@@ -222,9 +225,10 @@ Element.prototype.getData = function() {
     ) {
       resolve();
     } else {
+      const source = (self.source > 0) ? (self.source - 1) : null;
       parentWidget.getData().then((data) => {
         // Resolve the promise with the data
-        resolve(data);
+        resolve(data[source]);
       });
     }
   });
