@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023  Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -17,7 +17,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 /* eslint-disable new-cap */
 // Common functions/tools
@@ -276,11 +275,19 @@ window.forms = {
 
           // Add required attribute to the field if not already set
           if (
-            property?.validation?.length &&
+            property?.validation?.tests?.length &&
             !$newField.attr('data-is-required')
           ) {
-            $newField.attr('data-is-required', true);
-            property.isRequired = true;
+            let added = false;
+            $.each(property.validation.tests, function(index, el) {
+              $.each(el.conditions, function(condIndex, condition) {
+                if (condition?.type === 'required' && !added) {
+                  $newField.attr('data-is-required', true);
+                  property.isRequired = true;
+                  added = true;
+                }
+              });
+            });
           }
 
           // Add custom class to the field if not already set
