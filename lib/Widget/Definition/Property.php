@@ -266,6 +266,17 @@ class Property implements \JsonSerializable
                         }
                         break;
 
+                    case 'lt':
+                        // Value must be < to the condition value, or field value
+                        if ($valueToTestAgainst !== null && !($this->value < $valueToTestAgainst)) {
+                            throw new InvalidArgumentException(
+                                // phpcs:ignore Generic.Files.LineLength
+                                $message ?? sprintf(__('%s must be less than %s'), $this->title, $valueToTestAgainst),
+                                $this->id
+                            );
+                        }
+                        break;
+
                     case 'lte':
                         // Value must be <= to the condition value, or field value
                         if ($valueToTestAgainst !== null && !($this->value <= $valueToTestAgainst)) {
@@ -283,6 +294,17 @@ class Property implements \JsonSerializable
                             throw new InvalidArgumentException(
                                 // phpcs:ignore Generic.Files.LineLength
                                 $message ?? sprintf(__('%s must be greater than or equal to %s'), $this->title, $valueToTestAgainst),
+                                $this->id
+                            );
+                        }
+                        break;
+
+                    case 'gt':
+                        // Value must be > to the condition value, or field value
+                        if ($valueToTestAgainst !== null && !($this->value > $valueToTestAgainst)) {
+                            throw new InvalidArgumentException(
+                                // phpcs:ignore Generic.Files.LineLength
+                                $message ?? sprintf(__('%s must be greater than %s'), $this->title, $valueToTestAgainst),
                                 $this->id
                             );
                         }

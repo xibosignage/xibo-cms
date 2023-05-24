@@ -25,6 +25,7 @@ namespace Xibo\Listener;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Widget;
 use Xibo\Event\SubPlaylistDurationEvent;
+use Xibo\Event\SubPlaylistValidityEvent;
 use Xibo\Event\SubPlaylistWidgetsEvent;
 use Xibo\Event\WidgetDeleteEvent;
 use Xibo\Event\WidgetEditEvent;
@@ -90,6 +91,7 @@ class WidgetListener
         $dispatcher->addListener(WidgetDeleteEvent::$NAME, [$this, 'onWidgetDelete']);
         $dispatcher->addListener(SubPlaylistDurationEvent::$NAME, [$this, 'onDuration']);
         $dispatcher->addListener(SubPlaylistWidgetsEvent::$NAME, [$this, 'onWidgets']);
+        $dispatcher->addListener(SubPlaylistValidityEvent::$NAME, [$this, 'onSubPlaylistValid']);
         return $this;
     }
 
@@ -294,6 +296,31 @@ class WidgetListener
         }
 
         $event->setWidgets($this->getSubPlaylistResolvedWidgets($widget, $event->getTempId()));
+    }
+
+    /**
+     * @param SubPlaylistValidityEvent $event
+     * @return void
+     */
+    public function onSubPlaylistValid(SubPlaylistValidityEvent $event): void
+    {
+        $playlists = $this->getAssignedPlaylists($event->getWidget());
+        if (count($playlists) <= 0) {
+            $event->setIsValid(false);
+            return;
+        } else {
+            foreach ($playlists as $playlistItem) {
+                try {
+                    $this->playlistFactory->getById($playlistItem->playlistId);
+                } catch (NotFoundException $e) {
+                    $this->getLogger()->error('Misconfigured sub playlist, playlist ID '
+                        . $playlistItem->playlistId . ' Not found');
+                    $event->setIsValid(false);
+                    return;
+                }
+            }
+        }
+        $event->setIsValid(true);
     }
 
     /**

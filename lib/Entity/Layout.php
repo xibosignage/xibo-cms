@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
+use Xibo\Event\SubPlaylistValidityEvent;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -1810,6 +1811,16 @@ class Layout implements \JsonSerializable
                         __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
                         $media->name
                     ));
+                }
+            }
+
+            // Is this a sub-playlist?
+            if ($module->type === 'subplaylist') {
+                $event = new SubPlaylistValidityEvent($widget);
+                $this->getDispatcher()->dispatch($event);
+
+                if (!$event->isValid()) {
+                    throw new InvalidArgumentException(__('Misconfigured Playlist'), 'playlistId');
                 }
             }
         } catch (GeneralException $xiboException) {

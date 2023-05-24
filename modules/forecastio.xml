@@ -25,6 +25,7 @@
     <description>A module for displaying weather information. Uses the Forecast API</description>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\WeatherWidgetCompatibility</compatibilityClass>
+    <validatorClass>\Xibo\Widget\Validator\DisplayOrGeoValidator</validatorClass>
     <type>forecastio</type>
     <dataType>forecast</dataType>
     <dataCacheKey>%useDisplayLocation%_%latitude%_%longitude%_%units%_%lang%</dataCacheKey>
