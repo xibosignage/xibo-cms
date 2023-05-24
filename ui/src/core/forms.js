@@ -536,7 +536,7 @@ window.forms = {
 
             $colsInContainer.find('li').each(function(_index, el) {
               const colId = $(el).attr('id');
-              selectedCols.push(colId);
+              selectedCols.push(Number(colId));
             });
 
             // Delete all temporary fields
@@ -576,8 +576,7 @@ window.forms = {
           // add it to the selected columns
           // if not add it to the remaining columns
           $.each(datasetCols, function(_index, col) {
-            const dataSetColumnId = col.dataSetColumnId.toString();
-            if (selectedValue.includes(dataSetColumnId)) {
+            if (selectedValue.includes(col.dataSetColumnId)) {
               datasetColsIn.push(col);
             } else {
               datasetColsOut.push(col);

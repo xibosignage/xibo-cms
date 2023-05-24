@@ -135,60 +135,9 @@
             <twig><![CDATA[
 {% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 
-<div class="DataSetTableContainer"></div>
+<div id="DataSetTableContainer"></div>
 <style>
-/* Template Styles */
-table.DataSetTable {
-    width: 100%;
-    font-size: 14px;
-    table-layout: fixed;
-    border-collapse: collapse;
-}
-
-td.DataSetColumn img {
-    height: 80px;
-}
-
-/* Constructed Styles */
-{% if backgroundColor %}
-table.DataSetTable {
-    background-color: {{backgroundColor}};
-}
-{% endif %}
-
-{% if borderColor %}
-table.DataSetTable, table.DataSetTable tr, table.DataSetTable th, table.DataSetTable td {
-    border: 1px solid {{borderColor}};
-}
-{% endif %}
-
-{% if fontColor %}
-table.DataSetTable {
-    color: {{fontColor}};
-}
-{% endif %}
-
-{% if fontFamily %}
-table.DataSetTable {
-    font-family: {{fontFamily}};
-}
-{% endif %}
-
-{% if fontSize %}
-table.DataSetTable {
-    font-size: {{fontSize}}px;
-}
-{% endif %}
-
-/* Table display CSS fix */
-table.DataSetTable.cycle-slide {
-    display: table !important;
-}
-
-/* If we are going to cycle between pages, make sure we hide all of the tables initially */
-{% if rowsPerPage > 0 %}
-table.DataSetTable {visibility:hidden;}
-{% endif %}
+{{styleSheet|raw}}
 </style>
             ]]></twig>
         </stencil>
@@ -196,11 +145,11 @@ table.DataSetTable {visibility:hidden;}
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf((column.dataSetColumnId).toString()) !== -1;
+    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
 }) : [];
 
 // Get table element
-var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+var $datasetTableContainer = $(target).find('#DataSetTableContainer');
 
 // Clear the table container
 $datasetTableContainer.empty();
@@ -219,7 +168,7 @@ for (var i = 0; i < totalPages; i++) {
         $('<table class="DataSetTable">');
 
     // Show the table headings if required
-    if (properties.showHeadings === 1) {
+    if (properties.showHeadings == 1) {
         // Build the headings
         var headings = columns.map(function (column, colIdx) {
             return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
