@@ -626,11 +626,14 @@ PropertiesPanel.prototype.render = function(
             },
           ];
 
-          // if we have more than one element
-          // of the same type, show source field
+          // Show source if we the element isn't global
+          // or in a group
           if (
             targetAux.elementType != 'global' &&
-            target.elementTypeMap[targetAux.elementType][targetAux.id] > 1
+            (
+              targetAux.groupId == '' ||
+              targetAux.groupId == undefined
+            )
           ) {
             commonFields.push(
               {
