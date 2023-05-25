@@ -23,22 +23,32 @@
 namespace Xibo\Widget\Definition;
 
 /**
- * Represents a test/group of conditions
+ * A rule to apply to a property
  */
-class Test implements \JsonSerializable
+class Rule implements \JsonSerializable
 {
-    /** @var string */
-    public $type;
+    public $onSave = true;
 
-    /** @var Condition[]  */
-    public $conditions;
+    public $onStatus = true;
 
-    /** @inheritDoc */
+    public $message;
+
+    /** @var Test[] */
+    public $tests;
+
+    public function addRuleTest(Test $test): Rule
+    {
+        $this->tests[] = $test;
+        return $this;
+    }
+
     public function jsonSerialize(): array
     {
         return [
-            'type' => $this->type,
-            'conditions' => $this->conditions
+            'onSave' => $this->onSave,
+            'onStatus' => $this->onStatus,
+            'message' => $this->message,
+            'tests' => $this->tests,
         ];
     }
 }

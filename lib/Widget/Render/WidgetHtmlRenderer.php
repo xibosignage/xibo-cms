@@ -437,7 +437,7 @@ class WidgetHtmlRenderer
 
             // Validate this modules properties.
             try {
-                $module->validateProperties();
+                $module->validateProperties('status');
                 $widget->isValid = 1;
             } catch (GeneralException $xiboException) {
                 $widget->isValid = 0;

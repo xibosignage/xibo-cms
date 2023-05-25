@@ -39,9 +39,15 @@
         </property>
     </settings>
     <properties>
-        <property id="uri" type="text">
+        <property id="uri" type="text" variant="uri">
             <title>Video Path</title>
             <helpText>A URL to the HLS video stream. Requires Player running Windows 8.1 or later, or Android 6 or later. Earlier Android devices may play HLS via the LocalVideo widget.</helpText>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                    <condition type="uri"></condition>
+                </test>
+            </rule>
         </property>
         <property id="mute" type="checkbox">
             <title>Mute?</title>

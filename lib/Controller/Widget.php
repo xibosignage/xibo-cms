@@ -363,20 +363,21 @@ class Widget extends Base
         $module = $this->moduleFactory->getByType($widget->type);
 
         // Handle common parameters.
-        $duration = $params->getInt('duration', ['default' => $module->defaultDuration]);
-        if ($duration < 0) {
+        $widget->useDuration = $params->getCheckbox('useDuration');
+        $widget->duration = $params->getInt('duration', ['default' => $module->defaultDuration]);
+        $widget->setOptionValue('name', 'attrib', $params->getString('name'));
+        $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
+
+        // Validate common parameters if we don't have a validator present.
+        $widgetValidators = $module->getWidgetValidators();
+        if (count($widgetValidators) <= 0 && $widget->duration < 0) {
             throw new InvalidArgumentException(__('Duration needs to be a positive value'), 'duration');
         }
 
-        // Set maximum duration
-        if ($duration > 526000) {
+        // Set maximum duration - we do this regardless of the validator.
+        if ($widget->duration > 526000) {
             throw new InvalidArgumentException(__('Duration must be lower than 526000'), 'duration');
         }
-
-        $widget->duration = $duration;
-        $widget->useDuration = $params->getCheckbox('useDuration');
-        $widget->setOptionValue('name', 'attrib', $params->getString('name'));
-        $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
 
         // Save the template if provided
         $templateId = $params->getString('templateId');
@@ -424,8 +425,11 @@ class Widget extends Base
             if ($property->type === 'message') {
                 continue;
             }
-            $property->setValueByType($params)->validate();
+            $property->setValueByType($params);
         }
+
+        // Once they are set, validate them.
+        $module->validateProperties('save', ['duration' => $widget->duration]);
 
         // Assert these properties on the widget.
         $widget->applyProperties($module->properties);
@@ -436,8 +440,11 @@ class Widget extends Base
                 if ($property->type === 'message') {
                     continue;
                 }
-                $property->setValueByType($params)->validate();
+                $property->setValueByType($params);
             }
+
+            $template->validateProperties('save', ['duration' => $widget->duration]);
+
             $widget->applyProperties($template->properties);
         }
 
@@ -451,6 +458,11 @@ class Widget extends Base
                     $mediaId
                 ), 'libraryRef');
             }
+        }
+
+        // If we have a validator interface, then use it now
+        foreach ($widgetValidators as $widgetValidator) {
+            $widgetValidator->validate($module, $widget, 'save');
         }
 
         // We've reached the end, so save

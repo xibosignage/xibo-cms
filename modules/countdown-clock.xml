@@ -58,6 +58,12 @@
                     <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
+            <rule message="Please enter a positive countdown duration">
+                <test type="and">
+                    <condition type="gt">0</condition>
+                    <condition field="countdownWarningDuration" type="lte"></condition>
+                </test>
+            </rule>
         </property>
         <property id="countdownDate" type="date" format="DD/MM/YYYY HH:mm:ss" variant="dateTime">
             <title>Countdown Date</title>

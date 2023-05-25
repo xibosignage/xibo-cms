@@ -20,25 +20,30 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget\Definition;
+namespace Xibo\Widget\Validator;
+
+use Xibo\Entity\Module;
+use Xibo\Entity\Widget;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Widget\Provider\WidgetValidatorInterface;
+use Xibo\Widget\Provider\WidgetValidatorTrait;
 
 /**
- * Represents a test/group of conditions
+ * Validate that we have a duration greater than 0
  */
-class Test implements \JsonSerializable
+class ZeroDurationValidator implements WidgetValidatorInterface
 {
-    /** @var string */
-    public $type;
+    use WidgetValidatorTrait;
 
-    /** @var Condition[]  */
-    public $conditions;
-
-    /** @inheritDoc */
-    public function jsonSerialize(): array
+    /**
+     * @inheritDoc
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function validate(Module $module, Widget $widget, string $stage): void
     {
-        return [
-            'type' => $this->type,
-            'conditions' => $this->conditions
-        ];
+        // Videos can have 0 durations
+        if ($widget->duration <= 0) {
+            throw new InvalidArgumentException(__('Duration needs to be 0 or above'), 'duration');
+        }
     }
 }

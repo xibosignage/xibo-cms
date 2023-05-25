@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -24,6 +24,7 @@
     <author>Core</author>
     <description>Instruct a Display to execute a command using the operating system shell</description>
     <class></class>
+    <validatorClass>\Xibo\Widget\Validator\ShellCommandValidator</validatorClass>
     <type>shellcommand</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>

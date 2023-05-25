@@ -52,9 +52,7 @@ trait ModulePropertyTrait
                 $property->value = doubleval($property->value);
             }
 
-            if ($property->variant === 'uri' && !empty($value)) {
-                $property->value = urldecode($property->value);
-            }
+            $property->reverseFilters();
         }
         return $this;
     }
@@ -89,10 +87,9 @@ trait ModulePropertyTrait
                 $decoratedProperty = doubleval($decoratedProperty);
             }
 
-            if ($property->variant === 'uri' && !empty($value)) {
-                $decoratedProperty = urldecode($decoratedProperty);
-            }
+            $decoratedProperty = $property->reverseFiltersOnValue($decoratedProperty);
 
+            // Add our decorated property
             $decoratedProperties[$property->id] = $decoratedProperty;
         }
         return $decoratedProperties;
@@ -156,11 +153,17 @@ trait ModulePropertyTrait
     /**
      * @throws \Xibo\Support\Exception\InvalidArgumentException|\Xibo\Support\Exception\ValueTooLargeException
      */
-    public function validateProperties(): void
+    public function validateProperties(string $stage, $additionalProperties = []): void
     {
         // Go through all of our required properties, and validate that they are as they should be.
+        // provide a key/value state of all current properties
+        $properties = array_merge(
+            $this->getPropertyValues(false),
+            $additionalProperties,
+        );
+
         foreach ($this->properties as $property) {
-            $property->validate();
+            $property->validate($properties, $stage);
         }
     }
 }

@@ -45,11 +45,23 @@
             <title>Clock Columns</title>
             <helpText>Number of columns to display</helpText>
             <default>1</default>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                    <condition type="gte">0</condition>
+                </test>
+            </rule>
         </property>
         <property id="numRows" type="number">
             <title>Clock Rows</title>
             <helpText>Number of rows to display</helpText>
             <default>1</default>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                    <condition type="gte">0</condition>
+                </test>
+            </rule>
         </property>
         <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>

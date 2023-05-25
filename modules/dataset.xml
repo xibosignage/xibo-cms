@@ -67,6 +67,12 @@
                     <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
+            <rule message="Lower limit must be 0 or above, and lower than the upper limit">
+                <test type="and">
+                    <condition type="gt">0</condition>
+                    <condition field="upperLimit" type="lte"></condition>
+                </test>
+            </rule>
         </property>
         <property id="upperLimit" type="number">
             <title>Upper Row Limit</title>
@@ -77,6 +83,11 @@
                     <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
+            <rule message="Upper limit must be higher than 0">
+                <test type="and">
+                    <condition type="gt">0</condition>
+                </test>
+            </rule>
         </property>
         <property id="randomiseItems" type="checkbox">
             <title>Randomise?</title>
@@ -98,7 +109,6 @@
                 </test>
             </visibility>
         </property>
-
         <property type="header" variant="main">
             <title>Order</title>
             <visibility>
@@ -146,7 +156,6 @@
                 </test>
             </visibility>
         </property>
-
         <property type="header" variant="main">
             <title>Filter</title>
             <visibility>
@@ -193,8 +202,12 @@
                     <condition field="useFilteringClause" type="eq">1</condition>
                 </test>
             </visibility>
+            <rule>
+                <test type="and">
+                    <condition type="ncontains">DESC</condition>
+                </test>
+            </rule>
         </property>
-
         <property type="header" variant="main">
             <title>Caching</title>
             <visibility>
@@ -212,6 +225,12 @@
                     <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                    <condition type="gte">0</condition>
+                </test>
+            </rule>
         </property>
         <property id="freshnessTimeout" type="number">
             <title>Freshness (mins)</title>

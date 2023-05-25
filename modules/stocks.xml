@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -41,6 +41,11 @@
         <property id="items" type="connectorProperties" variant="autocomplete">
             <title>Stock Symbols</title>
             <helpText>A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.</helpText>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                </test>
+            </rule>
         </property>
         <property id="loop" type="checkbox">
             <title>Reverse conversion?</title>

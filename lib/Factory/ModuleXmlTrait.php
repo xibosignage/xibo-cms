@@ -31,6 +31,7 @@ use Xibo\Widget\Definition\LegacyType;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
 use Xibo\Widget\Definition\PropertyGroup;
+use Xibo\Widget\Definition\Rule;
 use Xibo\Widget\Definition\Stencil;
 
 /**
@@ -139,11 +140,41 @@ trait ModuleXmlTrait
                     $defaultValues[$property->id] = $defaultValue;
                 }
 
-                // Validation
+                // Validation (rule) conditions
                 $validationNodes = $node->getElementsByTagName('rule');
-                foreach ($validationNodes as $validationNode) {
-                    if ($validationNode instanceof \DOMElement) {
-                        $property->validation[] = $validationNode->textContent;
+                if (count($validationNodes) > 0) {
+                    // We have a rule
+                    $ruleNode = $validationNodes->item(0);
+                    if ($ruleNode->nodeType === XML_ELEMENT_NODE) {
+                        /** @var \DOMElement $ruleNode */
+                        $rule = new Rule();
+                        $rule->onSave = ($ruleNode->getAttribute('onSave') ?: 'true') === 'true';
+                        $rule->onStatus = ($ruleNode->getAttribute('onStatus') ?: 'true') === 'true';
+                        $rule->message = $ruleNode->getAttribute('message');
+
+                        // Get tests
+                        foreach ($ruleNode->childNodes as $testNode) {
+                            if ($testNode->nodeType === XML_ELEMENT_NODE) {
+                                /** @var \DOMElement $testNode */
+                                $conditions = [];
+                                foreach ($testNode->getElementsByTagName('condition') as $condNode) {
+                                    if ($condNode instanceof \DOMElement) {
+                                        $conditions[] = [
+                                            'field' => $condNode->getAttribute('field'),
+                                            'type' => $condNode->getAttribute('type'),
+                                            'value' => $condNode->textContent
+                                        ];
+                                    }
+                                }
+
+                                $rule->addRuleTest($property->parseTest(
+                                    $testNode->getAttribute('type'),
+                                    $conditions
+                                ));
+                            }
+                        }
+
+                        $property->validation = $rule;
                     }
                 }
 

@@ -20,25 +20,29 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget\Definition;
+namespace Xibo\Widget\Provider;
+
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
- * Represents a test/group of conditions
+ * A trait to set common objects on a Widget Compatibility Interface
  */
-class Test implements \JsonSerializable
+trait WidgetValidatorTrait
 {
-    /** @var string */
-    public $type;
+    private $log;
 
-    /** @var Condition[]  */
-    public $conditions;
-
-    /** @inheritDoc */
-    public function jsonSerialize(): array
+    public function getLog(): LoggerInterface
     {
-        return [
-            'type' => $this->type,
-            'conditions' => $this->conditions
-        ];
+        if ($this->log === null) {
+            $this->log = new NullLogger();
+        }
+        return $this->log;
+    }
+
+    public function setLog(LoggerInterface $logger): WidgetValidatorInterface
+    {
+        $this->log = $logger;
+        return $this;
     }
 }

@@ -195,6 +195,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getKeyedArrayOfModules(): array
     {
+        $this->getLog()->debug('ModuleFactory: getKeyedArrayOfModules');
         $modules = [];
         foreach ($this->load() as $module) {
             $modules[$module->type] = $module;
@@ -207,6 +208,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getAssignableModules(): array
     {
+        $this->getLog()->debug('ModuleFactory: getAssignableModules');
         $modules = [];
         foreach ($this->load() as $module) {
             if ($module->enabled === 1 && $module->assignable === 1) {
@@ -221,6 +223,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getLibraryModules(): array
     {
+        $this->getLog()->debug('ModuleFactory: getLibraryModules');
         $modules = [];
         foreach ($this->load() as $module) {
             if ($module->enabled == 1 && $module->regionSpecific === 0) {
@@ -238,6 +241,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getById($moduleId): Module
     {
+        $this->getLog()->debug('ModuleFactory: getById');
         foreach ($this->load() as $module) {
             if ($module->moduleId === $moduleId) {
                 return $module;
@@ -253,6 +257,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getAll(): array
     {
+        $this->getLog()->debug('ModuleFactory: getAll');
         return $this->load();
     }
 
@@ -262,6 +267,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getEnabled(): array
     {
+        $this->getLog()->debug('ModuleFactory: getEnabled');
         $modules = [];
         foreach ($this->load() as $module) {
             if ($module->enabled == 1) {
@@ -281,6 +287,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getByType(string $type, array $conditions = []): Module
     {
+        $this->getLog()->debug('ModuleFactory: getByType');
         $modules = $this->load();
         usort($modules, function ($a, $b) {
             /** @var Module $a */
@@ -326,6 +333,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getByExtension(string $extension): Module
     {
+        $this->getLog()->debug('ModuleFactory: getByExtension');
         foreach ($this->load() as $module) {
             $validExtensions = $module->getSetting('validExtensions');
             if (!empty($validExtensions) && Str::contains($validExtensions, $extension)) {
@@ -343,6 +351,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getValidExtensions($filterBy = []): array
     {
+        $this->getLog()->debug('ModuleFactory: getValidExtensions');
         $filterBy = $this->getSanitizer($filterBy);
         $typeFilter = $filterBy->getString('type');
         $extensions = [];
@@ -494,22 +503,35 @@ class ModuleFactory extends BaseFactory
                         // We create a module specific provider
                         if (!class_exists($module->class)) {
                             $module->errors[] = 'Module class not found: ' . $module->class;
+                        } else {
+                            $class = $module->class;
+                            $module->setWidgetProvider(new $class());
                         }
-                        $class = $module->class;
-                        $module->setWidgetProvider(new $class());
                     }
 
                     // Create a widget compatibility if necessary
-                    // Take our module and see if it has a class associated with it
                     if (!empty($module->compatibilityClass)) {
                         // We create a module specific provider
                         if (!class_exists($module->compatibilityClass)) {
                             $module->errors[] = 'Module compatibilityClass not found: ' . $module->compatibilityClass;
+                        } else {
+                            $compatibilityClass = $module->compatibilityClass;
+                            $module->setWidgetCompatibility(new $compatibilityClass());
                         }
-                        $compatibilityClass = $module->compatibilityClass;
-                        $module->setWidgetCompatibility(new $compatibilityClass());
                     }
 
+                    // Create a widget validator if necessary
+                    foreach ($module->validatorClass as $validatorClass) {
+                        // We create a module specific provider
+                        if (!class_exists($validatorClass)) {
+                            $module->errors[] = 'Module validatorClass not found: ' . $validatorClass;
+                        } else {
+                            $module->addWidgetValidator(
+                                (new $validatorClass())
+                                    ->setLog($this->getLog()->getLoggerInterface())
+                            );
+                        }
+                    }
 
                     // Set error state
                     $module->isError = $module->errors !== null && count($module->errors) > 0;
@@ -578,6 +600,14 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
+
+        // Validator classes
+        foreach ($xml->getElementsByTagName('validatorClass') as $node) {
+            /** @var \DOMNode $node */
+            if ($node instanceof \DOMElement) {
+                $module->validatorClass[] = trim($node->textContent);
+            }
+        }
 
         // Event listeners
         $module->onInitialize = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onInitialize');

@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
+use Xibo\Event\SubPlaylistValidityEvent;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -33,6 +34,7 @@ use Xibo\Factory\FontFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
@@ -376,6 +378,11 @@ class Layout implements \JsonSerializable
      */
     private $moduleFactory;
 
+    /**
+     * @var ModuleTemplateFactory
+     */
+    private $moduleTemplateFactory;
+
     /** @var PlaylistFactory */
     private $playlistFactory;
 
@@ -402,6 +409,7 @@ class Layout implements \JsonSerializable
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
+     * @param ModuleTemplateFactory $moduleTemplateFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
@@ -418,6 +426,7 @@ class Layout implements \JsonSerializable
         $layoutFactory,
         $mediaFactory,
         $moduleFactory,
+        $moduleTemplateFactory,
         $playlistFactory,
         $actionFactory,
         $folderFactory,
@@ -433,6 +442,7 @@ class Layout implements \JsonSerializable
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->moduleFactory = $moduleFactory;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
         $this->playlistFactory = $playlistFactory;
         $this->actionFactory = $actionFactory;
         $this->folderFactory = $folderFactory;
@@ -1767,13 +1777,28 @@ class Layout implements \JsonSerializable
      * @param int $status
      * @return void
      */
-    private function assessWidgetStatus(Module $module, Widget $widget, int &$status): void
+    public function assessWidgetStatus(Module $module, Widget $widget, int &$status): void
     {
         $moduleStatus = Status::$STATUS_VALID;
         try {
+            // Validate the module
             $module
                 ->decorateProperties($widget, true)
-                ->validateProperties();
+                ->validateProperties('status');
+
+            // Also validate the module template
+            $templateId = $widget->getOptionValue('templateId', null);
+            if ($templateId !== null && $templateId !== 'elements') {
+                $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
+                $template
+                    ->decorateProperties($widget)
+                    ->validateProperties('status');
+            }
+
+            // If we have validator interfaces, then use it now
+            foreach ($module->getWidgetValidators() as $widgetValidator) {
+                $widgetValidator->validate($module, $widget, 'status');
+            }
 
             // Is this module file based? If so, check its released status
             if ($module->regionSpecific == 0 && $widget->getPrimaryMediaId() != 0) {
@@ -1788,6 +1813,16 @@ class Layout implements \JsonSerializable
                         __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
                         $media->name
                     ));
+                }
+            }
+
+            // Is this a sub-playlist?
+            if ($module->type === 'subplaylist') {
+                $event = new SubPlaylistValidityEvent($widget);
+                $this->getDispatcher()->dispatch($event);
+
+                if (!$event->isValid()) {
+                    throw new InvalidArgumentException(__('Misconfigured Playlist'), 'playlistId');
                 }
             }
         } catch (GeneralException $xiboException) {

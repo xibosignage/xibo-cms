@@ -217,6 +217,7 @@ class Factories
                     $c->get('campaignFactory'),
                     $c->get('mediaFactory'),
                     $c->get('moduleFactory'),
+                    $c->get('moduleTemplateFactory'),
                     $c->get('resolutionFactory'),
                     $c->get('widgetFactory'),
                     $c->get('widgetOptionFactory'),
