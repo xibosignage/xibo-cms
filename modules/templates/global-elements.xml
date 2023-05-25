@@ -548,6 +548,9 @@ $('.date').each(function(_idx, dateEl){
             <hbs><![CDATA[
 <div class="line-container" style="position: relative;
     {{#eq orientation "horizontal"}}
+        top: calc({{lineWidth}}px * 2);
+        height: calc({{lineWidth}}px * 3);
+        width: 100%;
     {{else}}
         height: 100%;
         left: {{lineWidth}}px;
@@ -563,6 +566,8 @@ $('.date').each(function(_idx, dateEl){
                 height: calc({{lineWidth}}px * 3);
                 border-radius: 50%;
                 {{#eq orientation "horizontal"}}
+                    left: {{lineWidth}}px;
+                    top: calc(calc({{lineWidth}}px * -2) / 2);
                 {{else}}
                     left: calc(calc({{lineWidth}}px * -2) / 2);
                 {{/eq}}
@@ -573,6 +578,8 @@ $('.date').each(function(_idx, dateEl){
                     border-top: calc({{lineWidth}}px * 2) solid transparent;
                     border-bottom: calc({{lineWidth}}px * 2) solid transparent;
                     border-right: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                    left: {{lineWidth}}px;
+                    top: calc(calc({{lineWidth}}px * -3) / 2);
                 {{else}}
                     width: {{lineWidth}}px;
                     border-bottom: calc({{lineWidth}}px * 4) solid {{lineColor}};
@@ -585,18 +592,21 @@ $('.date').each(function(_idx, dateEl){
                 background-color: {{lineColor}};
                 width: calc({{lineWidth}}px * 3);
                 height: calc({{lineWidth}}px * 3);
-                {{#eq orientation "vertical"}}
-                    transform: rotate(45deg);
-                    left: calc(calc({{lineWidth}}px * 0.7333}}) * -1.414);
+                transform: rotate(45deg);
+                {{#eq orientation "horizontal"}}
+                    left: calc({{lineWidth}}px * 1.414);
+                    top: calc(calc({{lineWidth}}px * 0.7333}}) * -1.414);
                 {{else}}
-                    transform: rotate(45deg);
+                    left: calc(calc({{lineWidth}}px * 0.7333}}) * -1.414);
                 {{/eq}}
             {{/eq}}
             {{#eq tip1Type "line-arrow"}}
                 width: calc({{lineWidth}}px * 4);
                 height: calc({{lineWidth}}px * 4);
                 {{#eq orientation "horizontal"}}
-                    transform:  translate(90%, calc({{lineWidth}}px / 2)) rotate(-135deg);
+                    transform: rotate(-135deg);
+                    top: calc(calc(calc({{lineWidth}}px * 0.7333) * -1.414) - calc({{lineWidth}}px / 2));
+                    left: calc({{lineWidth}}px * 1.77);
                 {{else}}
                     transform: rotate(-45deg);
                     left: calc(calc(calc({{lineWidth}}px * 0.7333) * -1.414) - calc({{lineWidth}}px / 2));
@@ -614,8 +624,31 @@ $('.date').each(function(_idx, dateEl){
         {{#if orientation }}
             {{#eq orientation "horizontal"}}
                 height: {{lineWidth}}px;
-                width: 100%;
                 border-width: {{lineWidth}}px 0 0 0;
+                left: calc({{lineWidth}}px * 2);
+                width: calc(100% - calc({{lineWidth}}px * 4));
+                {{#eq tip1Type "squared"}}left: 0;width: calc(100% - calc({{lineWidth}}px * 2));{{/eq}}
+                {{#eq tip2Type "squared"}}left: 0;width: calc(100% - calc({{lineWidth}}px * 2));{{/eq}}
+                {{#eq tip1Type "squared"}}
+                    {{#eq tip2Type "squared"}}
+                        left: {{lineWidth}}px;
+                    {{else}}
+                        width: calc(100% - calc({{lineWidth}}px * 4));
+                        left: {{lineWidth}}px;
+                        {{#eq tip2Type "line-arrow"}}
+                            width: calc(100% - calc({{lineWidth}}px * 3));
+                        {{/eq}}
+                    {{/eq}}
+                {{else}}
+                    {{#eq tip2Type "squared"}}
+                        width: calc(100% - calc({{lineWidth}}px * 3));
+                        left: calc({{lineWidth}}px * 2);
+                        {{#eq tip1Type "line-arrow"}}
+                            left: calc({{lineWidth}}px * 2);
+                        {{/eq}}
+                    {{else}}
+                    {{/eq}}
+                {{/eq}}
             {{/eq}}
             {{#eq orientation "vertical"}}
                 width: {{lineWidth}}px;
@@ -658,6 +691,8 @@ $('.date').each(function(_idx, dateEl){
                 height: calc({{lineWidth}}px * 3);
                 border-radius: 50%;
                 {{#eq orientation "horizontal"}}
+                    right: {{lineWidth}}px;
+                    top: calc(calc({{lineWidth}}px * -2) / 2);
                 {{else}}
                     top: calc(100% - calc({{lineWidth}}px * 3));
                     left: calc(calc({{lineWidth}}px * -2) / 2);
@@ -669,6 +704,8 @@ $('.date').each(function(_idx, dateEl){
                     border-top: calc({{lineWidth}}px * 2) solid transparent;
                     border-bottom: calc({{lineWidth}}px * 2) solid transparent;
                     border-left: calc({{lineWidth}}px * 4) solid {{lineColor}};
+                    right: {{lineWidth}}px;
+                    top: calc(calc({{lineWidth}}px * -3) / 2);
                 {{else}}
                     width: {{lineWidth}}px;
                     border-top: calc({{lineWidth}}px * 4) solid {{lineColor}};
@@ -682,19 +719,23 @@ $('.date').each(function(_idx, dateEl){
                 background-color: {{lineColor}};
                 width: calc({{lineWidth}}px * 3);
                 height: calc({{lineWidth}}px * 3);
-                {{#eq orientation "vertical"}}
+                {{#eq orientation "horizontal"}}
+                    transform: rotate(45deg);
+                    right: calc({{lineWidth}}px * 1.414);
+                    top: calc(calc({{lineWidth}}px * 0.7333}}) * -1.414);
+                {{else}}
                     transform: rotate(45deg);
                     left: calc(calc({{lineWidth}}px * 0.7333}}) * -1.414);
                     top: calc(100% - calc(calc({{lineWidth}}px * 2.25) * 1.414));
-                {{else}}
-                    transform: rotate(45deg);
                 {{/eq}}
             {{/eq}}
             {{#eq tip2Type "line-arrow"}}
                 width: calc({{lineWidth}}px * 4);
                 height: calc({{lineWidth}}px * 4);
                 {{#eq orientation "horizontal"}}
-                    transform:  translate(-85%, calc({{lineWidth}}px / 2)) rotate(45deg);
+                    transform: rotate(45deg);
+                    top: calc(calc(calc({{lineWidth}}px * 0.7333) * -1.414) - calc({{lineWidth}}px / 2));
+                    right: calc({{lineWidth}}px * 1.77);
                 {{else}}
                     transform:  rotate(135deg);
                     left: calc(calc(calc({{lineWidth}}px * 0.7333) * -1.414) - calc({{lineWidth}}px / 2));
