@@ -31,18 +31,12 @@ use Slim\Flash\Messages;
 use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
 use Twig\TwigFilter;
+use Xibo\Service\ConfigService;
 use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
 use Xibo\Twig\TwigMessages;
-use Xibo\Factory\ContainerFactory;
-use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\ModuleTemplateFactory;
-use Monolog\Logger;
-use Nyholm\Psr7\ServerRequest;
-use Slim\Http\ServerRequest as Request;
 
-define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 require_once PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -73,33 +67,65 @@ foreach (glob(PROJECT_ROOT . '/views/*.twig') as $file) {
     $view->getEnvironment()->load(str_replace(PROJECT_ROOT . '/views/', '', $file));
 }
 
-// Create the container for dependency injection.
-try {
-    $container = ContainerFactory::create();
-} catch (Exception $e) {
-    die($e->getMessage());
+/**
+ * Mock PDO Storage Service which returns an empty array when select queried.
+ */
+class MockPdoStorageServiceForModuleFactory extends \Xibo\Storage\PdoStorageService
+{
+    public function select($sql, $params, $connection = 'default', $reconnect = false, $close = false)
+    {
+        return [];
+    }
 }
 
-// Logger
-$uidProcessor = new \Monolog\Processor\UidProcessor(7);
-$container->set('logger', function () use ($uidProcessor) {
-    return (new Logger('XMDS'))
-        ->pushProcessor($uidProcessor)
-        ->pushHandler(new \Xibo\Helper\DatabaseLogHandler());
-});
+// Mock Config Service
+class MockConfigService extends ConfigService
+{
+    public function getSetting($setting, $default = null, $full = false)
+    {
+        return '';
+    }
+}
 
-// Create a Slim application
-$app = \DI\Bridge\Slim\Bridge::create($container);
-$app->setBasePath($container->get('basePath'));
+// Transactor funtion
+function __($original)
+{
+    return $original;
+}
 
-// Mock a request
-$request = new Request(new ServerRequest('GET', $app->getBasePath()));
-$request = $request->withAttribute('name', 'locale');
-$container->set('name', 'locale');
+// Stash
+$pool = new \Stash\Pool();
 
-// Set state
-\Xibo\Middleware\State::setState($app, $request);
+// Create a new Sanitizer service
+$sanitizerService = new \Xibo\Helper\SanitizerService();
 
+// Create a new base dependency service
+$baseDepenencyService = new \Xibo\Service\BaseDependenciesService();
+$baseDepenencyService->setConfig(new MockConfigService());
+$baseDepenencyService->setStore(new MockPdoStorageServiceForModuleFactory());
+$baseDepenencyService->setSanitizer($sanitizerService);
+
+$moduleFactory = new \Xibo\Factory\ModuleFactory(
+    '',
+    $pool,
+    $view,
+    new MockConfigService(),
+);
+$moduleFactory->useBaseDependenciesService($baseDepenencyService);
+// Get all module
+$modules = $moduleFactory->getAll();
+
+$moduleTemplateFactory = new \Xibo\Factory\ModuleTemplateFactory(
+    $pool,
+    $view,
+);
+$moduleTemplateFactory->useBaseDependenciesService($baseDepenencyService);
+// Get all module templates
+$moduleTemplates = $moduleTemplateFactory->getAll();
+
+// --------------
+// Create translation file
+// Each line contains title or description or properties of the module/templates
 $file = PROJECT_ROOT. '/locale/moduletranslate.php';
 if (!file_exists($file)) {
     fopen($file, 'w');
@@ -107,10 +133,6 @@ if (!file_exists($file)) {
 
 if (is_writable($file)) {
     $content = '<?php' . PHP_EOL;
-
-    /** @var ModuleFactory $moduleFactory */
-    $moduleFactory = $container->get('moduleFactory');
-    $modules = $moduleFactory->getAll();
 
     $content .= "// Module translation" . PHP_EOL;
     // Module translation
@@ -158,10 +180,6 @@ if (is_writable($file)) {
             }
         }
     }
-
-    /** @var ModuleTemplateFactory $moduleTemplateFactory */
-    $moduleTemplateFactory = $container->get('moduleTemplateFactory');
-    $moduleTemplates = $moduleTemplateFactory->getAll();
 
     $content .= "// Module Template translation" . PHP_EOL;
     // Template Translation

@@ -85,12 +85,12 @@ class BaseDependenciesService
     }
 
     /**
-     * @return \Psr\Log\LoggerInterface
+     * @return LogServiceInterface
      */
     public function getLogger()
     {
         if ($this->log === null) {
-            $this->log = new NullLogger();
+            $this->log = new NullLogService(new NullLogger());
         }
 
         return $this->log;
