@@ -124,7 +124,7 @@ class Property implements \JsonSerializable
         $option->name = $name;
         $option->image = $image;
         $option->set = $set;
-        $option->title = $title;
+        $option->title = __($title);
         $this->options[] = $option;
         return $this;
     }
