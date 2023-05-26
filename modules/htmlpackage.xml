@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -31,7 +31,13 @@
     <regionSpecific>0</regionSpecific>
     <renderAs>native</renderAs>
     <defaultDuration>60</defaultDuration>
-    <settings></settings>
+    <settings>
+        <property id="validExtensions" type="text">
+            <title>Valid Extensions</title>
+            <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
+            <default>htz</default>
+        </property>
+    </settings>
     <properties>
         <property id="nominatedFile" type="text">
             <title>Nominated File</title>
