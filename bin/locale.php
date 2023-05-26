@@ -1,8 +1,9 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -30,6 +31,7 @@ use Slim\Flash\Messages;
 use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
 use Twig\TwigFilter;
+use Xibo\Service\ConfigService;
 use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
@@ -55,14 +57,164 @@ $view->getEnvironment()->addFilter(new TwigFilter('url_decode', 'urldecode'));
 $storage = [];
 $view->addExtension(new TwigMessages(new Messages($storage)));
 
-
 foreach (glob(PROJECT_ROOT . '/views/*.twig') as $file) {
     echo var_export($file, true) . PHP_EOL;
 
     $view->getEnvironment()->load(str_replace(PROJECT_ROOT . '/views/', '', $file));
 }
-foreach (glob(PROJECT_ROOT . '/modules/*.twig') as $file) {
-    echo var_export($file, true) . PHP_EOL;
 
-    $view->getEnvironment()->load(str_replace(PROJECT_ROOT . '/modules/', '', $file));
+/**
+ * Mock PDO Storage Service which returns an empty array when select queried.
+ */
+class MockPdoStorageServiceForModuleFactory extends \Xibo\Storage\PdoStorageService
+{
+    public function select($sql, $params, $connection = 'default', $reconnect = false, $close = false)
+    {
+        return [];
+    }
 }
+
+// Mock Config Service
+class MockConfigService extends ConfigService
+{
+    public function getSetting($setting, $default = null, $full = false)
+    {
+        return '';
+    }
+}
+
+// Translator function
+function __($original)
+{
+    return $original;
+}
+
+// Stash
+$pool = new \Stash\Pool();
+
+// Create a new Sanitizer service
+$sanitizerService = new \Xibo\Helper\SanitizerService();
+
+// Create a new base dependency service
+$baseDepenencyService = new \Xibo\Service\BaseDependenciesService();
+$baseDepenencyService->setConfig(new MockConfigService());
+$baseDepenencyService->setStore(new MockPdoStorageServiceForModuleFactory());
+$baseDepenencyService->setSanitizer($sanitizerService);
+
+$moduleFactory = new \Xibo\Factory\ModuleFactory(
+    '',
+    $pool,
+    $view,
+    new MockConfigService(),
+);
+$moduleFactory->useBaseDependenciesService($baseDepenencyService);
+// Get all module
+$modules = $moduleFactory->getAll();
+
+$moduleTemplateFactory = new \Xibo\Factory\ModuleTemplateFactory(
+    $pool,
+    $view,
+);
+$moduleTemplateFactory->useBaseDependenciesService($baseDepenencyService);
+// Get all module templates
+$moduleTemplates = $moduleTemplateFactory->getAll();
+
+// --------------
+// Create translation file
+// Each line contains title or description or properties of the module/templates
+$file = PROJECT_ROOT. '/locale/moduletranslate.php';
+$content = '<?php' . PHP_EOL;
+
+$content .= "// Module translation" . PHP_EOL;
+// Module translation
+foreach ($modules as $module) {
+    $content .= "echo __('$module->name');" . PHP_EOL;
+    $content .= "echo __('$module->description');" . PHP_EOL;
+
+    // Settings Translation
+    foreach ($module->settings as $setting) {
+        if (!empty($setting->title)) {
+            $content .= "echo __('$setting->title');" . PHP_EOL;
+        }
+        if (!empty($setting->helpText)) {
+            // replaces any single quote within the value with a backslash followed by a single quote
+            $helpText = str_replace("'", "\\'", $setting->helpText);
+            $content .= "echo __('$helpText');" . PHP_EOL;
+        }
+
+        if (isset($setting->options) > 0) {
+            foreach ($setting->options as $option) {
+                if (!empty($option->title)) {
+                    $content .= "echo __('$option->title');" . PHP_EOL;
+                }
+            }
+        }
+    }
+
+    // Properties translation
+    foreach ($module->properties as $property) {
+        if (!empty($property->title)) {
+            $content .= "echo __('$property->title');" . PHP_EOL;
+        }
+        if (!empty($property->helpText)) {
+            // replaces any single quote within the value with a backslash followed by a single quote
+            $helpText = str_replace("'", "\\'", $property->helpText);
+            $content .= "echo __('$helpText');" . PHP_EOL;
+        }
+
+        if (isset($property->rule) > 0) {
+            foreach ($property->rule as $rule) {
+                if (!empty($rule->message)) {
+                    $content .= "echo __('$rule->message');" . PHP_EOL;
+                }
+            }
+        }
+
+        if (isset($property->options) > 0) {
+            foreach ($property->options as $option) {
+                if (!empty($option->title)) {
+                    $content .= "echo __('$option->title');" . PHP_EOL;
+                }
+            }
+        }
+    }
+}
+
+$content .= "// Module Template translation" . PHP_EOL;
+// Template Translation
+foreach ($moduleTemplates as $moduleTemplate) {
+    $content .= "echo __('$moduleTemplate->title');" . PHP_EOL;
+
+    // Properties Translation
+    foreach ($moduleTemplate->properties as $property) {
+        if (!empty($property->title)) {
+            $content .= "echo __('$property->title');" . PHP_EOL;
+        }
+        if (!empty($property->helpText)) {
+            // replaces any single quote within the value with a backslash followed by a single quote
+            $helpText = str_replace("'", "\\'", $property->helpText);
+            $content .= "echo __('$helpText');" . PHP_EOL;
+        }
+
+        if (isset($property->rule) > 0) {
+            foreach ($property->rule as $rule) {
+                if (!empty($rule->message)) {
+                    $content .= "echo __('$rule->message');" . PHP_EOL;
+                }
+            }
+        }
+
+        if (isset($property->options) > 0) {
+            foreach ($property->options as $option) {
+                if (!empty($option->title)) {
+                    $content .= "echo __('$option->title');" . PHP_EOL;
+                }
+            }
+        }
+    }
+}
+
+$content .= '?>';
+file_put_contents($file, $content);
+echo 'moduletranslate.file created and data written successfully.';
+

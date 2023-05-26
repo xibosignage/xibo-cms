@@ -582,9 +582,9 @@ class ModuleFactory extends BaseFactory
 
         $module = new Module($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
         $module->moduleId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
-        $module->name = $this->getFirstValueOrDefaultFromXmlNode($xml, 'name');
+        $module->name = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'name'));
         $module->author = $this->getFirstValueOrDefaultFromXmlNode($xml, 'author');
-        $module->description = $this->getFirstValueOrDefaultFromXmlNode($xml, 'description');
+        $module->description = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'description'));
         $module->class = $this->getFirstValueOrDefaultFromXmlNode($xml, 'class');
         $module->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $module->thumbnail = $this->getFirstValueOrDefaultFromXmlNode($xml, 'thumbnail');

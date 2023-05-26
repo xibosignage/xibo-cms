@@ -34,7 +34,7 @@ interface LogServiceInterface
 {
     /**
      * Log constructor.
-     * @param Logger $logger
+     * @param LoggerInterface $logger
      * @param string $mode
      */
     public function __construct($logger, $mode = 'production');
