@@ -156,6 +156,8 @@ body {
  height: 420px !important;
  }
 
+{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+
 .text-right {
     text-align: right;
 }
@@ -404,6 +406,8 @@ body {
     font-family: "Helvetica", "Arial", sans-serif;
     line-height: 1;
 }
+
+{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
 
 .text-right {
     text-align: right;
