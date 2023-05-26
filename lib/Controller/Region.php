@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\RegionAddedEvent;
 use Xibo\Event\SubPlaylistWidgetsEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -252,6 +253,9 @@ class Region extends Base
         $layout->save([
             'saveTags' => false
         ]);
+
+        // Dispatch an event to say that we have added a region
+        $this->getDispatcher()->dispatch(new RegionAddedEvent($layout, $region), RegionAddedEvent::$NAME);
 
         // Return
         $this->getState()->hydrate([
