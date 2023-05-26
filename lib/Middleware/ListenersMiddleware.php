@@ -348,6 +348,7 @@ class ListenersMiddleware implements MiddlewareInterface
         (new WidgetListener(
             $c->get('playlistFactory'),
             $c->get('moduleFactory'),
+            $c->get('widgetFactory'),
             $c->get('store'),
             $c->get('configService')
         ))

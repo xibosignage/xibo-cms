@@ -204,6 +204,19 @@ class Widget extends Base
             );
         }
 
+        // If we're adding a canvas widget, then make sure we don't already have one and that we're on a region
+        if ($module->type === 'global') {
+            if (!$playlist->isRegionPlaylist()) {
+                throw new InvalidArgumentException(__('Canvas Widgets can only be added to a Zone'), 'regionId');
+            }
+
+            foreach ($playlist->widgets as $widget) {
+                if ($widget->type === 'global') {
+                    throw new InvalidArgumentException(__('Only one Canvas Widget allowed per Playlist'), 'type');
+                }
+            }
+        }
+
         // Grab a widget, set the type and default duration
         $widget = $this->widgetFactory->create(
             $this->getUser()->userId,

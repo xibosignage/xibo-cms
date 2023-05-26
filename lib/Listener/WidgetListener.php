@@ -24,6 +24,7 @@ namespace Xibo\Listener;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Widget;
+use Xibo\Event\RegionAddedEvent;
 use Xibo\Event\SubPlaylistDurationEvent;
 use Xibo\Event\SubPlaylistValidityEvent;
 use Xibo\Event\SubPlaylistWidgetsEvent;
@@ -31,6 +32,7 @@ use Xibo\Event\WidgetDeleteEvent;
 use Xibo\Event\WidgetEditEvent;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\GeneralException;
@@ -46,6 +48,10 @@ use Xibo\Widget\SubPlaylistItem;
  * Sub Playlists are a special case in that they resolve to multiple widgets
  * This is handled by the standard widget edit/delete events and a special event to calculate the duration
  * These events are processed by a SubPlaylistListener included with core.
+ *
+ * Region Events
+ * -------------
+ * We listen for a region being added and if its a canvas we add a "global" widget to it.
  */
 class WidgetListener
 {
@@ -56,6 +62,9 @@ class WidgetListener
 
     /** @var \Xibo\Factory\ModuleFactory */
     private $moduleFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
 
     /** @var StorageServiceInterface */
     private $storageService;
@@ -72,11 +81,13 @@ class WidgetListener
     public function __construct(
         PlaylistFactory $playlistFactory,
         ModuleFactory $moduleFactory,
+        WidgetFactory $widgetFactory,
         StorageServiceInterface $storageService,
         ConfigServiceInterface $configService
     ) {
         $this->playlistFactory = $playlistFactory;
         $this->moduleFactory = $moduleFactory;
+        $this->widgetFactory = $widgetFactory;
         $this->storageService = $storageService;
         $this->configService = $configService;
     }
@@ -92,6 +103,7 @@ class WidgetListener
         $dispatcher->addListener(SubPlaylistDurationEvent::$NAME, [$this, 'onDuration']);
         $dispatcher->addListener(SubPlaylistWidgetsEvent::$NAME, [$this, 'onWidgets']);
         $dispatcher->addListener(SubPlaylistValidityEvent::$NAME, [$this, 'onSubPlaylistValid']);
+        $dispatcher->addListener(RegionAddedEvent::$NAME, [$this, 'onRegionAdded']);
         return $this;
     }
 
@@ -703,6 +715,35 @@ class WidgetListener
         if ($widget->getOptionValue('subPlaylistIds', null) !== null) {
             $widget->setOptionValue('subPlaylistIds', 'attrib', null);
             $widget->setOptionValue('subPlaylistOptions', 'attrib', null);
+        }
+    }
+
+    /**
+     * Handle a region being added
+     * @param RegionAddedEvent $event
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
+    public function onRegionAdded(RegionAddedEvent $event)
+    {
+        // We are a canvas region
+        if ($event->getRegion()->type === 'canvas') {
+            $this->getLogger()->debug('onRegionAdded: canvas region found, adding global widget');
+
+            // Add the global widget
+            $module = $this->moduleFactory->getById('core-canvas');
+
+            $widget = $this->widgetFactory->create(
+                $event->getRegion()->getOwnerId(),
+                $event->getRegion()->regionPlaylist->playlistId,
+                $module->type,
+                $module->defaultDuration
+            );
+
+            $event->getRegion()->regionPlaylist->assignWidget($widget, 1);
+            $event->getRegion()->regionPlaylist->save(['notify' => false, 'validate' => false]);
         }
     }
 }

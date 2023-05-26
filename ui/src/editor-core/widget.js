@@ -754,12 +754,22 @@ Widget.prototype.removeElement = function(
 
   // Check if there's no more elements in widget and remove it
   if (Object.keys(this.elements).length == 0) {
-    // Check if parent region is canvas and it only has 1 widget
+    // Check if parent region is canvas, and it only has a global widget,
+    // with no elements
     // If so, remove region as well
-    const removeRegion = (
-      this.parent.subType == 'canvas' &&
-      Object.keys(this.parent.widgets).length == 1
+    let removeRegion = (
+      this.parent.subType === 'canvas' &&
+      Object.keys(this.parent.widgets).length === 1
     );
+
+    if (removeRegion) {
+      // Check that the widget is a global one and is empty
+      $.each(this.parent.widgets, function(i, e) {
+        if (e.subType !== 'global' || e.elements.length > 0) {
+          removeRegion = false;
+        }
+      });
+    }
 
     // Remove widget
     app.layout.deleteElement('widget', this.widgetId).then(() => {
