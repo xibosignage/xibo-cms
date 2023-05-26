@@ -40,10 +40,6 @@ use Xibo\Twig\TwigMessages;
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 require_once PROJECT_ROOT . '/vendor/autoload.php';
 
-if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
-    die('Not configured');
-}
-
 $view = Twig::create([
     PROJECT_ROOT . '/views',
     PROJECT_ROOT . '/modules',
@@ -87,7 +83,7 @@ class MockConfigService extends ConfigService
     }
 }
 
-// Transactor funtion
+// Translator function
 function __($original)
 {
     return $original;
@@ -127,89 +123,98 @@ $moduleTemplates = $moduleTemplateFactory->getAll();
 // Create translation file
 // Each line contains title or description or properties of the module/templates
 $file = PROJECT_ROOT. '/locale/moduletranslate.php';
-if (!file_exists($file)) {
-    fopen($file, 'w');
-}
+$content = '<?php' . PHP_EOL;
 
-if (is_writable($file)) {
-    $content = '<?php' . PHP_EOL;
+$content .= "// Module translation" . PHP_EOL;
+// Module translation
+foreach ($modules as $module) {
+    $content .= "echo __('$module->name');" . PHP_EOL;
+    $content .= "echo __('$module->description');" . PHP_EOL;
 
-    $content .= "// Module translation" . PHP_EOL;
-    // Module translation
-    foreach ($modules as $module) {
-        $content .= "echo __('$module->name');" . PHP_EOL;
-        $content .= "echo __('$module->description');" . PHP_EOL;
-
-        // Settings Translation
-        foreach ($module->settings as $setting) {
-            if (!empty($setting->title)) {
-                $content .= "echo __('$setting->title');" . PHP_EOL;
-            }
-            if (!empty($setting->helpText)) {
-                // replaces any single quote within the value with a backslash followed by a single quote
-                $helpText = str_replace("'", "\\'", $setting->helpText);
-                $content .= "echo __('$helpText');" . PHP_EOL;
-            }
-
-            if (isset($setting->options) > 0) {
-                foreach ($setting->options as $option) {
-                    if (!empty($option->title)) {
-                        $content .= "echo __('$option->title');" . PHP_EOL;
-                    }
-                }
-            }
+    // Settings Translation
+    foreach ($module->settings as $setting) {
+        if (!empty($setting->title)) {
+            $content .= "echo __('$setting->title');" . PHP_EOL;
+        }
+        if (!empty($setting->helpText)) {
+            // replaces any single quote within the value with a backslash followed by a single quote
+            $helpText = str_replace("'", "\\'", $setting->helpText);
+            $content .= "echo __('$helpText');" . PHP_EOL;
         }
 
-        // Properties translation
-        foreach ($module->properties as $property) {
-            if (!empty($property->title)) {
-                $content .= "echo __('$property->title');" . PHP_EOL;
-            }
-            if (!empty($property->helpText)) {
-                // replaces any single quote within the value with a backslash followed by a single quote
-                $helpText = str_replace("'", "\\'", $property->helpText);
-                $content .= "echo __('$helpText');" . PHP_EOL;
-            }
-
-            if (isset($property->options) > 0) {
-                foreach ($property->options as $option) {
-                    if (!empty($option->title)) {
-                        $content .= "echo __('$option->title');" . PHP_EOL;
-                    }
+        if (isset($setting->options) > 0) {
+            foreach ($setting->options as $option) {
+                if (!empty($option->title)) {
+                    $content .= "echo __('$option->title');" . PHP_EOL;
                 }
             }
         }
     }
 
-    $content .= "// Module Template translation" . PHP_EOL;
-    // Template Translation
-    foreach ($moduleTemplates as $moduleTemplate) {
-        $content .= "echo __('$moduleTemplate->title');" . PHP_EOL;
+    // Properties translation
+    foreach ($module->properties as $property) {
+        if (!empty($property->title)) {
+            $content .= "echo __('$property->title');" . PHP_EOL;
+        }
+        if (!empty($property->helpText)) {
+            // replaces any single quote within the value with a backslash followed by a single quote
+            $helpText = str_replace("'", "\\'", $property->helpText);
+            $content .= "echo __('$helpText');" . PHP_EOL;
+        }
 
-        // Properties Translation
-        foreach ($moduleTemplate->properties as $property) {
-            if (!empty($property->title)) {
-                $content .= "echo __('$property->title');" . PHP_EOL;
+        if (isset($property->rule) > 0) {
+            foreach ($property->rule as $rule) {
+                if (!empty($rule->message)) {
+                    $content .= "echo __('$rule->message');" . PHP_EOL;
+                }
             }
-            if (!empty($property->helpText)) {
-                // replaces any single quote within the value with a backslash followed by a single quote
-                $helpText = str_replace("'", "\\'", $property->helpText);
-                $content .= "echo __('$helpText');" . PHP_EOL;
-            }
+        }
 
-            if (isset($property->options) > 0) {
-                foreach ($property->options as $option) {
-                    if (!empty($option->title)) {
-                        $content .= "echo __('$option->title');" . PHP_EOL;
-                    }
+        if (isset($property->options) > 0) {
+            foreach ($property->options as $option) {
+                if (!empty($option->title)) {
+                    $content .= "echo __('$option->title');" . PHP_EOL;
                 }
             }
         }
     }
-
-    $content .= '?>';
-    file_put_contents($file, $content);
-    echo 'moduletranslate.file created and data written successfully.';
-} else {
-    echo 'Unable to write to the moduletranslate.file.';
 }
+
+$content .= "// Module Template translation" . PHP_EOL;
+// Template Translation
+foreach ($moduleTemplates as $moduleTemplate) {
+    $content .= "echo __('$moduleTemplate->title');" . PHP_EOL;
+
+    // Properties Translation
+    foreach ($moduleTemplate->properties as $property) {
+        if (!empty($property->title)) {
+            $content .= "echo __('$property->title');" . PHP_EOL;
+        }
+        if (!empty($property->helpText)) {
+            // replaces any single quote within the value with a backslash followed by a single quote
+            $helpText = str_replace("'", "\\'", $property->helpText);
+            $content .= "echo __('$helpText');" . PHP_EOL;
+        }
+
+        if (isset($property->rule) > 0) {
+            foreach ($property->rule as $rule) {
+                if (!empty($rule->message)) {
+                    $content .= "echo __('$rule->message');" . PHP_EOL;
+                }
+            }
+        }
+
+        if (isset($property->options) > 0) {
+            foreach ($property->options as $option) {
+                if (!empty($option->title)) {
+                    $content .= "echo __('$option->title');" . PHP_EOL;
+                }
+            }
+        }
+    }
+}
+
+$content .= '?>';
+file_put_contents($file, $content);
+echo 'moduletranslate.file created and data written successfully.';
+
