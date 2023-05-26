@@ -162,11 +162,10 @@ foreach ($modules as $module) {
             $content .= "echo __('$helpText');" . PHP_EOL;
         }
 
-        if (isset($property->rule) > 0) {
-            foreach ($property->rule as $rule) {
-                if (!empty($rule->message)) {
-                    $content .= "echo __('$rule->message');" . PHP_EOL;
-                }
+        if (isset($property->validation) > 0) {
+            $message = $property->validation->message;
+            if (!empty($message)) {
+                $content .= "echo __('$message');" . PHP_EOL;
             }
         }
 
@@ -196,11 +195,10 @@ foreach ($moduleTemplates as $moduleTemplate) {
             $content .= "echo __('$helpText');" . PHP_EOL;
         }
 
-        if (isset($property->rule) > 0) {
-            foreach ($property->rule as $rule) {
-                if (!empty($rule->message)) {
-                    $content .= "echo __('$rule->message');" . PHP_EOL;
-                }
+        if (isset($property->validation) > 0) {
+            $message = $property->validation->message;
+            if (!empty($message)) {
+                $content .= "echo __('$message');" . PHP_EOL;
             }
         }
 
@@ -217,4 +215,3 @@ foreach ($moduleTemplates as $moduleTemplate) {
 $content .= '?>';
 file_put_contents($file, $content);
 echo 'moduletranslate.file created and data written successfully.';
-
