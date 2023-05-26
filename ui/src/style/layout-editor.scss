@@ -947,7 +947,7 @@
             top: 0;
             background-color: $xibo-color-neutral-700;
             color: $xibo-color-neutral-100;
-            padding: 1px 3px;
+            padding: 2px 5px;
             border-radius: 4px;
             font-weight: bold;
             z-index: 100;
@@ -956,7 +956,6 @@
 
         &:hover .source {
             opacity: 0.8;
-            padding: 2px 5px;
         }
     }
 
@@ -965,8 +964,8 @@
             width: 100%;
             height: 100%;
             position: absolute;
-            top: 2px;
-            left: 2px;
+            top: 0;
+            left: 0;
             outline: 2px dotted $xibo-color-primary;
             outline-offset: 1px;
         }
@@ -975,6 +974,55 @@
             .group-select-overlay {
                 outline-width: 3px;
                 z-index: auto;
+            }
+        }
+
+        .group-edit-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: darken($xibo-color-accent, 20%);
+            color: $xibo-color-neutral-100;
+            padding: 2px 5px;
+            font-weight: bold;
+            border-radius: 4px;
+            z-index: 100;
+            opacity: 0.3;
+            width: 1.8rem;
+            text-align: center;
+
+            .fa-edit {
+                display: initial;
+            }
+            .fa-close {
+                display: none;
+            }
+
+            &::after {
+                content: ' ';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        &.editing {
+            outline-width: 3px;
+            outline-style: dashed;
+            outline-color: darken($xibo-color-accent, 20%);
+            outline-offset: 1px;
+
+            .group-select-overlay {
+                display: none;
+            }
+
+            .fa-edit {
+                display: none;
+            }
+            .fa-close {
+                display: initial;
             }
         }
 
@@ -988,16 +1036,15 @@
             top: 2px;
             background-color: $xibo-color-primary;
             color: $xibo-color-neutral-100;
-            padding: 1px 3px;
+            padding: 2px 5px;
             font-weight: bold;
             border-radius: 4px;
             z-index: 100;
             opacity: 0.3;
         }
 
-        &:hover > .source {
+        &:hover > .source, &:hover > .group-edit-btn {
             opacity: 0.8;
-            padding: 2px 5px;
         }
     }
 

@@ -423,6 +423,12 @@ Viewer.prototype.handleInteractions = function() {
           clickPosition: $(e.target).hasClass('layout') ? clickPosition : null,
         });
         self.selectElement();
+      } else if (
+        $(e.target).hasClass('group-edit-btn')
+      ) {
+        self.editGroup(
+          $(e.target).parents('.designer-element-group'),
+        );
       } else {
         // Select elements inside the layout
         clicks++;
@@ -484,7 +490,9 @@ Viewer.prototype.handleInteractions = function() {
             $(e.target).hasClass('group-select-overlay') &&
             !$(e.target).parent().hasClass('selected')
           ) {
-            // TODO Open edit group, but select group for now
+            self.editGroup(
+              $(e.target).parents('.designer-element-group'),
+            );
           } else if (
             $(e.target).hasClass('designer-region') &&
             !$(e.target).hasClass('selected')
@@ -517,7 +525,11 @@ Viewer.prototype.handleInteractions = function() {
       // Context menu
       if (
         $(ev.target).is('.editable, .deletable, .permissionsModifiable') &&
-        !$(ev.target).hasClass('contextMenuOpen')
+        !$(ev.target).hasClass('contextMenuOpen') &&
+        !(
+          $(ev.target).hasClass('designer-element-group') &&
+          $(ev.target).hasClass('editing')
+        )
       ) {
         // Open context menu
         lD.openContextMenu(ev.target, {
@@ -945,6 +957,11 @@ Viewer.prototype.renderElement = function(
             data-region-id="${element.regionId}"
             data-widget-id="${element.widgetId}"
             >
+          <div class="group-edit-btn viewer-element-select"
+            title="${viewerTrans.editGroup}">
+            <i class="fa fa-edit" aria-hidden="true"></i>
+            <i class="fa fa-close" aria-hidden="true"></i>
+          </div>
           <div class="group-select-overlay viewer-element-select">
           </div>
         </div>`,
@@ -1249,12 +1266,22 @@ Viewer.prototype.initMoveable = function() {
   this.moveable.on('drag', (e) => {
     // Margin to prevent dragging outside of the container
     const remainingMargin = 20;
+    let elLeft = e.left;
+    let elTop = e.top;
+
+    // If dragged object is an element inside a group
+    // use the group to set the limits
+    if ($(e.target).parent().hasClass('designer-element-group')) {
+      const parentPos = $(e.target).parent().position();
+      elLeft = parentPos.left + e.left;
+      elTop = parentPos.top + e.top;
+    }
 
     // Update horizontal position
     // if not outside of the container
     if (
-      e.left > -e.width + remainingMargin &&
-      e.left + remainingMargin < this.containerElementDimensions.width
+      elLeft > -e.width + remainingMargin &&
+      elLeft + remainingMargin < this.containerElementDimensions.width
     ) {
       e.target.style.left = `${e.left}px`;
     }
@@ -1262,8 +1289,8 @@ Viewer.prototype.initMoveable = function() {
     // Update vertical position
     // if not outside of the container
     if (
-      e.top > -e.height + remainingMargin &&
-      e.top + remainingMargin < this.containerElementDimensions.height
+      elTop > -e.height + remainingMargin &&
+      elTop + remainingMargin < this.containerElementDimensions.height
     ) {
       e.target.style.top = `${e.top}px`;
     }
@@ -1271,18 +1298,32 @@ Viewer.prototype.initMoveable = function() {
     if (e.isDrag) {
       // Save region properties
       (
-        (lD.selectedObject.type == 'region') ||
-        (lD.selectedObject.type == 'widget')
+        lD.selectedObject.type == 'region' ||
+        lD.selectedObject.type == 'widget'
       ) &&
         self.saveRegionProperties(e.target, true, true, false);
 
       // Save element properties
-      (lD.selectedObject.type == 'element') &&
+      // if it's not a group
+      (
+        lD.selectedObject.type == 'element' &&
+        !lD.selectedObject.groupId
+      ) &&
         self.saveElementProperties(e.target, true);
 
       // Save element group properties
       (lD.selectedObject.type == 'element-group') &&
         self.saveElementGroupProperties(e.target);
+
+      // Save element included in a group
+      (
+        lD.selectedObject.type == 'element' &&
+        lD.selectedObject.groupId
+      ) &&
+      self.saveElementGroupProperties(
+        $(e.target).parents('.designer-element-group'),
+        true,
+      );
     }
   });
 
@@ -1342,8 +1383,19 @@ Viewer.prototype.initMoveable = function() {
       self.saveRegionProperties(e.target, true, moved, true);
 
     // Save element properties
-    (lD.selectedObject.type == 'element') &&
-      self.saveElementProperties(e.target, moved);
+    (
+      lD.selectedObject.type == 'element' &&
+      !lD.selectedObject.groupId
+    ) && self.saveElementProperties(e.target, moved);
+
+    // Save element included in a group
+    (
+      lD.selectedObject.type == 'element' &&
+      lD.selectedObject.groupId
+    ) && self.saveElementGroupProperties(
+      $(e.target).parents('.designer-element-group'),
+      true,
+    );
   });
 };
 
@@ -1447,6 +1499,16 @@ Viewer.prototype.saveElementProperties = function(
       Math.round(groupPosition.top / scale);
     elementObject.groupProperties.left =
       Math.round(groupPosition.left / scale);
+
+    if (groupPosition.width) {
+      elementObject.groupProperties.width =
+        Math.round(groupPosition.width / scale);
+    }
+
+    if (groupPosition.height) {
+      elementObject.groupProperties.height =
+        Math.round(groupPosition.height / scale);
+    }
   }
 
   // Only change top/left if element has moved
@@ -1479,9 +1541,11 @@ Viewer.prototype.saveElementProperties = function(
 /**
  * Save element group properties
  * @param {*} elementGroup
+ * @param {boolean} [updateDimensions=false]
  */
 Viewer.prototype.saveElementGroupProperties = function(
   elementGroup,
+  updateDimensions = false,
 ) {
   const self = this;
   const scale = self.containerElementDimensions.scale;
@@ -1499,8 +1563,83 @@ Viewer.prototype.saveElementGroupProperties = function(
   // Get group elements
   const $groupElements = $elementGroup.find('.designer-element');
 
+  // Update group dimensions
+  const updateOffset = {
+    width: null,
+    height: null,
+    top: null,
+    left: null,
+  };
+
+  if (updateDimensions) {
+    // Update group dimensions based on elements
+    $groupElements.each(function(_key, el) {
+      const elementPosition = $(el).position();
+      // First we need to find the top/left position
+      // left needs to adjust to the elements more to the left of the group
+      if (
+        updateOffset.left === null ||
+        elementPosition.left < updateOffset.left
+      ) {
+        updateOffset.left = elementPosition.left;
+      }
+
+      // top needs to adjust to the element more to the top
+      if (
+        updateOffset.top === null ||
+        elementPosition.top < updateOffset.top
+      ) {
+        updateOffset.top = elementPosition.top;
+      }
+    });
+
+    // Now we need to calculate the width and height
+    $groupElements.each(function(_key, el) {
+      const elementPosition = $(el).position();
+
+      // Apply poition offsets
+      elementPosition.top -= updateOffset.top;
+      elementPosition.left -= updateOffset.left;
+
+      if (
+        updateOffset.width === null ||
+        elementPosition.left + $(el).width() >
+        updateOffset.width
+      ) {
+        updateOffset.width = elementPosition.left + $(el).width();
+      }
+
+      if (
+        updateOffset.height === null ||
+        elementPosition.top + $(el).height() >
+        updateOffset.height
+      ) {
+        updateOffset.height = elementPosition.top + $(el).height();
+      }
+    });
+
+    // Update group element with offset
+    groupPosition.top = groupPosition.top + updateOffset.top;
+    groupPosition.left = groupPosition.left + updateOffset.left;
+    groupPosition.width = updateOffset.width;
+    groupPosition.height = updateOffset.height;
+
+    // Also update CSS
+    $elementGroup.css(groupPosition);
+  }
+
   // Calculate group elements position, but only save on the last element
   $groupElements.each(function(_key, el) {
+    // if we're updating the dimensions of the group
+    // check if we have offset for position and apply that to all elements
+    if (updateDimensions) {
+      const elPosition = $(el).position();
+      $(el).css({
+        top: elPosition.top - updateOffset.top,
+        left: elPosition.left - updateOffset.left,
+      });
+    }
+
     self.saveElementProperties(
       el,
       true,
@@ -1527,6 +1666,17 @@ Viewer.prototype.saveElementGroupProperties = function(
 Viewer.prototype.selectElement = function(element = null) {
   // Deselect all elements
   this.DOMObject.find('.selected').removeClass('selected');
+
+  // Remove all editing from groups
+  // if we're not selecting an element from that group
+  if (!(
+    $(element).hasClass('designer-element') &&
+    $(element).parent().hasClass('designer-element-group') &&
+    $(element).parent().hasClass('editing')
+  )) {
+    this.DOMObject.find('.designer-element-group.editing')
+      .removeClass('editing');
+  }
 
   // Select element if exists
   if (element) {
@@ -1903,6 +2053,21 @@ Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
     id: objectId,
     data: data,
   }).appendTo(this.DOMObject);
+};
+
+Viewer.prototype.editGroup = function(
+  groupDOMObject,
+) {
+  const self = this;
+  const editing = $(groupDOMObject).hasClass('editing');
+
+  // Deselect all elements
+  lD.selectObject();
+  self.selectElement();
+
+  // Only add editing class if we were not
+  (!editing) &&
+    $(groupDOMObject).addClass('editing');
 };
 
 module.exports = Viewer;

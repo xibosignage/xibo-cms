@@ -719,11 +719,28 @@ Widget.prototype.removeElement = function(
 ) {
   const app = this.editorObject;
 
+  const elementGroupId = this.elements[elementId].groupId;
+
   // Remove element from DOM
   $(`#${elementId}`).remove();
 
   // Remove element from object
   delete this.elements[elementId];
+
+  // Remove element from a group
+  if (elementGroupId) {
+    delete this.elementGroups[elementGroupId].elements[elementId];
+
+    // If group is empty, remove it
+    if (
+      Object.values(this.elementGroups[elementGroupId].elements).length == 0
+    ) {
+      // Remove group from viewer
+      $(`#${elementGroupId}`).remove();
+
+      delete this.elementGroups[elementGroupId];
+    }
+  }
 
   // Save changes to widget
   (save) && this.saveElements();
