@@ -61,7 +61,6 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.elements = {};
   this.elementGroups = {};
   this.elementTypeMap = {};
-  this.elementTypeMapMax = 0;
 
   this.widgetName = data.name;
 
@@ -628,10 +627,18 @@ Widget.prototype.saveElements = function(
       layer: element.layer,
       rotation: element.rotation,
       properties: element.properties,
-      source: element.source,
     };
+
+    // Save slot if exists
+    if (element.slot != undefined) {
+      elementObject.slot = Number(element.slot);
+    }
+
     return elementObject;
   });
+
+  // Update element map
+  this.updateElementMap();
 
   // check if it's valid JSON
   try {
@@ -673,10 +680,7 @@ Widget.prototype.addElement = function(
   );
 
   // Update elements map for the widget
-  this.elements[element.elementId].source = this.updateElementMap(
-    newElement.elementType,
-    newElement.id,
-  );
+  this.elements[element.elementId].slot = this.updateElementMap(newElement);
 
   // If we have a groupId, add or assign it to the group
   if (element.groupId != undefined) {
@@ -698,9 +702,9 @@ Widget.prototype.addElement = function(
       .elements[element.elementId] =
         this.elements[element.elementId];
 
-    // Update source on group
-    this.elementGroups[element.groupId].updateSource(
-      newElement.source,
+    // Update slot on group
+    this.elementGroups[element.groupId].updateSlot(
+      newElement.slot,
     );
   }
 
@@ -890,54 +894,94 @@ Widget.prototype.getData = function() {
 
 /**
  * Update element map for this widget
- * @param {string} [elementType]
- * @param {string} [elementId]
+ * @param {object} [element]
  * @return {number} number of elements of the added type
  */
-Widget.prototype.updateElementMap = function(elementType, elementId) {
+Widget.prototype.updateElementMap = function(element) {
   const self = this;
-  const addElementToMap = function(type, id) {
+  const addElementToMap = function(el, add = false) {
+    // element.elementType, element.id, element.elementId
+    const elementType = el.elementType;
+    const elementSubType = el.id;
+    const elementSlot = el.slot;
+    const elementId = el.elementId;
+
     // if we don't have the type level, create it
-    if (!self.elementTypeMap[type]) {
-      self.elementTypeMap[type] = {};
+    if (!self.elementTypeMap[elementType]) {
+      self.elementTypeMap[elementType] = {};
     }
 
-    // if we already have element of the same if, increment the value
-    // if not, create a new record with value 1
-    if (self.elementTypeMap[type][id]) {
-      self.elementTypeMap[type][id] += 1;
+    // if we don't have the sub type level, create it
+    if (!self.elementTypeMap[elementType][elementSubType]) {
+      self.elementTypeMap[elementType][elementSubType] = [];
+    }
+
+    const subTypeArray = self.elementTypeMap[elementType][elementSubType];
+
+    // Check first available slot
+    const numberOfSlots = subTypeArray.length;
+    const firstSlot =
+      subTypeArray.findIndex((el) => (el == [] || el == undefined));
+
+
+    let newSlot = 0;
+
+    if (
+      elementSlot
+    ) {
+      // Slot set, add to position
+      if (!subTypeArray[elementSlot]) {
+        subTypeArray[elementSlot] = [];
+        subTypeArray[elementSlot].push(elementId);
+      } else {
+        // Add to array if it's not added already
+        if (subTypeArray[elementSlot].indexOf(elementId) === -1) {
+          subTypeArray[elementSlot].push(elementId);
+        }
+      }
+      newSlot = elementSlot;
+      subTypeArray[elementSlot];
+    } else if (firstSlot == -1 && numberOfSlots == 0) {
+      // If we have no slots, add to the first one
+      newSlot = 0;
+      subTypeArray[0] = [elementId];
+    } else if (firstSlot == -1) {
+      // If we have slots, but don't have an empty space, add to the next slot
+      newSlot = subTypeArray.length;
+      subTypeArray.push([elementId]);
     } else {
-      self.elementTypeMap[type][id] = 1;
+      // If we have slots and an empty slot, add to it
+      newSlot = firstSlot;
+      subTypeArray[firstSlot] = [elementId];
     }
 
-    // check if new value is the new max
-    if (self.elementTypeMapMax < self.elementTypeMap[type][id]) {
-      self.elementTypeMapMax = self.elementTypeMap[type][id];
-    }
+    // Return new element slot
+    return newSlot;
   };
 
   // if element type is global (not data based)
   // do nothing
-  if (elementType == 'global') {
+  if (element && element.elementType == 'global') {
     return;
   }
 
-  // If we don't pass the elementType or elementId
+  // If we don't pass the element
   // just update the type map based on existing elements
   if (
-    !elementType ||
-    !elementId
+    !element
   ) {
     // Reset map
     self.elementTypeMap = {};
 
     // Go through all elements and add the records to the map
     Object.values(this.elements).map((element) => {
-      addElementToMap(element.elementType, element.id);
+      addElementToMap(element);
     });
   } else {
-    addElementToMap(elementType, elementId);
-    return this.elementTypeMap[elementType][elementId];
+    const newElSlot = addElementToMap(element, true);
+
+    // Return element new position
+    return newElSlot;
   }
 };
 
