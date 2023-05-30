@@ -552,28 +552,14 @@ $('.date').each(function(_idx, dateEl){
     width: 100%;
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-    {{#*inline "solidArrow"}}
-        <g fill="{{fillColor}}"
-            style="
-                transform:
-                {{#eq tip "start"}}
-                translate(0, calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)))
-                {{/eq}}
-                {{#eq tip "end"}}
-                translate(
-                    calc(100% - calc(calc({{strokeWidth}}px * 0.75) * 5)),
-                    calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2))
-                )
-                {{/eq}}
-                scale(calc({{strokeWidth}} * 0.75));
-        ">
-            <polygon points="{{points}}" />
-        </g>
-    {{/inline}}
     {{#eq tip1Type "diamond"}}
         <g fill="{{lineColor}}" style="
                 transform:
-                translate(0, calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
+                {{#eq orientation "horizontal"}}
+                    translate(0, calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
+                {{else}}
+                    translate(calc(50% - calc({{lineWidth}}px * 1.5 * 1.26)), 0)
+                {{/eq}}
                 scale(calc({{lineWidth}} * 0.75));
         ">
             <polygon points="0 2.5,2.5 5,5 2.5,2.5 0"></polygon>
@@ -582,49 +568,120 @@ $('.date').each(function(_idx, dateEl){
     {{#eq tip2Type "diamond"}}
         <g fill="{{lineColor}}" style="
                 transform:
-                translate(calc(100% - calc({{lineWidth}}px * 3.75)), calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
+                {{#eq orientation "horizontal"}}
+                    translate(calc(100% - calc({{lineWidth}}px * 3.75)), calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
+                {{else}}
+                    translate(calc(50% - calc({{lineWidth}}px * 1.5 * 1.26)), calc(100% - calc({{lineWidth}}px * 3.75)))
+                {{/eq}}
                 scale(calc({{lineWidth}} * 0.75));
         ">
             <polygon points="0 2.5,2.5 5,5 2.5,2.5 0"></polygon>
         </g>
     {{/eq}}
-    {{#eq tip1Type "line-arrow"}}
-        <g fill="{{lineColor}}" style="
-            transform: translate(3px, calc(50% - calc({{lineWidth}}px * 3)))
-            scale(calc({{lineWidth}} * 0.75))
+    {{#*inline "lineArrow"}}
+        <g fill="{{fillColor}}" style="
+            transform:
+            {{#eq tip "start"}}
+                {{#eq orientation "horizontal"}}
+                    translate(3px, calc(50% - calc({{strokeWidth}}px * 3)))
+                {{else}}
+                    translate(calc(50% - calc({{strokeWidth}}px * 3)), 3px)
+                {{/eq}}
+            {{/eq}}
+            {{#eq tip "end"}}
+                {{#eq orientation "horizontal"}}
+                    translate(calc(100% - calc({{strokeWidth}}px * 4)), calc(50% - calc({{strokeWidth}}px * 3)))
+                {{else}}
+                    translate(calc(50% - calc({{strokeWidth}}px * 3)), calc(100% - calc({{strokeWidth}}px * 4)))
+                {{/eq}}
+            {{/eq}}
+            scale(calc({{strokeWidth}} * 0.75))
         ">
-            <polygon points="0,4 4,0 5,1 2,4 5,7 4,8"></polygon>
+            <polygon points="{{points}}"></polygon>
         </g>
+    {{/inline}}
+    {{#eq tip1Type "line-arrow"}}
+        {{#eq orientation "horizontal"}}
+            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="0,4 4,0 5,1 2,4 5,7 4,8" tip="start" }}
+        {{else}}
+            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="4,0 8,4 7,5 4,2 1,5 0,4" tip="start" }}
+        {{/eq}}
     {{/eq}}
     {{#eq tip2Type "line-arrow"}}
-        <g fill="{{lineColor}}" style="
-            transform: translate(calc(100% - calc({{lineWidth}}px * 4)), calc(50% - calc({{lineWidth}}px * 3)))
-            scale(calc({{lineWidth}} * 0.75))
-        ">
-            <polygon points="0,1 1,0 5,4 1,8 0,7 3,4"></polygon>
-        </g>
+        {{#eq orientation "horizontal"}}
+            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="0,1 1,0 5,4 1,8 0,7 3,4" tip="end" }}
+        {{else}}
+            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="1,0 4,3 7,0 8,1 4,5 0,1" tip="end" }}
+        {{/eq}}
     {{/eq}}
+    {{#*inline "solidArrow"}}
+        <g fill="{{fillColor}}"
+            style="
+                transform:
+                {{#eq tip "start"}}
+                    {{#eq orientation "horizontal"}}
+                        translate(0, calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)))
+                    {{else}}
+                        translate(calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)), 0)
+                    {{/eq}}
+                {{/eq}}
+                {{#eq tip "end"}}
+                    {{#eq orientation "horizontal"}}
+                        translate(
+                            calc(100% - calc(calc({{strokeWidth}}px * 0.75) * 5)),
+                            calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2))
+                        )
+                    {{else}}
+                        translate(
+                            calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)),
+                            calc(100% - calc(calc({{strokeWidth}}px * 0.75) * 5))
+                        )
+                    {{/eq}}
+                {{/eq}}
+                scale(calc({{strokeWidth}} * 0.75));
+        ">
+            <polygon points="{{points}}" />
+        </g>
+    {{/inline}}
     {{#eq tip1Type "solid-arrow"}}
         {{#eq orientation "horizontal"}}
             {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="0,4 5,1 5,7" tip="start" }}
         {{else}}
+            {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="4,0 7,5 1,5" tip="start" }}
         {{/eq}}
     {{/eq}}
     {{#eq tip2Type "solid-arrow"}}
         {{#eq orientation "horizontal"}}
             {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="0,1 0,7 5,4" tip="end" }}
         {{else}}
+            {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="1,0 7,0 4,5" tip="end" }}
         {{/eq}}
     {{/eq}}
     {{#eq tip1Type "circle"}}
-        <circle r="{{lineWidth}}" fill="{{lineColor}}" style="
-            transform: translate(calc({{lineWidth}}px * 1.5), 50%) scale(1.5);
-        "/>
+        <g fill="{{lineColor}}" style="
+            transform:
+                {{#eq orientation "horizontal"}}
+                    translate(calc({{lineWidth}}px * 1.5), 50%)
+                {{else}}
+                    translate(50%, calc({{lineWidth}}px * 1.5))
+                {{/eq}}
+                scale(1.5);
+        ">
+            <circle r="{{lineWidth}}"></circle>
+        </g>
     {{/eq}}
     {{#eq tip2Type "circle"}}
-        <circle r="{{lineWidth}}" fill="{{lineColor}}" style="
-            transform: translate(calc(100% - calc({{lineWidth}}px * 1.5)), 50%) scale(1.5);
-        "/>
+        <g fill="{{lineColor}}" style="
+            transform:
+                {{#eq orientation "horizontal"}}
+                    translate(calc(100% - calc({{lineWidth}}px * 1.5)), 50%)
+                {{else}}
+                    translate(50%, calc(100% - calc({{lineWidth}}px * 1.5)))
+                {{/eq}}
+                scale(1.5);
+        ">
+            <circle r="{{lineWidth}}"></circle>
+        </g>
     {{/eq}}
 </svg><div class="line"
         style="border-color: {{lineColor}};
@@ -657,29 +714,19 @@ $('.date').each(function(_idx, dateEl){
         {{#eq orientation "vertical"}}
             width: {{lineWidth}}px;
             top: 0;
-            left: calc(100% - calc({{lineWidth}}px / 2));
-            border-width: 0 {{lineWidth}}px 0 0;
-            height: 100%
-            {{#eq tip2Type "squared"}}
-                {{#eq tip1Type "squared"}}{{else}}
-                    height: calc(100% - calc({{lineWidth}}px * 2));
-                    top: {{lineWidth}}px;
+            left: calc(50% - calc({{lineWidth}}px / 2));
+            border-width: 0 0 0 {{lineWidth}}px;
+            height: 100%;
+            {{#eq tip1Type "squared"}}
+                {{#eq tip2Type "squared"}}{{else}}
+                    height: calc(100% - {{lineWidth}}px);
                 {{/eq}}
-            {{/eq}}
-            {{#eq tip1Type "line-arrow"}}
-                {{#eq tip2Type "line-arrow"}}
-                    height: 100%;
-                    top: 0;
+            {{else}}
+                top: {{lineWidth}}px;
+                {{#eq tip2Type "squared"}}
+                    height: calc(100% - {{lineWidth}}px);
                 {{else}}
                     height: calc(100% - calc({{lineWidth}}px * 2));
-                    top: 0;
-                    {{#eq tip2Type "squared"}}height: 100%;{{/eq}}
-                {{/eq}}
-            {{/eq}}
-            {{#eq tip2Type "line-arrow"}}
-                {{#eq tip1Type "line-arrow"}}{{else}}
-                    height: calc(100% - calc({{lineWidth}}px * 2));
-                    {{#eq tip1Type "squared"}}height: 100%;{{/eq}}
                 {{/eq}}
             {{/eq}}
         {{/eq}}"
