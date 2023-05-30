@@ -1896,6 +1896,20 @@ window.forms = {
 
             return $conditionTargetElem.length !== 0;
           }
+
+          if (test.conditions && targetId) {
+            for (let i = 0; i < test.conditions.length; i++) {
+              const conditionField = test.conditions[i].field;
+              const $conditionTargetElem = $(container)
+                .find(`#input_${targetId}_${conditionField}`);
+
+              if ($conditionTargetElem.length == 0) {
+                return false;
+              }
+            }
+
+            return true;
+          }
         };
 
         // Handle a single condition
