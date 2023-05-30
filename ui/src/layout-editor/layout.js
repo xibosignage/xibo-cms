@@ -189,10 +189,7 @@ Layout.prototype.createDataStructure = function(data) {
                 );
 
               // Update elements map for the widget
-              newWidget.updateElementMap(
-                newElement.elementType,
-                newElement.id,
-              );
+              newWidget.updateElementMap(newElement);
 
               // If we have a groupId, add or assign it to the group
               if (newElement.groupId != undefined) {
@@ -216,9 +213,9 @@ Layout.prototype.createDataStructure = function(data) {
                   .elements[newElement.elementId] =
                     newElement;
 
-                // Update source on group
-                newWidget.elementGroups[newElement.groupId].updateSource(
-                  newElement.source,
+                // Update slot on group
+                newWidget.elementGroups[newElement.groupId].updateSlot(
+                  newElement.slot,
                 );
               }
             }

@@ -9,9 +9,9 @@
     {{/if}}">
 </div>
 
-{{#if element.source}}
-<div class="source" title="{{trans.source}}">#<span>{{element.source}}</span></div>
-{{/if}}
+{{#neq element.slot undefined}}
+<div class="slot" title="{{trans.dataSlot}}">#<span>{{element.slot}}</span></div>
+{{/neq}}
 
 {{#with template}}
     {{#if onTemplateRender}}

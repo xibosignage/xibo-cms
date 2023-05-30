@@ -2215,16 +2215,16 @@ const formHelpers = function() {
         let fieldType = null;
 
         if ($(el).find('input').length) {
-          inputField = $(el).find('input');
+          inputField = $(el).find('> input');
           fieldType = inputField.attr('type');
-        } else if ($(el).find('select').length) {
-          inputField = $(el).find('select');
+        } else if ($(el).find('> select').length) {
+          inputField = $(el).find('> select');
           fieldType = 'select';
         }
 
         const errorMessage = errorMessagesTrans.requiredField.replace(
           '%property%',
-          inputField.attr('name'),
+          inputField.siblings('label').html(),
         );
 
         if (fieldType === 'text' || fieldType === 'number') {

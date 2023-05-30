@@ -515,16 +515,17 @@ PropertiesPanel.prototype.render = function(
       if (res.data.module.properties.length > 0) {
         const widgetProperties = res.data.module.properties;
 
-        // if it's an element group and we have source
+        // if it's an element group and we have a slot
         // add property to the top of configure tab
         if (
           isElementGroup &&
-          targetAux.source
+          targetAux.slot != undefined
         ) {
           widgetProperties.unshift({
-            id: 'source',
-            title: propertiesPanelTrans.source,
-            value: Number(targetAux.source),
+            id: 'slot',
+            title: propertiesPanelTrans.dataSlot,
+            helpText: propertiesPanelTrans.dataSlotHelpText,
+            value: Number(targetAux.slot),
             type: 'number',
             visibility: [],
           });
@@ -539,18 +540,18 @@ PropertiesPanel.prototype.render = function(
           res.data.module.propertyGroups,
         );
 
-        // if we created a new source for element group input
+        // if we created a new slot for element group input
         // handle when changed
         if (
           isElementGroup &&
-          targetAux.source
+          targetAux.slot != undefined
         ) {
-          self.DOMObject.find('[name="source"]')
+          self.DOMObject.find('[name="slot"]')
             .on('change', function(ev) {
               const sourceValue = $(ev.currentTarget).val();
 
-              // update source for the group
-              targetAux.updateSource(sourceValue, true);
+              // update slot for the group
+              targetAux.updateSlot(sourceValue, true);
 
               // save elements
               target.saveElements();
@@ -558,7 +559,7 @@ PropertiesPanel.prototype.render = function(
               // update value in the viewer
               app.viewer.DOMObject
                 .find('#' + app.selectedObject.id)
-                .find('> .source span').html(sourceValue);
+                .find('> .slot span').html(sourceValue);
 
               // Render canvas again
               app.viewer.renderCanvas(app.layout.canvas);
@@ -626,7 +627,7 @@ PropertiesPanel.prototype.render = function(
             },
           ];
 
-          // Show source if we the element isn't global
+          // Show slot if we the element isn't global
           // or in a group
           if (
             targetAux.elementType != 'global' &&
@@ -635,11 +636,12 @@ PropertiesPanel.prototype.render = function(
               targetAux.groupId == undefined
             )
           ) {
-            commonFields.push(
+            commonFields.unshift(
               {
-                id: 'source',
-                title: propertiesPanelTrans.source,
-                value: Number(targetAux.source),
+                id: 'slot',
+                title: propertiesPanelTrans.dataSlot,
+                helpText: propertiesPanelTrans.dataSlotHelpText,
+                value: Number(targetAux.slot),
                 type: 'number',
                 visibility: [],
               },

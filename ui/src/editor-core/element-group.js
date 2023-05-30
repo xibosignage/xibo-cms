@@ -21,29 +21,30 @@ const ElementGroup = function(data, widgetId, regionId) {
   this.layer = data.layer;
   this.elements = {};
 
-  // Group data source ( applies to all group elements )
-  this.source = data.source || null;
+  // Data slot index
+  this.slot = data.slot;
 
   // Set element to always be deletable
   this.isDeletable = true;
 };
 
-ElementGroup.prototype.updateSource = function(
-  sourceIndex,
+ElementGroup.prototype.updateSlot = function(
+  slotIndex,
   forceUpdate = false,
 ) {
   const self = this;
 
   if (
-    Number(sourceIndex) > this.source ||
+    !this.slot ||
+    Number(slotIndex) > this.slot ||
     forceUpdate
   ) {
-    this.source = Number(sourceIndex);
+    this.slot = Number(slotIndex);
   }
 
-  // All element in group use same source
+  // All element in group use same slot
   Object.values(this.elements).forEach((element) => {
-    element.source = self.source;
+    element.slot = self.slot;
   });
 };
 

@@ -1076,7 +1076,7 @@ $(target).xiboCalendarRender(properties, items);
             </property>
             <property id="weekdayNameLength" type="dropdown" mode="single">
                 <title>Week name length</title>
-                <helpText>Please select the lenght for the week names.</helpText>
+                <helpText>Please select the length for the week names.</helpText>
                 <default>long</default>
                 <options>
                     <option name="short">Short</option>
@@ -1547,7 +1547,7 @@ $(target).xiboCalendarRender(properties, items);
             </property>
             <property id="weekdayNameLength" type="dropdown" mode="single">
                 <title>Week name length</title>
-                <helpText>Please select the lenght for the week names.</helpText>
+                <helpText>Please select the length for the week names.</helpText>
                 <default>long</default>
                 <options>
                     <option name="short">Short</option>
@@ -2011,7 +2011,7 @@ $(target).xiboCalendarRender(properties, items);
             </property>
             <property id="weekdayNameLength" type="dropdown" mode="single">
                 <title>Week name length</title>
-                <helpText>Please select the lenght for the week names.</helpText>
+                <helpText>Please select the length for the week names.</helpText>
                 <default>long</default>
                 <options>
                     <option name="short">Short</option>
@@ -2407,7 +2407,7 @@ $(target).xiboCalendarRender(properties, items);
             </property>
             <property id="weekdayNameLength" type="dropdown" mode="single">
                 <title>Week name length</title>
-                <helpText>Please select the lenght for the week names.</helpText>
+                <helpText>Please select the length for the week names.</helpText>
                 <default>long</default>
                 <options>
                     <option name="short">Short</option>

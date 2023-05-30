@@ -988,15 +988,17 @@ Viewer.prototype.renderElement = function(
     // If group has source, add it to the container
     // or update it
     if (
-      group.source
+      group.slot != undefined
     ) {
-      const $source = $groupContainer.find('.source');
-      if ($source.length > 0) {
-        $source.find('span').html(group.source);
+      const $slot = $groupContainer.find('.slot');
+      if ($slot.length > 0) {
+        $slot.find('span').html(group.slot);
       } else {
         $groupContainer.append(
-          '<div class="source" title="' + propertiesPanelTrans.source + '">#' +
-          '<span>' + group.source + '</span>' +
+          '<div class="slot" title="' +
+            propertiesPanelTrans.dataSlot +
+          '">#' +
+          '<span>' + group.slot + '</span>' +
           '</div>');
       }
     }
