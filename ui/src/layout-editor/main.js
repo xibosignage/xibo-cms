@@ -2381,6 +2381,11 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   const objType = $(obj).data('type');
   let objAuxId = null;
 
+  // Don't open context menu in read only mode
+  if (lD.readOnlyMode) {
+    return;
+  }
+
   if (objType == 'widget') {
     objAuxId = $(obj).data('widgetRegion');
   } else if (objType == 'element' || objType == 'element-group') {
