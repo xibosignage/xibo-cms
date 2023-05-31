@@ -1693,6 +1693,11 @@ Viewer.prototype.selectElement = function(element = null) {
  * Update moveable
  */
 Viewer.prototype.updateMoveable = function() {
+  // On read only mode, don't update moveable
+  if (this.parent.readOnlyMode) {
+    return;
+  }
+
   // Get selected element
   const $selectedElement = this.DOMObject.find('.selected');
 

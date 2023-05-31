@@ -943,6 +943,11 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   const objId = $(obj).attr('id');
   const objType = $(obj).data('type');
 
+  // Don't open context menu in read only mode
+  if (lD && lD.readOnlyMode) {
+    return;
+  }
+
   // Get object
   const playlistObject = pE.getElementByTypeAndId(objType, objId);
 

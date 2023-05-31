@@ -313,9 +313,12 @@ window.forms = {
    * @param {string} container - Main container Jquery selector
    * @param {object} target - Target Jquery selector or object
    * @param {string} [targetId] - Target Id ( widget, element, etc.)
+   * @param {boolean} [readOnlyMode=false]
    * - If the properties are element properties
    */
-  initFields: function(container, target, targetId) {
+  initFields: function(container, target, targetId, readOnlyMode = false) {
+    const forms = this;
+
     // Find elements, either they match
     // the children of the container or they are the target
     const findElements = function(selector, target) {
@@ -463,35 +466,40 @@ window.forms = {
             });
           }
 
-          // Nabble the resulting buttons
-          $orderClauseFields.on('click', 'button', function(e) {
-            e.preventDefault();
+          // Show only on non read only mode
+          if (!readOnlyMode) {
+            // Nabble the resulting buttons
+            $orderClauseFields.on('click', 'button', function(e) {
+              e.preventDefault();
 
-            // find the gylph
-            if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
-              const context = {
-                columns: datasetCols,
-                title: $orderClauseFields.find('.form-inline').length + 1,
-                orderClause: '',
-                orderClauseAsc: '',
-                orderClauseDesc: '',
-                buttonGlyph: 'fa-minus',
-                ascTitle: ascTitle,
-                descTitle: descTitle,
-              };
-              $orderClauseFields.append(orderClauseTemplate(context));
-            } else {
-              // Remove this row
-              $(e.currentTarget).closest('.form-inline').remove();
-            }
+              // find the gylph
+              if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
+                const context = {
+                  columns: datasetCols,
+                  title: $orderClauseFields.find('.form-inline').length + 1,
+                  orderClause: '',
+                  orderClauseAsc: '',
+                  orderClauseDesc: '',
+                  buttonGlyph: 'fa-minus',
+                  ascTitle: ascTitle,
+                  descTitle: descTitle,
+                };
+                $orderClauseFields.append(orderClauseTemplate(context));
+              } else {
+                // Remove this row
+                $(e.currentTarget).closest('.form-inline').remove();
+              }
 
-            updateHiddenField();
-          });
+              updateHiddenField();
+            });
 
-          // Update the hidden field when the order clause changes
-          $el.on('change', 'select', function() {
-            updateHiddenField();
-          });
+            // Update the hidden field when the order clause changes
+            $el.on('change', 'select', function() {
+              updateHiddenField();
+            });
+          } else {
+            forms.makeFormReadOnly($el);
+          }
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.error(jqXHR, textStatus, errorThrown);
         });
@@ -610,22 +618,24 @@ window.forms = {
             );
           });
 
-          // Setup lists drag and sort ( with double click )
-          $el.find('#columnsIn, #columnsOut').sortable({
-            connectWith: '.connectedSortable',
-            dropOnEmpty: true,
-            receive: function() {
-              updateHiddenField();
-            },
-          }).disableSelection();
+          if (!readOnlyMode) {
+            // Setup lists drag and sort ( with double click )
+            $el.find('#columnsIn, #columnsOut').sortable({
+              connectWith: '.connectedSortable',
+              dropOnEmpty: true,
+              receive: function() {
+                updateHiddenField();
+              },
+            }).disableSelection();
 
-          // Double click to switch lists
-          $el.find('.li-sortable').on('dblclick', function(ev) {
-            const $this = $(ev.currentTarget);
-            $this.appendTo($this.parent().is('#columnsIn') ?
-              $columnsOut : $columnsIn);
-            updateHiddenField();
-          });
+            // Double click to switch lists
+            $el.find('.li-sortable').on('dblclick', function(ev) {
+              const $this = $(ev.currentTarget);
+              $this.appendTo($this.parent().is('#columnsIn') ?
+                $columnsOut : $columnsIn);
+              updateHiddenField();
+            });
+          }
 
           // Update hidden field on start
           updateHiddenField();
@@ -749,36 +759,41 @@ window.forms = {
             });
           }
 
-          // Nabble the resulting buttons
-          $filterClauseFields.on('click', 'button', function(e) {
-            e.preventDefault();
+          // Show only on non read only mode
+          if (!readOnlyMode) {
+            // Nabble the resulting buttons
+            $filterClauseFields.on('click', 'button', function(e) {
+              e.preventDefault();
 
-            // find the gylph
-            if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
-              const context = {
-                columns: datasetCols,
-                filterOptions: filterOptions,
-                filterOperatorOptions: filterOperatorOptions,
-                title: $filterClauseFields.find('.form-inline').length + 1,
-                filterClause: '',
-                filterClauseOperator: 'AND',
-                filterClauseCriteria: '',
-                filterClauseValue: '',
-                buttonGlyph: 'fa-minus',
-              };
-              $filterClauseFields.append(filterClauseTemplate(context));
-            } else {
-              // Remove this row
-              $(e.currentTarget).closest('.form-inline').remove();
-            }
+              // find the gylph
+              if ($(e.currentTarget).find('i').hasClass('fa-plus')) {
+                const context = {
+                  columns: datasetCols,
+                  filterOptions: filterOptions,
+                  filterOperatorOptions: filterOperatorOptions,
+                  title: $filterClauseFields.find('.form-inline').length + 1,
+                  filterClause: '',
+                  filterClauseOperator: 'AND',
+                  filterClauseCriteria: '',
+                  filterClauseValue: '',
+                  buttonGlyph: 'fa-minus',
+                };
+                $filterClauseFields.append(filterClauseTemplate(context));
+              } else {
+                // Remove this row
+                $(e.currentTarget).closest('.form-inline').remove();
+              }
 
-            updateHiddenField();
-          });
+              updateHiddenField();
+            });
 
-          // Update the hidden field when the filter clause changes
-          $el.on('change', 'select, input', function() {
-            updateHiddenField();
-          });
+            // Update the hidden field when the filter clause changes
+            $el.on('change', 'select, input', function() {
+              updateHiddenField();
+            });
+          } else {
+            forms.makeFormReadOnly($el);
+          }
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.error(jqXHR, textStatus, errorThrown);
         });
@@ -827,6 +842,11 @@ window.forms = {
                     playlistMixerTranslations.playlistId + ' ' +
                   $select.data('fieldId') + '</span>');
                 $select.remove();
+              }
+
+              // Disable fields on non read only mode
+              if (readOnlyMode) {
+                forms.makeFormReadOnly($form);
               }
             },
             error: function() {
@@ -1462,6 +1482,11 @@ window.forms = {
               }
             });
           }
+
+          // Disable fields on non read only mode
+          if (readOnlyMode) {
+            forms.makeFormReadOnly($(el));
+          }
         },
       });
     });
@@ -1617,6 +1642,11 @@ window.forms = {
                 // Setup the snippet selector
                 setupSnippets($select);
               }
+
+              // Disable fields on non read only mode
+              if (readOnlyMode) {
+                forms.makeFormReadOnly($select.parent());
+              }
             } else {
               $select.parent().hide();
             }
@@ -1707,6 +1737,8 @@ window.forms = {
       // If we have a value, select it
       if ($el.data('value') !== undefined) {
         $el.val($el.data('value'));
+        // Trigger change
+        $el.trigger('change');
       }
     });
 
@@ -1806,7 +1838,7 @@ window.forms = {
             $target.data('depends-on-value', valueToSet);
 
             // Reset the target form field
-            forms.initFields(container, $target, targetId);
+            forms.initFields(container, $target, targetId, readOnlyMode);
           }
         });
       });
@@ -2012,5 +2044,31 @@ window.forms = {
         formRenderDetectSpacingIssues(el);
       }, 500));
     });
+  },
+  /**
+    * Disable all the form inputs and make it read only
+    * @param {object} $formContainer - The form container
+    */
+  makeFormReadOnly: function($formContainer) {
+    // Disable inputs, select, textarea and buttons
+    $formContainer
+      .find(
+        'input, select, ' +
+        'textarea, button:not(.copyTextAreaButton)',
+      ).attr('disabled', 'disabled');
+
+    // Disable color picker plugin
+    $formContainer
+      .find('.colorpicker-input i.input-group-addon')
+      .off('click');
+
+    // Hide buttons
+    $formContainer.find(
+      'button:not(.copyTextAreaButton), ' +
+      '.date-clear-button',
+    ).hide();
+
+    // Hide bootstrap switch
+    $formContainer.find('.bootstrap-switch').hide();
   },
 };

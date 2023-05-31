@@ -315,22 +315,6 @@ PropertiesPanel.prototype.delete = function(element) {
 };
 
 /**
- * Disable all the form inputs and make it read only
- */
-PropertiesPanel.prototype.makeFormReadOnly = function() {
-  // Disable inputs, select, textarea and buttons
-  this.DOMObject
-    .find('input, select, textarea, button:not(.copyTextAreaButton)')
-    .attr('disabled', 'disabled');
-
-  // Hide buttons
-  this.DOMObject.find('button:not(.copyTextAreaButton)').hide();
-
-  // Hide bootstrap switch
-  this.DOMObject.find('.bootstrap-switch').hide();
-};
-
-/**
  * Render panel
  * @param {Object} target - the element object to be rendered
  * @param {number} step - the step to render
@@ -956,6 +940,13 @@ PropertiesPanel.prototype.initFields = function(
     };
   }
 
+  // Read only mode option
+  if (app.readOnlyMode) {
+    (!xiboInitOptions) && (xiboInitOptions = {});
+
+    xiboInitOptions.readOnlyMode = app.readOnlyMode;
+  }
+
   // Call Xibo Init for this form
   XiboInitialise(
     '#' + self.DOMObject.attr('id'),
@@ -969,8 +960,11 @@ PropertiesPanel.prototype.initFields = function(
   }
 
   // Make form read only
-  if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
-    self.makeFormReadOnly();
+  if (
+    app.readOnlyMode && app.readOnlyMode === true ||
+    lD && lD.readOnlyMode && lD.readOnlyMode === true
+  ) {
+    forms.makeFormReadOnly(self.DOMObject);
   }
 
   // if a tab was previously selected, select it again
