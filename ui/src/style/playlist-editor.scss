@@ -143,6 +143,13 @@ $timeline-left-margin-width: 100px;
     }
 }
 
+// Editor view mode
+#layout-editor.view-mode {
+    .widgetDelete {
+        display: none !important;
+    }
+}
+
 // Bootbox custom dialogs
 .second-dialog {
     z-index: 3100;

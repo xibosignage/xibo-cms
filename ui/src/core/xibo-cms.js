@@ -1250,7 +1250,8 @@ function XiboInitialise(scope, options) {
         forms.initFields(
             (scope === " ") ? "body" : scope,
             null,
-            (options && options.targetId) ? options.targetId : null
+            (options && options.targetId) ? options.targetId : null,
+            (options && options.readOnlyMode) ? options.readOnlyMode : false,
         );
     }
 }
