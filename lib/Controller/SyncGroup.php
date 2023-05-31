@@ -668,9 +668,18 @@ class SyncGroup extends Base
     {
         $syncGroup = $this->syncGroupFactory->getById($id);
         $params = $this->getSanitizer($request->getParams());
+        $displays = [];
 
         if (!empty($params->getInt('eventId'))) {
-            $displays = $syncGroup->getGroupMembersForEditForm($params->getInt('eventId'));
+            $syncGroupMembers = $syncGroup->getGroupMembersForForm();
+            foreach ($syncGroupMembers as $display) {
+                $layoutId = $syncGroup->getLayoutIdForDisplay(
+                    $params->getInt('eventId'),
+                    $display['displayId']
+                );
+                $display['layoutId'] = $layoutId;
+                $displays[] = $display;
+            }
         } else {
             $displays = $syncGroup->getGroupMembersForForm();
         }

@@ -1787,8 +1787,8 @@ class Schedule implements \JsonSerializable
         );
 
         return (count(array_unique($layouts, SORT_REGULAR)) === 1)
-            ? __('Mirror')
-            : __('Wall');
+            ? __('Synchronised Mirrored Content')
+            : __('Synchronised Content');
     }
 
     /**

@@ -349,9 +349,10 @@ class Schedule extends Base
 
             // Event Title
             if ($this->isSyncEvent($row->eventTypeId)) {
-                $title = __(
-                    'Synchronised group %s',
-                    $row->getUnmatchedProperty('syncGroupName')
+                $title = sprintf(
+                    __('%s scheduled on sync group %s'),
+                    $row->getSyncTypeForEvent(),
+                    $row->getUnmatchedProperty('syncGroupName'),
                 );
             } else if ($row->campaignId == 0) {
                 // Command
