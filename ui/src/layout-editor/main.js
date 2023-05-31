@@ -1696,6 +1696,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       console.error(jqXHR, textStatus, errorThrown);
     });
   } else if (draggableType === 'layout_template') {
+    // Show loading screen
+    lD.common.showLoadingScreen('addLayoutTemplate');
+
     // Call the replace function and reload on success.
     $.ajax({
       method: urlsForApi.layout.applyTemplate.type,
@@ -1709,6 +1712,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         download: draggableData?.download,
       },
       success: function(response) {
+        // Hide loading screen
+        lD.common.hideLoadingScreen('addLayoutTemplate');
+
         if (response.success && response.id) {
           // eslint-disable-next-line new-cap
           lD.reloadData(response.data, true);
@@ -1721,6 +1727,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         }
       },
       error: function(xhr) {
+        // Hide loading screen
+        lD.common.hideLoadingScreen('addLayoutTemplate');
+
         console.error(xhr);
       },
     });
