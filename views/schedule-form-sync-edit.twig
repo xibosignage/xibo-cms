@@ -48,7 +48,7 @@
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
             <form id="scheduleEditSyncForm" autocomplete="off" class="XiboForm form-horizontal" method="put" action="{{ url_for("schedule.edit" , {id: event.eventId}) }}"
                   data-full-screen-url="{{ url_for('layout.add.full.screen.schedule') }}" data-fetch-sync-displays="{{ url_for('syncgroup.fetch.displays', {id:':id'}) }}"
-                  data-event-id="{{ event.eventId }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}" data-default-lat="{{ defaultLat }}"
+                  data-event-sync-group-id="{{ event.syncGroupId }}" data-event-id="{{ event.eventId }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}" data-default-lat="{{ defaultLat }}"
                   data-default-long = "{{ defaultLong }}" data-event-start="{{ eventStart }}" data-event-end="{{ eventEnd }}"
             >
                 <div class="tab-content">

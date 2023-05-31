@@ -1524,13 +1524,16 @@ var setupSelectForSchedule = function (dialog) {
     })
 
     $('#syncGroupId', dialog).on('select2:select', function(event) {
+        let eventId = dialog.find('form').data().eventSyncGroupId == $(this).select2('data')[0].id
+          ? dialog.find('form').data().eventId
+          : null
         $.ajax({
             type: 'GET',
             url: dialog.find('form').data().fetchSyncDisplays.replace(':id', $(this).select2('data')[0].id),
             cache: false,
             dataType: 'json',
             data: {
-                eventId : dialog.find('form').data().eventId
+                eventId : eventId
             }
         })
           .then(

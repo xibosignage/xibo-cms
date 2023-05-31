@@ -173,11 +173,22 @@ class SyncGroup implements \JsonSerializable
         ]);
     }
 
-    public function getLayoutIdForDisplay($eventId)
+    public function getLayoutIdForDisplay(int $eventId, int $displayId)
     {
-        return $this->getStore()->select('SELECT `schedule_sync`.layoutId FROM `schedule_sync` WHERE `schedule_sync`.eventId = :eventId', [
-            'eventId' => $eventId
+        $layout = $this->getStore()->select('SELECT `schedule_sync`.layoutId 
+            FROM `display` 
+                INNER JOIN `schedule_sync` ON `schedule_sync`.displayId = `display`.displayId 
+            WHERE `display`.syncGroupId = :syncGroupId AND `schedule_sync`.eventId = :eventId AND `schedule_sync`.displayId = :displayId', [
+            'eventId' => $eventId,
+            'displayId' => $displayId,
+            'syncGroupId' => $this->syncGroupId
         ]);
+
+        if (count($layout) <= 0) {
+            return null;
+        }
+
+        return $layout[0]['layoutId'];
     }
 
     /**
