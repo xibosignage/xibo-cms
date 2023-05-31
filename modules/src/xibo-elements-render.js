@@ -80,20 +80,22 @@ jQuery.fn.extend({
       let timeout = duration * 1000;
       const noTransitionSpeed = 10;
 
-      if (options.effect !== 'noTransition') {
+      if (options.effect !== 'noTransition' && options.effect !== 'none') {
         timeout = timeout - options.speed;
       } else {
         timeout = timeout - noTransitionSpeed;
       }
 
-      $(cycleElement).addClass('anim-cycle').cycle({
-        fx: (options.effect === 'noTransition') ? 'none' : options.effect,
-        speed: (options.effect === 'noTransition') ?
-          noTransitionSpeed : options.speed,
+      $(cycleElement).addClass('cycle-slideshow').cycle({
+        fx: (options.effect === 'noTransition' || options.effect === 'none') ?
+          'none' : options.effect,
+        speed: (
+          options.effect === 'noTransition' || options.effect === 'none'
+        ) ? noTransitionSpeed : options.speed,
         timeout: timeout,
         slides: `> .${options.id}--item`,
         autoHeight: false,
-        delay: 0,
+        sync: false,
       });
     }
 
