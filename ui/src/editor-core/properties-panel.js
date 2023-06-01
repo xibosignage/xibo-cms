@@ -509,7 +509,7 @@ PropertiesPanel.prototype.render = function(
             id: 'slot',
             title: propertiesPanelTrans.dataSlot,
             helpText: propertiesPanelTrans.dataSlotHelpText,
-            value: Number(targetAux.slot),
+            value: Number(targetAux.slot) + 1,
             type: 'number',
             visibility: [],
           });
@@ -535,15 +535,10 @@ PropertiesPanel.prototype.render = function(
               const sourceValue = $(ev.currentTarget).val();
 
               // update slot for the group
-              targetAux.updateSlot(sourceValue, true);
+              targetAux.updateSlot(Number(sourceValue) - 1, true);
 
               // save elements
               target.saveElements();
-
-              // update value in the viewer
-              app.viewer.DOMObject
-                .find('#' + app.selectedObject.id)
-                .find('> .slot span').html(sourceValue);
 
               // Render canvas again
               app.viewer.renderCanvas(app.layout.canvas);
@@ -625,7 +620,7 @@ PropertiesPanel.prototype.render = function(
                 id: 'slot',
                 title: propertiesPanelTrans.dataSlot,
                 helpText: propertiesPanelTrans.dataSlotHelpText,
-                value: Number(targetAux.slot),
+                value: Number(targetAux.slot) + 1,
                 type: 'number',
                 visibility: [],
               },
@@ -680,6 +675,12 @@ PropertiesPanel.prototype.render = function(
                   if (value < 0) {
                     value = 0;
                   }
+                }
+
+                // If property is slot, set a value
+                // with -1 to match with the array
+                if (propertyName === 'slot') {
+                  value = Number(value) - 1;
                 }
 
                 // Set the property

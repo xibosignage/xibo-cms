@@ -909,7 +909,7 @@ Widget.prototype.getData = function() {
  */
 Widget.prototype.updateElementMap = function(element) {
   const self = this;
-  const addElementToMap = function(el, add = false) {
+  const addElementToMap = function(el) {
     // element.elementType, element.id, element.elementId
     const elementType = el.elementType;
     const elementSubType = el.id;
