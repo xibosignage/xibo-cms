@@ -1008,7 +1008,7 @@ class Library extends Base
      *  operationId="libraryAdd",
      *  tags={"library"},
      *  summary="Add Media",
-     *  description="Add Media to the Library",
+     *  description="Add Media to the Library, optionally replacing an existing media item, optionally adding to a playlist.",
      *  @SWG\Parameter(
      *      name="files",
      *      in="formData",
@@ -1059,16 +1059,23 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="formData",
+     *      description="A playlistId to add this uploaded media to",
+     *      type="int",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="widgetFromDt",
      *      in="formData",
-     *      description="Date in Y-m-d H:i:s format, will set widget start date",
+     *      description="Date in Y-m-d H:i:s format, will set widget start date. Requires a playlistId.",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetToDt",
      *      in="formData",
-     *      description="Date in Y-m-d H:i:s format, will set widget end date",
+     *      description="Date in Y-m-d H:i:s format, will set widget end date. Requires a playlistId.",
      *      type="string",
      *      required=false
      *   ),

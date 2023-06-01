@@ -634,9 +634,57 @@ class Schedule implements \JsonSerializable
         if ($this->isPriority < 0) {
             throw new InvalidArgumentException(__('Priority must be 0 or a positive number'), 'isPriority');
         }
-        // Check recurrenceDetail every is positive
-        if ($this->recurrenceType != '' && ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0)) {
-            throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
+
+        // Run some additional validation if we have a recurrence type set.
+        if (!empty($this->recurrenceType)) {
+            // Check recurrenceDetail every is positive
+            if ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0) {
+                throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
+            }
+
+            // Make sure that we don't repeat more frequently than the duration of the event as this is a common
+            // misconfiguration which results in overlapping repeats
+            if ($this->eventTypeId !== Schedule::$COMMAND_EVENT) {
+                $eventDuration = $this->toDt - $this->fromDt;
+
+                // Determine the number of seconds our repeat type/interval represents
+                switch ($this->recurrenceType) {
+                    case 'Minute':
+                        $repeatDuration = $this->recurrenceDetail * 60;
+                        break;
+
+                    case 'Hour':
+                        $repeatDuration = $this->recurrenceDetail * 3600;
+                        break;
+
+                    case 'Day':
+                        $repeatDuration = $this->recurrenceDetail * 86400;
+                        break;
+
+                    case 'Week':
+                        $repeatDuration = $this->recurrenceDetail * 86400 * 7;
+                        break;
+
+                    case 'Month':
+                        $repeatDuration = $this->recurrenceDetail * 86400 * 30;
+                        break;
+
+                    case 'Year':
+                        $repeatDuration = $this->recurrenceDetail * 86400 * 365;
+                        break;
+
+                    default:
+                        throw new InvalidArgumentException(__('Unknown repeat type'), 'recurrenceType');
+                }
+
+                if ($repeatDuration < $eventDuration) {
+                    throw new InvalidArgumentException(
+                        __('An event cannot repeat more often than the interval between its start and end date'),
+                        'recurrenceDetail',
+                        $eventDuration . ' seconds'
+                    );
+                }
+            }
         }
     }
 
