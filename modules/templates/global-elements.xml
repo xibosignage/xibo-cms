@@ -45,6 +45,10 @@
                 <title>Font Size</title>
                 <default>40</default>
             </property>
+            <property id="lineHeight" type="number">
+                <title>Line Height</title>
+                <default>1.2</default>
+            </property>
             <property id="bold" type="checkbox">
                 <title>Bold</title>
                 <helpText>Should the text be bold?</helpText>
@@ -166,6 +170,7 @@
     {{else}}
         white-space: nowrap;
     {{/if}}
+    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
     {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
