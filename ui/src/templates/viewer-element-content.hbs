@@ -1,12 +1,14 @@
-<div class="element-content"
-    style="
-    width: {{originalWidth}}px;
-    height: {{originalHeight}}px;
+<div style="all: initial;">
+    <div class="element-content"
+        style="
+        width: {{originalWidth}}px;
+        height: {{originalHeight}}px;
 
-    {{#if scale}}
-        transform: scale({{scale}});
-        transform-origin: top left;
-    {{/if}}">
+        {{#if scale}}
+            transform: scale({{scale}});
+            transform-origin: top left;
+        {{/if}}">
+    </div>
 </div>
 
 {{#neq element.slot undefined}}
