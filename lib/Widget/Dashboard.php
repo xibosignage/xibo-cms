@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,7 +24,6 @@ namespace Xibo\Widget;
 
 use Slim\Http\Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Event\XmdsConnectorFileEvent;
 use Xibo\Event\XmdsConnectorTokenEvent;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
@@ -294,6 +293,7 @@ class Dashboard extends ModuleWidget
             $module->defaultDuration = 60;
             $module->settings = [];
             $module->viewPath = '../modules';
+            $module->installName = 'dashboard';
 
             // Set the newly created module and then call install
             $this->setModule($module);
