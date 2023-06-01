@@ -2087,11 +2087,27 @@ Toolbar.prototype.createMediaPreview = function(media) {
  * @param {string} type - Type of media
  */
 Toolbar.prototype.openNewTabAndSearch = function(type) {
-  if (['audio', 'video', 'image'].includes(type)) {
-    this.openedMenu = ['image', 'audio', 'video'].indexOf(type) + 1;
-  } else {
-    // Open library tab
-    this.openedMenu = 4;
+  const isLibraryMenu = !['audio', 'video', 'image'].includes(type);
+  const getTabId = function(name) {
+    if (isLibraryMenu) {
+      name = 'library';
+    }
+
+    for (let index = 0; index < lD.toolbar.menuItems.length; index++) {
+      const menu = lD.toolbar.menuItems[index];
+      if (menu.name == name) {
+        return index;
+      }
+    }
+
+    return 0;
+  };
+
+  // Get tab id and set it as the opened menu
+  this.openedMenu = getTabId(type);
+
+  if (isLibraryMenu) {
+    // Add filter to library tab
     this.menuItems[this.openedMenu].filters.type.value = type;
   }
 
