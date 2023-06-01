@@ -992,13 +992,13 @@ Viewer.prototype.renderElement = function(
     ) {
       const $slot = $groupContainer.find('.slot');
       if ($slot.length > 0) {
-        $slot.find('span').html(group.slot);
+        $slot.find('span').html((Number(group.slot) + 1));
       } else {
         $groupContainer.append(
           '<div class="slot" title="' +
             propertiesPanelTrans.dataSlot +
           '">#' +
-          '<span>' + group.slot + '</span>' +
+          '<span>' + (Number(group.slot) + 1) + '</span>' +
           '</div>');
       }
     }
@@ -1121,6 +1121,11 @@ Viewer.prototype.renderElementContent = function(
       // Render element again
       self.renderElement(element, lD.layout.canvas);
       return;
+    }
+
+    // If we have slot, show it as a val+1
+    if (element.slot != undefined) {
+      element.slotView = Number(element.slot) + 1;
     }
 
     // Render element with template
