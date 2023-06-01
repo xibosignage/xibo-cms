@@ -10,7 +10,7 @@
                         <option value=""></option>
 
                         {{#each this.values}}
-                            <option value="{{this}}" class="{{#if disabled}}disabled{{/if}}" {{#eq ../type.value type}}selected{{/eq}}>{{name}}</option>
+                            <option value="{{type}}" class="{{#if disabled}}disabled{{/if}}" {{#eq ../this.value type}}selected{{/eq}}>{{name}}</option>
                         {{/each}}
                     {{/if}}
                 </select>
