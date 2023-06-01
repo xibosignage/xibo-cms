@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -149,6 +149,11 @@ class PlayerSoftware extends ModuleWidget
             $type = 'sssp';
         }
 
+        // if we were given media name on upload use that.
+        if ($media->name !== $media->fileName) {
+            $playerShowVersion = $media->name;
+        }
+
         return $factory->create($type, $version, $code, $media->mediaId, $playerShowVersion);
     }
 
@@ -159,5 +164,4 @@ class PlayerSoftware extends ModuleWidget
     {
         return $this->module->validExtensions;
     }
-
 }
