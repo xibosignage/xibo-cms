@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 // Include templates
 const templates = {
     dataSetOrderClauseTemplate: require("../templates/form-helpers-data-set-order-clause.hbs"),
@@ -890,7 +911,7 @@ let formHelpers = function() {
         var mediaId = dialog.find('form').data().mediaId;
         var widgetId = dialog.find('form').data().widgetId;
         var validExtensions = dialog.find('form').data().validExtensions;
-        
+        var maxImagePixelSize = dialog.find('form').data().maxImagePixelSize;
         // Append
         var replaceButton = $('<button type="button" class="btn btn-warning">').html(playlistAddFilesTrans.uploadMessage);
         replaceButton.click(function(e) {
@@ -917,7 +938,8 @@ let formHelpers = function() {
                             validExt: validExtensions
                         },
                         showWidgetDates: false,
-                        folderSelector: true
+                        folderSelector: true,
+                        maxImagePixelSize: maxImagePixelSize,
                     },
                     buttons: {
                         main: {

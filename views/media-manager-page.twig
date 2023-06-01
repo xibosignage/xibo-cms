@@ -207,7 +207,8 @@
                                 maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
                                 validExt: validExtensions
                             },
-                            folderSelector: false
+                            folderSelector: false,
+                            maxImagePixelSize: {{ settings.DEFAULT_RESIZE_LIMIT }}
                         },
                         uploadDoneEvent: function () {
                             XiboDialogClose();
@@ -286,7 +287,8 @@
                             maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
                             validExt: validExtensions
                         },
-                        folderSelector: false
+                        folderSelector: false,
+                        maxImagePixelSize: {{ settings.DEFAULT_RESIZE_LIMIT }}
                     },
                     uploadDoneEvent: function () {
                         XiboDialogClose();

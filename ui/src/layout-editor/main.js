@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1446,7 +1446,8 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 displayOrder: addToPosition,
                 currentWorkingFolderId: lD.folderId,
                 showWidgetDates: true,
-                folderSelector: true
+                folderSelector: true,
+                maxImagePixelSize: moduleData.maxImagePixelSize,
             }
         }).attr('data-test', 'uploadFormModal');
 
