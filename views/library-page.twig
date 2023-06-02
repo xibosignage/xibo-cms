@@ -358,7 +358,7 @@
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %},
                     currentWorkingFolderId: currentWorkingFolderId,
-                    folderSelector: true
+                    folderSelector: true,
                 }
             });
         });
@@ -416,7 +416,7 @@
                             maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
                             validExt: validExtensions,
                             validExtensionsMessage: "{{ "Valid extensions are %s" }}".replace("%s", validExtensions).replace(/\|/g, ", ")
-                        }
+                        },
                     },
                     uploadDoneEvent: function () {
                         XiboDialogClose();

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -128,7 +128,7 @@ class Theme implements Middleware
             'maxSize' => ByteFormatter::toBytes(Environment::getMaxUploadSize()),
             'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize()),
             'validExt' => implode('|', $container->get('moduleFactory')->getValidExtensions()),
-            'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image']))
+            'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image'])),
         ];
         $view['ckeditorConfig'] = $container->get('mediaService')->setUser($container->get('user'))->fontCKEditorConfig(RouteContext::fromRequest($request)->getRouteParser());
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
