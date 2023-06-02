@@ -228,7 +228,9 @@ Element.prototype.getData = function() {
       const slot = self.slot ? self.slot : 0;
       parentWidget.getData().then((data) => {
         // Resolve the promise with the data
-        resolve(data[slot]);
+        // If slot is outside the data array
+        // restart from 0
+        resolve(data[slot % data.length]);
       });
     }
   });
