@@ -24,10 +24,12 @@
     </div>
     <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{title}}" data-placement="right">{{title}}</span>
 
-    {{#if orientation}}
-        <span class="badge badge-pill badge-primary">{{orientation}}</span>
-    {{/if}}
-    {{#each tags}}
-        <span class="badge badge-pill badge-info">{{this}}</span>
-    {{/each}}
+    <div class="badges">
+        {{#if orientation}}
+            <span class="badge badge-pill badge-primary">{{orientation}}</span>
+        {{/if}}
+        {{#each tags}}
+            <span class="badge badge-pill badge-info">{{this}}</span>
+        {{/each}}
+    </div>
 </div>
