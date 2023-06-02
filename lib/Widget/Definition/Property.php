@@ -134,12 +134,13 @@ class Property implements \JsonSerializable
     /**
      * Add a visibility test
      * @param string $type
+     * @param string|null $message
      * @param array $conditions
      * @return $this
      */
-    public function addVisibilityTest(string $type, array $conditions): Property
+    public function addVisibilityTest(string $type, ?string $message, array $conditions): Property
     {
-        $this->visibility[] = $this->parseTest($type, $conditions);
+        $this->visibility[] = $this->parseTest($type, $message, $conditions);
         return $this;
     }
 
@@ -187,6 +188,11 @@ class Property implements \JsonSerializable
             throw new ValueTooLargeException(sprintf(__('Value too large for %s'), $this->title), $this->id);
         }
 
+        // If the value is equal to the default then ignore
+        if ($this->value === $this->default) {
+            return $this;
+        }
+
         // Skip if no validation.
         if ($this->validation === null
             || ($stage === 'save' && !$this->validation->onSave)
@@ -197,122 +203,154 @@ class Property implements \JsonSerializable
 
         foreach ($this->validation->tests as $test) {
             // We have a test, evaulate its conditions.
-            foreach ($test->conditions as $condition) {
-                // What value are we testing against (only used by certain types)
-                if (empty($condition->field)) {
-                    $valueToTestAgainst = $condition->value;
-                } else {
-                    $valueToTestAgainst = $properties[$condition->field] ?? $condition->value;
-                }
+            $exceptions = [];
 
-                // Do we have a message
-                $message = empty($this->validation->message) ? null : __($this->validation->message);
+            try {
+                foreach ($test->conditions as $condition) {
+                    // What value are we testing against (only used by certain types)
+                    if (empty($condition->field)) {
+                        $valueToTestAgainst = $condition->value;
+                    } else {
+                        $valueToTestAgainst = $properties[$condition->field] ?? $condition->value;
+                    }
 
-                switch ($condition->type) {
-                    case 'required':
-                        if (empty($this->value)) {
-                            throw new InvalidArgumentException(
-                                $message ?? sprintf(__('Missing required property %s'), $this->title),
-                                $this->id
-                            );
-                        }
-                        break;
+                    // Do we have a message
+                    $message = empty($test->message) ? null : __($test->message);
 
-                    case 'uri':
-                        if (!empty($this->value)
-                            && !v::url()->validate($this->value)
-                        ) {
-                            throw new InvalidArgumentException(
-                                $message ?? sprintf(__('%s must be a valid URI'), $this->title),
-                                $this->id
-                            );
-                        }
-                        break;
-
-                    case 'interval':
-                        if (!empty($this->value)) {
-                            // Try to create a date interval from it
-                            $dateInterval = \DateInterval::createFromDateString($this->value);
-
-                            // Use now and add the date interval to it
-                            $now = Carbon::now();
-                            $check = $now->copy()->add($dateInterval);
-
-                            if ($now->equalTo($check)) {
+                    switch ($condition->type) {
+                        case 'required':
+                            // We will accept the default value here
+                            if (empty($this->value) && empty($this->default)) {
                                 throw new InvalidArgumentException(
-                                    // phpcs:ignore Generic.Files.LineLength
-                                    $message ?? __('That is not a valid date interval, please use natural language such as 1 week'),
+                                    $message ?? sprintf(__('Missing required property %s'), $this->title),
                                     $this->id
                                 );
                             }
-                        }
-                        break;
+                            break;
 
-                    case 'contains':
-                        if (!empty($this->value) && !Str::contains($this->value, $valueToTestAgainst)) {
-                            throw new InvalidArgumentException(
-                                $message ?? sprintf(__('%s must contain %s'), $this->title, $valueToTestAgainst),
-                                $this->id,
-                            );
-                        }
-                        break;
+                        case 'uri':
+                            if (!empty($this->value)
+                                && !v::url()->validate($this->value)
+                            ) {
+                                throw new InvalidArgumentException(
+                                    $message ?? sprintf(__('%s must be a valid URI'), $this->title),
+                                    $this->id
+                                );
+                            }
+                            break;
 
-                    case 'ncontains':
-                        if (!empty($this->value) && Str::contains($this->value, $valueToTestAgainst)) {
-                            throw new InvalidArgumentException(
-                                $message ?? sprintf(__('%s must not contain %s'), $this->title, $valueToTestAgainst),
-                                $this->id,
-                            );
-                        }
-                        break;
+                        case 'interval':
+                            if (!empty($this->value)) {
+                                // Try to create a date interval from it
+                                $dateInterval = \DateInterval::createFromDateString($this->value);
 
-                    case 'lt':
-                        // Value must be < to the condition value, or field value
-                        if ($valueToTestAgainst !== null && !($this->value < $valueToTestAgainst)) {
-                            throw new InvalidArgumentException(
-                                // phpcs:ignore Generic.Files.LineLength
-                                $message ?? sprintf(__('%s must be less than %s'), $this->title, $valueToTestAgainst),
-                                $this->id
-                            );
-                        }
-                        break;
+                                // Use now and add the date interval to it
+                                $now = Carbon::now();
+                                $check = $now->copy()->add($dateInterval);
 
-                    case 'lte':
-                        // Value must be <= to the condition value, or field value
-                        if ($valueToTestAgainst !== null && !($this->value <= $valueToTestAgainst)) {
-                            throw new InvalidArgumentException(
-                                // phpcs:ignore Generic.Files.LineLength
-                                $message ?? sprintf(__('%s must be less than or equal to %s'), $this->title, $valueToTestAgainst),
-                                $this->id
-                            );
-                        }
-                        break;
+                                if ($now->equalTo($check)) {
+                                    throw new InvalidArgumentException(
+                                        // phpcs:ignore Generic.Files.LineLength
+                                        $message ?? __('That is not a valid date interval, please use natural language such as 1 week'),
+                                        $this->id
+                                    );
+                                }
+                            }
+                            break;
 
-                    case 'gte':
-                        // Value must be >= to the condition value, or field value
-                        if ($valueToTestAgainst !== null && !($this->value >= $valueToTestAgainst)) {
-                            throw new InvalidArgumentException(
-                                // phpcs:ignore Generic.Files.LineLength
-                                $message ?? sprintf(__('%s must be greater than or equal to %s'), $this->title, $valueToTestAgainst),
-                                $this->id
-                            );
-                        }
-                        break;
+                        case 'contains':
+                            if (!empty($this->value) && !Str::contains($this->value, $valueToTestAgainst)) {
+                                throw new InvalidArgumentException(
+                                    $message ?? sprintf(__('%s must contain %s'), $this->title, $valueToTestAgainst),
+                                    $this->id,
+                                );
+                            }
+                            break;
 
-                    case 'gt':
-                        // Value must be > to the condition value, or field value
-                        if ($valueToTestAgainst !== null && !($this->value > $valueToTestAgainst)) {
-                            throw new InvalidArgumentException(
-                                // phpcs:ignore Generic.Files.LineLength
-                                $message ?? sprintf(__('%s must be greater than %s'), $this->title, $valueToTestAgainst),
-                                $this->id
-                            );
-                        }
-                        break;
+                        case 'ncontains':
+                            if (!empty($this->value) && Str::contains($this->value, $valueToTestAgainst)) {
+                                throw new InvalidArgumentException(
+                                    // phpcs:ignore Generic.Files.LineLength
+                                    $message ?? sprintf(__('%s must not contain %s'), $this->title, $valueToTestAgainst),
+                                    $this->id,
+                                );
+                            }
+                            break;
 
-                    default:
-                        // Nothing to validate
+                        case 'lt':
+                            // Value must be < to the condition value, or field value
+                            if ($this->value !== null
+                                && $valueToTestAgainst !== null
+                                && !($this->value < $valueToTestAgainst)
+                            ) {
+                                throw new InvalidArgumentException(
+                                    // phpcs:ignore Generic.Files.LineLength
+                                    $message ?? sprintf(__('%s must be less than %s'), $this->title, $valueToTestAgainst),
+                                    $this->id
+                                );
+                            }
+                            break;
+
+                        case 'lte':
+                            // Value must be <= to the condition value, or field value
+                            if ($this->value !== null
+                                && $valueToTestAgainst !== null
+                                && !($this->value <= $valueToTestAgainst)
+                            ) {
+                                throw new InvalidArgumentException(
+                                    // phpcs:ignore Generic.Files.LineLength
+                                    $message ?? sprintf(__('%s must be less than or equal to %s'), $this->title, $valueToTestAgainst),
+                                    $this->id
+                                );
+                            }
+                            break;
+
+                        case 'gte':
+                            // Value must be >= to the condition value, or field value
+                            if ($this->value !== null
+                                && $valueToTestAgainst !== null
+                                && !($this->value >= $valueToTestAgainst)
+                            ) {
+                                throw new InvalidArgumentException(
+                                    // phpcs:ignore Generic.Files.LineLength
+                                    $message ?? sprintf(__('%s must be greater than or equal to %s'), $this->title, $valueToTestAgainst),
+                                    $this->id
+                                );
+                            }
+                            break;
+
+                        case 'gt':
+                            // Value must be > to the condition value, or field value
+                            if ($this->value !== null
+                                && $valueToTestAgainst !== null
+                                && !($this->value > $valueToTestAgainst)
+                            ) {
+                                throw new InvalidArgumentException(
+                                    // phpcs:ignore Generic.Files.LineLength
+                                    $message ?? sprintf(__('%s must be greater than %s'), $this->title, $valueToTestAgainst),
+                                    $this->id
+                                );
+                            }
+                            break;
+
+                        default:
+                            // Nothing to validate
+                    }
                 }
+            } catch (InvalidArgumentException $invalidArgumentException) {
+                // If we are an AND test, all conditions must pass, so we know already to exception here.
+                if ($test->type === 'and') {
+                    throw $invalidArgumentException;
+                }
+
+                // We're an OR
+                $exceptions[] = $invalidArgumentException;
+            }
+
+            // If we are an OR then make sure at least one of the tests has passed
+            $countOfFailures = count($exceptions);
+            if ($test->type === 'or' && $countOfFailures > 0 && $countOfFailures < count($test->conditions)) {
+                throw $exceptions[0];
             }
         }
         return $this;
@@ -418,13 +456,15 @@ class Property implements \JsonSerializable
 
     /**
      * @param string $type
+     * @param string $message
      * @param array $conditions
      * @return Test
      */
-    public function parseTest(string $type, array $conditions): Test
+    public function parseTest(string $type, string $message, array $conditions): Test
     {
         $test = new Test();
         $test->type = $type ?: 'and';
+        $test->message = $message;
 
         foreach ($conditions as $item) {
             $condition = new Condition();

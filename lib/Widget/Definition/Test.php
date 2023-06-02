@@ -33,12 +33,16 @@ class Test implements \JsonSerializable
     /** @var Condition[]  */
     public $conditions;
 
+    /** @var string|null */
+    public $message;
+
     /** @inheritDoc */
     public function jsonSerialize(): array
     {
         return [
             'type' => $this->type,
-            'conditions' => $this->conditions
+            'message' => $this->message,
+            'conditions' => $this->conditions,
         ];
     }
 }

@@ -84,8 +84,8 @@
                     <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
-            <rule message="Warning duration needs to be lower than the widget duration.">
-                <test type="and">
+            <rule>
+                <test type="and" message="Warning duration needs to be lower than the widget duration.">
                     <condition field="duration" type="lte"></condition>
                 </test>
             </rule>
