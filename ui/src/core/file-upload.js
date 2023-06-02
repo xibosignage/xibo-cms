@@ -85,14 +85,8 @@ function openUploadForm(options) {
             $(dialog).find('#files').on('change', handleVideoCoverImage);
         }
 
-        if (options.templateOptions.maxImagePixelSize) {
-            $(dialog).find('#files').on('change', (e) => {
-                checkImagePixelSize(
-                  e,
-                  this.files,
-                  options.templateOptions.maxImagePixelSize
-                )
-            });
+        if (maxImagePixelSize > 0) {
+            $(dialog).find('#files').on('change', checkImagePixelSize);
         }
 
         // If we are not a multi-upload, then limit to 1
@@ -200,8 +194,8 @@ function openUploadForm(options) {
                     handleVideoCoverImage(e, data)
                 }
 
-                if (options.templateOptions.maxImagePixelSize) {
-                    checkImagePixelSize(e, data, options.templateOptions.maxImagePixelSize)
+                if (maxImagePixelSize > 0) {
+                    checkImagePixelSize(e, data)
                 }
             })
 
@@ -339,7 +333,7 @@ function saveVideoCoverImage(data) {
     }
 }
 
-function checkImagePixelSize(e, data, maxPixelSize) {
+function checkImagePixelSize(e, data) {
     let files = data === undefined ? this.files : data.files;
 
     let $existingFiles = $('.template-upload canvas')
@@ -363,7 +357,7 @@ function checkImagePixelSize(e, data, maxPixelSize) {
                     img = new Image();
                     let objectUrl = URL.createObjectURL(file);
                     img.onload = function() {
-                        if (this.width > maxPixelSize || this.height > maxPixelSize) {
+                        if (this.width > maxImagePixelSize || this.height > maxImagePixelSize) {
                             const helpText = translations.imagePixelSizeTooLarge;
                             const $helpTextSelector = $('.template-upload canvas')
                               .closest('tr')

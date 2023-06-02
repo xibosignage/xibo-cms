@@ -911,7 +911,6 @@ let formHelpers = function() {
         var mediaId = dialog.find('form').data().mediaId;
         var widgetId = dialog.find('form').data().widgetId;
         var validExtensions = dialog.find('form').data().validExtensions;
-        var maxImagePixelSize = dialog.find('form').data().maxImagePixelSize;
         // Append
         var replaceButton = $('<button type="button" class="btn btn-warning">').html(playlistAddFilesTrans.uploadMessage);
         replaceButton.click(function(e) {
@@ -939,7 +938,6 @@ let formHelpers = function() {
                         },
                         showWidgetDates: false,
                         folderSelector: true,
-                        maxImagePixelSize: maxImagePixelSize,
                     },
                     buttons: {
                         main: {

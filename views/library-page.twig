@@ -359,7 +359,6 @@
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %},
                     currentWorkingFolderId: currentWorkingFolderId,
                     folderSelector: true,
-                    maxImagePixelSize: {{ settings.DEFAULT_RESIZE_LIMIT }}
                 }
             });
         });
@@ -418,7 +417,6 @@
                             validExt: validExtensions,
                             validExtensionsMessage: "{{ "Valid extensions are %s" }}".replace("%s", validExtensions).replace(/\|/g, ", ")
                         },
-                        maxImagePixelSize: {{ settings.DEFAULT_RESIZE_LIMIT }}
                     },
                     uploadDoneEvent: function () {
                         XiboDialogClose();

@@ -200,7 +200,6 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                     currentWorkingFolderId: pE.folderId,
                     showWidgetDates: true,
                     folderSelector: true,
-                    maxImagePixelSize: $(draggable).data().maxImagePixelSize,
                 }
             }).attr('data-test', 'uploadFormModal');
 

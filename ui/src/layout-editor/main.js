@@ -1447,7 +1447,6 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 currentWorkingFolderId: lD.folderId,
                 showWidgetDates: true,
                 folderSelector: true,
-                maxImagePixelSize: moduleData.maxImagePixelSize,
             }
         }).attr('data-test', 'uploadFormModal');
 

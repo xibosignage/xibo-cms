@@ -885,7 +885,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                     const module = app.common.getModuleByType(filter.type);
                     if(module) {
                         module.trans = toolbarTrans;
-                        module.maxImagePixelSize = libraryUpload.maxImagePixelSize;
                         const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
                         $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
                     }

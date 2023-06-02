@@ -800,7 +800,6 @@ class Module extends Base
             'templatesAvailable' => $templates,
             'options' => $options,
             'isTopLevel' => $this->playlistFactory->getById($module->widget->playlistId)->isRegionPlaylist(),
-            'maxImagePixelSize' => $media->mediaType == 'image' ? $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT') : null,
         ]));
 
         return $this->render($request, $response);
