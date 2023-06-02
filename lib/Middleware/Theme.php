@@ -129,7 +129,6 @@ class Theme implements Middleware
             'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize()),
             'validExt' => implode('|', $container->get('moduleFactory')->getValidExtensions()),
             'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image'])),
-            'maxImagePixelSize' => $settings['DEFAULT_RESIZE_LIMIT']
         ];
         $view['ckeditorConfig'] = $container->get('mediaService')->setUser($container->get('user'))->fontCKEditorConfig(RouteContext::fromRequest($request)->getRouteParser());
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
