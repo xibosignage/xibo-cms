@@ -328,6 +328,7 @@ PropertiesPanel.prototype.render = function(
 ) {
   const self = this;
   const app = this.parent;
+  const minSlotValue = 1;
   let targetAux;
   let renderElements = false;
   let isElementGroup = false;
@@ -510,6 +511,7 @@ PropertiesPanel.prototype.render = function(
             title: propertiesPanelTrans.dataSlot,
             helpText: propertiesPanelTrans.dataSlotHelpText,
             value: Number(targetAux.slot) + 1,
+            min: minSlotValue,
             type: 'number',
             visibility: [],
           });
@@ -532,10 +534,17 @@ PropertiesPanel.prototype.render = function(
         ) {
           self.DOMObject.find('[name="slot"]')
             .on('change', function(ev) {
-              const sourceValue = $(ev.currentTarget).val();
+              let slotValue = $(ev.currentTarget).val();
+
+              // If value is lower than minSlotValue
+              // set it to minSlotValue
+              if (Number(slotValue) < minSlotValue) {
+                slotValue = minSlotValue;
+                $(ev.currentTarget).val(minSlotValue);
+              }
 
               // update slot for the group
-              targetAux.updateSlot(Number(sourceValue) - 1, true);
+              targetAux.updateSlot(Number(slotValue) - 1, true);
 
               // save elements
               target.saveElements();
@@ -621,6 +630,7 @@ PropertiesPanel.prototype.render = function(
                 title: propertiesPanelTrans.dataSlot,
                 helpText: propertiesPanelTrans.dataSlotHelpText,
                 value: Number(targetAux.slot) + 1,
+                min: minSlotValue,
                 type: 'number',
                 visibility: [],
               },
@@ -680,6 +690,13 @@ PropertiesPanel.prototype.render = function(
                 // If property is slot, set a value
                 // with -1 to match with the array
                 if (propertyName === 'slot') {
+                  // If value is lower than minSlotValue
+                  // set it to minSlotValue
+                  if (Number(value) < minSlotValue) {
+                    value = minSlotValue;
+                    $(ev.currentTarget).val(minSlotValue);
+                  }
+
                   value = Number(value) - 1;
                 }
 
