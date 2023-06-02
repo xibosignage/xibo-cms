@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -36,7 +36,7 @@ function openUploadForm(options) {
     templateOptions: {
       layoutImport: false,
       multi: true,
-      includeTagsInput: true
+      includeTagsInput: true,
     },
   }, options);
 
@@ -76,7 +76,7 @@ function openUploadForm(options) {
       previewCrop: true,
       acceptFileTypes: new RegExp('\\.(' + options.templateOptions.upload.validExt + ')$', 'i'),
       maxFileSize: options.templateOptions.upload.maxSize,
-      includeTagsInput: options.templateOptions.includeTagsInput
+      includeTagsInput: options.templateOptions.includeTagsInput,
     };
     let refreshSessionInterval;
 
@@ -90,6 +90,10 @@ function openUploadForm(options) {
     // Video thumbnail capture.
     if (options.videoImageCovers) {
       $(dialog).find('#files').on('change', handleVideoCoverImage);
+    }
+
+    if (maxImagePixelSize > 0) {
+      $(dialog).find('#files').on('change', checkImagePixelSize);
     }
 
     // If we are not a multi-upload, then limit to 1
@@ -150,7 +154,7 @@ function openUploadForm(options) {
         }
 
         // If the upload was an error, then don't process the remaining methods.
-        if (data.result.files[0].error != null && data.result.files[0].error !== "") {
+        if (data.result.files[0].error != null && data.result.files[0].error !== '') {
           toastr.error(data.result.files[0].error);
           return;
         }
@@ -194,7 +198,15 @@ function openUploadForm(options) {
           $button.attr('disabled', 'disabled');
         }
       })
-      .bind('fileuploaddrop', handleVideoCoverImage);
+      .bind('fileuploaddrop', function(e, data) {
+        if (options.videoImageCovers) {
+          handleVideoCoverImage(e, data);
+        }
+
+        if (maxImagePixelSize > 0) {
+          checkImagePixelSize(e, data);
+        }
+      });
 
     if (options.templateOptions.folderSelector) {
       // Handle creating a folder selector
@@ -206,7 +218,9 @@ function openUploadForm(options) {
       }
 
       if ($('#folder-tree-form-modal').length === 0) {
-        const folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+        const folderTreeModal = Handlebars.compile(
+          $('#folder-tree-template').html(),
+        );
         $('body').append(folderTreeModal({
           container: 'container-folder-form-tree',
           modal: 'folder-tree-form-modal',
@@ -221,7 +235,12 @@ function openUploadForm(options) {
       }
 
       // Init JS Tree
-      initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), options.initialisedBy, true, 600);
+      initJsTreeAjax(
+        $('#folder-tree-form-modal').find('#container-folder-form-tree'),
+        options.initialisedBy,
+        true,
+        600,
+      );
     }
 
     // Handle any form opened event
@@ -244,10 +263,11 @@ function handleVideoCoverImage(e, data) {
   let video = null;
 
   // wait a little bit for the preview to be in the form
-  var checkExist = setInterval(function() {
+  const checkExist = setInterval(function () {
     if ($('.preview').find('video').length) {
       // iterate through our files, check if we have videos
-      // if we do, then set params on video object, convert 2nd second of the video to an image
+      // if we do, then set params on video object,
+      // convert 2nd second of the video to an image
       // and register onseeked and onpause events
       Array.from(files).forEach(function(file, index) {
         if (!file.error && file.type.includes('video')) {
@@ -263,7 +283,9 @@ function handleVideoCoverImage(e, data) {
 
       // show help text describing this feature.
       const helpText = translations.videoImageCoverHelpText;
-      const $helpTextSelector = $('.template-upload video:first').closest('tr').find('td span.info');
+      const $helpTextSelector = $('.template-upload video:first')
+        .closest('tr')
+        .find('td span.info');
       $helpTextSelector.empty();
       $helpTextSelector.append(helpText);
 
@@ -326,4 +348,55 @@ function saveVideoCoverImage(data) {
       data: thumbnailData,
     });
   }
+}
+/**
+ * Binds to a File Input and listens for changes,
+ * if Image was added, check the max resize limit
+ * and show a warning message if added image is too large
+ * @param e
+ * @param data
+ */
+function checkImagePixelSize(e, data) {
+  const files = data === undefined ? this.files : data.files;
+
+  const $existingFiles = $('.template-upload canvas')
+    .closest('tr')
+    .find('td span.info');
+
+  const checkExist = setInterval(function() {
+    if ($('.preview').find('canvas').length) {
+      // iterate through our files
+      Array.from(files).forEach(function(file, index) {
+        if (!file.error && file.type.includes('image')) {
+          // if we have existing files, adjust index
+          // to ensure we put the warning in the right place
+          if ($existingFiles.length > 0) {
+            if (index === 0) {
+              index = $existingFiles.length;
+            } else {
+              index += $existingFiles.length;
+            }
+          }
+          img = new Image();
+          const objectUrl = URL.createObjectURL(file);
+          img.onload = function() {
+            if (this.width > maxImagePixelSize ||
+              this.height > maxImagePixelSize
+            ) {
+              const helpText = translations.imagePixelSizeTooLarge;
+              $('.template-upload canvas')
+                .closest('tr')
+                .find('td span.info')[index]
+                .append(helpText);
+            }
+
+            URL.revokeObjectURL(objectUrl);
+          };
+          img.src = objectUrl;
+        }
+      });
+
+      clearInterval(checkExist);
+    }
+  }, 300);
 }
