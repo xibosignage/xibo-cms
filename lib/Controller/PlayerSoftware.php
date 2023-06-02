@@ -614,6 +614,12 @@ class PlayerSoftware extends Base
             $playerSoftware->size = filesize($filePath);
             $playerSoftware->md5 = md5_file($filePath);
             $playerSoftware->decorateRecord();
+
+            // if the name was provided on upload use that here.
+            if (!empty($file->name)) {
+                $playerSoftware->playerShowVersion = $file->name;
+            }
+
             $playerSoftware->save();
 
             // Test to ensure the final file size is the same as the file size we're expecting
