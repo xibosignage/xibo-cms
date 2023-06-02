@@ -3582,7 +3582,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                     // check state
                     let currentState = localStorage.getItem(id+'_folder_tree')
                     // if we have no state saved, select the homeFolderId in the tree.
-                    if (currentState === undefined || currentState === null) {
+                    if ((currentState === undefined || currentState === null) && !isForm) {
                         $(container).jstree(true).select_node(homeNodeId)
                     }
                 }
@@ -3598,7 +3598,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                     folderIdInputSelector = '#formFolderId';
                 }
 
-                var selectedFolder = $(folderIdInputSelector).val();
+                let selectedFolder = !$(folderIdInputSelector).val() ? homeNodeId : $(folderIdInputSelector).val();
 
                 if (selectedFolder !== undefined && selectedFolder !== '') {
                     $(this).jstree('select_node', selectedFolder);
