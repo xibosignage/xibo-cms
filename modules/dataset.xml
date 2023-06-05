@@ -67,9 +67,9 @@
                     <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
-            <rule message="Lower limit must be 0 or above, and lower than the upper limit">
-                <test type="and">
-                    <condition type="gt">0</condition>
+            <rule>
+                <test type="or" message="Lower limit must be 0 or above, and lower than the upper limit">
+                    <condition type="eq">0</condition>
                     <condition field="upperLimit" type="lte"></condition>
                 </test>
             </rule>
@@ -83,9 +83,9 @@
                     <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
-            <rule message="Upper limit must be higher than 0">
+            <rule>
                 <test type="and">
-                    <condition type="gt">0</condition>
+                    <condition type="gte">0</condition>
                 </test>
             </rule>
         </property>

@@ -150,7 +150,6 @@ trait ModuleXmlTrait
                         $rule = new Rule();
                         $rule->onSave = ($ruleNode->getAttribute('onSave') ?: 'true') === 'true';
                         $rule->onStatus = ($ruleNode->getAttribute('onStatus') ?: 'true') === 'true';
-                        $rule->message = $ruleNode->getAttribute('message');
 
                         // Get tests
                         foreach ($ruleNode->childNodes as $testNode) {
@@ -169,7 +168,8 @@ trait ModuleXmlTrait
 
                                 $rule->addRuleTest($property->parseTest(
                                     $testNode->getAttribute('type'),
-                                    $conditions
+                                    $testNode->getAttribute('message'),
+                                    $conditions,
                                 ));
                             }
                         }
@@ -218,7 +218,8 @@ trait ModuleXmlTrait
 
                             $property->addVisibilityTest(
                                 $testNode->getAttribute('type'),
-                                $conditions
+                                $testNode->getAttribute('message'),
+                                $conditions,
                             );
                         }
                     }
