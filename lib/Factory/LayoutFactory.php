@@ -2276,8 +2276,8 @@ class LayoutFactory extends BaseFactory
             $layout->width = $parsedRow->getDouble('width');
             $layout->height = $parsedRow->getDouble('height');
             $layout->orientation = $layout->width >= $layout->height ? 'landscape' : 'portrait';
-            $layout->createdDt = $parsedRow->getDate('createdDt');
-            $layout->modifiedDt = $parsedRow->getDate('modifiedDt');
+            $layout->createdDt = $parsedRow->getString('createdDt');
+            $layout->modifiedDt = $parsedRow->getString('modifiedDt');
             $layout->displayOrder = $parsedRow->getInt('displayOrder');
             $layout->statusMessage = $parsedRow->getString('statusMessage');
             $layout->enableStat = $parsedRow->getInt('enableStat');
