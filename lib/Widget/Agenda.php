@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Widget;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use ICal\ICal;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -794,7 +795,14 @@ class Agenda extends ModuleWidget
 
             if ($customInterval != '') {
                 // Try to create a date interval from it
-                $dateInterval = \DateInterval::createFromDateString($customInterval);
+                $dateInterval = CarbonInterval::createFromDateString($customInterval);
+
+                if ($dateInterval === false) {
+                    throw new InvalidArgumentException(
+                        __('That is not a valid date interval, please use natural language such as 1 week'),
+                        'customInterval'
+                    );
+                }
 
                 // Use now and add the date interval to it
                 $now = Carbon::now();

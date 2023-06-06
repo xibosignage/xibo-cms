@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -799,7 +799,7 @@ class Module extends Base
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions),
             'templatesAvailable' => $templates,
             'options' => $options,
-            'isTopLevel' => $this->playlistFactory->getById($module->widget->playlistId)->isRegionPlaylist()
+            'isTopLevel' => $this->playlistFactory->getById($module->widget->playlistId)->isRegionPlaylist(),
         ]));
 
         return $this->render($request, $response);

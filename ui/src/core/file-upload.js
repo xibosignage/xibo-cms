@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -83,6 +83,10 @@ function openUploadForm(options) {
         // Video thumbnail capture.
         if (options.videoImageCovers) {
             $(dialog).find('#files').on('change', handleVideoCoverImage);
+        }
+
+        if (maxImagePixelSize > 0) {
+            $(dialog).find('#files').on('change', checkImagePixelSize);
         }
 
         // If we are not a multi-upload, then limit to 1
@@ -185,7 +189,15 @@ function openUploadForm(options) {
                         $button.attr('disabled', 'disabled');
                     }
                 })
-            .bind('fileuploaddrop', handleVideoCoverImage);
+            .bind('fileuploaddrop', function (e, data) {
+                if (options.videoImageCovers) {
+                    handleVideoCoverImage(e, data)
+                }
+
+                if (maxImagePixelSize > 0) {
+                    checkImagePixelSize(e, data)
+                }
+            })
 
         if (options.templateOptions.folderSelector) {
             // Handle creating a folder selector
@@ -319,4 +331,47 @@ function saveVideoCoverImage(data) {
             data: thumbnailData
         });
     }
+}
+
+function checkImagePixelSize(e, data) {
+    let files = data === undefined ? this.files : data.files;
+
+    let $existingFiles = $('.template-upload canvas')
+      .closest('tr')
+      .find('td span.info')
+
+    const checkExist = setInterval(function() {
+        if ($('.preview').find('canvas').length) {
+            // iterate through our files
+            Array.from(files).forEach(function(file, index) {
+                if (!file.error && file.type.includes('image')) {
+                    // if we have existing files, adjust index
+                    // to ensure we put the warning in the right place
+                    if ($existingFiles.length > 0) {
+                        if (index === 0) {
+                            index = $existingFiles.length
+                        } else {
+                            index += $existingFiles.length
+                        }
+                    }
+                    img = new Image();
+                    let objectUrl = URL.createObjectURL(file);
+                    img.onload = function() {
+                        if (this.width > maxImagePixelSize || this.height > maxImagePixelSize) {
+                            const helpText = translations.imagePixelSizeTooLarge;
+                            const $helpTextSelector = $('.template-upload canvas')
+                              .closest('tr')
+                              .find('td span.info')[index]
+                              .append(helpText)
+                        }
+
+                        URL.revokeObjectURL(objectUrl);
+                    };
+                    img.src = objectUrl;
+                }
+            });
+
+            clearInterval(checkExist);
+        }
+    }, 300);
 }
