@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-07 14:10+0100\n"
+"POT-Creation-Date: 2023-06-06 11:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2700,7 +2700,7 @@ msgstr ""
 #: cache/87/87bb46eea86e54a95c60b2d64a19579ae8fe0146413ba08fa309d533f504d763.php:108
 #: cache/9a/9a843b09dbb217950e0d2e9b3d5a06cc7d7cd613e158b585fac20ce98fae0f5a.php:254
 #: cache/c0/c05179f1fb53774c57bc10e19cec4980afe00e88aaab4011a7207ca03232209c.php:123
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:601
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:605
 #: cache/b0/b02caf5e47c30f5cfda6613de25e8c84b6d96995b182bf079362288f9244e7e6.php:83
 #: cache/32/32070772cd97e4d7508d2d6eec949ef1945f951009a6494ccf9752360a72bd76.php:480
 #: cache/32/32070772cd97e4d7508d2d6eec949ef1945f951009a6494ccf9752360a72bd76.php:498
@@ -5731,7 +5731,7 @@ msgid "More"
 msgstr ""
 
 #: cache/3c/3cf6e5a03ca0fb6f0bd915ab8c09a8adf18500fd76b9a8cbfa35da8ef0b60cd0.php:128
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:576
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:580
 msgid "Loading..."
 msgstr ""
 
@@ -8961,7 +8961,7 @@ msgid "Cancel upload"
 msgstr ""
 
 #: cache/6e/6e1ad0ac5a78846d0e3ea98187fedcf718479d729d4565ba34294322780da5d3.php:328
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:580
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:584
 #: cache/fe/fe822a6f5712d67080516d8204b7a7194da01937a981ba4814d089ca458ae973.php:666
 #: cache/fe/fe822a6f5712d67080516d8204b7a7194da01937a981ba4814d089ca458ae973.php:1245
 #: cache/ec/ec1993f52a7b018be3c1193db714bb4c4190ed85704048ee555d54ec8022e897.php:302
@@ -10904,13 +10904,13 @@ msgstr ""
 
 #: cache/b1/b19ea9bbe44b6ed9904afda938cb51ecf849f891c4ab15c756192a46dce379fc.php:138
 #: cache/1f/1fd9187e2d4460389b74b86b63e578a124a11de83282c570a4e00a7bb65ba6ca.php:182
-#: lib/Report/TimeDisconnectedSummary.php:374
+#: lib/Report/TimeDisconnectedSummary.php:312
 msgid "Minutes"
 msgstr ""
 
 #: cache/b1/b19ea9bbe44b6ed9904afda938cb51ecf849f891c4ab15c756192a46dce379fc.php:143
 #: cache/1f/1fd9187e2d4460389b74b86b63e578a124a11de83282c570a4e00a7bb65ba6ca.php:167
-#: lib/Report/TimeDisconnectedSummary.php:371
+#: lib/Report/TimeDisconnectedSummary.php:309
 msgid "Hours"
 msgstr ""
 
@@ -11122,7 +11122,7 @@ msgid "Note: It will only be updated in layouts you have permission to edit."
 msgstr ""
 
 #: cache/d8/d83adfe4494e15657369aac9ec5524a363e8c8e8747514592931189f8724e0d2.php:348
-#: lib/Controller/Library.php:1293
+#: lib/Controller/Library.php:1300
 msgid "Sorry, Fonts do not have any editable properties."
 msgstr ""
 
@@ -12843,7 +12843,7 @@ msgid ""
 msgstr ""
 
 #: cache/9a/9a843b09dbb217950e0d2e9b3d5a06cc7d7cd613e158b585fac20ce98fae0f5a.php:259
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:605
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:609
 #: cache/8d/8d52b54f12c1919f9f39b1ba49ac8ed3caa43fd85bca5f1077ca328ec3f10c8b.php:331
 #: cache/8d/8d52b54f12c1919f9f39b1ba49ac8ed3caa43fd85bca5f1077ca328ec3f10c8b.php:365
 #: cache/8d/8d52b54f12c1919f9f39b1ba49ac8ed3caa43fd85bca5f1077ca328ec3f10c8b.php:403
@@ -15341,55 +15341,61 @@ msgstr ""
 msgid "Publish failed."
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:554
-msgid "No data available in table"
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:470
+msgid ""
+"Warning : Image is too large and will not be displayed on the Players. "
+"Please check the allowed Resize Limit in Administration -> Settings"
 msgstr ""
 
 #: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:558
-msgid "Showing _START_ to _END_ of _TOTAL_ entries"
+msgid "No data available in table"
 msgstr ""
 
 #: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:562
-msgid "Showing 0 to 0 of 0 entries"
+msgid "Showing _START_ to _END_ of _TOTAL_ entries"
 msgstr ""
 
 #: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:566
+msgid "Showing 0 to 0 of 0 entries"
+msgstr ""
+
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:570
 msgid "(filtered from _MAX_ total entries)"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:572
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:576
 msgid "Show _MENU_ entries"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:584
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:588
 msgid "Search:"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:588
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:592
 msgid "No matching records found"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:593
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:597
 msgid "First"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:597
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:601
 msgid "Last"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:611
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:615
 msgid ": activate to sort column ascending"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:615
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:619
 msgid ": activate to sort column descending"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:621
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:625
 msgid "Column visibility"
 msgstr ""
 
-#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:625
+#: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:629
 msgid "Print"
 msgstr ""
 
@@ -16016,7 +16022,7 @@ msgstr ""
 
 #: cache/67/67f8d4bfc3d480120c328105ec2fd8ff96194b3ad947cbbd12fc8d3845ef09e4.php:80
 #: cache/45/453574373ee821a249b1c16429aa79905b73b4e1d3b6b2f509d42f51751e5522.php:129
-#: lib/Controller/Playlist.php:1690 lib/Controller/Library.php:2032
+#: lib/Controller/Playlist.php:1690 lib/Controller/Library.php:2039
 #: lib/Controller/Layout.php:1582
 msgid "Design"
 msgstr ""
@@ -18727,7 +18733,7 @@ msgstr ""
 #: lib/Controller/MenuBoard.php:465 lib/Controller/Module.php:379
 #: lib/Controller/Module.php:848 lib/Controller/Folder.php:272
 #: lib/Controller/Playlist.php:892 lib/Controller/Transition.php:159
-#: lib/Controller/Library.php:1346 lib/Controller/DataSetColumn.php:594
+#: lib/Controller/Library.php:1353 lib/Controller/DataSetColumn.php:594
 #: lib/Controller/Tag.php:506 lib/Controller/Connector.php:201
 #: lib/Controller/Layout.php:740 lib/Controller/Layout.php:847
 #: lib/Controller/MenuBoardCategory.php:418 lib/Controller/Help.php:223
@@ -19527,7 +19533,7 @@ msgid ""
 "tab to define"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1114 lib/Controller/Library.php:2180
+#: lib/Controller/Playlist.php:1114 lib/Controller/Library.php:2187
 #: lib/Controller/Layout.php:2121
 #, php-format
 msgid "Copied as %s"
@@ -19567,7 +19573,7 @@ msgstr ""
 msgid "Specified Playlist item is not in use."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1700 lib/Controller/Library.php:2042
+#: lib/Controller/Playlist.php:1700 lib/Controller/Library.php:2049
 #: lib/Controller/Layout.php:1628
 msgid "Preview Layout"
 msgstr ""
@@ -19630,97 +19636,97 @@ msgstr ""
 msgid "This library item is in use."
 msgstr ""
 
-#: lib/Controller/Library.php:1112 lib/Controller/Library.php:1322
-#: lib/Controller/Library.php:2369
+#: lib/Controller/Library.php:1119 lib/Controller/Library.php:1329
+#: lib/Controller/Library.php:2376
 msgid "Cannot set Expiry date in the past"
 msgstr ""
 
-#: lib/Controller/Library.php:1367 lib/Controller/Library.php:1433
+#: lib/Controller/Library.php:1374 lib/Controller/Library.php:1440
 #: lib/Controller/Maintenance.php:101
 msgid "Sorry this function is disabled."
 msgstr ""
 
-#: lib/Controller/Library.php:1465 lib/Controller/Maintenance.php:273
+#: lib/Controller/Library.php:1472 lib/Controller/Maintenance.php:273
 msgid "Library Tidy Complete"
 msgstr ""
 
-#: lib/Controller/Library.php:1576
+#: lib/Controller/Library.php:1583
 msgid "Cannot download region specific module"
 msgstr ""
 
-#: lib/Controller/Library.php:1664
+#: lib/Controller/Library.php:1671
 msgid "Route is available through the API"
 msgstr ""
 
-#: lib/Controller/Library.php:1733 lib/Controller/Layout.php:2186
+#: lib/Controller/Library.php:1740 lib/Controller/Layout.php:2186
 msgid "No tags to assign"
 msgstr ""
 
-#: lib/Controller/Library.php:1744 lib/Controller/Layout.php:2197
+#: lib/Controller/Library.php:1751 lib/Controller/Layout.php:2197
 #, php-format
 msgid "Tagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:1807 lib/Controller/Layout.php:2262
+#: lib/Controller/Library.php:1814 lib/Controller/Layout.php:2262
 msgid "No tags to unassign"
 msgstr ""
 
-#: lib/Controller/Library.php:1818 lib/Controller/Layout.php:2272
+#: lib/Controller/Library.php:1825 lib/Controller/Layout.php:2272
 #, php-format
 msgid "Untagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:1965 lib/Controller/Library.php:2049
+#: lib/Controller/Library.php:1972 lib/Controller/Library.php:2056
 msgid "Specified Media item is not in use."
 msgstr ""
 
-#: lib/Controller/Library.php:2253 lib/Middleware/Theme.php:129
+#: lib/Controller/Library.php:2260 lib/Middleware/Theme.php:129
 #, php-format
 msgid "This form accepts files up to a maximum size of %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2377
+#: lib/Controller/Library.php:2384
 msgid "Provided URL is invalid"
 msgstr ""
 
-#: lib/Controller/Library.php:2416
+#: lib/Controller/Library.php:2423
 #, php-format
 msgid ""
 "Invalid Module type or extension. Module type %s does not allow for %s "
 "extension"
 msgstr ""
 
-#: lib/Controller/Library.php:2445
+#: lib/Controller/Library.php:2452
 msgid "Download rejected for an unknown reason."
 msgstr ""
 
-#: lib/Controller/Library.php:2449
+#: lib/Controller/Library.php:2456
 #, php-format
 msgid "Download rejected due to %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2456
+#: lib/Controller/Library.php:2463
 msgid "Media upload from URL was successful"
 msgstr ""
 
-#: lib/Controller/Library.php:2501
+#: lib/Controller/Library.php:2508
 msgid "Invalid image data"
 msgstr ""
 
-#: lib/Controller/Library.php:2607
+#: lib/Controller/Library.php:2614
 #, php-format
 msgid "Media %s moved to Folder %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2692
+#: lib/Controller/Library.php:2699
 msgid "Not configured by any active connector."
 msgstr ""
 
-#: lib/Controller/Library.php:2742
+#: lib/Controller/Library.php:2749
 msgid "Download failed"
 msgstr ""
 
-#: lib/Controller/Library.php:2751
+#: lib/Controller/Library.php:2758
 msgid "Imported"
 msgstr ""
 
@@ -20472,13 +20478,13 @@ msgid "Please enter author name"
 msgstr ""
 
 #: lib/Controller/Schedule.php:330 lib/Controller/Schedule.php:344
-#: lib/Entity/Schedule.php:1621 lib/Entity/Schedule.php:1632
+#: lib/Entity/Schedule.php:1669 lib/Entity/Schedule.php:1680
 #, php-format
 msgid "%s scheduled on %s"
 msgstr ""
 
 #: lib/Controller/Schedule.php:339 lib/Controller/Schedule.php:569
-#: lib/Entity/Schedule.php:1630
+#: lib/Entity/Schedule.php:1678
 msgid "Private Item"
 msgstr ""
 
@@ -21253,23 +21259,33 @@ msgstr ""
 msgid "Priority must be 0 or a positive number"
 msgstr ""
 
-#: lib/Entity/Schedule.php:615
+#: lib/Entity/Schedule.php:618
 msgid "Repeat every must be a positive number"
 msgstr ""
 
-#: lib/Entity/Schedule.php:921
+#: lib/Entity/Schedule.php:653
+msgid "Unknown repeat type"
+msgstr ""
+
+#: lib/Entity/Schedule.php:658
+msgid ""
+"An event cannot repeat more often than the interval between its start and "
+"end date"
+msgstr ""
+
+#: lib/Entity/Schedule.php:969
 msgid "Cache pool not available"
 msgstr ""
 
-#: lib/Entity/Schedule.php:924
+#: lib/Entity/Schedule.php:972
 msgid "Unable to generate schedule, unknown event"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1265 lib/Entity/Schedule.php:1560
+#: lib/Entity/Schedule.php:1313 lib/Entity/Schedule.php:1608
 msgid "Invalid recurrence type"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1591
+#: lib/Entity/Schedule.php:1639
 msgid "reminderDt not found as next event does not exist"
 msgstr ""
 
@@ -22298,12 +22314,12 @@ msgid "Please choose a template"
 msgstr ""
 
 #: lib/Widget/ForecastIo.php:992 lib/Widget/MenuBoard.php:763
-#: lib/Widget/Calendar.php:863 lib/Widget/GoogleTraffic.php:243
+#: lib/Widget/Calendar.php:864 lib/Widget/GoogleTraffic.php:243
 #: lib/Widget/Stocks.php:697 lib/Widget/Twitter.php:913
 #: lib/Widget/Ticker.php:1003 lib/Widget/Hls.php:191
 #: lib/Widget/DataSetView.php:919 lib/Widget/TwitterMetro.php:169
 #: lib/Widget/Currencies.php:858 lib/Widget/DataSetTicker.php:875
-#: lib/Widget/Agenda.php:784
+#: lib/Widget/Agenda.php:785
 msgid "Please enter a duration"
 msgstr ""
 
@@ -22373,15 +22389,16 @@ msgstr ""
 msgid "Assignable variable must be a number"
 msgstr ""
 
-#: lib/Widget/Calendar.php:852 lib/Widget/Agenda.php:713
+#: lib/Widget/Calendar.php:853 lib/Widget/Agenda.php:714
 msgid "The iCal provided is not valid, please choose a valid feed"
 msgstr ""
 
-#: lib/Widget/Calendar.php:868 lib/Widget/Agenda.php:789
+#: lib/Widget/Calendar.php:869 lib/Widget/Agenda.php:790
 msgid "Please enter a feed URI containing the events you want to display"
 msgstr ""
 
-#: lib/Widget/Calendar.php:883 lib/Widget/Agenda.php:804
+#: lib/Widget/Calendar.php:881 lib/Widget/Calendar.php:891
+#: lib/Widget/Agenda.php:802 lib/Widget/Agenda.php:812
 msgid ""
 "That is not a valid date interval, please use natural language such as 1 week"
 msgstr ""
@@ -22661,7 +22678,7 @@ msgstr ""
 msgid "Please enter countdown date."
 msgstr ""
 
-#: lib/Widget/Agenda.php:409
+#: lib/Widget/Agenda.php:410
 msgid "Configure your feed"
 msgstr ""
 
@@ -22673,19 +22690,19 @@ msgstr ""
 msgid "Please Select the sourceId"
 msgstr ""
 
-#: lib/Widget/Dashboard.php:59
+#: lib/Widget/Dashboard.php:58
 msgid "Please supply a URL."
 msgstr ""
 
-#: lib/Widget/Dashboard.php:65
+#: lib/Widget/Dashboard.php:64
 msgid "5 minutes is the lowest update interval allowed"
 msgstr ""
 
-#: lib/Widget/Dashboard.php:81
+#: lib/Widget/Dashboard.php:80
 msgid "Please set a URL"
 msgstr ""
 
-#: lib/Widget/Dashboard.php:119
+#: lib/Widget/Dashboard.php:118
 msgid "No token returned"
 msgstr ""
 
@@ -23610,25 +23627,25 @@ msgstr ""
 msgid "Not found"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:144
+#: lib/Report/TimeDisconnectedSummary.php:164
 #, php-format
 msgid "%s time disconnected summary report"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:245
+#: lib/Report/TimeDisconnectedSummary.php:265
 #: lib/Report/DistributionReport.php:303
 msgid "No display groups with View permissions"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:368
+#: lib/Report/TimeDisconnectedSummary.php:306
 msgid "Days"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:423
+#: lib/Report/TimeDisconnectedSummary.php:453
 msgid "Downtime"
 msgstr ""
 
-#: lib/Report/TimeDisconnectedSummary.php:428
+#: lib/Report/TimeDisconnectedSummary.php:458
 msgid "Uptime"
 msgstr ""
 
