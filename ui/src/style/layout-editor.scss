@@ -168,6 +168,38 @@
         }
     }
 
+    .snap-controls {
+        position: absolute;
+        display: flex;
+        gap: 3px;
+        bottom: 42px;
+        right: 6px;
+
+        .snap-to-grid-value {
+            width: 50px;
+            color: $xibo-color-primary;
+            margin-right: -6px;
+        }
+
+        & > .btn {
+            opacity: 0.9;
+            width: 30px;
+            font-size: 1rem;
+            background-color: $xibo-color-neutral-0;
+            color: $xibo-color-primary;
+            z-index: 1;
+
+            &.active {
+                background-color: $xibo-color-primary;
+                color: $xibo-color-neutral-0;
+            }
+    
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+
     /* width */
     ::-webkit-scrollbar {
         width: 10px;
@@ -471,7 +503,8 @@
         width: 100%;
 
         #inline-editor-templates,
-        #fullscreenBtn {
+        #fullscreenBtn,
+        .snap-controls {
             z-index: calc(#{$designer-overlay-z-index} + 10);
         }
 
@@ -1519,4 +1552,27 @@ div#bg_media_name {
             display: none;
         }
     }
+}
+
+/* Moveable elements */
+.moveable-line, .moveable-control {
+    background: $xibo-color-primary-l60 !important;
+}
+
+.moveable-normal {
+    opacity: 0.6 !important;
+}
+
+.moveable-bounds {
+    background: $xibo-color-semantic-error !important;
+}
+
+
+.moveable-control.moveable-origin, .moveable-normal.red {
+    background: $xibo-color-accent !important;
+}
+
+.moveable-size-value {
+    color: $xibo-color-accent !important;
+    font-size: 1rem !important;
 }
