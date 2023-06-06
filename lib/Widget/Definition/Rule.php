@@ -31,6 +31,9 @@ class Rule implements \JsonSerializable
 
     public $onStatus = true;
 
+    /** @var string|null */
+    public $message;
+
     /** @var Test[] */
     public $tests;
 
@@ -45,6 +48,7 @@ class Rule implements \JsonSerializable
         return [
             'onSave' => $this->onSave,
             'onStatus' => $this->onStatus,
+            'message' => $this->message,
             'tests' => $this->tests,
         ];
     }

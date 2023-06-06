@@ -47,7 +47,6 @@ $view = Twig::create([
 ], [
     'cache' => PROJECT_ROOT . '/cache'
 ]);
-$view->addExtension(new TwigExtension());
 $view->addExtension(new TransExtension());
 $view->addExtension(new ByteFormatterTwigExtension());
 $view->addExtension(new DateFormatTwigExtension());
@@ -125,27 +124,27 @@ $moduleTemplates = $moduleTemplateFactory->getAll();
 $file = PROJECT_ROOT. '/locale/moduletranslate.php';
 $content = '<?php' . PHP_EOL;
 
-$content .= "// Module translation" . PHP_EOL;
+$content .= '// Module translation' . PHP_EOL;
 // Module translation
 foreach ($modules as $module) {
-    $content .= "echo __('$module->name');" . PHP_EOL;
-    $content .= "echo __('$module->description');" . PHP_EOL;
+    $content .= 'echo __(\''.$module->name.'\');' . PHP_EOL;
+    $content .= 'echo __(\''.$module->description.'\');' . PHP_EOL;
 
     // Settings Translation
     foreach ($module->settings as $setting) {
         if (!empty($setting->title)) {
-            $content .= "echo __('$setting->title');" . PHP_EOL;
+            $content .= 'echo __(\''.$setting->title.'\');' . PHP_EOL;
         }
         if (!empty($setting->helpText)) {
             // replaces any single quote within the value with a backslash followed by a single quote
-            $helpText = str_replace("'", "\\'", $setting->helpText);
-            $content .= "echo __('$helpText');" . PHP_EOL;
+            $helpText = addslashes($setting->helpText);
+            $content .= 'echo __(\''.$helpText.'\');' . PHP_EOL;
         }
 
         if (isset($setting->options) > 0) {
             foreach ($setting->options as $option) {
                 if (!empty($option->title)) {
-                    $content .= "echo __('$option->title');" . PHP_EOL;
+                    $content .= 'echo __(\''.$option->title.'\');' . PHP_EOL;
                 }
             }
         }
@@ -154,58 +153,58 @@ foreach ($modules as $module) {
     // Properties translation
     foreach ($module->properties as $property) {
         if (!empty($property->title)) {
-            $content .= "echo __('$property->title');" . PHP_EOL;
+            $content .= 'echo __(\''.$property->title.'\');' . PHP_EOL;
         }
         if (!empty($property->helpText)) {
             // replaces any single quote within the value with a backslash followed by a single quote
-            $helpText = str_replace("'", "\\'", $property->helpText);
-            $content .= "echo __('$helpText');" . PHP_EOL;
+            $helpText = addslashes($property->helpText);
+            $content .= 'echo __(\''.$helpText.'\');' . PHP_EOL;
         }
 
         if (isset($property->validation) > 0) {
             $message = $property->validation->message;
             if (!empty($message)) {
-                $content .= "echo __('$message');" . PHP_EOL;
+                $content .= 'echo __(\''.$message.'\');' . PHP_EOL;
             }
         }
 
         if (isset($property->options) > 0) {
             foreach ($property->options as $option) {
                 if (!empty($option->title)) {
-                    $content .= "echo __('$option->title');" . PHP_EOL;
+                    $content .= 'echo __(\''.$option->title.'\');' . PHP_EOL;
                 }
             }
         }
     }
 }
 
-$content .= "// Module Template translation" . PHP_EOL;
+$content .= '// Module Template translation' . PHP_EOL;
 // Template Translation
 foreach ($moduleTemplates as $moduleTemplate) {
-    $content .= "echo __('$moduleTemplate->title');" . PHP_EOL;
+    $content .= 'echo __(\''.$moduleTemplate->title.'\');' . PHP_EOL;
 
     // Properties Translation
     foreach ($moduleTemplate->properties as $property) {
         if (!empty($property->title)) {
-            $content .= "echo __('$property->title');" . PHP_EOL;
+            $content .= 'echo __(\''.$property->title.'\');' . PHP_EOL;
         }
         if (!empty($property->helpText)) {
             // replaces any single quote within the value with a backslash followed by a single quote
-            $helpText = str_replace("'", "\\'", $property->helpText);
-            $content .= "echo __('$helpText');" . PHP_EOL;
+            $helpText = addslashes($property->helpText);
+            $content .= 'echo __(\''.$helpText.'\');' . PHP_EOL;
         }
 
         if (isset($property->validation) > 0) {
             $message = $property->validation->message;
             if (!empty($message)) {
-                $content .= "echo __('$message');" . PHP_EOL;
+                $content .= 'echo __(\''.$message.'\');' . PHP_EOL;
             }
         }
 
         if (isset($property->options) > 0) {
             foreach ($property->options as $option) {
                 if (!empty($option->title)) {
-                    $content .= "echo __('$option->title');" . PHP_EOL;
+                    $content .= 'echo __(\''.$option->title.'\');' . PHP_EOL;
                 }
             }
         }
