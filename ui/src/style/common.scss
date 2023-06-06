@@ -70,6 +70,13 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
     .form-check-label {
         flex-grow: 1;
     }
+    .control-label {
+        & > strong {
+            + span[data-toggle="popover"] {
+                margin-left: 10px;
+            }
+        }
+    }
 }
 
 /* Layout Manager */
