@@ -1,0 +1,5 @@
+{
+  "name": "Seed Database",
+  "class": "\\Xibo\\XTR\\SeedDatabaseTask",
+  "options": {}
+}
