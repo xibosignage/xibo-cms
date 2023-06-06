@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Definition;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -242,7 +243,14 @@ class Property implements \JsonSerializable
                         case 'interval':
                             if (!empty($this->value)) {
                                 // Try to create a date interval from it
-                                $dateInterval = \DateInterval::createFromDateString($this->value);
+                                $dateInterval = CarbonInterval::createFromDateString($this->value);
+                                if ($dateInterval === false) {
+                                    throw new InvalidArgumentException(
+                                        // phpcs:ignore Generic.Files.LineLength
+                                        __('That is not a valid date interval, please use natural language such as 1 week'),
+                                        'customInterval'
+                                    );
+                                }
 
                                 // Use now and add the date interval to it
                                 $now = Carbon::now();

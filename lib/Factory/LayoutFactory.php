@@ -26,7 +26,6 @@ use Carbon\Carbon;
 use Stash\Invalidation;
 use Stash\Pool;
 use Xibo\Entity\DataSet;
-use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Folder;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Module;
@@ -1739,14 +1738,17 @@ class LayoutFactory extends BaseFactory
                         ));
                     }
 
-                    // Check the column headings
-                    $diff = array_udiff($dataSet->columns, $existingDataSet->columns, function ($a, $b) {
-                        /** @var DataSetColumn $a */
-                        /** @var DataSetColumn $b */
-                        return $a->heading == $b->heading;
-                    });
-
-                    if (count($diff) > 0) {
+                    // Loop over the desired column headings and the ones in the existing dataset and error out
+                    // as soon as we have one that isn't found.
+                    foreach ($dataSet->columns as $column) {
+                        // Loop through until we find it
+                        foreach ($existingDataSet->columns as $existingDataSetColumn) {
+                            if ($column->heading === $existingDataSetColumn->heading) {
+                                // Drop out to the next column we want to find.
+                                continue 2;
+                            }
+                        }
+                        // We have not found that column in our existing data set
                         throw new InvalidArgumentException(__('DataSets have different column names'));
                     }
                 }
@@ -1790,8 +1792,8 @@ class LayoutFactory extends BaseFactory
                                 foreach ($existingDataSet->columns as $column) {
                                     foreach ($columns as $index => $col) {
                                         if ($col == $column->priorDatasetColumnId) {
-                                            // This must be a string
-                                            $columns[$index] = '' . $column->dataSetColumnId;
+                                            // v4 uses integers as its column ids.
+                                            $columns[$index] = $column->dataSetColumnId;
                                         }
                                     }
                                 }
@@ -2438,8 +2440,8 @@ class LayoutFactory extends BaseFactory
             $layout->width = $parsedRow->getDouble('width');
             $layout->height = $parsedRow->getDouble('height');
             $layout->orientation = $layout->width >= $layout->height ? 'landscape' : 'portrait';
-            $layout->createdDt = $parsedRow->getDate('createdDt');
-            $layout->modifiedDt = $parsedRow->getDate('modifiedDt');
+            $layout->createdDt = $parsedRow->getString('createdDt');
+            $layout->modifiedDt = $parsedRow->getString('modifiedDt');
             $layout->displayOrder = $parsedRow->getInt('displayOrder');
             $layout->statusMessage = $parsedRow->getString('statusMessage');
             $layout->enableStat = $parsedRow->getInt('enableStat');

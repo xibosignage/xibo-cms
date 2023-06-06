@@ -378,9 +378,19 @@ class Soap4 extends Soap
                 $event = new XmdsDependencyRequestEvent($requiredFile);
                 $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
+                // Return either using the full path (for items not cached to the library)
+                // or the relative path for those that are.
                 $path = $event->getFullPath();
                 if (empty($path)) {
-                    throw new NotFoundException(__('File not found'));
+                    // Try the relative path
+                    $path = $event->getRelativePath();
+
+                    if (empty($path)) {
+                        // We've tried both options, so we fail here.
+                        throw new NotFoundException(__('File not found'));
+                    }
+
+                    $path = $libraryLocation . $path;
                 }
 
                 $f = fopen($path, 'r');
