@@ -1365,6 +1365,7 @@ var setupSelectForSchedule = function (dialog) {
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
     $campaignSelect.select2({
+        dropdownParent: $(dialog),
         ajax: {
             url: $campaignSelect.data("searchUrl"),
             dataType: "json",
