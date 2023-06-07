@@ -59,9 +59,8 @@
                 </test>
             </visibility>
             <rule>
-                <test type="and" message="Please enter a positive countdown duration">
+                <test message="Please enter a positive countdown duration">
                     <condition type="gt">0</condition>
-                    <condition field="countdownWarningDuration" type="lte"></condition>
                 </test>
             </rule>
         </property>
@@ -85,6 +84,14 @@
                     <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
+            <rule>
+                <test message="Warning duration needs to be lower than the countdown main duration.">
+                    <condition field="countdownDuration" type="lt"></condition>
+                </test>
+                <test message="Please enter a positive countdown duration">
+                    <condition type="gt">0</condition>
+                </test>
+            </rule>
         </property>
         <property id="countdownWarningDate" type="date" format="DD/MM/YYYY HH:mm:ss" variant="dateTime">
             <title>Warning Date</title>

@@ -31,7 +31,7 @@
               <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
               <default></default>
               <rule>
-                  <test type="and">
+                  <test>
                       <condition type="interval"></condition>
                   </test>
               </rule>
@@ -2794,7 +2794,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
                 <default></default>
                 <rule>
-                    <test type="and">
+                    <test>
                         <condition type="interval"></condition>
                     </test>
                 </rule>
@@ -3134,7 +3134,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
                 <default></default>
                 <rule>
-                    <test type="and">
+                    <test>
                         <condition type="interval"></condition>
                     </test>
                 </rule>

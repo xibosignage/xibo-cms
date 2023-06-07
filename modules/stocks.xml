@@ -42,7 +42,7 @@
             <title>Stock Symbols</title>
             <helpText>A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.</helpText>
             <rule>
-                <test type="and">
+                <test>
                     <condition type="required"></condition>
                 </test>
             </rule>

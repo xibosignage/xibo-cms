@@ -43,7 +43,7 @@
             <helpText>The Location (URL) of the dashboard webpage</helpText>
             <default></default>
             <rule>
-                <test type="and">
+                <test>
                     <condition type="required"></condition>
                 </test>
             </rule>

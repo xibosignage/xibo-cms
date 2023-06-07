@@ -40,7 +40,7 @@
             <helpText>Search term. You can test your search term in the twitter.com search box first.</helpText>
             <default></default>
             <rule>
-                <test type="and">
+                <test>
                     <condition type="required"></condition>
                 </test>
             </rule>
