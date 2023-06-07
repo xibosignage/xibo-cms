@@ -36,7 +36,6 @@ use Xibo\Factory\FontFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\playlistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\SyncGroupFactory;
 use Xibo\Factory\TaskFactory;
@@ -63,7 +62,6 @@ class SeedDatabaseTask implements TaskInterface
     private WidgetFactory $widgetFactory;
     private LayoutFactory $layoutFactory;
     private CampaignFactory $campaignFactory;
-    private playlistFactory $playlistFactory;
     private TaskFactory $taskFactory;
     private DisplayFactory $displayFactory;
     private DataSetFactory $dataSetFactory;
@@ -92,7 +90,6 @@ class SeedDatabaseTask implements TaskInterface
         $this->widgetFactory = $container->get('widgetFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->campaignFactory = $container->get('campaignFactory');
-        $this->playlistFactory = $container->get('playlistFactory');
         $this->taskFactory = $container->get('taskFactory');
         $this->displayFactory = $container->get('displayFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
@@ -263,7 +260,7 @@ class SeedDatabaseTask implements TaskInterface
         $this->mediaService->initLibrary();
 
         // Import a layout
-        $folder = PROJECT_ROOT . '/seeds/layouts';
+        $folder = PROJECT_ROOT . '/tests/resources/seeds/layouts/';
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
             if (stripos($file, '.zip')) {

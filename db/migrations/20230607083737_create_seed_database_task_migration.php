@@ -22,30 +22,24 @@
 
 use Phinx\Migration\AbstractMigration;
 
-
 /**
- * Add widget compatibility task
+ * Add seed database task
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
-class AddWidgetCompatibilityTaskMigration extends AbstractMigration
+class CreateSeedDatabaseTaskMigration extends AbstractMigration
 {
     public function change()
     {
-
-        // Add a task for widget upgrade from v3 to v4
-        $this->table('task')
-            ->insert([
-                'name' => 'Widget Compatibility',
-                'class' => '\Xibo\XTR\WidgetCompatibilityTask',
-                'options' => '[]',
-                'schedule' => '* * * * * *',
-                'isActive' => '1',
-                'configFile' => '/tasks/widget-compatibility.task',
-                'pid' => 0,
-                'lastRunDt' => 0,
-                'lastRunDuration' => 0,
-                'lastRunExitCode' => 0
-            ])
+        $task = $this->table('task');
+        $task->insert([
+            'name' => 'Seed Database',
+            'class' => '\Xibo\XTR\SeedDatabaseTask',
+            'options' => '[]',
+            'schedule' => '* * * * * *',
+            'isActive' => '0',
+            'configFile' => '/tasks/seed-database.task'
+        ])
             ->save();
     }
 }
+
