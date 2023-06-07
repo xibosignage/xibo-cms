@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -44,7 +44,7 @@ describe('Proof of Play', function () {
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('media'); // stat type
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
-        cy.get('#stats tbody tr:nth-child(1) td:nth-child(8)').contains('POP Media 1'); // media
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(8)').contains('child_folder_media'); // media
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(2); // number of plays
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(120); // total duration
 
@@ -56,6 +56,8 @@ describe('Proof of Play', function () {
 
         // Wait for
         cy.wait('@reportData');
+        cy.contains('Tabular').should('be.visible').click();
+
 
         // Should have layout stat - Test a layout stat for an ad campaign, a layout and a display
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('layout'); // stat type
@@ -89,7 +91,7 @@ describe('Proof of Play', function () {
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('media'); // stat type
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
-        cy.get('#stats tbody tr:nth-child(1) td:nth-child(8)').contains('POP Media 1'); // media
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(8)').contains('child_folder_media'); // media
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(2); // number of plays
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(120); // total duration
 

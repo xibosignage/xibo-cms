@@ -35,10 +35,10 @@ class AddWidgetCompatibilityTaskMigration extends AbstractMigration
         // Add a task for widget upgrade from v3 to v4
         $this->table('task')
             ->insert([
-                'name' => 'Widget Compatibity',
+                'name' => 'Widget Compatibility',
                 'class' => '\Xibo\XTR\WidgetCompatibilityTask',
                 'options' => '[]',
-                'schedule' => '0 0 1 1 *',
+                'schedule' => '* * * * * *',
                 'isActive' => '1',
                 'configFile' => '/tasks/widget-compatibility.task',
                 'pid' => 0,
