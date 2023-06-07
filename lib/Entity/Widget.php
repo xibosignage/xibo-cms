@@ -1141,8 +1141,8 @@ class Widget implements \JsonSerializable
         $this->isNew = true;
 
         $sql = '
-            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`, `fromDt`, `toDt`, `createdDt`, `modifiedDt`)
-            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration, :fromDt, :toDt, :createdDt, :modifiedDt)
+            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`, `fromDt`, `toDt`, `createdDt`, `modifiedDt`, `schemaVersion`)
+            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration, :fromDt, :toDt, :createdDt, :modifiedDt, :schemaVersion)
         ';
 
         $this->widgetId = $this->getStore()->insert($sql, array(
@@ -1156,7 +1156,8 @@ class Widget implements \JsonSerializable
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
             'createdDt' => ($this->createdDt === null) ? Carbon::now()->format('U') : $this->createdDt,
-            'modifiedDt' => Carbon::now()->format('U')
+            'modifiedDt' => Carbon::now()->format('U'),
+            'schemaVersion' => $this->schemaVersion
         ));
     }
 

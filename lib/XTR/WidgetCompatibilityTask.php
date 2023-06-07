@@ -71,6 +71,9 @@ class WidgetCompatibilityTask implements TaskInterface
         // If the Widget Compatibility class is defined, it needs to be executed to upgrade the widgets.
         $this->runMessage = '# ' . __('Widget Compatibility') . PHP_EOL . PHP_EOL;
 
+        // We should get all widgets which are < the schema version of the module installed, and
+        // upgrade them to the schema version of the module installed.
+        // TODO How to get widgets which are < the schema version of the module installed?
         $widgets = $this->widgetFactory->query(null, [
             'schemaVersion' => 1
         ]);
@@ -95,7 +98,8 @@ class WidgetCompatibilityTask implements TaskInterface
                 continue;
             }
 
-            if ($module->isWidgetCompatibilityAvailable()) {
+            // Only upgrade if widget schema version is less than the module schema version
+            if ($widget->schemaVersion < $module->schemaVersion && $module->isWidgetCompatibilityAvailable()) {
                 $countWidgets++;
 
                 // Grab a widget compatibility interface, if there is one
@@ -103,9 +107,9 @@ class WidgetCompatibilityTask implements TaskInterface
                 if ($widgetCompatibilityInterface !== null) {
                     $this->log->debug('WidgetCompatibilityTask: widgetId ' . $widget->widgetId);
                     try {
-                        $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, 2);
+                        $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, $module->schemaVersion);
                         if ($upgraded) {
-                            $widget->schemaVersion = 2;
+                            $widget->schemaVersion = $module->schemaVersion;
                             $widget->save(['alwaysUpdate'=>true]);
                         }
                     } catch (\Exception $e) {

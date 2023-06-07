@@ -2913,11 +2913,11 @@ class LayoutFactory extends BaseFactory
                     $upgraded = $widgetCompatibilityInterface->upgradeWidget(
                         $widget,
                         $widget->schemaVersion,
-                        2
+                        $module->schemaVersion
                     );
 
                     if ($upgraded) {
-                        $widget->schemaVersion = 2;
+                        $widget->schemaVersion = $module->schemaVersion;
                     }
                 } catch (\Exception $e) {
                     $this->getLog()->error('Error upgrading widget '. $e->getMessage());
