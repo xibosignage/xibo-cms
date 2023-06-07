@@ -162,9 +162,13 @@ foreach ($modules as $module) {
         }
 
         if (isset($property->validation) > 0) {
-            $message = $property->validation->message;
-            if (!empty($message)) {
-                $content .= 'echo __(\''.$message.'\');' . PHP_EOL;
+            $tests = $property->validation->tests;
+            foreach ($tests as $test) {
+                // Property rule test message
+                $message = $test->message;
+                if (!empty($message)) {
+                    $content .= 'echo __(\''.$message.'\');' . PHP_EOL;
+                }
             }
         }
 
@@ -195,9 +199,13 @@ foreach ($moduleTemplates as $moduleTemplate) {
         }
 
         if (isset($property->validation) > 0) {
-            $message = $property->validation->message;
-            if (!empty($message)) {
-                $content .= 'echo __(\''.$message.'\');' . PHP_EOL;
+            $tests = $property->validation->tests;
+            foreach ($tests as $test) {
+                // Property rule test message
+                $message = $test->message;
+                if (!empty($message)) {
+                    $content .= 'echo __(\''.$message.'\');' . PHP_EOL;
+                }
             }
         }
 
