@@ -91,7 +91,7 @@ class Module extends Base
         ];
 
         // TODO: do we need a filter?
-        $modules = $this->moduleFactory->getAll();
+        $modules = $this->moduleFactory->getAllExceptCanvas();
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
