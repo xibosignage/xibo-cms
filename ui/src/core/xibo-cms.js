@@ -311,8 +311,11 @@ function XiboInitialise(scope, options) {
     $(scope + " .pagedSelect select.form-control").each(function() {
         var $this = $(this);
         var anchor = $this.data("anchorElement");
+        var inModal = $(scope).hasClass("modal");
         if (anchor !== undefined && anchor !== "") {
             makePagedSelect($(this), $(anchor));
+        } else if (inModal) {
+            makePagedSelect($(this), $(scope));
         } else {
             makePagedSelect($(this), $("body"));
         }
