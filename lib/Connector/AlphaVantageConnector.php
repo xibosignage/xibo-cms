@@ -229,43 +229,47 @@ class AlphaVantageConnector implements ConnectorInterface
         $items = array_map('trim', explode(',', $items));
 
         foreach ($items as $symbol) {
-            // Does this symbol have any additional data
-            $parsedSymbol = explode('|', $symbol);
+            try {
+                // Does this symbol have any additional data
+                $parsedSymbol = explode('|', $symbol);
 
-            $symbol = $parsedSymbol[0];
-            $name = ($parsedSymbol[1] ?? $symbol);
-            $currency = ($parsedSymbol[2] ?? '');
+                $symbol = $parsedSymbol[0];
+                $name = ($parsedSymbol[1] ?? $symbol);
+                $currency = ($parsedSymbol[2] ?? '');
 
-            $result = $this->getStockQuote($symbol, $this->getSetting('isPaidPlan'));
+                $result = $this->getStockQuote($symbol, $this->getSetting('isPaidPlan'));
 
-            $this->getLogger()->debug(
-                'AlphaVantage Connector : getStockResults data: ' .
-                var_export($result, true)
-            );
+                $this->getLogger()->debug(
+                    'AlphaVantage Connector : getStockResults data: ' .
+                    var_export($result, true)
+                );
 
-            $item = [];
+                $item = [];
 
-            foreach ($result['Time Series (Daily)'] as $series) {
-                $item = [
-                    'Name' => $name,
-                    'Symbol' => $symbol,
-                    'time' => $result['Meta Data']['3. Last Refreshed'],
-                    'LastTradePriceOnly' => round($series['4. close'], 4),
-                    'RawLastTradePriceOnly' => $series['4. close'],
-                    'YesterdayTradePriceOnly' => round($series['1. open'], 4),
-                    'RawYesterdayTradePriceOnly' => $series['1. open'],
-                    'TimeZone' => $result['Meta Data']['5. Time Zone'],
-                    'Currency' => $currency
-                ];
+                foreach ($result['Time Series (Daily)'] as $series) {
+                    $item = [
+                        'Name' => $name,
+                        'Symbol' => $symbol,
+                        'time' => $result['Meta Data']['3. Last Refreshed'],
+                        'LastTradePriceOnly' => round($series['4. close'], 4),
+                        'RawLastTradePriceOnly' => $series['4. close'],
+                        'YesterdayTradePriceOnly' => round($series['1. open'], 4),
+                        'RawYesterdayTradePriceOnly' => $series['1. open'],
+                        'TimeZone' => $result['Meta Data']['5. Time Zone'],
+                        'Currency' => $currency
+                    ];
 
-                $item['Change'] = round($item['RawLastTradePriceOnly'] - $item['RawYesterdayTradePriceOnly'], 4);
-                $item['SymbolTrimmed'] = explode('.', $item['Symbol'])[0];
-                $item = $this->decorateWithReplacements($item);
-                break;
+                    $item['Change'] = round($item['RawLastTradePriceOnly'] - $item['RawYesterdayTradePriceOnly'], 4);
+                    $item['SymbolTrimmed'] = explode('.', $item['Symbol'])[0];
+                    $item = $this->decorateWithReplacements($item);
+                    break;
+                }
+
+                // Parse the result and add it to our data array
+                $dataProvider->addItem($item);
+            } catch (\Exception $exception) {
+                $this->getLogger()->error('Invalid symbol ' . $symbol . ', e: ' . $exception->getMessage());
             }
-
-            // Parse the result and add it to our data array
-            $dataProvider->addItem($item);
         }
     }
 

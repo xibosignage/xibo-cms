@@ -9,6 +9,10 @@ window.templates = {
         require('./src/templates/forms/inputs/add-ons/customPopOver.hbs'),
       dropdownOptionImage:
         require('./src/templates/forms/inputs/add-ons/dropdownOptionImage.hbs'),
+      dateFormatHelperPopup:
+        require(
+          './src/templates/forms/inputs/add-ons/dateFormatHelperPopup.hbs',
+        ),
     },
     group: require('./src/templates/forms/group.hbs'),
     button: require('./src/templates/forms/button.hbs'),

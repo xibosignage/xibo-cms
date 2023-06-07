@@ -257,6 +257,37 @@ window.forms = {
             );
           }
 
+          // Add date format helper popup when variant = dateFormat
+          if (property.variant && property.variant === 'dateFormat') {
+            $newField.find('label.control-label').append(
+              $(templates.forms.addOns.dateFormatHelperPopup({
+                content: Handlebars.compile($('#php-date-format-table').html()),
+              })),
+            );
+
+            // Initialize popover
+            $newField.find('[data-toggle="popover"]').popover({
+              sanitize: false,
+            }).on('mouseenter', function() {
+              // eslint-disable-next-line no-invalid-this
+              const $this = $(this);
+              const popoverId = $this.attr('aria-describedby');
+
+              $('#' + popoverId)
+                .on('mouseenter', function() {
+                  $this.popover('show');
+                })
+                .on('mouseleave', function() {
+                  $this.popover('hide');
+                });
+            }).on('mouseleave', function() {
+              setTimeout(function() {
+                // eslint-disable-next-line no-invalid-this
+                $(this).popover('hide');
+              }, 300);
+            });
+          }
+
           // Handle depends on property if not already set
           if (
             property.dependsOn &&
