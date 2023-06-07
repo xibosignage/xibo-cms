@@ -311,8 +311,8 @@ $(() => {
       // Refresh the designer containers
       lD.refreshEditor(true, true);
 
-      // TODO: Load preferences (not being used at the moment)
-      // lD.loadPrefs();
+      // Load preferences
+      lD.loadPrefs();
     } else {
       // Login Form needed?
       if (res.login) {
@@ -2879,11 +2879,11 @@ lD.handleMessage = function(event) {
   }
 };
 
-
 /**
  * Load user preferences
  */
 lD.loadPrefs = function() {
+  const self = this;
   // Load using the API
   const linkToAPI = urlsForApi.user.getPref;
 
@@ -2894,8 +2894,15 @@ lD.loadPrefs = function() {
   }).done(function(res) {
     if (res.success) {
       const loadedData = JSON.parse(res.data.value);
-      // TODO Loaded data is not being used
-      console.log(loadedData);
+      if (loadedData.snapOptions) {
+        self.viewer.moveableOptions = loadedData.snapOptions;
+
+        // Update moveable
+        self.viewer.updateMoveable();
+
+        // Update moveable UI
+        self.viewer.updateMoveableUI();
+      }
     } else {
       // Login Form needed?
       if (res.login) {
@@ -2926,12 +2933,13 @@ lD.savePrefs = function(clearPrefs = false) {
     console.log('Clearing user preferences');
   }
 
-  // TODO Data to be saved
+  // Data to be saved
   const dataToSave = {
     preference: [
       {
         option: 'editor',
         value: JSON.stringify({
+          snapOptions: this.viewer.moveableOptions,
         }),
       },
     ],

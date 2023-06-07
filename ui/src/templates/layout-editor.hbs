@@ -39,6 +39,23 @@
                             <i class="fas fa-arrows-alt hide-on-fs"></i>
                             <i class="fas fa-compress-arrows-alt show-on-fs"></i>
                         </button>
+
+                        {{!-- Snap controls --}}
+                        <div class="snap-controls" style="display: none;">
+                            <input type="number" class="snap-to-grid-value" name="snapToGridValue" style="display: none;">
+                            <button type="button" id="snapToGrid" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                                data-title="{{ trans.snapToGrid }}">
+                                <i class="fa-border-all fas"></i>
+                            </button>
+                            <button type="button" id="snapToBorders" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                                data-title="{{ trans.snapToBorders }}">
+                                <i class="fa-border-style fas"></i>
+                            </button>
+                            <button type="button" id="snapToElements" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                                data-title="{{ trans.snapToElements }}">
+                                <i class="fas fa-square"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="editor-toolbar editor-bottom-bar">

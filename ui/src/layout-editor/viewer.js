@@ -43,6 +43,12 @@ const Viewer = function(parent, container) {
 
   // Moveable object
   this.moveable = null;
+  this.moveableOptions = {
+    snapToGrid: false,
+    snapGridGap: 20,
+    snapToBorders: false,
+    snapToElements: false,
+  };
 
   // Layout orientation
   this.orientation = null;
@@ -253,6 +259,14 @@ Viewer.prototype.render = function(forceReload = false) {
 
   // Update moveable
   this.updateMoveable();
+
+  // Update moveable UI
+  this.updateMoveableUI();
+
+  // Initialise tooltips
+  this.parent.common.reloadTooltips(
+    this.DOMObject.parent(),
+  );
 };
 
 /**
@@ -549,6 +563,65 @@ Viewer.prototype.handleInteractions = function() {
     this.reload = true;
     this.toggleFullscreen();
   }.bind(this));
+
+  // Handle snap buttons
+  $viewerContainer.parent().find('#snapToGrid').off().click(function(ev) {
+    this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
+
+    // Turn off snap to element if grid is on
+    if (this.moveableOptions.snapToGrid) {
+      this.moveableOptions.snapToElements = false;
+    }
+
+    // Update moveable options
+    this.updateMoveableOptions();
+
+    // Update moveable UI
+    this.updateMoveableUI();
+  }.bind(this));
+
+  $viewerContainer.parent().find('#snapToBorders').off().click(function() {
+    this.moveableOptions.snapToBorders = !this.moveableOptions.snapToBorders;
+
+    // Update moveable options
+    this.updateMoveableOptions();
+
+    // Update moveable UI
+    this.updateMoveableUI();
+  }.bind(this));
+
+  $viewerContainer.parent().find('#snapToElements').off().click(function() {
+    this.moveableOptions.snapToElements = !this.moveableOptions.snapToElements;
+
+    // Turn off snap to grid if element is on
+    if (this.moveableOptions.snapToElements) {
+      this.moveableOptions.snapToGrid = false;
+    }
+
+    // Update moveable options
+    this.updateMoveableOptions();
+
+    // Update moveable UI
+    this.updateMoveableUI();
+  }.bind(this));
+
+  const updateMoveableWithDebounce = _.debounce(function() {
+    self.updateMoveableOptions();
+  }, 1000);
+  $viewerContainer.parent().find('.snap-to-grid-value')
+    .off().on('input', function(ev) {
+      let gridValue = Number($(ev.currentTarget).val());
+
+      if (gridValue < 1) {
+        gridValue = 1;
+        $(ev.currentTarget).val(1);
+      }
+
+      self.moveableOptions.snapGridGap = gridValue;
+
+      // Update moveable options
+      updateMoveableWithDebounce();
+    });
 };
 
 /**
@@ -1277,7 +1350,7 @@ Viewer.prototype.initMoveable = function() {
     let elTop = e.top;
 
     // If dragged object is an element inside a group
-    // use the group to set the limits
+    // use the group position to get the global position
     if ($(e.target).parent().hasClass('designer-element-group')) {
       const parentPos = $(e.target).parent().position();
       elLeft = parentPos.left + e.left;
@@ -1403,6 +1476,11 @@ Viewer.prototype.initMoveable = function() {
       $(e.target).parents('.designer-element-group'),
       true,
     );
+  });
+
+  // Update moveable options
+  this.updateMoveableOptions({
+    savePreferences: false,
   });
 };
 
@@ -1723,8 +1801,201 @@ Viewer.prototype.updateMoveable = function() {
 
     this.moveable.target = $selectedElement[0];
     this.moveable.updateRect();
+
+    // Show snap controls
+    this.DOMObject.parent().find('.snap-controls').show();
   } else {
     this.moveable.target = null;
+
+    // Hide snap controls
+    this.DOMObject.parent().find('.snap-controls').hide();
+  }
+
+  // Also update options
+  this.updateMoveableOptions({
+    savePreferences: false,
+  });
+};
+
+/**
+ * Update moveable interface
+ */
+Viewer.prototype.updateMoveableUI = function() {
+  const $snapControls = this.DOMObject.parent().find('.snap-controls');
+
+  // Snap to grid value
+  const $gridValue = $snapControls.find('.snap-to-grid-value');
+  if (!this.moveableOptions.snapToGrid) {
+    // Hide number input
+    $gridValue.hide();
+  } else {
+    // Show number input
+    $gridValue.show();
+
+    // Set snap to grid gap
+    $gridValue.val(this.moveableOptions.snapGridGap);
+  }
+
+
+  // Snap to grid
+  $snapControls.find('#snapToGrid').toggleClass(
+    'active',
+    this.moveableOptions.snapToGrid,
+  );
+
+  // Snap to borders
+  $snapControls.find('#snapToBorders').toggleClass(
+    'active',
+    this.moveableOptions.snapToBorders,
+  );
+
+  // Snap to elements
+  $snapControls.find('#snapToElements').toggleClass(
+    'active',
+    this.moveableOptions.snapToElements,
+  );
+};
+
+/**
+ * Update moveable options
+ * @param {object} [options] - options
+ * @param {boolean=} [options.snapToGrid] - Snap to grid lines
+ * @param {boolean=} [options.snapGridGap]
+ *  - Snap to grid distance between grid lines
+ * @param {boolean=} [options.snapToBorders] - Snap to layout borders
+ * @param {boolean=} [options.snapToElements] - Snap to other elements
+ * @param {boolean=} [options.savePreferences=true] - Save preferences
+ */
+Viewer.prototype.updateMoveableOptions = function({
+  snapToGrid,
+  snapGridGap,
+  snapToBorders,
+  snapToElements,
+  savePreferences = true,
+} = {}) {
+  const snapThreshold = 5;
+
+  // Snap to grid
+  (snapToGrid) &&
+    (this.moveableOptions.snapToGrid = snapToGrid);
+
+  // Update grid gap
+  (snapGridGap) &&
+    (this.moveableOptions.snapGridGap = snapGridGap);
+
+  // Snap to borders
+  (snapToBorders) &&
+    (this.moveableOptions.snapToBorders = snapToBorders);
+
+  // Snap to elements
+  (snapToElements) &&
+    (this.moveableOptions.snapToElements = snapToElements);
+
+  // Container scale
+  const scale = (this.containerElementDimensions) ?
+    this.containerElementDimensions.scale : 1;
+  const containerWidth = (this.containerElementDimensions) ?
+    this.containerElementDimensions.width : lD.layout.width;
+  const containerHeight = (this.containerElementDimensions) ?
+    this.containerElementDimensions.height : lD.layout.height;
+
+  // Toggle snap
+  if (
+    this.moveableOptions.snapToGrid ||
+    this.moveableOptions.snapToBorders ||
+    this.moveableOptions.snapToElements
+  ) {
+    this.moveable.snappable = true;
+    this.moveable.snapThreshold = snapThreshold;
+    this.moveable.snapContainer =
+      this.DOMObject.find('.viewer-element.layout')[0];
+
+    this.moveable.snapDirections = {
+      top: true,
+      left: true,
+      bottom: true,
+      right: true,
+      center: (this.moveableOptions.snapToGrid) ? false : true,
+      middle: (this.moveableOptions.snapToGrid) ? false : true,
+    };
+
+    this.moveable.elementSnapDirections = {
+      top: true,
+      left: true,
+      bottom: true,
+      right: true,
+      center: true,
+      middle: true,
+    };
+
+    this.moveable.snapDistFormat = function(v) {
+      return `${Math.round(v/scale)}px`;
+    };
+
+    // Snap to middle points
+    this.moveable.horizontalGuidelines =
+      [{
+        pos: containerHeight/2,
+        className: 'red',
+      }];
+    this.moveable.verticalGuidelines =
+      [{
+        pos: containerWidth/2,
+        className: 'red',
+      }];
+  } else {
+    this.moveable.snappable = false;
+    this.moveable.snapDirections = null;
+    this.moveable.elementSnapDirections = null;
+    this.moveable.horizontalGuidelines = [];
+    this.moveable.verticalGuidelines = [];
+  }
+
+  // Grid snap
+  if (this.moveableOptions.snapToGrid) {
+    const gridGap = this.moveableOptions.snapGridGap * scale;
+
+    this.moveable.snapGridWidth = gridGap;
+    this.moveable.snapGridHeight = gridGap;
+    this.moveable.isDisplayGridGuidelines = true;
+    this.moveable.horizontalGuidelines = [];
+    this.moveable.verticalGuidelines = [];
+  } else {
+    this.moveable.snapGridWidth = null;
+    this.moveable.snapGridHeight = null;
+    this.moveable.isDisplayGridGuidelines = false;
+  }
+
+  // Border snap
+  if (this.moveableOptions.snapToBorders) {
+    this.moveable.bounds = {
+      left: 0,
+      right: containerWidth,
+      top: 0,
+      bottom: containerHeight,
+    };
+  } else {
+    this.moveable.bounds = null;
+  }
+
+  // Snap to elements
+  if (this.moveableOptions.snapToElements) {
+    // Get elements
+    const $elementsToSnapTo = $('.designer-element:not(.selected)');
+    const elementsArray = [];
+    Array.from($elementsToSnapTo).forEach(function(el) {
+      elementsArray.push(el);
+    });
+
+    this.moveable.elementGuidelines = elementsArray;
+  } else {
+    // Clear guidelines
+    this.moveable.elementGuidelines = [];
+  }
+
+  // Save snap preferences
+  if (savePreferences) {
+    this.parent.savePrefs();
   }
 };
 
