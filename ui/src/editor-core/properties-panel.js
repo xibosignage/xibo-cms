@@ -775,6 +775,11 @@ PropertiesPanel.prototype.render = function(
         positionTemplate(positionProperties),
       );
 
+      // Hide make fullscreen button for element groups
+      if (isElementGroup) {
+        self.DOMObject.find('#positionTab #setFullScreen').hide();
+      }
+
       // If we change any input, update the target position
       self.DOMObject.find('#positionTab [name]').on('change', function(ev) {
         const viewerScale = lD.viewer.containerElementDimensions.scale;
@@ -828,6 +833,51 @@ PropertiesPanel.prototype.render = function(
           lD.viewer.updateMoveable();
         }
       });
+
+      // Handle set fullscreen button
+      self.DOMObject.find('#positionTab #setFullScreen').on(
+        'click',
+        function(ev) {
+          const form = $(ev.currentTarget).parents('#positionTab');
+          const viewerScale = lD.viewer.containerElementDimensions.scale;
+
+          if (targetAux == undefined) {
+            // Widget
+            const regionId = target.parent.id;
+
+            lD.layout.regions[regionId].transform({
+              width: lD.layout.width,
+              height: lD.layout.height,
+              top: 0,
+              left: 0,
+            }, true);
+
+            lD.viewer.updateRegion(lD.layout.regions[regionId]);
+          } else if (targetAux?.type == 'element') {
+            // Element
+            const $targetElement = $('#' + targetAux.elementId);
+
+            // Move element
+            $targetElement.css({
+              width: lD.layout.width * viewerScale,
+              height: lD.layout.height * viewerScale,
+              top: 0,
+              left: 0,
+            });
+
+            // Save properties
+            lD.viewer.saveElementProperties($targetElement, true);
+
+            // Update element
+            lD.viewer.updateElement(targetAux, true);
+          }
+
+          // Change position tab values
+          form.find('[name="width"]').val(lD.layout.width);
+          form.find('[name="height"]').val(lD.layout.height);
+          form.find('[name="top"]').val(0);
+          form.find('[name="left"]').val(0);
+        });
     }
 
     // Init fields

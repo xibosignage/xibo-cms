@@ -59,7 +59,7 @@
     .main-panel-wrapper {
         position: relative;
         height: 100%;
-        padding: 4px;
+        padding: 2px;
         background-color: $xibo-color-neutral-900;
         border-width: 2px;
         border-style: solid;
@@ -353,7 +353,8 @@
         height: 100%;
         border: none;
         background: $xibo-color-neutral-900;
-        padding: 32px;
+        padding: 18px;
+        border-radius: 2p;
 
         .layout-viewer-border {
             @include set-transparent-color(background, $xibo-color-neutral-900, 0.9);
