@@ -72,10 +72,14 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
 
     // Update new values if they are provided
     const newValues = [{
-      width: (transform.width) ? transform.width : this.dimensions.width,
-      height: (transform.height) ? transform.height : this.dimensions.height,
-      top: (transform.top) ? transform.top : this.dimensions.top,
-      left: (transform.left) ? transform.left : this.dimensions.left,
+      width: (transform.width != undefined) ?
+        transform.width : this.dimensions.width,
+      height: (transform.height != undefined) ?
+        transform.height : this.dimensions.height,
+      top: (transform.top != undefined) ?
+        transform.top : this.dimensions.top,
+      left: (transform.left != undefined) ?
+        transform.left : this.dimensions.left,
       regionid: this.regionId,
     }];
 
@@ -102,10 +106,10 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
   // Apply changes to the region ( updating values )
   this.dimensions.width = transform.width;
   this.dimensions.height = transform.height;
-  this.dimensions.top =
-    (transform.top) ? transform.top : this.dimensions.top;
-  this.dimensions.left =
-    (transform.left) ? transform.left : this.dimensions.left;
+  this.dimensions.top = (transform.top != undefined) ?
+    transform.top : this.dimensions.top;
+  this.dimensions.left = (transform.left != undefined) ?
+    transform.left : this.dimensions.left;
 };
 
 /**
