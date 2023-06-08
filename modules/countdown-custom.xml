@@ -68,7 +68,7 @@
                 </test>
             </visibility>
             <rule>
-                <test type="and">
+                <test>
                     <condition type="required"></condition>
                 </test>
             </rule>
@@ -84,7 +84,7 @@
                 </test>
             </visibility>
             <rule>
-                <test type="and" message="Warning duration needs to be lower than the widget duration.">
+                <test message="Warning duration needs to be lower than the widget duration.">
                     <condition field="duration" type="lte"></condition>
                 </test>
             </rule>

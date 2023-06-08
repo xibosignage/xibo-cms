@@ -68,8 +68,10 @@
                 </test>
             </visibility>
             <rule>
-                <test type="or" message="Lower limit must be 0 or above, and lower than the upper limit">
-                    <condition type="eq">0</condition>
+                <test message="Lower limit must be 0 or above">
+                    <condition type="gte">0</condition>
+                </test>
+                <test message="Lower limit must be lower than the upper limit">
                     <condition field="upperLimit" type="lte"></condition>
                 </test>
             </rule>
@@ -84,7 +86,7 @@
                 </test>
             </visibility>
             <rule>
-                <test type="and">
+                <test message="Upper limit must be 0 or above">
                     <condition type="gte">0</condition>
                 </test>
             </rule>
@@ -203,7 +205,7 @@
                 </test>
             </visibility>
             <rule>
-                <test type="and">
+                <test>
                     <condition type="ncontains">DESC</condition>
                 </test>
             </rule>

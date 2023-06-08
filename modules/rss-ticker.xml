@@ -53,7 +53,7 @@
             <helpText>The Link for the RSS feed</helpText>
             <default></default>
             <rule>
-                <test type="and">
+                <test>
                     <condition type="required"></condition>
                 </test>
             </rule>
