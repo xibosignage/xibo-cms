@@ -262,6 +262,23 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
+     * Get an array of all modules except canvas
+     * @return Module[]
+     */
+    public function getAllExceptCanvas(): array
+    {
+        $this->getLog()->debug('ModuleFactory: getAllButCanvas');
+        $modules = [];
+        foreach ($this->load() as $module) {
+            // Hide the canvas module from the module list
+            if ($module->moduleId != 'core-canvas') {
+                $modules[] = $module;
+            }
+        }
+        return $modules;
+    }
+
+    /**
      * Get an array of all enabled modules
      * @return Module[]
      */
