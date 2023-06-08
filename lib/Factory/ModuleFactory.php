@@ -271,7 +271,7 @@ class ModuleFactory extends BaseFactory
         $modules = [];
         foreach ($this->load() as $module) {
             // Hide the canvas module from the module list
-            if ($module->name != 'Canvas') {
+            if ($module->moduleId != 'core-canvas') {
                 $modules[] = $module;
             }
         }
