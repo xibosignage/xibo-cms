@@ -22,7 +22,7 @@
 
 namespace Xibo\XTR;
 
-use Xibo\Entity\Task;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -71,63 +71,29 @@ class WidgetCompatibilityTask implements TaskInterface
         // If the Widget Compatibility class is defined, it needs to be executed to upgrade the widgets.
         $this->runMessage = '# ' . __('Widget Compatibility') . PHP_EOL . PHP_EOL;
 
-        // We should get all widgets which are < the schema version of the module installed, and
-        // upgrade them to the schema version of the module installed.
-        // TODO How to get widgets which are < the schema version of the module installed?
-        $widgets = $this->widgetFactory->query(null, [
-            'schemaVersion' => 1
-        ]);
+        // Get all modules
+        $modules = $this->moduleFactory->getAll();
 
-        $countWidgets = 0;
-        foreach ($widgets as $widget) {
-            // Load the widget
-            $widget->load();
+        // For each module we should get all widgets which are < the schema version of the module installed, and
+        // upgrade them to the schema version of the module installed
+        foreach ($modules as $module) {
+            // Run upgrade - Part 1
+            // Upgrade a widget having the same module type
+            $statement = $this->executeStatement($module->type, $module->schemaVersion);
+            $this->upgradeWidget($statement);
 
-            // Form conditions from the widget's option and value, e.g, templateId==worldclock1
-            $widgetConditionMatch = [];
-            foreach ($widget->widgetOptions as $option) {
-                $widgetConditionMatch[] = $option->option . '==' . $option->value;
+            // Run upgrade - Part 2
+            // Upgrade a widget having the old style module type/legacy type
+            $legacyTypes = [];
+            if (count($module->legacyTypes) > 0) {
+                // Get the name of the module legacy types
+                $legacyTypes = array_column($module->legacyTypes, 'name'); // TODO Make this efficient
             }
 
-            // Get module
-            try {
-                $module = $this->moduleFactory->getByType($widget->type, $widgetConditionMatch);
-            } catch (NotFoundException $notFoundException) {
-                $this->log->error('Module not found for widget: ' . $widget->type);
-                $this->appendRunMessage('Upgrade widget error for widgetId: : '. $widget->widgetId);
-                continue;
-            }
-
-            // Only upgrade if widget schema version is less than the module schema version
-            if ($widget->schemaVersion < $module->schemaVersion && $module->isWidgetCompatibilityAvailable()) {
-                $countWidgets++;
-
-                // Grab a widget compatibility interface, if there is one
-                $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
-                if ($widgetCompatibilityInterface !== null) {
-                    $this->log->debug('WidgetCompatibilityTask: widgetId ' . $widget->widgetId);
-                    try {
-                        $upgraded = $widgetCompatibilityInterface->upgradeWidget($widget, $widget->schemaVersion, $module->schemaVersion);
-                        if ($upgraded) {
-                            $widget->schemaVersion = $module->schemaVersion;
-                            $widget->save(['alwaysUpdate'=>true]);
-                        }
-                    } catch (\Exception $e) {
-                        $this->log->error('Failed to upgrade for widgetId: ' . $widget->widgetId .
-                            ', message: ' . $e->getMessage());
-                        $this->appendRunMessage('Upgrade widget error for widgetId: : '. $widget->widgetId);
-                    }
-                }
-
-                try {
-                    // Get the layout of the widget and set it to rebuild.
-                    $playlist = $this->playlistFactory->getById($widget->playlistId);
-                    $playlist->notifyLayouts();
-                } catch (\Exception $e) {
-                    $this->log->error('Failed to set layout rebuild for widgetId: ' . $widget->widgetId .
-                        ', message: ' . $e->getMessage());
-                    $this->appendRunMessage('Layout rebuild error for widgetId: : '. $widget->widgetId);
-                }
+            // Get module legacy type and update matched widgets
+            foreach ($legacyTypes as $legacyType) {
+                $statement = $this->executeStatement($legacyType, $module->schemaVersion);
+                $this->upgradeWidget($statement);
             }
         }
 
@@ -143,7 +109,115 @@ class WidgetCompatibilityTask implements TaskInterface
             $this->appendRunMessage('Disabling widget compatibility task.');
             $this->log->debug('Disabling widget compatibility task.');
         }
-        $this->log->info('Total widgets upgraded: '. $countWidgets);
-        $this->appendRunMessage('Total widgets upgraded: '. $countWidgets);
+
+    }
+
+    /**
+     *
+     * @param string $type
+     * @param int $version
+     * @return false|\PDOStatement
+     */
+    private function executeStatement(string $type, int $version): bool|\PDOStatement
+    {
+        $sql = '
+          SELECT widget.widgetId,
+              widget.playlistId,
+              widget.ownerId,
+              widget.type,
+              widget.duration,
+              widget.displayOrder,
+              widget.schemaVersion
+          FROM `widget` 
+          WHERE `widget`.type = :type
+          and  `widget`.schemaVersion < :version
+        ';
+        $connection = $this->store->getConnection();
+        $connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+
+        // Prepare the statement
+        $statement = $connection->prepare($sql);
+
+        // Execute
+        $statement->execute([
+            'type' => $type,
+            'version' => $version
+        ]);
+
+        return $statement;
+    }
+
+    private function upgradeWidget(\PDOStatement $statement): void
+    {
+        // Load each widget and its options
+        // Then run upgrade
+        while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
+            try {
+                $widget = $this->widgetFactory->getById((int) $row['widgetId']);
+                $widget->loadMinimum();
+
+                $this->log->debug('WidgetCompatibilityTask: Get Widget: ' . $row['widgetId']);
+
+                // Form conditions from the widget's option and value, e.g, templateId==worldclock1
+                $widgetConditionMatch = [];
+                foreach ($widget->widgetOptions as $option) {
+                    $widgetConditionMatch[] = $option->option . '==' . $option->value;
+                }
+
+                // Get module
+                try {
+                    $module = $this->moduleFactory->getByType($widget->type, $widgetConditionMatch);
+                } catch (NotFoundException $e) {
+                    $this->log->error('Module not found for widget: ' . $widget->type);
+                    $this->appendRunMessage('Module not found for widget: '. $widget->widgetId);
+                    continue;
+                }
+
+                // Run upgrade
+                if ($module->isWidgetCompatibilityAvailable()) {
+                    // Grab a widget compatibility interface, if there is one
+                    $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
+                    if ($widgetCompatibilityInterface !== null) {
+                        try {
+                            $upgraded = $widgetCompatibilityInterface->upgradeWidget(
+                                $widget,
+                                $widget->schemaVersion,
+                                $module->schemaVersion
+                            );
+
+                            // Save widget version
+                            if ($upgraded) {
+                                $widget->schemaVersion = $module->schemaVersion;
+                                $widget->type = $module->type;
+                                $widget->save(['alwaysUpdate'=>true]);
+                                $this->log->debug('WidgetCompatibilityTask: Upgraded');
+                            }
+                        } catch (\Exception $e) {
+                            $this->log->error('Failed to upgrade for widgetId: ' . $widget->widgetId .
+                                ', message: ' . $e->getMessage());
+                            $this->appendRunMessage('Failed to upgrade for widgetId: : '. $widget->widgetId);
+                        }
+                    }
+
+                    try {
+                        // Get the layout of the widget and set it to rebuild.
+                        $playlist = $this->playlistFactory->getById($widget->playlistId);
+                        $playlist->notifyLayouts();
+                    } catch (\Exception $e) {
+                        $this->log->error('Failed to set layout rebuild for widgetId: ' . $widget->widgetId .
+                            ', message: ' . $e->getMessage());
+                        $this->appendRunMessage('Layout rebuild error for widgetId: : '. $widget->widgetId);
+                    }
+
+                    $this->store->commitIfNecessary();
+                }
+
+            } catch (GeneralException $e) {
+                $this->log->debug($e->getTraceAsString());
+                $this->log->error('WidgetCompatibilityTask: Cannot process widget');
+            }
+        }
+
+        $this->appendRunMessage(__('Done.'. PHP_EOL));
     }
 }

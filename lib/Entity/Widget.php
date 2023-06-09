@@ -824,6 +824,24 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Load the Widget with minimal data i.e., options
+     */
+    public function loadMinimum(): void
+    {
+        if ($this->loaded || $this->widgetId == null || $this->widgetId == 0) {
+            return;
+        }
+
+        // Load the widget options
+        $this->widgetOptions = $this->widgetOptionFactory->getByWidgetId($this->widgetId);
+        foreach ($this->widgetOptions as $widgetOption) {
+            $this->originalWidgetOptions[] = clone $widgetOption;
+        }
+
+        $this->loaded = true;
+    }
+
+    /**
      * @param Property[] $properties
      * @return \Xibo\Entity\Widget
      */
