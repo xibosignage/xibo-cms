@@ -2904,7 +2904,8 @@ class LayoutFactory extends BaseFactory
         $widget->type = $module->type;
 
         // Upgrade if necessary
-        if ($module->isWidgetCompatibilityAvailable()) {
+        // We do not upgrade widgets which are already at the right schema version
+        if ($widget->schemaVersion < $module->schemaVersion && $module->isWidgetCompatibilityAvailable()) {
             // Grab a widget compatibility interface, if there is one
             $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
             if ($widgetCompatibilityInterface !== null) {

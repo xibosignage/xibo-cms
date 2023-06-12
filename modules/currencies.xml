@@ -28,8 +28,8 @@
     <type>currencies</type>
     <dataType>currency</dataType>
     <dataCacheKey>%items%_%base%</dataCacheKey>
-    <schemaVersion>1</schemaVersion>
-    <assignable>2</assignable>
+    <schemaVersion>2</schemaVersion>
+    <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>30</defaultDuration>

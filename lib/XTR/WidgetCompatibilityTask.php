@@ -109,7 +109,7 @@ class WidgetCompatibilityTask implements TaskInterface
             $this->appendRunMessage('Disabling widget compatibility task.');
             $this->log->debug('Disabling widget compatibility task.');
         }
-
+        $this->appendRunMessage(__('Done.'. PHP_EOL));
     }
 
     /**
@@ -121,15 +121,9 @@ class WidgetCompatibilityTask implements TaskInterface
     private function executeStatement(string $type, int $version): bool|\PDOStatement
     {
         $sql = '
-          SELECT widget.widgetId,
-              widget.playlistId,
-              widget.ownerId,
-              widget.type,
-              widget.duration,
-              widget.displayOrder,
-              widget.schemaVersion
+          SELECT widget.widgetId
           FROM `widget` 
-          WHERE `widget`.type = :type
+          WHERE `widget`.`type` = :type
           and  `widget`.schemaVersion < :version
         ';
         $connection = $this->store->getConnection();
@@ -208,16 +202,13 @@ class WidgetCompatibilityTask implements TaskInterface
                             ', message: ' . $e->getMessage());
                         $this->appendRunMessage('Layout rebuild error for widgetId: : '. $widget->widgetId);
                     }
-
-                    $this->store->commitIfNecessary();
                 }
-
             } catch (GeneralException $e) {
                 $this->log->debug($e->getTraceAsString());
                 $this->log->error('WidgetCompatibilityTask: Cannot process widget');
             }
         }
 
-        $this->appendRunMessage(__('Done.'. PHP_EOL));
+        $this->store->commitIfNecessary();
     }
 }
