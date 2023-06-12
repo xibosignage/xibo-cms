@@ -11,7 +11,7 @@ const loadingTemplate = require('../templates/loading.hbs');
 const viewerElementTemplate = require('../templates/viewer-element.hbs');
 const viewerElementContentTemplate =
   require('../templates/viewer-element-content.hbs');
-
+const drawThrottle = 50;
 
 /**
  * Viewer contructor
@@ -259,6 +259,11 @@ Viewer.prototype.render = function(forceReload = false) {
 
   // Update moveable
   this.updateMoveable();
+
+  // Update moveable options
+  this.updateMoveableOptions({
+    savePreferences: false,
+  });
 
   // Update moveable UI
   this.updateMoveableUI();
@@ -876,17 +881,17 @@ Viewer.prototype.renderRegionDebounced = _.debounce(
  * Update element
  * @param {object} element
  */
-Viewer.prototype.updateElement = function(
+Viewer.prototype.updateElement = _.throttle(function(
   element,
 ) {
-  const $container = this.DOMObject.find(`#${element.elementId}`);
+  const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
 
   // Calculate scaled dimensions
   element.scaledDimensions = {
-    height: element.height * this.containerElementDimensions.scale,
-    left: element.left * this.containerElementDimensions.scale,
-    top: element.top * this.containerElementDimensions.scale,
-    width: element.width * this.containerElementDimensions.scale,
+    height: element.height * lD.viewer.containerElementDimensions.scale,
+    left: element.left * lD.viewer.containerElementDimensions.scale,
+    top: element.top * lD.viewer.containerElementDimensions.scale,
+    width: element.width * lD.viewer.containerElementDimensions.scale,
   };
 
   // Update element index
@@ -895,24 +900,24 @@ Viewer.prototype.updateElement = function(
   });
 
   // Update element content
-  this.renderElementContent(
+  lD.viewer.renderElementContent(
     element,
   );
 
   // Update moveable
-  this.updateMoveable();
-};
+  lD.viewer.updateMoveable();
+}, drawThrottle);
 
 /**
  * Update Region
  * @param {object} region - region object
  * @param {boolean} changed - if region was changed
  */
-Viewer.prototype.updateRegion = function(
+Viewer.prototype.updateRegion = _.throttle(function(
   region,
   changed = false,
 ) {
-  const $container = this.DOMObject.find(`#${region.id}`);
+  const $container = lD.viewer.DOMObject.find(`#${region.id}`);
 
   // If drawer and has target region, set dimensions
   // to be the same as it
@@ -926,10 +931,11 @@ Viewer.prototype.updateRegion = function(
 
   // Calculate scaled dimensions
   region.scaledDimensions = {
-    height: region.dimensions.height * this.containerElementDimensions.scale,
-    left: region.dimensions.left * this.containerElementDimensions.scale,
-    top: region.dimensions.top * this.containerElementDimensions.scale,
-    width: region.dimensions.width * this.containerElementDimensions.scale,
+    height: region.dimensions.height *
+      lD.viewer.containerElementDimensions.scale,
+    left: region.dimensions.left * lD.viewer.containerElementDimensions.scale,
+    top: region.dimensions.top * lD.viewer.containerElementDimensions.scale,
+    width: region.dimensions.width * lD.viewer.containerElementDimensions.scale,
   };
 
   // Update region container dimensions
@@ -946,11 +952,11 @@ Viewer.prototype.updateRegion = function(
   }
 
   // Update region content
-  this.updateRegionContent(region, changed);
+  lD.viewer.updateRegionContent(region, changed);
 
   // Update moveable
-  this.updateMoveable();
-};
+  lD.viewer.updateMoveable();
+}, drawThrottle);
 
 
 /**
@@ -998,6 +1004,7 @@ Viewer.prototype.renderElement = function(
     left: element.left * viewerScale,
     top: element.top * viewerScale,
     width: element.width * viewerScale,
+    rotation: element.rotation,
     // If layer is negative, set it to 0
     layer: element.layer < 0 ? 0 : element.layer,
   };
@@ -1177,7 +1184,11 @@ Viewer.prototype.renderElementContent = function(
     // Create and render HBS template from template
     const stencil = template.parent ?
       template.parent.stencil : template.stencil;
-    let hbsTemplate = Handlebars.compile(stencil.hbs);
+    let hbsTemplate = Handlebars.compile(
+      (stencil?.hbs) ?
+        stencil.hbs:
+        '',
+    );
 
     // If element dimensions are not set, set them
     // to the extended template, if it exists
@@ -1199,6 +1210,13 @@ Viewer.prototype.renderElementContent = function(
     // If we have slot, show it as a val+1
     if (element.slot != undefined) {
       element.slotView = Number(element.slot) + 1;
+    }
+
+    // If template can be rotated
+    // set container and element to have that info
+    if (template.canRotate) {
+      element.canRotate = template.canRotate;
+      $elementContainer.data('canRotate', element.canRotate);
     }
 
     // Render element with template
@@ -1231,7 +1249,11 @@ Viewer.prototype.renderElementContent = function(
       }
 
       // Handle override property values
-      if (template.extends?.override && template.extends?.with) {
+      if (
+        stencil &&
+        template.extends?.override &&
+        template.extends?.with
+      ) {
         const replacedStencil = stencil.hbs.replace(
           '{{' + template.extends.override + '}}',
           '{{' + template.extends.with + '}}',
@@ -1337,9 +1359,35 @@ Viewer.prototype.initMoveable = function() {
     resizable: true,
   });
 
-  // Resize helper
-  resizeFrame = {
-    translate: [0, 0],
+  // Const save tranformation
+  const saveTransformation = function(target) {
+    // Apply transformation to the element
+    const transformSplit = (target.style.transform).split(/[(),]+/);
+    let hasTranslate = false;
+
+    // If the transform has translate
+    if (target.style.transform.search('translate') != -1) {
+      target.style.left =
+        `${parseFloat(target.style.left) + parseFloat(transformSplit[1])}px`;
+      target.style.top =
+        `${parseFloat(target.style.top) + parseFloat(transformSplit[2])}px`;
+
+      hasTranslate = true;
+    }
+
+    // Reset transform
+    if (target.style.transform.search('rotate') != -1) {
+      const rotateValue = (hasTranslate) ?
+        transformSplit[4] :
+        transformSplit[1];
+
+      target.style.transform = `rotate(${rotateValue})`;
+    } else {
+      target.style.transform = '';
+    }
+
+    // Return transform split
+    return transformSplit;
   };
 
   /* draggable */
@@ -1376,6 +1424,9 @@ Viewer.prototype.initMoveable = function() {
     }
   }).on('dragEnd', (e) => {
     if (e.isDrag) {
+      // Save transformation
+      saveTransformation(e.target);
+
       // Save region properties
       (
         lD.selectedObject.type == 'region' ||
@@ -1403,21 +1454,15 @@ Viewer.prototype.initMoveable = function() {
       self.saveElementGroupProperties(
         $(e.target).parents('.designer-element-group'),
         true,
+        false,
       );
     }
   });
 
   /* resizable */
-  this.moveable.on('resizeStart', (e) => {
-    e.setOrigin(['%', '%']);
-    e.dragStart && e.dragStart.set(resizeFrame.translate);
-  }).on('resize', (e) => {
-    const beforeTranslate = e.drag.beforeTranslate;
-    resizeFrame.translate = beforeTranslate;
-    e.target.style.width = `${e.width}px`;
-    e.target.style.height = `${e.height}px`;
-    e.target.style.transform =
-      `translate(${beforeTranslate[0]}px, ${beforeTranslate[1]}px)`;
+  this.moveable.on('resize', (e) => {
+    e.target.style.cssText += `width: ${e.width}px; height: ${e.height}px`;
+    e.target.style.transform = e.drag.transform;
 
     // If selected object is a widget, get parent instead
     const selectedObject = (lD.selectedObject.type == 'widget') ?
@@ -1438,16 +1483,8 @@ Viewer.prototype.initMoveable = function() {
       self.updateElement(selectedObject, true);
     }
   }).on('resizeEnd', (e) => {
-    // Change transform translate to the new position
-    const transformSplit = (e.target.style.transform).split(/[(),]+/);
-
-    e.target.style.left =
-      `${parseFloat(e.target.style.left) + parseFloat(transformSplit[1])}px`;
-    e.target.style.top =
-      `${parseFloat(e.target.style.top) + parseFloat(transformSplit[2])}px`;
-
-    // Reset transform
-    e.target.style.transform = '';
+    // Save transformation
+    transformSplit = saveTransformation(e.target);
 
     // Check if the region moved when resizing
     const moved = (
@@ -1475,6 +1512,34 @@ Viewer.prototype.initMoveable = function() {
     ) && self.saveElementGroupProperties(
       $(e.target).parents('.designer-element-group'),
       true,
+      false,
+    );
+  });
+
+  /* rotatable */
+  this.moveable.on('rotate', (e) => {
+    e.target.style.transform = e.drag.transform;
+  }).on('rotateEnd', (e) => {
+    // Save transformation
+    saveTransformation(e.target);
+
+    // Save element properties
+    if (
+      lD.selectedObject.type == 'element' &&
+      !lD.selectedObject.groupId
+    ) {
+      // Save element
+      self.saveElementProperties(e.target);
+    }
+
+    // Save element included in a group
+    (
+      lD.selectedObject.type == 'element' &&
+      lD.selectedObject.groupId
+    ) && self.saveElementGroupProperties(
+      $(e.target).parents('.designer-element-group'),
+      true,
+      false,
     );
   });
 
@@ -1578,6 +1643,18 @@ Viewer.prototype.saveElementProperties = function(
   elementObject.width = Math.round($element.width() / scale);
   elementObject.height = Math.round($element.height() / scale);
 
+  // Save rotation
+  if (
+    $element[0].style.transform.search('rotate') >= 0
+  ) {
+    const transformSplit = $element[0].style.transform.split(/[(),]+/);
+    const rotation = (transformSplit.length == 3) ?
+      transformSplit[1] :
+      transformSplit[4];
+
+    elementObject.rotation = Number(rotation.split('deg')[0]);
+  }
+
   // If we have group position, we also need to update groupProperties
   if (groupPosition) {
     elementObject.groupProperties.top =
@@ -1598,12 +1675,15 @@ Viewer.prototype.saveElementProperties = function(
 
   // Only change top/left if element has moved
   if (hasMoved) {
+    const topPosition = Number($element.css('top').split('px')[0]);
+    const leftPosition = Number($element.css('left').split('px')[0]);
+
     elementObject.top = (groupPosition && groupPosition.top) ?
-      Math.round(($element.position().top + groupPosition.top) / scale) :
-      Math.round($element.position().top / scale);
+      Math.round((topPosition + groupPosition.top) / scale) :
+      Math.round(topPosition / scale);
     elementObject.left = (groupPosition && groupPosition.left) ?
-      Math.round(($element.position().left + groupPosition.left) / scale) :
-      Math.round($element.position().left / scale);
+      Math.round((leftPosition + groupPosition.left) / scale) :
+      Math.round(leftPosition / scale);
   }
 
   // If we're not saving through a group
@@ -1614,6 +1694,15 @@ Viewer.prototype.saveElementProperties = function(
       left: elementObject.left,
       width: elementObject.width,
       height: elementObject.height,
+      rotation: elementObject.rotation,
+    });
+  } else if (elementObject.selected) {
+    lD.propertiesPanel.updatePositionForm({
+      top: elementObject.top - elementObject.groupProperties.top,
+      left: elementObject.left - elementObject.groupProperties.left,
+      width: elementObject.width,
+      height: elementObject.height,
+      rotation: elementObject.rotation,
     });
   }
 
@@ -1627,10 +1716,12 @@ Viewer.prototype.saveElementProperties = function(
  * Save element group properties
  * @param {*} elementGroup
  * @param {boolean} [updateDimensions=false]
+ * @param {boolean} [savingGroup=true] - if we are saving the group object
  */
 Viewer.prototype.saveElementGroupProperties = function(
   elementGroup,
   updateDimensions = false,
+  savingGroup = true,
 ) {
   const self = this;
   const scale = self.containerElementDimensions.scale;
@@ -1680,7 +1771,30 @@ Viewer.prototype.saveElementGroupProperties = function(
 
     // Now we need to calculate the width and height
     $groupElements.each(function(_key, el) {
-      const elementPosition = $(el).position();
+      const $element = $(el);
+      const elementPosition = $element.position();
+      let elWidth = $element.width();
+      let elHeight = $element.height();
+
+      // If the element has rotation, the dimensions need to
+      // come from its bounding box ( for that we need to apply CSS rotation )
+      const targetTransform = $element[0].style.transform;
+      if (targetTransform.search('rotate') != -1) {
+        const transformSplit = (targetTransform).split(/[(),]+/);
+        const rotateValue = transformSplit[1];
+
+        // Reset transform and give CSS rotation
+        $element[0].style.transform = '';
+        $element.css('rotate', rotateValue);
+
+        // Assign bounding box values to width and height
+        elWidth = $element[0].getBoundingClientRect().width;
+        elHeight = $element[0].getBoundingClientRect().height;
+
+        // Revert transform and CSS
+        $element.css('rotate', '');
+        $element[0].style.transform = targetTransform;
+      }
 
       // Apply poition offsets
       elementPosition.top -= updateOffset.top;
@@ -1688,18 +1802,18 @@ Viewer.prototype.saveElementGroupProperties = function(
 
       if (
         updateOffset.width === null ||
-        elementPosition.left + $(el).width() >
+        elementPosition.left + elWidth >
         updateOffset.width
       ) {
-        updateOffset.width = elementPosition.left + $(el).width();
+        updateOffset.width = elementPosition.left + elWidth;
       }
 
       if (
         updateOffset.height === null ||
-        elementPosition.top + $(el).height() >
+        elementPosition.top + elHeight >
         updateOffset.height
       ) {
-        updateOffset.height = elementPosition.top + $(el).height();
+        updateOffset.height = elementPosition.top + elHeight;
       }
     });
 
@@ -1718,10 +1832,11 @@ Viewer.prototype.saveElementGroupProperties = function(
     // if we're updating the dimensions of the group
     // check if we have offset for position and apply that to all elements
     if (updateDimensions) {
-      const elPosition = $(el).position();
+      const topPosition = Number($(el).css('top').split('px')[0]);
+      const leftPosition = Number($(el).css('left').split('px')[0]);
       $(el).css({
-        top: elPosition.top - updateOffset.top,
-        left: elPosition.left - updateOffset.left,
+        top: topPosition - updateOffset.top,
+        left: leftPosition - updateOffset.left,
       });
     }
 
@@ -1734,14 +1849,16 @@ Viewer.prototype.saveElementGroupProperties = function(
   });
 
   // Save position for the group object
-  groupObject.top = Math.round(groupPosition.top / scale);
-  groupObject.left = Math.round(groupPosition.left / scale);
+  if (savingGroup) {
+    groupObject.top = Math.round(groupPosition.top / scale);
+    groupObject.left = Math.round(groupPosition.left / scale);
 
-  // Update position form values
-  lD.propertiesPanel.updatePositionForm({
-    top: groupObject.top,
-    left: groupObject.left,
-  });
+    // Update position form values
+    lD.propertiesPanel.updatePositionForm({
+      top: groupObject.top,
+      left: groupObject.left,
+    });
+  }
 };
 
 /**
@@ -1799,6 +1916,15 @@ Viewer.prototype.updateMoveable = function() {
       this.moveable.dragTarget = undefined;
     }
 
+    // Set rotatable
+    if ($selectedElement.data('canRotate')) {
+      this.moveable.rotatable = true;
+      this.moveable.throttleRotate = 1;
+    } else {
+      this.moveable.rotatable = false;
+    }
+
+
     this.moveable.target = $selectedElement[0];
     this.moveable.updateRect();
 
@@ -1810,11 +1936,6 @@ Viewer.prototype.updateMoveable = function() {
     // Hide snap controls
     this.DOMObject.parent().find('.snap-controls').hide();
   }
-
-  // Also update options
-  this.updateMoveableOptions({
-    savePreferences: false,
-  });
 };
 
 /**
@@ -1981,7 +2102,12 @@ Viewer.prototype.updateMoveableOptions = function({
   // Snap to elements
   if (this.moveableOptions.snapToElements) {
     // Get elements
-    const $elementsToSnapTo = $('.designer-element:not(.selected)');
+    const $elementsToSnapTo =
+      this.DOMObject.find(
+        '.designer-element:not(.selected), ' +
+        '.designer-region:not(.selected), ' +
+        '.designer-element-group:not(.selected) ',
+      );
     const elementsArray = [];
     Array.from($elementsToSnapTo).forEach(function(el) {
       elementsArray.push(el);

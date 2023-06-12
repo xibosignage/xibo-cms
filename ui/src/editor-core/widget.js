@@ -743,6 +743,12 @@ Widget.prototype.removeElement = function(
       $(`#${elementGroupId}`).remove();
 
       delete this.elementGroups[elementGroupId];
+    } else {
+      // Recalculate group dimensions
+      lD.viewer.saveElementGroupProperties(
+        lD.viewer.DOMObject.find('#' + elementGroupId),
+        true,
+      );
     }
   }
 
@@ -789,6 +795,7 @@ Widget.prototype.removeElement = function(
       }
     });
   } else {
+    // Update element map
     this.updateElementMap();
   }
 };
