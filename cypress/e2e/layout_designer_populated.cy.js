@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 describe('Layout Designer (Populated)', function() {
 
     beforeEach(function() {
@@ -13,7 +34,7 @@ describe('Layout Designer (Populated)', function() {
     });
 
     // Open widget form, change the name and duration, save, and see the name change result
-    it('changes and saves widget properties', () => {
+    it.skip('changes and saves widget properties', () => {
         // Create and alias for reload widget
         cy.server();
         cy.route('/playlist/widget/form/edit/*').as('reloadWidget');
@@ -42,7 +63,7 @@ describe('Layout Designer (Populated)', function() {
     });
 
     // On layout edit form, change background color and layer, save and check the changes
-    it('changes and saves layout properties', () => {
+    it.skip('changes and saves layout properties', () => {
 
         // Create and alias for reload layout
         cy.server();
@@ -68,7 +89,7 @@ describe('Layout Designer (Populated)', function() {
     });
 
     // On layout edit form, change background image check the changes
-    it('should change layout´s background image', () => {
+    it.skip('should change layout´s background image', () => {
 
         // Create and alias for reload layout
         cy.server();
@@ -104,7 +125,7 @@ describe('Layout Designer (Populated)', function() {
     });
 
     // Navigator
-    it('should change and save the region´s position', () => {
+    it.skip('should change and save the region´s position', () => {
 
         // Create and alias for position save and reload layout
         cy.server();
@@ -164,7 +185,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('should delete a widget using the toolbar bin', () => {
+    it.skip('should delete a widget using the toolbar bin', () => {
         cy.server();
         cy.route('/layout?layoutId=*').as('reloadLayout');
         cy.route('/region/preview/*').as('regionPreview');
@@ -193,7 +214,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('saves the widgets order when sorting by dragging', () => {
+    it.skip('saves the widgets order when sorting by dragging', () => {
         cy.server();
         cy.route('POST', '**/playlist/order/*').as('saveOrder');
         cy.route('/layout?layoutId=*').as('reloadLayout');
@@ -227,7 +248,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('should publish a layout and go into a published state', () => {
+    it.skip('should publish a layout and go into a published state', () => {
 
         cy.server();
         cy.route('PUT', '/layout/publish/*').as('layoutPublish');

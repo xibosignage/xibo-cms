@@ -4,7 +4,6 @@ on:
   pull_request:
     branches-ignore:
       - master
-      - westphal
 
 jobs:
   test-suite:
@@ -48,6 +47,8 @@ jobs:
           docker cp cms-web:/var/www/cms/web/settings.php web/settings.php
           docker exec -t cms-web /bin/bash -c "chown -R www-data.www-data /var/www/cms"
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
+          docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO task (name, class, status, isActive, configFile) VALUES ('Seed Database', '\Xibo\XTR\SeedDatabaseTask', 2, 1, '/tasks/seed-database.task', '{}', '* * * * * *')"
+          docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 20"
           sleep 5
       - name: Run Code Sniffer
         run: |
