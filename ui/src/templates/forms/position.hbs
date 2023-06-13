@@ -20,6 +20,10 @@
         {{> inputs/number value=height id="height" title="Height" helpText="The height" customClass="position-input" }}
     {{/ifCond}}
 
+    {{#ifCond rotation '!=' undefined}}
+        {{> inputs/number value=rotation id="rotation" title="Rotation" helpText="The rotation" customClass="position-input" }}
+    {{/ifCond}}
+
     {{#ifCond zIndex '!=' undefined}}
         {{> inputs/number value=zIndex id="zIndex" title="Layer" helpText="The z-index" customClass="position-input" }}
     {{/ifCond}}
