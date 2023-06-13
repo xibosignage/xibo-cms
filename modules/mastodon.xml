@@ -27,7 +27,7 @@
     <type>mastodon</type>
     <dataType>social-media</dataType>
     <dataCacheKey>%hashtag%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%</dataCacheKey>
-    <schemaVersion>2</schemaVersion>
+    <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>

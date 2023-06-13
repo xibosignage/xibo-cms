@@ -3402,7 +3402,8 @@ class Layout extends Base
             $this->getUser()->userId,
             $region->getPlaylist()->playlistId,
             $type === 'media' ? $media->mediaType : 'subplaylist',
-            $itemDuration
+            $itemDuration,
+            $module->schemaVersion
         );
 
         if ($type === 'playlist') {
