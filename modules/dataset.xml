@@ -30,7 +30,7 @@
     <dataType>dataset</dataType>
     <legacyType>datasetticker</legacyType>
     <legacyType>datasetview</legacyType>
-    <schemaVersion>1</schemaVersion>
+    <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>

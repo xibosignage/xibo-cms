@@ -746,6 +746,7 @@ PropertiesPanel.prototype.render = function(
           left: targetAux.left,
           width: targetAux.width,
           height: targetAux.height,
+          rotation: targetAux.rotation,
           zIndex: targetAux.layer,
         };
       } else {
@@ -771,6 +772,15 @@ PropertiesPanel.prototype.render = function(
           '<i class="fas fa-border-none"></i></a></li>');
 
       // Add position tab content after advanced tab content
+      // If element is in a group, adjust position to the group's
+      if (
+        targetAux?.type == 'element' &&
+        targetAux?.groupProperties != undefined
+      ) {
+        positionProperties.left -= targetAux.groupProperties.left;
+        positionProperties.top -= targetAux.groupProperties.top;
+      }
+
       self.DOMObject.find('#advancedTab').after(
         positionTemplate(positionProperties),
       );
@@ -809,8 +819,25 @@ PropertiesPanel.prototype.render = function(
             left: form.find('[name="left"]').val() * viewerScale,
           });
 
-          // Save properties
-          lD.viewer.saveElementProperties($targetElement, true);
+          // Rotate element
+          if (form.find('[name="rotation"]').val() != undefined) {
+            $targetElement.css('transform', 'rotate(' +
+              form.find('[name="rotation"]').val() +
+              'deg)');
+            lD.viewer.moveable.updateRect();
+          }
+
+          // Recalculate group dimensions
+          if (targetAux.groupId) {
+            lD.viewer.saveElementGroupProperties(
+              lD.viewer.DOMObject.find('#' + targetAux.groupId),
+              true,
+              false,
+            );
+          } else {
+            // Save properties
+            lD.viewer.saveElementProperties($targetElement, true);
+          }
 
           // Update element
           lD.viewer.updateElement(targetAux, true);

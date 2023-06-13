@@ -225,6 +225,9 @@ class Widget extends Base
             $module->defaultDuration
         );
 
+        // Set the schema version to the module schema version
+        $widget->schemaVersion = $module->schemaVersion;
+
         // Get the template
         if ($module->isTemplateExpected()) {
             $templateId = $params->getString('templateId', [

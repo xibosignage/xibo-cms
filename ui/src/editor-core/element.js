@@ -38,6 +38,9 @@ const Element = function(data, widgetId, regionId) {
   // Element template
   this.template = {};
 
+  // Can rotate?
+  this.canRotate = false;
+
   // Data slot index
   this.slot = data.slot;
 };
@@ -91,6 +94,11 @@ Element.prototype.getProperties = function() {
           if (property.value == undefined) {
             property.value = property.default;
           }
+        }
+
+        // Check if element has rotation and set it
+        if (templateCopy.canRotate) {
+          self.canRotate = templateCopy.canRotate;
         }
       }
 
@@ -197,6 +205,7 @@ Element.prototype.getTemplate = function() {
  * @param {number} [transform.height] - New height (for resize tranformation)
  * @param {number} [transform.top] - New top position (for move tranformation)
  * @param {number} [transform.left] - New left position (for move tranformation)
+ * @param {number} [transform.rotation] - New rotation
  */
 Element.prototype.transform = function(transform) {
   // Apply changes to the element ( updating values )
@@ -204,6 +213,7 @@ Element.prototype.transform = function(transform) {
   (transform.height) && (this.height = transform.height);
   (transform.top) && (this.top = transform.top);
   (transform.left) && (this.left = transform.left);
+  (transform.rotation) && (this.rotation = transform.rotation);
 };
 
 /**

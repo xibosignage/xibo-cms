@@ -429,6 +429,7 @@ $('.date').each(function(_idx, dateEl){
         <title>Line</title>
         <type>element</type>
         <dataType>global</dataType>
+        <canRotate>true</canRotate>
         <thumbnail>line-thumb</thumbnail>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
@@ -449,14 +450,6 @@ $('.date').each(function(_idx, dateEl){
                     <option name="dotted">Dotted</option>
                     <option name="dashed">Dashed</option>
                     <option name="double">Double</option>
-                </options>
-            </property>
-            <property id="orientation" type="dropdown" mode="single">
-                <title>Orientation</title>
-                <default>horizontal</default>
-                <options>
-                    <option name="horizontal">Horizontal</option>
-                    <option name="vertical">Vertical</option>
                 </options>
             </property>
             <property id="tip1Type" type="dropdown" mode="single">
@@ -494,11 +487,7 @@ $('.date').each(function(_idx, dateEl){
     {{#eq tip1Type "diamond"}}
         <g fill="{{lineColor}}" style="
                 transform:
-                {{#eq orientation "horizontal"}}
-                    translate(0, calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
-                {{else}}
-                    translate(calc(50% - calc({{lineWidth}}px * 1.5 * 1.26)), 0)
-                {{/eq}}
+                translate(0, calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
                 scale(calc({{lineWidth}} * 0.75));
         ">
             <polygon points="0 2.5,2.5 5,5 2.5,2.5 0"></polygon>
@@ -507,11 +496,7 @@ $('.date').each(function(_idx, dateEl){
     {{#eq tip2Type "diamond"}}
         <g fill="{{lineColor}}" style="
                 transform:
-                {{#eq orientation "horizontal"}}
-                    translate(calc(100% - calc({{lineWidth}}px * 3.75)), calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
-                {{else}}
-                    translate(calc(50% - calc({{lineWidth}}px * 1.5 * 1.26)), calc(100% - calc({{lineWidth}}px * 3.75)))
-                {{/eq}}
+                translate(calc(100% - calc({{lineWidth}}px * 3.75)), calc(50% - calc({{lineWidth}}px * 1.5 * 1.214)))
                 scale(calc({{lineWidth}} * 0.75));
         ">
             <polygon points="0 2.5,2.5 5,5 2.5,2.5 0"></polygon>
@@ -521,18 +506,10 @@ $('.date').each(function(_idx, dateEl){
         <g fill="{{fillColor}}" style="
             transform:
             {{#eq tip "start"}}
-                {{#eq orientation "horizontal"}}
-                    translate(3px, calc(50% - calc({{strokeWidth}}px * 3)))
-                {{else}}
-                    translate(calc(50% - calc({{strokeWidth}}px * 3)), 3px)
-                {{/eq}}
+                translate(3px, calc(50% - calc({{strokeWidth}}px * 3)))
             {{/eq}}
             {{#eq tip "end"}}
-                {{#eq orientation "horizontal"}}
-                    translate(calc(100% - calc({{strokeWidth}}px * 4)), calc(50% - calc({{strokeWidth}}px * 3)))
-                {{else}}
-                    translate(calc(50% - calc({{strokeWidth}}px * 3)), calc(100% - calc({{strokeWidth}}px * 4)))
-                {{/eq}}
+                translate(calc(100% - calc({{strokeWidth}}px * 4)), calc(50% - calc({{strokeWidth}}px * 3)))
             {{/eq}}
             scale(calc({{strokeWidth}} * 0.75))
         ">
@@ -540,42 +517,23 @@ $('.date').each(function(_idx, dateEl){
         </g>
     {{/inline}}
     {{#eq tip1Type "line-arrow"}}
-        {{#eq orientation "horizontal"}}
-            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="0,4 4,0 5,1 2,4 5,7 4,8" tip="start" }}
-        {{else}}
-            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="4,0 8,4 7,5 4,2 1,5 0,4" tip="start" }}
-        {{/eq}}
+        {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="0,4 4,0 5,1 2,4 5,7 4,8" tip="start" }}
     {{/eq}}
     {{#eq tip2Type "line-arrow"}}
-        {{#eq orientation "horizontal"}}
-            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="0,1 1,0 5,4 1,8 0,7 3,4" tip="end" }}
-        {{else}}
-            {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="1,0 4,3 7,0 8,1 4,5 0,1" tip="end" }}
-        {{/eq}}
+        {{> lineArrow fillColor=lineColor strokeWidth=lineWidth points="0,1 1,0 5,4 1,8 0,7 3,4" tip="end" }}
     {{/eq}}
     {{#*inline "solidArrow"}}
         <g fill="{{fillColor}}"
             style="
                 transform:
                 {{#eq tip "start"}}
-                    {{#eq orientation "horizontal"}}
-                        translate(0, calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)))
-                    {{else}}
-                        translate(calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)), 0)
-                    {{/eq}}
+                    translate(0, calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)))
                 {{/eq}}
                 {{#eq tip "end"}}
-                    {{#eq orientation "horizontal"}}
-                        translate(
-                            calc(100% - calc(calc({{strokeWidth}}px * 0.75) * 5)),
-                            calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2))
-                        )
-                    {{else}}
-                        translate(
-                            calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2)),
-                            calc(100% - calc(calc({{strokeWidth}}px * 0.75) * 5))
-                        )
-                    {{/eq}}
+                    translate(
+                        calc(100% - calc(calc({{strokeWidth}}px * 0.75) * 5)),
+                        calc(50% - calc(calc(calc({{strokeWidth}}px * 0.75) * 8) / 2))
+                    )
                 {{/eq}}
                 scale(calc({{strokeWidth}} * 0.75));
         ">
@@ -583,27 +541,15 @@ $('.date').each(function(_idx, dateEl){
         </g>
     {{/inline}}
     {{#eq tip1Type "solid-arrow"}}
-        {{#eq orientation "horizontal"}}
-            {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="0,4 5,1 5,7" tip="start" }}
-        {{else}}
-            {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="4,0 7,5 1,5" tip="start" }}
-        {{/eq}}
+        {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="0,4 5,1 5,7" tip="start" }}
     {{/eq}}
     {{#eq tip2Type "solid-arrow"}}
-        {{#eq orientation "horizontal"}}
-            {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="0,1 0,7 5,4" tip="end" }}
-        {{else}}
-            {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="1,0 7,0 4,5" tip="end" }}
-        {{/eq}}
+        {{> solidArrow fillColor=lineColor strokeWidth=lineWidth points="0,1 0,7 5,4" tip="end" }}
     {{/eq}}
     {{#eq tip1Type "circle"}}
         <g fill="{{lineColor}}" style="
             transform:
-                {{#eq orientation "horizontal"}}
-                    translate(calc({{lineWidth}}px * 1.5), 50%)
-                {{else}}
-                    translate(50%, calc({{lineWidth}}px * 1.5))
-                {{/eq}}
+                translate(calc({{lineWidth}}px * 1.5), 50%)
                 scale(1.5);
         ">
             <circle r="{{lineWidth}}"></circle>
@@ -612,61 +558,36 @@ $('.date').each(function(_idx, dateEl){
     {{#eq tip2Type "circle"}}
         <g fill="{{lineColor}}" style="
             transform:
-                {{#eq orientation "horizontal"}}
-                    translate(calc(100% - calc({{lineWidth}}px * 1.5)), 50%)
-                {{else}}
-                    translate(50%, calc(100% - calc({{lineWidth}}px * 1.5)))
-                {{/eq}}
+                translate(calc(100% - calc({{lineWidth}}px * 1.5)), 50%)
                 scale(1.5);
         ">
             <circle r="{{lineWidth}}"></circle>
         </g>
     {{/eq}}
 </svg><div class="line"
-        style="border-color: {{lineColor}};
-        position: absolute;
-        {{#if lineStyle }}border-style: {{lineStyle}};{{/if}}
-        {{#eq orientation "horizontal"}}
-            height: {{lineWidth}}px;
-            border-width: {{lineWidth}}px 0 0 0;
-            top: calc(50% - calc({{lineWidth}}px / 2));
-            left: 0;
-            width: 100%;
-            {{#eq tip1Type "squared"}}
-                {{#eq tip2Type "squared"}}{{else}}
+    style="border-color: {{lineColor}};
+    position: absolute;
+    {{#if lineStyle }}border-style: {{lineStyle}};{{/if}}
+        height: {{lineWidth}}px;
+        border-width: {{lineWidth}}px 0 0 0;
+        top: calc(50% - calc({{lineWidth}}px / 2));
+        left: 0;
+        width: 100%;
+        {{#eq tip1Type "squared"}}
+            {{#eq tip2Type "squared"}}{{else}}
+                width: calc(100% - {{lineWidth}}px);
+                left: 0;
+                {{#eq tip2Type "line-arrow"}}
                     width: calc(100% - {{lineWidth}}px);
-                    left: 0;
-                    {{#eq tip2Type "line-arrow"}}
-                        width: calc(100% - {{lineWidth}}px);
-                    {{/eq}}
-                {{/eq}}
-            {{else}}
-                {{#eq tip2Type "squared"}}
-                    width: calc(100% - {{lineWidth}}px);
-                    left: {{lineWidth}}px;
-                {{else}}
-                    width: calc(100% - calc({{lineWidth}}px * 2));
-                    left: {{lineWidth}}px;
                 {{/eq}}
             {{/eq}}
-        {{/eq}}
-        {{#eq orientation "vertical"}}
-            width: {{lineWidth}}px;
-            top: 0;
-            left: calc(50% - calc({{lineWidth}}px / 2));
-            border-width: 0 0 0 {{lineWidth}}px;
-            height: 100%;
-            {{#eq tip1Type "squared"}}
-                {{#eq tip2Type "squared"}}{{else}}
-                    height: calc(100% - {{lineWidth}}px);
-                {{/eq}}
+        {{else}}
+            {{#eq tip2Type "squared"}}
+                width: calc(100% - {{lineWidth}}px);
+                left: {{lineWidth}}px;
             {{else}}
-                top: {{lineWidth}}px;
-                {{#eq tip2Type "squared"}}
-                    height: calc(100% - {{lineWidth}}px);
-                {{else}}
-                    height: calc(100% - calc({{lineWidth}}px * 2));
-                {{/eq}}
+                width: calc(100% - calc({{lineWidth}}px * 2));
+                left: {{lineWidth}}px;
             {{/eq}}
         {{/eq}}"
     ></div></div>]]></hbs>
@@ -680,6 +601,7 @@ $('.date').each(function(_idx, dateEl){
         <title>Rectangle</title>
         <type>element</type>
         <dataType>global</dataType>
+        <canRotate>true</canRotate>
         <thumbnail>square-thumb</thumbnail>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>

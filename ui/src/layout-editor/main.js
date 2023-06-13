@@ -1638,7 +1638,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       droppableIsZone
     )
   ) {
-    // TODO: Convert region to playlist
+    // Convert region to playlist
     const regionId = (droppableIsWidget) ?
       $(droppable).data('widgetRegion') :
       $(droppable).attr('id');
@@ -1648,9 +1648,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         'region',
         regionId,
       );
-
-    console.log('Convert region ' + regionId + ' to playlist!');
-    console.log(region);
 
     region.subType = 'playlist';
 
@@ -2897,8 +2894,8 @@ lD.loadPrefs = function() {
       if (loadedData.snapOptions) {
         self.viewer.moveableOptions = loadedData.snapOptions;
 
-        // Update moveable
-        self.viewer.updateMoveable();
+        // Update moveable options
+        self.viewer.updateMoveableOptions();
 
         // Update moveable UI
         self.viewer.updateMoveableUI();
