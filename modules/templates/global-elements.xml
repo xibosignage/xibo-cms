@@ -337,73 +337,6 @@ $('.date').each(function(_idx, dateEl){
         </assets>
     </template>
     <template>
-        <id>rectangle</id>
-        <title>Rectangle</title>
-        <type>element</type>
-        <dataType>global</dataType>
-        <canRotate>true</canRotate>
-        <thumbnail>square-thumb</thumbnail>
-        <startWidth>250</startWidth>
-        <startHeight>250</startHeight>
-        <properties>
-            <property id="backgroundColor" type="color">
-                <title>Background Color</title>
-                <default>#1775F6</default>
-            </property>
-            <property id="roundBorder" type="checkbox">
-                <title>Round Border</title>
-                <default>0</default>
-                <helpText>Should the square have rounded corners?</helpText>
-            </property>
-            <property id="borderRadius" type="number">
-                <title>Border Radius</title>
-                <default>20</default>
-                <visibility>
-                    <test>
-                        <condition field="roundBorder" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="outline" type="checkbox">
-                <title>Show Outline</title>
-                <default>1</default>
-                <helpText>Should the square have an outline?</helpText>
-            </property>
-            <property id="outlineColor" type="color">
-                <title>Outline Color</title>
-                <default>%THEME_COLOR%</default>
-                <visibility>
-                    <test>
-                        <condition field="outline" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="outlineWidth" type="number">
-                <title>Outline Width</title>
-                <default>8</default>
-                <visibility>
-                    <test>
-                        <condition field="outline" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
-        </properties>
-        <stencil>
-            <hbs><![CDATA[
-<div class="rectangle-container"
-    style="background-color: {{backgroundColor}};
-    {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
-    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
-    width: 100%; height: 100%;"
->
-</div>
-            ]]></hbs>
-        </stencil>
-        <assets>
-            <asset id="square-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/square.png" />
-        </assets>
-    </template>
-    <template>
         <id>global-image</id>
         <type>element</type>
         <dataType>global</dataType>
@@ -661,6 +594,358 @@ $('.date').each(function(_idx, dateEl){
         </stencil>
         <assets>
             <asset id="line-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/line.png" />
+        </assets>
+    </template>
+    <template>
+        <id>rectangle</id>
+        <title>Rectangle</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>square-thumb</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Color</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="roundBorder" type="checkbox">
+                <title>Round Border</title>
+                <default>0</default>
+                <helpText>Should the square have rounded corners?</helpText>
+            </property>
+            <property id="borderRadius" type="number">
+                <title>Border Radius</title>
+                <default>20</default>
+                <visibility>
+                    <test>
+                        <condition field="roundBorder" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the square have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Color</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>8</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="rectangle-container"
+    style="background-color: {{backgroundColor}};
+    {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
+    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
+    width: 100%; height: 100%;"
+>
+</div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="square-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/square.png" />
+        </assets>
+    </template>
+    <template>
+        <id>circle</id>
+        <title>Circle</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <thumbnail>circle-thumb</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Color</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the circle have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Color</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>8</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <hbs><![CDATA[
+<div class="circle-container" style="position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;"
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <symbol id="circle" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+            <circle
+                {{#if outline }}
+                    r="calc(50 - calc({{outlineWidth}} / 4))"
+                {{else}}
+                    r="50"
+                {{/if}}
+                {{# if backgroundColor }}
+                    fill="{{backgroundColor}}"
+                {{else}}
+                    fill="none"
+                {{/if}}
+                {{# if outline }}
+                    {{#if outlineColor }}stroke="{{outlineColor}}"{{/if}}
+                    {{#if outlineWidth }}stroke-width="{{outlineWidth}}"{{/if}}
+                    vector-effect="non-scaling-stroke"
+                {{/if}}
+                cx="50%"
+                cy="50%"
+            ></circle>
+        </symbol>
+    </defs>
+    <use href="#circle" width="100%" height="100%" />
+</svg></div>]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="circle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/circle.png" />
+        </assets>
+    </template>
+    <template>
+        <id>triangle</id>
+        <title>Triangle</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <thumbnail>triangle-thumb</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Color</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the triangle have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Color</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>8</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <hbs><![CDATA[
+<div class="triangle-container" style="position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;"
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <symbol id="triangle" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+            <polygon points="1,99 50,1 99,99"
+                {{#if backgroundColor }}
+                    fill="{{backgroundColor}}"
+                {{else}}
+                    fill="none"
+                {{/if}}
+                {{#if outline }}
+                    {{#if outlineColor}}stroke="{{outlineColor}}"{{/if}}
+                    {{#if outlineWidth}}stroke-width="{{outlineWidth}}"{{/if}}
+                    vector-effect="non-scaling-stroke"
+                {{/if}}
+                class="triangle"
+            ></polygon>
+        </symbol>
+    </defs>
+    <use href="#triangle" width="100%" height="100%" />
+</svg></div>]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="triangle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/triangle.png" />
+        </assets>
+    </template>
+    <template>
+        <id>pentagon</id>
+        <title>Pentagon</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <thumbnail>pentagon-thumb</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Color</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the pentagon have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Color</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>8</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <hbs><![CDATA[
+<div class="pentagon-container" style="position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;"
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <symbol id="pentagon" viewBox="0 0 100 93" preserveAspectRatio="xMidYMid meet">
+            <polygon points="50,1 99,36 83.33,93 16.67,93 1,36"
+                {{#if backgroundColor }}
+                    fill="{{backgroundColor}}"
+                {{else}}
+                    fill="none"
+                {{/if}}
+                {{#if outline }}
+                    {{#if outlineColor }}stroke="{{outlineColor}}"{{/if}}
+                    {{#if outlineWidth }}stroke-width="{{outlineWidth}}"{{/if}}
+                    vector-effect="non-scaling-stroke"
+                {{/if}}
+            />
+        </symbol>
+    </defs>
+    <use href="#pentagon" width="100%" height="100%"></use>
+</svg></div>]]></hbs>
+        </stencil>
+
+        <assets>
+            <asset id="pentagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/pentagon.png" />
+        </assets>
+    </template>
+    <template>
+        <id>hexagon</id>
+        <title>Hexagon</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <thumbnail>hexagon-thumb</thumbnail>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Color</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the hexagon have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Color</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>8</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <hbs><![CDATA[
+<div class="hexagon-container" style="position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;"
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <symbol id="hexagon" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+            <polygon points="50,1 99,24.5 99,73.5 50,99 1,73.5 1,24.5"
+                {{#if backgroundColor }}
+                    fill="{{backgroundColor}}"
+                {{else}}
+                    fill="none"
+                {{/if}}
+                {{#if outline }}
+                    {{#if outlineColor }}stroke="{{outlineColor}}"{{/if}}
+                    {{#if outlineWidth }}stroke-width="{{outlineWidth}}"{{/if}}
+                    vector-effect="non-scaling-stroke"
+                {{/if}}
+            />
+        </symbol>
+    </defs>
+    <use href="#hexagon" width="100%" height="100%"></use>
+</svg></div>]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="hexagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/hexagon.png" />
         </assets>
     </template>
 </templates>
