@@ -29,7 +29,7 @@
     <group id="worldclock" icon="world">World Clock</group>
     <legacyType>worldclock</legacyType>
     <dataType></dataType>
-    <schemaVersion>1</schemaVersion>
+    <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>

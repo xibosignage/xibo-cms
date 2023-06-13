@@ -2904,7 +2904,8 @@ class LayoutFactory extends BaseFactory
         $widget->type = $module->type;
 
         // Upgrade if necessary
-        if ($module->isWidgetCompatibilityAvailable()) {
+        // We do not upgrade widgets which are already at the right schema version
+        if ($widget->schemaVersion < $module->schemaVersion && $module->isWidgetCompatibilityAvailable()) {
             // Grab a widget compatibility interface, if there is one
             $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
             if ($widgetCompatibilityInterface !== null) {
@@ -2913,11 +2914,11 @@ class LayoutFactory extends BaseFactory
                     $upgraded = $widgetCompatibilityInterface->upgradeWidget(
                         $widget,
                         $widget->schemaVersion,
-                        2
+                        $module->schemaVersion
                     );
 
                     if ($upgraded) {
-                        $widget->schemaVersion = 2;
+                        $widget->schemaVersion = $module->schemaVersion;
                     }
                 } catch (\Exception $e) {
                     $this->getLog()->error('Error upgrading widget '. $e->getMessage());

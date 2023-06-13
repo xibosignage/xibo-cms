@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -29,7 +29,7 @@
     <dataCacheKey></dataCacheKey>
     <type>subplaylist</type>
     <dataType></dataType>
-    <schemaVersion>1</schemaVersion>
+    <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>

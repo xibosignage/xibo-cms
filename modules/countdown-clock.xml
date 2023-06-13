@@ -29,7 +29,7 @@
     <group id="countdown" icon="countdown">Countdown</group>
     <legacyType condition="templateId==countdown2">countdown</legacyType>
     <dataType></dataType>
-    <schemaVersion>1</schemaVersion>
+    <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
