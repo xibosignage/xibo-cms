@@ -227,15 +227,17 @@ class WidgetFactory extends BaseFactory
      * @param int $playlistId
      * @param string $type
      * @param int $duration
+     * @param int $schemaVersion
      * @return Widget
      */
-    public function create($ownerId, $playlistId, $type, $duration)
+    public function create($ownerId, $playlistId, $type, $duration, $schemaVersion)
     {
         $widget = $this->createEmpty();
         $widget->ownerId = $ownerId;
         $widget->playlistId = $playlistId;
         $widget->type = $type;
         $widget->duration = $duration;
+        $widget->schemaVersion = $schemaVersion;
         $widget->displayOrder = 1;
         $widget->useDuration = 0;
 

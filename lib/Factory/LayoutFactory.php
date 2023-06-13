@@ -1027,7 +1027,7 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode['useDuration'];
                 $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
-                $widget->schemaVersion = isset($mediaNode['schemaVersion']) ? (int)$mediaNode['schemaVersion'] : 2;
+                $widget->schemaVersion = isset($mediaNode['schemaVersion']) ? (int)$mediaNode['schemaVersion'] : 1;
 
                 // Widget from/to dates.
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
@@ -1901,7 +1901,7 @@ class LayoutFactory extends BaseFactory
                 $playlistWidget->tempId = $widgetsDetail['tempId'];
                 $playlistWidget->mediaIds = $widgetsDetail['mediaIds'];
                 $playlistWidget->widgetOptions = [];
-                $playlistWidget->schemaVersion = isset($widgetsDetail['schemaVersion']) ? (int)$widgetsDetail['schemaVersion'] : 2;
+                $playlistWidget->schemaVersion = isset($widgetsDetail['schemaVersion']) ? (int)$widgetsDetail['schemaVersion'] : 1;
 
                 // Prepare widget options, check legacy types from conditions, set widget type and upgrade
                 $module = $this->prepareWidgetAndGetModule($playlistWidget, $widgetsDetail['widgetOptions']);

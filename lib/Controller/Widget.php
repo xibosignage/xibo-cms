@@ -222,11 +222,9 @@ class Widget extends Base
             $this->getUser()->userId,
             $playlist->playlistId,
             $module->type,
-            $module->defaultDuration
+            $module->defaultDuration,
+            $module->schemaVersion
         );
-
-        // Set the schema version to the module schema version
-        $widget->schemaVersion = $module->schemaVersion;
 
         // Get the template
         if ($module->isTemplateExpected()) {

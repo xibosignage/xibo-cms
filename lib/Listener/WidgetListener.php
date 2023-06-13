@@ -739,7 +739,8 @@ class WidgetListener
                 $event->getRegion()->getOwnerId(),
                 $event->getRegion()->regionPlaylist->playlistId,
                 $module->type,
-                $module->defaultDuration
+                $module->defaultDuration,
+                $module->schemaVersion
             );
 
             $event->getRegion()->regionPlaylist->assignWidget($widget, 1);

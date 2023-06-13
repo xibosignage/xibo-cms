@@ -748,7 +748,8 @@ class Playlist extends Base
                         $this->getUser()->userId,
                         $playlist->playlistId,
                         $item->mediaType,
-                        $itemDuration
+                        $itemDuration,
+                        $module->schemaVersion
                     );
                     $widget->assignMedia($item->mediaId);
 
@@ -1351,7 +1352,7 @@ class Playlist extends Base
             $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
 
             // Create a widget
-            $widget = $this->widgetFactory->create($this->getUser()->userId, $id, $item->mediaType, $itemDuration);
+            $widget = $this->widgetFactory->create($this->getUser()->userId, $id, $item->mediaType, $itemDuration, $module->schemaVersion);
             $widget->assignMedia($item->mediaId);
 
             // If a duration has been provided, then we want to use it, so set useDuration to 1.

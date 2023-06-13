@@ -1175,7 +1175,7 @@ class Widget implements \JsonSerializable
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
             'createdDt' => ($this->createdDt === null) ? Carbon::now()->format('U') : $this->createdDt,
             'modifiedDt' => Carbon::now()->format('U'),
-            'schemaVersion' => $this->schemaVersion ?? 2
+            'schemaVersion' => $this->schemaVersion
         ));
     }
 
