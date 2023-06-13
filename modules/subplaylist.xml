@@ -29,7 +29,7 @@
     <dataCacheKey></dataCacheKey>
     <type>subplaylist</type>
     <dataType></dataType>
-    <schemaVersion>2</schemaVersion>
+    <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
