@@ -744,6 +744,7 @@ $('.date').each(function(_idx, dateEl){
         <title>Triangle</title>
         <type>element</type>
         <dataType>global</dataType>
+        <canRotate>true</canRotate>
         <thumbnail>triangle-thumb</thumbnail>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
@@ -814,6 +815,7 @@ $('.date').each(function(_idx, dateEl){
         <title>Pentagon</title>
         <type>element</type>
         <dataType>global</dataType>
+        <canRotate>true</canRotate>
         <thumbnail>pentagon-thumb</thumbnail>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
@@ -884,6 +886,7 @@ $('.date').each(function(_idx, dateEl){
         <title>Hexagon</title>
         <type>element</type>
         <dataType>global</dataType>
+        <canRotate>true</canRotate>
         <thumbnail>hexagon-thumb</thumbnail>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
