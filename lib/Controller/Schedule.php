@@ -717,8 +717,16 @@ class Schedule extends Base
             $tree = $this->displayGroupFactory->getRelationShipTree($displayGroup->displayGroupId);
 
             foreach ($tree as $branch) {
-                $this->getLog()->debug('Branch found: ' . $branch->displayGroup . ' [' . $branch->displayGroupId . '], ' . $branch->depth . '-' . $branch->level);
-                if ($branch->depth < 0 && $branch->displayGroupId != $eventDisplayGroup->displayGroupId) {
+                $this->getLog()->debug(
+                    'Branch found: ' . $branch->displayGroup .
+                    ' [' . $branch->displayGroupId . '], ' .
+                    $branch->getUnmatchedProperty('depth') . '-' .
+                    $branch->getUnmatchedProperty('level')
+                );
+                
+                if ($branch->getUnmatchedProperty('depth') < 0 &&
+                    $branch->displayGroupId != $eventDisplayGroup->displayGroupId
+                ) {
                     $intermediates[] = $branch->displayGroupId;
                 }
             }
@@ -749,7 +757,7 @@ class Schedule extends Base
                         $branch->getUnmatchedProperty('depth') . '-' .
                         $branch->getUnmatchedProperty('level')
                     );
-                    
+
                     if ($branch->displayGroupId != $eventDisplayGroup->displayGroupId) {
                         $possibleIntermediates[] = $branch->displayGroupId;
                     }
