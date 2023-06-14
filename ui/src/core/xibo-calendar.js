@@ -26,7 +26,6 @@ var mymap;
 var mymapmarker;
 
 $(document).ready(function() {
-
     var getJsonRequestControl = null;
 
     // Set a listener for popover clicks
@@ -51,9 +50,17 @@ $(document).ready(function() {
 
     $('.btn-group button[data-calendar-view]').each(function() {
         var $this = $(this);
-        $this.click(function() {
+        $this.click(function () {
             calendar.view($this.data('calendar-view'));
+            $('#range').val($this.data('calendar-view'))
         });
+    })
+
+    $('a[data-toggle="tab"].schedule-nav').on('shown.bs.tab', function (e) {
+        let activeTab = $(e.target).attr("href")
+        if (activeTab === '#calendar-view') {
+            $('#range').trigger('change');
+        }
     });
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
@@ -62,12 +69,60 @@ $(document).ready(function() {
         var calendarOptions = $("#CalendarContainer").data();
 
         // Callback function to navigate to calendar date with the date picker
-        var navigateToCalendarDate = function() {
+        const navigateToCalendarDate = function() {
             if(calendar != undefined) {
+                let selectedDate = moment(moment($('#fromDt').val()).format(jsDateOnlyFormat));
                 // Add event to the picker to update the calendar
-                calendar.navigate('date', moment($('#dateInput input[data-input]').val()));
+                calendar.navigate('date', selectedDate);
             }
         };
+
+        const navigateToCalendarDatePicker = function() {
+            calendar.navigate('date', moment($('#dateInput input[data-input]').val()));
+        }
+
+        $('#range').on('change', function() {
+            if(calendar != undefined) {
+                let range = $('#range').val();
+                let isPast = range.includes('last');
+
+                if (range === 'custom') {
+                    $('#fromDt, #toDt').on('change', function () {
+                        navigateToCalendarDate()
+                        let from =  moment(
+                          moment($('#fromDt').val())
+                            .startOf('day')
+                            .format(jsDateOnlyFormat)
+                        )
+                        let to =  moment(
+                          moment($('#toDt').val())
+                            .startOf('day')
+                            .format(jsDateOnlyFormat)
+                        )
+
+                        let diff = to.diff(from, 'days');
+
+                        if (diff < 1) {
+                            calendar.options.view === 'agenda'
+                              ? calendar.view('agenda')
+                              : calendar.view('day')
+                        } else if (diff >= 1 && diff <= 7) {
+                            calendar.view('week')
+                        } else if (diff > 7 && diff <= 31) {
+                            calendar.view('month')
+                        } else {
+                            calendar.view('year')
+                        }
+                    });
+                } else {
+                    range = isPast ? range.replace('last', '') : range;
+                    calendar.view(range);
+                }
+            }
+
+            updateRangeFilter($('#range'), $('#fromDt'), $('#toDt'), navigateToCalendarDate)
+        });
+        updateRangeFilter($('#range'), $('#fromDt'), $('#toDt'))
 
         // Select picker options
         var pickerOptions = {};
@@ -99,12 +154,12 @@ $(document).ready(function() {
 
         // Create the date input shortcut
         initDatePicker(
-            $('#dateInput'),
-            systemDateFormat,
-            jsDateOnlyFormat,
-            pickerOptions,
-            navigateToCalendarDate,
-            false // clear button
+          $('#dateInput'),
+          systemDateFormat,
+          jsDateOnlyFormat,
+          pickerOptions,
+          navigateToCalendarDatePicker,
+          false // clear button
         );
 
         // Location filter init
@@ -186,17 +241,21 @@ $(document).ready(function() {
                 $('#DisplayList').prop('disabled', isShowAll);
 
                 if (this.options.view !== 'agenda') {
-
-                    $('.cal-event-agenda-filter').hide();
+                    $('.cal-event-agenda-filter, .xibo-agenda-calendar-controls, #btn-month-view').hide();
+                    $('#btn-agenda-view').show();
+                    $('.non-agenda-filter').find('input, select').prop('disabled', false)
 
                     // Serialise
-                    var displayGroups = $('#DisplayList').serialize();
-                    var displayLayouts = $('#campaignId').serialize();
+                    let displayGroups = $('#DisplayList').serialize();
+                    let displayLayouts = $('#campaignId').serialize();
+                    let eventTypes = $('#eventTypeId').serialize();
+                    let geoAware = $('#geoAware').serialize();
+                    let recurring = $('#recurring').serialize();
 
                     var url = calendarOptions.eventSource;
 
-                    // Append the Layout selected
-                    url += '?' + displayLayouts;
+                    // Append the selected filters
+                    url += '?' + displayLayouts + '&' + eventTypes + '&' + geoAware + '&' + recurring;
 
                     // Should we append displays?
                     if (isShowAll) {
@@ -210,78 +269,80 @@ $(document).ready(function() {
                     events = [];
 
                     // Populate the events array via AJAX
-                    var params = {
-                        "from": moment(this.options.position.start.getTime()).format(systemDateFormat),
-                        "to": moment(this.options.position.end.getTime()).format(systemDateFormat)
+                    let params = {
+                        from: moment(this.options.position.start.getTime()).format(systemDateFormat),
+                        to: moment(this.options.position.end.getTime()).format(systemDateFormat)
                     };
 
                     // If there is already a request, abort it
-                    if(getJsonRequestControl) {
+                    if (getJsonRequestControl) {
                         getJsonRequestControl.abort();
                     }
 
                     $('#calendar-progress').addClass('show');
 
                     getJsonRequestControl = $.getJSON(url, params)
-                        .done(function(data) {
-                            events = data.result;
+                      .done(function (data) {
+                          events = data.result;
 
-                            if (done != undefined)
-                                done();
+                          if (done != undefined)
+                              done();
 
-                            calendar._render();
+                          calendar._render();
 
-                            // Hook up any pop-overs (for small events)
-                            $('[data-toggle="popover"]').popover({
-                                trigger: "manual",
-                                html: true,
-                                placement: "bottom",
-                                content: function() {
-                                    return $(this).html();
-                                }
-                            }).on("mouseenter", function() {
-                                var self = this;
+                          // Hook up any pop-overs (for small events)
+                          $('[data-toggle="popover"]').popover({
+                              trigger: "manual",
+                              html: true,
+                              placement: "bottom",
+                              content: function () {
+                                  return $(this).html();
+                              }
+                          }).on("mouseenter", function () {
+                              var self = this;
 
-                                // Hide all other popover
-                                $('[data-toggle="popover"]').not(this).popover("hide");
+                              // Hide all other popover
+                              $('[data-toggle="popover"]').not(this).popover("hide");
 
-                                // Show this popover
-                                $(this).popover("show");
+                              // Show this popover
+                              $(this).popover("show");
 
-                                // Hide popover when mouse leaves it
-                                $(".popover").off("mouseleave").on("mouseleave", function() {
-                                    $(self).popover('hide');
-                                });
-                            }).on('shown.bs.popover', function() {
-                                var source = $(this);
-                                var popover = source.attr("aria-describedby");
+                              // Hide popover when mouse leaves it
+                              $(".popover").off("mouseleave").on("mouseleave", function () {
+                                  $(self).popover('hide');
+                              });
+                          }).on('shown.bs.popover', function () {
+                              var source = $(this);
+                              var popover = source.attr("aria-describedby");
 
-                                $("#" + popover + " a").click(function(e) {
-                                    e.preventDefault();
-                                    XiboFormRender($(this));
-                                    source.popover("hide");
-                                });
-                            });
+                              $("#" + popover + " a").click(function (e) {
+                                  e.preventDefault();
+                                  XiboFormRender($(this));
+                                  source.popover("hide");
+                              });
+                          });
 
-                            $('#calendar-progress').removeClass('show');
-                        })
-                        .fail(function(res) {
-                            $('#calendar-progress').removeClass('show');
+                          $('#calendar-progress').removeClass('show');
+                      })
+                      .fail(function (res) {
+                          $('#calendar-progress').removeClass('show');
 
-                            if (done != undefined)
-                                done();
+                          if (done != undefined)
+                              done();
 
-                            calendar._render();
+                          calendar._render();
 
-                            if(res.statusText != 'abort') {
-                                toastr.error(translations.failure);
-                                console.error(res);
-                            }
-                        });
+                          if (res.statusText != 'abort') {
+                              toastr.error(translations.failure);
+                              console.error(res);
+                          }
+                      });
                 } else {
 
                     // Show time slider on agenda view and call the calendar view on slide stop event
-                    $('.cal-event-agenda-filter').show();
+                    $('.cal-event-agenda-filter, .xibo-agenda-calendar-controls, #btn-month-view').show();
+                    $('#btn-agenda-view').hide();
+                    $('.non-agenda-filter').find('input, select').prop('disabled', true)
 
                     var $timePicker = $('#timePicker');
 
@@ -291,12 +352,12 @@ $(document).ready(function() {
                     var ticks = [];
                     var ticksLabels = [];
                     var ticksPositions = [];
-                    for(var i = 0; i <= 1440; i += 120) {
+                    for (var i = 0; i <= 1440; i += 120) {
                         // Last step get one less minute
                         var minutes = i === 1440 ? 1439 : i;
                         ticks.push(minutes);
                         ticksLabels.push(momentNow.clone().startOf('day').add(minutes, 'minutes').format(jsTimeFormat));
-                        ticksPositions.push(i/1440*100);
+                        ticksPositions.push(i / 1440 * 100);
                     }
 
                     $timePicker.slider({
@@ -305,14 +366,14 @@ $(document).ready(function() {
                         ticks: ticks,
                         ticks_labels: ticksLabels,
                         ticks_positions: ticksPositions,
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return moment().startOf("day").minute(value).format(jsTimeFormat);
                         }
-                    }).off('slideStop').on('slideStop', function(ev) {
+                    }).off('slideStop').on('slideStop', function (ev) {
                         calendar.view();
                     });
 
-                    $('.time-picker-step-btn').off().on('click', function() {
+                    $('.time-picker-step-btn').off().on('click', function () {
                         $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
                         calendar.view();
                     });
@@ -322,12 +383,12 @@ $(document).ready(function() {
                     var displayGroupsList = [];
                     var chooseAllDisplays = false;
 
-                    if(!isShowAll) {
+                    if (!isShowAll) {
 
                         $('#DisplayList').prop('disabled', false);
 
                         // Find selected display group and create a display group list used to create tabs
-                        $('#DisplayList option').each(function() {
+                        $('#DisplayList option').each(function () {
                             var $self = $(this);
 
                             // If the all option is selected
@@ -336,7 +397,7 @@ $(document).ready(function() {
                                 return true;
                             }
 
-                            if($self.is(':selected') || chooseAllDisplays) {
+                            if ($self.is(':selected') || chooseAllDisplays) {
 
                                 displayGroupsList.push({
                                     id: $self.val(),
@@ -352,8 +413,8 @@ $(document).ready(function() {
                     }
 
                     // Sort display group list by name
-                    displayGroupsList.sort(function(a, b){
-                        var nameA = a.name.toLowerCase(), nameB=b.name.toLowerCase()
+                    displayGroupsList.sort(function (a, b) {
+                        var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase()
                         if (nameA < nameB) //sort string ascending
                             return -1;
                         if (nameA > nameB)
@@ -365,8 +426,8 @@ $(document).ready(function() {
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
 
                     var dateMoment = moment(this.options.position.start.getTime() / 1000, "X");
-                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0;
-                    var timeMoment = moment(timeFromSlider*60, "X");
+                    var timeFromSlider = ($('#timePickerSlider').length) ? $('#timePicker').slider('getValue') : 0;
+                    var timeMoment = moment(timeFromSlider * 60, "X");
 
                     // Add hour to date to get the selected date
                     var dateSelected = moment(dateMoment + timeMoment);
@@ -377,7 +438,7 @@ $(document).ready(function() {
                     };
 
                     // if the result are empty create a empty object and reset the results
-                    if(jQuery.isEmptyObject(events['results'])){
+                    if (jQuery.isEmptyObject(events['results'])) {
 
                         // events var must be an array for compatibility with the previous implementation
                         events = [];
@@ -397,19 +458,19 @@ $(document).ready(function() {
                     }
 
                     // If there is already a request, abort it
-                    if(getJsonRequestControl) {
+                    if (getJsonRequestControl) {
                         getJsonRequestControl.abort();
                     }
 
                     // 0 - If all is selected, force the user to specify the displaygroups
-                    if(isShowAll) {
+                    if (isShowAll) {
                         events['errorMessage'] = 'all_displays_selected';
 
-                        if(done != undefined)
+                        if (done != undefined)
                             done();
 
                         calendar._render();
-                    } else if($('#DisplayList').val() == null || Array.isArray($('#DisplayList').val()) && $('#DisplayList').val().length == 0) {
+                    } else if ($('#DisplayList').val() == null || Array.isArray($('#DisplayList').val()) && $('#DisplayList').val().length == 0) {
                         // 1 - if there are no displaygroups selected
                         events['errorMessage'] = 'display_not_selected';
 
@@ -417,7 +478,7 @@ $(document).ready(function() {
                             done();
 
                         calendar._render();
-                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date && events['results'][selectedDisplayGroup]['geoLatitude'] == $('#geoLatitude').val() && events['results'][selectedDisplayGroup]['geoLongitude'] == $('#geoLongitude').val()) {
+                    } else if (!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date && events['results'][selectedDisplayGroup]['geoLatitude'] == $('#geoLatitude').val() && events['results'][selectedDisplayGroup]['geoLongitude'] == $('#geoLongitude').val()) {
                         // 2 - Use cache if the element was already saved for the requested date
                         if (done != undefined)
                             done();
@@ -429,69 +490,67 @@ $(document).ready(function() {
 
                         // 3 - make request to get the data for the events
                         getJsonRequestControl = $.getJSON(url, params)
-                            .done(function(data) {
+                          .done(function (data) {
 
-                                var noEvents = true;
+                              var noEvents = true;
 
-                                if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
-                                    events['results'][String(selectedDisplayGroup)] = data.data;
-                                    events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
+                              if (!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0) {
+                                  events['results'][String(selectedDisplayGroup)] = data.data;
+                                  events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
 
-                                    noEvents = false;
+                                  noEvents = false;
 
-                                    if($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' &&
-                                        $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
-                                        events['results'][String(selectedDisplayGroup)]['geoLatitude'] = $('#geoLatitude').val();
-                                        events['results'][String(selectedDisplayGroup)]['geoLongitude'] = $('#geoLongitude').val();
+                                  if ($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' &&
+                                    $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
+                                      events['results'][String(selectedDisplayGroup)]['geoLatitude'] = $('#geoLatitude').val();
+                                      events['results'][String(selectedDisplayGroup)]['geoLongitude'] = $('#geoLongitude').val();
 
-                                        events['results'][String(selectedDisplayGroup)]['events'] = filterEventsByLocation(events['results'][String(selectedDisplayGroup)]['events']);
+                                      events['results'][String(selectedDisplayGroup)]['events'] = filterEventsByLocation(events['results'][String(selectedDisplayGroup)]['events']);
 
-                                        noEvents = (data.data.events.length <= 0);
-                                    }
-                                }
+                                      noEvents = (data.data.events.length <= 0);
+                                  }
+                              }
 
-                                if(noEvents) {
-                                    events['results'][String(selectedDisplayGroup)] = {};
-                                    events['errorMessage'] = 'no_events';
-                                }
+                              if (noEvents) {
+                                  events['results'][String(selectedDisplayGroup)] = {};
+                                  events['errorMessage'] = 'no_events';
+                              }
 
-                                if (done != undefined)
-                                    done();
+                              if (done != undefined)
+                                  done();
 
-                                calendar._render();
+                              calendar._render();
 
-                                $('#calendar-progress').removeClass('show');
-                            })
-                            .fail(function(res) {
-                                // Deal with the failed request
+                              $('#calendar-progress').removeClass('show');
+                          })
+                          .fail(function (res) {
+                              // Deal with the failed request
 
-                                if (done != undefined)
-                                    done();
+                              if (done != undefined)
+                                  done();
 
-                                if(res.statusText != 'abort') {
-                                    events['errorMessage'] = 'request_failed';
-                                }
+                              if (res.statusText != 'abort') {
+                                  events['errorMessage'] = 'request_failed';
+                              }
 
-                                calendar._render();
+                              calendar._render();
 
-                                $('#calendar-progress').removeClass('show');
-                            });
+                              $('#calendar-progress').removeClass('show');
+                          });
                     }
-
                 }
-
             },
             onAfterEventsLoad: function(events) {
-                if(this.options.view == 'agenda') {
+                if (this.options.view == 'agenda') {
                     // When agenda panel is ready, turn tables into datatables with paging
-                    $('.agenda-panel').ready(function() {
+                    $('.agenda-panel').ready(function () {
                         $('.agenda-table-layouts').dataTable({
                             "searching": false
                         });
                     });
                 }
 
-                if(!events) {
+                if (!events) {
                     return;
                 }
             },
@@ -673,7 +732,7 @@ var setupScheduleForm = function(dialog) {
     $(dialog).find('[data-toggle="popover"]').popover();
 
     // Post processing on the schedule-edit form.
-    var $scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    var $scheduleEditForm = $(dialog).find('#scheduleEditForm, #scheduleEditSyncForm');
     if ($scheduleEditForm.length > 0) {
         // Add a button for duplicating this event
         var $button = $("<button>").addClass("btn btn-info")

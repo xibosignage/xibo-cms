@@ -140,10 +140,11 @@ function XiboInitialise(scope, options) {
         }
 
         var filterRefresh = _.debounce(function () {
-            if (gridName != undefined)
+            if (gridName != undefined) {
                 localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
+            }
 
-            $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
+            $(this).closest(".XiboGrid").find("table.dataTable").first().DataTable().ajax.reload();
         }, 500);
 
         // Prevent enter key to submit form
@@ -3403,6 +3404,38 @@ function destroyDatePicker($element) {
 
     // Unbind toggle button click
     $element.parent().find('.date-open-button').off('click');
+}
+
+function updateRangeFilter($element, $from, $to, callBack) {
+    let value = $element.val();
+    let from;
+    let to;
+    let isCustom = value === 'custom';
+    let isPast = value.includes('last');
+
+    if (value === 'agenda') {
+        value = 'day';
+    }
+
+    if (isCustom) {
+        $('.custom-date-range').removeClass('d-none');
+    } else {
+        $('.custom-date-range').addClass('d-none');
+
+        if (!isPast) {
+            from = moment().startOf(value).format(jsDateFormat)
+            to = moment().endOf(value).format(jsDateFormat)
+        } else {
+            let pastValue = value.replace('last', '');
+            from = moment().startOf(pastValue).subtract(1, pastValue +'s').format(jsDateFormat)
+            to = moment().endOf(pastValue).subtract(1, pastValue +'s').format(jsDateFormat)
+        }
+
+        updateDatePicker($from, from, jsDateFormat, true);
+        updateDatePicker($to, to, jsDateFormat, true);
+    }
+
+    (typeof callBack === 'function') && callBack();
 }
 
 function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [])

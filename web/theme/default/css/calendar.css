@@ -1,13 +1,14 @@
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -114,11 +115,11 @@
 }
 
 .agenda-table thead {
-    background-color: #e3e3e3;
+    background-color: #e3e3e3!important;
 }
 
 .agenda-table .table-title {
-    background-color: #30426a;
+    background-color: #30426a!important;
     color: #fff;
 }
 
@@ -183,7 +184,7 @@
     }
 
     .agenda-panel .agenda-col.col-lg-3 {
-        margin-top: 41px;
+        margin-top: 33px;
     }
 
     .agenda-panel .dataTables_wrapper .col-sm-12 {

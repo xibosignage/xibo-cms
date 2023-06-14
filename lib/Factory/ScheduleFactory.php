@@ -331,6 +331,16 @@ class ScheduleFactory extends BaseFactory
                     continue;
                 }
 
+                if ($sort == '`icon`') {
+                    $newSortOrder[] = '`eventTypeId`';
+                    continue;
+                }
+
+                if ($sort == '`icon` DESC') {
+                    $newSortOrder[] = '`eventTypeId` DESC';
+                    continue;
+                }
+
                 $newSortOrder[] = $sort;
             }
             $sortOrder = $newSortOrder;

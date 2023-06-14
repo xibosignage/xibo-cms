@@ -33,8 +33,6 @@ use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
@@ -96,8 +94,6 @@ class Schedule extends Base
 
     /** @var  DayPartFactory */
     private $dayPartFactory;
-    private MediaFactory $mediaFactory;
-    private PlaylistFactory $playlistFactory;
     private SyncGroupFactory $syncGroupFactory;
 
     /**
@@ -125,8 +121,6 @@ class Schedule extends Base
         $dayPartFactory,
         $scheduleReminderFactory,
         $scheduleExclusionFactory,
-        MediaFactory $mediaFactory,
-        PlaylistFactory $playlistFactory,
         SyncGroupFactory $syncGroupFactory
     ) {
         $this->session = $session;
@@ -139,8 +133,6 @@ class Schedule extends Base
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
         $this->scheduleExclusionFactory = $scheduleExclusionFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->playlistFactory = $playlistFactory;
         $this->syncGroupFactory = $syncGroupFactory;
     }
 
@@ -194,9 +186,10 @@ class Schedule extends Base
             'displayGroups' => $displayGroups,
             'displayGroupsShowAll' => $displayGroupsShowAll,
             'defaultLat' => $defaultLat,
-            'defaultLong' => $defaultLong
+            'defaultLong' => $defaultLong,
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypesGrid(),
         ];
-
+        
         // Render the Theme and output
         $this->getState()->template = 'schedule-page';
         $this->getState()->setData($data);
@@ -301,7 +294,10 @@ class Schedule extends Base
         $filter = [
             'futureSchedulesFrom' => $start->format('U'),
             'futureSchedulesTo' => $end->format('U'),
-            'displayGroupIds' => $displayGroupIds
+            'displayGroupIds' => $displayGroupIds,
+            'geoAware' => $sanitizedParams->getInt('geoAware'),
+            'recurring' => $sanitizedParams->getInt('recurring'),
+            'eventTypeId' => $sanitizedParams->getInt('eventTypeId'),
         ];
 
         if ($campaignId != null) {
@@ -574,13 +570,23 @@ class Schedule extends Base
 
             // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {
-
                 // Add the link to the schedule
-                if (!$this->isApi($request))
-                    $schedule->link = $this->urlFor($request,'schedule.edit.form', ['id' => $schedule->eventId]);
+                if (!$this->isApi($request)) {
+                    $route = $event['eventTypeId'] == \Xibo\Entity\Schedule::$SYNC_EVENT
+                        ? 'schedule.edit.sync.form'
+                        : 'schedule.edit.form';
+                    $schedule->setUnmatchedProperty(
+                        'link',
+                        $this->urlFor($request, $route, ['id' => $schedule->eventId])
+                    );
+                }
 
                 // Add the Layout
-                $layoutId = $event['layoutId'];
+                if ($event['eventTypeId'] == \Xibo\Entity\Schedule::$SYNC_EVENT) {
+                    $layoutId = $event['syncLayoutId'];
+                } else {
+                    $layoutId = $event['layoutId'];
+                }
 
                 $this->getLog()->debug('Adding this events layoutId [' . $layoutId . '] to list');
 
@@ -589,12 +595,20 @@ class Schedule extends Base
                     $layout = $this->layoutFactory->getById($layoutId);
 
                     // Add the link to the layout
-                    if (!$this->isApi($request))
-                        $layout->link = $this->urlFor($request,'layout.designer', ['id' => $layout->layoutId]);
+                    if (!$this->isApi($request)) {
+                        // do not link to Layout Designer for Full screen Media/Playlist Layout.
+                        $link = (in_array($event['eventTypeId'], [7, 8]))
+                            ? ''
+                            : $this->urlFor($request, 'layout.designer', ['id' => $layout->layoutId]);
 
-                    if ($showLayoutName || $this->getUser()->checkViewable($layout))
+                        $layout->setUnmatchedProperty(
+                            'link',
+                            $link
+                        );
+                    }
+                    if ($showLayoutName || $this->getUser()->checkViewable($layout)) {
                         $layouts[$layoutId] = $layout;
-                    else {
+                    } else {
                         $layouts[$layoutId] = [
                             'layout' => __('Private Item')
                         ];
@@ -627,9 +641,12 @@ class Schedule extends Base
 
                 // Determine the intermediate display groups
                 $this->getLog()->debug('Adding this events intermediateDisplayGroupIds to list');
-                $schedule->intermediateDisplayGroupIds = $this->calculateIntermediates($display, $displayGroup, $event['displayGroupId']);
+                $schedule->setUnmatchedProperty(
+                    'intermediateDisplayGroupIds',
+                    $this->calculateIntermediates($display, $displayGroup, $event['displayGroupId'])
+                );
 
-                foreach ($schedule->intermediateDisplayGroupIds as $intermediate) {
+                foreach ($schedule->getUnmatchedProperty('intermediateDisplayGroupIds') as $intermediate) {
                     if (!array_key_exists($intermediate, $displayGroups)) {
                         $displayGroups[$intermediate] = $this->displayGroupFactory->getById($intermediate);
                     }
@@ -645,8 +662,8 @@ class Schedule extends Base
                     $schedule->eventId = $eventId;
                     $schedule->fromDt = $scheduleEvent->fromDt;
                     $schedule->toDt = $scheduleEvent->toDt;
-                    $schedule->layoutId = intval($event['layoutId']);
-                    $schedule->displayGroupId = intval($event['displayGroupId']);
+                    $schedule->setUnmatchedProperty('layoutId', intval($layoutId));
+                    $schedule->setUnmatchedProperty('displayGroupId', intval($event['displayGroupId']));
 
                     $events[] = $schedule;
                 }
@@ -1279,13 +1296,17 @@ class Schedule extends Base
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
-        $media = null;
-        $playlist = null;
         if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
             if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT) {
-                $media = $this->mediaFactory->getByCampaignId($schedule->campaignId)[0];
+                $schedule->setUnmatchedProperty(
+                    'mediaId',
+                    $this->layoutFactory->getLinkedFullScreenMediaId($schedule->campaignId)
+                );
             } else if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$PLAYLIST_EVENT) {
-                $playlist = $this->playlistFactory->getByCampaignId($schedule->campaignId)[0];
+                $schedule->setUnmatchedProperty(
+                    'playlistId',
+                    $this->layoutFactory->getLinkedFullScreenPlaylistId($schedule->campaignId)
+                );
             }
         }
 
@@ -1309,8 +1330,6 @@ class Schedule extends Base
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
-            'media' => $media,
-            'playlist' => $playlist
         ]);
 
         return $this->render($request, $response);
@@ -2001,8 +2020,8 @@ class Schedule extends Base
             'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
             'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
-            'media' => (($from === 'Library') ? $this->mediaFactory->getById($id) : null),
-            'playlist' => (($from === 'Playlist') ? $this->playlistFactory->getById($id) : null),
+            'mediaId' => (($from === 'Library') ? $id : null),
+            'playlistId' => (($from === 'Playlist') ? $id : null),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
 
@@ -2022,28 +2041,6 @@ class Schedule extends Base
             'Playlist' => \Xibo\Entity\Schedule::$PLAYLIST_EVENT,
             default => \Xibo\Entity\Schedule::$LAYOUT_EVENT
         };
-    }
-
-    /**
-     * Schedule grid page view
-     * @param Request $request
-     * @param Response $response
-     * @return ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function gridPage(Request $request, Response $response)
-    {
-        // Call to render the template
-        $this->getState()->template = 'schedule-grid-page';
-        $this->getState()->setData([
-            'eventTypes' => \Xibo\Entity\Schedule::getEventTypesGrid(),
-            'defaults' => [
-                'fromDate' => Carbon::now()->startOfMonth()->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->startOfMonth()->addMonth()->format(DateFormatHelper::getSystemFormat()),
-            ],
-        ]);
-        return $this->render($request, $response);
     }
 
     /**
@@ -2126,13 +2123,13 @@ class Schedule extends Base
         $events = $this->scheduleFactory->query(
             $this->gridRenderSort($params),
             $this->gridRenderFilter([
-                'eventTypeId' => $params->getInt('filterEventTypeId'),
+                'eventTypeId' => $params->getInt('eventTypeId'),
                 'toDt' => $params->getDate('toDt')?->format('U'),
                 'fromDt' => $params->getDate('fromDt')?->format('U'),
                 'geoAware' => $params->getInt('geoAware'),
                 'recurring' => $params->getInt('recurring'),
-                'campaignId' => $params->getInt('filterCampaignId'),
-                'displayGroupIds' => $params->getIntArray('filterDisplayGroupIds'),
+                'campaignId' => $params->getInt('campaignId'),
+                'displayGroupIds' => $params->getIntArray('displayGroupIds'),
                 'gridFilter' => 1
             ], $params)
         );
@@ -2182,12 +2179,53 @@ class Schedule extends Base
                 }
             }
 
+            if (!empty($event->recurrenceType)) {
+                $repeatsOn = '';
+                $repeatsUntil = '';
+
+                if ($event->recurrenceType === 'Week') {
+                    $weekdays = Carbon::getDays();
+
+                    $repeatsOn = $weekdays[$event->recurrenceRepeatsOn - 1];
+                } else if ($event->recurrenceType === 'Month') {
+                    if ($event->recurrenceMonthlyRepeatsOn === 0) {
+                        $repeatsOn = 'the ' . Carbon::parse($event->fromDt)->format('jS') . ' day of the month';
+                    } else {
+                        $date = Carbon::parse($event->fromDt);
+                        $firstDay = Carbon::parse('first ' . $date->format('l') . ' of ' . $date->format('F'));
+                        $nth = $firstDay->diffInDays($date) / 7 + 1;
+                        $repeatWeekDayDate = $date->copy()->setDay($nth)->format('jS');
+                        $repeatsOn = 'the ' . $repeatWeekDayDate . ' '
+                            . Carbon::parse($event->fromDt)->format('l')
+                            . ' of the month';
+                    }
+                }
+
+                if (!empty($event->recurrenceRange)) {
+                    $repeatsUntil = Carbon::createFromTimestamp($event->recurrenceRange)
+                            ->format(DateFormatHelper::getSystemFormat());
+                }
+
+                $event->setUnmatchedProperty(
+                    'recurringEventDescription',
+                    __(sprintf(
+                        'Repeats every %d %s %s %s',
+                        $event->recurrenceDetail,
+                        $event->recurrenceType . ($event->recurrenceDetail > 1 ? 's' : ''),
+                        !empty($repeatsOn) ? 'on ' . $repeatsOn : '',
+                        !empty($repeatsUntil) ? ' until ' . $repeatsUntil : ''
+                    ))
+                );
+            } else {
+                $event->setUnmatchedProperty('recurringEventDescription', '');
+            }
+
             if ($this->isApi($request)) {
                 continue;
             }
 
             $event->includeProperty('buttons');
-
+            $event->setUnmatchedProperty('isEditable', $this->isEventEditable($event));
             if ($this->isEventEditable($event)) {
                 $event->buttons[] = [
                     'id' => 'schedule_button_edit',
