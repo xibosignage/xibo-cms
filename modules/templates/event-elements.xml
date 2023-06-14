@@ -61,4 +61,32 @@
             <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
     </template>
+    <template>
+        <id>event_endDate</id>
+        <extends override="date" with="data.endDate">date</extends>
+        <title>End Date</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>date-thumb</thumbnail>
+        <startWidth>450</startWidth>
+        <startHeight>80</startHeight>
+        <assets>
+            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+    <template>
+        <id>event_location</id>
+        <extends override="text" with="data.location">text</extends>
+        <title>Location</title>
+        <type>element</type>
+        <dataType>event</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>event-location</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="event-location" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
+        </assets>
+    </template>
 </templates>
