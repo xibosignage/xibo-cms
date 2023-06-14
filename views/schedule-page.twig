@@ -139,20 +139,24 @@
                     </div>
                 </div>
 
-                <ul class="nav nav-tabs nav-fill">
-                    <li class="nav-item">
-                        <a class="schedule-nav nav-link active" id="grid-tab" href="#grid-view" role="tab"
-                           data-toggle="tab"><span>{% trans "Grid" %}</span></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="schedule-nav nav-link" id="calendar-tab" href="#calendar-view"
-                           data-calendar-view="month" role="tab"
-                           data-toggle="tab"><span>{% trans "Calendar" %}</span></a>
-                    </li>
-                </ul>
-                <div class="tab-content">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="schedule-nav nav-link active" id="grid-tab" href="#grid-view" role="tab"
+                               data-toggle="tab"><span>{% trans "Grid" %}</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="schedule-nav nav-link" id="calendar-tab" href="#calendar-view"
+                               data-calendar-view="month" role="tab"
+                               data-toggle="tab"><span>{% trans "Calendar" %}</span></a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body">
+                    <div class="tab-content">
                     <div class="tab-pane active" id="grid-view">
-                        <div class="XiboData card pt-3">
+                        <div class="XiboData pt-3">
                             <table id="schedule-grid" class="table table-striped w-100"
                                    data-state-preference-name="scheduleGrid">
                                 <thead>
@@ -304,6 +308,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
