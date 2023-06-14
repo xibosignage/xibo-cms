@@ -260,7 +260,7 @@ class XiboDashboardConnector implements ConnectorInterface
         }
 
         if ($this->availableServices === null) {
-            $this->getLogger()->debug('getAvailableServices: Requesting available services.' . $apiKey);
+            $this->getLogger()->debug('getAvailableServices: Requesting available services.');
             try {
                 $response = $this->getClient()->get($this->getServiceUrl() . '/services', [
                     'headers' => [
