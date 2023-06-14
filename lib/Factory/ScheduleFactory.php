@@ -268,10 +268,15 @@ class ScheduleFactory extends BaseFactory
                 LEFT OUTER JOIN `command`
                 ON `command`.commandId = `schedule`.commandId
                 LEFT OUTER JOIN `schedule_sync`
-                ON `schedule_sync`.eventId = `schedule`.eventId
-                  AND `schedule_sync`.displayId = :displayId
-                LEFT OUTER JOIN `layout` syncLayout
-                ON `syncLayout`.layoutId = `schedule_sync`.layoutId
+                ON `schedule_sync`.eventId = `schedule`.eventId';
+
+        // do this only if we have a Display.
+        if (!$options['useGroupId']) {
+            $SQL .= ' AND `schedule_sync`.displayId = :displayId';
+        }
+
+        $SQL .= ' LEFT OUTER JOIN `layout` syncLayout
+                 ON `syncLayout`.layoutId = `schedule_sync`.layoutId
                   AND `syncLayout`.retired = 0 
                   AND `syncLayout`.parentId IS NULL
         ';

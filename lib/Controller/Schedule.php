@@ -743,7 +743,13 @@ class Schedule extends Base
                 $possibleIntermediates = [];
 
                 foreach ($tree as $branch) {
-                    $this->getLog()->debug('Branch found: ' . $branch->displayGroup . ' [' . $branch->displayGroupId . '], ' . $branch->depth . '-' . $branch->level);
+                    $this->getLog()->debug(
+                        'Branch found: ' . $branch->displayGroup .
+                        ' [' . $branch->displayGroupId . '], ' .
+                        $branch->getUnmatchedProperty('depth') . '-' .
+                        $branch->getUnmatchedProperty('level')
+                    );
+                    
                     if ($branch->displayGroupId != $eventDisplayGroup->displayGroupId) {
                         $possibleIntermediates[] = $branch->displayGroupId;
                     }
