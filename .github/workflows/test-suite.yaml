@@ -47,8 +47,6 @@ jobs:
           docker cp cms-web:/var/www/cms/web/settings.php web/settings.php
           docker exec -t cms-web /bin/bash -c "chown -R www-data.www-data /var/www/cms"
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
-          docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO task (name, class, status, isActive, configFile, options, schedule) VALUES ('Seed Database', '\\\\Xibo\\\\XTR\\\\SeedDatabaseTask', 2, 1, '/tasks/seed-database.task', '{}', '* * * * * *')"
-          docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 20"
           sleep 5
       - name: Run Code Sniffer
         run: |
@@ -56,6 +54,11 @@ jobs:
             docker exec --user www-data -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/phpcs --standard=vendor/xibosignage/support/src/Standards/xibo_ruleset.xml --report=json --file-list=files.txt > phpcs.json || true"
             docker exec --user www-data -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/diffFilter --phpcs diff.txt phpcs.json"
           fi
+      - name: Seed Database
+        run: |
+          docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO task (name, class, status, isActive, configFile, options, schedule) VALUES ('Seed Database', '\\\\Xibo\\\\XTR\\\\SeedDatabaseTask', 2, 1, '/tasks/seed-database.task', '{}', '* * * * * *')"
+          docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 20"
+          sleep 5
       - name: Run Cypress
         run: |
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_clients (id, secret, name, userId, authCode, clientCredentials) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz', 'cypress', 1, 0, 1)"
