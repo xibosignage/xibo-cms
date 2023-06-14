@@ -746,9 +746,12 @@ PropertiesPanel.prototype.render = function(
           left: targetAux.left,
           width: targetAux.width,
           height: targetAux.height,
-          rotation: targetAux.rotation,
           zIndex: targetAux.layer,
         };
+
+        if (targetAux.canRotate) {
+          positionProperties.rotation = targetAux.rotation;
+        }
       } else {
         positionProperties = {
           type: 'region',
