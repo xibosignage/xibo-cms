@@ -109,7 +109,7 @@
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Media" %}{% endset %}
-                        {% set helpText %}{% trans "Choose a media item on the library you want shown full screen" %}{% endset %}
+                        {% set helpText %}{% trans "Select a Media file from the Library to use. The selected file will be shown full screen for this event." %}{% endset %}
                         {% set attributes = [
                             { name: "data-width", value: "100%" },
                             { name: "data-search-url", value: url_for("library.search") ~ "?fullScreenScheduleCheck=true&types[]=image&types[]=video" },
@@ -118,12 +118,12 @@
                             { name: "data-text-property", value: "name" },
                             { name: "data-additional-property", value: "hasFullScreenLayout" },
                             { name: "data-initial-key", value: "mediaId"},
-                            { name: "data-initial-value", value: media.mediaId}
+                            { name: "data-initial-value", value: event.getUnmatchedProperty("mediaId")}
                         ] %}
-                        {{ forms.dropdown("mediaId", "single", title, media.mediaId, [media], "mediaId", "name", helpText, "pagedSelect media-control", "", "", "", attributes) }}
+                        {{ forms.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "pagedSelect media-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Playlist" %}{% endset %}
-                        {% set helpText %}{% trans "Choose a Playlist you want shown full screen" %}{% endset %}
+                        {% set helpText %}{% trans "Select a Playlist to use. The selected playlist will be shown full screen for this event." %}{% endset %}
                         {% set attributes = [
                             { name: "data-width", value: "100%" },
                             { name: "data-search-url", value: url_for("playlist.search") ~ "?fullScreenScheduleCheck=true" },
@@ -132,9 +132,9 @@
                             { name: "data-text-property", value: "name" },
                             { name: "data-additional-property", value: "hasFullScreenLayout" },
                             { name: "data-initial-key", value: "playlistId"},
-                            { name: "data-initial-value", value: playlist.playlistId}
+                            { name: "data-initial-value", value: event.getUnmatchedProperty("playlistId")}
                         ] %}
-                        {{ forms.dropdown("playlistId", "single", title, playlist.playlistId, [playlist], "playlistId", "name", helpText, "pagedSelect playlist-control", "", "", "", attributes) }}
+                        {{ forms.dropdown("playlistId", "single", title, "", null, "playlistId", "name", helpText, "pagedSelect playlist-control", "", "", "", attributes) }}
 
                         {{ forms.hidden('fullScreenCampaignId') }}
 

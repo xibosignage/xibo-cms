@@ -583,6 +583,63 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * @param int $campaignId
+     * @return int|null
+     */
+    public function getLinkedFullScreenMediaId(int $campaignId): ?int
+    {
+        $mediaId = $this->getStore()->select('SELECT `lkwidgetmedia`.mediaId
+                    FROM region
+                     INNER JOIN playlist
+                            ON playlist.regionId = region.regionId
+                     INNER JOIN lkplaylistplaylist
+                            ON lkplaylistplaylist.parentId = playlist.playlistId
+                     INNER JOIN widget
+                            ON widget.playlistId = lkplaylistplaylist.childId
+                     INNER JOIN lkwidgetmedia
+                            ON widget.widgetId = lkwidgetmedia.widgetId
+                     INNER JOIN `lkcampaignlayout` lkcl 
+                            ON lkcl.layoutid = region.layoutid AND lkcl.CampaignID = :campaignId',
+            ['campaignId' => $campaignId]
+        );
+
+        if (count($mediaId) <= 0) {
+            return null;
+        }
+
+        return $mediaId[0]['mediaId'];
+    }
+
+    /**
+     * @param int $campaignId
+     * @return int|null
+     */
+    public function getLinkedFullScreenPlaylistId(int $campaignId): ?int
+    {
+        $playlistId = $this->getStore()->select('SELECT `lkplaylistplaylist`.childId
+                    FROM region
+                    INNER JOIN playlist
+                        ON `playlist`.regionId = `region`.regionId
+                    INNER JOIN lkplaylistplaylist
+                        ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
+                    INNER JOIN widget
+                        ON `widget`.playlistId = `lkplaylistplaylist`.childId
+                    INNER JOIN lkwidgetmedia
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId        
+                    INNER JOIN `lkcampaignlayout` lkcl
+                            ON lkcl.layoutid = region.layoutid
+                            AND lkcl.CampaignID = :campaignId',
+            ['campaignId' => $campaignId]
+        );
+
+        if (count($playlistId) <= 0) {
+            return null;
+        }
+
+        return $playlistId[0]['playlistId'];
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @param null $layout

@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -34,8 +34,7 @@
             <li class="nav-item">
         {% endif %}
                 {% if currentUser.featureEnabled("schedule.view") %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% if countViewable > 1 %}{% trans "Calendar" %}{% else %}{% trans "Calendar" %}{% endif %}</a>
-                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.grid.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a>
                 {% endif %}
                 {% if currentUser.featureEnabled("daypart.view") %}
                     <a class="{{ groupElementClass }}" href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a>

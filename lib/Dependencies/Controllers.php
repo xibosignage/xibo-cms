@@ -480,8 +480,6 @@ class Controllers
                     $c->get('dayPartFactory'),
                     $c->get('scheduleReminderFactory'),
                     $c->get('scheduleExclusionFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('playlistFactory'),
                     $c->get('syncGroupFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,160 +25,295 @@
 
 {% block title %}{{ "Schedule"|trans }} | {% endblock %}
 
-{% block pageContent %}
-    <div class="row">
-        <div class="xibo-calendar-controls-container align-content-start col-sm-6 col-xl-5 pr-0 form-inline">
-            <div class="xibo-calendar-controls">
-                <div class="form-check">
-                    <input class="form-check-input" title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ url_for("displayGroup.search") }}"
-                        {% if displayGroupsShowAll == -1 %}
-                            checked
-                        {% endif %}
-                    >
-                    <label class="form-check-label" for="showAll">{% trans "Show All" %}</label>
-                </div>
-            </div>
-            <div class="xibo-calendar-controls dropdown ">
-                <select id="DisplayList" class="form-control" name="displayGroupIds[]"
-                        data-placeholder="{% trans "Displays" %}"
-                        data-search-url="{{ url_for("displayGroup.search") }}"
-                        data-trans-groups="{% trans "Groups" %}"
-                        data-trans-display="{% trans "Display" %}"
-                        data-allow-clear="true"
-                        data-width="100%"
-                        data-placeholder="{% trans "Select Displays" %}" multiple>
-                    {% for option in displayGroups %}
-                        {% set itemOptionId = attribute(option, "displayGroupId") %}
-                        {% set itemOptionValue = attribute(option, "displayGroup") %}
-                        <option value="{{ itemOptionId }}" selected >{{ itemOptionValue }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="xibo-calendar-controls dropdown">
-                {# Campaign / Layout list. We want to build two arrays for us to use. #}
-                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
-                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-
-                <select name="campaignId" id="campaignId" class="d-none form-control"
-                    data-search-url= "{{ url_for("campaign.search") }}"
-                    data-trans-campaigns= "{% trans "Campaigns" %}"
-                    data-trans-layouts= "{% trans "Layouts" %}"
-                    data-allow-clear="true"
-                    data-width="100%"
-                    title="{% trans "Layout / Campaign" %}"
-                    data-placeholder="{% trans "Layout / Campaign" %}"
-                    data-dropdownAutoWidth
-                    >
-                </select>
-            </div>
-        </div>
-        <div class="xibo-calendar-controls-container align-content-start justify-content-end col-sm-6 col-xl-7 pl-0 form-inline text-right">
-            {% if currentUser.featureEnabled("schedule.add") %}
-                <div class="xibo-calendar-controls">
-                    <button class="btn btn-success XiboFormButton" href="{{ url_for("schedule.add.form") }}">
-                        {% trans "Add Event" %}
-                    </button>
-                </div>
+{% block actionMenu %}
+    {% if currentUser.featureEnabled("schedule.add") %}
+        <div class="widget-action-menu pull-right">
+            {% if currentUser.featureEnabled("schedule.sync") %}
+                <button class="btn btn-white XiboFormButton btns" title="{% trans "Add a new Sync event" %}"
+                        href="{{ url_for("schedule.add.sync.form") }}"><span
+                            class="fa fa-plus"></span> {% trans "Add Synchronised Event" %}</button>
             {% endif %}
-            <div class="btn-group xibo-calendar-controls">
-                <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="fa fa-backward"></span> {% trans "Prev" %}</button>
-                <button type="button" class="btn btn-white" data-calendar-nav="today">{% trans "Today" %}</button>
-                <button type="button" class="btn btn-primary" data-calendar-nav="next">{% trans "Next" %} <span class="fa fa-forward"></span></button>
-            </div>
-            <div class="xibo-calendar-controls">
-                <div class="inputgroup date" id="dateInput">
-                    <span class="btn btn-outline-dark date-open-button" role="button">
-                        <i class="fa fa-calendar"></i>
-                    </span>
-                    <input type="text" class="form-control" id="dateInputLink" data-input />
-                </div>
-            </div>
-            <div class="btn-group xibo-calendar-controls">
-                <button type="button" class="btn btn-outline-info" data-calendar-view="year">{% trans "Year" %}</button>
-                <button type="button" class="btn btn-outline-info active" data-calendar-view="month">{% trans "Month" %}</button>
-                <button type="button" class="btn btn-outline-info" data-calendar-view="week">{% trans "Week" %}</button>
-                <button type="button" class="btn btn-outline-info" data-calendar-view="day">{% trans "Day" %}</button>
-                {% if currentUser.featureEnabled("schedule.agenda") %}
-                    <button type="button" class="btn btn-outline-info" data-calendar-view="agenda">{% trans "Agenda" %}</button>
-                {% endif %}
-            </div>
+            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Scheduled event" %}"
+                    href="{{ url_for("schedule.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Event" %}
+            </button>
         </div>
-        <div class="text-center col-xl-12">
-            <h1 class="page-header"></h1>
-            <div class="calendar-loading">
-                <span id="calendar-progress" class="fa fa-spin fa-cog"></span>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 cal-event-agenda-filter" style="display:none;">
-            <!-- Time Slider -->
-            <div class="cal-event-time-bar">
-                <div class="btn slider-step-btn time-picker-step-btn" data-step="-1">
-                    <span class="fa fa-step-backward"></span>
-                </div>
-                <input id="timePicker" type="text"
-                    data-slider-id='timePickerSlider'
-                    data-slider-min="0"
-                    data-slider-max="1439"
-                    data-slider-step="1"
-                    data-slider-value="0"
-                    data-slider-handle="square"
-                />
-                <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
-                    <span class="fa fa-step-forward"></span>
-                </div>
-            </div>
+    {% endif %}
+{% endblock %}
 
-            <!-- Geo location -->
-            <form class="form-inline cal-event-location">
-                <button id="toggleMap" type="button" class="btn btn-primary pull-right" title="{% trans "Map" %}"><i class="fa fa-map"></i></button>
-                <button id="getLocation" type="button" class="btn btn-white pull-right" title="{% trans "Get browser location!" %}"><i class="fa fa-map-marker"></i></button>
-                <button id="clearLocation" type="button" class="btn btn-white pull-right" title="{% trans "Clear coordinates!" %}"><i class="fa fa-times"></i></button>
-                <div class="form-group pull-right">
-                    <input type="email" class="form-control" id="geoLongitude" placeholder="Longitude">
-                </div>
-                <div class="form-group pull-right">
-                    <input type="text" class="form-control" id="geoLatitude" placeholder="Latitude">
-                </div>
-            </form>
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Schedule" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="scheduleGridView">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="schedule-filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set day %}{% trans "Today" %}{% endset %}
+                            {% set week %}{% trans "This Week" %}{% endset %}
+                            {% set month %}{% trans "This Month" %}{% endset %}
+                            {% set year %}{% trans "This Year" %}{% endset %}
+                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
+                            {% set agenda %}{% trans "Agenda" %}{% endset %}
+                            {% set options = [
+                                { name: "custom", range: range },
+                                { name: "day", range: day },
+                                { name: "week", range: week },
+                                { name: "month", range: month },
+                                { name: "year", range: year },
+                                { name: "lastday", range: yesterday },
+                                { name: "lastweek", range: lastweek },
+                                { name: "lastmonth", range: lastmonth },
+                                { name: "lastyear", range: lastyear },
+                                { name: "agenda", range: agenda}
+                            ] %}
+                            {{ inline.dropdown("range", "single", title, "month", options, "name", "range", "", "date-range-input") }}
 
-            <!-- Geo location map -->
-            <div class="cal-event-location-map" data-default-lat="{{ defaultLat }}" data-default-long="{{ defaultLong }}">
-                <div id="geoFilterAgendaMap" style="height: 400px; width: 100%" class="d-none"></div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div id="CalendarContainer" data-event-source="{{ url_for("schedule.calendar.data") }}" data-agenda-link="{{ url_for("schedule.events", {id: ':id'}) }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
-            <div id="Calendar"></div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="cal-legend">
-                <ul>
-                    <li class="event-always"><span class="fa fa-retweet"></span> {% trans "Always showing" %}</li>
-                    <li class="event-info"><span class="fa fa-desktop"></span> {% trans "Single Display" %}</li>
-                    <li class="event-success"><span class="fa fa-desktop"></span> {% trans "Multi Display" %}</li>
-                    <li class="event-important"><span class="fa fa-bullseye"></span> {% trans "Priority" %}</li>
-                    <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
-                    <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Only" %}</li>
-                    <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
-                    <li class="event-interrupt"><span class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
-                    <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
-                    <li class="event-action"><span class="fa fa-paper-plane "></span> {% trans "Interactive Action" %}</li>
-                    <li class="event-sync"><span class="fa fa-refresh"></span> {% trans "Synchronised" %}</li>
+                            {% set title %}{% trans 'From Date' %}{% endset %}
+                            {{ inline.dateTime("fromDt", title, "", "", "custom-date-range", "", "") }}
+
+                            {% set title %}{% trans 'To Date' %}{% endset %}
+                            {{ inline.dateTime("toDt", title, "", "", "custom-date-range", "", "") }}
+
+                            {% set title %}{% trans 'Event Type' %}{% endset %}
+                            {{ inline.dropdown("eventTypeId", "single", title, "", [{eventTypeId: null, eventTypeName: "All"}]|merge(eventTypes), "eventTypeId", "eventTypeName", "", "non-agenda-filter") }}
+
+                            {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                            {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+
+                            <div class="form-group mr-1 mb-1 non-agenda-filter">
+                                <label class="control-label mr-1" for="campaignId" title=""
+                                       accesskey="">{{ title }}</label>
+                                <select name="campaignId" id="campaignId" class="form-control"
+                                        data-search-url="{{ url_for("campaign.search") }}"
+                                        data-trans-campaigns="{% trans "Campaigns" %}"
+                                        data-trans-layouts="{% trans "Layouts" %}"
+                                        data-allow-clear="true"
+                                        data-width="100%"
+                                        title="{% trans "Layout / Campaign" %}"
+                                        data-placeholder="{% trans "Layout / Campaign" %}"
+                                        data-dropdownAutoWidth
+                                >
+                                </select>
+                            </div>
+
+                            {% set title %}{% trans "Displays" %}{% endset %}
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" for="DisplayList" title=""
+                                       accesskey="">{{ title }}</label>
+                                <select id="DisplayList" class="form-control" name="displayGroupIds[]"
+                                        data-placeholder="{% trans "Displays" %}"
+                                        data-search-url="{{ url_for("displayGroup.search") }}"
+                                        data-trans-groups="{% trans "Groups" %}"
+                                        data-trans-display="{% trans "Display" %}"
+                                        data-allow-clear="true"
+                                        data-width="100%"
+                                        data-placeholder="{% trans "Select Displays" %}" multiple>
+                                    {% for option in displayGroups %}
+                                        {% set itemOptionId = attribute(option, "displayGroupId") %}
+                                        {% set itemOptionValue = attribute(option, "displayGroup") %}
+                                        <option value="{{ itemOptionId }}" selected>{{ itemOptionValue }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% set title %}{% trans 'Geo Aware?' %}{% endset %}
+                            {% set options = [
+                                { id: null, name: "Both"|trans },
+                                { id: 0, name: "No"|trans },
+                                { id: 1, name: "Yes"|trans }
+                            ] %}
+                            {{ inline.dropdown("geoAware", "single", title, "both", options, "id", "name", "", "non-agenda-filter") }}
+
+                            {% set title %}{% trans 'Recurring?' %}{% endset %}
+                            {% set options = [
+                                { id: null, name: "Both" },
+                                { id: 0, name: "No"|trans },
+                                { id: 1, name: "Yes"|trans }
+                            ] %}
+                            {{ inline.dropdown("recurring", "single", title, "both", options, "id", "name", "", "non-agenda-filter") }}
+                        </form>
+                    </div>
+                </div>
+
+                <ul class="nav nav-tabs nav-fill">
+                    <li class="nav-item">
+                        <a class="schedule-nav nav-link active" id="grid-tab" href="#grid-view" role="tab"
+                           data-toggle="tab"><span>{% trans "Grid" %}</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="schedule-nav nav-link" id="calendar-tab" href="#calendar-view"
+                           data-calendar-view="month" role="tab"
+                           data-toggle="tab"><span>{% trans "Calendar" %}</span></a>
+                    </li>
                 </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="grid-view">
+                        <div class="XiboData card pt-3">
+                            <table id="schedule-grid" class="table table-striped w-100"
+                                   data-state-preference-name="scheduleGrid">
+                                <thead>
+                                <tr>
+                                    <th>{% trans 'ID' %}</th>
+                                    <th></th>
+                                    <th>{% trans 'Event Type' %}</th>
+                                    <th>{% trans 'Start' %}</th>
+                                    <th>{% trans 'End' %}</th>
+                                    <th>{% trans 'Campaign' %}</th>
+                                    <th>{% trans 'Campaign ID' %}</th>
+                                    <th>{% trans 'Display Groups' %}</th>
+                                    <th>{% trans 'SoV' %}</th>
+                                    <th>{% trans 'Max Plays per Hour' %}</th>
+                                    <th>{% trans 'Geo Aware?' %}</th>
+                                    <th>{% trans 'Recurring?' %}</th>
+                                    <th>{% trans 'Recurrence Description' %}</th>
+                                    <th>{% trans 'Recurrence Type' %}</th>
+                                    <th>{% trans 'Recurrence Interval' %}</th>
+                                    <th>{% trans 'Recurrence Repeats On' %}</th>
+                                    <th>{% trans 'Recurrence End' %}</th>
+                                    <th>{% trans 'Priority?' %}</th>
+                                    <th class="rowMenu"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="calendar-view">
+                        <div class="row">
+                            <div class="xibo-calendar-controls-container align-content-start justify-content-end col-xl-12 pl-0 form-inline text-right">
+                                <div class="btn-group xibo-calendar-controls xibo-agenda-calendar-controls">
+                                    <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span
+                                                class="fa fa-backward"></span> {% trans "Prev" %}</button>
+                                    <button type="button" class="btn btn-white"
+                                            data-calendar-nav="today">{% trans "Today" %}</button>
+                                    <button type="button" class="btn btn-primary"
+                                            data-calendar-nav="next">{% trans "Next" %} <span
+                                                class="fa fa-forward"></span></button>
+                                </div>
+                                <div class="xibo-calendar-controls xibo-agenda-calendar-controls">
+                                    <div class="inputgroup date calendar-date-picker-input" id="dateInput">
+                                        <span class="btn btn-outline-dark date-open-button" role="button">
+                                            <i class="fa fa-calendar"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="dateInputLink" data-input/>
+                                    </div>
+                                </div>
+                                <div class="btn-group xibo-calendar-controls">
+                                    {% if currentUser.featureEnabled("schedule.agenda") %}
+                                        <button type="button" id="btn-agenda-view" class="btn btn-outline-info" data-calendar-view="agenda">{% trans "Agenda" %}</button>
+                                    {% endif %}
+                                    <button type="button" id="btn-month-view" class="btn btn-outline-info" data-calendar-view="month">{% trans "Month" %}</button>
+                                </div>
+                            </div>
+                            <div class="text-center col-xl-12">
+                                <h1 class="page-header"></h1>
+                                <div class="calendar-loading">
+                                    <span id="calendar-progress" class="fa fa-spin fa-cog"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12 cal-event-agenda-filter">
+                                <!-- Time Slider -->
+                                <div class="cal-event-time-bar">
+                                    <div class="btn slider-step-btn time-picker-step-btn" data-step="-1">
+                                        <span class="fa fa-step-backward"></span>
+                                    </div>
+                                    <input id="timePicker" type="text"
+                                           data-slider-id='timePickerSlider'
+                                           data-slider-min="0"
+                                           data-slider-max="1439"
+                                           data-slider-step="1"
+                                           data-slider-value="0"
+                                           data-slider-handle="square"
+                                    />
+                                    <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
+                                        <span class="fa fa-step-forward"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Geo location -->
+                                <form class="form-inline cal-event-location">
+                                    <button id="toggleMap" type="button" class="btn btn-primary pull-right"
+                                            title="{% trans "Map" %}"><i class="fa fa-map"></i></button>
+                                    <button id="getLocation" type="button" class="btn btn-white pull-right"
+                                            title="{% trans "Get browser location!" %}"><i class="fa fa-map-marker"></i>
+                                    </button>
+                                    <button id="clearLocation" type="button" class="btn btn-white pull-right"
+                                            title="{% trans "Clear coordinates!" %}"><i class="fa fa-times"></i>
+                                    </button>
+                                    <div class="form-group pull-right">
+                                        <input type="email" class="form-control" id="geoLongitude"
+                                               placeholder="Longitude">
+                                    </div>
+                                    <div class="form-group pull-right">
+                                        <input type="text" class="form-control" id="geoLatitude" placeholder="Latitude">
+                                    </div>
+                                </form>
+
+                                <!-- Geo location map -->
+                                <div class="cal-event-location-map" data-default-lat="{{ defaultLat }}"
+                                     data-default-long="{{ defaultLong }}">
+                                    <div id="geoFilterAgendaMap" style="height: 400px; width: 100%"
+                                         class="d-none"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div id="CalendarContainer" data-event-source="{{ url_for("schedule.calendar.data") }}"
+                                 data-agenda-link="{{ url_for("schedule.events", {id: ':id'}) }}"
+                                 data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
+                                <div class="calendar-view" id="Calendar"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="cal-legend">
+                                    <ul>
+                                        <li class="event-always"><span
+                                                    class="fa fa-retweet"></span> {% trans "Always showing" %}</li>
+                                        <li class="event-info"><span
+                                                    class="fa fa-desktop"></span> {% trans "Single Display" %}</li>
+                                        <li class="event-success"><span
+                                                    class="fa fa-desktop"></span> {% trans "Multi Display" %}</li>
+                                        <li class="event-important"><span
+                                                    class="fa fa-bullseye"></span> {% trans "Priority" %}</li>
+                                        <li class="event-special"><span
+                                                    class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
+                                        <li class="event-inverse"><span
+                                                    class="fa fa-lock"></span> {% trans "View Only" %}</li>
+                                        <li class="event-command"><span
+                                                    class="fa fa-wrench"></span> {% trans "Command" %}</li>
+                                        <li class="event-interrupt"><span
+                                                    class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
+                                        <li class="event-geo-location"><span
+                                                    class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
+                                        <li class="event-action"><span
+                                                    class="fa fa-paper-plane "></span> {% trans "Interactive Action" %}
+                                        </li>
+                                        <li class="event-sync"><span
+                                                    class="fa fa-refresh"></span> {% trans "Synchronised" %}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
 {% endblock %}
 
 {% block javaScriptTemplates %}
     {{ parent() }}
-    
+
     {% verbatim %}
         <script type="text/x-handlebars-template" id="calendar-template-day">
             <div id="cal-day-box">
@@ -373,7 +508,7 @@
 
         <script type="text/x-handlebars-template" id="calendar-template-month-day">
             <div class="cal-month-day <%= cls %>">
-                <span class="pull-right" data-cal-date="<%= data_day %>" data-cal-view="day" data-toggle="tooltip" title="<%= tooltip %>"><%= day %></span>
+                <span class="pull-right" data-cal-date="<%= data_day %>" data-cal-view="agenda" data-toggle="tooltip" title="<%= tooltip %>"><%= day %></span>
 
                 <% if (events.length > 0) { %>
                     <span class="cal-month-day-number-events label label-info" data-toggle="tooltip" title="{% endverbatim %}{% trans "Number of events" %}{% verbatim %}"><%= events.length %></span>
@@ -635,19 +770,19 @@
                     
                     <% if (agenda.errorMessage != '') { %>
                        {% endverbatim %}
-                       <!-- Request failed - Show Error Message -->
-                       <div class="text-danger text-center">
-                           <% if (agenda.errorMessage == 'display_not_selected') { %>
-                               <p>{% trans "Display not selected!" %}</p>
-                           <% } else if (agenda.errorMessage == 'all_displays_selected') { %>
-                               <p>{% trans "Show All option does not work for this filter, one or more specific Display/Display Group need to be selected!" %}</p>
-                           <% } else if (agenda.errorMessage == 'no_events') { %>
-                               <p>{% trans "No events for the chosen Display/Display Group on the selected date!" %}</p>    
-                           <% } else  if (agenda.errorMessage == 'request_failed') { %>
-                               <p>{% trans "Data request failed!" %}</p>
-                           <% } %>
-                       </div>
-                       {% verbatim %}
+    <!-- Request failed - Show Error Message -->
+    <div class="text-danger text-center">
+        <% if (agenda.errorMessage == 'display_not_selected') { %>
+        <p>{% trans "Display not selected!" %}</p>
+        <% } else if (agenda.errorMessage == 'all_displays_selected') { %>
+        <p>{% trans "Show All option does not work for this filter, one or more specific Display/Display Group need to be selected!" %}</p>
+        <% } else if (agenda.errorMessage == 'no_events') { %>
+        <p>{% trans "No events for the chosen Display/Display Group on the selected date!" %}</p>
+        <% } else if (agenda.errorMessage == 'request_failed') { %>
+        <p>{% trans "Data request failed!" %}</p>
+        <% } %>
+    </div>
+    {% verbatim %}
                    <% } else if(!jQuery.isEmptyObject(agenda.results)) { %>
                         <!-- Request successful - Show Data -->
                             
@@ -672,6 +807,9 @@
                                                     <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
                                                     <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
                                                     <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
+                                                    <%= cal._layouts(resultItem.events, resultItem.layouts, 7) %>
+                                                    <%= cal._layouts(resultItem.events, resultItem.layouts, 8) %>
+                                                    <%= cal._layouts(resultItem.events, resultItem.layouts, 9) %>
                                                 </div>
                                                 <div class="col-lg-3 agenda-col">
                                                     <div class="row">
@@ -712,6 +850,12 @@
                                 {% endverbatim %}{% trans "Interrupt Layouts" %}{% verbatim %}
                             <% } else if (layouts.type == 5) { %>
                                 {% endverbatim %}{% trans "Campaign Layouts" %}{% verbatim %}
+                            <% } else if (layouts.type == 7) { %>
+                                {% endverbatim %}{% trans "Full Screen Video/Image" %}{% verbatim %}</span>
+                            <% } else if (layouts.type == 8) { %>
+                                {% endverbatim %}{% trans "Full Screen Playlist" %}{% verbatim %}</span>
+                            <% } else if (layouts.type == 9) { %>
+                                {% endverbatim %}{% trans "Synchronised" %}{% verbatim %}</span>
                             <% } %>
                             
                             <span class="pull-right badge badge-light" title="{% endverbatim %}{% trans "Number of Layouts" %}{% verbatim %}" data-toggle="tooltip" data-placement="top">
@@ -720,22 +864,22 @@
                         </th>
                     </tr>
                     {% endverbatim %}
-                    <tr>
-                        <th></th>
-                        <th>{% trans "ID" %}</th>
-                        <th>{% trans "Layout Name" %}</th>
-                        <th>{% trans "Status" %}</th>
-                        <th>{% trans "From Date" %}</th>
-                        <th>{% trans "To Date" %}</th>
-                        <th>{% trans "Layout Duration" %}</th>
-                        {%  verbatim %}<% if (layouts.type == 4) { %>{% endverbatim %}
-                        <th>{% trans "Share of Voice" %}</th>
-                        {% verbatim %}<% } %>{% endverbatim %}
-                        <th>{% trans "Display Order" %}</th>
-                        <th>{% trans "Priority" %}</th>
-                        <th>{% trans "Visible" %}</th>
-                    </tr>
-                    {% verbatim %}
+    <tr>
+        <th></th>
+        <th>{% trans "ID" %}</th>
+        <th>{% trans "Layout Name" %}</th>
+        <th>{% trans "Status" %}</th>
+        <th>{% trans "From Date" %}</th>
+        <th>{% trans "To Date" %}</th>
+        <th>{% trans "Layout Duration" %}</th>
+        {% verbatim %}<% if (layouts.type == 4) { %>{% endverbatim %}
+        <th>{% trans "Share of Voice" %}</th>
+        {% verbatim %}<% } %>{% endverbatim %}
+        <th>{% trans "Display Order" %}</th>
+        <th>{% trans "Priority" %}</th>
+        <th>{% trans "Visible" %}</th>
+    </tr>
+    {% verbatim %}
                 </thead>
                 <tbody>
                     <% _.each(layouts, function(layout){ %>
@@ -794,17 +938,17 @@
         <script type="text/x-handlebars-template" id="calendar-template-agenda-displaygroups">
             <table id="displaygroups" class="table agenda-table" data-type="displaygroups"  width="100%">
                 {% endverbatim %}
-                <thead>
-                    <tr class="table-title">
-                        <th colspan="3">{% trans "Display Groups" %}</th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th>{% trans "ID" %}</th>
-                        <th>{% trans "Name" %}</th>
-                    </tr>
-                </thead>
-                {% verbatim %}
+    <thead>
+    <tr class="table-title">
+        <th colspan="3">{% trans "Display Groups" %}</th>
+    </tr>
+    <tr>
+        <th></th>
+        <th>{% trans "ID" %}</th>
+        <th>{% trans "Name" %}</th>
+    </tr>
+    </thead>
+    {% verbatim %}
                 <tbody>
                     <% _.each(displaygroups, function(displaygroup){ %>
                         <tr data-elem-id="<%= displaygroup.displayGroupId %>">
@@ -825,18 +969,18 @@
         <script type="text/x-handlebars-template" id="calendar-template-agenda-campaigns">
             <table id="campaigns" class="table agenda-table" data-type="campaigns"  width="100%">
                 {% endverbatim %}
-                <thead>
-                    <tr class="table-title">
-                        <th colspan="4">{% trans "Campaigns" %}</th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th>{% trans "ID" %}</th>
-                        <th>{% trans "Name" %}</th>
-                        <th>{% trans "Cycle Playback?" %}</th>
-                    </tr>
-                </thead>
-                {% verbatim %}
+    <thead>
+    <tr class="table-title">
+        <th colspan="4">{% trans "Campaigns" %}</th>
+    </tr>
+    <tr>
+        <th></th>
+        <th>{% trans "ID" %}</th>
+        <th>{% trans "Name" %}</th>
+        <th>{% trans "Cycle Playback?" %}</th>
+    </tr>
+    </thead>
+    {% verbatim %}
                 <tbody>
                     <% _.each(campaigns, function(campaign){ %>
                         <tr data-elem-id="<%= campaign.campaignId %>">
@@ -860,7 +1004,11 @@
         <script type="text/x-handlebars-template" id="calendar-template-breadcrumb-trail">
             <!-- Layout -->
             <span>
-                <a href="<%= layout.link %>"><%= layout.name %></a>
+                    <% if (layout.link != '') { %>
+                      <a href="<%= layout.link %>"><%= layout.name %></a>
+                    <% } else { %>
+                      <%= layout.name %>
+                    <% } %>
             </span>
             
             <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
@@ -881,8 +1029,8 @@
             <span>
                 <a href="<%= schedule.link %>" class="XiboFormButton" data-event-start="<%= schedule.fromDt %>" data-event-end="<%= schedule.toDt %>">
                     {% endverbatim %}
-                        {% trans "Schedule" %}
-                    {% verbatim %}
+    {% trans "Schedule" %}
+    {% verbatim %}
                 </a>
             </span>
             
@@ -974,211 +1122,450 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-		// We are using this variable in xibo-calendar.js
-        var scheduleRecurrenceDeleteUrl = "{{ url_for("schedule.recurrence.delete.form", {id:':id'}) }}";
+      // We are using this variable in xibo-calendar.js
+      var scheduleRecurrenceDeleteUrl = "{{ url_for("schedule.recurrence.delete.form", {id:':id'}) }}";
+      var layoutPreviewUrl = "{{ url_for("layout.preview", {id: ':id'}) }}";
 
-        var layoutPreviewUrl = "{{ url_for("layout.preview", {id: ':id'}) }}";
+      $('.custom-date-range').addClass('d-none')
 
-        // Equals helper for the templates below
-        Handlebars.registerHelper('eq', function(v1, v2, opts) {
-            if (v1 === v2) {
-                return opts.fn(this);
-            } else {
-                return opts.inverse(this);
+      // Equals helper for the templates below
+      Handlebars.registerHelper('eq', function (v1, v2, opts) {
+        if (v1 === v2) {
+          return opts.fn(this);
+        } else {
+          return opts.inverse(this);
+        }
+      });
+
+      // Init campaign select2
+      $(function () {
+        // Select lists
+        var dialog = 'body';
+
+        var $campaignSelect = $('#schedule-filter #campaignId');
+        $campaignSelect.select2({
+          dropdownParent: $(dialog),
+          ajax: {
+            url: $campaignSelect.data("searchUrl"),
+            dataType: "json",
+            placeholder: 'This is my placeholder',
+            allowClear: true,
+            data: function (params) {
+
+              var query = {
+                isLayoutSpecific: -1,
+                retired: 0,
+                totalDuration: 0,
+                name: params.term,
+                start: 0,
+                length: 10,
+                columns: [
+                  {
+                    data: 'isLayoutSpecific'
+                  },
+                  {
+                    data: 'campaign'
+                  }
+                ],
+                order: [
+                  {
+                    column: 0,
+                    dir: 'asc'
+                  },
+                  {
+                    column: 1,
+                    dir: 'asc'
+                  }
+                ]
+              };
+
+              // Set the start parameter based on the page number
+              if (params.page != null) {
+                query.start = (params.page - 1) * 10;
+              }
+
+              return query;
+            },
+            processResults: function (data, params) {
+
+              var results = [];
+              var campaigns = [];
+              var layouts = [];
+
+              $.each(data.data, function (index, element) {
+                if (element.isLayoutSpecific === 1) {
+                  layouts.push({
+                    id: element.campaignId,
+                    text: element.campaign
+                  });
+                } else {
+                  campaigns.push({
+                    id: element.campaignId,
+                    text: element.campaign
+                  });
+                }
+              });
+
+              if (campaigns.length > 0) {
+                results.push({
+                  text: $campaignSelect.data('transCampaigns'),
+                  children: campaigns
+                })
+              }
+
+              if (layouts.length > 0) {
+                results.push({
+                  text: $campaignSelect.data('transLayouts'),
+                  children: layouts
+                })
+              }
+
+              var page = params.page || 1;
+              page = (page > 1) ? page - 1 : page;
+
+              return {
+                results: results,
+                pagination: {
+                  more: (page * 10 < data.recordsTotal)
+                }
+              }
             }
-        });
+          }
+        })
+          .on('change', function (e) {
+            // Refresh the calendar view
+            setTimeout(calendar.view(), 1000);
+          });
 
-        // Init campaign select2
-        $(function() {
-            // Select lists
-            var dialog = 'body';
-
-            var $campaignSelect = $('.xibo-calendar-controls #campaignId');
-            $campaignSelect.select2({
-                dropdownParent: $(dialog),
-                ajax: {
-                    url: $campaignSelect.data("searchUrl"),
-                    dataType: "json",
-                    placeholder: 'This is my placeholder',
-                    allowClear: true,
-                    data: function(params) {
-
-                        var query = {
-                            isLayoutSpecific: -1,
-                            retired: 0,
-                            totalDuration: 0,
-                            name: params.term,
-                            start: 0,
-                            length: 10,
-                            columns: [
-                                {
-                                    "data": "isLayoutSpecific"
-                                },
-                                {
-                                    "data": "campaign"
-                                }
-                            ],
-                            order: [
-                                {
-                                    "column": 0,
-                                    "dir": "asc"
-                                },
-                                {
-                                    "column": 1,
-                                    "dir": "asc"
-                                }
-                            ]
-                        };
-
-                        // Set the start parameter based on the page number
-                        if (params.page != null) {
-                            query.start = (params.page - 1) * 10;
-                        }
-
-                        return query;
-                    },
-                    processResults: function(data, params) {
-
-                        var results = [];
-                        var campaigns = [];
-                        var layouts = [];
-
-                        $.each(data.data, function(index, element) {
-                            if (element.isLayoutSpecific === 1) {
-                                layouts.push({
-                                    "id": element.campaignId,
-                                    "text": element.campaign
-                                });
-                            } else {
-                                campaigns.push({
-                                    "id": element.campaignId,
-                                    "text": element.campaign
-                                });
-                            }
-                        });
-
-                        if (campaigns.length > 0) {
-                            results.push({
-                                "text": $campaignSelect.data('transCampaigns'),
-                                "children": campaigns
-                            })
-                        }
-
-                        if (layouts.length > 0) {
-                            results.push({
-                                "text": $campaignSelect.data('transLayouts'),
-                                "children": layouts
-                            })
-                        }
-
-                        var page = params.page || 1;
-                        page = (page > 1) ? page - 1 : page;
-
-                        return {
-                            results: results,
-                            pagination: {
-                                more: (page * 10 < data.recordsTotal)
-                            }
-                        }
-                    }
+        var $displaySelect = $('#DisplayList', dialog);
+        $displaySelect.select2({
+          dropdownParent: $(dialog),
+          dropdownAutoWidth: true,
+          ajax: {
+            url: $displaySelect.data("searchUrl"),
+            dataType: "json",
+            data: function (params) {
+              var query = {
+                isDisplaySpecific: -1,
+                forSchedule: 1,
+                displayGroup: params.term,
+                start: 0,
+                length: 10,
+                columns: [
+                  {
+                    data: 'isDisplaySpecific'
+                  },
+                  {
+                    data: 'displayGroup'
+                  }
+                ],
+                order: [
+                  {
+                    column: 0,
+                    dir: 'asc'
+                  },
+                  {
+                    column: 1,
+                    dir: 'asc'
+                  }
+                ]
+              };
+              // Set the start parameter based on the page number
+              if (params.page != null) {
+                query.start = (params.page - 1) * 10;
+              }
+              return query;
+            },
+            processResults: function (data, params) {
+              var groups = [];
+              var displays = [];
+              $.each(data.data, function (index, element) {
+                if (element.isDisplaySpecific === 1) {
+                  displays.push({
+                    id: element.displayGroupId,
+                    text: element.displayGroup
+                  });
+                } else {
+                  groups.push({
+                    id: element.displayGroupId,
+                    text: element.displayGroup
+                  });
                 }
-            })
-            .on('change', function(e) {
-                // Refresh the calendar view
-                setTimeout(calendar.view(), 1000);
-            });
-
-            var $displaySelect = $('#DisplayList', dialog);
-            $displaySelect.select2({
-                dropdownParent: $(dialog),
-                dropdownAutoWidth: true,
-                ajax: {
-                    url: $displaySelect.data("searchUrl"),
-                    dataType: "json",
-                    data: function(params) {
-                        var query = {
-                            isDisplaySpecific: -1,
-                            forSchedule: 1,
-                            displayGroup: params.term,
-                            start: 0,
-                            length: 10,
-                            columns: [
-                                {
-                                    "data": "isDisplaySpecific"
-                                },
-                                {
-                                    "data": "displayGroup"
-                                }
-                            ],
-                            order: [
-                                {
-                                    "column": 0,
-                                    "dir": "asc"
-                                },
-                                {
-                                    "column": 1,
-                                    "dir": "asc"
-                                }
-                            ]
-                        };
-                        // Set the start parameter based on the page number
-                        if (params.page != null) {
-                            query.start = (params.page - 1) * 10;
-                        }
-                        return query;
-                    },
-                    processResults: function(data, params) {
-                        var groups = [];
-                        var displays = [];
-                        $.each(data.data, function(index, element) {
-                            if (element.isDisplaySpecific === 1) {
-                                displays.push({
-                                    "id": element.displayGroupId,
-                                    "text": element.displayGroup
-                                });
-                            } else {
-                                groups.push({
-                                    "id": element.displayGroupId,
-                                    "text": element.displayGroup
-                                });
-                            }
-                        });
-                        var page = params.page || 1;
-                        page = (page > 1) ? page - 1 : page;
-                        return {
-                            results: [
-                                {
-                                    "text": $displaySelect.data('transGroups'),
-                                    "children": groups
-                                },{
-                                    "text": $displaySelect.data('transDisplay'),
-                                    "children": displays
-                                }
-                            ],
-                            pagination: {
-                                more: (page * 10 < data.recordsTotal)
-                            }
-                        }
-                    }
+              });
+              var page = params.page || 1;
+              page = (page > 1) ? page - 1 : page;
+              return {
+                results: [
+                  {
+                    text: $displaySelect.data('transGroups'),
+                    children: groups
+                  }, {
+                    text: $displaySelect.data('transDisplay'),
+                    children: displays
+                  }
+                ],
+                pagination: {
+                  more: (page * 10 < data.recordsTotal)
                 }
-            }).on('select2:unselecting', function() {
-                // Prevent the ajax request when we deselect an option ( change will still be called )
-                var opts = $(this).data('select2').options;
-                opts.set('disabled', true);
+              }
+            }
+          }
+        }).on('select2:unselecting', function () {
+          // Prevent the ajax request when we deselect an option ( change will still be called )
+          var opts = $(this).data('select2').options;
+          opts.set('disabled', true);
 
-                setTimeout(function() {
-                    opts.set('disabled', false);
-                }, 100);
-            })
-            .on('change', function(e) {
-                // Refresh the calendar view
-                setTimeout(calendar.view(), 1000);
-            });
+          setTimeout(function () {
+            opts.set('disabled', false);
+          }, 100);
+        })
+          .on('change', function (e) {
+            // Refresh the calendar view
+            setTimeout(calendar.view(), 1000);
+          });
 
-            // Set up our show all selector control
-            $('#showAll', dialog).on('change', function() {
-                setTimeout(calendar.view(), 1000);
-            });
+        // Set up our show all selector control
+        $('#showAll, #eventTypeId, #recurring, #geoAware', dialog).on('change', function () {
+          setTimeout(calendar.view(), 1000);
         });
+      });
+
+      const table = $('#schedule-grid').DataTable({
+        language: dataTablesLanguage,
+        dom: dataTablesTemplate,
+        serverSide: true,
+        stateSave: true,
+        responsive: true,
+        stateDuration: 0,
+        stateLoadCallback: dataTableStateLoadCallback,
+        stateSaveCallback: dataTableStateSaveCallback,
+        filter: false,
+        searchDelay: 3000,
+        order: [],
+        ajax: {
+          url: '{{ url_for("schedule.search") }}',
+          data: function (d) {
+            $.extend(d, $('#schedule-grid').closest('.XiboGrid').find('.FilterDiv form').serializeObject());
+          }
+        },
+        columns: [
+          {
+            data: 'eventId',
+            responsivePriority: 5,
+            className: 'none',
+          },
+          {
+            name: 'icon',
+            responsivePriority: 2,
+            data: function (data) {
+              var eventIcon = 'fa-desktop';
+              var eventClass = 'event-warning';
+
+              if (data.displayGroups.length <= 1) {
+                eventClass = 'event-info';
+              } else {
+                eventClass = 'event-success';
+              }
+
+              if (data.isAlways == 1) {
+                eventIcon = 'fa-retweet';
+              }
+
+              if (data.recurrenceType != null && data.recurrenceType != '') {
+                eventClass = 'event-special';
+                eventIcon = 'fa-repeat';
+              }
+
+              if (data.isPriority >= 1) {
+                eventClass = 'event-important';
+                eventIcon = 'fa-bullseye';
+              }
+
+              if (data.eventTypeId == 2) {
+                eventIcon = 'fa-wrench';
+              }
+
+              if (data.eventTypeId == 4) {
+                eventIcon = 'fa-hand-paper';
+              }
+
+              if (data.isGeoAware === 1) {
+                eventIcon = 'fa-map-marker';
+              }
+
+              if (data.eventTypeId == 6) {
+                eventIcon = 'fa-paper-plane';
+              }
+
+              if (data.eventTypeId == 9) {
+                eventIcon = 'fa-refresh';
+              }
+
+              if (!data.isEditable) {
+                eventIcon = 'fa-lock';
+                eventClass = 'event-inverse';
+              }
+
+              return '<span class="fa ' + eventIcon + ' ' + eventClass + ' "></span>';
+            }
+          },
+          {
+            name: 'eventTypeId',
+            responsivePriority: 2,
+            data: function (data) {
+              return data.eventTypeName
+            }
+          },
+          {
+            name: 'fromDt',
+            responsivePriority: 2,
+            data: function (data) {
+              if (data.isAlways === 1) {
+                return '{{ "Always"|trans }}'
+              } else {
+                return moment(data.fromDt, 'X').format(jsDateFormat)
+              }
+            }
+          },
+          {
+            name: 'toDt',
+            responsivePriority: 2,
+            data: function (data) {
+              if (data.isAlways === 1) {
+                return '{{ "Always"|trans }}'
+              } else {
+                return moment(data.toDt, 'X').format(jsDateFormat)
+              }
+            }
+          },
+          {
+            name: 'campaign',
+            responsivePriority: 2,
+            data: function (data) {
+              if (data.eventTypeId !== 9) {
+                return data.campaign;
+              } else {
+                return data.syncType;
+              }
+            }
+          },
+          {
+            data: 'campaignId',
+            responsivePriority: 5,
+            className: 'none',
+          },
+          {
+            name: 'displayGroups',
+            responsivePriority: 2,
+            sortable: false,
+            data: function (data) {
+              if (data.displayGroups.length > 1 && data.eventTypeId !== 9) {
+                return '<span class="badge" style="background-color: green; color: white" ' +
+                  'data-toggle="popover" data-trigger="click" data-placement="top" ' +
+                  'data-content="' + data.displayGroupList + '">' + (data.displayGroups.length) +
+                  '</span>';
+              } else {
+                return data.displayGroupList
+              }
+            }
+          },
+          {
+            data: 'shareOfVoice',
+            responsivePriority: 4,
+          },
+          {
+            name: 'maxPlaysPerHour',
+            responsivePriority: 4,
+            data: function (data) {
+              if (data.maxPlaysPerHour === 0) {
+                return translations.unlimited;
+              } else {
+                return data.maxPlaysPerHour;
+              }
+            }
+          },
+          {
+            data: 'isGeoAware',
+            responsivePriority: 4,
+            "render": dataTableTickCrossColumn,
+          },
+          {
+            data: 'recurringEvent',
+            responsivePriority: 4,
+            "render": dataTableTickCrossColumn,
+          },
+          {
+            data: 'recurringEventDescription',
+            responsivePriority: 4,
+            sortable: false,
+          },
+          {
+            data: 'recurrenceType',
+            visible: false,
+            responsivePriority: 4,
+          },
+          {
+            data: 'recurrenceDetail',
+            visible: false,
+            responsivePriority: 4,
+          },
+          {
+            name: 'recurrenceRepeatsOn',
+            visible: false,
+            responsivePriority: 4,
+            data: function (data) {
+              if (data.recurringEvent) {
+                if (data.recurrenceType === 'Week') {
+                  const daysOfTheWeek = [
+                    '{% trans "Monday" %}',
+                    '{% trans "Tuesday" %}',
+                    '{% trans "Wednesday" %}',
+                    '{% trans "Thursday" %}',
+                    '{% trans "Friday" %}',
+                    '{% trans "Saturday" %}',
+                    '{% trans "Sunday" %}'
+                  ];
+
+                  return daysOfTheWeek[data.recurrenceRepeatsOn - 1];
+                } else if (data.recurrenceType === 'Month') {
+                  return data.recurrenceMonthlyRepeatsOn
+                } else {
+                  return '';
+                }
+              } else {
+                return '';
+              }
+            }
+          },
+          {
+            name: 'recurrenceRange',
+            visible: false,
+            responsivePriority: 4,
+            data: function (data) {
+              if (data.recurringEvent && data.recurrenceRange !== null) {
+                return moment(data.recurrenceRange, 'X').format(jsDateFormat)
+              } else {
+                return ''
+              }
+            }
+          },
+          {
+            data: 'isPriority',
+            responsivePriority: 2,
+          },
+          {
+            orderable: false,
+            responsivePriority: 1,
+            data: dataTableButtonsColumn
+          },
+        ]
+      });
+
+      table.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+        $('[data-toggle="popover"]').popover();
+      });
+      table.on('processing.dt', dataTableProcessing);
+      dataTableAddButtons(table, $('#schedule-grid_wrapper').find('.dataTables_buttons'), true, true);
     </script>
 {% endblock %}
