@@ -208,8 +208,8 @@ class DisplayGroupFactory extends BaseFactory
             'displayGroupId' => $displayGroupId
         ]) as $row) {
             $item = $this->createEmpty()->hydrate($row);
-            $item->depth = intval($row['depth']);
-            $item->level = intval($row['level']);
+            $item->setUnmatchedProperty('depth', intval($row['depth']));
+            $item->setUnmatchedProperty('level', intval($row['level']));
             $tree[] = $item;
         }
 
@@ -264,7 +264,7 @@ class DisplayGroupFactory extends BaseFactory
     {
         $sql = 'UPDATE `displaygroup` SET bandwidthLimit = :bandwidthLimit WHERE displayGroupId IN (0';
         $params['bandwidthLimit'] = $bandwidthLimit;
-        
+
         $i = 0;
         foreach ($displayGroupIds as $displayGroupId) {
             $i++;
