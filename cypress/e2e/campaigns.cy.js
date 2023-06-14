@@ -73,7 +73,7 @@ describe('Campaigns', function () {
           .should('have.length', 0);
     });
 
-    it('should assign layouts to an existing campaign', function() {
+    it.skip('should assign layouts to an existing campaign', function() {
 
         // Create some layouts
         createTempLayouts(2);

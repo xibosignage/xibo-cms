@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -145,7 +145,7 @@ class ScheduleReport extends Base
                 $nextRunDt = $cron->getNextRunDate(Carbon::createFromTimestamp($reportSchedule->lastRunDt))->format('U');
             }
 
-            $reportSchedule->nextRunDt = $nextRunDt;
+            $reportSchedule->setUnmatchedProperty('nextRunDt', $nextRunDt);
 
             // Ad hoc report name
             $adhocReportName = $reportSchedule->reportName;
@@ -180,11 +180,11 @@ class ScheduleReport extends Base
 
             switch ($reportSchedule->isActive) {
                 case 1:
-                    $reportSchedule->isActiveDescription = __('This report schedule is active');
+                    $reportSchedule->setUnmatchedProperty('isActiveDescription', __('This report schedule is active'));
                     break;
 
                 default:
-                    $reportSchedule->isActiveDescription = __('This report schedule is paused');
+                    $reportSchedule->setUnmatchedProperty('isActiveDescription', __('This report schedule is paused'));
             }
 
             if ($reportSchedule->getLastSavedReportId() > 0) {
