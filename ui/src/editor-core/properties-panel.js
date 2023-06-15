@@ -40,15 +40,27 @@ const PropertiesPanel = function(parent, container) {
 
 /**
  * Save properties from the panel form
- * @param {object} target - the element that the form relates to
+ * @param {object=} target - the element that the form relates to
+ * @param {boolean=} [reloadAfterSave=true] - Refresh editor after save request
  * @return {boolean} - false if form is invalid
  */
-PropertiesPanel.prototype.save = function(target) {
+PropertiesPanel.prototype.save = function(
+  {
+    target = undefined,
+    reloadAfterSave = true,
+    showErrorMessages = true,
+  } = {},
+) {
   const app = this.parent;
   const self = this;
   const form = $(this.DOMObject).find('form');
   let savingElement = false;
   let savingElementGroup = false;
+
+  // If target isn't set, use selected object
+  if (!target) {
+    target = app.selectedObject;
+  }
 
   // If main container has inline editing class, remove it
   app.editorContainer.removeClass('inline-edit-mode');
@@ -58,9 +70,12 @@ PropertiesPanel.prototype.save = function(target) {
     app.viewer.hideInlineEditor();
   }
 
-  // If target is element, call saveElement function
-  // and switch the target to be the widget of that element
-  if (target.type === 'element') {
+  // If target is element or element group
+  // switch the target to be the widget of that element
+  if (
+    target.type === 'element' ||
+    target.type === 'element-group'
+  ) {
     const oldTarget = target;
 
     target = app.getElementByTypeAndId(
@@ -73,21 +88,17 @@ PropertiesPanel.prototype.save = function(target) {
     // So it can be reloaded in all elements
     target.cachedData = {};
 
-    this.saveElement(
-      oldTarget,
-      form.find('[name].element-property'),
-    );
+    // Save element properties
+    if (oldTarget.type === 'element') {
+      this.saveElement(
+        oldTarget,
+        form.find('[name].element-property'),
+      );
 
-    savingElement = true;
-  }
-
-  // If we're saving a widget, but the selected object is an element group
-  if (target.type === 'widget' && app.selectedObject.type === 'element-group') {
-    // Reset element's parent widget data
-    // So it can be reloaded in all elements
-    target.cachedData = {};
-
-    savingElementGroup = true;
+      savingElement = true;
+    } else {
+      savingElementGroup = true;
+    }
   }
 
   // Run form submit module optional function
@@ -96,13 +107,10 @@ PropertiesPanel.prototype.save = function(target) {
 
     const errors = formHelpers.validateFormBeforeSubmit(this.DOMObject);
 
-    if (errors !== null) {
+    if (errors !== null && showErrorMessages) {
       const errorMessage = Object.values(errors).join('</br>');
       // Display message in form
       formHelpers.displayErrorMessage(form, errorMessage, 'danger');
-
-      // Show toast message
-      toastr.error(errorMessage);
       return false;
     } else {
       formHelpers.clearErrorMessage(form);
@@ -153,18 +161,14 @@ PropertiesPanel.prototype.save = function(target) {
       {
         customRequestPath: requestPath,
       },
-    ).then((res) => {
+    ).then((_res) => {
       // Success
       app.common.hideLoadingScreen();
 
       // Clear error message
       formHelpers.clearErrorMessage(form);
 
-      const resultMessage = res.message;
-
       const reloadData = function() {
-        toastr.success(resultMessage);
-
         const mainObject =
           app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
 
@@ -197,7 +201,11 @@ PropertiesPanel.prototype.save = function(target) {
       };
 
       // Reload data if we're not saving an element
-      if (!savingElement && !savingElementGroup) {
+      if (
+        !savingElement &&
+        !savingElementGroup &&
+        reloadAfterSave
+      ) {
         reloadData();
       } else {
         // If we're saving an element, reload all elements
@@ -209,6 +217,10 @@ PropertiesPanel.prototype.save = function(target) {
         }
       }
     }).catch((error) => { // Fail/error
+      if (!showErrorMessages) {
+        return;
+      }
+
       app.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
@@ -232,9 +244,6 @@ PropertiesPanel.prototype.save = function(target) {
 
       // Reset active tab
       self.openTabOnRender = '';
-
-      // Show toast message
-      toastr.error(errorMessage);
     });
   }
 };
@@ -434,16 +443,12 @@ PropertiesPanel.prototype.render = function(
       trans: propertiesPanelTrans,
     });
 
-    // Create buttons object
+    // Create buttons object for the external playlist editor
     let buttons = {};
     if (
-      res.buttons != undefined &&
-      res.buttons != '' &&
-      (app.readOnlyMode === undefined || app.readOnlyMode === false)
+      self.parent.mainObjectType == 'playlist' &&
+      self.parent.inline === false
     ) {
-      // Process buttons from result
-      buttons = formHelpers.widgetFormRenderButtons(res.buttons);
-    } else {
       // Render save button
       buttons = formHelpers.widgetFormRenderButtons(formTemplates.buttons);
     }
@@ -467,13 +472,18 @@ PropertiesPanel.prototype.render = function(
       dataToRender.bgImageName = dataToRender.backgrounds[0]?.name || '';
     }
 
-    const html = propertiesPanelTemplate({
+    const propertiesPanelOptions = {
       header: res.dialogTitle,
       style: target.type,
       form: htmlTemplate(dataToRender),
-      buttons: buttons,
       trans: propertiesPanelTrans,
-    });
+    };
+
+    if (!$.isEmptyObject(buttons)) {
+      propertiesPanelOptions.buttons = buttons;
+    }
+
+    const html = propertiesPanelTemplate(propertiesPanelOptions);
 
     // Append layout html to the main div
     self.DOMObject.html(html);
@@ -935,6 +945,9 @@ PropertiesPanel.prototype.initFields = function(
   const self = this;
   const app = this.parent;
   const targetIsElement = (target.type === 'element');
+  const readOnlyModeOn =
+    (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
+    (app?.readOnlyMode === true);
 
   // Set condition and handle replacements
   forms.handleFormReplacements(self.DOMObject.find('form'), data);
@@ -975,7 +988,7 @@ PropertiesPanel.prototype.initFields = function(
   }
 
   // If we're not in read only mode
-  if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
+  if (!readOnlyModeOn) {
     // Handle buttons
     self.DOMObject.find('.properties-panel-btn:not(.inline-btn)')
       .off().click(function(e) {
@@ -1004,13 +1017,6 @@ PropertiesPanel.prototype.initFields = function(
       self.DOMObject.find('button#delete').addClass('d-none');
     }
 
-    // Handle keyboard keys
-    self.DOMObject.off('keydown').keydown(function(handler) {
-      if (handler.key == 'Enter' && !$(handler.target).is('textarea')) {
-        self.save(target, $(handler.target).data('subAction'));
-      }
-    });
-
     // Render action tab
     if (
       app.mainObjectType === 'layout' &&
@@ -1036,10 +1042,10 @@ PropertiesPanel.prototype.initFields = function(
   }
 
   // Read only mode option
-  if (app.readOnlyMode) {
+  if (readOnlyModeOn) {
     (!xiboInitOptions) && (xiboInitOptions = {});
 
-    xiboInitOptions.readOnlyMode = app.readOnlyMode;
+    xiboInitOptions.readOnlyMode = true;
   }
 
   // Call Xibo Init for this form
@@ -1055,10 +1061,7 @@ PropertiesPanel.prototype.initFields = function(
   }
 
   // Make form read only
-  if (
-    app.readOnlyMode && app.readOnlyMode === true ||
-    lD && lD.readOnlyMode && lD.readOnlyMode === true
-  ) {
+  if (readOnlyModeOn) {
     forms.makeFormReadOnly(self.DOMObject);
   }
 
@@ -1078,6 +1081,46 @@ PropertiesPanel.prototype.initFields = function(
       position: 'left',
     },
   );
+
+  // Handle Auto Save
+  // (only when working in the layout editor)
+  if (
+    !readOnlyModeOn &&
+    (
+      self.parent.mainObjectType == 'layout' ||
+      (
+        self.parent.mainObjectType == 'playlist' &&
+        self.parent.inline === true
+      )
+    )
+  ) {
+    const saveDebounced = _.wrap(
+      _.memoize(
+        () => _.debounce(self.save.bind(self), 500), _.property('id'),
+      ),
+      (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
+    );
+
+    // Auto save when changing inputs
+    $(self.DOMObject).find('form').off()
+      .on(
+        'change inputChange',
+        '.xibo-form-input:not(.position-input):not(.snippet-selector) ' +
+          'select:not(.element-property), ' +
+        '.xibo-form-input:not(.position-input) ' +
+          'input:not(.element-property), ' +
+        '.xibo-form-input:not(.position-input) ' +
+          'textarea:not(.element-property), ' +
+        '[name="backgroundImageId"] ',
+        function(_ev, options) {
+          // Debounce save based on the object being saved
+          if (!options?.skipSave) {
+            saveDebounced(
+              self.parent.selectedObject,
+            );
+          }
+        });
+  }
 };
 
 /**
@@ -1140,9 +1183,6 @@ PropertiesPanel.prototype.saveRegion = function(
 
       // Display message in form
       formHelpers.displayErrorMessage(form, errorMessage, 'danger');
-
-      // Show toast message
-      toastr.error(errorMessage);
     });
   }
 };

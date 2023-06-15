@@ -724,6 +724,9 @@ Toolbar.prototype.render = function() {
 
   const self = this;
   const app = this.parent;
+  const readOnlyModeOn =
+    (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
+    (app?.readOnlyMode === true);
 
   // Deselect selected card on render
   this.selectedCard = {};
@@ -733,8 +736,7 @@ Toolbar.prototype.render = function() {
 
   const toolbarOpened =
     (this.openedMenu != -1) &&
-    (app.readOnlyMode === undefined ||
-      app.readOnlyMode === false);
+    (!readOnlyModeOn);
 
   // Compile toolbar template with data
   const html = ToolbarTemplate({
@@ -742,13 +744,17 @@ Toolbar.prototype.render = function() {
     menuItems: this.menuItems,
     trans: newToolbarTrans,
     mainObjectType: app.mainObjectType,
+    helpLink: (
+      (typeof(layoutEditorHelpLink) != 'undefined') ?
+        layoutEditorHelpLink : null
+    ),
   });
 
   // Append toolbar html to the main div
   this.DOMObject.html(html);
 
   // If read only mode is enabled
-  if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
+  if (readOnlyModeOn) {
     // Hide edit mode fields
     this.DOMObject.find('.hide-on-read-only').hide();
 
@@ -1829,9 +1835,12 @@ Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
 Toolbar.prototype.handleCardsBehaviour = function() {
   const app = this.parent;
   const self = this;
+  const readOnlyModeOn =
+    (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
+    (app?.readOnlyMode === true);
 
   // If in edit mode
-  if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
+  if (!readOnlyModeOn) {
     this.DOMObject.find('.toolbar-card:not(.toolbar-card-menu)')
       .each(function(idx, el) {
         $(el).draggable({

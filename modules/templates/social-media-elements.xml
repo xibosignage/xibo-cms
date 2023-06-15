@@ -115,7 +115,7 @@
                     <height>40</height>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="fontFace">Open Sans</property>
+                        <property id="fontFace">open sans regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">24</property>
                         <property id="fontColor">#3c3ad3</property>

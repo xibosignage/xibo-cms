@@ -3125,7 +3125,13 @@ function makePagedSelect(element, parent) {
         }).then(function(data) {
             // create the option and append to Select2
             var option = new Option(data.data[0][element.data("textProperty")], data.data[0][element.data("idProperty")], true, true);
-            element.append(option).trigger('change');
+            // Trigger change but skip auto save
+            element.append(option).trigger(
+                'change',
+                [{
+                    skipSave: true,
+                }]
+            );
 
             // manually trigger the `select2:select` event
             element.trigger({

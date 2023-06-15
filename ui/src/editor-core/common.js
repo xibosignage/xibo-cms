@@ -13,7 +13,7 @@ module.exports = {
     bumpVal++;
 
     if (bumpVal <= 1) {
-      $('.loading-overlay').addClass('loading').show();
+      $('.loading-overlay').addClass('loading').fadeIn(400);
     }
 
     $('.loading-overlay').data('bump', bumpVal++);
@@ -28,7 +28,9 @@ module.exports = {
     bumpVal--;
 
     if (bumpVal <= 0) {
-      $('.loading-overlay.loading').removeClass('loading');
+      $('.loading-overlay.loading').fadeOut(400, function(el) {
+        $(el).removeClass('loading');
+      });
     }
 
     $('.loading-overlay').data('bump', bumpVal);

@@ -545,6 +545,7 @@ lD.refreshEditor = function(
  * @param {boolean} [refreshEditor=false] - refresh editor
  * @param {boolean} captureThumbnail - capture thumbnail
  * @param {callBack} callBack - callback function
+ * @param {boolean} updateToolbar - update toolbar
  * @return {Promise} - Promise
  */
 lD.reloadData = function(
@@ -552,6 +553,7 @@ lD.reloadData = function(
   refreshEditor = false,
   captureThumbnail = false,
   callBack = null,
+  updateToolbar = false,
 ) {
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
@@ -588,7 +590,7 @@ lD.reloadData = function(
       captureThumbnail && lD.uploadThumbnail();
 
       // Refresh designer
-      refreshEditor && lD.refreshEditor(true, true);
+      refreshEditor && lD.refreshEditor(updateToolbar, true);
 
       // Call callback function
       callBack && callBack();
@@ -949,13 +951,11 @@ lD.undoLastAction = function() {
   lD.common.showLoadingScreen('undoLastAction');
 
   lD.historyManager.revertChange().then((res) => { // Success
-    toastr.success(res.message);
-
     // Refresh designer according to local or API revert
     if (res.localRevert) {
       lD.refreshEditor(false, true);
     } else {
-      lD.reloadData(lD.layout);
+      lD.reloadData(lD.layout, true);
     }
 
     lD.common.hideLoadingScreen('undoLastAction');
@@ -1080,7 +1080,6 @@ lD.deleteObject = function(
         options,
       ).then((res) => {
         // Behavior if successful
-        toastr.success(res.message);
         lD.reloadData(lD.layout, true);
 
         lD.common.hideLoadingScreen('deleteObject');
@@ -1974,9 +1973,6 @@ lD.addModuleToPlaylist = function(
         return res;
       }
 
-      // Behavior if successful
-      toastr.success(res.message);
-
       // Save the new widget as temporary
       lD.viewer.saveTemporaryObject(
         'widget_' + regionId + '_' + res.data.widgetId,
@@ -2097,9 +2093,6 @@ lD.addMediaToPlaylist = function(
       updateTargetType: 'widget',
     },
   ).then((res) => { // Success
-    // Behavior if successful
-    toastr.success(res.message);
-
     if (!drawerWidget) {
       // Save the new widget as temporary
       lD.viewer.saveTemporaryObject(
@@ -2979,8 +2972,7 @@ lD.savePrefs = function(clearPrefs = false) {
  * @return {Promise} - Promise object
  */
 lD.initDrawer = function(data) {
-  const readOnlyModeOn =
-    (this.readOnlyMode != undefined && this.readOnlyMode === true);
+  const readOnlyModeOn = (this?.readOnlyMode === true);
 
   // Check if the drawer is already created/added
   if (!$.isEmptyObject(lD.layout.drawer)) {
@@ -3008,8 +3000,6 @@ lD.initDrawer = function(data) {
       },
     }).done(function(res) {
       if (res.success) {
-        toastr.success(res.message);
-
         // Create drawer in the layout object
         lD.layout.createDrawer(res.data);
       } else {

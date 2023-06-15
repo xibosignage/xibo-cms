@@ -448,7 +448,8 @@ window.forms = {
             });
 
             // Update the hidden field with a JSON string
-            $orderClauseHiddenInput.val(JSON.stringify(orderClauses));
+            $orderClauseHiddenInput.val(JSON.stringify(orderClauses))
+              .trigger('change');
           };
 
           // Clear existing fields
@@ -525,7 +526,7 @@ window.forms = {
             });
 
             // Update the hidden field when the order clause changes
-            $el.on('change', 'select', function() {
+            $el.on('change', 'select:not([type="hidden"])', function() {
               updateHiddenField();
             });
           } else {
@@ -577,7 +578,7 @@ window.forms = {
 
           // Update the hidden field with a JSON string
           // of the order clauses
-          const updateHiddenField = function() {
+          const updateHiddenField = function(skipSave = false) {
             const selectedCols = [];
 
             $colsInContainer.find('li').each(function(_index, el) {
@@ -598,7 +599,12 @@ window.forms = {
             });
 
             // Update the hidden field with a JSON string
-            $selectHiddenInput.val(JSON.stringify(selectedCols));
+            $selectHiddenInput.val(JSON.stringify(selectedCols))
+              .trigger(
+                'change',
+                [{
+                  skipSave: skipSave,
+                }]);
           };
 
           // Clear existing fields
@@ -669,7 +675,7 @@ window.forms = {
           }
 
           // Update hidden field on start
-          updateHiddenField();
+          updateHiddenField(true);
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.error(jqXHR, textStatus, errorThrown);
         });
@@ -739,7 +745,8 @@ window.forms = {
             });
 
             // Update the hidden field with a JSON string
-            $filterClauseHiddenInput.val(JSON.stringify(filterClauses));
+            $filterClauseHiddenInput.val(JSON.stringify(filterClauses))
+              .trigger('change');
           };
 
           // Clear existing fields
@@ -819,9 +826,11 @@ window.forms = {
             });
 
             // Update the hidden field when the filter clause changes
-            $el.on('change', 'select, input', function() {
-              updateHiddenField();
-            });
+            $el.on('change',
+              'select:not([type="hidden"]), input:not([type="hidden"])',
+              function(ev) {
+                updateHiddenField();
+              });
           } else {
             forms.makeFormReadOnly($el);
           }
@@ -1142,7 +1151,7 @@ window.forms = {
 
       // Update the textarea when the editor changes
       newEditor.onDidChangeModelContent(() => {
-        $textArea.val(newEditor.getValue());
+        $textArea.val(newEditor.getValue()).trigger('inputChange');
       });
 
       // Update the editor when the textarea changes
@@ -1502,7 +1511,11 @@ window.forms = {
                     '</option>'));
 
                 // Trigger change event
-                $el.trigger('change');
+                $el.trigger(
+                  'change',
+                  [{
+                    skipSave: true,
+                  }]);
               } else {
                 $el.append(
                   $('<option value="' +
@@ -1769,7 +1782,11 @@ window.forms = {
       if ($el.data('value') !== undefined) {
         $el.val($el.data('value'));
         // Trigger change
-        $el.trigger('change');
+        $el.trigger(
+          'change',
+          [{
+            skipSave: true,
+          }]);
       }
     });
 

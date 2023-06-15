@@ -145,10 +145,16 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
     z-index: 2;
 }
 
+.loading-overlay {
+    top: auto;
+    bottom: 0;
+    width: 100px;
+    height: 100px;
+    border-radius: 0 12px 0 0;
+}
+
 .loading-overlay.loading {
-    display: block;
     z-index: $loading-overlay-z-index;
-    @include transparent-object(40);
 }
 
 .loading-overlay.loading .loading-icon {

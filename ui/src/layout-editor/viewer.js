@@ -692,6 +692,9 @@ Viewer.prototype.update = function() {
 
   // Update moveable
   this.updateMoveable();
+
+  // Update moveable options
+  this.updateMoveableOptions();
 };
 
 /**

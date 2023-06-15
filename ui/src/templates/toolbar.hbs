@@ -21,5 +21,11 @@
             {{!-- Submenu content --}}
             <div id="content-submenu" class="d-none"></div>
         </ul>
+
+        {{#if helpLink}}
+            <a href="{{ helpLink }}" class="editor-help-link" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-question-circle"></i>
+            </a>
+        {{/if}}
     </div>
 </nav>

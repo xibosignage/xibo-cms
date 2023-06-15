@@ -52,6 +52,9 @@
         & > .form-control:not([type="hidden"]) {
             border-top-left-radius: 0.25rem;
             border-bottom-left-radius: 0.25rem;
+        }
+
+        & > .form-control:not(:disabled) {
             background-color: white;
             cursor: pointer;
         }

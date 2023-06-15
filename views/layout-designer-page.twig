@@ -31,7 +31,7 @@
 {% block pageContent %}
 
     <!-- Editor structure -->
-    <div id="layout-editor" data-published-layout-id="{{ publishedLayoutId }}" data-layout-id="{{ layout.layoutId }}"></div>
+    <div id="layout-editor" data-published-layout-id="{{ publishedLayoutId }}" data-layout-id="{{ layout.layoutId }}" data-layout-help={{ help }}></div>
 
     <div class="loading-overlay">
         <i class="fa fa-spinner fa-spin loading-icon"></i>
@@ -49,6 +49,7 @@
 
             {# Custom translations #}
             {% autoescape "js" %}
+                var layoutEditorHelpLink = "{{ help }}";
                 {# Insert custom translations here #}
                 var layoutEditorTrans = {
                     back: "{% trans "Back" %}",

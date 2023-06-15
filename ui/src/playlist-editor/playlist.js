@@ -244,9 +244,6 @@ Playlist.prototype.addElement = function(
         pE.selectedObject.id = 'widget_' + res.data.widgetId;
         pE.selectedObject.type = 'widget';
 
-        // Behavior if successful
-        toastr.success(res.message);
-
         pE.reloadData();
       }).catch((error) => { // Fail/error
         pE.common.hideLoadingScreen('addModuleToPlaylist');
@@ -327,8 +324,6 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
     pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
     pE.selectedObject.type = 'widget';
 
-    // Behavior if successful
-    toastr.success(res.message);
     pE.reloadData();
   }).catch((error) => { // Fail/error
     pE.common.hideLoadingScreen();

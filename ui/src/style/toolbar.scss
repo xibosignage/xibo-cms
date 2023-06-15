@@ -44,6 +44,20 @@
         .navbar-btn {
             margin: 8px 3px;
         }
+
+        .editor-help-link {
+            width: 60px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            text-decoration: none;
+
+            &:hover {
+                color: $xibo-color-neutral-0;
+            }
+        }
     }
 
     .toolbar-pane {
