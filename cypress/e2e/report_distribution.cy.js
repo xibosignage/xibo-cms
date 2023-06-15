@@ -102,7 +102,7 @@ describe('Distribution by Layout, Media or Event', function () {
         cy.wait('@loadDisplays');
 
         // Type the display name
-        cy.get('.select2-container--open input[type="search"]').type('POP Display 1');
+        cy.get('.select2-container--open input[type="search"]').type('POP Display 1').click();
         cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
 
         cy.get('#dialog_btn_2').should('be.visible').click();
