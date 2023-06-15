@@ -298,11 +298,5 @@
             footer.find(".btn-primary").before(replaceButton);
         }
     </script>
-
-    {% for module in assignableModules %}
-        {% if module.layoutDesignerJavaScript() != "" %}
-            {% include module.layoutDesignerJavaScript() ~ ".twig" %}
-        {% endif %}
-    {% endfor %}
 {% endblock %}
 

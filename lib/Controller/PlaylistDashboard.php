@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\SubPlaylistItemsEvent;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -153,29 +154,8 @@ class PlaylistDashboard extends Base
             throw new AccessDeniedException();
         }
 
-        // Load my Playlist and information about its widgets
-        $playlist->load();
-        $user = $this->getUser();
-
-        foreach ($playlist->widgets as $widget) {
-            // Create a module for the widget and load in some extra data
-            $module = $this->moduleFactory->getByType($widget->type);
-            $widget->name = $widget->getOptionValue('name', $module->name);
-            $widget->regionSpecific = $module->regionSpecific;
-
-            // Check my permissions
-            if ($widget->regionSpecific == 0) {
-                $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                $widget->viewble = $user->checkViewable($media);
-                $widget->editable = $user->checkEditable($media);
-                $widget->deletable = $user->checkDeleteable($media);
-            } else {
-                $widget->viewble = $user->checkViewable($widget);
-                $widget->editable = $user->checkEditable($widget);
-                $widget->deletable = $user->checkDeleteable($widget);
-            }
-
-        }
+        $this->getLog()->debug('show: testing to see if ' . $playlist->name . ' / ' . $playlist->playlistId
+            . ' is the first playlist in any other ones.');
 
         // Work out the slot size of the first sub-playlist we are in.
         foreach ($this->playlistFactory->query(null, [
@@ -184,23 +164,55 @@ class PlaylistDashboard extends Base
             'disableUserCheck' => 1
         ]) as $parent) {
             // $parent is a playlist to which we belong.
-            $this->getLog()->debug('This playlist is a sub-playlist in ' . $parent->name . '.');
+            $this->getLog()->debug('show: This playlist is a sub-playlist in ' . $parent->name . '.');
             $parent->load();
 
             foreach ($parent->widgets as $parentWidget) {
                 if ($parentWidget->type === 'subplaylist') {
-                    // Create a SubPlaylist widget, so we can easily get the items we want.
-                    $subPlaylist = $this->moduleFactory->createWithWidget($parentWidget);
-                    $subPlaylistOptions = $subPlaylist->getAssignedPlaylistById($playlist->playlistId);
+                    $this->getLog()->debug('show: matched against a sub playlist widget ' . $parentWidget->widgetId . '.');
 
-                    // This will be included?
-                    $spotCount = $subPlaylistOptions !== null ? $subPlaylistOptions->spots : 0;
+                    // Get the sub-playlist widgets
+                    $event = new SubPlaylistItemsEvent($parentWidget);
+                    $this->getDispatcher()->dispatch($event, SubPlaylistItemsEvent::$NAME);
 
-                    // Take the highest number of Spots we can find out of all the assignments.
-                    $spotsFound = max($spotCount, $spotsFound);
+                    foreach ($event->getItems() as $subPlaylistItem) {
+                        $this->getLog()->debug('show: Assessing playlist ' . $subPlaylistItem->playlistId . ' on ' . $playlist->name);
+                        if ($subPlaylistItem->playlistId == $playlist->playlistId) {
+                            // Take the highest number of Spots we can find out of all the assignments.
+                            $spotsFound = max($subPlaylistItem->spots ?? 0, $spotsFound);
 
-                    // Assume this one isn't in the list more than one time.
-                    break;
+                            // Assume this one isn't in the list more than one time.
+                            break 2;
+                        }
+                    }
+
+                    $this->getLog()->debug('show: no matching playlists found.');
+                }
+            }
+        }
+
+        // Load my Playlist and information about its widgets
+        if ($spotsFound > 0) {
+            // We are in a sub-playlist with spots, so now we load our widgets.
+            $playlist->load();
+            $user = $this->getUser();
+
+            foreach ($playlist->widgets as $widget) {
+                // Create a module for the widget and load in some extra data
+                $module = $this->moduleFactory->getByType($widget->type);
+                $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
+                $widget->setUnmatchedProperty('regionSpecific', $module->regionSpecific);
+
+                // Check my permissions
+                if ($module->regionSpecific == 0) {
+                    $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                    $widget->setUnmatchedProperty('viewble', $user->checkViewable($media));
+                    $widget->setUnmatchedProperty('editable', $user->checkEditable($media));
+                    $widget->setUnmatchedProperty('deletable', $user->checkDeleteable($media));
+                } else {
+                    $widget->setUnmatchedProperty('viewble', $user->checkViewable($widget));
+                    $widget->setUnmatchedProperty('editable', $user->checkEditable($widget));
+                    $widget->setUnmatchedProperty('deletable', $user->checkDeleteable($widget));
                 }
             }
         }

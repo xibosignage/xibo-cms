@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -71,17 +71,10 @@ class MediaManager extends Base
      */
     public function displayPage(Request $request, Response $response)
     {
-        $moduleFactory = $this->moduleFactory;
-        
-        $this->getState()->template .= 'media-manager-page';
+        $this->getState()->template = 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
             'modules' => $this->moduleFactory->getAssignableModules(),
-            'assignableModules' => array_map(function($element) use ($moduleFactory) { 
-                    $module = $moduleFactory->createForInstall($element->class);
-                    $module->setModule($element);
-                    return $module;
-                }, $moduleFactory->getAssignableModules())
         ]);
 
         return $this->render($request, $response);
