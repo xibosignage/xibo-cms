@@ -1930,6 +1930,11 @@ Viewer.prototype.updateMoveable = function() {
 
     // Show snap controls
     this.DOMObject.parent().find('.snap-controls').show();
+
+    // Initialise tooltips
+    this.parent.common.reloadTooltips(
+      this.DOMObject.parent().find('.snap-controls'),
+    );
   } else {
     this.moveable.target = null;
 
