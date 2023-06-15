@@ -26,12 +26,12 @@ describe('Summary by Layout, Media or Event', function () {
     });
 
     it('Range: Today, Checks duration and count of a layout stat', () => {
-        cy.visit('/report/form/summaryReport');
-
         // Create and alias for load layout
         cy.server();
         cy.route('/display?start=0&length=10').as('loadDisplays');
         cy.route('/layout?start=0&length=10').as('loadLayout');
+
+        cy.visit('/report/form/summaryReport');
 
         // Click on the select2 selection
         cy.get('#displayId + span .select2-selection').click();
@@ -69,12 +69,12 @@ describe('Summary by Layout, Media or Event', function () {
     });
 
     it('Create/Delete a Daily Summary Report Schedule', () => {
-        cy.visit('/report/form/summaryReport');
-
         // Create and alias for load layout
         cy.server();
         cy.route('/display?start=0&length=10').as('loadDisplays');
         cy.route('/layout?start=0&length=10').as('loadLayout');
+
+        cy.visit('/report/form/summaryReport');
 
         // Click on the select2 selection
         cy.get('#layoutId + span .select2-selection').click();
@@ -83,7 +83,7 @@ describe('Summary by Layout, Media or Event', function () {
         cy.wait('@loadLayout');
 
         // Type the layout name
-        cy.get('.select2-container--open input[type="search"]').type('POP Layout 1');
+        cy.get('.select2-container--open input[type="search"]').type('POP Layout 1').click();
         cy.get('.select2-container--open .select2-results > ul').contains('POP Layout 1').click();
 
         // ------

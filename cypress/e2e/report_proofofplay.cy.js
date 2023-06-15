@@ -26,7 +26,6 @@ describe('Proof of Play', function () {
     });
 
     it('Range: Today - Test layout/media stats for a layout and a display', function() {
-
         cy.server();
         cy.route('/report/data/proofofplayReport?*').as('reportData');
 
@@ -69,7 +68,6 @@ describe('Proof of Play', function () {
     });
 
     it('Range: Lastweek - Test media stats for a layout and a display', function() {
-
         cy.server();
         cy.route('/report/data/proofofplayReport?*').as('reportData');
 

@@ -26,13 +26,12 @@ describe('Distribution by Layout, Media or Event', function () {
     });
 
     it('Range: Today, Checks duration and count of a layout stat', () => {
-
-        cy.visit('/report/form/distributionReport');
-
         // Create and alias for load layout
         cy.server();
         cy.route('/display?start=0&length=10').as('loadDisplays');
         cy.route('/layout?start=0&length=10').as('loadLayout');
+
+        cy.visit('/report/form/distributionReport');
 
         // Click on the select2 selection
         cy.get('#displayId + span .select2-selection').click();
@@ -42,7 +41,7 @@ describe('Distribution by Layout, Media or Event', function () {
 
         // Type the display name
         cy.get('.select2-container--open input[type="search"]').type('POP Display 1').click();
-        cy.get('.select2-container--open .select2-results').contains('POP Display 1').click();
+        cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
 
         // Click on the select2 selection
         cy.get('#layoutId + span .select2-selection').click();
@@ -70,13 +69,12 @@ describe('Distribution by Layout, Media or Event', function () {
     });
 
     it('Create/Delete a Daily Distribution Report Schedule', () => {
-
-        cy.visit('/report/form/distributionReport');
-
         // Create and alias for load layout
         cy.server();
         cy.route('/display?start=0&length=10').as('loadDisplays');
         cy.route('/layout?start=0&length=10').as('loadLayout');
+
+        cy.visit('/report/form/distributionReport');
 
         // Click on the select2 selection
         cy.get('#layoutId + span .select2-selection').click();

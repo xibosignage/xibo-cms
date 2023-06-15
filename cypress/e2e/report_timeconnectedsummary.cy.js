@@ -26,11 +26,11 @@ describe('Time Connected', function () {
     });
 
     it('should load time connected data of displays', () => {
-        cy.visit('/report/form/timedisconnectedsummary');
-
         // Create and alias for load display
         cy.server();
         cy.route('/display?start=0&length=10').as('loadDisplays');
+
+        cy.visit('/report/form/timedisconnectedsummary');
 
         // Click on the select2 selection
         cy.get('#displayId + span .select2-selection').click();

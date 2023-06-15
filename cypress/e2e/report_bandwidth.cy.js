@@ -26,11 +26,11 @@ describe('Bandwidth', function () {
     });
 
     it('should load tabular data and charts', () => {
-        cy.visit('/report/form/bandwidth');
-
         // Create and alias for load Display
         cy.server();
         cy.route('/display?start=0&length=10').as('loadDisplays');
+
+        cy.visit('/report/form/bandwidth');
 
         // Click on the select2 selection
         cy.get('#displayId + span .select2-selection').click();
