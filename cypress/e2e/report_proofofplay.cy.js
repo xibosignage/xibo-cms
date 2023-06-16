@@ -109,4 +109,70 @@ describe('Proof of Play', function () {
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(1); // number of plays
         cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(60); // total duration
     });
+
+    it('Range: Today - Test event/widget stats for a layout and a display', function() {
+        cy.server();
+        cy.route('/report/data/proofofplayReport?*').as('reportData');
+
+        cy.visit('/report/form/proofofplayReport');
+
+        cy.get('#type').select('event');
+
+                // Click on the Apply button
+        cy.contains('Apply').click();
+
+        // Wait for
+        cy.wait('@reportData');
+
+        // Should have media stats - Test media stats for a layout and a display
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('event'); // stat type
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(9)').contains('Event123'); // tag/eventname
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(1); // number of plays
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(60); // total duration
+
+        cy.get('#type').select('widget');
+
+        // Click on the Apply button
+        cy.contains('Apply').click();
+
+        // Wait for
+        cy.wait('@reportData');
+        cy.contains('Tabular').should('be.visible').click();
+
+        // Should have layout stat - Test a layout stat for an ad campaign, a layout and a display
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('widget'); // stat type
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(1); // number of plays
+        cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(60); // total duration
+    });
+
+    it('Range: Test export', function() {
+        // Create and alias for load layout
+        cy.server();
+        cy.route('/display?start=*').as('loadDisplays');
+
+        cy.visit('/report/view');
+        cy.contains('Export').click();
+
+        cy.get(':nth-child(1) > .col-sm-10 > .input-group > .datePickerHelper').click();
+        cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
+        cy.get(':nth-child(2) > .col-sm-10 > .input-group > .datePickerHelper').click();
+        cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').next().click();
+
+        // Click on the select2 selection
+        cy.get('#displayId + span .select2-selection').click();
+
+        // Wait for displays to load
+        cy.wait('@loadDisplays');
+
+        // Type the display name
+        cy.get('.select2-container--open input[type="search"]').type('POP Display 1');
+
+        // Wait for displays to load
+        cy.wait('@loadDisplays');
+        cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
+    });
 });

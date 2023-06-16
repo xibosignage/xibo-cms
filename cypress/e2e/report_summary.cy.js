@@ -28,19 +28,22 @@ describe('Summary by Layout, Media or Event', function () {
     it('Range: Today, Checks duration and count of a layout stat', () => {
         // Create and alias for load layout
         cy.server();
-        cy.route('/display?start=0&length=10').as('loadDisplays');
-        cy.route('/layout?start=0&length=10').as('loadLayout');
+        cy.route('/display?start=*').as('loadDisplays');
+        cy.route('/layout?start=*').as('loadLayout');
 
         cy.visit('/report/form/summaryReport');
 
         // Click on the select2 selection
         cy.get('#displayId + span .select2-selection').click();
 
-        // Wait for layout to load
+        // Wait for displays to load
         cy.wait('@loadDisplays');
 
         // Type the display name
-        cy.get('.select2-container--open input[type="search"]').type('POP Display 1').click();
+        cy.get('.select2-container--open input[type="search"]').type('POP Display 1');
+
+        // Wait for displays to load
+        cy.wait('@loadDisplays');
         cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
 
         // Click on the select2 selection
@@ -51,6 +54,9 @@ describe('Summary by Layout, Media or Event', function () {
 
         // Type the layout name
         cy.get('.select2-container--open input[type="search"]').type('POP Layout 1');
+
+        // Wait for layout to load
+        cy.wait('@loadLayout');
         cy.get('.select2-container--open .select2-results > ul').contains('POP Layout 1').click();
 
         // Click on the Apply button
@@ -71,8 +77,8 @@ describe('Summary by Layout, Media or Event', function () {
     it('Create/Delete a Daily Summary Report Schedule', () => {
         // Create and alias for load layout
         cy.server();
-        cy.route('/display?start=0&length=10').as('loadDisplays');
-        cy.route('/layout?start=0&length=10').as('loadLayout');
+        cy.route('/display?start=*').as('loadDisplays');
+        cy.route('/layout?start=*').as('loadLayout');
 
         cy.visit('/report/form/summaryReport');
 
@@ -83,7 +89,10 @@ describe('Summary by Layout, Media or Event', function () {
         cy.wait('@loadLayout');
 
         // Type the layout name
-        cy.get('.select2-container--open input[type="search"]').type('POP Layout 1').click();
+        cy.get('.select2-container--open input[type="search"]').type('POP Layout 1');
+
+        // Wait for layout to load
+        cy.wait('@loadLayout');
         cy.get('.select2-container--open .select2-results > ul').contains('POP Layout 1').click();
 
         // ------
@@ -100,7 +109,10 @@ describe('Summary by Layout, Media or Event', function () {
         cy.wait('@loadDisplays');
 
         // Type the display name
-        cy.get('.select2-container--open input[type="search"]').type('POP Display 1').click();
+        cy.get('.select2-container--open input[type="search"]').type('POP Display 1');
+
+        // Wait for display to load
+        cy.wait('@loadDisplays');
         cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
 
         cy.get('#dialog_btn_2').should('be.visible').click();
