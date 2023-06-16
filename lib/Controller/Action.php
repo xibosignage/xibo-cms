@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -202,22 +202,22 @@ class Action  extends Base
         );
 
         foreach ($actions as $action) {
-            $action->widgetName = null;
-            $action->regionName = null;
+            $action->setUnmatchedProperty('widgetName', null);
+            $action->setUnmatchedProperty('regionName', null);
 
             if ($action->actionType === 'navWidget' && $action->widgetId != null) {
                 $widget = $this->widgetFactory->loadByWidgetId($action->widgetId);
                 $module = $this->moduleFactory->getByType($widget->type);
 
                 // dynamic field to display in the grid instead of widgetId
-                $action->widgetName = $widget->getOptionValue('name', $module->name);
+                $action->setUnmatchedProperty('widgetName', $widget->getOptionValue('name', $module->name));
             }
 
             if ($action->target === 'region' && $action->targetId != null) {
                 $region = $this->regionFactory->getById($action->targetId);
 
                 // dynamic field to display in the grid instead of regionId
-                $action->regionName = $region->name;
+                $action->setUnmatchedProperty('regionName', $region->name);
             }
 
             if ($this->isApi($request)) {
@@ -287,7 +287,10 @@ class Action  extends Base
         foreach ($widgets as $widget) {
             $module = $this->moduleFactory->getByType($widget->type);
             // if we don't have a name set in the Widget
-            $widget->name = sprintf('%s [%s]', $widget->getOptionValue('name', $module->name), $module->type);
+            $widget->setUnmatchedProperty(
+                'name',
+                sprintf('%s [%s]', $widget->getOptionValue('name', $module->name), $module->type)
+            );
         }
 
         $this->getState()->template = 'action-form-add';

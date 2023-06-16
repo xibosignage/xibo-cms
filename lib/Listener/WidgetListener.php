@@ -26,6 +26,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Widget;
 use Xibo\Event\RegionAddedEvent;
 use Xibo\Event\SubPlaylistDurationEvent;
+use Xibo\Event\SubPlaylistItemsEvent;
 use Xibo\Event\SubPlaylistValidityEvent;
 use Xibo\Event\SubPlaylistWidgetsEvent;
 use Xibo\Event\WidgetDeleteEvent;
@@ -102,6 +103,7 @@ class WidgetListener
         $dispatcher->addListener(WidgetDeleteEvent::$NAME, [$this, 'onWidgetDelete']);
         $dispatcher->addListener(SubPlaylistDurationEvent::$NAME, [$this, 'onDuration']);
         $dispatcher->addListener(SubPlaylistWidgetsEvent::$NAME, [$this, 'onWidgets']);
+        $dispatcher->addListener(SubPlaylistItemsEvent::$NAME, [$this, 'onSubPlaylistItems']);
         $dispatcher->addListener(SubPlaylistValidityEvent::$NAME, [$this, 'onSubPlaylistValid']);
         $dispatcher->addListener(RegionAddedEvent::$NAME, [$this, 'onRegionAdded']);
         return $this;
@@ -308,6 +310,20 @@ class WidgetListener
         }
 
         $event->setWidgets($this->getSubPlaylistResolvedWidgets($widget, $event->getTempId()));
+    }
+
+    /**
+     * @param SubPlaylistItemsEvent $event
+     * @return void
+     */
+    public function onSubPlaylistItems(SubPlaylistItemsEvent $event)
+    {
+        $widget = $event->getWidget();
+        if ($widget->type !== 'subplaylist') {
+            return;
+        }
+
+        $event->setItems($this->getAssignedPlaylists($widget));
     }
 
     /**

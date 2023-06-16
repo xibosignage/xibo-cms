@@ -1283,17 +1283,7 @@ class Layout implements \JsonSerializable
             // actions on Layout
             foreach ($this->actions as $action) {
                 $layoutActionNode = $document->createElement('action');
-                $layoutActionNode->setAttribute('layoutCode', $action->layoutCode);
-                $layoutActionNode->setAttribute('widgetId', $action->widgetId);
-                $layoutActionNode->setAttribute('triggerCode', $action->triggerCode);
-                $layoutActionNode->setAttribute('targetId', $action->targetId);
-                $layoutActionNode->setAttribute('target', $action->target);
-                $layoutActionNode->setAttribute('sourceId', $action->sourceId);
-                $layoutActionNode->setAttribute('source', $action->source);
-                $layoutActionNode->setAttribute('actionType', $action->actionType);
-                $layoutActionNode->setAttribute('triggerType', $action->triggerType);
-                $layoutActionNode->setAttribute('id', $action->actionId);
-
+                $this->decorateActionXmlNode($layoutActionNode, $action);
                 $layoutNode->appendChild($layoutActionNode);
             }
         }
@@ -1327,17 +1317,7 @@ class Layout implements \JsonSerializable
 
             foreach ($region->actions as $action) {
                 $regionActionNode = $document->createElement('action');
-                $regionActionNode->setAttribute('layoutCode', $action->layoutCode);
-                $regionActionNode->setAttribute('widgetId', $action->widgetId);
-                $regionActionNode->setAttribute('targetId', $action->targetId);
-                $regionActionNode->setAttribute('target', $action->target);
-                $regionActionNode->setAttribute('sourceId', $action->sourceId);
-                $regionActionNode->setAttribute('source', $action->source);
-                $regionActionNode->setAttribute('actionType', $action->actionType);
-                $regionActionNode->setAttribute('triggerType', $action->triggerType);
-                $regionActionNode->setAttribute('triggerCode', $action->triggerCode);
-                $regionActionNode->setAttribute('id', $action->actionId);
-
+                $this->decorateActionXmlNode($regionActionNode, $action);
                 $regionNode->appendChild($regionActionNode);
             }
 
@@ -1495,17 +1475,7 @@ class Layout implements \JsonSerializable
 
                 foreach ($widget->actions as $action) {
                     $widgetActionNode = $document->createElement('action');
-                    $widgetActionNode->setAttribute('layoutCode', $action->layoutCode);
-                    $widgetActionNode->setAttribute('widgetId', $action->widgetId);
-                    $widgetActionNode->setAttribute('targetId', $action->targetId);
-                    $widgetActionNode->setAttribute('target', $action->target);
-                    $widgetActionNode->setAttribute('sourceId', $action->sourceId);
-                    $widgetActionNode->setAttribute('source', $action->source);
-                    $widgetActionNode->setAttribute('actionType', $action->actionType);
-                    $widgetActionNode->setAttribute('triggerType', $action->triggerType);
-                    $widgetActionNode->setAttribute('triggerCode', $action->triggerCode);
-                    $widgetActionNode->setAttribute('id', $action->actionId);
-
+                    $this->decorateActionXmlNode($widgetActionNode, $action);
                     $mediaNode->appendChild($widgetActionNode);
                 }
 
@@ -1833,6 +1803,34 @@ class Layout implements \JsonSerializable
         }
 
         $status = ($moduleStatus > $status) ? $moduleStatus : $status;
+    }
+
+    /**
+     * @param \DOMElement $node
+     * @param Action $action
+     * @return void
+     */
+    private function decorateActionXmlNode(\DOMElement $node, Action $action): void
+    {
+        $node->setAttribute('layoutCode', $action->layoutCode ?? '');
+        $node->setAttribute('target', $action->target ?? '');
+        $node->setAttribute('source', $action->source ?? '');
+        $node->setAttribute('actionType', $action->actionType ?? '');
+        $node->setAttribute('triggerType', $action->triggerType ?? '');
+        $node->setAttribute('triggerCode', $action->triggerCode ?? '');
+        $node->setAttribute('id', $action->actionId);
+
+        if (!empty($action->widgetId)) {
+            $node->setAttribute('widgetId', $action->widgetId);
+        }
+
+        if (!empty($action->targetId)) {
+            $node->setAttribute('targetId', $action->targetId);
+        }
+
+        if (!empty($action->sourceId)) {
+            $node->setAttribute('sourceId', $action->sourceId);
+        }
     }
 
     /**

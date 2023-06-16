@@ -411,24 +411,8 @@ class Font extends Base
             $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
             // Add the Font
-            $font = $this->getFontFactory()->createEmpty();
-            $fontLib = \FontLib\Font::load($filePath);
-
-            // check embed flag
-            $embed = intval($fontLib->getData('OS/2', 'fsType'));
-            // if it's not embeddable, throw exception
-            if ($embed != 0 && $embed != 8) {
-                throw new InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
-            }
-
-            $name = ($file->name == '') ? $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily() : $file->name;
-
-            $font->modifiedBy = $this->getUser()->userName;
-            $font->name = $name;
-            $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily())));
-            $font->fileName = $file->fileName;
-            $font->size = filesize($filePath);
-            $font->md5 = md5_file($filePath);
+            $font = $this->getFontFactory()
+                ->createFontFromUpload($filePath, $file->name, $file->fileName, $this->getUser()->userName);
             $font->save();
 
             // Test to ensure the final file size is the same as the file size we're expecting

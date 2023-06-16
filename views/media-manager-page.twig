@@ -220,7 +220,7 @@
                 $("#" + e.target.id).find('.WidgetEditForm').on('click', function() {
                     e.preventDefault();
 
-                    formHelpers.widgetFormRender($(this), $(this).data());
+                    return formHelpers.widgetFormRender($(this), $(this).data());
                 });
             });
             table.on('processing.dt', dataTableProcessing);
@@ -298,11 +298,5 @@
             footer.find(".btn-primary").before(replaceButton);
         }
     </script>
-
-    {% for module in assignableModules %}
-        {% if module.layoutDesignerJavaScript() != "" %}
-            {% include module.layoutDesignerJavaScript() ~ ".twig" %}
-        {% endif %}
-    {% endfor %}
 {% endblock %}
 

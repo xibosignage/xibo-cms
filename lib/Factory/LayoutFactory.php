@@ -1270,7 +1270,8 @@ class LayoutFactory extends BaseFactory
             $layoutName
         ));
 
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/';
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        $libraryLocationTemp = $libraryLocation . 'temp/';
 
         // Do some pre-checks on the arguments we have been provided
         if (!file_exists($zipFile)) {
@@ -1441,7 +1442,7 @@ class LayoutFactory extends BaseFactory
                 continue;
             }
             
-            $temporaryFileName = $libraryLocation . $fileName;
+            $temporaryFileName = $libraryLocationTemp . $fileName;
 
             // Get the file from the ZIP
             $fileStream = $zip->getStream('library/' . $fileName);
@@ -1482,30 +1483,24 @@ class LayoutFactory extends BaseFactory
                         throw new NotFoundException();
                     }
                     $this->getLog()->debug('Font already exists with name: ' . $intendedMediaName);
-                } catch (NotFoundException $exception) {
+                } catch (NotFoundException) {
                     $this->getLog()->debug('Font does not exist in Library, add it ' . $fileName);
                     // Add the Font
-                    $font = $this->fontFactory->createEmpty();
-                    $fontLib = \FontLib\Font::load($temporaryFileName);
-
-                    // check embed flag
-                    $embed = intval($fontLib->getData('OS/2', 'fsType'));
-                    // if it's not embeddable, log error and skip it
-                    if ($embed != 0 && $embed != 8) {
-                        throw new InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
-                    }
-
-                    $font->modifiedBy = $this->getUserFactory()->getById($userId)->userName;
-                    $font->name = $file['name'];
-                    $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily())));
-                    $font->fileName = $fileName;
-                    $font->size = filesize($temporaryFileName);
-                    $font->md5 = md5_file($temporaryFileName);
+                    $font = $this->fontFactory->createFontFromUpload(
+                        $temporaryFileName,
+                        $file['name'],
+                        $fileName,
+                        $this->getUser()->userName,
+                    );
                     $font->save();
                     $fontsAdded = true;
+
                     // everything is fine, move the file from temp folder.
                     rename($temporaryFileName, $libraryLocation . 'fonts/' . $font->fileName);
                 }
+
+                // Fonts do not create media records, so we have nothing left to do in the rest of this loop
+                continue;
             } else {
                 try {
                     $media = $this->mediaFactory->getByName($intendedMediaName);
@@ -1893,8 +1888,7 @@ class LayoutFactory extends BaseFactory
         // Save the thumbnail to a temporary location.
         $image_path = $zip->getFromName('library/thumbs/campaign_thumb.png');
         if ($image_path !== false) {
-            // $libraryLocation has temp on it already.
-            $temporaryLayoutThumb = $libraryLocation . $layout->layout . '-campaign_thumb.png';
+            $temporaryLayoutThumb = $libraryLocationTemp . $layout->layout . '-campaign_thumb.png';
             $layout->setUnmatchedProperty('thumbnail', $temporaryLayoutThumb);
             $image = imagecreatefromstring($image_path);
             imagepng($image, $temporaryLayoutThumb);

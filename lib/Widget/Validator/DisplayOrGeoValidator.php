@@ -39,7 +39,15 @@ class DisplayOrGeoValidator implements WidgetValidatorInterface
     /** @inheritDoc */
     public function validate(Module $module, Widget $widget, string $stage): void
     {
-        if ($widget->getOptionValue('useDisplayLocation', 0) == 0) {
+        $useDisplayLocation = $widget->getOptionValue('useDisplayLocation', null);
+        if ($useDisplayLocation === null) {
+            foreach ($module->properties as $property) {
+                if ($property->id === 'useDisplayLocation') {
+                    $useDisplayLocation = $property->default;
+                }
+            }
+        }
+        if ($useDisplayLocation === 0) {
             // Validate lat/long
             if (!v::latitude()->validate($widget->getOptionValue('latitude', null))) {
                 throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
