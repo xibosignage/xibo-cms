@@ -451,9 +451,6 @@ Widget.prototype.editPropertyForm = function(property, type) {
           ).then((res) => { // Success
             app.common.hideLoadingScreen();
 
-            // Behavior if successful
-            toastr.success(res.message);
-
             dialog.modal('hide');
 
             app.reloadData(app.layout);

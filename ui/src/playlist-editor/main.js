@@ -94,6 +94,9 @@ window.pE = {
 
   // folderId
   folderId: '',
+
+  // inline playlist editor?
+  inline: false,
 };
 
 /**
@@ -118,6 +121,7 @@ pE.loadEditor = function(inline = false) {
     pE.regionSpecificQuery = '&regionSpecific=1';
     pE.mainRegion =
       pE.editorContainer.parents('#editor-container').data('regionObj');
+    pE.inline = true;
   }
 
   // Get playlist id
@@ -356,9 +360,6 @@ pE.undoLastAction = function() {
 
   pE.historyManager.revertChange().then((res) => { // Success
     pE.common.hideLoadingScreen();
-
-    toastr.success(res.message);
-
     // Refresh designer according to local or API revert
     if (res.localRevert) {
       pE.refreshEditor();
@@ -454,9 +455,6 @@ pE.deleteObject = function(objectType, objectId) {
               .then((res) => { // Success
                 pE.common.hideLoadingScreen('deleteObject');
 
-                // Behavior if successful
-                toastr.success(res.message);
-
                 // Remove selected object
                 pE.selectedObject = {};
 
@@ -464,8 +462,6 @@ pE.deleteObject = function(objectType, objectId) {
                 pE.reloadData();
               }).catch((error) => { // Fail/error
                 pE.common.hideLoadingScreen('deleteObject');
-                // Behavior if successful
-                toastr.success(res.message);
                 pE.reloadData();
               }).catch((error) => { // Fail/error
                 pE.common.hideLoadingScreen('deleteObject');
@@ -593,9 +589,6 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
           // Delete element from the playlist
           pE.playlist.deleteElement(objectType, objectId, options)
             .then((res) => { // Success
-            // Behavior if successful
-              toastr.success(res.message);
-
               deletedElements++;
 
               if (deletedElements == $objects.length) {
@@ -827,9 +820,6 @@ pE.saveOrder = function() {
   ).then((res) => { // Success
     pE.common.hideLoadingScreen('saveOrder');
 
-    // Behavior if successful
-    toastr.success(res.message);
-
     self.reloadData();
   }).catch((error) => { // Fail/error
     pE.common.hideLoadingScreen('saveOrder');
@@ -944,7 +934,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   const objType = $(obj).data('type');
 
   // Don't open context menu in read only mode
-  if (lD && lD.readOnlyMode) {
+  if (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) {
     return;
   }
 

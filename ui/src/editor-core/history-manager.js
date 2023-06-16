@@ -354,9 +354,6 @@ HistoryManager.prototype.revertChange = function() {
               // Resolve promise
               resolve(data);
             } else {
-              // Show toast message
-              toastr.success(data.message);
-
               // Revert next change
               revertObject();
             }

@@ -272,6 +272,7 @@ class Layout extends Base
             'users' => $this->userFactory->query(),
             'modules' => $moduleFactory->getAssignableModules(),
             'timeZones' => $timeZones,
+            'help' => $this->getHelp()->link('Layout', 'Edit'),
         ];
 
         // Call the render the template

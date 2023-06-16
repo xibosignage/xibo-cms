@@ -180,9 +180,6 @@ Region.prototype.editPropertyForm = function(property) {
           ).then((res) => { // Success
             app.common.hideLoadingScreen();
 
-            // Behavior if successful
-            toastr.success(res.message);
-
             dialog.modal('hide');
 
             app.reloadData(app.layout);

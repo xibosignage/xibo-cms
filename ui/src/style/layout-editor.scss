@@ -1256,7 +1256,7 @@
 
 /* Loading Container */
 #layout-editor .loading-container {
-    height: calc(100vh - 130px);
+    height: calc(100vh - 50px);
     width: 100%;
     position: absolute;
 
@@ -1265,9 +1265,10 @@
         text-align: center;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 5.35rem;
+        font-size: 4rem;
         color: $xibo-color-primary;
         z-index: 0;
+        opacity: 0.6;
     }
 }
 

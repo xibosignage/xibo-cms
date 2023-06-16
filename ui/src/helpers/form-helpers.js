@@ -1070,7 +1070,7 @@ const formHelpers = function() {
       if (updateOnBlur) {
         CKEDITOR.instances[textAreaId].on('blur', function() {
           // Update CKEditor, but don't parse data (do that only on save)
-          self.updateCKEditor(textAreaId);
+          self.updateCKEditor(textAreaId, false);
         });
       }
 
@@ -1097,7 +1097,7 @@ const formHelpers = function() {
    * @param {Object=} instance - The instance object
    * @param {boolean=} updateParsedData - Update parsed data on CKEditor
    */
-  this.updateCKEditor = function(instance = null, updateParsedData = false) {
+  this.updateCKEditor = function(instance = null, updateParsedData = true) {
     const self = this;
 
     try {
@@ -1141,6 +1141,7 @@ const formHelpers = function() {
           self.parseCKEditorData(
             instance,
             CKEDITOR.instances[instance].destroy,
+            false,
           );
         } else {
           console.warn('CKEditor instance does not exist.');
@@ -1183,6 +1184,11 @@ const formHelpers = function() {
     // Update text field with the new data
     // ( to avoid the setData delay on save )
     $('textarea#' + instance).val(data);
+
+    // If we're not saving, trigger change for saving
+    if (!updateDataAfterParse) {
+      $('textarea#' + instance).trigger('inputChange');
+    }
 
     // Set the appropriate text editor field with this data
     if (updateDataAfterParse) {
@@ -1996,25 +2002,29 @@ const formHelpers = function() {
     options = {},
   ) {
     switch (actionType) {
-    case 'save':
-      this.widgetFormEditSubmit(container, widgetType);
-      break;
+      case 'save':
+        this.widgetFormEditSubmit(container, widgetType);
+        break;
 
-    case 'back':
-      // Get current step
-      const currentStep = container.find('form').data('formStep');
-      this.widgetFormRender(options.sourceObj, options.data, (currentStep - 1));
-      break;
+      case 'back':
+        // Get current step
+        const currentStep = container.find('form').data('formStep');
+        this.widgetFormRender(
+          options.sourceObj,
+          options.data,
+          (currentStep - 1),
+        );
+        break;
 
-    case 'close':
-      container.modal('hide');
-      break;
+      case 'close':
+        container.modal('hide');
+        break;
 
-    default:
-      if (typeof window[actionType] === 'function') {
-        window[actionType](container);
-      }
-      break;
+      default:
+        if (typeof window[actionType] === 'function') {
+          window[actionType](container);
+        }
+        break;
     }
   };
 
@@ -2118,7 +2128,7 @@ const formHelpers = function() {
       }
     }
 
-    // Add back button
+    // Add delete button
     buttons.delete = {
       name: editorsTrans.delete,
       type: 'btn-danger',

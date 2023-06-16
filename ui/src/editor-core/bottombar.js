@@ -17,8 +17,7 @@ const Bottombar = function(parent, container) {
  */
 Bottombar.prototype.render = function(element) {
   const app = this.parent;
-  const readOnlyModeOn =
-    (app.readOnlyMode != undefined && app.readOnlyMode === true);
+  const readOnlyModeOn = (app?.readOnlyMode === true);
 
   // Get topbar trans
   const newBottomBarTrans = $.extend(toolbarTrans, topbarTrans);
@@ -30,8 +29,7 @@ Bottombar.prototype.render = function(element) {
   // Check if trash bin is active
   const trashBinActive =
     app.selectedObject.isDeletable &&
-    (app.readOnlyMode === undefined ||
-      app.readOnlyMode === false);
+    (app?.readOnlyMode === false);
 
   // Get text for bin tooltip
   newBottomBarTrans.trashBinActiveTitle =
@@ -120,7 +118,7 @@ Bottombar.prototype.render = function(element) {
   }
 
   // If read only mode is enabled
-  if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
+  if (app?.readOnlyMode === true) {
     // Create the read only alert message
     const $readOnlyMessage =
       $('<div id="read-only-message" class="alert alert-warning' +

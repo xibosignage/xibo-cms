@@ -955,8 +955,6 @@ Layout.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
     .then((res) => { // Success
       lD.common.hideLoadingScreen();
 
-      // Behavior if successful
-      toastr.success(res.message);
       lD.reloadData(lD.layout);
     }).catch((error) => { // Fail/error
       // Remove sort class
