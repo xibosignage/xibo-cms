@@ -1030,7 +1030,7 @@ Toolbar.prototype.openMenu = function(
 
     if (app.mainObjectType != 'playlist') {
       // Refresh main containers
-      app.viewer.update();
+      app.viewer.render(true);
     }
   }
 

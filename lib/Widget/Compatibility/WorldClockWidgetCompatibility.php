@@ -87,6 +87,9 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
             $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
         }
 
+        // Always remove template id from world clock
+        $widget->removeOption('templateId');
+
         return $upgraded;
     }
 
