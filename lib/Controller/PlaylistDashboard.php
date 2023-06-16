@@ -25,7 +25,6 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\SubPlaylistItemsEvent;
-use Xibo\Helper\XiboUploadHandler;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 
@@ -248,59 +247,9 @@ class PlaylistDashboard extends Base
         // Pass to view
         $this->getState()->template = 'playlist-module-form-delete';
         $this->getState()->setData([
-            'wodget' => $widget,
+            'widget' => $widget,
             'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Upload adding/replacing accordingly
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function upload(Request $request, Response $response)
-    {
-        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        // Get Valid Extensions
-        $validExt = $this->moduleFactory->getValidExtensions();
-
-        // pass in a library controller to handle the extra functions needed // TODO we are injecting containerInterface to get the library controller like that, not sure if that's a good approach
-        $libraryController = $this->container->get('\Xibo\Controller\Library');
-
-        $options = [
-            'userId' => $this->getUser()->userId,
-            'controller' => $libraryController,
-            'oldMediaId' => $sanitizedParams->getInt('oldMediaId'),
-            'widgetId' => $sanitizedParams->getInt('widgetId'),
-            'updateInLayouts' => 1,
-            'deleteOldRevisions' => 1,
-            'allowMediaTypeChange' => 1,
-            'playlistId' => $sanitizedParams->getInt('playlistId'),
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'library.add'),
-            'upload_url' => $this->urlFor($request,'library.add'),
-            'image_versions' => [],
-            'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
-            'libraryLimit' => ($this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024),
-            'libraryQuotaFull' => false,
-            'expires' => 0
-        ];
-
-        // Output handled by UploadHandler
-        $this->setNoOutput(true);
-
-        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
-
-        // Hand off to the Upload Handler provided by jquery-file-upload
-        new XiboUploadHandler($options);
 
         return $this->render($request, $response);
     }

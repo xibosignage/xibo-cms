@@ -66,10 +66,15 @@
                              data-playlist-id="{{ widget.playlistId }}"
                              data-widget-id="{{ widget.widgetId }}"
                              data-widget-name="{{ widget.getUnmatchedProperty("name") }}"
-                                {% if widget.getUnmatchedProperty("regionSpecific") == 0 %}
-                                data-media-id="{{ widget.getPrimaryMediaId() }}"
-                                {% endif %}
-                             >
+                             data-widget-preview="{{ url_for("library.download", {id:':id'}) }}?preview=1"
+                            {% if widget.getUnmatchedProperty("regionSpecific") == 0 %}
+                             data-media-id="{{ widget.getPrimaryMediaId() }}"
+                            {% endif %}
+                            {% if widget.getUnmatchedProperty("deletable") == 1 and currentUser.featureEnabled("playlist.modify") and widget.getUnmatchedProperty("regionSpecific") == 0 %}
+                             data-widget-del="{{ url_for("playlist.module.widget.delete.form", {id:':id'}) }}"
+                            {% endif %}
+                             data-feature-enabled="{{ currentUser.featureEnabled("playlist.modify")  }}"
+                        >
 
                             {% if widget.getUnmatchedProperty("regionSpecific") == 0 and widget.getUnmatchedProperty("editable") %}
                                 {% if not widget.getUnmatchedProperty("viewble") %}

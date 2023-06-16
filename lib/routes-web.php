@@ -44,27 +44,24 @@ $app->group('', function(RouteCollectorProxy $group) {
 $app->get('/icondashboard', ['\Xibo\Controller\IconDashboard', 'displayPage'])
     ->setName('icondashboard.view');
 
-$app->group('', function(RouteCollectorProxy $group) {
+$app->group('', function (RouteCollectorProxy $group) {
     $group->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'displayPage'])
         ->setName('mediamanager.view');
     $group->get('/mediamanager/data', ['\Xibo\Controller\MediaManager', 'grid'])
         ->setName('mediamanager.search');
 })->add(new FeatureAuth($app->getContainer(), ['dashboard.media.manager']));
 
-$app->group('', function(RouteCollectorProxy $group) {
+$app->group('', function (RouteCollectorProxy $group) {
     $group->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard', 'displayPage'])
         ->setName('playlistdashboard.view');
     $group->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard', 'grid'])
         ->setName('playlistdashboard.search');
     $group->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard', 'show'])
         ->setName('playlistdashboard.show');
-    $group->get('/playlistdashboard/widget/form/delete/{id}', ['\Xibo\Controller\PlaylistDashboard', 'deletePlaylistWidgetForm'])
-        ->setName('playlist.module.widget.delete.form');
-
-    //TODO: why is this commented out?
-    //$group->map('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->via('HEAD');
-    $group->post('/playlistdashboard/library', ['\Xibo\Controller\PlaylistDashboard', 'upload'])
-        ->setName('playlistdashboard.library.add');
+    $group->get('/playlistdashboard/widget/form/delete/{id}', [
+        '\Xibo\Controller\PlaylistDashboard',
+        'deletePlaylistWidgetForm',
+    ])->setName('playlist.module.widget.delete.form');
 })->add(new FeatureAuth($app->getContainer(), ['dashboard.playlist']));
 
 // Login Form

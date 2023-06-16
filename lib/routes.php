@@ -323,9 +323,11 @@ $app->get('/library/thumbnail/{id}', [
     '\Xibo\Controller\Library', 'thumbnail'
 ])->setName('library.thumbnail');
 
+$app->post('/library', ['\Xibo\Controller\Library','add'])->setName('library.add')
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.add', 'dashboard.playlist']));
+
 $app->group('', function (RouteCollectorProxy $group) {
     //$group->map(['HEAD'],'/library', ['\Xibo\Controller\Library','  addgroup
-    $group->post('/library', ['\Xibo\Controller\Library','add'])->setName('library.add');
     $group->post('/library/uploadUrl', ['\Xibo\Controller\Library','uploadFromUrl'])->setName('library.uploadFromUrl');
     $group->post('/library/thumbnail', ['\Xibo\Controller\Library','addThumbnail'])->setName('library.thumbnail.add');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.add']));
