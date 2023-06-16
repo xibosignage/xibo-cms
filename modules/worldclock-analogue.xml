@@ -314,9 +314,15 @@
         ]]></hbs>
         <twig><![CDATA[
 <style>
-.analogue-clock {
+body {
     {% if bgColor %}
         background: {{bgColor}};
+    {% endif %}
+}
+
+.analogue-clock {
+    {% if faceColor %}
+        background: {{faceColor}};
     {% endif %}
     position: relative;
     text-align: center;
@@ -532,7 +538,7 @@
 moment.locale(globalOptions.locale);
 
 Handlebars.registerHelper('eq', function (v1, v2, opts) {
-  if (v1 === v2) {
+  if (v1 == v2) {
     return opts.fn(this);
   } else {
     return opts.inverse(this);
