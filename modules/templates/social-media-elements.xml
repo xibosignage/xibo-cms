@@ -115,7 +115,7 @@
                     <height>40</height>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="fontFace">open sans regular</property>
+                        <property id="fontFamily">aileron regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">24</property>
                         <property id="fontColor">#3c3ad3</property>
@@ -133,7 +133,8 @@
                     <rotation>0</rotation>
                     <defaultProperties>
                         <property id="dateFormat">HH:mm - DD/MM/YYYY</property>
-                        <property id="fontFamily">linear regular</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
                         <property id="fontSize">20</property>
                         <property id="fontColor">#3c3ad3</property>
                         <property id="horizontalAlign">flex-end</property>
@@ -148,7 +149,8 @@
                     <height>120</height>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="fontSize">20</property>
+                        <property id="fontFamily">linear regular</property>
+                        <property id="fontSize">22</property>
                         <property id="fontColor">#3c3ad3</property>
                         <property id="horizontalAlign">flex-start</property>
                         <property id="verticalAlign">flex-start</property>
