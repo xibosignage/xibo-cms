@@ -129,12 +129,18 @@ class SyncTest extends XmdsTestCase
         $innerDocument->loadXML($result);
 
         $this->assertSame('READY', $innerDocument->documentElement->getAttribute('code'));
-        $this->assertSame('Display is active and ready to start.', $innerDocument->documentElement->getAttribute('message'));
+        $this->assertSame(
+            'Display is active and ready to start.',
+            $innerDocument->documentElement->getAttribute('message')
+        );
+
+        $syncNodes = $innerDocument->getElementsByTagName('syncGroup');
+        $this->assertSame(1, count($syncNodes));
 
         if ($version === 7) {
-            $this->assertSame('192.168.0.3', $innerDocument->documentElement->getAttribute('syncGroup'));
+            $this->assertSame('192.168.0.3', $syncNodes->item(0)->textContent);
         } else {
-            $this->assertSame('lead', $innerDocument->documentElement->getAttribute('syncGroup'));
+            $this->assertSame('lead', $syncNodes->item(0)->textContent);
         }
     }
 }

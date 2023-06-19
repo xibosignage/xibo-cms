@@ -437,13 +437,16 @@ class Soap5 extends Soap4
             $syncGroup = $this->syncGroupFactory->getById($display->syncGroupId);
 
             if ($syncGroup->leadDisplayId === $display->displayId) {
-                $nodeValue = 'lead';
+                $syncNodeValue = 'lead';
             } else {
                 $leadDisplay = $this->syncGroupFactory->getLeadDisplay($syncGroup->leadDisplayId);
-                $nodeValue = $leadDisplay->lanIpAddress;
+                $syncNodeValue = $leadDisplay->lanIpAddress;
             }
 
-            $displayElement->setAttribute('syncGroup', $nodeValue);
+            $syncNode = $return->createElement('syncGroup');
+            $value = $return->createTextNode($syncNodeValue ?? '');
+            $syncNode->appendChild($value);
+            $displayElement->appendChild($syncNode);
         }
 
         $display->save(Display::$saveOptionsMinimum);
