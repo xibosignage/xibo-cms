@@ -3015,6 +3015,7 @@ function makePagedSelect(element, parent) {
         ajax: {
             url: element.data("searchUrl"),
             dataType: "json",
+            delay: 250,
             data: function(params) {
                 var query = {
                     start: 0,
