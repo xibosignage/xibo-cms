@@ -54,7 +54,7 @@ describe('Proof of Play', function () {
         cy.get('.total-stat').contains('Total number of records to be exported 5');
     });
 
-    it.only('Range: Today - Test layout/media stats for a layout and a display', function() {
+    it('Range: Today - Test layout/media stats for a layout and a display', function() {
         cy.intercept('/report/data/proofofplayReport?*').as('reportData');
 
         cy.visit('/report/form/proofofplayReport');
