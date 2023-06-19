@@ -471,9 +471,9 @@ class SeedDatabaseTask implements TaskInterface
             ];
             $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
 
-            // an event stat for today
+            // an widget stat for today
             $params = [
-                'type' => 'event',
+                'type' => 'widget',
                 'statDate' => Carbon::now()->hour(12)->format('U'),
                 'scheduleId' => 0,
                 'displayId' => $this->displays['POP Display 1'],
@@ -489,9 +489,9 @@ class SeedDatabaseTask implements TaskInterface
             ];
             $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
 
-            // a widget stat for today
+            // a event stat for today
             $params = [
-                'type' => 'widget',
+                'type' => 'event',
                 'statDate' => Carbon::now()->hour(12)->format('U'),
                 'scheduleId' => 0,
                 'displayId' => $this->displays['POP Display 1'],

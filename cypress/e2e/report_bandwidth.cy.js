@@ -27,8 +27,7 @@ describe('Bandwidth', function () {
 
     it('should load tabular data and charts', () => {
         // Create and alias for load Display
-        cy.server();
-        cy.route('/display?start=*').as('loadDisplays');
+        cy.intercept('/display?start=*').as('loadDisplays');
 
         cy.visit('/report/form/bandwidth');
 
@@ -43,7 +42,9 @@ describe('Bandwidth', function () {
 
         // Wait for Display to load
         cy.wait('@loadDisplays');
-        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).contains('POP Display 1').click();
+        cy.get('.select2-container--open').contains('POP Display 1');
+        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+        cy.get('.select2-container--open .select2-results > ul > li:first').contains('POP Display 1').click();
 
         // Click on the Apply button
         cy.contains('Apply').should('be.visible').click();
