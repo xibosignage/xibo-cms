@@ -44,7 +44,7 @@ describe('Distribution by Layout, Media or Event', function () {
 
         // Wait for display to load
         cy.wait('@loadDisplays');
-        cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
+        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).contains('POP Display 1').click();
 
         // Click on the select2 selection
         cy.get('#layoutId + span .select2-selection').click();
@@ -57,7 +57,7 @@ describe('Distribution by Layout, Media or Event', function () {
 
         // Wait for layout to load
         cy.wait('@loadLayout');
-        cy.get('.select2-container--open .select2-results > ul').contains('POP Layout 1').click();
+        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).contains('POP Layout 1').click();
 
         // Click on the Apply button
         cy.contains('Apply').should('be.visible').click();
@@ -93,7 +93,7 @@ describe('Distribution by Layout, Media or Event', function () {
 
         // Wait for layout to load
         cy.wait('@loadLayout');
-        cy.get('.select2-container--open .select2-results > ul').contains('POP Layout 1').click();
+        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).contains('POP Layout 1').click();
 
         // ------
         // ------
@@ -113,7 +113,7 @@ describe('Distribution by Layout, Media or Event', function () {
 
         // Wait for display to load
         cy.wait('@loadDisplays');
-        cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
+        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).contains('POP Display 1').click();
 
         cy.get('#dialog_btn_2').should('be.visible').click();
 

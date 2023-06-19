@@ -43,7 +43,7 @@ describe('Bandwidth', function () {
 
         // Wait for Display to load
         cy.wait('@loadDisplays');
-        cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
+        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).contains('POP Display 1').click();
 
         // Click on the Apply button
         cy.contains('Apply').should('be.visible').click();

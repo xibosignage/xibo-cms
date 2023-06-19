@@ -173,6 +173,6 @@ describe('Proof of Play', function () {
 
         // Wait for displays to load
         cy.wait('@loadDisplays');
-        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).contains('POP Display 1').click();
+        cy.get('.select2-container--open .select2-results > ul').should('have.length', 1).should('have.length', 1).contains('POP Display 1').click();
     });
 });
