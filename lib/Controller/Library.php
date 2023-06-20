@@ -758,6 +758,7 @@ class Library extends Base
 
             // Schedule Now
             if ($this->getUser()->featureEnabled('schedule.now')
+                && in_array($media->mediaType, ['image', 'video'])
                 && ($this->getUser()->checkEditable($media)
                     || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
             ) {

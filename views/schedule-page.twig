@@ -22,6 +22,7 @@
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
+{% import "forms.twig" as forms %}
 
 {% block title %}{{ "Schedule"|trans }} | {% endblock %}
 
@@ -88,7 +89,7 @@
                             <div class="form-group mr-1 mb-1 non-agenda-filter">
                                 <label class="control-label mr-1" for="campaignId" title=""
                                        accesskey="">{{ title }}</label>
-                                <select name="campaignId" id="campaignId" class="form-control"
+                                <select name="campaignId" id="campaignIdFilter" class="form-control"
                                         data-search-url="{{ url_for("campaign.search") }}"
                                         data-trans-campaigns="{% trans "Campaigns" %}"
                                         data-trans-layouts="{% trans "Layouts" %}"
@@ -102,17 +103,40 @@
                             </div>
 
                             {% set title %}{% trans "Displays" %}{% endset %}
-                            <div class="form-group mr-1 mb-1">
+                            <div class="form-group mr-1 mb-1 pagedSelect" style="min-width: 200px">
                                 <label class="control-label mr-1" for="DisplayList" title=""
                                        accesskey="">{{ title }}</label>
                                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
-                                        data-placeholder="{% trans "Displays" %}"
-                                        data-search-url="{{ url_for("displayGroup.search") }}"
-                                        data-trans-groups="{% trans "Groups" %}"
-                                        data-trans-display="{% trans "Display" %}"
-                                        data-allow-clear="true"
                                         data-width="100%"
-                                        data-placeholder="{% trans "Select Displays" %}" multiple>
+                                        data-placeholder="{% trans "Displays" %}"
+                                        data-search-url="{{ url_for("display.search") }}"
+                                        data-search-term="display"
+                                        data-id-property="displayGroupId"
+                                        data-text-property="display"
+                                        data-additional-property="displayGroupId"
+                                        data-allow-clear="true"
+                                        multiple>
+                                    {% for option in displaySpecificDisplayGroups %}
+                                        {% set itemOptionId = attribute(option, "displayGroupId") %}
+                                        {% set itemOptionValue = attribute(option, "displayGroup") %}
+                                        <option value="{{ itemOptionId }}" selected>{{ itemOptionValue }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            {% set title %}{% trans "Display Groups" %}{% endset %}
+                            <div class="form-group mr-1 mb-1 pagedSelect" style="min-width: 200px">
+                                <label class="control-label mr-1" for="DisplayGroupList" title=""
+                                       accesskey="">{{ title }}</label>
+                                <select id="DisplayGroupList" class="form-control" name="displayGroupIds[]"
+                                        data-width="100%"
+                                        data-placeholder="{% trans "Display Groups" %}"
+                                        data-search-url="{{ url_for("displayGroup.search") }}"
+                                        data-search-term="displayGroup"
+                                        data-id-property="displayGroupId"
+                                        data-text-property="displayGroup"
+                                        data-allow-clear="true"
+                                        multiple>
                                     {% for option in displayGroups %}
                                         {% set itemOptionId = attribute(option, "displayGroupId") %}
                                         {% set itemOptionValue = attribute(option, "displayGroup") %}
@@ -190,6 +214,9 @@
                     </div>
                     <div class="tab-pane" id="calendar-view">
                         <div class="row">
+                            <div class="text-center text-danger col-lg-12" id="calendar-error-message">
+                                <span>{% trans "Please select a Display or Display Group to view the calendar" %}</span>
+                            </div>
                             <div class="xibo-calendar-controls-container align-content-start justify-content-end col-xl-12 pl-0 form-inline text-right">
                                 <div class="btn-group xibo-calendar-controls xibo-agenda-calendar-controls">
                                     <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span
@@ -212,7 +239,7 @@
                                     {% if currentUser.featureEnabled("schedule.agenda") %}
                                         <button type="button" id="btn-agenda-view" class="btn btn-outline-info" data-calendar-view="agenda">{% trans "Agenda" %}</button>
                                     {% endif %}
-                                    <button type="button" id="btn-month-view" class="btn btn-outline-info" data-calendar-view="month">{% trans "Month" %}</button>
+                                    <button type="button" id="btn-month-view" class="btn btn-outline-info" data-calendar-view="month">{% trans "Back" %}</button>
                                 </div>
                             </div>
                             <div class="text-center col-xl-12">
@@ -1121,8 +1148,87 @@
             </tr>
         {{/each}}
         </script>
-
         {% endverbatim %}
+
+
+    <script type="text/x-handlebars-template" id="full-screen-schedule-template">
+            <!-- Modal -->
+            <div id="full-screen-schedule-modal" class="modal fade inner-modal" role="dialog">
+                <div class="modal-dialog modal-md modal-dialog-centered">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header bg-light">
+                            <h4 class="modal-title">{% verbatim %}{{#eq type "Media"}}{% endverbatim %}{% trans "Select Media"%}{% verbatim %}{{/eq}}{{#eq type "Playlist"}}{% endverbatim %} {% trans "Select Playlist" %}{% verbatim %}{{/eq}}{%endverbatim%}</h4>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="scheduleFullScreenForm" autocomplete="off" class="form-horizontal" method="post" action="{{ url_for('layout.add.full.screen.schedule') }}" data-full-screen-url="{{ url_for('layout.add.full.screen.schedule') }}">
+                            {% verbatim %}
+                                <input type="hidden" id="eventTypeId" value="{{ eventTypeId }}">
+                            {{#eq type "Media"}}
+                            {% endverbatim %}
+                                {% set title %}{% trans "Media" %}{% endset %}
+                                {% set helpText %}{% trans "Select a Media file from the Library to use. The selected file will be shown full screen for this event." %}{% endset %}
+                                {% set attributes = [
+                                    { name: "data-width", value: "100%" },
+                                    { name: "data-search-url", value: url_for("library.search") ~ "?fullScreenScheduleCheck=true&types[]=image&types[]=video" },
+                                    { name: "data-search-term", value: "media" },
+                                    { name: "data-id-property", value: "mediaId" },
+                                    { name: "data-text-property", value: "name" },
+                                    { name: "data-additional-property", value: "hasFullScreenLayout" },
+                                    { name: "data-initial-key", value: "mediaId"},
+                                    { name: "data-initial-value", value: mediaId}
+                                ] %}
+                                {{ forms.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "pagedSelect media-control", "", "", "", attributes) }}
+                                {% verbatim %}
+                                 {{/eq}}
+                                 {{#eq type "Playlist"}}
+                                 {% endverbatim %}
+                                {% set title %}{% trans "Playlist" %}{% endset %}
+                                {% set helpText %}{% trans "Select a Playlist to use. The selected playlist will be shown full screen for this event." %}{% endset %}
+                                {% set attributes = [
+                                    { name: "data-width", value: "100%" },
+                                    { name: "data-search-url", value: url_for("playlist.search") ~ "?fullScreenScheduleCheck=true" },
+                                    { name: "data-search-term", value: "name" },
+                                    { name: "data-id-property", value: "playlistId" },
+                                    { name: "data-text-property", value: "name" },
+                                    { name: "data-additional-property", value: "hasFullScreenLayout" },
+                                    { name: "data-initial-key", value: "playlistId"},
+                                    { name: "data-initial-value", value: playlistId}
+                                ] %}
+                                {{ forms.dropdown("playlistId", "single", title, "", null, "playlistId", "name", helpText, "pagedSelect playlist-control", "", "", "", attributes) }}
+                                {% verbatim %}
+                                {{/eq}}
+                                {% endverbatim %}
+
+                                {% set title %}{% trans "Duration in loop" %}{% endset %}
+                                {% set helpText %}{% trans "Set how long this item should be shown each time it appears in the schedule. Leave blank to use the Media Duration set in the Library" %}{% endset %}
+                                {{ forms.number('layoutDuration', title, "", helpText, 'media-control no-full-screen-layout') }}
+
+                                {% set title %}{% trans "Resolution" %}{% endset %}
+                                {% set helpText %}{% trans "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media." %}{% endset %}
+                                {% set attributes = [
+                                    { name: "data-search-url", value: url_for("resolution.search") },
+                                    { name: "data-search-term", value: "resolution" },
+                                    { name: "data-id-property", value: "resolutionId" },
+                                    { name: "data-text-property", value: "resolution" },
+                                    { name: "data-trans-media-help-text", value: "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media."|trans },
+                                    { name: "data-trans-playlist-help-text", value: "Optionally select a Resolution to use for the selected Playlist. Leave blank to default to a 1080p Resolution"|trans },
+                                ] %}
+                                {{ forms.dropdown("resolutionId", "single", title, "", null, "resolutionId", "resolution", helpText, "pagedSelect media-playlist-control resolution-control no-full-screen-layout", "", "", "", attributes) }}
+
+                                {% set title %}{% trans "Background Colour" %}{% endset %}
+                                {% set helpText %}{% trans "Optionally set a colour to use as a background for if the item selected does not fill the entire screen" %}{% endset %}
+                                {{ forms.colorPicker("backgroundColor", title, '#000', helpText, 'media-playlist-control no-full-screen-layout') }}
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-primary" id="btnFullScreenLayoutConfirm">{% trans "Save" %}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
 {% endblock %}
 
 {% block javaScript %}
@@ -1147,7 +1253,7 @@
         // Select lists
         var dialog = 'body';
 
-        var $campaignSelect = $('#schedule-filter #campaignId');
+        var $campaignSelect = $('#schedule-filter #campaignIdFilter');
         $campaignSelect.select2({
           dropdownParent: $(dialog),
           ajax: {
@@ -1242,97 +1348,11 @@
             setTimeout(calendar.view(), 1000);
           });
 
-        var $displaySelect = $('#DisplayList', dialog);
-        $displaySelect.select2({
-          dropdownParent: $(dialog),
-          dropdownAutoWidth: true,
-          ajax: {
-            url: $displaySelect.data("searchUrl"),
-            dataType: "json",
-            data: function (params) {
-              var query = {
-                isDisplaySpecific: -1,
-                forSchedule: 1,
-                displayGroup: params.term,
-                start: 0,
-                length: 10,
-                columns: [
-                  {
-                    data: 'isDisplaySpecific'
-                  },
-                  {
-                    data: 'displayGroup'
-                  }
-                ],
-                order: [
-                  {
-                    column: 0,
-                    dir: 'asc'
-                  },
-                  {
-                    column: 1,
-                    dir: 'asc'
-                  }
-                ]
-              };
-              // Set the start parameter based on the page number
-              if (params.page != null) {
-                query.start = (params.page - 1) * 10;
-              }
-              return query;
-            },
-            processResults: function (data, params) {
-              var groups = [];
-              var displays = [];
-              $.each(data.data, function (index, element) {
-                if (element.isDisplaySpecific === 1) {
-                  displays.push({
-                    id: element.displayGroupId,
-                    text: element.displayGroup
-                  });
-                } else {
-                  groups.push({
-                    id: element.displayGroupId,
-                    text: element.displayGroup
-                  });
-                }
-              });
-              var page = params.page || 1;
-              page = (page > 1) ? page - 1 : page;
-              return {
-                results: [
-                  {
-                    text: $displaySelect.data('transGroups'),
-                    children: groups
-                  }, {
-                    text: $displaySelect.data('transDisplay'),
-                    children: displays
-                  }
-                ],
-                pagination: {
-                  more: (page * 10 < data.recordsTotal)
-                }
-              }
-            }
-          }
-        }).on('select2:unselecting', function () {
-          // Prevent the ajax request when we deselect an option ( change will still be called )
-          var opts = $(this).data('select2').options;
-          opts.set('disabled', true);
-
-          setTimeout(function () {
-            opts.set('disabled', false);
-          }, 100);
-        })
-          .on('change', function (e) {
-            // Refresh the calendar view
+        // Set up our show all selector control
+        $('#showAll, #eventTypeId, #recurring, #geoAware, #DisplayList, #DisplayGroupList', dialog)
+          .on('change', function () {
             setTimeout(calendar.view(), 1000);
           });
-
-        // Set up our show all selector control
-        $('#showAll, #eventTypeId, #recurring, #geoAware', dialog).on('change', function () {
-          setTimeout(calendar.view(), 1000);
-        });
       });
 
       const table = $('#schedule-grid').DataTable({

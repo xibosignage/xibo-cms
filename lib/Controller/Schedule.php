@@ -153,6 +153,7 @@ class Schedule extends Base
         }
 
         $displayGroups = [];
+        $displaySpecificDisplayGroups = [];
 
         // Boolean to check if the option show all was saved in session
         $displayGroupsShowAll = false;
@@ -169,7 +170,11 @@ class Schedule extends Base
                     $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
                     if ($this->getUser()->checkViewable($displayGroup)) {
-                        $displayGroups[] = $displayGroup;
+                        if ($displayGroup->isDisplaySpecific === 1) {
+                            $displaySpecificDisplayGroups[] = $displayGroup;
+                        } else {
+                            $displayGroups[] = $displayGroup;
+                        }
                     }
                 } catch (NotFoundException $e) {
                     $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
@@ -184,6 +189,7 @@ class Schedule extends Base
         $data = [
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
+            'displaySpecificDisplayGroups' => $displaySpecificDisplayGroups,
             'displayGroupsShowAll' => $displayGroupsShowAll,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
@@ -1311,6 +1317,8 @@ class Schedule extends Base
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
         if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
+            $schedule->setUnmatchedProperty('fullScreenCampaignId', $schedule->campaignId);
+            
             if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT) {
                 $schedule->setUnmatchedProperty(
                     'mediaId',
@@ -1645,7 +1653,9 @@ class Schedule extends Base
         }
 
         $schedule->eventTypeId = $sanitizedParams->getInt('eventTypeId');
-        $schedule->campaignId = $sanitizedParams->getInt('campaignId');
+        $schedule->campaignId = $this->isFullScreenSchedule($schedule->eventTypeId)
+            ? $sanitizedParams->getInt('fullScreenCampaignId')
+            : $sanitizedParams->getInt('campaignId');
         $schedule->commandId = $sanitizedParams->getInt('commandId');
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder',['default' => $schedule->displayOrder]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => $schedule->isPriority]);
@@ -2036,7 +2046,8 @@ class Schedule extends Base
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'mediaId' => (($from === 'Library') ? $id : null),
             'playlistId' => (($from === 'Playlist') ? $id : null),
-            'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
+            'help' => $this->getHelp()->link('Schedule', 'ScheduleNow'),
+            'readonlySelect' => !($from == 'DisplayGroup')
         ]);
 
         return $this->render($request, $response);

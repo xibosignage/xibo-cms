@@ -60,6 +60,10 @@ $(document).ready(function() {
         let activeTab = $(e.target).attr("href")
         if (activeTab === '#calendar-view') {
             $('#range').trigger('change');
+        } else {
+            if ($('#range').val() === 'agenda') {
+                $('#range').val('day').trigger('change')
+            }
         }
     });
 
@@ -117,6 +121,10 @@ $(document).ready(function() {
                 } else {
                     range = isPast ? range.replace('last', '') : range;
                     calendar.view(range);
+                }
+                // for agenda, switch to calendar tab.
+                if (range === 'agenda') {
+                    $('#calendar-tab').trigger('click')
                 }
             }
 
@@ -232,13 +240,14 @@ $(document).ready(function() {
             onBeforeEventsLoad: function (done) {
 
                 var calendarOptions = $("#CalendarContainer").data();
+                const $calendarErrorMessage = $('#calendar-error-message');
 
                 // Append display groups and layouts
                 var isShowAll = $('#showAll').is(':checked');
 
                 // Enable or disable the display list according to whether show all is selected
                 // we do this before we serialise because serialising a disabled list gives nothing
-                $('#DisplayList').prop('disabled', isShowAll);
+                $('#DisplayList, #DisplayGroupList').prop('disabled', isShowAll);
 
                 if (this.options.view !== 'agenda') {
                     $('.cal-event-agenda-filter, .xibo-agenda-calendar-controls, #btn-month-view').hide();
@@ -246,11 +255,13 @@ $(document).ready(function() {
                     $('.non-agenda-filter').find('input, select').prop('disabled', false)
 
                     // Serialise
-                    let displayGroups = $('#DisplayList').serialize();
-                    let displayLayouts = $('#campaignId').serialize();
+                    let displayGroups = $('select[name="displayGroupIds[]"').serialize();
+                    let displayLayouts = $('#campaignIdFilter').serialize();
                     let eventTypes = $('#eventTypeId').serialize();
                     let geoAware = $('#geoAware').serialize();
                     let recurring = $('#recurring').serialize();
+
+                    !displayGroups ? $calendarErrorMessage.show() : $calendarErrorMessage.hide()
 
                     var url = calendarOptions.eventSource;
 
@@ -342,7 +353,10 @@ $(document).ready(function() {
                     // Show time slider on agenda view and call the calendar view on slide stop event
                     $('.cal-event-agenda-filter, .xibo-agenda-calendar-controls, #btn-month-view').show();
                     $('#btn-agenda-view').hide();
-                    $('.non-agenda-filter').find('input, select').prop('disabled', true)
+                    $('.non-agenda-filter').find('input, select').prop('disabled', true);
+
+                    // agenda has it is own error conditions.
+                    $calendarErrorMessage.hide()
 
                     var $timePicker = $('#timePicker');
 
@@ -384,11 +398,10 @@ $(document).ready(function() {
                     var chooseAllDisplays = false;
 
                     if (!isShowAll) {
-
-                        $('#DisplayList').prop('disabled', false);
+                        $('#DisplayList, #DisplayGroupList').prop('disabled', false);
 
                         // Find selected display group and create a display group list used to create tabs
-                        $('#DisplayList option').each(function () {
+                        $('select[name="displayGroupIds[]"] option').each(function () {
                             var $self = $(this);
 
                             // If the all option is selected
@@ -470,7 +483,7 @@ $(document).ready(function() {
                             done();
 
                         calendar._render();
-                    } else if ($('#DisplayList').val() == null || Array.isArray($('#DisplayList').val()) && $('#DisplayList').val().length == 0) {
+                    } else if (displayGroupsList == null || Array.isArray(displayGroupsList) && displayGroupsList.length == 0) {
                         // 1 - if there are no displaygroups selected
                         events['errorMessage'] = 'display_not_selected';
 
@@ -686,7 +699,8 @@ var setupScheduleForm = function(dialog) {
     processScheduleFormElements($("#actionType", dialog));
 
     // Events on change
-    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId, #actionType", dialog).on("change", function() { processScheduleFormElements($(this)) });
+    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId, #actionType, #fullScreenCampaignId", dialog)
+      .on("change", function() { processScheduleFormElements($(this)) });
 
     // Handle the repeating monthly selector
     // Run when the tab changes
@@ -784,41 +798,72 @@ var beforeSubmitScheduleForm = function(form) {
     });
 
     $('[data-toggle="popover"]').popover();
+    form.submit();
+};
+
+/**
+ * Create or fetch a full screen layout
+ * for selected media or playlist
+ * accept callback function.
+ *
+ * @param {object} form
+ * @param {function} callBack
+ * @param {boolean} populateHiddenFields
+ */
+var fullscreenBeforeSubmit = function(form, callBack, populateHiddenFields = true) {
     const eventTypeId = form.find('#eventTypeId').val();
-    if (eventTypeId == 7 || eventTypeId == 8) {
-        let data = {
-            id: eventTypeId == 7 ? form.find('#mediaId').val() : form.find('#playlistId').val(),
-            type: eventTypeId == 7 ? 'media' : 'playlist',
-            layoutDuration: eventTypeId == 7 ? form.find('#layoutDuration').val() : null,
-            resolutionId: form.find('#resolutionId').select2('data').length > 0 ? form.find('#resolutionId').select2('data')[0].id : null,
-            backgroundColor: form.find('#backgroundColor').val()
-        }
 
-        // create or fetch Full screen Layout linked to this media/playlist
-        $.ajax({
-            type: 'POST',
-            url: form.data().fullScreenUrl,
-            cache: false,
-            dataType: 'json',
-            data: data,
-        })
-          .then(
-            (response) => {
-                if (!response.success) {
-                    SystemMessageInline(
-                      (response.message === '') ? translations.failure : response.message,
-                      form.closest('.modal'),
-                    );
-                }
-
-                form.find('#fullScreenCampaignId').val(response.data.campaignId);
-                form.submit();
-            }, (xhr) => {
-                SystemMessage(xhr.responseText, false);
-            })
-    } else {
-        form.submit();
+    let data = {
+        id: eventTypeId == 7 ? form.find('#mediaId').val() : form.find('#playlistId').val(),
+        type: eventTypeId == 7 ? 'media' : 'playlist',
+        layoutDuration: eventTypeId == 7 ? form.find('#layoutDuration').val() : null,
+        resolutionId: form.find('#resolutionId').select2('data').length > 0 ? form.find('#resolutionId').select2('data')[0].id : null,
+        backgroundColor: form.find('#backgroundColor').val()
     }
+
+    // create or fetch Full screen Layout linked to this media/playlist
+    $.ajax({
+        type: 'POST',
+        url: form.data().fullScreenUrl,
+        cache: false,
+        dataType: 'json',
+        data: data,
+    })
+      .then(
+        (response) => {
+            if (!response.success) {
+                SystemMessageInline(
+                  (response.message === '') ? translations.failure : response.message,
+                  form.closest('.modal'),
+                );
+            }
+
+            if (populateHiddenFields) {
+                // populate hidden fields
+                // trigger change on fullScreenCampaignId,
+                // to show the campaign preview
+                if (eventTypeId == 7) {
+                    const $fullScreenControl = $('#fullScreenControl_media');
+                    $fullScreenControl.text($fullScreenControl.data('hasLayout'));
+                    $('#media').val(form.find('#mediaId').select2('data')[0].text);
+                    $('#mediaId').val(form.find('#mediaId').select2('data')[0].id);
+                } else if (eventTypeId == 8) {
+                    const $fullScreenControl = $('#fullScreenControl_playlist')
+                    $fullScreenControl.text($fullScreenControl.data('hasLayout'));
+                    $('#playlist').val(form.find('#playlistId').select2('data')[0].text);
+                    $('#playlistId').val(form.find('#playlistId').select2('data')[0].id);
+                }
+            }
+
+            $('#fullScreenCampaignId').val(response.data.campaignId).trigger('change');
+
+            (typeof callBack === 'function') && callBack(form);
+
+            // close this modal, return to main schedule modal.
+            $('#full-screen-schedule-modal').modal('hide')
+        }, (xhr) => {
+            SystemMessage(xhr.responseText, false);
+        })
 };
 
 /**
@@ -963,8 +1008,6 @@ var processScheduleFormElements = function(el) {
             // Change the help text and label of the campaignId dropdown
             var $campaignSelect = el.closest("form").find("#campaignId");
             var $layoutControl = $(".layout-control");
-            var $resolutionControl = $('.resolution-control');
-            var $resolutionSelect = el.closest('form').find('#resolutionId');
             var searchIsLayoutSpecific = -1;
 
             if (fieldVal === "1" || fieldVal === "3" || fieldVal === "4") {
@@ -983,18 +1026,6 @@ var processScheduleFormElements = function(el) {
                 // Change Label and Help text when Campaign event type is selected
                 $layoutControl.children("label").text($campaignSelect.data("transCampaign"));
                 $layoutControl.children("div").children("small.form-text.text-muted").text($campaignSelect.data("transCampaignHelpText"));
-            }
-
-            if (fieldVal == 7) {
-                $resolutionControl
-                  .children('div')
-                  .children('small.form-text.text-muted')
-                  .text($resolutionSelect.data('transMediaHelpText'))
-            } else if (fieldVal == 8) {
-                $resolutionControl
-                  .children('div')
-                  .children('small.form-text.text-muted')
-                  .text($resolutionSelect.data('transPlaylistHelpText'))
             }
 
             // Set the search criteria
@@ -1039,6 +1070,7 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'campaignId':
+        case 'fullScreenCampaignId':
             console.log('Process: campaignId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
 
             // Update the preview button URL
@@ -1151,13 +1183,15 @@ var scheduleNowFormEvaluateDates = function(form) {
  * Call evaluate values and then submit schedule now form
  */
 
-var scheduleNowFormSubmit = function(form) {
-
-  // Evaluate dates
-  scheduleNowFormEvaluateDates(form);
-
-  // Submit the form
-  form.submit();
+const scheduleNowFormSubmit = function(form) {
+    // media or playlist, create/fetch full screen layout
+    // then submit schedule now form.
+    if ([7, 8].includes(parseInt($(form).find('#eventTypeId').val()))) {
+        fullscreenBeforeSubmit(form, beforeSubmitScheduleForm, false);
+    } else {
+        // everything else, just submit the form
+        beforeSubmitScheduleForm(form)
+    }
 };
 
 /**

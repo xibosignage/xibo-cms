@@ -1222,7 +1222,7 @@ if(!String.prototype.formatNum) {
 			self.view(view);
 			$('#range').val(view)
 		});
-		$('.cal-cell').on('click', function() {
+		$('.cal-cell').dblclick(function() {
 			var view = $('[data-cal-date]', this).data('cal-view');
 			self.options.day = $('[data-cal-date]', this).data('cal-date');
 			// Add event to the picker to update the calendar
@@ -1348,6 +1348,8 @@ if(!String.prototype.formatNum) {
 				downbox.hide();
 			})
 			.on('click', function(event) {
+				self.options.day = $('[data-cal-date]', this).data('cal-date');
+				updateDatePicker($('#dateInput'), self.options.day, jsDateOnlyFormat);
 				if($('.events-list', this).length == 0) {
 					return;
 				}

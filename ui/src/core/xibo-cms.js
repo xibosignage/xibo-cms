@@ -1248,6 +1248,153 @@ function XiboInitialise(scope, options) {
         }, 200);
     });
 
+    $(scope + ' #fullScreenCampaignId').each(function() {
+        let $form = $(this).closest('form');
+        let eventTypeId = parseInt($form.find('#eventTypeId').val());
+        let mediaId = $form.find('#mediaId').val();
+        let playlistId = $form.find('#playlistId').val();
+        let dataObj = {};
+        let url;
+
+        if (mediaId !== null && mediaId !== undefined && mediaId !== '') {
+            dataObj = {
+                mediaId: mediaId,
+            }
+            url = $form.data().libraryGetUrl;
+        } else if (playlistId != null && playlistId != undefined && playlistId !== '') {
+            dataObj = {
+                playlistId: playlistId,
+            }
+            url = $form.data().playlistGetUrl;
+        }
+
+        // get selected media or playlist details
+        if (url != null && [7, 8].includes(eventTypeId)) {
+            $.ajax({
+                type: 'GET',
+                url: url,
+                cache: false,
+                dataType: 'json',
+                data: dataObj,
+            })
+              .then(
+                (response) => {
+                    if (!response.success) {
+                        SystemMessageInline(
+                          (response.message === '') ? translations.failure : response.message,
+                          $form.closest('.modal'),
+                        );
+                    }
+
+                    // at the moment we only add media or playlist name to readonly input
+                    // this might be extended in the future.
+                    if (eventTypeId == 7) {
+                        $('#media').val(response.data[0].name)
+                    } else if (eventTypeId == 8) {
+                        $('#playlist').val(response.data[0].name)
+                    }
+                }, (xhr) => {
+                    SystemMessage(xhr.responseText, false);
+                })
+        }
+    })
+
+    $(scope + ' .full-screen-layout-form').click(function() {
+        if ($('#full-screen-schedule-modal').length != 0) {
+            $('#full-screen-schedule-modal').remove();
+        }
+
+        let eventTypeId = $(this).closest('form').find('#eventTypeId').val()
+        let mediaId = $(this).closest('form').find('#mediaId').val();
+        let playlistId = $(this).closest('form').find('#playlistId').val();
+        if ($('#full-screen-schedule-modal').length === 0) {
+            // compile full screen schedule modal template
+            const fullScreenSchedule = Handlebars.compile($('#full-screen-schedule-template').html());
+            const config = {
+                type: eventTypeId == 7 ? 'Media' : 'Playlist',
+                eventTypeId : eventTypeId,
+            }
+
+            $('body').append(fullScreenSchedule(config));
+            const $modal = $('#full-screen-schedule-modal');
+
+            $modal
+              .on('show.bs.modal', function() {
+                  $('.no-full-screen-layout').addClass('d-none')
+              })
+              .on('shown.bs.modal', function() {
+                  const $form = $modal.find('form')
+                  // set initial values if we have any
+                  $form.find('.pagedSelect select.form-control').each(function() {
+                      if ($(this).attr('id') == 'mediaId' && mediaId != null) {
+                          $(this).data('initialValue', mediaId)
+                      } else if ($(this).attr('id') == 'playlistId' && playlistId != null) {
+                          $(this).data('initialValue', playlistId)
+                      }
+
+                      // init select2
+                      makePagedSelect($(this), '#' + $form.attr('id'));
+                  });
+
+                  // init color picker
+                  $form.find('.colorpicker-input').each(function() {
+                      $(this).colorpicker();
+                  });
+
+                  // change input visibility depending on what we selected for media/playlist
+                  $('#mediaId, #playlistId').on('select2:select', function(event) {
+                      let hasFullScreenLayout = false;
+                      if (event.params.data.data !== undefined) {
+                          hasFullScreenLayout = event.params.data.data[0].hasFullScreenLayout;
+                      } else if (event.params.data.hasFullScreenLayout !== undefined) {
+                          hasFullScreenLayout = event.params.data.hasFullScreenLayout;
+                      }
+
+                      if (hasFullScreenLayout) {
+                          $('.no-full-screen-layout').addClass('d-none');
+                      } else {
+                          if ($(this).attr('id') === 'mediaId') {
+                              $('.no-full-screen-layout').removeClass('d-none');
+                          } else {
+                              $('.no-full-screen-layout.media-playlist-control').removeClass('d-none')
+                          }
+                      }
+                  })
+
+                  // resolution helpText changes depending
+                  // if we are on playlist or media event
+                  const $resolutionControl = $('.resolution-control');
+                  const $resolutionSelect = $form.find('#resolutionId');
+                  if (eventTypeId == 7) {
+                      $resolutionControl
+                        .children('div')
+                        .children('small.form-text.text-muted')
+                        .text($resolutionSelect.data('transMediaHelpText'))
+                  } else if (eventTypeId == 8) {
+                      $resolutionControl
+                        .children('div')
+                        .children('small.form-text.text-muted')
+                        .text($resolutionSelect.data('transPlaylistHelpText'))
+                  }
+
+                  // confirmation button was pressed
+                  // create or fetch the Layout for selected media or playllist
+                  // this will populate fullScreenCampaignId hidden input
+                  // and close this modal once everything is done
+                  $('#btnFullScreenLayoutConfirm').on('click', function(e) {
+                      e.preventDefault();
+                      fullscreenBeforeSubmit($form)
+                  })
+              })
+              .on('hidden.bs.modal', function() {
+                  // Fix for 2nd/overlay modal
+                  $('.modal:visible').length && $(document.body).addClass('modal-open');
+
+                  $(this).data('bs.modal', null);
+              });
+        }
+    })
+
     // Initalise remaining form fields
     if (forms && typeof forms.initFields === 'function') {
         // Initialise fields, with scope of body if we don't have a specific scope
