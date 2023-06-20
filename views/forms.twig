@@ -191,11 +191,11 @@
     </div>
 {% endmacro %}
 
-{% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups, optionImageValue, optionFilter) %}
+{% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups, optionImageValue, optionFilter, readonly) %}
     <div class="form-group row {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
+            <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }} {% if readonly %}readonly{% endif %}
                 {% if dataAttributes|length > 0 %}
                     {% for attribute in dataAttributes %}
                         {{ attribute.name }}="{{ attribute.value }}"
@@ -363,6 +363,26 @@
                         <option value="OR" {% if logicalOperatorValue != "AND" %}selected{% endif %}>OR</option>
                         <option value="AND" {% if logicalOperatorValue == "AND" %}selected{% endif %}>AND</option>
                 </select>
+            </div>
+            <small class="form-text text-muted">{{ helpText }}</small>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro inputFullScreenSchedule(name, title, value, helpText, groupClass, idValue, validation, accessKey) %}
+    <div class="form-group row input-full-screen-layout {{ groupClass }}">
+        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="col-sm-10">
+            <div class="input-group">
+                <input class="form-control" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} readonly />
+                <input type="hidden" id="{{ name }}Id" value="{{ idValue }}"/>
+                <div class="input-group-append input-group-addon">
+                    <button class="btn btn-outline-secondary full-screen-layout-form" type="button"
+                            data-toggle="modal" data-target="#full-screen-schedule-modal" id="fullScreenControl_{{ name }}"
+                            data-no-layout="{% trans "Choose" %}" data-has-layout="{% trans "Change" %}">
+                        {% if idValue %}{% trans "Change" %}{% else %}{% trans "Choose" %}{% endif %}
+                    </button>
+                </div>
             </div>
             <small class="form-text text-muted">{{ helpText }}</small>
         </div>
