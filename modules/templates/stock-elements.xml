@@ -1,0 +1,78 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>stock_name</id>
+        <extends override="text" with="data.Name">text</extends>
+        <title>Name</title>
+        <type>element</type>
+        <dataType>stock</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>stock-name</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="stock-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-name.png" />
+        </assets>
+    </template>
+    <template>
+        <id>stock_symbol</id>
+        <extends override="text" with="data.SymbolTrimmed">text</extends>
+        <title>Symbol</title>
+        <type>element</type>
+        <dataType>stock</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>stock-symbol</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="stock-symbol" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-symbol.png" />
+        </assets>
+    </template>
+    <template>
+        <id>stock_lastTradePrice</id>
+        <extends override="text" with="data.LastTradePriceOnly">text</extends>
+        <title>Last Trade Price</title>
+        <type>element</type>
+        <dataType>stock</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>stock-last-trade-price</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="stock-last-trade-price" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
+        </assets>
+    </template>
+    <template>
+        <id>stock_changePercentage</id>
+        <extends override="text" with="data.ChangePercentage">text</extends>
+        <title>Change Percentage</title>
+        <type>element</type>
+        <dataType>stock</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>stock-change-percentage</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="stock-change-percentage" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
+        </assets>
+    </template>
+</templates>

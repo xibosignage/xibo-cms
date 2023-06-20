@@ -1137,6 +1137,7 @@ class Widget extends Base
         return $response->withJson([
             'data' => $data,
             'meta' => $dataProvider->getMeta(),
+            'isPreview' => $dataProvider->isPreview(),
         ]);
     }
 

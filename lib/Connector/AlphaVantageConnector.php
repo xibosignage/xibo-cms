@@ -134,7 +134,7 @@ class AlphaVantageConnector implements ConnectorInterface
         }
 
         // We handle the stocks widget and the property with id="items"
-        if ($widget->type === 'stocks' && $event->getPropertyId() === 'items') {
+        if (($widget->type === 'stocks' || $widget->type === 'element') && $event->getPropertyId() === 'items') {
             if (empty($this->getSetting('apiKey'))) {
                 $this->getLogger()->debug('onWidgetEditOption: AlphaVantage API not configured.');
                 return;
