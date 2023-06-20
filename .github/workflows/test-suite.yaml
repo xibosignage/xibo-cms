@@ -56,8 +56,8 @@ jobs:
       - name: Run Code Sniffer
         run: |
           if [[ -s "files.txt" ]]; then
-            docker exec --user www-data -v $(pwd)/files.txt:/var/www/cms/files.txt -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/phpcs --standard=vendor/xibosignage/support/src/Standards/xibo_ruleset.xml --report=json --file-list=files.txt > phpcs.json || true"
-            docker exec --user www-data -v $(pwd)/diff.txt:/var/www/cms/diff.txt -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/diffFilter --phpcs diff.txt phpcs.json"
+            docker run --user www-data -v $(pwd)/files.txt:/var/www/cms/files.txt -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/phpcs --standard=vendor/xibosignage/support/src/Standards/xibo_ruleset.xml --report=json --file-list=files.txt > phpcs.json || true"
+            docker run --user www-data -v $(pwd)/diff.txt:/var/www/cms/diff.txt -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/diffFilter --phpcs diff.txt phpcs.json"
           fi
       - name: Run Cypress
         run: |
