@@ -14,11 +14,6 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Get Diff
-        run: |
-          git fetch origin ${GITHUB_BASE_REF}
-          git diff origin/${GITHUB_BASE_REF} > diff.txt
-          git diff origin/${GITHUB_BASE_REF} --name-only --diff-filter=ACMR -- "*.php" > files.txt
       - name: Configure Build X
         uses: docker/setup-buildx-action@v1
       - name: Build
@@ -53,11 +48,16 @@ jobs:
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO task (name, class, status, isActive, configFile, options, schedule) VALUES ('Seed Database', '\\\\Xibo\\\\XTR\\\\SeedDatabaseTask', 2, 1, '/tasks/seed-database.task', '{}', '* * * * * *')"
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 20"
           sleep 5
+      - name: Get Diff
+        run: |
+          git fetch origin ${GITHUB_BASE_REF}
+          git diff origin/${GITHUB_BASE_REF} > diff.txt
+          git diff origin/${GITHUB_BASE_REF} --name-only --diff-filter=ACMR -- "*.php" > files.txt
       - name: Run Code Sniffer
         run: |
           if [[ -s "files.txt" ]]; then
-            docker exec --user www-data -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/phpcs --standard=vendor/xibosignage/support/src/Standards/xibo_ruleset.xml --report=json --file-list=files.txt > phpcs.json || true"
-            docker exec --user www-data -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/diffFilter --phpcs diff.txt phpcs.json"
+            docker exec --user www-data -v $(pwd)/files.txt:/var/www/cms/files.txt -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/phpcs --standard=vendor/xibosignage/support/src/Standards/xibo_ruleset.xml --report=json --file-list=files.txt > phpcs.json || true"
+            docker exec --user www-data -v $(pwd)/diff.txt:/var/www/cms/diff.txt -t cms-web /bin/bash -c "cd  /var/www/cms/; vendor/bin/diffFilter --phpcs diff.txt phpcs.json"
           fi
       - name: Run Cypress
         run: |
