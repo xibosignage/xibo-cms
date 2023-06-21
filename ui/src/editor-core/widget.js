@@ -919,6 +919,7 @@ Widget.prototype.updateElementMap = function(element) {
     const elementSubType = el.id;
     const elementSlot = el.slot;
     const elementId = el.elementId;
+    const elementGroupId = el.groupId;
 
     // if we don't have the type level, create it
     if (!self.elementTypeMap[elementType]) {
@@ -935,10 +936,20 @@ Widget.prototype.updateElementMap = function(element) {
     // Check first available slot
     const numberOfSlots = subTypeArray.length;
     const firstSlot =
-      subTypeArray.findIndex((el) => (el == [] || el == undefined));
-
+      subTypeArray.findIndex(function(el) {
+        // If slot is empty, or we have an element of the same group
+        return (
+          el == [] ||
+          el == undefined ||
+          el[0].elGroup == elementGroupId);
+      });
 
     let newSlot = 0;
+
+    const elementObjectToAdd = {
+      elId: elementId,
+      elGroup: elementGroupId,
+    };
 
     if (
       elementSlot
@@ -946,11 +957,15 @@ Widget.prototype.updateElementMap = function(element) {
       // Slot set, add to position
       if (!subTypeArray[elementSlot]) {
         subTypeArray[elementSlot] = [];
-        subTypeArray[elementSlot].push(elementId);
+        subTypeArray[elementSlot].push(elementObjectToAdd);
       } else {
         // Add to array if it's not added already
-        if (subTypeArray[elementSlot].indexOf(elementId) === -1) {
-          subTypeArray[elementSlot].push(elementId);
+        const findElement = subTypeArray[elementSlot].findIndex(function(el) {
+          return (el.elId == elementId);
+        });
+
+        if (findElement === -1) {
+          subTypeArray[elementSlot].push(elementObjectToAdd);
         }
       }
       newSlot = elementSlot;
@@ -958,15 +973,19 @@ Widget.prototype.updateElementMap = function(element) {
     } else if (firstSlot == -1 && numberOfSlots == 0) {
       // If we have no slots, add to the first one
       newSlot = 0;
-      subTypeArray[0] = [elementId];
+      subTypeArray[0] = [elementObjectToAdd];
     } else if (firstSlot == -1) {
       // If we have slots, but don't have an empty space, add to the next slot
       newSlot = subTypeArray.length;
-      subTypeArray.push([elementId]);
+      subTypeArray.push([elementObjectToAdd]);
     } else {
-      // If we have slots and an empty slot, add to it
+      // If we have slots and an empty slot ( or of the same group ), add to it
       newSlot = firstSlot;
-      subTypeArray[firstSlot] = [elementId];
+      if (!subTypeArray[firstSlot]) {
+        subTypeArray[firstSlot] = [];
+      }
+
+      subTypeArray[firstSlot].push(elementObjectToAdd);
     }
 
     // Return new element slot

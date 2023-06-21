@@ -214,6 +214,10 @@
                 <title>Font Size</title>
                 <default>40</default>
             </property>
+            <property id="lineHeight" type="number">
+                <title>Line Height</title>
+                <default>1.2</default>
+            </property>
             <property id="bold" type="checkbox">
                 <title>Bold</title>
                 <helpText>Should the text be bold?</helpText>
@@ -305,6 +309,7 @@
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if fontColor}}color: {{fontColor}};{{/if}}
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
@@ -316,13 +321,13 @@
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
-<div class="date" data-date="{{date}}">{{date}}</div>
+<div class="date" data-date="{{date}}" style="height: 100%;">{{date}}</div>
 </div>
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
 // Match all affected elements and get date div value
-$('.date').each(function(_idx, dateEl){
+$(target).find('.date').each(function(_idx, dateEl){
     let dateValue = $(dateEl).data('date');
 
     // Format the date with the dateFormat property
@@ -414,9 +419,10 @@ $('.date').each(function(_idx, dateEl){
         <stencil>
             <hbs><![CDATA[
 <div class="img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
-    {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
-   <img src="{{{url}}}" style="width:100%; height: 100%; object-fit: {{objectFit}}; object-position: {{alignId}} {{valignId}}; position: absolute; top: 0; left: 0;"/>
+    {{#if url}}
+        <img src="{{url}}" style="width:100%; height: 100%; object-fit: {{objectFit}}; object-position: {{alignId}} {{valignId}}; position: absolute; top: 0; left: 0;"/>
+    {{/if}}
 </div>
             ]]></hbs>
         </stencil>
@@ -710,7 +716,7 @@ $('.date').each(function(_idx, dateEl){
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="circle" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <symbol id="circle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
             <circle
                 {{#if outline }}
                     r="calc(50 - calc({{outlineWidth}} / 4))"
@@ -732,7 +738,7 @@ $('.date').each(function(_idx, dateEl){
             ></circle>
         </symbol>
     </defs>
-    <use href="#circle" width="100%" height="100%" />
+    <use href="#circle_{{uniqueID}}" width="100%" height="100%" />
 </svg></div>]]></hbs>
         </stencil>
         <assets>
@@ -787,7 +793,7 @@ $('.date').each(function(_idx, dateEl){
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="triangle" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <symbol id="triangle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
             <polygon points="1,99 50,1 99,99"
                 {{#if backgroundColor }}
                     fill="{{backgroundColor}}"
@@ -803,7 +809,7 @@ $('.date').each(function(_idx, dateEl){
             ></polygon>
         </symbol>
     </defs>
-    <use href="#triangle" width="100%" height="100%" />
+    <use href="#triangle_{{uniqueID}}" width="100%" height="100%" />
 </svg></div>]]></hbs>
         </stencil>
         <assets>
@@ -858,7 +864,7 @@ $('.date').each(function(_idx, dateEl){
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="pentagon" viewBox="0 0 100 93" preserveAspectRatio="xMidYMid meet">
+        <symbol id="pentagon_{{uniqueID}}" viewBox="0 0 100 93" preserveAspectRatio="xMidYMid meet">
             <polygon points="50,1 99,36 83.33,93 16.67,93 1,36"
                 {{#if backgroundColor }}
                     fill="{{backgroundColor}}"
@@ -873,7 +879,7 @@ $('.date').each(function(_idx, dateEl){
             />
         </symbol>
     </defs>
-    <use href="#pentagon" width="100%" height="100%"></use>
+    <use href="#pentagon_{{uniqueID}}" width="100%" height="100%"></use>
 </svg></div>]]></hbs>
         </stencil>
 
@@ -929,7 +935,7 @@ $('.date').each(function(_idx, dateEl){
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="hexagon" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <symbol id="hexagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
             <polygon points="50,1 99,24.5 99,73.5 50,99 1,73.5 1,24.5"
                 {{#if backgroundColor }}
                     fill="{{backgroundColor}}"
@@ -944,7 +950,7 @@ $('.date').each(function(_idx, dateEl){
             />
         </symbol>
     </defs>
-    <use href="#hexagon" width="100%" height="100%"></use>
+    <use href="#hexagon_{{uniqueID}}" width="100%" height="100%"></use>
 </svg></div>]]></hbs>
         </stencil>
         <assets>

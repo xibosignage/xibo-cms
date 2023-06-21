@@ -86,7 +86,425 @@
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
         <assets>
-            <asset id="event-location" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
+            <asset id="event-location" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-location.png" />
+        </assets>
+    </template>
+    <template>
+        <id>calendar_event_detailed</id>
+        <type>element-group</type>
+        <dataType>event</dataType>
+        <title>Calendar Detailed Event</title>
+        <thumbnail>calendar-event-detailed</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>300</startWidth>
+            <startHeight>300</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>300</width>
+                    <height>300</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(74,74,74,0.66)</property>
+                        <property id="outline">0</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">12</property>
+                    </defaultProperties>
+                </element>
+                <element id="line">
+                    <title>Separator</title>
+                    <top>90</top>
+                    <left>60</left>
+                    <width>230</width>
+                    <height>30</height>
+                    <layer>0</layer>
+                    <defaultProperties>
+                        <property id="lineColor">#4a4a4a</property>
+                        <property id="lineWidth">7</property>
+                        <property id="lineStyle">dotted</property>
+                    </defaultProperties>
+                </element>
+                <element id="circle">
+                    <title>Day background</title>
+                    <top>10</top>
+                    <left>10</left>
+                    <width>110</width>
+                    <height>110</height>
+                    <layer>1</layer>
+                    <defaultProperties>
+                        <property id="backgroundColor">#4a4a4a</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Day of the month</title>
+                    <top>25</top>
+                    <left>25</left>
+                    <width>80</width>
+                    <height>80</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="dateFormat">D</property>
+                        <property id="fontFamily">linear regular</property>
+                        <property id="fontSize">80</property>
+                        <property id="lineHeight">1.25</property>
+                        <property id="bold">1</property>
+                        <property id="fontColor">#6fedf8</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Day of the week</title>
+                    <top>10</top>
+                    <left>120</left>
+                    <width>170</width>
+                    <height>45</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="dateFormat">dddd</property>
+                        <property id="fontFamily">railway regular</property>
+                        <property id="fontSize">30</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Hour</title>
+                    <top>60</top>
+                    <left>120</left>
+                    <width>170</width>
+                    <height>30</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="dateFormat">HH:mm</property>
+                        <property id="fontFamily">railway regular</property>
+                        <property id="fontSize">24</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_summary">
+                    <title>Summary</title>
+                    <top>130</top>
+                    <left>10</left>
+                    <width>280</width>
+                    <height>35</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">24</property>
+                        <property id="fontColor">#6fedf8</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-end</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_description">
+                    <title>Description</title>
+                    <top>165</top>
+                    <left>10</left>
+                    <width>280</width>
+                    <height>125</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontSize">22</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-start</property>
+                        <property id="showOverflow">0</property>
+                        <property id="justify">1</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="calendar-event-detailed" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/calendar-event-detailed.png" />
+        </assets>
+    </template>
+    <template>
+        <id>calendar_event_simple</id>
+        <type>element-group</type>
+        <dataType>event</dataType>
+        <title>Calendar Simple Event</title>
+        <thumbnail>calendar-event-simple</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>400</startWidth>
+            <startHeight>160</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>400</width>
+                    <height>160</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(234,234,234,0.66)</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="rectangle">
+                    <title>Header Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>400</width>
+                    <height>55</height>
+                    <layer>1</layer>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(66,66,66,0.64)</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Day of the week</title>
+                    <top>5</top>
+                    <left>5</left>
+                    <width>390</width>
+                    <height>45</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="dateFormat">ddd Do</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">32</property>
+                        <property id="fontColor">#ffffff</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                        <property id="lineHeight">1.5</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_summary">
+                    <title>Summary</title>
+                    <top>55</top>
+                    <left>5</left>
+                    <width>390</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontSize">24</property>
+                        <property id="fontColor">#2f5c7d</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                        <property id="lineHeight">1.5</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Hour</title>
+                    <top>95</top>
+                    <left>5</left>
+                    <width>390</width>
+                    <height>35</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="dateFormat">dddd Do @ HH:mm</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontSize">18</property>
+                        <property id="fontColor">#535353</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                        <property id="lineHeight">1.5</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_location">
+                    <title>Location</title>
+                    <top>130</top>
+                    <left>5</left>
+                    <width>390</width>
+                    <height>25</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontSize">16</property>
+                        <property id="fontColor">#828282</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-start</property>
+                        <property id="showOverflow">0</property>
+                        <property id="justify">1</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="calendar-event-simple" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/calendar-event-simple.png" />
+        </assets>
+    </template>
+    <template>
+        <id>calendar_event_row</id>
+        <type>element-group</type>
+        <dataType>event</dataType>
+        <title>Calendar Event Row</title>
+        <thumbnail>calendar-event-row</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>600</startWidth>
+            <startHeight>100</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>600</width>
+                    <height>100</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(25,25,25,0.7)</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">12</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="rectangle">
+                    <title>Separator</title>
+                    <top>0</top>
+                    <left>200</left>
+                    <width>10</width>
+                    <height>100</height>
+                    <layer>1</layer>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(201,84,59,0.89)</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Day</title>
+                    <top>10</top>
+                    <left>10</left>
+                    <width>180</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="dateFormat">D MMMM</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">30</property>
+                        <property id="fontColor">#e9e9e9</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Week day</title>
+                    <top>50</top>
+                    <left>10</left>
+                    <width>180</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="dateFormat">ddd</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">26</property>
+                        <property id="fontColor">#cacaca</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_summary">
+                    <title>Summary</title>
+                    <top>10</top>
+                    <left>220</left>
+                    <width>380</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="dateFormat">D MMMM</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">30</property>
+                        <property id="fontColor">#e9e9e9</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_startDate">
+                    <title>Start Date</title>
+                    <top>50</top>
+                    <left>220</left>
+                    <width>60</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="dateFormat">HH:mm</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">20</property>
+                        <property id="fontColor">#d18170</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                        <property id="lineHeight">2</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_endDate">
+                    <title>End Date</title>
+                    <top>50</top>
+                    <left>285</left>
+                    <width>65</width>
+                    <height>40</height>
+                    <rotation>0</rotation>
+                    <layer>2</layer>
+                    <defaultProperties>
+                        <property id="dateFormat">- HH:mm</property>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">20</property>
+                        <property id="fontColor">#d18170</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                        <property id="lineHeight">2</property>
+                    </defaultProperties>
+                </element>
+                <element id="event_location">
+                    <title>Location</title>
+                    <top>50</top>
+                    <left>360</left>
+                    <width>230</width>
+                    <height>40</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontSize">18</property>
+                        <property id="fontColor">#bcbcbc</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-start</property>
+                        <property id="showOverflow">0</property>
+                        <property id="lineHeight">2</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="calendar-event-row" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/calendar-event-row.png" />
         </assets>
     </template>
 </templates>

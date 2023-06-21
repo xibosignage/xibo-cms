@@ -75,6 +75,19 @@
         </assets>
     </template>
     <template>
+        <id>post_photo</id>
+        <extends override="url" with="data.photo">global-image</extends>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <title>Post Photo</title>
+        <thumbnail>social-media-post-photo</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="social-media-post-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-photo.png" />
+        </assets>
+    </template>
+    <template>
         <id>post_horizontal</id>
         <type>element-group</type>
         <dataType>social-media</dataType>
@@ -86,6 +99,7 @@
             <startHeight>200</startHeight>
             <elements>
                 <element id="rectangle">
+                    <title>Background</title>
                     <top>0</top>
                     <left>0</left>
                     <layer>0</layer>
@@ -100,6 +114,7 @@
                     </defaultProperties>
                 </element>
                 <element id="profile_photo">
+                    <title>Profile Photo</title>
                     <top>20</top>
                     <left>20</left>
                     <width>160</width>
@@ -108,6 +123,7 @@
                     <layer>1</layer>
                 </element>
                 <element id="social_media_username">
+                    <title>Username</title>
                     <top>20</top>
                     <left>190</left>
                     <layer>1</layer>
@@ -120,11 +136,12 @@
                         <property id="fontSize">24</property>
                         <property id="fontColor">#3c3ad3</property>
                         <property id="horizontalAlign">flex-start</property>
-                        <property id="verticalAlign">center</property>
+                        <property id="verticalAlign">flex-start</property>
                         <property id="showOverflow">0</property>
                     </defaultProperties>
                 </element>
                 <element id="social_media_date">
+                    <title>Date</title>
                     <top>20</top>
                     <left>590</left>
                     <layer>1</layer>
@@ -134,14 +151,14 @@
                     <defaultProperties>
                         <property id="dateFormat">HH:mm - DD/MM/YYYY</property>
                         <property id="fontFamily">aileron regular</property>
-                        <property id="bold">1</property>
                         <property id="fontSize">20</property>
                         <property id="fontColor">#3c3ad3</property>
                         <property id="horizontalAlign">flex-end</property>
-                        <property id="verticalAlign">center</property>
+                        <property id="verticalAlign">flex-start</property>
                     </defaultProperties>
                 </element>
                 <element id="social_media_description">
+                    <title>Description</title>
                     <top>60</top>
                     <left>190</left>
                     <layer>1</layer>
@@ -161,6 +178,188 @@
         </stencil>
         <assets>
             <asset id="social-media-post-horizontal" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-horizontal.png" />
+        </assets>
+    </template>
+    <template>
+        <id>post_vintage_photo</id>
+        <type>element-group</type>
+        <dataType>social-media</dataType>
+        <title>Vintage Photo</title>
+        <thumbnail>social-media-post-vintage-photo</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>300</startWidth>
+            <startHeight>350</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>300</width>
+                    <height>350</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#f9f9f9</property>
+                        <property id="outlineColor">#333</property>
+                        <property id="outlineWidth">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="rectangle">
+                    <title>Photo area</title>
+                    <top>20</top>
+                    <left>20</left>
+                    <layer>1</layer>
+                    <width>260</width>
+                    <height>260</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#333</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="post_photo">
+                    <title>Post Photo</title>
+                    <top>20</top>
+                    <left>20</left>
+                    <layer>2</layer>
+                    <width>260</width>
+                    <height>260</height>
+                </element>
+                <element id="social_media_username">
+                    <title>Username</title>
+                    <top>280</top>
+                    <left>20</left>
+                    <width>260</width>
+                    <height>35</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontFamily">linear regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">18</property>
+                        <property id="fontColor">#96614a</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="social_media_date">
+                    <title>Date</title>
+                    <top>315</top>
+                    <left>20</left>
+                    <width>260</width>
+                    <height>30</height>
+                    <layer>2</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="dateFormat">MMM D, YYYY,  HH:mm</property>
+                        <property id="fontFamily">railway regular</property>
+                        <property id="fontSize">16</property>
+                        <property id="fontColor">#626262</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">flex-end</property>
+                        <property id="lineHeight">2.5</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="social-media-post-vintage-photo" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-vintage-photo.png" />
+        </assets>
+    </template>
+    <template>
+        <id>post_dark</id>
+        <type>element-group</type>
+        <dataType>social-media</dataType>
+        <title>Post - Dark</title>
+        <thumbnail>social-media-post-dark</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>440</startWidth>
+            <startHeight>250</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>440</width>
+                    <height>250</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(0,0,0,0.60)</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="profile_photo">
+                    <title>Profile Photo</title>
+                    <top>20</top>
+                    <left>20</left>
+                    <width>80</width>
+                    <height>80</height>
+                    <rotation>0</rotation>
+                    <layer>1</layer>
+                    <defaultProperties>
+                        <property id="objectFit">fill</property>
+                        <property id="roundBorder">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="social_media_username">
+                    <title>Username</title>
+                    <top>25</top>
+                    <left>110</left>
+                    <width>300</width>
+                    <height>30</height>
+                    <layer>1</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontFamily">linear regular</property>
+                        <property id="bold">1</property>
+                        <property id="fontSize">22</property>
+                        <property id="fontColor">#ffffff</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-start</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="social_media_date">
+                    <title>Date</title>
+                    <top>55</top>
+                    <left>110</left>
+                    <width>300</width>
+                    <height>30</height>
+                    <layer>1</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="dateFormat">MMM D,  HH:mm</property>
+                        <property id="fontFamily">linear regular</property>
+                        <property id="fontSize">20</property>
+                        <property id="fontColor">#aeaeae</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-start</property>
+                    </defaultProperties>
+                </element>
+                <element id="social_media_description">
+                    <title>Description</title>
+                    <top>105</top>
+                    <left>20</left>
+                    <width>400</width>
+                    <height>125</height>
+                    <layer>1</layer>
+                    <rotation>0</rotation>
+                    <defaultProperties>
+                        <property id="fontFamily">linear regular</property>
+                        <property id="fontSize">20</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">flex-start</property>
+                        <property id="showOverflow">0</property>
+                        <property id="justify">1</property>
+                        <property id="lineHeight">1</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="social-media-post-dark" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-dark.png" />
         </assets>
     </template>
 </templates>
