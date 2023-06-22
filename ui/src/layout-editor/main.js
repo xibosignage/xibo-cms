@@ -2383,7 +2383,13 @@ lD.openPlaylistEditor = function(playlistId, region) {
       lD.editorContainer.find('.properties-panel-container').addClass('opened');
 
       // Reload data
-      lD.reloadData(lD.layout, true);
+      lD.reloadData(
+        lD.layout,
+        true,
+        false,
+        null,
+        true,
+      );
     });
 };
 
