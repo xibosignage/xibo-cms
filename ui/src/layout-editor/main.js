@@ -1981,6 +1981,7 @@ lD.addModuleToPlaylist = function(
           type: 'widget',
           parentType: 'region',
           widgetRegion: 'region_' + regionId,
+          isInDrawer: drawerWidget,
         },
       );
 
@@ -2229,16 +2230,27 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
  * Call layout status
  */
 lD.checkLayoutStatus = function() {
+  const self = this;
+
+  // If there was still a status request
+  // don't make another one
+  if (this.checkStatusRequest != undefined) {
+    return;
+  }
+
   const linkToAPI = urlsForApi.layout.status;
   let requestPath = linkToAPI.url;
 
   // replace id if necessary/exists
   requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
-  $.ajax({
+  this.checkStatusRequest = $.ajax({
     url: requestPath,
     type: linkToAPI.type,
   }).done(function(res) {
+    // Clear request var after response
+    self.checkStatusRequest = undefined;
+
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
@@ -2284,8 +2296,13 @@ lD.checkLayoutStatus = function() {
       }
     }
   }).fail(function(jqXHR, textStatus, errorThrown) {
+    // Clear request var after response
+    self.checkStatusRequest = undefined;
+
     // Output error to console
-    console.error(jqXHR, textStatus, errorThrown);
+    if (textStatus != 'requestAborted') {
+      console.error(jqXHR, textStatus, errorThrown);
+    }
   });
 };
 
@@ -2366,7 +2383,13 @@ lD.openPlaylistEditor = function(playlistId, region) {
       lD.editorContainer.find('.properties-panel-container').addClass('opened');
 
       // Reload data
-      lD.reloadData(lD.layout, true);
+      lD.reloadData(
+        lD.layout,
+        true,
+        false,
+        null,
+        true,
+      );
     });
 };
 

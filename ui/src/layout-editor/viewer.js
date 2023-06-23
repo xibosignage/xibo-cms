@@ -11,7 +11,7 @@ const loadingTemplate = require('../templates/loading.hbs');
 const viewerElementTemplate = require('../templates/viewer-element.hbs');
 const viewerElementContentTemplate =
   require('../templates/viewer-element-content.hbs');
-const drawThrottle = 50;
+const drawThrottle = 60;
 
 /**
  * Viewer contructor
@@ -792,6 +792,7 @@ Viewer.prototype.renderRegion = function(
         editable: widget.isEditable,
         parentId: widget.regionId,
         selected: widget.selected,
+        drawerWidget: widget.drawerWidget,
       });
     }
 
@@ -1257,10 +1258,28 @@ Viewer.prototype.renderElementContent = function(
         template.extends?.override &&
         template.extends?.with
       ) {
-        const replacedStencil = stencil.hbs.replace(
+        let replacedStencil = stencil.hbs.replace(
           '{{' + template.extends.override + '}}',
           '{{' + template.extends.with + '}}',
         );
+
+        // Also make replacements for variables being used in HBS helpers
+        const regExp = new RegExp(
+          '{{#([a-zA-Z0-9_]+) ' +
+          template.extends.override +
+          '}}', 'g');
+        const replacements = [...replacedStencil.matchAll(regExp)];
+
+        replacements.forEach((match) => {
+          const newReplace = match[0].replace(
+            template.extends.override,
+            template.extends.with,
+          );
+
+          replacedStencil = replacedStencil.replace(match[0], newReplace);
+        });
+
+        // Compile template
         hbsTemplate = Handlebars.compile(replacedStencil);
       }
 
@@ -1281,6 +1300,9 @@ Viewer.prototype.renderElementContent = function(
 
         // Add widget data to properties
         convertedProperties.data = elData;
+
+        // Send uniqueID
+        convertedProperties.uniqueID = element.elementId;
 
         // Compile hbs template with data
         let hbsHtml = hbsTemplate(convertedProperties);
@@ -1306,7 +1328,10 @@ Viewer.prototype.renderElementContent = function(
             window['onTemplateRender_' + element.elementId];
 
           // Call on template render on element creation
-          onTemplateRender && onTemplateRender(convertedProperties);
+          onTemplateRender && onTemplateRender(
+            convertedProperties,
+            $elementContainer.find('.element-content'),
+          );
         }
 
         // Call callback if it exists
@@ -1907,7 +1932,8 @@ Viewer.prototype.updateMoveable = function() {
   // Update moveable if region is selected and belongs to the DOM
   if (
     $selectedElement &&
-    $.contains(document, $selectedElement[0])
+    $.contains(document, $selectedElement[0]) &&
+    !$selectedElement.hasClass('drawerWidget')
   ) {
     // If target is designer-element-group, don't allow resizing
     if ($selectedElement.hasClass('designer-element-group')) {

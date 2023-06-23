@@ -672,61 +672,75 @@ PropertiesPanel.prototype.render = function(
           // Also Init fields for the element
           self.initFields(targetAux, res.data, actionEditMode, true);
 
+          // Save element
+          const saveElement = function(target) {
+            const $target = $(target);
+            let containerChanged = false;
+            // If the property is common, save it to the element
+            if ($target.hasClass('element-common-property')) {
+              // Get the property name
+              const propertyName = $target.attr('name');
+
+              // Get the value
+              let value = $target.val();
+
+              // If property is layer, convert to int
+              // and don't allow negative values
+              if (propertyName === 'layer') {
+                value = parseInt(value);
+                if (value < 0) {
+                  value = 0;
+                }
+              }
+
+              // If property is slot, set a value
+              // with -1 to match with the array
+              if (propertyName === 'slot') {
+                // If value is lower than minSlotValue
+                // set it to minSlotValue
+                if (Number(value) < minSlotValue) {
+                  value = minSlotValue;
+                  $(target).val(minSlotValue);
+                }
+
+                value = Number(value) - 1;
+              }
+
+              // Set the property
+              targetAux[propertyName] = value;
+
+              // Set the container changed flag
+              containerChanged = true;
+            }
+
+            // Save the element
+            self.saveElement(
+              targetAux,
+              self.DOMObject.find(
+                '[name].element-property:not(.element-common-property)',
+              ),
+              containerChanged,
+            );
+          };
+
+          const saveDebounced = _.wrap(
+            _.memoize(
+              () => _.debounce(saveElement.bind(self), 250), _.property('id'),
+            ),
+            (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
+          );
+
           // When we change the element fields, save them
           self.DOMObject.find(
             '[name].element-property',
           ).on(
             'change',
-            function(ev) {
-              const $target = $(ev.currentTarget);
-              let containerChanged = false;
-              // If the property is common, save it to the element
-              if ($target.hasClass('element-common-property')) {
-                // Get the property name
-                const propertyName = $target.attr('name');
-
-                // Get the value
-                let value = $target.val();
-
-                // If property is layer, convert to int
-                // and don't allow negative values
-                if (propertyName === 'layer') {
-                  value = parseInt(value);
-                  if (value < 0) {
-                    value = 0;
-                  }
-                }
-
-                // If property is slot, set a value
-                // with -1 to match with the array
-                if (propertyName === 'slot') {
-                  // If value is lower than minSlotValue
-                  // set it to minSlotValue
-                  if (Number(value) < minSlotValue) {
-                    value = minSlotValue;
-                    $(ev.currentTarget).val(minSlotValue);
-                  }
-
-                  value = Number(value) - 1;
-                }
-
-                // Set the property
-                targetAux[propertyName] = value;
-
-                // Set the container changed flag
-                containerChanged = true;
-              }
-
-              // Save the element
-              self.saveElement(
-                targetAux,
-                self.DOMObject.find(
-                  '[name].element-property:not(.element-common-property)',
-                ),
-                containerChanged,
+            function(_ev) {
+              // Debounce save based on the object being saved
+              saveDebounced(
+                _ev.currentTarget,
               );
-            },
-          );
+            });
         });
       }
     }
@@ -1108,11 +1122,12 @@ PropertiesPanel.prototype.initFields = function(
     $(self.DOMObject).find('form').off()
       .on(
         'change inputChange',
-        '.xibo-form-input:not(.position-input):not(.snippet-selector) ' +
+        '.xibo-form-input:not(.position-input)' +
+        ':not(.action-form-input):not(.snippet-selector) ' +
           'select:not(.element-property), ' +
-        '.xibo-form-input:not(.position-input) ' +
+        '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
           'input:not(.element-property), ' +
-        '.xibo-form-input:not(.position-input) ' +
+        '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
           'textarea:not(.element-property), ' +
         '[name="backgroundImageId"] ',
         function(_ev, options) {
