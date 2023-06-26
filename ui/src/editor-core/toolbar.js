@@ -413,6 +413,10 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemTitle: toolbarTrans.menuItems.libraryTitle,
       contentType: 'media',
       filters: {
+        type: {
+          value: '',
+          values: moduleListOtherFiltered,
+        },
         name: {
           value: '',
           key: 'media',
@@ -421,10 +425,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: '',
           key: 'tags',
           dataRole: 'tagsinput',
-        },
-        type: {
-          value: '',
-          values: moduleListOtherFiltered,
         },
         owner: {
           value: '',

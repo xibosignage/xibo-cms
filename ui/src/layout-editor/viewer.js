@@ -619,7 +619,7 @@ Viewer.prototype.handleInteractions = function() {
 
       if (gridValue < 1) {
         gridValue = 1;
-        $(ev.currentTarget).val(1);
+        $(ev.currentTarget).val(1).trigger('select');
       }
 
       self.moveableOptions.snapGridGap = gridValue;
