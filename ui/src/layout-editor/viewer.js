@@ -1291,7 +1291,7 @@ Viewer.prototype.renderElementContent = function(
             const data = elData[key];
 
             // Check if data needs to be replaced
-            if (data && data.match(macroRegex) !== null) {
+            if (String(data) && String(data).match(macroRegex) !== null) {
               // Replace macro with current date
               elData[key] = composeUTCDateFromMacro(data);
             }

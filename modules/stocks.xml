@@ -41,6 +41,7 @@
         <property id="items" type="connectorProperties" variant="autocomplete">
             <title>Stock Symbols</title>
             <helpText>A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.</helpText>
+            <default></default>
             <rule>
                 <test>
                     <condition type="required"></condition>
@@ -114,6 +115,7 @@ $(target).xiboLayoutAnimate(properties);
 [{
     "SymbolTrimmed": "Sample Stock 1",
     "NameTrimmed": "Sample Stock 1",
+    "Name": "Sample Stock 1",
     "LastTradePriceOnly": "105.41",
     "CurrencyUpper": "",
     "ChangeStyle": "value-down",
@@ -123,6 +125,7 @@ $(target).xiboLayoutAnimate(properties);
 {
     "SymbolTrimmed": "Sample Stock 2",
     "NameTrimmed": "Sample Stock 2",
+    "Name": "Sample Stock 2",
     "LastTradePriceOnly": "201.11",
     "CurrencyUpper": "",
     "ChangeStyle": "value-up",

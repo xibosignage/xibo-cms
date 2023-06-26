@@ -37,6 +37,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -439,7 +440,7 @@ class WidgetHtmlRenderer
             try {
                 $module->validateProperties('status');
                 $widget->isValid = 1;
-            } catch (GeneralException $xiboException) {
+            } catch (InvalidArgumentException $invalidArgumentException) {
                 $widget->isValid = 0;
             }
 

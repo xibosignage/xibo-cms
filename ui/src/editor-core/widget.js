@@ -875,7 +875,7 @@ Widget.prototype.getData = function() {
       type: linkToAPI.type,
       dataType: 'json',
     }).done((data) => {
-      if (!data.data) {
+      if (!data.data || !self.isValid) {
         // Show sample data
         for (let i = 0; i < modulesList.length; i++) {
           if (modulesList[i].type === self.subType) {

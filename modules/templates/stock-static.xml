@@ -136,7 +136,7 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
             <hbs><![CDATA[
 <div class="row row-finance template-item">
     <div class="weather-col col-2 value name-stock">{{SymbolTrimmed}}</div>
-    <div class="weather-col col-5 value ">{{NameTrimmed}}</div>
+    <div class="weather-col col-5 value ">{{Name}}</div>
     <div class="weather-col col-2 text-right value">{{LastTradePriceOnly}} {{CurrencyUpper}}</div>
     <div class="weather-col col-2 text-right value {{ChangeStyle}}">{{ChangePercentage}}%</div>
     <div class="weather-col col-1 text-right"><div class="{{ChangeIcon}}"></div></div>
@@ -376,7 +376,7 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
             <height id="height">380</height>
             <hbs><![CDATA[
 <div class="row row-finance template-item">
-    <div class="weather-col col-12 name">{{NameTrimmed}}</div>
+    <div class="weather-col col-12 name">{{Name}}</div>
     <div class="weather-col col-12 subname">{{SymbolTrimmed}}</div>
     <div class="weather-col col-12 value-currency">{{LastTradePriceOnly}} {{CurrencyUpper}}</div>
     <div class="weather-col col-12 total">
