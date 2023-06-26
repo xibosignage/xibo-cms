@@ -32,7 +32,10 @@ jobs:
           tags: ghcr.io/xibosignage/xibo-cms:${{ github.ref_name }}
           build-args: GIT_COMMIT=${{ github.sha }}
           push: true
-          load: true
+          load: false
+      - name: Pull Image
+        run: |
+          docker pull ghcr.io/xibosignage/xibo-cms:release-${GITHUB_REF##*/}
       - name: Build archive
         run: |
           CONTAINER=$(docker create ghcr.io/xibosignage/xibo-cms:release-${GITHUB_REF##*/})
