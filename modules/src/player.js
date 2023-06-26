@@ -470,6 +470,7 @@ $(function() {
                 let cssStyles = {
                   height: data.height,
                   width: data.width,
+                  transform: `rotate(${data?.rotation || 0}deg)`,
                 };
 
                 if (isStatic) {
