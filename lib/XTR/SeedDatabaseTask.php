@@ -162,11 +162,10 @@ class SeedDatabaseTask implements TaskInterface
      */
     private function createDisplayGroups(): void
     {
-        $displayGroups = ['POP Display Group', 'Display Group 1', 'Display Group 2'];
+        $displayGroups = ["POP Display Group", 'Display Group 1', 'Display Group 2'];
 
-        foreach ($displayGroups as $displayGroupName) {
-            try {
-                $displayGroup = $this->displayGroupFactory->createEmpty();
+foreach($displayGroups as $displayGroupName) {
+            try{$displayGroup = $this->displayGroupFactory->createEmpty();
                 $displayGroup->displayGroup = $displayGroupName;
                 $displayGroup->userId = $this->userFactory->getSystemUser()->getId();
                 $displayGroup->save();
