@@ -136,7 +136,10 @@ PropertiesPanel.prototype.save = function(
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
   // If form is valid, submit it ( add change )
-  if (formFieldsToSave.valid()) {
+  if (
+    formFieldsToSave.length > 0 &&
+    formFieldsToSave.valid()
+  ) {
     // Get form data
     // if we're saving an element, don't include the element properties
     const formNewData = formFieldsToSave.serialize();
@@ -178,7 +181,11 @@ PropertiesPanel.prototype.save = function(
           app.viewer
         ) {
           // Reload data, but only render the region that the widget is in
-          app.reloadData(mainObject).done(() => {
+          app.reloadData(
+            mainObject,
+            {
+              reloadPropertiesPanel: false,
+            }).done(() => {
             if (!target.drawerWidget) {
               app.viewer.renderRegion(
                 app.getElementByTypeAndId('region', target.regionId),
@@ -193,21 +200,22 @@ PropertiesPanel.prototype.save = function(
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element
+          // but don't reload properties panel
           app.reloadData(
             mainObject,
-            (target.type === 'layout'),
+            {
+              refreshEditor: (target.type === 'layout'),
+              reloadPropertiesPanel: false,
+            },
           );
         }
       };
 
-      // Reload data if we're not saving an element
+      // Save elements or element groups
       if (
-        !savingElement &&
-        !savingElementGroup &&
-        reloadAfterSave
+        savingElement ||
+        savingElementGroup
       ) {
-        reloadData();
-      } else {
         // If we're saving an element, reload all elements
         // from the widget that the element is in
         for (element in target.elements) {
@@ -215,6 +223,9 @@ PropertiesPanel.prototype.save = function(
             app.viewer.renderElementContent(target.elements[element]);
           }
         }
+      } else if (reloadAfterSave) {
+        // Reload data if we're not saving an element
+        reloadData();
       }
     }).catch((error) => { // Fail/error
       if (!showErrorMessages) {

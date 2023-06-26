@@ -59,7 +59,7 @@
     .main-panel-wrapper {
         position: relative;
         height: 100%;
-        padding: 2px;
+        padding: 0;
         background-color: $xibo-color-neutral-900;
         border-width: 2px;
         border-style: solid;
@@ -134,8 +134,28 @@
             }
         }
 
-        .user-notif>.item>a {
-            padding: 5px 0;
+        .user-notif > .item > a {
+            display: flex;
+            height: 50px;
+            width: 50px;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #f9f9f9;
+
+            & > i {
+                color: $xibo-color-secondary;
+            }
+
+            &:hover {
+                & > .red {
+                    background: #df4040 !important;
+                }
+
+                & > i {
+                    color: lighten($xibo-color-secondary, 20%);
+                }
+            }
         }
     }
 }
@@ -298,7 +318,7 @@
     padding: 16px 16px 0px 16px;
 
     .main-panel-wrapper {
-        border-color: $xibo-color-secondary;
+        border-color: $xibo-color-primary-l60;
     }
 
     // Inline editor controls
@@ -354,7 +374,7 @@
         border: none;
         background: $xibo-color-neutral-900;
         padding: 18px;
-        border-radius: 2p;
+        border-radius: 2px 2px 0 0;
 
         .layout-viewer-border {
             @include set-transparent-color(background, $xibo-color-neutral-900, 0.9);

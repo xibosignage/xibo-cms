@@ -240,6 +240,10 @@
                     },
                     drop: _.debounce(function(event, ui) {
                         var $draggable = $(ui.draggable[0]);
+
+                        // Change file name
+                        bgImageFileName.html($draggable.data('title'));
+
                         if($draggable.hasClass('from-provider')) {
                             backgroundImageHandleDrop($draggable.data('providerData'), true);
                         } else {
@@ -253,6 +257,10 @@
                     var selectedCard = lD.toolbar.selectedCard;
                     var fromProvider = selectedCard.hasClass('from-provider');
                     var cardData = (fromProvider) ? selectedCard.data('providerData') : selectedCard.data('mediaId');
+
+                    // Change file name
+                    bgImageFileName.html(selectedCard.data('title'));
+
                     backgroundImageHandleDrop(cardData, fromProvider);
                 });
 
@@ -356,10 +364,8 @@
 
                         XiboDialogClose();
 
-                        // Auto-submit form
-                        setTimeout(function(){
-                          $(dialog).find('button#save').trigger('click');
-                        }, 100);
+                        // Auto-submit form by triggering the input field
+                        $('[name="backgroundImageId"]').trigger('change');
                     }
                 });
             }

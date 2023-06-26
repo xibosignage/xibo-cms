@@ -340,7 +340,12 @@ Layout.prototype.checkout = function() {
       lD.editorContainer.find('#read-only-message').remove();
 
       // Reload layout
-      lD.reloadData(res.data, true, true);
+      lD.reloadData(res.data,
+        {
+          refreshEditor: true,
+          refreshViewer: true,
+          reloadPropertiesPanel: true,
+        });
 
       // Refresh toolbar
       lD.toolbar.render();
