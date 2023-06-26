@@ -784,11 +784,17 @@ Widget.prototype.removeElement = function(
       if (removeRegion) {
         app.layout.deleteElement('region', this.parent.regionId).then(() => {
           // Reload layout
-          app.reloadData(app.layout, true);
+          app.reloadData(app.layout,
+            {
+              refreshEditor: true,
+            });
         });
       } else {
         // Reload layout
-        app.reloadData(app.layout, true);
+        app.reloadData(app.layout,
+          {
+            refreshEditor: true,
+          });
       }
     });
   } else {

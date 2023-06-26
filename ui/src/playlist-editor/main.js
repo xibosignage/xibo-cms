@@ -255,11 +255,13 @@ pE.loadEditor = function(inline = false) {
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceUnselect - Clean selected object
  * @param {number=} [positionToAdd = null] - Order position for widget
+ * @param {bool=} reloadPropertiesPanel - Force properties panel reload
  */
 pE.selectObject = function({
   target = null,
   forceUnselect = false,
   positionToAdd = null,
+  reloadPropertiesPanel = true,
 } = {}) {
   // Clear rogue tooltips
   pE.common.clearTooltips();
@@ -336,7 +338,9 @@ pE.selectObject = function({
     }
 
     // Refresh the designer containers
-    pE.refreshEditor();
+    pE.refreshEditor({
+      reloadPropertiesPanel: reloadPropertiesPanel,
+    });
   }
 };
 
@@ -717,21 +721,27 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
 /**
  * Refresh designer
- * @param {boolean} [updateToolbar=false] - Update toolbar
+ * @param {boolean} [reloadToolbar=false] - Reload toolbar
+ * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
  */
-pE.refreshEditor = function(updateToolbar = false) {
+pE.refreshEditor = function(
+  {
+    reloadToolbar = false,
+    reloadPropertiesPanel = false,
+  } = {},
+) {
   // Remove temporary data
-  this.clearTemporaryData();
+  (reloadPropertiesPanel) && this.clearTemporaryData();
 
   // Render containers
-  (updateToolbar) && this.toolbar.render();
+  (reloadToolbar) && this.toolbar.render();
   this.historyManager.render();
 
   // Render timeline
   this.timeline.render();
 
   // Render properties panel
-  this.propertiesPanel.render(this.selectedObject);
+  (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
 
   // Update elements based on manager changes
   this.updateElements();
@@ -742,8 +752,15 @@ pE.refreshEditor = function(updateToolbar = false) {
 
 /**
  * Reload API data and replace the playlist structure with the new value
+ * @param {boolean} [reloadToolbar=false] - Reload toolbar
+ * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
  */
-pE.reloadData = function() {
+pE.reloadData = function(
+  {
+    reloadToolbar = true,
+    reloadPropertiesPanel = true,
+  } = {},
+) {
   pE.common.showLoadingScreen();
 
   $.get(
@@ -771,7 +788,10 @@ pE.reloadData = function() {
 
         // folder Id
         pE.folderId = pE.playlist.folderId;
-        pE.refreshEditor();
+        pE.refreshEditor({
+          reloadToolbar: reloadToolbar,
+          reloadPropertiesPanel: reloadPropertiesPanel,
+        });
       } else {
         if (res.login) {
           window.location.href = window.location.href;

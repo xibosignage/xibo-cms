@@ -2,7 +2,7 @@
     {{#each filters}}
         {{#eq @key "type"}}
             <div class="form-group {{#if this.locked}}hidden{{/if}}">
-                <label for="input-type" class="mb-0">{{../trans.searchtype}}</label>
+                <label for="input-type" class="mb-0">{{../trans.searchFilters.type}}</label>
                 <select id="input-type" name="type" class="form-control mr-1 input-type">
                     {{#if this.locked}}
                         <option value="{{this.value}}" selected>{{this.value}}</option>

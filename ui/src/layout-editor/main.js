@@ -309,7 +309,11 @@ $(() => {
       lD.selectedObject.type = 'layout';
 
       // Refresh the designer containers
-      lD.refreshEditor(true, true);
+      lD.refreshEditor({
+        reloadToolbar: true,
+        reloadViewer: true,
+        reloadPropertiesPanel: true,
+      });
 
       // Load preferences
       lD.loadPrefs();
@@ -353,8 +357,9 @@ $(() => {
  * @param {object=} target - Object to be selected
  * @param {bool=} forceSelect - Select object even if it was already selected
  * @param {object=} clickPosition - Position of the click
- * @param {bool=} reloadViewer - Force viewer reload
  * @param {bool=} refreshEditor - Force refresh of the editor
+ * @param {bool=} reloadViewer - Force viewer reload
+ * @param {bool=} reloadPropertiesPanel - Force properties panel reload
  */
 lD.selectObject =
   function({
@@ -363,6 +368,7 @@ lD.selectObject =
     clickPosition = null,
     refreshEditor = true,
     reloadViewer = false,
+    reloadPropertiesPanel = true,
   } = {}) {
     // Clear rogue tooltips
     lD.common.clearTooltips();
@@ -451,6 +457,20 @@ lD.selectObject =
       const oldSelectedId = this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
 
+      // If the selected object was different from the previous
+      // and we are focused on a properties panel field, save before continuing
+      if (
+        (
+          oldSelectedId != newSelectedId ||
+          oldSelectedType != newSelectedType
+        ) &&
+        $(document.activeElement).parents('#properties-panel').length > 0
+      ) {
+        this.propertiesPanel.save({
+          reloadAfterSave: false,
+        });
+      }
+
       // Unselect the previous selectedObject object if still selected
       if (this.selectedObject.selected) {
         this.selectedObject.selected = false;
@@ -461,6 +481,7 @@ lD.selectObject =
       this.selectedObject.type = 'layout';
 
       // If the selected object was different from the previous
+      // or we force select
       // select a new one
       if (
         oldSelectedId != newSelectedId ||
@@ -509,25 +530,33 @@ lD.selectObject =
         this.selectedObject.type = newSelectedType;
 
         // Refresh the designer containers
-        (refreshEditor) && lD.refreshEditor(false, reloadViewer);
+        (refreshEditor) && lD.refreshEditor({
+          reloadToolbar: false,
+          reloadViewer: reloadViewer,
+          reloadPropertiesPanel: reloadPropertiesPanel,
+        });
       }
     }
   };
 
 /**
  * Refresh designer
- * @param {boolean} [updateToolbar=false] - Update toolbar
+ * @param {boolean} [reloadToolbar=false] - Update toolbar
  * @param {boolean} [reloadViewer=false] - Reload viewer
+ * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
  */
 lD.refreshEditor = function(
-  updateToolbar = false,
-  reloadViewer = false,
+  {
+    reloadToolbar = false,
+    reloadViewer = false,
+    reloadPropertiesPanel = false,
+  } = {},
 ) {
-  // Remove temporary data
-  this.clearTemporaryData();
+  // Remove temporary data only when reloading properties panel
+  (reloadPropertiesPanel) && this.clearTemporaryData();
 
   // Toolbars
-  (updateToolbar) && this.toolbar.render();
+  (reloadToolbar) && this.toolbar.render();
   this.topbar.render();
   this.bottombar.render(this.selectedObject);
 
@@ -535,7 +564,7 @@ lD.refreshEditor = function(
   this.historyManager.render();
 
   // Properties panel and viewer
-  this.propertiesPanel.render(this.selectedObject);
+  (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
   (reloadViewer) && this.viewer.render(reloadViewer);
 };
 
@@ -543,17 +572,23 @@ lD.refreshEditor = function(
  * Reload API data and replace the layout structure with the new value
  * @param {object=} layout  - previous layout
  * @param {boolean} [refreshEditor=false] - refresh editor
- * @param {boolean} captureThumbnail - capture thumbnail
- * @param {callBack} callBack - callback function
- * @param {boolean} updateToolbar - update toolbar
+ * @param {boolean} [captureThumbnail=false] - capture thumbnail
+ * @param {callBack} [callBack=null]- callback function
+ * @param {boolean} [reloadToolbar=false] - update toolbar
+ * @param {boolean} [reloadViewer=true] - Reload viewer
+ * @param {boolean} [reloadPropertiesPanel=true] - Reload properties panel
  * @return {Promise} - Promise
  */
 lD.reloadData = function(
   layout,
-  refreshEditor = false,
-  captureThumbnail = false,
-  callBack = null,
-  updateToolbar = false,
+  {
+    refreshEditor = false,
+    captureThumbnail = false,
+    callBack = null,
+    reloadToolbar = false,
+    reloadViewer = true,
+    reloadPropertiesPanel = true,
+  } = {},
 ) {
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
@@ -578,6 +613,7 @@ lD.reloadData = function(
         target: $('#' + selectObjectId),
         forceSelect: true,
         refreshEditor: false, // Don't refresh the editor here
+        reloadPropertiesPanel: false,
       });
 
       // Reload the form helper connection
@@ -590,7 +626,11 @@ lD.reloadData = function(
       captureThumbnail && lD.uploadThumbnail();
 
       // Refresh designer
-      refreshEditor && lD.refreshEditor(updateToolbar, true);
+      refreshEditor && lD.refreshEditor({
+        reloadToolbar: reloadToolbar,
+        reloadViewer: reloadViewer,
+        reloadPropertiesPanel: reloadPropertiesPanel,
+      });
 
       // Call callback function
       callBack && callBack();
@@ -953,9 +993,16 @@ lD.undoLastAction = function() {
   lD.historyManager.revertChange().then((res) => { // Success
     // Refresh designer according to local or API revert
     if (res.localRevert) {
-      lD.refreshEditor(false, true);
+      lD.refreshEditor({
+        reloadToolbar: false,
+        reloadViewer: true,
+        reloadPropertiesPanel: true,
+      });
     } else {
-      lD.reloadData(lD.layout, true);
+      lD.reloadData(lD.layout,
+        {
+          refreshEditor: true,
+        });
     }
 
     lD.common.hideLoadingScreen('undoLastAction');
@@ -1080,7 +1127,10 @@ lD.deleteObject = function(
         options,
       ).then((res) => {
         // Behavior if successful
-        lD.reloadData(lD.layout, true);
+        lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
 
         lD.common.hideLoadingScreen('deleteObject');
       }).catch((error) => { // Fail/error
@@ -1461,7 +1511,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }
 
           // Reload data and select element when data reloads
-          lD.reloadData(lD.layout, true, true);
+          lD.reloadData(lD.layout,
+            {
+              refreshEditor: true,
+            });
         });
       };
 
@@ -1685,7 +1738,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         }
       } else {
         // Reload Data
-        lD.reloadData(lD.layout, true);
+        lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
       }
     }).fail(function(jqXHR, textStatus, errorThrown) {
       // Output error to console
@@ -1713,7 +1769,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
 
         if (response.success && response.id) {
           // eslint-disable-next-line new-cap
-          lD.reloadData(response.data, true);
+          lD.reloadData(response.data,
+            {
+              refreshEditor: true,
+            });
         } else if (response.login) {
           // eslint-disable-next-line new-cap
           LoginBox();
@@ -1797,7 +1856,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           );
         } else {
           // Reload data ( and viewer )
-          lD.reloadData(lD.layout, true);
+          lD.reloadData(lD.layout,
+            {
+              refreshEditor: true,
+            });
         }
       });
     }
@@ -1850,11 +1912,17 @@ lD.addModuleToPlaylist = function(
           regionId,
         ).then(() => {
           // Reload data ( and viewer )
-          (reloadData) && lD.reloadData(lD.layout, true);
+          (reloadData) && lD.reloadData(lD.layout,
+            {
+              refreshEditor: true,
+            });
         });
       } else {
         // Reload data ( and viewer )
-        (reloadData) && lD.reloadData(lD.layout, true);
+        (reloadData) && lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
       }
     };
 
@@ -1987,26 +2055,29 @@ lD.addModuleToPlaylist = function(
 
       if (!drawerWidget) {
         // Reload data ( and viewer )
-        (reloadData) && lD.reloadData(lD.layout, true);
+        (reloadData) && lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
       } else {
         const newWidgetId = res.data.widgetId;
         // Reload data ( and viewer )
         (reloadData) && lD.reloadData(
           lD.layout,
-          false,
-          false,
-          () => {
-            const $actionForm =
-              lD.propertiesPanel.DOMObject.find('.action-element-form');
+          {
+            callBack: () => {
+              const $actionForm =
+                lD.propertiesPanel.DOMObject.find('.action-element-form');
 
-            lD.populateDropdownWithLayoutElements(
-              $actionForm.find('[name=widgetId]'),
-              {
-                value: newWidgetId,
-                filters: ['drawerWidgets'],
-              },
-              $actionForm.data(),
-            );
+              lD.populateDropdownWithLayoutElements(
+                $actionForm.find('[name=widgetId]'),
+                {
+                  value: newWidgetId,
+                  filters: ['drawerWidgets'],
+                },
+                $actionForm.data(),
+              );
+            },
           },
         );
       }
@@ -2110,26 +2181,29 @@ lD.addMediaToPlaylist = function(
       );
 
       // Reload data ( and viewer )
-      lD.reloadData(lD.layout, true);
+      lD.reloadData(lD.layout,
+        {
+          refreshEditor: true,
+        });
     } else {
       const newWidgetId = res.data.newWidgets[0].widgetId;
       // Reload data ( and viewer )
       lD.reloadData(
         lD.layout,
-        false,
-        false,
-        () => {
-          const $actionForm =
-            lD.propertiesPanel.DOMObject.find('.action-element-form');
+        {
+          callback: () => {
+            const $actionForm =
+              lD.propertiesPanel.DOMObject.find('.action-element-form');
 
-          lD.populateDropdownWithLayoutElements(
-            $actionForm.find('[name=widgetId]'),
-            {
-              value: newWidgetId,
-              filters: ['drawerWidgets'],
-            },
-            $actionForm.data(),
-          );
+            lD.populateDropdownWithLayoutElements(
+              $actionForm.find('[name=widgetId]'),
+              {
+                value: newWidgetId,
+                filters: ['drawerWidgets'],
+              },
+              $actionForm.data(),
+            );
+          },
         },
       );
     }
@@ -2385,11 +2459,11 @@ lD.openPlaylistEditor = function(playlistId, region) {
       // Reload data
       lD.reloadData(
         lD.layout,
-        true,
-        false,
-        null,
-        true,
-      );
+        {
+          refreshEditor: true,
+          reloadToolbar: true,
+          reloadPropertiesPanel: true,
+        });
     });
 };
 
@@ -2885,7 +2959,11 @@ lD.handleMessage = function(event) {
   const messageFromSender = event.data;
   if (messageFromSender == 'viewerStoppedPlaying') {
     // Refresh designer
-    lD.refreshEditor(false, true);
+    lDrefreshEditor({
+      reloadToolbar: false,
+      reloadViewer: true,
+      reloadPropertiesPanel: true,
+    });
 
     // Show tooltip on play button
     lD.bottombar.showPlayMessage();

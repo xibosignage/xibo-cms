@@ -182,7 +182,7 @@ Viewer.prototype.render = function(forceReload = false) {
 
   // Reset container properties
   $viewerContainer.css('background',
-    (this.theme == 'dark') ? '#2c2d2e' : '#d8dce1',
+    (this.theme == 'dark') ? '#2c2d2e' : '#F3F8FF',
   );
   $viewerContainer.css('border', 'none');
 
@@ -619,7 +619,7 @@ Viewer.prototype.handleInteractions = function() {
 
       if (gridValue < 1) {
         gridValue = 1;
-        $(ev.currentTarget).val(1);
+        $(ev.currentTarget).val(1).trigger('select');
       }
 
       self.moveableOptions.snapGridGap = gridValue;
