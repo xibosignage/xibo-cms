@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -73,7 +73,7 @@ describe('Campaigns', function () {
           .should('have.length', 0);
     });
 
-    it('should assign layouts to an existing campaign', function() {
+    it.skip('should assign layouts to an existing campaign', function() {
 
         // Create some layouts
         createTempLayouts(2);

@@ -471,6 +471,42 @@ class SeedDatabaseTask implements TaskInterface
             ];
             $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
 
+            // an widget stat for today
+            $params = [
+                'type' => 'widget',
+                'statDate' => Carbon::now()->hour(12)->format('U'),
+                'scheduleId' => 0,
+                'displayId' => $this->displays['POP Display 1'],
+                'campaignId' => $campaignId,
+                'layoutId' => $this->layouts['POP Layout 1'],
+                'mediaId' => $media->mediaId,
+                'widgetId' => $widgetId,
+                'start' => Carbon::now()->hour(12)->format('U'),
+                'end' => Carbon::now()->hour(12)->addSeconds(60)->format('U'),
+                'tag' => null,
+                'duration' => 60,
+                'count' => 1,
+            ];
+            $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
+
+            // a event stat for today
+            $params = [
+                'type' => 'event',
+                'statDate' => Carbon::now()->hour(12)->format('U'),
+                'scheduleId' => 0,
+                'displayId' => $this->displays['POP Display 1'],
+                'campaignId' => 0,
+                'layoutId' => 0,
+                'mediaId' => null,
+                'widgetId' => 0,
+                'start' => Carbon::now()->hour(12)->format('U'),
+                'end' => Carbon::now()->hour(12)->addSeconds(60)->format('U'),
+                'tag' => 'Event123',
+                'duration' => 60,
+                'count' => 1,
+            ];
+            $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
+
             $this->store->commitIfNecessary();
         } catch (GeneralException $e) {
             $this->getLogger()->error('Error inserting stats: '. $e->getMessage());

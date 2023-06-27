@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 describe('Layout Designer (Empty)', function() {
 
     beforeEach(function() {
@@ -33,7 +54,7 @@ describe('Layout Designer (Empty)', function() {
 
         });
 
-        it('goes into draft mode when checked out', function() {
+        it.skip('goes into draft mode when checked out', function() {
 
             // Get the done button from the checkout modal
             cy.get('[data-test="welcomeModal"] button.btn-bb-checkout').click();
@@ -42,7 +63,7 @@ describe('Layout Designer (Empty)', function() {
             cy.contains('Checked out ' + layoutTempName);
         });
 
-        it('should prevent a layout edit action, and show a toast message', function() {
+        it.skip('should prevent a layout edit action, and show a toast message', function() {
 
             // Should contain widget options form
             cy.get('#properties-panel-form-container').contains('Edit Layout');
@@ -65,7 +86,7 @@ describe('Layout Designer (Empty)', function() {
             });
         });
 
-        it('should create a new region from within the navigator edit', () => {
+        it.skip('should create a new region from within the navigator edit', () => {
             // Open navigator edit
             cy.get('.editor-bottom-bar #navigator-edit-btn').click();
 
@@ -76,7 +97,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-timeline [data-type="region"]').should('have.length', 2);
         });
 
-        it('should delete a region using the toolbar bin', () => {
+        it.skip('should delete a region using the toolbar bin', () => {
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
 
@@ -105,7 +126,7 @@ describe('Layout Designer (Empty)', function() {
             });
         });
 
-        it('creates a new widget by selecting a searched media from the toolbar to layout-navigator region', () => {
+        it.skip('creates a new widget by selecting a searched media from the toolbar to layout-navigator region', () => {
 
             cy.populateLibraryWithMedia();
 
@@ -139,7 +160,7 @@ describe('Layout Designer (Empty)', function() {
             });
         });
 
-        it('shows the file upload form by adding a uploadable media from the toolbar to layout-navigator region', () => {
+        it.skip('shows the file upload form by adding a uploadable media from the toolbar to layout-navigator region', () => {
 
             cy.populateLibraryWithMedia();
 

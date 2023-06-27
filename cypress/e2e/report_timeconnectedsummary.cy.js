@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -26,22 +26,25 @@ describe('Time Connected', function () {
     });
 
     it('should load time connected data of displays', () => {
-        cy.visit('/report/form/timedisconnectedsummary');
-
         // Create and alias for load display
-        cy.server();
-        cy.route('/display?start=0&length=10').as('loadDisplays');
+        cy.intercept('/display?start=*').as('loadDisplays');
+
+        cy.visit('/report/form/timedisconnectedsummary');
 
         // Click on the select2 selection
         cy.get('#displayId + span .select2-selection').click();
 
-        // Wait for layout to load
+        // Wait for display to load
         cy.wait('@loadDisplays');
-
 
         // Type the display name
         cy.get('.select2-container--open input[type="search"]').type('POP Display 1');
-        cy.get('.select2-container--open .select2-results > ul').contains('POP Display 1').click();
+
+        // Wait for display to load
+        cy.wait('@loadDisplays');
+        cy.get('.select2-container--open').contains('POP Display 1');
+        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+        cy.get('.select2-container--open .select2-results > ul > li:first').contains('POP Display 1').click();
 
         // Click on the Apply button
         cy.contains('Apply').should('be.visible').click();
