@@ -491,6 +491,7 @@ $(function() {
               };
               const templateData = Object.assign(
                 {}, elementProperties, elementCopy, globalOptions,
+                {uniqueID: elementCopy.elementId},
               );
 
               // Get widget info if exists.
