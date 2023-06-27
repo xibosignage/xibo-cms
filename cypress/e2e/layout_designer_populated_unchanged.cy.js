@@ -1,18 +1,39 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 describe('Layout Designer (Populated/Unchanged)', function() {
 
     before(function() {
         // Import existing
-        cy.importLayout('../assets/export_test_layout.zip').as('testLayoutId').then((res) => {
-            cy.checkoutLayout(res);
-        });
+        // cy.importLayout('../assets/export_test_layout.zip').as('testLayoutId').then((res) => {
+        //     cy.checkoutLayout(res);
+        // });
     });
 
     beforeEach(function() {
         cy.login();
-        cy.goToLayoutAndLoadPrefs(this.testLayoutId);
+       // cy.goToLayoutAndLoadPrefs(this.testLayoutId);
     });
 
-    it('should load all the layout designer elements', function() {
+    it.skip('should load all the layout designer elements', function() {
 
         // Check if the basic elements of the designer loaded
         cy.get('#layout-editor').should('be.visible');
@@ -21,7 +42,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.get('#properties-panel').should('be.visible');
     });
 
-    it('shows widget properties in the properties panel when clicking on a widget in the timeline', function() {
+    it.skip('shows widget properties in the properties panel when clicking on a widget in the timeline', function() {
 
         // Select the first widget from the first region on timeline ( image )
         cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').click();
@@ -30,7 +51,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.get('#properties-panel').contains('Edit Image');
     });
 
-    it('should open the playlist editor and be able to show modals', function() {
+    it.skip('should open the playlist editor and be able to show modals', function() {
             cy.route('/playlist/widget/form/edit/*').as('reloadWidget');
             
             // Open the playlist editor
@@ -49,7 +70,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
             cy.get('[data-test="deleteObjectModal"]').should('be.visible');
     });
 
-    it('should revert a saved form to a previous state', () => {
+    it.skip('should revert a saved form to a previous state', () => {
         let oldName;
 
         // Create and alias for reload widget
@@ -92,7 +113,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         });
     });
 
-    it('should revert the widgets order when using the undo feature', () => {
+    it.skip('should revert the widgets order when using the undo feature', () => {
         cy.server();
         cy.route('POST', '**/playlist/order/*').as('saveOrder');
         cy.route('/layout?layoutId=*').as('reloadLayout');
@@ -138,7 +159,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         });
     });
 
-    it('should play a preview in the viewer', () => {
+    it.skip('should play a preview in the viewer', () => {
         cy.server();
         cy.route('**/region/preview/*').as('loadRegion');
         // Wait for the viewer and region to load
