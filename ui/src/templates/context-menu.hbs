@@ -17,7 +17,7 @@
             </div>
         {{/if}}
 
-        <div class="main-button-container">
+        <div class="main-button-container d-flex flex-column">
             {{#eq type "widget"}}
                 {{#if isEditable}}
                     {{#if canAttachAudio}}
@@ -42,19 +42,25 @@
 
             {{#if isPlaylist}}
                 <div class="context-menu-btn editPlaylistBtn" data-title="{{trans.editPlaylist}}" data-action="editPlaylist" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                    <i class="fa fa-edit"></i>
+                    <i class="fa fa-edit"></i><span>{{trans.editPlaylist}}</span>
                 </div>
             {{/if}}
 
             {{#if isPermissionsModifiable}}
                 <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                    <i class="fa tool-icon-permissions"></i>
+                    <i class="fa tool-icon-permissions"></i><span>{{trans.editPermissions}}</span>
+                </div>
+            {{/if}}
+
+            {{#if canBeCopied}}
+                <div class="context-menu-btn copyBtn" data-title="{{trans.copy}}" data-action="Copy" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fa fa-copy"></i><span>{{trans.copy}}</span>
                 </div>
             {{/if}}
 
             {{#if isDeletable}}
                 <div class="context-menu-btn deleteBtn" data-title="{{trans.delete}}" data-action="Delete" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                    <i class="fa fa-trash"></i>
+                    <i class="fa fa-trash"></i><span>{{trans.delete}}</span>
                 </div>
             {{/if}}
         </div>

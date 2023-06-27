@@ -178,10 +178,8 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
     .context-menu {
         position: absolute;
         z-index: ($loading-overlay-z-index + 1);
-        opacity: 0.9;
-        background: $xibo-color-primary-l10;
-        border: $xibo-color-primary-l60 solid 1px;
-        @include box-shadow(2px 2px 5px $xibo-color-neutral-900);
+        background: $xibo-color-neutral-0;
+        @include box-shadow(4px 4px 8px $xibo-color-shadow);
 
         .sort-controls-container {
             text-align: center;
@@ -196,18 +194,19 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
             }
         }
 
-        .main-button-container {
-            margin: 0.25rem 0.5rem;
-        }
-
         .context-menu-btn {
             display: inline-block;
-            font-size: 1.25rem;
+            font-size: 1rem;
             color: $xibo-color-primary;
+            padding: 6px 12px;
             cursor: pointer;
 
+            & > span {
+                margin-left: 6px;
+            }
+
             &:hover {
-                color: darken($xibo-color-primary, 5%);
+                background-color: $xibo-color-primary-l10;
             }
         }
 
