@@ -6,7 +6,7 @@
   "scripts": {
     "test": "cypress run --config screenshotsFolder=library/cypress/results,video=false --reporter junit --reporter-options 'mochaFile=library/cypress/results/results_cypress_[hash].xml,toConsole=true'",
     "cypress:open": "cypress open",
-    "build": "webpack --mode=development --env=true",
+    "build": "webpack --mode=development",
     "publish": "webpack --mode=production"
   },
   "directories": {
