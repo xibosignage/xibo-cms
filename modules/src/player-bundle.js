@@ -26,6 +26,7 @@ window.moment = require('moment');
 require('moment-timezone');
 window.Handlebars = require('handlebars/dist/handlebars.min.js');
 require('./handlebars-helpers.js');
+require('url-search-params-polyfill');
 
 // Include HLS.js
 window.Hls = require('hls.js');
