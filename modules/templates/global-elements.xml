@@ -328,10 +328,10 @@
         <onTemplateRender><![CDATA[
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
-    let dateValue = $(dateEl).data('date');
+    var dateValue = $(dateEl).data('date');
 
     // Format the date with the dateFormat property
-    let formattedDate = moment(dateValue).format(properties.dateFormat);
+    var formattedDate = moment(dateValue).format(properties.dateFormat);
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);
