@@ -1464,60 +1464,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
 
     // Get canvas
     this.layout.getCanvas().then((canvas) => {
-      // Add elements to widget
-      const addElementsToWidget = function(
-        elements,
-        widget,
-      ) {
-        // Loop through elements
-        elements.forEach((element) => {
-          // Create a unique id for the element
-          element.elementId =
-            'element_' + element.id + '_' +
-            Math.floor(Math.random() * 1000000);
-
-          // Add element to the widget
-          widget.addElement(element, false);
-        });
-
-        // Save JSON with new element into the widget
-        widget.saveElements().then((_res) => {
-          const firstElement = elements[0];
-
-          // If it's group, save it as temporary object
-          if (isGroup) {
-            lD.viewer.saveTemporaryObject(
-              firstElement.groupId,
-              'element-group',
-              {
-                type: 'element-group',
-                parentType: 'widget',
-                widgetId: widget.widgetId,
-                regionId: widget.regionId.split('_')[1],
-              },
-            );
-          } else {
-            // Save the first element as a temporary object
-            lD.viewer.saveTemporaryObject(
-              firstElement.elementId,
-              'element',
-              {
-                type: 'element',
-                parentType: 'widget',
-                widgetId: widget.widgetId,
-                regionId: widget.regionId.split('_')[1],
-              },
-            );
-          }
-
-          // Reload data and select element when data reloads
-          lD.reloadData(lD.layout,
-            {
-              refreshEditor: true,
-            });
-        });
-      };
-
       // Create element
       const createElement = function({
         id,
@@ -1601,16 +1547,18 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             );
 
             // Add element to the new widget
-            addElementsToWidget(
+            self.addElementsToWidget(
               elements,
               newWidget,
+              isGroup,
             );
           });
         } else {
           // Add element to the current widget
-          addElementsToWidget(
+          self.addElementsToWidget(
             elements,
             currentWidget,
+            isGroup,
           );
         }
       };
@@ -2475,6 +2423,7 @@ lD.openPlaylistEditor = function(playlistId, region) {
 lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   const objId = $(obj).attr('id');
   const objType = $(obj).data('type');
+  let canBeCopied = false;
   let objAuxId = null;
 
   // Don't open context menu in read only mode
@@ -2487,6 +2436,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   } else if (objType == 'element' || objType == 'element-group') {
     objAuxId =
       'widget_' + $(obj).data('regionId') + '_' + $(obj).data('widgetId');
+
+    canBeCopied = true;
   }
 
   // Get object
@@ -2495,7 +2446,10 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   // Create menu and append to the designer div
   // ( using the object extended with translations )
   lD.editorContainer.append(
-    contextMenuTemplate(Object.assign(layoutObject, {trans: contextMenuTrans})),
+    contextMenuTemplate(Object.assign(layoutObject, {
+      trans: contextMenuTrans,
+      canBeCopied: canBeCopied,
+    })),
   );
 
   // Set menu position ( and fix page limits )
@@ -2556,6 +2510,74 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       // Move widget in the timeline
       lD.layout.moveWidgetInRegion(
         layoutObject.regionId, layoutObject.id, target.data('actionType'),
+      );
+    } else if (target.data('action') == 'Copy') {
+      // For now, use an offset value to position the new element
+      const offsetMove = 20;
+
+      // Get widget
+      const elementWidget =
+        lD.getElementByTypeAndId('widget', objAuxId, 'canvas');
+
+      // Element array to add
+      const elementArray = [];
+
+      const createNewElement = function(element, groupId = null) {
+        // Create temporary copy element
+        const elementCopy = Object.assign(
+          {},
+          element,
+        );
+
+        // Set type as element type before adding
+        elementCopy.type = elementCopy.elementType;
+
+        // Get new random id
+        elementCopy.elementId =
+          'element_' + element.id + '_' +
+          Math.floor(Math.random() * 1000000);
+
+        // If it's in a group
+        if (groupId) {
+          // Add group id
+          elementCopy.groupId = groupId;
+
+          // Add offset to group for the element
+          elementCopy.groupProperties = Object.assign(
+            {},
+            elementCopy.groupProperties,
+          );
+          elementCopy.groupProperties.top += offsetMove;
+          elementCopy.groupProperties.left += offsetMove;
+
+          // Add offset if it's not in a group
+          elementCopy.top += offsetMove;
+          elementCopy.left += offsetMove;
+        } else {
+          // Add offset if it's not in a group
+          elementCopy.top += offsetMove;
+          elementCopy.left += offsetMove;
+        }
+
+        return elementCopy;
+      };
+
+      if (layoutObject.type == 'element') {
+        elementArray.push(createNewElement(layoutObject));
+      } else if (layoutObject.type == 'element-group') {
+        // Generate a random group id
+        const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+        Object.values(layoutObject.elements).forEach((el) => {
+          elementArray.push(createNewElement(el, groupId));
+        });
+      }
+
+      // Add element to widget
+      lD.addElementsToWidget(
+        elementArray,
+        elementWidget,
+        (layoutObject.type == 'element-group'),
       );
     } else if (target.data('action') == 'editPlaylist') {
       // Open playlist editor
@@ -3570,4 +3592,64 @@ lD.closeDrawerWidget = function() {
 
   // Clear previous selected object
   lD.previousSelectedObject = {};
+};
+
+/**
+ * Add elements to widget
+ * @param {object[]} elements - One or more elements to be added
+ * @param {widget} widget - Target widget
+ * @param {boolean} isGroup
+ */
+lD.addElementsToWidget = function(
+  elements,
+  widget,
+  isGroup = false,
+) {
+  // Loop through elements
+  elements.forEach((element) => {
+    // Create a unique id for the element
+    element.elementId =
+      'element_' + element.id + '_' +
+      Math.floor(Math.random() * 1000000);
+
+    // Add element to the widget
+    widget.addElement(element, false);
+  });
+
+  // Save JSON with new element into the widget
+  widget.saveElements().then((_res) => {
+    const firstElement = elements[0];
+
+    // If it's group, save it as temporary object
+    if (isGroup) {
+      lD.viewer.saveTemporaryObject(
+        firstElement.groupId,
+        'element-group',
+        {
+          type: 'element-group',
+          parentType: 'widget',
+          widgetId: widget.widgetId,
+          regionId: widget.regionId.split('_')[1],
+        },
+      );
+    } else {
+      // Save the first element as a temporary object
+      lD.viewer.saveTemporaryObject(
+        firstElement.elementId,
+        'element',
+        {
+          type: 'element',
+          parentType: 'widget',
+          widgetId: widget.widgetId,
+          regionId: widget.regionId.split('_')[1],
+        },
+      );
+    }
+
+    // Reload data and select element when data reloads
+    lD.reloadData(lD.layout,
+      {
+        refreshEditor: true,
+      });
+  });
 };
