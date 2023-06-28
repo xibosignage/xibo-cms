@@ -71,6 +71,18 @@
         <thumbnail>stock-change-percentage</thumbnail>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+if (String(value).length === 0) {
+    return '';
+}
+
+if (String(value).includes('%')) {
+    return value;
+}
+
+return value + '%';
+]]></onElementParseData>
         <assets>
             <asset id="stock-change-percentage" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-change-percentage.png" />
         </assets>

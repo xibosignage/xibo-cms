@@ -100,6 +100,9 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var string A Renderer to run if custom rendering is required. */
     public $onTemplateRender;
+
+    /** @var string A data parser for elements */
+    public $onElementParseData;
     
     /** @var bool $isError Does this module have any errors? */
     public $isError;

@@ -31,6 +31,9 @@ require('url-search-params-polyfill');
 // Include HLS.js
 window.Hls = require('hls.js');
 
+// Include common transformer
+window.transformer = require('../../ui/src/helpers/transformer.js');
+
 // Our own imports
 import '../vendor/xibo-interactive-control.min.js';
 import './xibo-calendar-render';

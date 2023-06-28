@@ -1304,6 +1304,31 @@ Viewer.prototype.renderElementContent = function(
         // Send uniqueID
         convertedProperties.uniqueID = element.elementId;
 
+        const extendedDataKey = transformer.getExtendedDataKey(
+          template.extends.with,
+        );
+
+        if (extendedDataKey !== null &&
+          template.onElementParseData &&
+          typeof window[
+            `onElementParseData_${element.id}`
+          ] === 'function'
+        ) {
+          const onElementParseData = window[
+            `onElementParseData_${element.id}`
+          ];
+
+          if (onElementParseData &&
+            convertedProperties.data.hasOwnProperty(extendedDataKey)
+          ) {
+            convertedProperties.data[
+              extendedDataKey
+            ] = onElementParseData(
+              elData[extendedDataKey],
+            );
+          }
+        }
+
         // Compile hbs template with data
         let hbsHtml = hbsTemplate(convertedProperties);
 
