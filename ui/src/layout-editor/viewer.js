@@ -1186,8 +1186,8 @@ Viewer.prototype.renderElementContent = function(
   // template will be already loaded/chached )
   element.getTemplate().then((template) => {
     // Create and render HBS template from template
-    const stencil = template.parent ?
-      template.parent.stencil : template.stencil;
+    const stencil = template.stencil ?
+      template.stencil : template.parent.stencil;
     let hbsTemplate = Handlebars.compile(
       (stencil?.hbs) ?
         stencil.hbs:
@@ -1304,28 +1304,29 @@ Viewer.prototype.renderElementContent = function(
         // Send uniqueID
         convertedProperties.uniqueID = element.elementId;
 
-        const extendedDataKey = transformer.getExtendedDataKey(
-          template.extends.with,
-        );
+        const extendedDataKey = template?.extends ?
+          transformer.getExtendedDataKey(template.extends.with) : null;
+        const elementParseDataFn = window[`onElementParseData_${element.id}`];
+        const hasElementParseDataFn = typeof elementParseDataFn === 'function';
 
-        if (extendedDataKey !== null &&
-          template.onElementParseData &&
-          typeof window[
-            `onElementParseData_${element.id}`
-          ] === 'function'
-        ) {
-          const onElementParseData = window[
-            `onElementParseData_${element.id}`
-          ];
-
-          if (onElementParseData &&
-            convertedProperties.data.hasOwnProperty(extendedDataKey)
-          ) {
-            convertedProperties.data[
-              extendedDataKey
-            ] = onElementParseData(
-              elData[extendedDataKey],
-            );
+        if (extendedDataKey !== null) {
+          if (template.onElementParseData && hasElementParseDataFn) {
+            if (convertedProperties.data.hasOwnProperty(extendedDataKey)) {
+              convertedProperties.data[
+                extendedDataKey
+              ] = elementParseDataFn(
+                elData[extendedDataKey],
+              );
+            } else {
+              // We set/add the property to the element
+              convertedProperties[extendedDataKey] = elementParseDataFn(
+                convertedProperties[extendedDataKey],
+              );
+            }
+          }
+        } else {
+          if (template.onElementParseData && hasElementParseDataFn) {
+            elementParseDataFn();
           }
         }
 

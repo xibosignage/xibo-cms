@@ -75,16 +75,60 @@ return value + '%';
     </template>
     <template>
         <id>currency_changeIcon</id>
-        <extends override="text" with="data.ChangeIcon">text</extends>
         <title>Change Icon</title>
         <type>element</type>
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>currency-change-percentage</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <thumbnail>currency-change-icon</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <stencil>
+            <hbs><![CDATA[
+<div class="arrow"><div class="{{data.ChangeIcon}}"></div></div>
+<style>
+.arrow {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.down-arrow {
+    width: fit-content;
+    height: auto;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid red;
+    position: absolute;
+    top: calc(50% - 5px);
+    left: calc(50% - 11px);
+}
+
+.up-arrow {
+    width: fit-content;
+    height: auto;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid green;
+    position: absolute;
+    top: calc(50% - 5px);
+    left: calc(50% - 11px);
+}
+
+.right-arrow {
+    width: fit-content;
+    height: auto;
+    border-left: 10px solid gray;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    position: absolute;
+    top: calc(50% - 11px);
+    left: calc(50% - 5px);
+}
+</style>
+]]></hbs>
+        </stencil>
         <assets>
-            <asset id="currency-change-percentage" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+            <asset id="currency-change-icon" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-change-icon.png" />
         </assets>
     </template>
     <template>
@@ -97,8 +141,24 @@ return value + '%';
         <thumbnail>currency-logo</thumbnail>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
+        <stencil>
+            <hbs><![CDATA[
+<div class="img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
+    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
+    <div class="center-block flag-icon-container" style="width: 100px;
+        height: 100px;
+        display: block;
+        margin-right: auto;
+        margin-left: auto;">
+        <img src="[[assetId=flags]]" class="flag-icon flag-icon-{{url}}" style="width: 1000%;" />
+    </div>
+    <link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen"/>
+</div>]]></hbs>
+        </stencil>
         <assets>
             <asset id="currency-logo" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-logo.png" />
+            <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp" />
+            <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css" />
         </assets>
     </template>
 </templates>

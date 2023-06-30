@@ -431,7 +431,7 @@ function XiboInitialise(scope, options) {
             return settings;
           },
           transform: function(list) {
-            return list?.data?.length > 0 ? $.map(list.data, function(tagObj) {
+            return list.data.length > 0 ? $.map(list.data, function(tagObj) {
               return tagObj.type;
             }) : [];
           },
