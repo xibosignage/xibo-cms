@@ -430,12 +430,10 @@ function XiboInitialise(scope, options) {
 
             return settings;
           },
-          filter: function(list) {
-            return $.map(list.data, function(tagObj) {
-              return {
-                tag: tagObj.type,
-              };
-            });
+          transform: function(list) {
+            return list.data.length > 0 ? $.map(list.data, function(tagObj) {
+              return tagObj.type;
+            }) : [];
           },
         },
       });
@@ -444,14 +442,20 @@ function XiboInitialise(scope, options) {
 
       promise
         .done(function() {
+          // Destroy tagsinput instance
+          if (typeof self.tagsinput === 'function') {
+            self.tagsinput('destroy');
+          }
+
           // Initialise tagsinput with autocomplete
           self.tagsinput({
-            typeaheadjs: {
+            typeaheadjs: [{
+              hint: true,
+              highlight: true,
+            }, {
               name: 'tags',
-              displayKey: 'tag',
-              valueKey: 'tag',
               source: tags.ttAdapter(),
-            },
+            }],
           });
         })
         .fail(function() {

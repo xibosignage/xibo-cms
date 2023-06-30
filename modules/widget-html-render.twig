@@ -115,6 +115,13 @@
         }
     </script>
 {% endfor %}
+{% for templateId, parser in onElementParseData %}
+    <script type="text/javascript" id="onElementParseData-{{ templateId }}">
+      function onElementParseData_{{ templateId }}(value) {
+          {{ parser|raw  }}
+      }
+    </script>
+{% endfor %}
     <!-- NUMITEMS={{ numItems }} -->
     <!-- DURATION={{ duration }} -->
 </html>
