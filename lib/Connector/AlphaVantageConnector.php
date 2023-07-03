@@ -115,7 +115,6 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 // If we've got data, then set our cache period.
                 $event->getDataProvider()->setCacheTtl($this->getSetting('cachePeriod', 3600));
-                $dataProvider->setIsHandled();
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
                 $dataProvider->addError(__('Unable to contact the AlphaVantage API'));
@@ -123,7 +122,14 @@ class AlphaVantageConnector implements ConnectorInterface
         }
     }
 
-    public function onWidgetEditOption(WidgetEditOptionRequestEvent $event)
+    /**
+     * If the Widget type is stocks, process it and update options
+     *
+     * @param WidgetEditOptionRequestEvent $event
+     * @return void
+     * @throws NotFoundException
+     */
+    public function onWidgetEditOption(WidgetEditOptionRequestEvent $event): void
     {
         $this->getLogger()->debug('onWidgetEditOption');
 
@@ -143,6 +149,9 @@ class AlphaVantageConnector implements ConnectorInterface
             try {
                 $results = [];
                 $bestMatches = $this->getSearchResults($event->getPropertyValue() ?? '');
+                $this->getLogger()->debug('onWidgetEditOption::getSearchResults => ' . var_export([
+                    'bestMatches' => $bestMatches,
+                ], true));
 
                 if ($bestMatches === false) {
                     $results[] = [
@@ -212,9 +221,9 @@ class AlphaVantageConnector implements ConnectorInterface
      * Get Stocks data, parse it to an array and add each item to the dataProvider
      *
      * @throws ConfigurationException
-     * @throws GeneralException
+     * @throws InvalidArgumentException|GeneralException
      */
-    private function getStockResults(DataProviderInterface $dataProvider)
+    private function getStockResults(DataProviderInterface $dataProvider): void
     {
         // Construct the YQL
         // process items
@@ -222,7 +231,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
         if ($items == '') {
             $this->getLogger()->error('Missing Items for Stocks Module with WidgetId ' . $dataProvider->getWidgetId());
-            return;
+            throw new InvalidArgumentException(__('Missing Items for Stocks Module'), 'items');
         }
 
         // Parse items out into an array
@@ -267,8 +276,10 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 // Parse the result and add it to our data array
                 $dataProvider->addItem($item);
-            } catch (\Exception $exception) {
-                $this->getLogger()->error('Invalid symbol ' . $symbol . ', e: ' . $exception->getMessage());
+                $dataProvider->setIsHandled();
+            } catch (InvalidArgumentException $invalidArgumentException) {
+                $this->getLogger()->error('Invalid symbol ' . $symbol . ', e: ' . $invalidArgumentException->getMessage());
+                throw new InvalidArgumentException(__('Invalid symbol ' . $symbol), 'items');
             }
         }
     }
@@ -366,8 +377,9 @@ class AlphaVantageConnector implements ConnectorInterface
      *
      * @param DataProviderInterface $dataProvider
      * @return void
+     * @throws InvalidArgumentException
      */
-    private function getCurrenciesResults(DataProviderInterface $dataProvider)
+    private function getCurrenciesResults(DataProviderInterface $dataProvider): void
     {
         // What items/base currencies are we interested in?
         $items = $dataProvider->getProperty('items');
@@ -378,7 +390,7 @@ class AlphaVantageConnector implements ConnectorInterface
                 'Missing Items for Currencies Module with WidgetId ' .
                 $dataProvider->getWidgetId()
             );
-            return;
+            throw new InvalidArgumentException(__('Missing Items for Currencies Module. Please provide items in order to proceed.'), 'items');
         }
 
         // Does this require a reversed conversion?
@@ -462,6 +474,7 @@ class AlphaVantageConnector implements ConnectorInterface
                 );
 
                 $dataProvider->addItem($item);
+                $dataProvider->setIsHandled();
             }
         } catch (GeneralException $requestException) {
             $this->getLogger()->error('Problem getting currency information. E = ' . $requestException->getMessage());

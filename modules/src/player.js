@@ -520,11 +520,30 @@ $(function() {
                     // For each data item, parse it and add it to the content;
                     let templateAlreadyAdded = false;
                     $.each(dataItems, function(_key, item) {
-                      (hbs) && renderElement(Object.assign(
-                        templateData,
-                        {data: item},
-                      ));
+                      if (hbs) {
+                        const extendDataWith = transformer
+                          .getExtendedDataKey(dataOverrideWith);
+                        if (extendDataWith !== null && typeof window[
+                          `onElementParseData_${templateData.id}`
+                        ] === 'function') {
+                          const onElementParseData = window[
+                            `onElementParseData_${templateData.id}`
+                          ];
 
+                          if (onElementParseData &&
+                            item.hasOwnProperty(extendDataWith)
+                          ) {
+                            item[extendDataWith] = onElementParseData(
+                              item[extendDataWith],
+                            );
+                          }
+                        }
+
+                        renderElement(Object.assign(
+                          templateData,
+                          {data: item},
+                        ));
+                      }
                       templateAlreadyAdded = true;
                     });
 
