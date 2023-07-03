@@ -207,6 +207,12 @@ Layout.prototype.createDataStructure = function(data) {
                     );
                 }
 
+                // Add group reference to element
+                newElement.group = newWidget.elementGroups[newElement.groupId];
+
+                // Remove temporary group properties from element
+                delete newElement.groupProperties;
+
                 // Add element to group
                 newWidget
                   .elementGroups[newElement.groupId]
