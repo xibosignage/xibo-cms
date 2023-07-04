@@ -1778,7 +1778,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           elementOptions.layer = previousElement.layer + 1;
 
           // Add previous widget to the elements array
+          // and to element group
           elements.push(previousElement);
+          targetWidget.elementGroups[groupId]
+            .elements[previousElement.elementId] = previousElement;
 
           addToGroup = true;
         }
@@ -1794,7 +1797,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           elements,
           addToGroup,
           addToGroupType,
-          true,
+          addToGroup,
         );
       }
     });

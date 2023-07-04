@@ -490,14 +490,27 @@ Viewer.prototype.handleInteractions = function() {
         (
           $(e.target).hasClass('designer-region-zone') ||
           $(e.target).hasClass('designer-region-playlist') ||
-          $(e.target).hasClass('designer-widget')
+          $(e.target).hasClass('designer-widget') ||
+          $(e.target).hasClass('designer-element')
         ) &&
         $(e.target).hasClass('ui-droppable-active')
       ) {
-        // Add item to the selected region
+        // Add item to the selected element
         lD.selectObject({
           target: $(e.target),
           forceSelect: true,
+          clickPosition: clickPosition,
+        });
+      } else if (
+        $(e.target).hasClass('group-select-overlay') &&
+        $(e.target).parents('.designer-element-group')
+          .hasClass('ui-droppable-active')
+      ) {
+        // Add item to the selected element group
+        lD.selectObject({
+          target: $(e.target).parents('.designer-element-group'),
+          forceSelect: true,
+          clickPosition: clickPosition,
         });
       } else if (
         $(e.target).hasClass('layout-wrapper') ||
