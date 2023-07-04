@@ -9,6 +9,8 @@ const viewerActionEditRegionTemplate =
   require('../templates/viewer-action-edit-region.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const viewerElementTemplate = require('../templates/viewer-element.hbs');
+const viewerElementGroupTemplate =
+  require('../templates/viewer-element-group.hbs');
 const viewerElementContentTemplate =
   require('../templates/viewer-element-content.hbs');
 const drawThrottle = 60;
@@ -281,6 +283,44 @@ Viewer.prototype.handleInteractions = function() {
   const self = this;
   const $viewerContainer = this.DOMObject;
 
+  const calculatePosition = function(
+    $droppableArea,
+    event,
+    ui,
+  ) {
+    const draggableDimensions = {
+      width: ui.draggable.width(),
+      height: ui.draggable.height(),
+    };
+
+    const droppableAreaPosition = {
+      x: $droppableArea.offset().left,
+      y: $droppableArea.offset().top,
+    };
+
+    // Get position, event location
+    // adjusted with the viewer container
+    // and the helper offset
+    const position = {
+      top: event.pageY -
+        droppableAreaPosition.y -
+        (draggableDimensions.height / 2),
+      left: event.pageX -
+        droppableAreaPosition.x -
+        (draggableDimensions.width / 2),
+    };
+
+    // Scale value to original size ( and parse to int )
+    position.top = parseInt(
+      position.top /
+      self.containerElementDimensions.scale);
+    position.left = parseInt(
+      position.left /
+      self.containerElementDimensions.scale);
+
+    return position;
+  };
+
   // Handle droppable layout area
   const $droppableArea = $viewerContainer.find('.layout.droppable');
   $droppableArea.droppable({
@@ -291,35 +331,11 @@ Viewer.prototype.handleInteractions = function() {
     },
     tolerance: 'pointer',
     drop: _.debounce(function(event, ui) {
-      const draggableDimensions = {
-        width: ui.draggable.width(),
-        height: ui.draggable.height(),
-      };
-
-      const droppableAreaPosition = {
-        x: $droppableArea.offset().left,
-        y: $droppableArea.offset().top,
-      };
-
-      // Get position, event location
-      // adjusted with the viewer container
-      // and the helper offset
-      const position = {
-        top: event.pageY -
-          droppableAreaPosition.y -
-          (draggableDimensions.height / 2),
-        left: event.pageX -
-          droppableAreaPosition.x -
-          (draggableDimensions.width / 2),
-      };
-
-      // Scale value to original size ( and parse to int )
-      position.top = parseInt(
-        position.top /
-        self.containerElementDimensions.scale);
-      position.left = parseInt(
-        position.left /
-        self.containerElementDimensions.scale);
+      const position = calculatePosition(
+        $droppableArea,
+        event,
+        ui,
+      );
 
       lD.dropItemAdd(event.target, ui.draggable[0], position);
     }, 200),
@@ -380,6 +396,58 @@ Viewer.prototype.handleInteractions = function() {
     }, 200),
   });
 
+  // Handle droppable element and group
+  this.DOMObject.find(
+    '.designer-region-canvas > .designer-element, ' +
+    '.designer-element-group',
+  ).each((_idx, element) => {
+    const $el = $(element);
+    let elementsType = 'global';
+
+    if ($el.hasClass('designer-element-group')) {
+      // Go through elements and check if there's any other than global
+      $el.find('.designer-element').each((_idx, elementInGroup) => {
+        const $elInGroup = $(elementInGroup);
+        // Check element type
+        if ($elInGroup.data('elementType') != 'global') {
+          elementsType = $elInGroup.data('elementType');
+          return false;
+        }
+      });
+    } else {
+      // Check element type
+      if ($el.data('elementType') != 'global') {
+        elementsType = $el.data('elementType');
+      }
+    }
+
+    $el.droppable({
+      greedy: true,
+      tolerance: 'pointer',
+      accept: (draggable) => {
+        // Validate if element is of the same
+        // type as existing element or group
+        return (
+          lD.common.hasTarget(draggable, 'element') &&
+          (
+            $(draggable).data('dataType') == elementsType ||
+            $(draggable).data('dataType') == 'global'
+          )
+        );
+      },
+      drop: _.debounce(function(event, ui) {
+        const position = calculatePosition(
+          $droppableArea,
+          event,
+          ui,
+        );
+
+        lD.dropItemAdd(event.target, ui.draggable[0], position);
+      }, 200),
+    });
+  });
+
+
   // Handle click and double click
   let clicks = 0;
   let timer = null;
@@ -422,14 +490,27 @@ Viewer.prototype.handleInteractions = function() {
         (
           $(e.target).hasClass('designer-region-zone') ||
           $(e.target).hasClass('designer-region-playlist') ||
-          $(e.target).hasClass('designer-widget')
+          $(e.target).hasClass('designer-widget') ||
+          $(e.target).hasClass('designer-element')
         ) &&
         $(e.target).hasClass('ui-droppable-active')
       ) {
-        // Add item to the selected region
+        // Add item to the selected element
         lD.selectObject({
           target: $(e.target),
           forceSelect: true,
+          clickPosition: clickPosition,
+        });
+      } else if (
+        $(e.target).hasClass('group-select-overlay') &&
+        $(e.target).parents('.designer-element-group')
+          .hasClass('ui-droppable-active')
+      ) {
+        // Add item to the selected element group
+        lD.selectObject({
+          target: $(e.target).parents('.designer-element-group'),
+          forceSelect: true,
+          clickPosition: clickPosition,
         });
       } else if (
         $(e.target).hasClass('layout-wrapper') ||
@@ -487,6 +568,7 @@ Viewer.prototype.handleInteractions = function() {
               // Select element if exists
               lD.selectObject({
                 target: $(e.target),
+                clickPosition: clickPosition,
               });
               self.selectElement($(e.target));
             } else if (
@@ -496,6 +578,7 @@ Viewer.prototype.handleInteractions = function() {
               // Select element if exists
               lD.selectObject({
                 target: $(e.target).parent(),
+                clickPosition: clickPosition,
               });
               self.selectElement($(e.target).parent());
             }
@@ -506,8 +589,7 @@ Viewer.prototype.handleInteractions = function() {
           clicks = 0;
 
           if (
-            $(e.target).hasClass('group-select-overlay') &&
-            !$(e.target).parent().hasClass('selected')
+            $(e.target).hasClass('group-select-overlay')
           ) {
             self.editGroup(
               $(e.target).parents('.designer-element-group'),
@@ -1016,10 +1098,10 @@ Viewer.prototype.renderElement = function(
   // If element belongs to a group, adjust top and left
   if (element.groupId) {
     elementRenderDimensions.left -=
-      element.groupProperties.left * viewerScale;
+      element.group.left * viewerScale;
 
     elementRenderDimensions.top -=
-      element.groupProperties.top * viewerScale;
+      element.group.top * viewerScale;
   }
 
   // Render element container
@@ -1036,19 +1118,10 @@ Viewer.prototype.renderElement = function(
       $canvasRegionContainer.find(`#${element.groupId}`).length == 0
     ) {
       $canvasRegionContainer.append(
-        `<div id="${element.groupId}" class="designer-element-group editable"
-            data-type="element-group"
-            data-region-id="${element.regionId}"
-            data-widget-id="${element.widgetId}"
-            >
-          <div class="group-edit-btn viewer-element-select"
-            title="${viewerTrans.editGroup}">
-            <i class="fa fa-edit" aria-hidden="true"></i>
-            <i class="fa fa-close" aria-hidden="true"></i>
-          </div>
-          <div class="group-select-overlay viewer-element-select">
-          </div>
-        </div>`,
+        viewerElementGroupTemplate({
+          element: element,
+          trans: viewerTrans,
+        }),
       );
     }
 
@@ -1109,10 +1182,10 @@ Viewer.prototype.renderElement = function(
     // Set dimensions
     $groupContainer.css({
       position: 'absolute',
-      height: element.groupProperties.height * viewerScale,
-      left: element.groupProperties.left * viewerScale,
-      top: element.groupProperties.top * viewerScale,
-      width: element.groupProperties.width * viewerScale,
+      height: element.group.height * viewerScale,
+      left: element.group.left * viewerScale,
+      top: element.group.top * viewerScale,
+      width: element.group.width * viewerScale,
     });
 
     // Check if element ::after layer is equal or greater than group layer
@@ -1671,13 +1744,11 @@ Viewer.prototype.saveRegionProperties = function(
  * Save element properties
  * @param {*} element - Element object
  * @param {*} hasMoved
- * @param {*} groupPosition
  * @param {*} save
  */
 Viewer.prototype.saveElementProperties = function(
   element,
   hasMoved = false,
-  groupPosition = false,
   save = true,
 ) {
   const self = this;
@@ -1709,51 +1780,27 @@ Viewer.prototype.saveElementProperties = function(
     elementObject.rotation = Number(rotation.split('deg')[0]);
   }
 
-  // If we have group position, we also need to update groupProperties
-  if (groupPosition) {
-    elementObject.groupProperties.top =
-      Math.round(groupPosition.top / scale);
-    elementObject.groupProperties.left =
-      Math.round(groupPosition.left / scale);
-
-    if (groupPosition.width) {
-      elementObject.groupProperties.width =
-        Math.round(groupPosition.width / scale);
-    }
-
-    if (groupPosition.height) {
-      elementObject.groupProperties.height =
-        Math.round(groupPosition.height / scale);
-    }
-  }
-
   // Only change top/left if element has moved
   if (hasMoved) {
     const topPosition = Number($element.css('top').split('px')[0]);
     const leftPosition = Number($element.css('left').split('px')[0]);
 
-    elementObject.top = (groupPosition && groupPosition.top) ?
-      Math.round((topPosition + groupPosition.top) / scale) :
+    elementObject.top = (elementObject.group && elementObject.group.top) ?
+      Math.round(topPosition / scale) + elementObject.group.top :
       Math.round(topPosition / scale);
-    elementObject.left = (groupPosition && groupPosition.left) ?
-      Math.round((leftPosition + groupPosition.left) / scale) :
+    elementObject.left = (elementObject.group && elementObject.group.left) ?
+      Math.round(leftPosition / scale) + elementObject.group.left :
       Math.round(leftPosition / scale);
   }
 
   // If we're not saving through a group
   // Update position form values
-  if (!groupPosition) {
+  if (elementObject.selected) {
     lD.propertiesPanel.updatePositionForm({
-      top: elementObject.top,
-      left: elementObject.left,
-      width: elementObject.width,
-      height: elementObject.height,
-      rotation: elementObject.rotation,
-    });
-  } else if (elementObject.selected) {
-    lD.propertiesPanel.updatePositionForm({
-      top: elementObject.top - elementObject.groupProperties.top,
-      left: elementObject.left - elementObject.groupProperties.left,
+      top: (elementObject.group) ?
+        (elementObject.top - elementObject.group.top) : elementObject.top,
+      left: (elementObject.group) ?
+        (elementObject.left - elementObject.group.left) : elementObject.left,
       width: elementObject.width,
       height: elementObject.height,
       rotation: elementObject.rotation,
@@ -1767,7 +1814,7 @@ Viewer.prototype.saveElementProperties = function(
 };
 
 /**
- * Save element group properties
+ * Save element group properties and recalculate dimensions
  * @param {*} elementGroup
  * @param {boolean} [updateDimensions=false]
  * @param {boolean} [savingGroup=true] - if we are saving the group object
@@ -1782,7 +1829,13 @@ Viewer.prototype.saveElementGroupProperties = function(
 
   // Get group position
   const $elementGroup = $(elementGroup);
-  const groupPosition = $elementGroup.position();
+  const groupPosition = {
+    top: $elementGroup.position().top,
+    left: $elementGroup.position().left,
+    width: $elementGroup.width(),
+    height: $elementGroup.height(),
+  };
+
   const groupObject = lD.getElementByTypeAndId(
     'element-group',
     $elementGroup.attr('id'),
@@ -1850,7 +1903,7 @@ Viewer.prototype.saveElementGroupProperties = function(
         $element[0].style.transform = targetTransform;
       }
 
-      // Apply poition offsets
+      // Apply position offsets
       elementPosition.top -= updateOffset.top;
       elementPosition.left -= updateOffset.left;
 
@@ -1881,6 +1934,12 @@ Viewer.prototype.saveElementGroupProperties = function(
     $elementGroup.css(groupPosition);
   }
 
+  // Save scaled group dimensions to the object
+  groupObject.top = Math.round(groupPosition.top / scale);
+  groupObject.left = Math.round(groupPosition.left / scale);
+  groupObject.width = Math.round(groupPosition.width / scale);
+  groupObject.height = Math.round(groupPosition.height / scale);
+
   // Calculate group elements position, but only save on the last element
   $groupElements.each(function(_key, el) {
     // if we're updating the dimensions of the group
@@ -1897,16 +1956,12 @@ Viewer.prototype.saveElementGroupProperties = function(
     self.saveElementProperties(
       el,
       true,
-      groupPosition,
       _key == $groupElements.length - 1,
     );
   });
 
   // Save position for the group object
   if (savingGroup) {
-    groupObject.top = Math.round(groupPosition.top / scale);
-    groupObject.left = Math.round(groupPosition.left / scale);
-
     // Update position form values
     lD.propertiesPanel.updatePositionForm({
       top: groupObject.top,

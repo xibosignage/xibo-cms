@@ -43,6 +43,7 @@ const Toolbar = require('../editor-core/toolbar.js');
 const Topbar = require('../editor-core/topbar.js');
 const Bottombar = require('../editor-core/bottombar.js');
 const Widget = require('../editor-core/widget.js');
+const ElementGroup = require('../editor-core/element-group.js');
 
 // Common funtions/tools
 const Common = require('../editor-core/common.js');
@@ -394,11 +395,27 @@ lD.selectObject =
             target.hasClass('designer-widget') &&
             activeDroppable
           ) ||
-          target.hasClass('ui-droppable-actions-target')
+          target.hasClass('ui-droppable-actions-target') ||
+          (
+            (
+              target.hasClass('designer-element-group') ||
+              target.hasClass('designer-element')
+            ) &&
+            lD.common.hasTarget(card, 'element')
+          )
         )
       ) {
+        // Send click position if we're adding to elements and element groups
+        const clickPositionElement = (
+          (
+            target.hasClass('designer-element-group') ||
+            target.hasClass('designer-element')
+          ) &&
+          lD.common.hasTarget(card, 'element')
+        ) ? clickPosition : null;
+
         // Simulate drop item add
-        this.dropItemAdd(target, card);
+        this.dropItemAdd(target, card, clickPositionElement);
       } else {
         // No target - add to layout
         this.dropItemAdd(null, card, clickPosition);
@@ -1308,6 +1325,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const droppableIsZone = ($(droppable).data('subType') === 'zone');
   const droppableIsPlaylist =($(droppable).data('subType') === 'playlist');
   const droppableIsWidget = $(droppable).hasClass('designer-widget');
+  const droppableIsElement = $(droppable).hasClass('designer-element');
+  const droppableIsElementGroup =
+    $(droppable).hasClass('designer-element-group');
 
   /**
    * Import from provider or add media from library
@@ -1461,6 +1481,36 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   ) {
     const isGroup = (draggableType == 'element-group');
     const self = this;
+    let addToGroupId = null;
+    let addToGroupWidgetId = null;
+    let addToExistingElementId = null;
+
+    // If target ( element or group ) is type global
+    // if draggable is type global or if both are the same type
+    const canBeAddedToGroup = function() {
+      return draggableData.dataType == 'global' ||
+        draggableData.dataType == $(droppable).data('elementType');
+    };
+
+    // Create group if group is type global
+    // if draggable is type global or if both are the same type
+    if (droppableIsElement) {
+      if (canBeAddedToGroup()) {
+        addToExistingElementId = $(droppable).attr('id');
+        addToGroupWidgetId = 'widget_' + $(droppable).data('regionId') +
+          '_' + $(droppable).data('widgetId');
+      }
+    }
+
+    // Add to group if group is type global
+    // if draggable is type global or if both are the same type
+    if (droppableIsElementGroup) {
+      if (canBeAddedToGroup()) {
+        addToGroupId = $(droppable).attr('id');
+        addToGroupWidgetId = 'widget_' + $(droppable).data('regionId') +
+          '_' + $(droppable).data('widgetId');
+      }
+    }
 
     // Get canvas
     this.layout.getCanvas().then((canvas) => {
@@ -1516,13 +1566,19 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
 
       const createWidgetAndAddElements = function(
         elements,
+        inGroup = false,
+        newGroupType,
+        recalculateGroupBeforeSaving,
       ) {
+        // Widget type
+        (!newGroupType) && (newGroupType = draggableSubType);
+
         // Check if we have a canvas widget with
         // subtype equal to the draggableSubType
         // If we do, add the element to that widget
         // If we don't, create a new widget
         const currentWidget = Object.values(canvas.widgets).find((w) => {
-          return w.subType === draggableSubType;
+          return w.subType === newGroupType;
         });
 
         // If we don't have a widget, create a new one
@@ -1531,7 +1587,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           lD.addModuleToPlaylist(
             canvas.regionId,
             canvas.playlists.playlistId,
-            draggableSubType,
+            newGroupType,
             draggableData,
             null,
             false,
@@ -1550,7 +1606,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             self.addElementsToWidget(
               elements,
               newWidget,
-              isGroup,
+              inGroup,
+              recalculateGroupBeforeSaving,
             );
           });
         } else {
@@ -1558,7 +1615,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           self.addElementsToWidget(
             elements,
             currentWidget,
-            isGroup,
+            inGroup,
+            recalculateGroupBeforeSaving,
           );
         }
       };
@@ -1584,8 +1642,12 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               const newElement = createElement({
                 id: element.id,
                 type: draggableData.dataType,
-                left: dropPosition.left + element.left,
-                top: dropPosition.top + element.top,
+                left: (dropPosition) ?
+                  dropPosition.left + element.left :
+                  element.left,
+                top: (dropPosition) ?
+                  dropPosition.top + element.top :
+                  element.top,
                 width: element.width,
                 height: element.height,
                 layer: element.layer,
@@ -1595,8 +1657,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                 groupProperties: {
                   width: draggableData.templateStartWidth,
                   height: draggableData.templateStartHeight,
-                  top: dropPosition.top,
-                  left: dropPosition.left,
+                  top: (dropPosition) ? dropPosition.top : 0,
+                  left: (dropPosition) ? dropPosition.left : 0,
                 },
               });
 
@@ -1605,16 +1667,19 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             });
 
             // Create widget and add elements
-            createWidgetAndAddElements(elements);
+            createWidgetAndAddElements(
+              elements,
+              true,
+            );
           }
         });
       } else {
-        // Create element
-        const element = createElement({
+        // Element options
+        const elementOptions = {
           id: draggableData.templateId,
           type: draggableData.dataType,
-          left: dropPosition.left,
-          top: dropPosition.top,
+          left: (dropPosition) ? dropPosition.left : 0,
+          top: (dropPosition) ? dropPosition.top : 0,
           width: draggableData.templateStartWidth,
           height: draggableData.templateStartHeight,
           layer: 0,
@@ -1622,13 +1687,118 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           extendsTemplate: draggableData.extendsTemplate,
           extendsOverride: draggableData.extendsOverride,
           extendsOverrideId: draggableData.extendsOverrideId,
-        });
+        };
+
+        let addToGroup = false;
+        let addToGroupType = null;
+
+        // If element has a group, add to it
+        if (addToGroupId) {
+          elementOptions.groupId = addToGroupId;
+
+          // Get group
+          const elementGroup = lD.getElementByTypeAndId(
+            'element-group',
+            addToGroupId,
+            addToGroupWidgetId,
+          );
+
+          const targetWidget = lD.getElementByTypeAndId(
+            'widget',
+            'widget_' + $(droppable).data('regionId') + '_' +
+              $(droppable).data('widgetId'),
+            'canvas',
+          );
+
+          // Get highest layer and group type
+          let highestLayer = 0;
+          Object.values(elementGroup.elements).forEach((el)=> {
+            if (el.layer > highestLayer) {
+              highestLayer = el.layer;
+            }
+          });
+
+          // Set group type as the same as the target widget
+          addToGroupType = targetWidget.subType;
+
+          // Assign layer to element
+          elementOptions.layer = highestLayer + 1;
+
+          // Add group object
+          elementOptions.group = elementGroup;
+
+          addToGroup = true;
+        }
+
+        // If we want to create a new element group
+        if (addToExistingElementId) {
+          // Generate a random group id
+          const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+          // Get previous element
+          const previousElement = lD.getElementByTypeAndId(
+            'element',
+            addToExistingElementId,
+            addToGroupWidgetId,
+          );
+
+          const targetWidget = lD.getElementByTypeAndId(
+            'widget',
+            'widget_' + $(droppable).data('regionId') + '_' +
+              $(droppable).data('widgetId'),
+            'canvas',
+          );
+
+          // Create new element group
+          targetWidget.elementGroups[groupId] = new ElementGroup(
+            Object.assign(
+              {
+                width: previousElement.width,
+                height: previousElement.height,
+                top: previousElement.top,
+                left: previousElement.left,
+              },
+              {
+                id: groupId,
+              },
+            ),
+            $(droppable).data('widgetId'),
+            $(droppable).data('regionId'),
+          );
+
+          // Set group if for the elements
+          previousElement.groupId = groupId;
+          previousElement.group = targetWidget.elementGroups[groupId];
+          elementOptions.groupId = groupId;
+
+          // Check group type
+          addToGroupType = targetWidget.subType;
+
+          // Set new element layer to be the top layer
+          elementOptions.layer = previousElement.layer + 1;
+
+          // Add previous widget to the elements array
+          // and to element group
+          elements.push(previousElement);
+          targetWidget.elementGroups[groupId]
+            .elements[previousElement.elementId] = previousElement;
+
+          addToGroup = true;
+        }
+
+        // Create element
+        const element = createElement(elementOptions);
 
         // Add element to elements array
         elements.push(element);
 
         // Create widget and add elements
-        createWidgetAndAddElements(elements);
+        createWidgetAndAddElements(
+          elements,
+          addToGroup,
+          addToGroupType,
+          addToGroup,
+        );
       }
     });
   } else if (
@@ -2522,7 +2692,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       // Element array to add
       const elementArray = [];
 
-      const createNewElement = function(element, groupId = null) {
+      const createNewElementFromCopy = function(element, groupId = null) {
         // Create temporary copy element
         const elementCopy = Object.assign(
           {},
@@ -2542,34 +2712,48 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           // Add group id
           elementCopy.groupId = groupId;
 
-          // Add offset to group for the element
-          elementCopy.groupProperties = Object.assign(
-            {},
-            elementCopy.groupProperties,
-          );
-          elementCopy.groupProperties.top += offsetMove;
-          elementCopy.groupProperties.left += offsetMove;
+          // If group doesn't exist, create it and add it to the elementGroup
+          if (!elementWidget[groupId]) {
+            // Create copy of previous group
+            elementCopy.group = Object.assign(
+              {},
+              elementCopy.group,
+            );
 
-          // Add offset if it's not in a group
-          elementCopy.top += offsetMove;
-          elementCopy.left += offsetMove;
-        } else {
-          // Add offset if it's not in a group
-          elementCopy.top += offsetMove;
-          elementCopy.left += offsetMove;
+            // Addign new id and position
+            elementCopy.group.id = groupId;
+            elementCopy.group.top += offsetMove;
+            elementCopy.group.left += offsetMove;
+
+            // Add group to widget element groups
+            elementWidget[groupId] = elementCopy.group;
+
+            // Clear elements from group and add new
+            elementWidget[groupId] = {};
+            elementWidget[groupId][elementCopy.elementId] = elementCopy;
+          } else {
+            // Assign group to new element
+            elementCopy.group = elementWidget[groupId];
+            elementWidget[groupId][elementCopy.elementId] = elementCopy;
+          }
         }
+
+        // Also add offset to each element, even in groups
+        // the top/left position is globally based in the editor
+        elementCopy.top += offsetMove;
+        elementCopy.left += offsetMove;
 
         return elementCopy;
       };
 
       if (layoutObject.type == 'element') {
-        elementArray.push(createNewElement(layoutObject));
+        elementArray.push(createNewElementFromCopy(layoutObject));
       } else if (layoutObject.type == 'element-group') {
         // Generate a random group id
         const groupId = 'group_' + Math.floor(Math.random() * 1000000);
 
         Object.values(layoutObject.elements).forEach((el) => {
-          elementArray.push(createNewElement(el, groupId));
+          elementArray.push(createNewElementFromCopy(el, groupId));
         });
       }
 
@@ -3599,22 +3783,40 @@ lD.closeDrawerWidget = function() {
  * @param {object[]} elements - One or more elements to be added
  * @param {widget} widget - Target widget
  * @param {boolean} isGroup
+ * @param {boolean} recalculateGroupBeforeSaving
  */
 lD.addElementsToWidget = function(
   elements,
   widget,
   isGroup = false,
+  recalculateGroupBeforeSaving = false,
 ) {
   // Loop through elements
   elements.forEach((element) => {
-    // Create a unique id for the element
-    element.elementId =
-      'element_' + element.id + '_' +
-      Math.floor(Math.random() * 1000000);
+    // Add only if elements doesn't exist on widget already
+    if (!(
+      element.elementId &&
+      widget.elements[element.elementId]
+    )) {
+      // Create a unique id for the element
+      element.elementId =
+        'element_' + element.id + '_' +
+        Math.floor(Math.random() * 1000000);
 
-    // Add element to the widget
-    widget.addElement(element, false);
+      // Add element to the widget
+      widget.addElement(element, false);
+    }
   });
+
+  // Recalcalate group dimensions
+  if (recalculateGroupBeforeSaving) {
+    // Get group
+    const widgetGroup = widget.elementGroups[
+      elements[0].groupId
+    ];
+
+    widgetGroup.updateGroupDimensions();
+  }
 
   // Save JSON with new element into the widget
   widget.saveElements().then((_res) => {

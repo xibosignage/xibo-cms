@@ -1147,6 +1147,32 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       selectorBuild.push('.designer-region[data-sub-type="zone"].droppable');
     }
 
+    if (app.common.hasTarget(draggable, 'element')) {
+      // Validate if element is of the same
+      // type as existing element or group
+      const elementDataType = $(draggable).data('dataType');
+
+      if (elementDataType != 'global') {
+        // Selector that handles all droppables that can accept the
+        // new dragabble of type not global
+        selectorBuild.push(
+          '.designer-element-group[data-element-type="' +
+            elementDataType + '"], ' +
+          '.designer-element-group[data-element-type="global"], ' +
+          '.designer-region-canvas > .designer-element[data-element-type="' +
+            elementDataType + '"], ' +
+          '.designer-region-canvas > ' +
+            '.designer-element[data-element-type="global"]',
+        );
+      } else {
+        // Selector that handles all droppables for elements
+        selectorBuild.push(
+          '.designer-element-group, ' +
+          '.designer-region-canvas > .designer-element',
+        );
+      }
+    }
+
     // Playlist editor droppables
     // and layout editor droppables
     if (app.common.hasTarget(draggable, 'playlist')) {
