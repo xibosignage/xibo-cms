@@ -27,8 +27,8 @@
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
         <thumbnail>stock-name</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <startWidth>300</startWidth>
+        <startHeight>100</startHeight>
         <assets>
             <asset id="stock-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-name.png" />
         </assets>
@@ -41,8 +41,8 @@
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
         <thumbnail>stock-symbol</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <startWidth>300</startWidth>
+        <startHeight>100</startHeight>
         <assets>
             <asset id="stock-symbol" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-symbol.png" />
         </assets>
@@ -55,8 +55,8 @@
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
         <thumbnail>stock-last-trade-price</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
         <assets>
             <asset id="stock-last-trade-price" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-last-trade-price.png" />
         </assets>
@@ -69,8 +69,8 @@
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
         <thumbnail>stock-change-percentage</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
         <onElementParseData><![CDATA[
 // value - element to be parsed
 if (String(value).length === 0) {
