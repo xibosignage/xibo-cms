@@ -1,6 +1,7 @@
 <div id="{{element.elementId}}" 
     class="designer-element viewer-element-select {{#if element.selected}}selected{{/if}} deletable"
     data-type="element"
+    data-element-type="{{#if element.elementType}}{{element.elementType}}{{else}}global{{/if}}"
     data-sub-type="{{element.id}}"
     data-widget-id="{{element.widgetId}}"
     data-region-id="{{element.regionId}}"

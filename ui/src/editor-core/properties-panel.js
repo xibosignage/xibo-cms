@@ -813,10 +813,10 @@ PropertiesPanel.prototype.render = function(
       // If element is in a group, adjust position to the group's
       if (
         targetAux?.type == 'element' &&
-        targetAux?.groupProperties != undefined
+        targetAux?.group != undefined
       ) {
-        positionProperties.left -= targetAux.groupProperties.left;
-        positionProperties.top -= targetAux.groupProperties.top;
+        positionProperties.left -= targetAux.group.left;
+        positionProperties.top -= targetAux.group.top;
       }
 
       self.DOMObject.find('#advancedTab').after(

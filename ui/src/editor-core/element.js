@@ -15,6 +15,7 @@ const Element = function(data, widgetId, regionId) {
   // If group id is set, grab group properties
   if (this.groupId) {
     this.groupProperties = data.groupProperties;
+    this.group = {};
   }
 
   this.id = data.id;

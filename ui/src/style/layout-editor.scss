@@ -1011,6 +1011,20 @@
         &:hover .slot {
             opacity: 0.8;
         }
+
+        &.ui-droppable-active {
+            @include z-index-set($designer-z-index-select);
+            background: $xibo-color-accent !important;
+
+            &.ui-droppable-hover,
+            &:hover {
+                background: darken($xibo-color-accent, 20%) !important;
+            }
+
+            * {
+                opacity: 0.6;
+            }
+        }
     }
 
     .designer-element-group {
@@ -1100,6 +1114,20 @@
         &:hover > .slot, &:hover > .group-edit-btn {
             opacity: 0.8;
         }
+
+        &.ui-droppable-active {
+            @include z-index-set($designer-z-index-select);
+            background: $xibo-color-accent !important;
+
+            &.ui-droppable-hover,
+            &:hover {
+                background: darken($xibo-color-accent, 20%) !important;
+            }
+
+            * {
+                opacity: 0.6;
+            }
+        }
     }
 
     .designer-region:not(.selected):hover::before {
@@ -1122,7 +1150,7 @@
             }
 
             * {
-                opacity: 0.8;
+                opacity: 0.6;
             }
         }
 
@@ -1154,12 +1182,6 @@
 
         .layout.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $xibo-color-layout-hover !important;
-
-            &.ui-droppable-hover,
-            &:hover {
-                background: darken($xibo-color-layout-hover, 20%) !important;
-            }
         }
 
         &.ui-droppable-active {

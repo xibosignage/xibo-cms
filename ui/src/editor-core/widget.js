@@ -613,8 +613,6 @@ Widget.prototype.saveElements = function(
 
     const elementObject = {
       id: element.id,
-      groupId: element.groupId,
-      groupProperties: element.groupProperties,
       elementId: element.elementId,
       type: element.elementType,
       left: element.left,
@@ -625,6 +623,17 @@ Widget.prototype.saveElements = function(
       rotation: element.rotation,
       properties: element.properties,
     };
+
+    // If we have group, add group properties
+    if (element.group) {
+      elementObject.groupId = element.group.id,
+      elementObject.groupProperties = {
+        top: element.group.top,
+        left: element.group.left,
+        width: element.group.width,
+        height: element.group.height,
+      };
+    }
 
     // Save slot if exists
     if (element.slot != undefined) {
@@ -645,6 +654,8 @@ Widget.prototype.saveElements = function(
     return;
   }
 
+  lD.common.showLoadingScreen();
+
   return $.ajax({
     url: requestPath,
     type: linkToAPI.type,
@@ -657,6 +668,22 @@ Widget.prototype.saveElements = function(
     ]),
   }).fail(function(jqXHR, textStatus, errorThrown) {
     console.error('saveElementsToWidget', jqXHR, textStatus, errorThrown);
+  }).always(function(res) {
+    if (!res.success) {
+      // Login Form needed?
+      if (res.login) {
+        window.location.href = window.location.href;
+        location.reload();
+      } else {
+        // Just an error we dont know about
+        if (res.message == undefined) {
+          console.error(res);
+        } else {
+          console.error(res.message);
+        }
+      }
+    }
+    lD.common.hideLoadingScreen();
   });
 };
 
@@ -684,7 +711,7 @@ Widget.prototype.addElement = function(
     if (this.elementGroups[element.groupId] == undefined) {
       this.elementGroups[element.groupId] = new ElementGroup(
         Object.assign(
-          element.groupProperties,
+          (element.group) ? element.group : element.groupProperties,
           {
             id: element.groupId,
           },
@@ -693,6 +720,12 @@ Widget.prototype.addElement = function(
         this.regionId,
       );
     }
+
+    // Add group reference to element
+    newElement.group = this.elementGroups[element.groupId];
+
+    // Remove temporary group properties from element
+    delete newElement.groupProperties;
 
     // Add element to group
     this.elementGroups[element.groupId]
@@ -719,7 +752,6 @@ Widget.prototype.removeElement = function(
   save,
 ) {
   const app = this.editorObject;
-
   const elementGroupId = this.elements[elementId].groupId;
 
   // Remove element from DOM
@@ -729,6 +761,7 @@ Widget.prototype.removeElement = function(
   delete this.elements[elementId];
 
   // Remove element from a group
+  let savedAlready = false;
   if (elementGroupId) {
     delete this.elementGroups[elementGroupId].elements[elementId];
 
@@ -741,16 +774,20 @@ Widget.prototype.removeElement = function(
 
       delete this.elementGroups[elementGroupId];
     } else {
-      // Recalculate group dimensions
-      lD.viewer.saveElementGroupProperties(
-        lD.viewer.DOMObject.find('#' + elementGroupId),
-        true,
-      );
+      // Recalculate group dimensions and save
+      if (save) {
+        lD.viewer.saveElementGroupProperties(
+          lD.viewer.DOMObject.find('#' + elementGroupId),
+          true,
+        );
+
+        savedAlready = true;
+      }
     }
   }
 
   // Save changes to widget
-  (save) && this.saveElements();
+  (save && !savedAlready) && this.saveElements();
 
   // If object is selected, remove it from selection
   if (this.editorObject.selectedObject.elementId == elementId) {
@@ -798,7 +835,7 @@ Widget.prototype.removeElement = function(
       }
     });
   } else {
-    // Update element map
+    // If we're not removing widget, we need ot update element map
     this.updateElementMap();
   }
 };
@@ -835,6 +872,7 @@ Widget.prototype.removeElementGroup = function(
 
   // Delete element group from widget
   this.elementGroups[elementGroup.id] = null;
+  delete this.elementGroups[elementGroup.id];
 
   // If object is selected, remove it from selection
   if (this.editorObject.selectedObject.id == groupId) {
