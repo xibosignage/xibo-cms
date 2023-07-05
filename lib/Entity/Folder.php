@@ -241,8 +241,8 @@ class Folder
     private function manageChildren($mode)
     {
         $parent = $this->folderFactory->getById($this->parentId);
-        $parentChildren = array_filter(explode(',', $parent->children));
-        $children = array_filter(explode(',', $this->children));
+        $parentChildren = array_filter(explode(',', $parent->children ?? ''));
+        $children = array_filter(explode(',', $this->children ?? ''));
 
         if ($mode === 'delete') {
             // remove this folder from children of the parent
@@ -329,7 +329,7 @@ class Folder
      */
     private function manageChildPermissions($permissionFolderId)
     {
-        $children = array_filter(explode(',', $this->children));
+        $children = array_filter(explode(',', $this->children ?? ''));
 
         foreach ($children as $child) {
 
@@ -441,7 +441,7 @@ class Folder
      */
     public function isTheSameBranch(int $newParentFolderId): bool
     {
-        $children = array_filter(explode(',', $this->children));
+        $children = array_filter(explode(',', $this->children ?? ''));
         $found = false;
 
         foreach ($children as $child) {

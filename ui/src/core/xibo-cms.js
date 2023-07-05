@@ -3781,7 +3781,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
             // if node has children and User does not have suitable permissions, disable the node
             // If node does NOT have children and User does not have suitable permissions, hide the node completely
             $.each(data.instance._model.data, function(index, e) {
-                if (e.li_attr !== undefined && e.li_attr.disabled) {
+                if (e?.original?.type === 'disabled') {
                     var node = $(container).jstree().get_node(e.id);
                     if (e.children.length === 0) {
                         $(container).jstree().hide_node(node);
