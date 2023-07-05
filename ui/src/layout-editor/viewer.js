@@ -1407,7 +1407,7 @@ Viewer.prototype.renderElementContent = function(
         let hbsHtml = hbsTemplate(convertedProperties);
 
         // Replace 123 with urls for [[assetID=123]] with asset url
-        const assetRegex = /\[\[assetId=(\D+)\]\]/gi;
+        const assetRegex = /\[\[assetId=[\w&\-]+\]\]/gi;
 
         // Replace [[assetID=123]] with asset url
         hbsHtml.match(assetRegex)?.forEach((match) => {

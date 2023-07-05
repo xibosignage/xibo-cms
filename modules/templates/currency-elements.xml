@@ -27,8 +27,8 @@
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
         <thumbnail>currency-name</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
         <assets>
             <asset id="currency-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
         </assets>
@@ -41,8 +41,8 @@
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
         <thumbnail>currency-last-trade-price</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <startWidth>250</startWidth>
+        <startHeight>100</startHeight>
         <assets>
             <asset id="currency-last-trade-price" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-last-trade-price.png" />
         </assets>
@@ -55,8 +55,8 @@
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
         <thumbnail>currency-change-percentage</thumbnail>
-        <startWidth>650</startWidth>
-        <startHeight>250</startHeight>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
         <onElementParseData><![CDATA[
 // value - element to be parsed
 if (String(value).length === 0) {
@@ -143,18 +143,31 @@ return value + '%';
         <startHeight>100</startHeight>
         <stencil>
             <hbs><![CDATA[
-<div class="img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
+<div class="img-container" style="width:100%; height: 100%; position: relative; overflow: hidden;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
-    <div class="center-block flag-icon-container" style="width: 100px;
-        height: 100px;
-        display: block;
-        margin-right: auto;
-        margin-left: auto;">
-        <img src="[[assetId=flags]]" class="flag-icon flag-icon-{{url}}" style="width: 1000%;" />
+    <div class="center-block-100 flag-icon-container">
+        <img src="[[assetId=flags]]" class="flag-icon flag-icon-{{url}}" />
     </div>
     <link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen"/>
-</div>]]></hbs>
+</div><style>
+.center-block-100 {
+    width: 100%;
+    height: 100%;
+}
+</style>]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+const currencyLogo = $(target).find("img");
+
+if (currencyLogo.length && typeof currencyLogo.xiboImageRender === 'function') {
+    $(target).find("img").xiboImageRender(properties);
+}
+
+if ($(target).length && typeof currencyLogo.xiboLayoutScaler === 'function') {
+    $(target).xiboLayoutScaler(properties);
+}
+
+]]></onTemplateRender>
         <assets>
             <asset id="currency-logo" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-logo.png" />
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp" />
