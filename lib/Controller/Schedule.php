@@ -788,12 +788,15 @@ class Schedule extends Base
      * Shows a form to add an event
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
+     * @param string|null $from
+     * @param int|null $id
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    function addForm(Request $request, Response $response)
+    function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
     {
         // Get the display groups added to the session (if there are some)
         $displayGroupIds = $this->session->get('displayGroupIds');
@@ -822,8 +825,7 @@ class Schedule extends Base
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
-        $this->getState()->template = 'schedule-form-add';
-        $this->getState()->setData([
+        $addFormData = [
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
@@ -834,7 +836,29 @@ class Schedule extends Base
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
-        ]);
+            'isScheduleNow' => false,
+            'relativeTime' => 0,
+        ];
+        $formNowData = [];
+
+        if (!empty($from) && !empty($id)) {
+            $formNowData = [
+                'eventTypeId' => $this->getEventTypeId($from),
+                'campaign' => (($from == 'Campaign' || $from == 'Layout') ? $this->campaignFactory->getById($id) : null),
+                'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
+                'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
+                'mediaId' => (($from === 'Library') ? $id : null),
+                'playlistId' => (($from === 'Playlist') ? $id : null),
+                'readonlySelect' => !($from == 'DisplayGroup'),
+                'isScheduleNow' => true,
+                'relativeTime' => 1,
+            ];
+        }
+
+        $formData = array_merge($addFormData, $formNowData);
+
+        $this->getState()->template = 'schedule-form-add';
+        $this->getState()->setData($formData);
 
         return $this->render($request, $response);
     }
@@ -2020,37 +2044,6 @@ class Schedule extends Base
         }
 
         return true;
-    }
-
-    /**
-     * Schedule Now Form
-     * @param Request $request
-     * @param Response $response
-     * @param string $from The object that called this form
-     * @param int $id The Id
-     *
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws ControllerNotImplemented
-     */
-    public function scheduleNowForm(Request $request, Response $response,$from, $id)
-    {
-        $this->getState()->template = 'schedule-form-now';
-        $this->getState()->setData([
-            'eventTypeId' => $this->getEventTypeId($from),
-            'campaign' => (($from == 'Campaign' || $from == 'Layout') ? $this->campaignFactory->getById($id) : null),
-            'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
-            'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
-            'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
-            'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
-            'mediaId' => (($from === 'Library') ? $id : null),
-            'playlistId' => (($from === 'Playlist') ? $id : null),
-            'help' => $this->getHelp()->link('Schedule', 'ScheduleNow'),
-            'readonlySelect' => !($from == 'DisplayGroup')
-        ]);
-
-        return $this->render($request, $response);
     }
 
     /**

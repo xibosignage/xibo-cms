@@ -534,10 +534,24 @@ class SyncGroup extends Base
             throw new AccessDeniedException();
         }
 
+        // Folders
+        $folderId = $params->getInt('folderId');
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
+            $folderId = $this->getUser()->homeFolderId;
+        }
+
+        $folder = $this->folderFactory->getById($folderId, 0);
+
         $syncGroup->name = $params->getString('name');
         $syncGroup->syncPublisherPort = $params->getInt('syncPublisherPort');
         $syncGroup->leadDisplayId = $params->getInt('leadDisplayId');
         $syncGroup->modifiedBy = $this->getUser()->userId;
+        $syncGroup->folderId = $folder->getId();
+        $syncGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         $syncGroup->save();
 

@@ -1635,7 +1635,7 @@ class Layout extends Base
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide
             // the Schedule Now button
-            $layout->setUnmatchedProperty('scheduleNowPermission', $this->getUser()->featureEnabled('schedule.now'));
+            $layout->setUnmatchedProperty('scheduleNowPermission', $this->getUser()->featureEnabled('schedule.add'));
 
             // Add some buttons for this row
             if ($this->getUser()->featureEnabled('layout.modify')
@@ -1709,12 +1709,12 @@ class Layout extends Base
                 $layout->buttons[] = ['divider' => true];
             }
 
-            // Schedule Now
-            if ($this->getUser()->featureEnabled('schedule.now')) {
+            // Schedule
+            if ($this->getUser()->featureEnabled('schedule.add')) {
                 $layout->buttons[] = array(
-                    'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request, 'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
-                    'text' => __('Schedule Now')
+                    'id' => 'layout_button_schedule',
+                    'url' => $this->urlFor($request, 'schedule.add.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
+                    'text' => __('Schedule')
                 );
             }
 
@@ -3355,7 +3355,7 @@ class Layout extends Base
             '_' . ($type === 'media' ? $media->mediaId : $playlist->playlistId),
             'Full Screen Layout created from ' . ($type === 'media' ? $media->name : $playlist->name),
             '',
-            '',
+            null,
             false
         );
 

@@ -434,11 +434,6 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'scheduling',
                     'title' => __('Allow edits including deletion of existing Scheduled Events')
                 ],
-                'schedule.now' => [
-                    'feature' => 'schedule.now',
-                    'group' => 'scheduling',
-                    'title' => __('Add "Schedule Now" function to allow for the creation of short events to play immediately')
-                ],
                 'schedule.sync' => [
                     'feature' => 'schedule.sync',
                     'group' => 'scheduling',

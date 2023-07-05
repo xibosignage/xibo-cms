@@ -108,6 +108,7 @@
 {% endblock %}
 
 {% block javaScriptTemplates %}
+    {% include 'schedule-form-templates.twig' %}
 
     <script type="text/javascript">
         var userPreferencesUrl = "{{ url_for("user.pref") }}";

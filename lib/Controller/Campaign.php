@@ -282,12 +282,12 @@ class Campaign extends Base
             $campaign->includeProperty('buttons');
             $campaign->buttons = [];
 
-            // Schedule Now
-            if ($this->getUser()->featureEnabled('schedule.now') && $campaign->type === 'list') {
+            // Schedule
+            if ($this->getUser()->featureEnabled('schedule.add') && $campaign->type === 'list') {
                 $campaign->buttons[] = array(
-                    'id' => 'campaign_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
-                    'text' => __('Schedule Now')
+                    'id' => 'campaign_button_schedule',
+                    'url' => $this->urlFor($request,'schedule.add.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
+                    'text' => __('Schedule')
                 );
             }
 

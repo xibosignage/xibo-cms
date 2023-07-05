@@ -89,7 +89,7 @@ $app->get('/schedule/grid/view', ['\Xibo\Controller\Schedule','gridPage'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.view']))
     ->setName('schedule.grid.view');
 
-$app->get('/schedule/form/add', ['\Xibo\Controller\Schedule','addForm'])
+$app->get('/schedule/form/add[/{from}/{id}]', ['\Xibo\Controller\Schedule','addForm'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.add']))
     ->setName('schedule.add.form');
 
@@ -103,10 +103,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/schedulerecurrence/form/delete/{id}', ['\Xibo\Controller\Schedule', 'deleteRecurrenceForm'])
         ->setName('schedule.recurrence.delete.form');
 })->add(new FeatureAuth($app->getContainer(), ['schedule.modify']));
-
-$app->get('/schedule/form/now/{from}/{id}', ['\Xibo\Controller\Schedule','scheduleNowForm'])
-    ->add(new FeatureAuth($app->getContainer(), ['schedule.now']))
-    ->setName('schedule.now.form');
 
 //
 // notification

@@ -1255,8 +1255,8 @@ function XiboInitialise(scope, options) {
     $(scope + ' #fullScreenCampaignId').each(function() {
         let $form = $(this).closest('form');
         let eventTypeId = parseInt($form.find('#eventTypeId').val());
-        let mediaId = $form.find('#mediaId').val();
-        let playlistId = $form.find('#playlistId').val();
+        let mediaId = $form.find('#fullScreen-mediaId').val();
+        let playlistId = $form.find('#fullScreen-playlistId').val();
         let dataObj = {};
         let url;
 
@@ -1293,9 +1293,23 @@ function XiboInitialise(scope, options) {
                     // at the moment we only add media or playlist name to readonly input
                     // this might be extended in the future.
                     if (eventTypeId == 7) {
-                        $('#media').val(response.data[0].name)
+                        $form.find('#fullScreen-media').val(response.data[0].name)
                     } else if (eventTypeId == 8) {
-                        $('#playlist').val(response.data[0].name)
+                        $form.find('#fullScreen-playlist').val(response.data[0].name)
+                    }
+
+                    if (response.data[0]?.fullScreenCampaignId) {
+                        $form.find('#fullScreenCampaignId')
+                          .val(response.data[0].fullScreenCampaignId)
+                          .trigger('change')
+                    }
+
+                    if (!response.data[0]?.hasFullScreenLayout) {
+                        if (eventTypeId == 7) {
+                            $form.find('#fullScreenControl_media').click();
+                        } else if (eventTypeId == 8) {
+                            $form.find('#fullScreenControl_playlist').click();
+                        }
                     }
                 }, (xhr) => {
                     SystemMessage(xhr.responseText, false);
@@ -1309,14 +1323,17 @@ function XiboInitialise(scope, options) {
         }
 
         let eventTypeId = $(this).closest('form').find('#eventTypeId').val()
-        let mediaId = $(this).closest('form').find('#mediaId').val();
-        let playlistId = $(this).closest('form').find('#playlistId').val();
+        let mediaId = $(this).closest('form').find('#fullScreen-mediaId').val();
+        let playlistId = $(this).closest('form').find('#fullScreen-playlistId').val();
+        let readOnlySelect = $(this).data('readonly');
+
         if ($('#full-screen-schedule-modal').length === 0) {
             // compile full screen schedule modal template
             const fullScreenSchedule = Handlebars.compile($('#full-screen-schedule-template').html());
             const config = {
                 type: eventTypeId == 7 ? 'Media' : 'Playlist',
                 eventTypeId : eventTypeId,
+                readonlySelect: readOnlySelect
             }
 
             $('body').append(fullScreenSchedule(config));
@@ -1346,7 +1363,7 @@ function XiboInitialise(scope, options) {
                   });
 
                   // change input visibility depending on what we selected for media/playlist
-                  $('#mediaId, #playlistId').on('select2:select', function(event) {
+                  $('#mediaId, #playlistId', $form).on('select2:select', function(event) {
                       let hasFullScreenLayout = false;
                       if (event.params.data.data !== undefined) {
                           hasFullScreenLayout = event.params.data.data[0].hasFullScreenLayout;
@@ -1364,6 +1381,10 @@ function XiboInitialise(scope, options) {
                           }
                       }
                   })
+
+                  if (readOnlySelect) {
+                      $form.find('#mediaId, #playlistId').prop('disabled', true);
+                  }
 
                   // resolution helpText changes depending
                   // if we are on playlist or media event
@@ -3760,7 +3781,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
             // if node has children and User does not have suitable permissions, disable the node
             // If node does NOT have children and User does not have suitable permissions, hide the node completely
             $.each(data.instance._model.data, function(index, e) {
-                if (e.li_attr !== undefined && e.li_attr.disabled) {
+                if (e?.original?.type === 'disabled') {
                     var node = $(container).jstree().get_node(e.id);
                     if (e.children.length === 0) {
                         $(container).jstree().hide_node(node);

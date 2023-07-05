@@ -53,8 +53,8 @@
                   data-duplicated-message="{% trans "Duplicate form loaded, make adjustments and press save." %}"
                   data-default-lat="{{ defaultLat }}"
                   data-default-long="{{ defaultLong }}"
-                  data-library-get-url="{{ url_for("library.search") }}"
-                  data-playlist-get-url="{{ url_for("playlist.search") }}">
+                  data-library-get-url="{{ url_for("library.search") }}?fullScreenScheduleCheck=true&types[]=image&types[]=video"
+                  data-playlist-get-url="{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Event Type" %}{% endset %}
