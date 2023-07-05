@@ -2411,7 +2411,7 @@ class Layout implements \JsonSerializable
             'parentId' => ($this->parentId == null) ? null : $this->parentId,
             'enableStat' => $this->enableStat,
             'autoApplyTransitions' => ($this->autoApplyTransitions == null) ? 0 : $this->autoApplyTransitions,
-            'code' => $this->code
+            'code' => ($this->code == null) ? null : $this->code
         ));
 
         // Add a Campaign
@@ -2517,7 +2517,7 @@ class Layout implements \JsonSerializable
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
             'enableStat' => $this->enableStat,
             'autoApplyTransitions' => $this->autoApplyTransitions,
-            'code' => $this->code
+            'code' => ($this->code == null) ? null : $this->code
         ));
 
         // Update the Campaign

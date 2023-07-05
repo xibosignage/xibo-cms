@@ -2012,7 +2012,7 @@ class LayoutFactory extends BaseFactory
         $parsedFilter = $this->getSanitizer($filterBy);
         $params = [];
         $select = 'SELECT DISTINCT code, `campaign`.CampaignID, `campaign`.permissionsFolderId ';
-        $body = ' FROM layout INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.LayoutID = layout.LayoutID INNER JOIN `campaign` ON lkcampaignlayout.CampaignID = campaign.CampaignID AND campaign.IsLayoutSpecific = 1 WHERE code IS NOT NULL';
+        $body = ' FROM layout INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.LayoutID = layout.LayoutID INNER JOIN `campaign` ON lkcampaignlayout.CampaignID = campaign.CampaignID AND campaign.IsLayoutSpecific = 1 WHERE `layout`.code IS NOT NULL AND `layout`.code <> \'\' ';
 
         // get by Code
         if ($parsedFilter->getString('code') != '') {

@@ -3355,7 +3355,7 @@ class Layout extends Base
             '_' . ($type === 'media' ? $media->mediaId : $playlist->playlistId),
             'Full Screen Layout created from ' . ($type === 'media' ? $media->name : $playlist->name),
             '',
-            '',
+            null,
             false
         );
 
