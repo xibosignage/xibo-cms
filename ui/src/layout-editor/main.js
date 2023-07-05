@@ -780,6 +780,7 @@ lD.addLayout = function() {
     type: urlsForApi.layout.add.type,
     url: urlsForApi.layout.add.url,
     cache: false,
+    data: {folderId: lD.folderId},
     dataType: 'json',
     success: function(response, textStatus, error) {
       lD.common.hideLoadingScreen();

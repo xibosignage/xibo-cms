@@ -348,11 +348,17 @@
 
             // Bind to the layout add button
             $('button.layout-add-button').on('click', function() {
+              let currentWorkingFolderId =
+                $("#layouts")
+                  .closest(".XiboGrid")
+                  .find(".FilterDiv form")
+                  .find('#folderId').val()
                 // Submit the URL provided as a POST request.
                 $.ajax({
                     type: 'POST',
                     url: $(this).attr('href'),
                     cache: false,
+                    data : {folderId : currentWorkingFolderId},
                     dataType: 'json',
                     success: function(response, textStatus, error) {
                         if (response.success && response.id) {
