@@ -922,7 +922,7 @@ class Display extends Base
             }
 
             // Schedule
-            if ($this->getUser()->featureEnabled('schedule.now')
+            if ($this->getUser()->featureEnabled('schedule.add')
                 && ($this->getUser()->checkEditable($display)
                     || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
             ) {

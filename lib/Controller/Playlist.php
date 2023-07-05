@@ -520,7 +520,7 @@ class Playlist extends Base
             }
 
             // Schedule
-            if ($this->getUser()->featureEnabled('schedule.now')
+            if ($this->getUser()->featureEnabled('schedule.add')
                 && ($this->getUser()->checkEditable($playlist)
                     || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
             ) {

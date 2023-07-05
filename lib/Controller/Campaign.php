@@ -283,7 +283,7 @@ class Campaign extends Base
             $campaign->buttons = [];
 
             // Schedule
-            if ($this->getUser()->featureEnabled('schedule.now') && $campaign->type === 'list') {
+            if ($this->getUser()->featureEnabled('schedule.add') && $campaign->type === 'list') {
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_schedule',
                     'url' => $this->urlFor($request,'schedule.add.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),

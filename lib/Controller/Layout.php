@@ -1635,7 +1635,7 @@ class Layout extends Base
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide
             // the Schedule Now button
-            $layout->setUnmatchedProperty('scheduleNowPermission', $this->getUser()->featureEnabled('schedule.now'));
+            $layout->setUnmatchedProperty('scheduleNowPermission', $this->getUser()->featureEnabled('schedule.add'));
 
             // Add some buttons for this row
             if ($this->getUser()->featureEnabled('layout.modify')
@@ -1710,7 +1710,7 @@ class Layout extends Base
             }
 
             // Schedule
-            if ($this->getUser()->featureEnabled('schedule.now')) {
+            if ($this->getUser()->featureEnabled('schedule.add')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedule',
                     'url' => $this->urlFor($request, 'schedule.add.form', ['id' => $layout->campaignId, 'from' => 'Layout']),

@@ -759,7 +759,7 @@ class Library extends Base
             }
 
             // Schedule
-            if ($this->getUser()->featureEnabled('schedule.now')
+            if ($this->getUser()->featureEnabled('schedule.add')
                 && in_array($media->mediaType, ['image', 'video'])
                 && ($this->getUser()->checkEditable($media)
                     || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
