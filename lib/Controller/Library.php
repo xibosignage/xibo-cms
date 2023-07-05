@@ -624,7 +624,9 @@ class Library extends Base
             }
 
             if ($parsedQueryParams->getCheckbox('fullScreenScheduleCheck')) {
-                $media->setUnmatchedProperty('hasFullScreenLayout', $this->hasFullScreenLayout($media));
+                $fullScreenCampaignId = $this->hasFullScreenLayout($media);
+                $media->setUnmatchedProperty('hasFullScreenLayout', (!empty($fullScreenCampaignId)));
+                $media->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
             }
 
             $media->buttons = [];
@@ -756,20 +758,20 @@ class Library extends Base
                 );
             }
 
-            // Schedule Now
+            // Schedule
             if ($this->getUser()->featureEnabled('schedule.now')
                 && in_array($media->mediaType, ['image', 'video'])
                 && ($this->getUser()->checkEditable($media)
                     || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
             ) {
                 $media->buttons[] = [
-                    'id' => 'library_button_schedulenow',
+                    'id' => 'library_button_schedule',
                     'url' => $this->urlFor(
                         $request,
-                        'schedule.now.form',
+                        'schedule.add.form',
                         ['id' => $media->mediaId, 'from' => 'Library']
                     ),
-                    'text' => __('Schedule Now')
+                    'text' => __('Schedule')
                 ];
             }
         }
@@ -2814,10 +2816,11 @@ class Library extends Base
     /**
      * Check if we already have a full screen Layout for this Media
      * @param Media $media
-     * @return bool
+     * @return int|null
+     * @throws NotFoundException
      */
-    private function hasFullScreenLayout(Media $media): bool
+    private function hasFullScreenLayout(Media $media): ?int
     {
-        return !empty($this->layoutFactory->getLinkedFullScreenLayout('media', $media->mediaId));
+        return $this->layoutFactory->getLinkedFullScreenLayout('media', $media->mediaId)?->campaignId;
     }
 }

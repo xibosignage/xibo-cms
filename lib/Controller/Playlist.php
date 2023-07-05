@@ -333,7 +333,9 @@ class Playlist extends Base
 
 
             if ($sanitizedParams->getCheckbox('fullScreenScheduleCheck')) {
-                $playlist->setUnmatchedProperty('hasFullScreenLayout', $this->hasFullScreenLayout($playlist));
+                $fullScreenCampaignId = $this->hasFullScreenLayout($playlist);
+                $playlist->setUnmatchedProperty('hasFullScreenLayout', (!empty($fullScreenCampaignId)));
+                $playlist->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
             }
 
             if ($this->isApi($request)) {
@@ -517,19 +519,19 @@ class Playlist extends Base
                 );
             }
 
-            // Schedule Now
+            // Schedule
             if ($this->getUser()->featureEnabled('schedule.now')
                 && ($this->getUser()->checkEditable($playlist)
                     || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
             ) {
                 $playlist->buttons[] = [
-                    'id' => 'playlist_button_schedulenow',
+                    'id' => 'playlist_button_schedule',
                     'url' => $this->urlFor(
                         $request,
-                        'schedule.now.form',
+                        'schedule.add.form',
                         ['id' => $playlist->playlistId, 'from' => 'Playlist']
                     ),
-                    'text' => __('Schedule Now')
+                    'text' => __('Schedule')
                 ];
             }
         }
@@ -1924,10 +1926,10 @@ class Playlist extends Base
     /**
      * Check if we already have a full screen Layout for this Playlist
      * @param \Xibo\Entity\Playlist $playlist
-     * @return bool
+     * @return ?int
      */
-    private function hasFullScreenLayout(\Xibo\Entity\Playlist $playlist): bool
+    private function hasFullScreenLayout(\Xibo\Entity\Playlist $playlist): ?int
     {
-        return !empty($this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId));
+        return $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId)?->campaignId;
     }
 }

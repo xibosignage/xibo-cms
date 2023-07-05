@@ -52,14 +52,18 @@
                   data-not-daypart-message="{{ notDayPartMessage }}"
                   data-default-lat="{{ defaultLat }}"
                   data-default-long = "{{ defaultLong }}"
-                  data-library-get-url="{{ url_for("library.search") }}"
-                  data-playlist-get-url="{{ url_for("playlist.search") }}">
+                  data-library-get-url="{{ url_for("library.search") }}?fullScreenScheduleCheck=true&types[]=image&types[]=video"
+                  data-playlist-get-url="{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                        {% if isScheduleNow %}
+                            {{ forms.hidden("eventTypeId", eventTypeId) }}
+                        {% else %}
+                            {% set title %}{% trans "Event Type" %}{% endset %}
+                            {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
+                            {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "eventTypeId", "eventTypeName", helpText) }}
+                        {% endif %}
 
-                        {% set title %}{% trans "Event Type" %}{% endset %}
-                        {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
-                        {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "eventTypeId", "eventTypeName", helpText) }}
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
@@ -87,6 +91,25 @@
                             </div>
                         </div>
 
+                        {% set title %}{% trans "Use Relative time?" %}{% endset %}
+                        {% set helpText %}{% trans "Switch between relative time inputs and Date pickers for start and end time." %}{% endset %}
+                        {{ forms.checkbox("relativeTime", title, relativeTime, helpText) }}
+
+                        {% set title %}{% trans "Hours" %}{% endset %}
+                        {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("hours", title, "", helpText, "duration-part relative-time-control") }}
+
+                        {% set title %}{% trans "Minutes" %}{% endset %}
+                        {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("minutes", title, "", helpText, "duration-part relative-time-control") }}
+
+                        {% set title %}{% trans "Seconds" %}{% endset %}
+                        {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field duration-part relative-time-control") }}
+
+                        {% set title %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
+                        <div class="alert alert-info scheduleNowMessage d-none relative-time-control" data-template="{{ title }}"></div>
+
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
                         {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control", "required") }}
@@ -107,15 +130,15 @@
 
                         {% set title %}{% trans "Layout" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
-                        {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
+                        {{ forms.dropdown("campaignId", "single", title, campaign.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes, "", "", "", readonlySelect) }}
 
                         {% set title %}{% trans "Media" %}{% endset %}
                         {% set helpText %}{% trans "Select a Media file from the Library to use. The selected file will be shown full screen for this event." %}{% endset %}
-                        {{ forms.inputFullScreenSchedule('media', title, "", helpText, "media-control full-screen-control") }}
+                        {{ forms.inputFullScreenSchedule('media', title, "", helpText, "media-control full-screen-control", mediaId, "", "", readonlySelect) }}
 
                         {% set title %}{% trans "Playlist" %}{% endset %}
                         {% set helpText %}{% trans "Select a Playlist to use. The selected playlist will be shown full screen for this event." %}{% endset %}
-                        {{ forms.inputFullScreenSchedule('playlist', title, "", helpText, "playlist-control full-screen-control") }}
+                        {{ forms.inputFullScreenSchedule('playlist', title, "", helpText, "playlist-control full-screen-control", playlistId, "", "", readonlySelect) }}
                         {{ forms.hidden('fullScreenCampaignId') }}
 
                         <div class="form-group row preview-button-container">

@@ -921,15 +921,15 @@ class Display extends Base
                 $display->buttons[] = ['divider' => true];
             }
 
-            // Schedule Now
+            // Schedule
             if ($this->getUser()->featureEnabled('schedule.now')
                 && ($this->getUser()->checkEditable($display)
                     || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
             ) {
                 $display->buttons[] = array(
-                    'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor($request, 'schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
-                    'text' => __('Schedule Now')
+                    'id' => 'display_button_schedule',
+                    'url' => $this->urlFor($request, 'schedule.add.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'text' => __('Schedule')
                 );
             }
 

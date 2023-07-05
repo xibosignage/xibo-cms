@@ -693,14 +693,24 @@ var setupScheduleForm = function(dialog) {
 
     // Hide/Show form elements according to the selected options
     // Initial state of the components
-    processScheduleFormElements($("#recurrenceType", dialog));
-    processScheduleFormElements($("#eventTypeId", dialog));
-    processScheduleFormElements($("#campaignId", dialog));
-    processScheduleFormElements($("#actionType", dialog));
+    processScheduleFormElements($('#recurrenceType', dialog));
+    processScheduleFormElements($('#eventTypeId', dialog));
+    processScheduleFormElements($('#campaignId', dialog));
+    processScheduleFormElements($('#actionType', dialog));
+    processScheduleFormElements($('#relativeTime', dialog));
 
     // Events on change
-    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId, #actionType, #fullScreenCampaignId", dialog)
-      .on("change", function() { processScheduleFormElements($(this)) });
+    $('#recurrenceType, #eventTypeId, #dayPartId, #campaignId, #actionType, #fullScreenCampaignId, #relativeTime', dialog)
+      .on('change', function() { processScheduleFormElements($(this)) });
+
+    var evaluateDates = _.debounce(function() {
+        scheduleEvaluateRelativeDateTime($form);
+    }, 500);
+
+    // Bind to the H:i:s fields
+    $form.find("#hours").on("keyup", evaluateDates);
+    $form.find("#minutes").on("keyup", evaluateDates);
+    $form.find("#seconds").on("keyup", evaluateDates);
 
     // Handle the repeating monthly selector
     // Run when the tab changes
@@ -845,13 +855,13 @@ var fullscreenBeforeSubmit = function(form, callBack, populateHiddenFields = tru
                 if (eventTypeId == 7) {
                     const $fullScreenControl = $('#fullScreenControl_media');
                     $fullScreenControl.text($fullScreenControl.data('hasLayout'));
-                    $('#media').val(form.find('#mediaId').select2('data')[0].text);
-                    $('#mediaId').val(form.find('#mediaId').select2('data')[0].id);
+                    $('#fullScreen-media').val(form.find('#mediaId').select2('data')[0].text);
+                    $('#fullScreen-mediaId').val(form.find('#mediaId').select2('data')[0].id);
                 } else if (eventTypeId == 8) {
                     const $fullScreenControl = $('#fullScreenControl_playlist')
                     $fullScreenControl.text($fullScreenControl.data('hasLayout'));
-                    $('#playlist').val(form.find('#playlistId').select2('data')[0].text);
-                    $('#playlistId').val(form.find('#playlistId').select2('data')[0].id);
+                    $('#fullScreen-playlist').val(form.find('#playlistId').select2('data')[0].text);
+                    $('#fullScreen-playlistId').val(form.find('#playlistId').select2('data')[0].id);
                 }
             }
 
@@ -959,7 +969,8 @@ var processScheduleFormElements = function(el) {
             var maxPlaysControlDisplay = (fieldVal == 2 || fieldVal == 6) ? 'none' : '';
             var mediaScheduleControlDisplay = (fieldVal == 7) ? '' : 'none';
             var playlistScheduleControlDisplay = (fieldVal == 8) ? '' : 'none';
-            var playlistMediaScheduleControlDisplay = (fieldVal == 7 || fieldVal == 8) ? '' : 'none'
+            var playlistMediaScheduleControlDisplay = (fieldVal == 7 || fieldVal == 8) ? '' : 'none';
+            var relativeTimeControlDisplay = (fieldVal == 2) ? 'none' : '';
 
             $('.layout-control').css('display', layoutControlDisplay);
             $('.endtime-control').css('display', endTimeControlDisplay);
@@ -973,6 +984,7 @@ var processScheduleFormElements = function(el) {
             $('.media-control').css('display', mediaScheduleControlDisplay);
             $('.playlist-control').css('display', playlistScheduleControlDisplay);
             $('.media-playlist-control').css('display', playlistMediaScheduleControlDisplay);
+            $('.relative-time-control').css('display', relativeTimeControlDisplay);
 
             // action event type
             if (fieldVal === 6) {
@@ -1050,12 +1062,14 @@ var processScheduleFormElements = function(el) {
             var $endTime = $(".endtime-control");
             var $repeats = $("li.repeats");
             var $reminder = $("li.reminders");
+            var $relative = $('.relative-time-control');
 
             // Set control visibility
             $startTime.css('display', startTimeControlDisplay);
             $endTime.css('display', endTimeControlDisplay);
             $repeats.css('display', repeatsControlDisplay);
             $reminder.css('display', reminderControlDisplay);
+            $relative.css('display', endTimeControlDisplay);
 
             // Dayparts only show the start control
             if (meta.isAlways === 0 && meta.isCustom === 0) {
@@ -1092,7 +1106,23 @@ var processScheduleFormElements = function(el) {
 
             $('.layout-code-control').css('display', layoutCodeControl);
             $('.command-control').css('display', commandControlDisplay);
+        case 'relativeTime' :
+            var datePickersControlDisplay = $(el).is(':checked') ? 'none' : '';
+            var relativeTimeControlDisplay = $(el).is(':checked') ? '' : 'none';
 
+            var $startTime = $(".starttime-control");
+            var $endTime = $(".endtime-control");
+            var $relative = $('.relative-time-control');
+
+            if (dateFormat.indexOf('s') <= -1) {
+                $('.schedule-now-seconds-field').remove();
+            }
+
+            $startTime.css('display', datePickersControlDisplay);
+            $endTime.css('display', datePickersControlDisplay);
+            $relative.css('display', relativeTimeControlDisplay);
+
+            break;
     }
 };
 
@@ -1108,90 +1138,42 @@ var duplicateScheduledEvent = function() {
 }
 
 /**
- * Callback for the schedule form
- */
-var setupScheduleNowForm = function(form) {
-
-    setupSelectForSchedule(form);
-    processScheduleFormElements($("#eventTypeId", form));
-
-    // Hide the seconds input option unless seconds are enabled in the date format
-    if (dateFormat.indexOf("s") <= -1) {
-        $(form).find(".schedule-now-seconds-field").hide();
-    }
-
-    $(form).find("#always").on("change", function() {
-        var always = $(form).find("#always").is(':checked');
-        var dayPartId = (always) ? $(form).find("#alwaysDayPartId").val() : $(form).find("#customDayPartId").val();
-
-        $(form).find("#dayPartId").val(dayPartId);
-
-        $(form).find(".duration-part").toggle();
-        if (dateFormat.indexOf("s") <= -1) {
-            $(form).find(".schedule-now-seconds-field").hide();
-        }
-    });
-
-    var evaluateDates = _.debounce(function() {
-      scheduleNowFormEvaluateDates(form);
-    }, 500);
-
-    // Bind to the H:i:s fields
-    $(form).find("#hours").on("keyup", evaluateDates);
-    $(form).find("#minutes").on("keyup", evaluateDates);
-    $(form).find("#seconds").on("keyup", evaluateDates);
-};
-
-/**
  * Evaluate dates on schedule form and fill the date input fields
  */
-var scheduleNowFormEvaluateDates = function(form) {
+var scheduleEvaluateRelativeDateTime = function($form) {
+    var hours = $form.find("#hours").val();
+    var minutes = $form.find("#minutes").val();
+    var seconds = $form.find("#seconds").val();
 
-    var always = $(form).find("#always").is(':checked');
+    //var fromDt = moment().add(-24, "hours");
+    var fromDt = moment();
+    var toDt = moment();
 
-    if (!always) {
-        var hours = $(form).find("#hours").val();
-        var minutes = $(form).find("#minutes").val();
-        var seconds = $(form).find("#seconds").val();
+    // Use Hours, Minutes and Seconds to generate a from date
+    var $messageDiv = $('.scheduleNowMessage');
 
-        //var fromDt = moment().add(-24, "hours");
-        var fromDt = moment();
-        var toDt = moment();
+    if (hours != '') {
+        toDt.add(hours, "hours");
+    }
 
-        // Use Hours, Minutes and Seconds to generate a from date
-        var $messageDiv = $('.scheduleNowMessage');
+    if (minutes != '') {
+        toDt.add(minutes, "minutes");
+    }
 
-        if (hours != "")
-            toDt.add(hours, "hours");
+    if (seconds != '') {
+        toDt.add(seconds, "seconds");
+    }
 
-        if (minutes != "")
-            toDt.add(minutes, "minutes");
-
-        if (seconds != "")
-            toDt.add(seconds, "seconds");
-
+    if (hours == '' && minutes == '' && seconds == '') {
+        $messageDiv.html('');
+    } else {
         // Update the message div
         $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("d-none");
-
-        // Update the final submit fields
-        $("#fromDt").val(fromDt.format(systemDateFormat));
-        $("#toDt").val(toDt.format(systemDateFormat));
     }
-};
 
-/**
- * Call evaluate values and then submit schedule now form
- */
-
-const scheduleNowFormSubmit = function(form) {
-    // media or playlist, create/fetch full screen layout
-    // then submit schedule now form.
-    if ([7, 8].includes(parseInt($(form).find('#eventTypeId').val()))) {
-        fullscreenBeforeSubmit(form, beforeSubmitScheduleForm, false);
-    } else {
-        // everything else, just submit the form
-        beforeSubmitScheduleForm(form)
-    }
+    // Update the final submit fields
+    updateDatePicker($form.find('#fromDt'), fromDt.format(systemDateFormat), systemDateFormat, true);
+    updateDatePicker($form.find('#toDt'), toDt.format(systemDateFormat), systemDateFormat, true);
 };
 
 /**

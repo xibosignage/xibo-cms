@@ -1709,12 +1709,12 @@ class Layout extends Base
                 $layout->buttons[] = ['divider' => true];
             }
 
-            // Schedule Now
+            // Schedule
             if ($this->getUser()->featureEnabled('schedule.now')) {
                 $layout->buttons[] = array(
-                    'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request, 'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
-                    'text' => __('Schedule Now')
+                    'id' => 'layout_button_schedule',
+                    'url' => $this->urlFor($request, 'schedule.add.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
+                    'text' => __('Schedule')
                 );
             }
 
