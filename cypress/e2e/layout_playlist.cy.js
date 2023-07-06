@@ -26,6 +26,7 @@ describe('Layout Designer', function() {
   });
 
   it('should create a new layout and be redirected to the layout designer, add/delete playlist widget', function() {
+    cy.intercept('GET', '/playlist/widget/form/edit/*').as('toolbarPrefsLoad');
     cy.visit('/layout/view');
 
     cy.get('button[href="/layout"]').click();
@@ -38,13 +39,19 @@ describe('Layout Designer', function() {
 
     // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').should('exist');
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').parent().parent().click({multiple: true});
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').parent().parent().click();
+
+    cy.wait('@toolbarPrefsLoad');
 
     cy.get('[data-sub-type="clock"]').click();
 
     cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb').click();
-    cy.get('#playlist-timeline').click();
 
+    cy.get('#playlist-editor #playlist-timeline').click();
+
+    // Open widget menu
+    cy.clearToolbarPrefs();
+    cy.get('[data-widget-type="clock-analogue"]').should('exist');
     cy.get('[data-widget-type="clock-analogue"]').rightclick();
     cy.get('[data-title="Delete"]').click();
     cy.get('.modal-footer > .btn-danger').click();

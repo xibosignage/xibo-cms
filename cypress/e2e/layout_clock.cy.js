@@ -26,6 +26,9 @@ describe('Layout Designer', function() {
   });
 
   it('should create a new layout and be redirected to the layout designer, add/delete analogue clock', function() {
+
+    cy.intercept('/playlist/widget/*').as('saveWidget');
+
     cy.visit('/layout/view');
 
     cy.get('button[href="/layout"]').click();
@@ -46,11 +49,28 @@ describe('Layout Designer', function() {
     cy.get('[name="themeId"]').select('Dark', {force: true});
     cy.get('[name="offset"]').clear().type('1').trigger('change');
 
+    cy.get('.widget-form .nav-link[href="#advancedTab"]').click();
+    cy.wait('@saveWidget');
+
+    // Type the new name in the input
+    cy.get('#advancedTab input[name="name"]').clear().type('newName');
+
+    // Set a duration
+    cy.get('#advancedTab input[name="useDuration"]').check();
+    cy.get('#advancedTab input[name="duration"]').clear().type(12).trigger('change');
+
+    // Change the background of the layout
     cy.get('.viewer-element').click({force: true});
     cy.get('[name="backgroundColor"]').clear().type('#ffffff').trigger('change');
 
     // Validate background color changed wo white
     cy.get('.viewer-element').should('have.css', 'background-color', 'rgb(255, 255, 255)');
+
+    // Check if the name and duration values are the same entered
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').parent().parent().click();
+    cy.get('.widget-form .nav-link[href="#advancedTab"]').click();
+    cy.get('#advancedTab input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
+    cy.get('#advancedTab input[name="duration"]').should('have.attr', 'value').and('equal', '12');
 
     // Delete
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').parent().parent().rightclick();
