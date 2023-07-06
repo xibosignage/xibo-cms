@@ -387,6 +387,7 @@ class Region extends Base
         $region->left = $sanitizedParams->getDouble('left', ['default' => 0]);
         $region->zIndex = $sanitizedParams->getInt('zIndex');
         $region->type = $sanitizedParams->getString('type');
+        $region->syncKey = $sanitizedParams->getString('syncKey', ['defaultOnEmptyString' => true]);
 
         // Loop
         $region->setOptionValue('loop', $sanitizedParams->getCheckbox('loop'));

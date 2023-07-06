@@ -229,7 +229,8 @@ class RegionFactory extends BaseFactory
               `region`.zIndex,
               `region`.type,
               `region`.duration,
-              `region`.isDrawer
+              `region`.isDrawer,
+              `region`.syncKey
         ';
 
         $sql .= '

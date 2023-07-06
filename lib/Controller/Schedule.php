@@ -1327,12 +1327,14 @@ class Schedule extends Base
             $schedule->toDt = '';
         } else {
             $schedule->fromDt = Carbon::createFromTimestamp($schedule->fromDt)->format(DateFormatHelper::getSystemFormat());
-            $schedule->toDt = Carbon::createFromTimestamp($schedule->toDt)->format(DateFormatHelper::getSystemFormat());
+            if ($schedule->toDt != null) {
+                $schedule->toDt = Carbon::createFromTimestamp($schedule->toDt)->format(DateFormatHelper::getSystemFormat());
+            }
         }
 
-        if ($schedule->recurrenceRange != null)
+        if ($schedule->recurrenceRange != null) {
             $schedule->recurrenceRange = Carbon::createFromTimestamp($schedule->recurrenceRange)->format(DateFormatHelper::getSystemFormat());
-
+        }
         // Get all reminders
         $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $id]);
 
