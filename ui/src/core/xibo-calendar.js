@@ -700,7 +700,7 @@ var setupScheduleForm = function(dialog) {
     processScheduleFormElements($('#relativeTime', dialog));
 
     // Events on change
-    $('#recurrenceType, #eventTypeId, #dayPartId, #campaignId, #actionType, #fullScreenCampaignId, #relativeTime', dialog)
+    $('#recurrenceType, #eventTypeId, #dayPartId, #campaignId, #actionType, #fullScreenCampaignId, #relativeTime, #syncTimezone', dialog)
       .on('change', function() { processScheduleFormElements($(this)) });
 
     var evaluateDates = _.debounce(function() {
@@ -938,6 +938,7 @@ var fullscreenBeforeSubmit = function(form, callBack, populateHiddenFields = tru
  */
 var processScheduleFormElements = function(el) {
     var fieldVal = el.val();
+    let relativeTime = $('#relativeTime').is(':checked');
 
     switch (el.attr('id')) {
         case 'recurrenceType':
@@ -959,8 +960,8 @@ var processScheduleFormElements = function(el) {
 
             var layoutControlDisplay =
               (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8) ? 'none' : '';
-            var endTimeControlDisplay = (fieldVal == 2) ? 'none' : '';
-            var startTimeControlDisplay = (fieldVal == 2) ? '' : '';
+            var endTimeControlDisplay = (fieldVal == 2 || relativeTime) ? 'none' : '';
+            var startTimeControlDisplay = (relativeTime && fieldVal != 2) ? 'none' : '';
             var dayPartControlDisplay = (fieldVal == 2) ? 'none' : '';
             var commandControlDisplay = (fieldVal == 2) ? '' : 'none';
             var scheduleSyncControlDisplay = (fieldVal == 1) ? '' : 'none';
@@ -970,7 +971,8 @@ var processScheduleFormElements = function(el) {
             var mediaScheduleControlDisplay = (fieldVal == 7) ? '' : 'none';
             var playlistScheduleControlDisplay = (fieldVal == 8) ? '' : 'none';
             var playlistMediaScheduleControlDisplay = (fieldVal == 7 || fieldVal == 8) ? '' : 'none';
-            var relativeTimeControlDisplay = (fieldVal == 2) ? 'none' : '';
+            var relativeTimeControlDisplay = (fieldVal == 2 || !relativeTime) ? 'none' : '';
+            var relativeTimeCheckboxDisplay = (fieldVal == 2) ? 'none' : '';
 
             $('.layout-control').css('display', layoutControlDisplay);
             $('.endtime-control').css('display', endTimeControlDisplay);
@@ -985,6 +987,7 @@ var processScheduleFormElements = function(el) {
             $('.playlist-control').css('display', playlistScheduleControlDisplay);
             $('.media-playlist-control').css('display', playlistMediaScheduleControlDisplay);
             $('.relative-time-control').css('display', relativeTimeControlDisplay);
+            $('.relative-time-checkbox').css('display', relativeTimeCheckboxDisplay)
 
             // action event type
             if (fieldVal === 6) {
@@ -1053,32 +1056,37 @@ var processScheduleFormElements = function(el) {
 
             var meta = el.find('option[value=' + fieldVal + ']').data();
 
-            var endTimeControlDisplay = (meta.isCustom === 0) ? "none" : "";
-            var startTimeControlDisplay = (meta.isAlways === 1) ? "none" : "";
-            var repeatsControlDisplay = (meta.isAlways === 1) ? "none" : "";
-            var reminderControlDisplay = (meta.isAlways === 1) ? "none" : "";
+            var endTimeControlDisplay = (meta.isCustom === 0 || relativeTime) ? 'none' : '';
+            var startTimeControlDisplay = (meta.isAlways === 1 || relativeTime) ? 'none' : '';
+            var repeatsControlDisplay = (meta.isAlways === 1) ? 'none' : '';
+            var reminderControlDisplay = (meta.isAlways === 1) ? 'none' : '';
+            var relativeTimeControlDisplay =
+              (meta.isCustom === 0 || !relativeTime) ? 'none' : '';
+            var relativeTimeCheckboxDisplay = (meta.isCustom === 0) ? 'none' : '';
 
-            var $startTime = $(".starttime-control");
-            var $endTime = $(".endtime-control");
-            var $repeats = $("li.repeats");
-            var $reminder = $("li.reminders");
+            var $startTime = $('.starttime-control');
+            var $endTime = $('.endtime-control');
+            var $repeats = $('li.repeats');
+            var $reminder = $('li.reminders');
             var $relative = $('.relative-time-control');
+            var $relativeCheckbox = $('.relative-time-checkbox');
 
             // Set control visibility
             $startTime.css('display', startTimeControlDisplay);
             $endTime.css('display', endTimeControlDisplay);
             $repeats.css('display', repeatsControlDisplay);
             $reminder.css('display', reminderControlDisplay);
-            $relative.css('display', endTimeControlDisplay);
+            $relative.css('display', relativeTimeControlDisplay);
+            $relativeCheckbox.css('display', relativeTimeCheckboxDisplay);
 
             // Dayparts only show the start control
             if (meta.isAlways === 0 && meta.isCustom === 0) {
                 // We need to update the date/time controls to only accept the date element
-                $startTime.find("input[name=fromDt_Link2]").hide();
-                $startTime.find(".help-block").html($startTime.closest("form").data().notDaypartMessage);
+                $startTime.find('input[name=fromDt_Link2]').hide();
+                $startTime.find('small.text-muted').html($startTime.closest('form').data().notDaypartMessage);
             } else {
-                $startTime.find("input[name=fromDt_Link2]").show();
-                $startTime.find(".help-block").html($startTime.closest("form").data().daypartMessage);
+                $startTime.find('input[name=fromDt_Link2]').show();
+                $startTime.find('small.text-muted').html($startTime.closest('form').data().daypartMessage);
             }
 
             break;
@@ -1107,7 +1115,13 @@ var processScheduleFormElements = function(el) {
             $('.layout-code-control').css('display', layoutCodeControl);
             $('.command-control').css('display', commandControlDisplay);
         case 'relativeTime' :
-            var datePickersControlDisplay = $(el).is(':checked') ? 'none' : '';
+            if (!el.is(":visible")) {
+                return;
+            }
+
+            var datePickerStartControlDisplay = $(el).is(':checked') ? 'none' : '';
+            var datePickerEndControlDisplay =
+              ($(el).is(':checked') || $('#eventTypeId').val() == 2) ? 'none' : ''
             var relativeTimeControlDisplay = $(el).is(':checked') ? '' : 'none';
 
             var $startTime = $(".starttime-control");
@@ -1118,9 +1132,21 @@ var processScheduleFormElements = function(el) {
                 $('.schedule-now-seconds-field').remove();
             }
 
-            $startTime.css('display', datePickersControlDisplay);
-            $endTime.css('display', datePickersControlDisplay);
+            if ($(el).is(':checked')) {
+                scheduleEvaluateRelativeDateTime($(el).closest('form'))
+            }
+
+            $startTime.css('display', datePickerStartControlDisplay);
+            $endTime.css('display', datePickerEndControlDisplay);
             $relative.css('display', relativeTimeControlDisplay);
+
+            break;
+        case 'syncTimezone' :
+            var relativeTimeChecked = $('#relativeTime').is(':checked');
+
+            if (relativeTimeChecked) {
+                scheduleEvaluateRelativeDateTime($(el).closest('form'))
+            }
 
             break;
     }
@@ -1151,6 +1177,8 @@ var scheduleEvaluateRelativeDateTime = function($form) {
 
     // Use Hours, Minutes and Seconds to generate a from date
     var $messageDiv = $('.scheduleNowMessage');
+    let $syncTimezone = $form.find('#syncTimezone');
+    let messageTemplate = '';
 
     if (hours != '') {
         toDt.add(hours, "hours");
@@ -1165,15 +1193,22 @@ var scheduleEvaluateRelativeDateTime = function($form) {
     }
 
     if (hours == '' && minutes == '' && seconds == '') {
-        $messageDiv.html('');
+        $messageDiv.html('').addClass('d-none');
+        updateDatePicker($form.find('#fromDt'), '');
+        updateDatePicker($form.find('#toDt'), '');
     } else {
         // Update the message div
-        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("d-none");
-    }
+        if ($syncTimezone.is(':checked')) {
+            messageTemplate = 'templateSync';
+        } else {
+            messageTemplate = 'templateNoSync';
+        }
+        $messageDiv.html($messageDiv.data(messageTemplate).replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("d-none");
 
-    // Update the final submit fields
-    updateDatePicker($form.find('#fromDt'), fromDt.format(systemDateFormat), systemDateFormat, true);
-    updateDatePicker($form.find('#toDt'), toDt.format(systemDateFormat), systemDateFormat, true);
+        // Update the final submit fields
+        updateDatePicker($form.find('#fromDt'), fromDt.format(systemDateFormat), systemDateFormat, true);
+        updateDatePicker($form.find('#toDt'), toDt.format(systemDateFormat), systemDateFormat, true);
+    }
 };
 
 /**
