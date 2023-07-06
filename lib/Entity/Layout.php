@@ -1307,6 +1307,7 @@ class Layout implements \JsonSerializable
             $regionNode->setAttribute('height', $region->height);
             $regionNode->setAttribute('top', $region->top);
             $regionNode->setAttribute('left', $region->left);
+            $regionNode->setAttribute('syncKey', $region->syncKey ?? '');
 
             // Only set the zIndex if present
             if ($region->zIndex != 0) {
