@@ -1,0 +1,148 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>article_title</id>
+        <extends override="text" with="data.title">text</extends>
+        <title>Title</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-title</thumbnail>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="article-title" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-title.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_summary</id>
+        <extends override="text" with="data.summary">text</extends>
+        <title>Summary</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-summary</thumbnail>
+        <startWidth>500</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="article-summary" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-summary.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_content</id>
+        <extends override="text" with="data.content" escape="false">text</extends>
+        <title>Content</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-content</thumbnail>
+        <startWidth>500</startWidth>
+        <startHeight>500</startHeight>
+        <assets>
+            <asset id="article-content" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-content.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_author</id>
+        <extends override="text" with="data.author">text</extends>
+        <title>Author</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-author</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="article-author" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-author.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_date</id>
+        <extends override="date" with="data.date">date</extends>
+        <title>Date</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-date</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="article-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_publishedDate</id>
+        <extends override="date" with="data.publishedDate">date</extends>
+        <title>Published Date</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-published-date</thumbnail>
+        <startWidth>400</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="article-published-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_image</id>
+        <extends override="url" with="data.image">global-image</extends>
+        <title>Image</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-image</thumbnail>
+        <startWidth>200</startWidth>
+        <startHeight>200</startHeight>
+        <assets>
+            <asset id="article-image" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_link</id>
+        <extends override="text" with="data.link">text</extends>
+        <title>Link</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-link</thumbnail>
+        <startWidth>480</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="article-link" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-link.png" />
+        </assets>
+    </template>
+    <template>
+        <id>article_permalink</id>
+        <extends override="text" with="data.permalink">text</extends>
+        <title>Permalink</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>article-permalink</thumbnail>
+        <startWidth>480</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="article-permalink" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-link.png" />
+        </assets>
+    </template>
+</templates>

@@ -1331,29 +1331,8 @@ Viewer.prototype.renderElementContent = function(
         template.extends?.override &&
         template.extends?.with
       ) {
-        let replacedStencil = stencil.hbs.replace(
-          '{{' + template.extends.override + '}}',
-          '{{' + template.extends.with + '}}',
-        );
-
-        // Also make replacements for variables being used in HBS helpers
-        const regExp = new RegExp(
-          '{{#([a-zA-Z0-9_]+) ' +
-          template.extends.override +
-          '}}', 'g');
-        const replacements = [...replacedStencil.matchAll(regExp)];
-
-        replacements.forEach((match) => {
-          const newReplace = match[0].replace(
-            template.extends.override,
-            template.extends.with,
-          );
-
-          replacedStencil = replacedStencil.replace(match[0], newReplace);
-        });
-
         // Compile template
-        hbsTemplate = Handlebars.compile(replacedStencil);
+        hbsTemplate = Handlebars.compile(stencil.hbs);
       }
 
       // Get element data from widget
@@ -1377,25 +1356,29 @@ Viewer.prototype.renderElementContent = function(
         // Send uniqueID
         convertedProperties.uniqueID = element.elementId;
 
-        const extendedDataKey = template?.extends ?
+        const extendOverrideKey = template?.extends?.override || null;
+        const extendWithDataKey = template?.extends ?
           transformer.getExtendedDataKey(template.extends.with) : null;
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
         const hasElementParseDataFn = typeof elementParseDataFn === 'function';
+        const isInData = extendOverrideKey !== null &&
+          elData && elData.hasOwnProperty(extendOverrideKey);
 
-        if (extendedDataKey !== null) {
+        if (extendWithDataKey !== null) {
+          if (isInData) {
+            convertedProperties[extendOverrideKey] = elData[extendOverrideKey];
+          } else {
+            convertedProperties[extendOverrideKey] = elData[extendWithDataKey];
+          }
+        }
+
+        if (extendWithDataKey !== null) {
           if (template.onElementParseData && hasElementParseDataFn) {
-            if (convertedProperties.data.hasOwnProperty(extendedDataKey)) {
-              convertedProperties.data[
-                extendedDataKey
-              ] = elementParseDataFn(
-                elData[extendedDataKey],
-              );
-            } else {
-              // We set/add the property to the element
-              convertedProperties[extendedDataKey] = elementParseDataFn(
-                convertedProperties[extendedDataKey],
-              );
-            }
+            convertedProperties[extendOverrideKey] = elementParseDataFn(
+              isInData ?
+                elData[extendOverrideKey] :
+                elData[extendWithDataKey],
+            );
           }
         } else {
           if (template.onElementParseData && hasElementParseDataFn) {

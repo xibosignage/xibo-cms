@@ -442,23 +442,6 @@ $(function() {
                 dataOverride = $template?.data('extends-override');
                 dataOverrideWith = $template?.data('extends-with');
 
-                // Check if template is extended and get values
-                if ((dataOverride !== 'undefined' &&
-                    dataOverrideWith !== 'undefined') &&
-                    (String(dataOverride).length > 0 &&
-                    String(dataOverrideWith).length > 0)
-                ) {
-                  if ($template.html().includes(`{{${dataOverride}}}`)) {
-                    $template.html(
-                      $template.html()
-                        .replaceAll(
-                          `{{${dataOverride}}}`,
-                          `{{${dataOverrideWith}}}`,
-                        ),
-                    );
-                  }
-                }
-
                 hbs = Handlebars.compile($template.html());
               }
 
@@ -523,17 +506,23 @@ $(function() {
                       if (hbs) {
                         const extendDataWith = transformer
                           .getExtendedDataKey(dataOverrideWith);
-                        if (extendDataWith !== null && typeof window[
+
+                        if (extendDataWith !== null &&
+                          item.hasOwnProperty(extendDataWith)
+                        ) {
+                          item[dataOverride] = item[extendDataWith];
+                        }
+
+                        if (typeof window[
                           `onElementParseData_${templateData.id}`
-                        ] === 'function') {
+                        ] === 'function'
+                        ) {
                           const onElementParseData = window[
                             `onElementParseData_${templateData.id}`
                           ];
 
-                          if (onElementParseData &&
-                            item.hasOwnProperty(extendDataWith)
-                          ) {
-                            item[extendDataWith] = onElementParseData(
+                          if (onElementParseData) {
+                            item[dataOverride] = onElementParseData(
                               item[extendDataWith],
                             );
                           }
@@ -541,7 +530,7 @@ $(function() {
 
                         renderElement(Object.assign(
                           templateData,
-                          {data: item},
+                          item,
                         ));
                       }
                       templateAlreadyAdded = true;
