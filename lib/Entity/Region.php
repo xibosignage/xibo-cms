@@ -108,6 +108,12 @@ class Region implements \JsonSerializable
     public $zIndex;
 
     /**
+     * @SWG\Property(description="The syncKey of this Region")
+     * @var string
+     */
+    public $syncKey;
+
+    /**
      * @SWG\Property(description="An array of Region Options")
      * @var RegionOption[]
      */
@@ -246,6 +252,7 @@ class Region implements \JsonSerializable
             . $this->regionId
             . $this->zIndex
             . $this->duration
+            . $this->syncKey
             . json_encode($this->actions));
     }
 
@@ -588,8 +595,8 @@ class Region implements \JsonSerializable
         $this->getLog()->debug('Adding region to LayoutId ' . $this->layoutId);
 
         $sql = '
-            INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`, `isDrawer`, `type`) 
-              VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex, :isDrawer, :type)
+            INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`, `isDrawer`, `type`, `syncKey`) 
+              VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex, :isDrawer, :type, :syncKey)
         ';
 
         $this->regionId = $this->getStore()->insert($sql, array(
@@ -602,7 +609,8 @@ class Region implements \JsonSerializable
             'left' => $this->left,
             'zIndex' => $this->zIndex,
             'isDrawer' => $this->isDrawer,
-            'type' => $this->type
+            'type' => $this->type,
+            'syncKey' => $this->syncKey
         ));
     }
 
@@ -624,7 +632,8 @@ class Region implements \JsonSerializable
             `zIndex` = :zIndex,
             `duration` = :duration,
             `isDrawer` = :isDrawer,
-            `type` = :type
+            `type` = :type,
+            `syncKey` = :syncKey
            WHERE `regionId` = :regionId
         ';
 
@@ -639,6 +648,7 @@ class Region implements \JsonSerializable
             'duration' => $this->duration,
             'isDrawer' => $this->isDrawer,
             'type' => $this->type,
+            'syncKey' => $this->syncKey,
             'regionId' => $this->regionId
         ));
     }
