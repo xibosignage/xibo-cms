@@ -27,7 +27,7 @@
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
         <thumbnail>stock-name</thumbnail>
-        <startWidth>300</startWidth>
+        <startWidth>420</startWidth>
         <startHeight>100</startHeight>
         <assets>
             <asset id="stock-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-name.png" />
@@ -41,7 +41,7 @@
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
         <thumbnail>stock-symbol</thumbnail>
-        <startWidth>300</startWidth>
+        <startWidth>420</startWidth>
         <startHeight>100</startHeight>
         <assets>
             <asset id="stock-symbol" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-symbol.png" />
@@ -83,6 +83,17 @@ if (String(value).includes('%')) {
 
 return value + '%';
 ]]></onElementParseData>
+        <onTemplateRender><![CDATA[
+var elementData = null;
+if (properties.hasOwnProperty('data')) {
+    elementData = properties.data;
+}
+
+if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
+    var changeStyle = elementData.ChangeStyle;
+    $(target).find('div:first').css({color: changeStyle === 'value-down' ? 'red' : 'green'});
+}
+]]></onTemplateRender>
         <assets>
             <asset id="stock-change-percentage" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-change-percentage.png" />
         </assets>

@@ -18,7 +18,7 @@
 {{#with template}}
     {{#if onTemplateRender}}
         <script type="text/javascript">
-            function onTemplateRender_{{ ../element.elementId }}(properties, target) {
+            function onTemplateRender_{{ ../element.elementId }}(id, target, items, properties, meta) {
                 {{{onTemplateRender}}}
             }
         </script>
