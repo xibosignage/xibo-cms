@@ -129,59 +129,55 @@ $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{
-    "author": "author"
-    "content": "<p>Content</p>"
-    "date": "2000-01-01T01:00:30+00:00"
-    "image": ""
-    "link": "https://www.example.com"
-    "permalink": null
-    "publishedDate": "2000-01-01T01:00:30+00:00"
-    "summary": "Summary"
-    "title": "Title"
-},
-{
-    "author": "author"
-    "content": "<p>Content</p>"
-    "date": "2000-01-01T01:00:30+00:00"
-    "image": ""
-    "link": "https://www.example.com"
-    "permalink": null
-    "publishedDate": "2000-01-01T01:00:30+00:00"
-    "summary": "Summary"
-    "title": "Title"
-},
-{
-    "author": "author"
-    "content": "<p>Content</p>"
-    "date": "2000-01-01T01:00:30+00:00"
-    "image": ""
-    "link": "https://www.example.com"
-    "permalink": null
-    "publishedDate": "2000-01-01T01:00:30+00:00"
-    "summary": "Summary"
-    "title": "Title"
-},
-{
-    "author": "author"
-    "content": "<p>Content</p>"
-    "date": "2000-01-01T01:00:30+00:00"
-    "image": ""
-    "link": "https://www.example.com"
-    "permalink": null
-    "publishedDate": "2000-01-01T01:00:30+00:00"
-    "summary": "Summary"
-    "title": "Title"
-},
-{
-    "author": "author"
-    "content": "<p>Content</p>"
-    "date": "2000-01-01T01:00:30+00:00"
-    "image": ""
-    "link": "https://www.example.com"
-    "permalink": null
-    "publishedDate": "2000-01-01T01:00:30+00:00"
-    "summary": "Summary"
-    "title": "Title"
+    "author": "sample@example.com (Author 1)",
+    "content": "<p>Sample Content 1</p>",
+    "date": "2000-01-01T01:00:30+00:00",
+    "image": "",
+    "link": "https://www.example.com",
+    "permalink": null,
+    "publishedDate": "2000-01-01T01:00:30+00:00",
+    "summary": "Sample Summary 1",
+    "title": "Sample Title 1"
+},{
+    "author": "sample@example.com (Author 2)",
+    "content": "<p>Sample Content 2</p>",
+    "date": "2000-01-01T01:00:30+00:00",
+    "image": "",
+    "link": "https://www.example.com",
+    "permalink": null,
+    "publishedDate": "2000-01-01T01:00:30+00:00",
+    "summary": "Sample Summary 2",
+    "title": "Sample Title 2"
+},{
+    "author": "sample@example.com (Author 3)",
+    "content": "<p>Sample Content 3</p>",
+    "date": "2000-01-01T01:00:30+00:00",
+    "image": "",
+    "link": "https://www.example.com",
+    "permalink": null,
+    "publishedDate": "2000-01-01T01:00:30+00:00",
+    "summary": "Sample Summary 3",
+    "title": "Sample Title 3"
+},{
+    "author": "sample@example.com (Author 4)",
+    "content": "<p>Sample Content 4</p>",
+    "date": "2000-01-01T01:00:30+00:00",
+    "image": "",
+    "link": "https://www.example.com",
+    "permalink": null,
+    "publishedDate": "2000-01-01T01:00:30+00:00",
+    "summary": "Sample Summary 4",
+    "title": "Sample Title 4"
+},{
+    "author": "sample@example.com (Author 5)",
+    "content": "<p>Sample Content 5</p>",
+    "date": "2000-01-01T01:00:30+00:00",
+    "image": "",
+    "link": "https://www.example.com",
+    "permalink": null,
+    "publishedDate": "2000-01-01T01:00:30+00:00",
+    "summary": "Sample Summary 5",
+    "title": "Sample Title 5"
 }]
-    ]]></sampleData>
+]]></sampleData>
 </module>
