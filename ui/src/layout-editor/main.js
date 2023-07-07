@@ -97,6 +97,9 @@ window.lD = {
   propertiesPanel: {},
 
   folderId: '',
+
+  // Top layer value
+  topLayer: 0,
 };
 
 // Load Layout and build app structure
@@ -453,9 +456,9 @@ lD.selectObject =
       const newSelectedId =
         (target === null) ? this.layout.id : target.attr('id');
       const newSelectedType =
-      (target === null || target.data('type') === undefined) ?
-        'layout' :
-        target.data('type');
+        (target === null || target.data('type') === undefined) ?
+          'layout' :
+          target.data('type');
 
       const isInDrawer = function(target) {
         if (target !== null) {
@@ -1485,11 +1488,14 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     let addToGroupWidgetId = null;
     let addToExistingElementId = null;
 
-    // If target ( element or group ) is type global
+    // If target is type global ( and being edited )
     // if draggable is type global or if both are the same type
     const canBeAddedToGroup = function() {
-      return draggableData.dataType == 'global' ||
-        draggableData.dataType == $(droppable).data('elementType');
+      return $(droppable).hasClass('editing') &&
+      (
+        draggableData.dataType == 'global' ||
+        draggableData.dataType == $(droppable).data('elementType')
+      );
     };
 
     // Create group if group is type global
@@ -1886,6 +1892,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         lD.common.hideLoadingScreen('addLayoutTemplate');
 
         if (response.success && response.id) {
+          // Deselect previous object
+          lD.selectObject();
+
           // eslint-disable-next-line new-cap
           lD.reloadData(response.data,
             {
@@ -3822,8 +3831,9 @@ lD.addElementsToWidget = function(
   widget.saveElements().then((_res) => {
     const firstElement = elements[0];
 
-    // If it's group, save it as temporary object
-    if (isGroup) {
+    // If it's group with more than one element being added
+    // select group
+    if (isGroup && elements.length > 1) {
       lD.viewer.saveTemporaryObject(
         firstElement.groupId,
         'element-group',
@@ -3842,6 +3852,7 @@ lD.addElementsToWidget = function(
         {
           type: 'element',
           parentType: 'widget',
+          selectInGroupEdit: isGroup,
           widgetId: widget.widgetId,
           regionId: widget.regionId.split('_')[1],
         },

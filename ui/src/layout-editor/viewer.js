@@ -254,13 +254,28 @@ Viewer.prototype.render = function(forceReload = false) {
   // Handle UI interactions
   this.handleInteractions();
 
+  // If we are selecting an element in a group,
+  // we need to put the group in edit mode
+  if (
+    this.parent.selectedObject.type == 'element' &&
+    this.parent.selectedObject.groupId != undefined
+  ) {
+    this.editGroup(
+      this.DOMObject.find(
+        '.designer-element-group#' +
+        this.parent.selectedObject.groupId,
+      ),
+      this.parent.selectedObject.elementId,
+    );
+  }
+
   // Refresh on window resize
   $(window).on('resize', function() {
     this.update();
   }.bind(this));
 
   // Update moveable
-  this.updateMoveable();
+  this.updateMoveable(true);
 
   // Update moveable options
   this.updateMoveableOptions({
@@ -396,30 +411,22 @@ Viewer.prototype.handleInteractions = function() {
     }, 200),
   });
 
-  // Handle droppable element and group
+  // Handle droppable group
   this.DOMObject.find(
-    '.designer-region-canvas > .designer-element, ' +
     '.designer-element-group',
   ).each((_idx, element) => {
     const $el = $(element);
     let elementsType = 'global';
 
-    if ($el.hasClass('designer-element-group')) {
-      // Go through elements and check if there's any other than global
-      $el.find('.designer-element').each((_idx, elementInGroup) => {
-        const $elInGroup = $(elementInGroup);
-        // Check element type
-        if ($elInGroup.data('elementType') != 'global') {
-          elementsType = $elInGroup.data('elementType');
-          return false;
-        }
-      });
-    } else {
+    // Go through elements and check if there's any other than global
+    $el.find('.designer-element').each((_idx, elementInGroup) => {
+      const $elInGroup = $(elementInGroup);
       // Check element type
-      if ($el.data('elementType') != 'global') {
-        elementsType = $el.data('elementType');
+      if ($elInGroup.data('elementType') != 'global') {
+        elementsType = $elInGroup.data('elementType');
+        return false;
       }
-    }
+    });
 
     $el.droppable({
       greedy: true,
@@ -427,6 +434,12 @@ Viewer.prototype.handleInteractions = function() {
       accept: (draggable) => {
         // Validate if element is of the same
         // type as existing element or group
+
+        // Check if element group is in edit mode
+        if (!$el.hasClass('editing')) {
+          return false;
+        }
+
         return (
           lD.common.hasTarget(draggable, 'element') &&
           (
@@ -459,6 +472,17 @@ Viewer.prototype.handleInteractions = function() {
       if (e.which == 3) {
         return;
       }
+
+      const playlistEditorBtnClick = function(playlistId) {
+        // Edit region if it's a playlist
+        // Get region object
+        const regionObject =
+          lD.getElementByTypeAndId('region', playlistId);
+        // Open playlist editor
+        lD.openPlaylistEditor(
+          regionObject.playlists.playlistId,
+          regionObject);
+      };
 
       // Get click position
       const clickPosition = {
@@ -502,13 +526,11 @@ Viewer.prototype.handleInteractions = function() {
           clickPosition: clickPosition,
         });
       } else if (
-        $(e.target).hasClass('group-select-overlay') &&
-        $(e.target).parents('.designer-element-group')
-          .hasClass('ui-droppable-active')
+        $(e.target).is('.designer-element-group.editing.ui-droppable-active')
       ) {
         // Add item to the selected element group
         lD.selectObject({
-          target: $(e.target).parents('.designer-element-group'),
+          target: $(e.target),
           forceSelect: true,
           clickPosition: clickPosition,
         });
@@ -529,6 +551,12 @@ Viewer.prototype.handleInteractions = function() {
         self.editGroup(
           $(e.target).parents('.designer-element-group'),
         );
+      } else if (
+        $(e.target).hasClass('playlist-edit-btn')
+      ) {
+        // Edit region if it's a playlist
+        playlistEditorBtnClick($(e.target)
+          .parents('.designer-region-playlist').attr('id'));
       } else {
         // Select elements inside the layout
         clicks++;
@@ -541,16 +569,14 @@ Viewer.prototype.handleInteractions = function() {
 
             if (
               $(e.target).data('subType') === 'playlist' &&
+              $(e.target).hasClass('designer-region') &&
               !$(e.target).hasClass('selected')
             ) {
-              // Edit region if it's a playlist
-              // Get region object
-              const regionObject =
-                lD.getElementByTypeAndId('region', $(e.target).attr('id'));
-              // Open playlist editor
-              lD.openPlaylistEditor(
-                regionObject.playlists.playlistId,
-                regionObject);
+              // Select region
+              lD.selectObject({
+                target: $(e.target),
+              });
+              self.selectElement($(e.target));
             } else if (
               $(e.target).find('.designer-widget').length > 0 &&
               !$(e.target).find('.designer-widget').hasClass('selected') &&
@@ -589,22 +615,18 @@ Viewer.prototype.handleInteractions = function() {
           clicks = 0;
 
           if (
+            $(e.target).data('subType') === 'playlist'
+          ) {
+            // Edit region if it's a playlist
+            playlistEditorBtnClick($(e.target).attr('id'));
+          } else if (
             $(e.target).hasClass('group-select-overlay')
           ) {
             self.editGroup(
               $(e.target).parents('.designer-element-group'),
             );
-          } else if (
-            $(e.target).hasClass('designer-region') &&
-            !$(e.target).hasClass('selected')
-          ) {
-            // Select region
-            lD.selectObject({
-              target: $(e.target),
-            });
-            self.selectElement($(e.target));
           } else {
-            // Move out from region editing
+            // Move out from group editing
             lD.selectObject();
             self.selectElement();
           }
@@ -773,7 +795,7 @@ Viewer.prototype.update = function() {
   }.bind(this));
 
   // Update moveable
-  this.updateMoveable();
+  this.updateMoveable(true);
 
   // Update moveable options
   this.updateMoveableOptions();
@@ -791,6 +813,7 @@ Viewer.prototype.renderRegion = function(
 ) {
   const self = this;
   const $container = this.DOMObject.find(`#${region.id}`);
+  const isPlaylist = region.subType == 'playlist';
 
   // Get first widget of the region
   const widget = (widgetToLoad) ?
@@ -798,7 +821,7 @@ Viewer.prototype.renderRegion = function(
     region.widgets[Object.keys(region.widgets)[0]];
 
   // If there's no widget, return
-  if (!widget && region.subType != 'playlist') {
+  if (!widget && !isPlaylist) {
     return;
   }
 
@@ -831,7 +854,7 @@ Viewer.prototype.renderRegion = function(
     '&height=' + containerElementDimensions.height;
 
   // If it's not a playlist, add widget to request
-  if (region.subType != 'playlist') {
+  if (!isPlaylist) {
     requestPath += '&widgetId=' + widget['widgetId'];
   }
 
@@ -862,7 +885,7 @@ Viewer.prototype.renderRegion = function(
       trans: viewerTrans,
     };
 
-    if (region.subType == 'playlist') {
+    if (isPlaylist) {
       $.extend(true, options, {
         elementType: 'playlist',
       });
@@ -885,6 +908,14 @@ Viewer.prototype.renderRegion = function(
 
     // Append layout html to the container div
     $container.html(html);
+
+    // If it's playlist, add playlist edit button
+    if (isPlaylist) {
+      $container.append(`<div class="playlist-edit-btn viewer-element-select"
+        title="${viewerTrans.editPlaylist}">
+          <i class="fa fa-list-ol" aria-hidden="true"></i>
+      </div>`);
+    }
 
     // If widget is selected, update moveable for the region
     if (widget && widget.selected) {
@@ -989,9 +1020,41 @@ Viewer.prototype.updateElement = _.throttle(function(
   lD.viewer.renderElementContent(
     element,
   );
+}, drawThrottle);
 
-  // Update moveable
-  lD.viewer.updateMoveable();
+/**
+ * Update element group
+ * @param {object} elementGroup
+ */
+Viewer.prototype.updateElementGroup = _.throttle(function(
+  elementGroup,
+) {
+  Object.values(elementGroup.elements).forEach((element) => {
+    const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
+
+    // Calculate scaled dimensions
+    element.scaledDimensions = {
+      height: element.height * lD.viewer.containerElementDimensions.scale,
+      left: (element.left - elementGroup.left) *
+        lD.viewer.containerElementDimensions.scale,
+      top: (element.top - elementGroup.top) *
+        lD.viewer.containerElementDimensions.scale,
+      width: element.width * lD.viewer.containerElementDimensions.scale,
+    };
+
+    // Update element index
+    $container.css({
+      height: element.scaledDimensions.height,
+      left: element.scaledDimensions.left,
+      top: element.scaledDimensions.top,
+      width: element.scaledDimensions.width,
+    });
+
+    // Update element content
+    lD.viewer.renderElementContent(
+      element,
+    );
+  });
 }, drawThrottle);
 
 /**
@@ -1039,9 +1102,6 @@ Viewer.prototype.updateRegion = _.throttle(function(
 
   // Update region content
   lD.viewer.updateRegionContent(region, changed);
-
-  // Update moveable
-  lD.viewer.updateMoveable();
 }, drawThrottle);
 
 
@@ -1206,9 +1266,6 @@ Viewer.prototype.renderElement = function(
   this.renderElementContent(element, () => {
     // Handle viewer interactions
     self.handleInteractions();
-
-    // Update moveable
-    this.updateMoveable();
   });
 };
 
@@ -1607,7 +1664,9 @@ Viewer.prototype.initMoveable = function() {
       self.updateRegion(selectedObject, true);
     } else if (selectedObject.type == 'element') {
       // Update element
-      self.updateElement(selectedObject, true);
+      self.updateElement(selectedObject);
+    } else if (selectedObject.type == 'element-group') {
+      self.updateElementGroup(selectedObject);
     }
   }).on('resizeEnd', (e) => {
     // Save transformation
@@ -1640,6 +1699,15 @@ Viewer.prototype.initMoveable = function() {
       $(e.target).parents('.designer-element-group'),
       true,
       false,
+    );
+
+    // Save group
+    (
+      lD.selectedObject.type == 'element-group'
+    ) && self.saveElementGroupProperties(
+      e.target,
+      false,
+      true,
     );
   });
 
@@ -1966,6 +2034,8 @@ Viewer.prototype.saveElementGroupProperties = function(
     lD.propertiesPanel.updatePositionForm({
       top: groupObject.top,
       left: groupObject.left,
+      width: groupObject.width,
+      height: groupObject.height,
     });
   }
 };
@@ -1973,14 +2043,20 @@ Viewer.prototype.saveElementGroupProperties = function(
 /**
  * Select element
  * @param {object} element - Element object
+ * @param {boolean} removeEditFromGroup
  */
-Viewer.prototype.selectElement = function(element = null) {
+Viewer.prototype.selectElement = function(
+  element = null,
+  removeEditFromGroup = true,
+) {
   // Deselect all elements
   this.DOMObject.find('.selected').removeClass('selected');
 
   // Remove all editing from groups
   // if we're not selecting an element from that group
-  if (!(
+  if (
+    removeEditFromGroup &&
+  !(
     $(element).hasClass('designer-element') &&
     $(element).parent().hasClass('designer-element-group') &&
     $(element).parent().hasClass('editing')
@@ -1995,13 +2071,16 @@ Viewer.prototype.selectElement = function(element = null) {
   }
 
   // Update moveable
-  this.updateMoveable();
+  this.updateMoveable(true);
 };
 
 /**
  * Update moveable
+ * @param {boolean} updateTarget
  */
-Viewer.prototype.updateMoveable = function() {
+Viewer.prototype.updateMoveable = function(
+  updateTarget = false,
+) {
   // On read only mode, don't update moveable
   if (this.parent.readOnlyMode) {
     return;
@@ -2010,19 +2089,16 @@ Viewer.prototype.updateMoveable = function() {
   // Get selected element
   const $selectedElement = this.DOMObject.find('.selected');
 
-  // Update moveable if region is selected and belongs to the DOM
+  // Update moveable if we have a selected element, and is not a drawerWidget
   if (
     $selectedElement &&
     $.contains(document, $selectedElement[0]) &&
     !$selectedElement.hasClass('drawerWidget')
   ) {
-    // If target is designer-element-group, don't allow resizing
     if ($selectedElement.hasClass('designer-element-group')) {
-      this.moveable.resizable = false;
       this.moveable.dragTarget =
         $selectedElement.find('.group-select-overlay')[0];
     } else {
-      this.moveable.resizable = true;
       this.moveable.dragTarget = undefined;
     }
 
@@ -2034,17 +2110,55 @@ Viewer.prototype.updateMoveable = function() {
       this.moveable.rotatable = false;
     }
 
+    // Update snap to elements targets
+    if (
+      updateTarget &&
+      this.moveableOptions.snapToElements
+    ) {
+      const elementInGroup = $selectedElement.parent()
+        .is('.designer-element-group');
+      let $elementsToSnapTo;
 
-    this.moveable.target = $selectedElement[0];
+      // If element is not in a group, match only with
+      // elements outside of a group, groups and regions
+      if (!elementInGroup) {
+        // Get elements
+        $elementsToSnapTo = this.DOMObject.find(
+          '.designer-element-group:not(.selected)' +
+          ',div:not(".designer-element-group") >' +
+            '.designer-element:not(.selected)' +
+          ',.designer-region:not(.selected)');
+      } else {
+        // If element is in a group, match with element
+        // in the group and parent group
+        $elementsToSnapTo = $.merge(
+          $selectedElement.siblings('.designer-element:not(.selected)'),
+          $selectedElement.parent('.designer-element-group:not(.selected)'),
+        );
+      }
+
+      const elementsArray = [];
+      Array.from($elementsToSnapTo).forEach(function(el) {
+        elementsArray.push(el);
+      });
+      this.moveable.elementGuidelines = elementsArray;
+    }
+
+    // Update target only when needed
+    if (updateTarget) {
+      this.moveable.target = $selectedElement[0];
+
+      // Show snap controls
+      this.DOMObject.parent().find('.snap-controls').show();
+
+      // Initialise tooltips
+      this.parent.common.reloadTooltips(
+        this.DOMObject.parent().find('.snap-controls'),
+      );
+    }
+
+    // Always update the moveable area
     this.moveable.updateRect();
-
-    // Show snap controls
-    this.DOMObject.parent().find('.snap-controls').show();
-
-    // Initialise tooltips
-    this.parent.common.reloadTooltips(
-      this.DOMObject.parent().find('.snap-controls'),
-    );
   } else {
     this.moveable.target = null;
 
@@ -2071,7 +2185,6 @@ Viewer.prototype.updateMoveableUI = function() {
     // Set snap to grid gap
     $gridValue.val(this.moveableOptions.snapGridGap);
   }
-
 
   // Snap to grid
   $snapControls.find('#snapToGrid').toggleClass(
@@ -2581,17 +2694,51 @@ Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
 
 Viewer.prototype.editGroup = function(
   groupDOMObject,
+  elementToSelectOnLoad = null,
 ) {
   const self = this;
   const editing = $(groupDOMObject).hasClass('editing');
 
-  // Deselect all elements
-  lD.selectObject();
-  self.selectElement();
+  // Deselect all elements or select specific element
+  if (elementToSelectOnLoad) {
+    lD.selectObject({
+      target: $('#' + elementToSelectOnLoad),
+      forceSelect: true,
+      refreshEditor: false,
+      reloadPropertiesPanel: false,
+    });
+    self.selectElement('#' + elementToSelectOnLoad);
+  } else {
+    lD.selectObject();
+    self.selectElement();
+  }
 
   // Only add editing class if we were not
-  (!editing) &&
+  if (!editing) {
     $(groupDOMObject).addClass('editing');
+
+    // Add overlay and click to close
+    self.DOMObject.siblings('.viewer-overlay').show()
+      .off().on('click', () => {
+        self.editGroup(groupDOMObject);
+      });
+
+    // Bump z-index to show over overlay
+    $(groupDOMObject).css('z-index', 2);
+
+    // Give group the same background as the layout's
+    $(groupDOMObject).css('background-color',
+      self.DOMObject.find('> .layout').css('background-color'));
+  } else {
+    // Hide overlay
+    self.DOMObject.siblings('.viewer-overlay').hide();
+
+    // Set z-index to auto
+    $(groupDOMObject).css('z-index', '');
+
+    // Remove background color
+    $(groupDOMObject).css('background-color', '');
+  }
 };
 
 module.exports = Viewer;

@@ -44,6 +44,12 @@ const Element = function(data, widgetId, regionId) {
 
   // Data slot index
   this.slot = data.slot;
+
+  // Group scale
+  this.groupScale = (data.groupScale != undefined) ?
+    data.groupScale : 1;
+  this.groupScaleType = (data.groupScaleType != undefined) ?
+    data.groupScaleType : 'top_left';
 };
 
 /**

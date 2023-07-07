@@ -132,6 +132,10 @@ Layout.prototype.createDataStructure = function(data) {
       // Save index
       newRegion.index = parseInt(region) + 1;
 
+      // Check if new region has top layer and set it
+      (newRegion.index > lD.topLayer) &&
+        (lD.topLayer = newRegion.index);
+
       // Widgets
       const widgets = newRegion.playlists.widgets;
 
@@ -187,6 +191,10 @@ Layout.prototype.createDataStructure = function(data) {
                   newWidget.widgetId,
                   data.regions[region].regionId,
                 );
+
+              // Check if new element has top layer and set it
+              (newElement.layer > lD.topLayer) &&
+                (lD.topLayer = newElement.layer);
 
               // Update elements map for the widget
               newWidget.updateElementMap(newElement);

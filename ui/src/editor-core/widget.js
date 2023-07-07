@@ -633,6 +633,14 @@ Widget.prototype.saveElements = function(
         width: element.group.width,
         height: element.group.height,
       };
+
+      // Save group scale type if exists
+      if (element.groupScale) {
+        elementObject.groupScale = 1;
+      } else if (element.groupScaleType) {
+        elementObject.groupScale = 0;
+        elementObject.groupScaleType = element.groupScaleType;
+      }
     }
 
     // Save slot if exists
@@ -792,8 +800,9 @@ Widget.prototype.removeElement = function(
   // If object is selected, remove it from selection
   if (this.editorObject.selectedObject.elementId == elementId) {
     this.editorObject.selectObject({
-      reloadViewer: true,
+      reloadViewer: false,
     });
+    lD.viewer.selectElement(null, false);
   }
 
   // Check if there's no more elements in widget and remove it

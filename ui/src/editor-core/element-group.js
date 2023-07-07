@@ -165,4 +165,60 @@ ElementGroup.prototype.updateGroupDimensions = function(
   }
 };
 
+/**
+ * Transform an element group using the new values
+ * @param {object=} [transform] - Transformation values
+ * @param {number} [transform.width] - New width (for resize tranformation)
+ * @param {number} [transform.height] - New height (for resize tranformation)
+ * @param {number} [transform.top] - New top position (for move tranformation)
+ * @param {number} [transform.left] - New left position (for move tranformation)
+ */
+ElementGroup.prototype.transform = function(transform) {
+  const transformation = {
+    scaleX: 0,
+    scaleY: 0,
+  };
+
+  // Apply changes to the group ( updating values )
+  if (transform.width) {
+    transformation.scaleX = transform.width / this.width;
+    this.width = transform.width;
+  }
+
+  if (transform.height) {
+    transformation.scaleY = transform.height / this.height;
+    this.height = transform.height;
+  }
+
+  if (transform.top) {
+    this.top = transform.top;
+  }
+
+  if (transform.left) {
+    this.left = transform.left;
+  }
+
+  const elGroup = this;
+
+  // Apply changes to each element of the group
+  Object.values(this.elements).forEach((el) => {
+    const elRelativePositionScaled = {
+      left: (el.left - elGroup.left) * transformation.scaleX,
+      top: (el.top - elGroup.top) * transformation.scaleY,
+    };
+
+    if (el.groupScale == 1) {
+      // Scale with the element
+      el.transform({
+        width: transformation.scaleX * el.width,
+        height: transformation.scaleY * el.height,
+        top: elGroup.top + elRelativePositionScaled.top,
+        left: elGroup.left + elRelativePositionScaled.left,
+      });
+    } else {
+      // TODO: Don't scale, but stick to corners
+    }
+  });
+};
+
 module.exports = ElementGroup;
