@@ -882,7 +882,6 @@ $(target).find('.date').each(function(_idx, dateEl){
     <use href="#pentagon_{{uniqueID}}" width="100%" height="100%"></use>
 </svg></div>]]></hbs>
         </stencil>
-
         <assets>
             <asset id="pentagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/pentagon.png" />
         </assets>
