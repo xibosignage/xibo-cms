@@ -1157,18 +1157,13 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
         // new dragabble of type not global
         selectorBuild.push(
           '.designer-element-group[data-element-type="' +
-            elementDataType + '"], ' +
-          '.designer-element-group[data-element-type="global"], ' +
-          '.designer-region-canvas > .designer-element[data-element-type="' +
-            elementDataType + '"], ' +
-          '.designer-region-canvas > ' +
-            '.designer-element[data-element-type="global"]',
+            elementDataType + '"].editing, ' +
+          '.designer-element-group[data-element-type="global"].editing',
         );
       } else {
         // Selector that handles all droppables for elements
         selectorBuild.push(
-          '.designer-element-group, ' +
-          '.designer-region-canvas > .designer-element',
+          '.designer-element-group.editing',
         );
       }
     }

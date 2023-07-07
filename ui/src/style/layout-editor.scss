@@ -321,6 +321,16 @@
         border-color: $xibo-color-primary-l60;
     }
 
+    .viewer-overlay {
+        display: none;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background-color: rgb(255 255 255 / 80%);
+    }
+
     // Inline editor controls
     #inline-editor-templates {
         position: absolute;
@@ -375,6 +385,11 @@
         background: $xibo-color-neutral-900;
         padding: 18px;
         border-radius: 2px 2px 0 0;
+        /* Prevent text select */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
 
         .layout-viewer-border {
             @include set-transparent-color(background, $xibo-color-neutral-900, 0.9);
@@ -412,6 +427,39 @@
 
         .designer-region-playlist {
             background: $xibo-color-neutral-900;
+
+            .playlist-edit-btn {
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                background-color: darken($xibo-color-accent, 20%);
+                color: $xibo-color-neutral-100;
+                padding: 2px 5px;
+                font-weight: bold;
+                border-radius: 4px;
+                z-index: 100;
+                opacity: 0.3;
+                width: 1.8rem;
+                text-align: center;
+                cursor: pointer;
+    
+                .fa-edit {
+                    display: initial;
+                }
+    
+                &::after {
+                    content: ' ';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            &:hover > .playlist-edit-btn {
+                opacity: 0.8;
+            }
         }
 
         .designer-region {
@@ -986,19 +1034,20 @@
             width: 100%;
             height: 100%;
             outline: 2px dotted $xibo-color-neutral-100;
-            outline-offset: -2px;
+            outline-offset: -1px;
         }
 
         &.selected {
             &::after {
-                outline: none;
+                outline-offset: 0;
+                outline-style: solid;
             }
         }
 
         .slot {
             position: absolute;
-            left: 0;
-            top: 0;
+            left: 2px;
+            top: 2px;
             background-color: $xibo-color-neutral-700;
             color: $xibo-color-neutral-100;
             padding: 2px 5px;
@@ -1034,13 +1083,14 @@
             position: absolute;
             top: 0;
             left: 0;
-            outline: 2px dotted $xibo-color-primary;
+            outline: 2px dashed $xibo-color-primary;
             outline-offset: 1px;
         }
 
         &.selected {
             .group-select-overlay {
-                outline-width: 3px;
+                outline-offset: 0;
+                outline-style: solid;
                 z-index: auto;
             }
         }
@@ -1058,6 +1108,7 @@
             opacity: 0.3;
             width: 1.8rem;
             text-align: center;
+            cursor: pointer;
 
             .fa-edit {
                 display: initial;
@@ -1091,6 +1142,12 @@
             }
             .fa-close {
                 display: initial;
+            }
+        }
+
+        &:not(.editing) {
+            .designer-element::after {
+                outline: none;
             }
         }
 
