@@ -1411,8 +1411,10 @@ Viewer.prototype.renderElementContent = function(
 
           // Call on template render on element creation
           onTemplateRender && onTemplateRender(
-            convertedProperties,
+            element.elementId,
             $elementContainer.find('.element-content'),
+            [],
+            convertedProperties,
           );
         }
 
