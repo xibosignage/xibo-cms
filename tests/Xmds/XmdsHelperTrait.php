@@ -99,4 +99,21 @@ trait XmdsHelperTrait
           </soap:Body>
         </soap:Envelope>';
     }
+
+    public function getWidgetData($version, $widgetId)
+    {
+        return '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <tns:GetData>
+      <serverKey xsi:type="xsd:string">6v4RduQhaw5Q</serverKey>
+      <hardwareKey xsi:type="xsd:string">PHPUnit'. $version .'</hardwareKey>
+      <widgetId xsi:type="xsd:int">'.$widgetId.'</widgetId>
+    </tns:GetData>
+  </soap:Body>
+</soap:Envelope>';
+    }
 }

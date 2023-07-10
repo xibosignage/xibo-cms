@@ -84,16 +84,17 @@ class GetDependencyTest extends XmdsTestCase
 
         foreach ($array as $item) {
             foreach ($item as $file) {
-                if (!empty($file['@attributes'])) {
-                    if ($file['@attributes']['saveAs'] === $fileName) {
-                        if ($version === 7) {
-                            $this->assertSame('dependency', $file['@attributes']['type']);
-                        } else {
-                            $this->assertSame('media', $file['@attributes']['type']);
-                        }
-
-                        $path = strstr($file['@attributes']['path'], '?');
+                if (!empty($file['@attributes'])
+                    && !empty($file['@attributes']['saveAs'])
+                    && $file['@attributes']['saveAs'] === $fileName
+                ) {
+                    if ($version === 7) {
+                        $this->assertSame('dependency', $file['@attributes']['type']);
+                    } else {
+                        $this->assertSame('media', $file['@attributes']['type']);
                     }
+
+                    $path = strstr($file['@attributes']['path'], '?');
                 }
             }
         }
@@ -123,12 +124,13 @@ class GetDependencyTest extends XmdsTestCase
 
         foreach ($array as $item) {
             foreach ($item as $file) {
-                if (!empty($file['@attributes'])) {
-                    if ($file['@attributes']['saveAs'] === 'bundle.min.js') {
-                        $size = $file['@attributes']['size'];
-                        $type = $file['@attributes']['fileType'];
-                        $id = $file['@attributes']['id'];
-                    }
+                if (!empty($file['@attributes'])
+                    && !empty($file['@attributes']['saveAs'])
+                    && $file['@attributes']['saveAs'] === 'bundle.min.js'
+                ) {
+                    $size = $file['@attributes']['size'];
+                    $type = $file['@attributes']['fileType'];
+                    $id = $file['@attributes']['id'];
                 }
 
             }
@@ -188,12 +190,14 @@ class GetDependencyTest extends XmdsTestCase
 
         foreach ($array as $item) {
             foreach ($item as $file) {
-                if (!empty($file['@attributes'])) {
-                    if ($file['@attributes']['saveAs'] === 'bundle.min.js') {
-                        $size = $file['@attributes']['size'];
-                        $type = $file['@attributes']['type'];
-                        $id = $file['@attributes']['id'];
-                    }
+                if (!empty($file['@attributes'])
+                    && !empty($file['@attributes']['saveAs'])
+                    && $file['@attributes']['saveAs'] === 'bundle.min.js'
+                ) {
+                    $size = $file['@attributes']['size'];
+                    $type = $file['@attributes']['type'];
+                    $id = $file['@attributes']['id'];
+
                 }
             }
         }

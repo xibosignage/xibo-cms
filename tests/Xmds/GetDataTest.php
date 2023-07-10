@@ -47,20 +47,6 @@ class GetDataTest extends XmdsTestCase
             ),
             7
         );
-
-        $this->dataSetXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
-    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:GetData>
-      <serverKey xsi:type="xsd:string">6v4RduQhaw5Q</serverKey>
-      <hardwareKey xsi:type="xsd:string">PHPUnit7</hardwareKey>
-      <widgetId xsi:type="xsd:int">6</widgetId>
-    </tns:GetData>
-  </soap:Body>
-</soap:Envelope>';
     }
     public function testGetData()
     {
@@ -71,7 +57,7 @@ class GetDataTest extends XmdsTestCase
         exec('cd /var/www/cms; php bin/run.php 9');
 
         // XMDS GetData with our dataSet Widget
-        $response = $this->sendRequest('POST', $this->dataSetXml);
+        $response = $this->sendRequest('POST', $this->getWidgetData(7, 6));
         $content = $response->getBody()->getContents();
 
         // expect GetDataResponse
