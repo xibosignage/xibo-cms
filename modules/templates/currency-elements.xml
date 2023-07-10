@@ -143,31 +143,55 @@ return value + '%';
         <startHeight>100</startHeight>
         <stencil>
             <hbs><![CDATA[
-<div class="img-container" style="width:100%; height: 100%; position: relative; overflow: hidden;
-    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
-    <div class="center-block-100 flag-icon-container">
-        <img src="[[assetId=flags]]" class="flag-icon flag-icon-{{url}}" />
+<div id="currency-logo-{{uniqueID}}" class="currency-logo" data-css-url="[[assetId=flagsCSS]]">
+    <div class="img-circle center-block flag-icon-container">
+        <img src="[[assetId=flags]]" class="flag-icon flag-icon-{{url}}">
     </div>
-    <link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen"/>
-</div><style>
-.center-block-100 {
+</div>
+<style>
+#currency-logo-{{uniqueID}} {
+    overflow: hidden;
     width: 100%;
     height: 100%;
 }
-</style>]]></hbs>
+#currency-logo-{{uniqueID}} .img-circle {
+    border-radius: 50%;
+    vertical-align: middle;
+    border: 0;
+    height: 100%;
+}
+#currency-logo-{{uniqueID}} .center-block {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+</style>
+            ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-const currencyLogo = $(target).find("img");
+// Width and Height of the element
+const width = $(target).width();
+const height = $(target).height();
 
-if (currencyLogo.length && typeof currencyLogo.xiboImageRender === 'function') {
-    $(target).find("img").xiboImageRender(properties);
+const $logoContainer = $(target).find('.currency-logo');
+const $imageContainer = $(target).find('.img-circle');
+
+// Inject CSS into target container if it's not added yet
+if ($(target).parent().parent().find('.sampleCSS').length == 0) {
+    $(target).parent().parent().prepend(`<link rel="stylesheet" href="${$logoContainer.data('cssUrl')}" class="sampleCSS" media="screen"/>`)
 }
 
-if ($(target).length && typeof currencyLogo.xiboLayoutScaler === 'function') {
-    $(target).xiboLayoutScaler(properties);
+// Scale image to the container
+if (width > height) {
+    $imageContainer.css('width', height);
+    $imageContainer.css('height', '100%');
+} else {
+    $imageContainer.css('height', width);
+    $imageContainer.css('width', '100%');
 }
-
-]]></onTemplateRender>
+        ]]></onTemplateRender>
         <assets>
             <asset id="currency-logo" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-logo.png" />
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp" />
