@@ -444,3 +444,27 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx) {
     }
   });
 });
+
+/**
+ * Force open toolbar menu when we are on playlist editor
+ * @param {number} menuIdx
+ */
+Cypress.Commands.add('openToolbarMenuForPlaylist', function(menuIdx) {
+  cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoadForPlaylist');
+  cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsLoadForPlaylist');
+
+  // Wait for the toolbar to reload when getting prefs at start
+  cy.wait('@toolbarPrefsLoadForPlaylist');
+
+  cy.get('.editor-toolbar').then(($toolbar) => {
+    if ($toolbar.find('#content-' + menuIdx + ' .close-submenu').length > 0) {
+      cy.log('Just close sub-menu!');
+      cy.get('.close-submenu').click();
+    } else if ($toolbar.find('#btn-menu-' + menuIdx + '.active').length == 0) {
+      cy.log('Open menu!');
+      cy.get('.editor-main-toolbar #btn-menu-' + menuIdx).click();
+    } else {
+      cy.log('Do nothing!');
+    }
+  });
+});

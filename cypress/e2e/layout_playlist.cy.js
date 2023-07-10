@@ -40,13 +40,15 @@ describe('Layout Designer', function() {
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').should('exist');
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').parents('.designer-region').click();
 
+    // Open widget menu for plalist
+    cy.openToolbarMenuForPlaylist(0);
     cy.get('[data-sub-type="clock"]').click();
 
     cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb').click();
 
     cy.get('#playlist-editor #playlist-timeline').click();
 
-    // Open widget menu
+    // Clear toolbar preferences
     cy.clearToolbarPrefs();
     cy.get('[data-widget-type="clock-analogue"]').should('exist');
     cy.get('[data-widget-type="clock-analogue"]').rightclick();
