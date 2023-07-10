@@ -26,7 +26,6 @@ describe('Layout Designer', function() {
   });
 
   it('should create a new layout and be redirected to the layout designer, add/delete playlist widget', function() {
-    cy.intercept('GET', '/playlist/widget/form/edit/*').as('toolbarPrefsLoad');
     cy.visit('/layout/view');
 
     cy.get('button[href="/layout"]').click();
@@ -39,8 +38,7 @@ describe('Layout Designer', function() {
 
     // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').should('exist');
-
-    cy.wait('@toolbarPrefsLoad');
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').parents('.designer-region').click();
 
     cy.get('[data-sub-type="clock"]').click();
 
