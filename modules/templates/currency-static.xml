@@ -81,8 +81,6 @@
   </div>
 </div>
 
-<link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen">
-
 <style>
 {{styleSheet|raw}}
 </style>
@@ -166,8 +164,6 @@ if (templateItems.length > 0) {
         </div>
     </div>
 </div>
-
-<link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen">
 
 <style>
 body {
@@ -347,8 +343,6 @@ if (templateItems.length > 0) {
   <div id="cycle-container" class="items-container">
   </div>
 </div>
-
-<link rel="stylesheet" href="[[assetId=flagsCSS]]" media="screen">
 
 <style>
 body {

@@ -36,7 +36,6 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -374,6 +373,8 @@ class WidgetHtmlRenderer
         $twig = [];
         $twig['hbs'] = [];
         $twig['twig'] = [];
+        $twig['style'] = [];
+        $twig['assets'] = [];
         $twig['onRender'] = [];
         $twig['onParseData'] = [];
         $twig['onElementParseData'] = [];
@@ -485,8 +486,18 @@ class WidgetHtmlRenderer
                 $twig['onVisible'][$widget->widgetId] = $module->onVisible;
             }
 
+            // Include any module assets.
+            foreach ($module->assets as $asset) {
+                if ($asset->isSendToPlayer()
+                    && $asset->mimeType === 'text/css' || $asset->mimeType === 'text/javascript'
+                ) {
+                    $twig['assets'][] = $asset;
+                }
+            }
+
             // Find my template
             if ($templateId !== 'elements') {
+                // Render out the `twig` from our specific static template
                 foreach ($moduleTemplates as $moduleTemplate) {
                     if ($moduleTemplate->templateId === $templateId) {
                         $moduleTemplate->decorateProperties($widget, true);
@@ -531,6 +542,9 @@ class WidgetHtmlRenderer
                         'gapBetweenHbs' => $module->stencil->gapBetweenHbs,
                     ];
                 }
+                if ($module->stencil->style !== null) {
+                    $twig['style'][] = $module->stencil->style;
+                }
             }
 
             // Include elements/element groups - they will already be JSON encoded.
@@ -570,7 +584,8 @@ class WidgetHtmlRenderer
             }
         }
 
-        // Render out HBS from templates
+        // Render out HBS/style from templates
+        // we do not render Twig here
         foreach ($moduleTemplates as $moduleTemplate) {
             // Handle extends.
             $extension = $moduleTemplate->getUnmatchedProperty('extends');
@@ -597,6 +612,10 @@ class WidgetHtmlRenderer
                         'with' => $moduleTemplate->extends?->with,
                     ],
                 ];
+
+                if ($moduleTemplate->stencil->style !== null) {
+                    $twig['style'][] = $moduleTemplate->stencil->style;
+                }
             } else if ($extension !== null) {
                 // Output the extension HBS instead
                 $twig['hbs'][$moduleTemplate->templateId] = [
@@ -609,6 +628,10 @@ class WidgetHtmlRenderer
                         'with' => $moduleTemplate->extends?->with,
                     ],
                 ];
+
+                if ($extension->stencil->style !== null) {
+                    $twig['style'][] = $extension->stencil->style;
+                }
             }
 
             if ($moduleTemplate->onTemplateRender !== null) {
@@ -617,6 +640,15 @@ class WidgetHtmlRenderer
 
             if ($moduleTemplate->onElementParseData !== null) {
                 $twig['onElementParseData'][$moduleTemplate->templateId] = $moduleTemplate->onElementParseData;
+            }
+
+            // Include any module template assets.
+            foreach ($moduleTemplate->assets as $asset) {
+                if ($asset->isSendToPlayer()
+                    && $asset->mimeType === 'text/css' || $asset->mimeType === 'text/javascript'
+                ) {
+                    $twig['assets'][] = $asset;
+                }
             }
         }
 

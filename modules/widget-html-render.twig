@@ -52,6 +52,20 @@
     {% for item in twig %}
         {{ item|raw }}
     {% endfor %}
+    {% for asset in assets %}
+        {% if asset.mimeType == 'text/css' %}
+        <link rel="stylesheet" media="screen" href="[[assetId={{ asset.id }}]]" />
+        {% elseif asset.mimeType == 'text/javascript' %}
+        <script id="{{ asset.id }}" type="text/javascript" src="[[assetId={{ asset.id }}]]"></script>
+        {% endif %}
+    {% endfor %}
+    {% if style|length > 0 %}
+        <style type="text/css">
+        {% for item in style %}
+            {{ item|raw }}
+        {% endfor %}
+        </style>
+    {% endif %}
     </body>
     <script type="text/javascript">
         window.globalOptions = {

@@ -38,6 +38,9 @@ class Stencil implements \JsonSerializable
     public $hbs;
 
     /** @var string|null */
+    public $style;
+
+    /** @var string|null */
     public $hbsId;
 
     /** @var double Optional positional information if contained as part of an element group */
@@ -55,6 +58,7 @@ class Stencil implements \JsonSerializable
         return [
             'hbsId' => $this->hbsId,
             'hbs' => $this->hbs,
+            'style' => $this->style,
             'width' => $this->width,
             'height' => $this->height,
             'gapBetweenHbs' => $this->gapBetweenHbs,
