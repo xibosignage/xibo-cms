@@ -997,4 +997,33 @@ Layout.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
     });
 };
 
+/**
+ * Check if the layout is empty
+ * @return {boolean} if the layout has no content
+ */
+Layout.prototype.isEmpty = function() {
+  // Check if there are regions
+  if (!$.isEmptyObject(this.regions)) {
+    return false;
+  }
+
+  // If we have canvas...
+  if (!$.isEmptyObject(this.canvas)) {
+    // Check if we have more than one widget in canvas
+    // ( the canvas widget is there by default )
+    if (Object.values(this.canvas.widgets).length > 1) {
+      return false;
+    }
+
+    // Check if we have any elements in canvas
+    if (!$.isEmptyObject(
+      Object.values(this.canvas.widgets)[0].elements,
+    )) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 module.exports = Layout;
