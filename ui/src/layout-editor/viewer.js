@@ -1377,6 +1377,9 @@ Viewer.prototype.renderElementContent = function(
         // Send uniqueID
         convertedProperties.uniqueID = element.elementId;
 
+        // Send element props
+        convertedProperties.prop = element;
+
         const extendedDataKey = template?.extends ?
           transformer.getExtendedDataKey(template.extends.with) : null;
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
