@@ -994,7 +994,7 @@ PropertiesPanel.prototype.render = function(
       });
 
       // Handle set fullscreen button
-      self.DOMObject.find('#positionTab #setFullScreen').on(
+      self.DOMObject.find('#positionTab #setFullScreen').off().on(
         'click',
         function(ev) {
           const form = $(ev.currentTarget).parents('#positionTab');

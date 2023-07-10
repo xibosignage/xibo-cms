@@ -812,11 +812,11 @@
 
         &.show > a {
             color: $xibo-color-primary-l5;
-            background-color: bo-color-primary-d6;
+            background-color: $xibo-color-primary-d60;
         }
 
         &.open > a {
-            color: bo-color-primary-d6;
+            color: $xibo-color-primary-d60;
         }
 
         .navbar-submenu-item-options {
