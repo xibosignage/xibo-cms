@@ -450,8 +450,7 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx) {
  * @param {number} menuIdx
  */
 Cypress.Commands.add('openToolbarMenuForPlaylist', function(menuIdx) {
-  cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoadForPlaylist');
-  cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsLoadForPlaylist');
+  cy.intercept('POST', '/user/pref').as('toolbarPrefsLoadForPlaylist');
 
   // Wait for the toolbar to reload when getting prefs at start
   cy.wait('@toolbarPrefsLoadForPlaylist');
