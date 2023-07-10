@@ -41,7 +41,6 @@ describe('Layout Designer', function() {
 
     // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_mastodon"]').should('exist');
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_mastodon"]').parent().parent().click();
 
     cy.get('[name="hashtag"]').clear();
     cy.get('[name="hashtag"]').type('#cat');
@@ -60,7 +59,7 @@ describe('Layout Designer', function() {
     cy.get('[name="alignmentH"]').select('Right', {force: true});
     cy.get('[name="alignmentV"]').select('Bottom', {force: true});
 
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_mastodon"]').parent().parent().rightclick();
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_mastodon"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
     cy.get('.btn-bb-confirm').click();
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_mastodon"]').should('not.exist');

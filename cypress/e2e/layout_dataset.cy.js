@@ -42,13 +42,19 @@ describe('Layout Designer', function() {
 
     // // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('exist');
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').parent().parent().click();
 
     // Select the dataset
     cy.get('#configureTab > .dropdown-input-group > .select2 > .selection > .select2-selection').click();
 
     // Wait for datasets to load
     cy.wait('@loadDatasets');
+
+    // Type the dataset name
+    cy.get('.select2-container--open input[type="search"]').type('test');
+
+    // Wait for datasets to load
+    cy.wait('@loadDatasets');
+    cy.get('.select2-container--open').contains('test');
     cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
     cy.get('.select2-container--open .select2-results > ul > li:first').contains('test').click();
 
@@ -95,7 +101,7 @@ describe('Layout Designer', function() {
     cy.get('[name="fontSize"]').clear().type('48');
     cy.get('[name="backgroundColor"]').clear().type('#333333');
 
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').parent().parent().rightclick();
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
     cy.get('.btn-bb-confirm').click();
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('not.exist');

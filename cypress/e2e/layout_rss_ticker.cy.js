@@ -41,7 +41,7 @@ describe('Layout Designer', function() {
 
     // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').should('exist');
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').parent().parent().click({multiple: true});
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').parents('.designer-region').click();
 
     // Validate if uri is not provide we show an error message
     cy.get('[name="numItems"]').clear().type('10').trigger('change');
@@ -68,7 +68,7 @@ describe('Layout Designer', function() {
     cy.get('.cke_editable_inline').type('No data to show').trigger('change');
     cy.get('[name="copyright"]').clear().type('Xibo').trigger('change');
 
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').parent().parent().rightclick();
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
     cy.get('.btn-bb-confirm').click();
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').should('not.exist');

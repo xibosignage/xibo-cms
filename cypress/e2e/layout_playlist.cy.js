@@ -39,7 +39,6 @@ describe('Layout Designer', function() {
 
     // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').should('exist');
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="playlist"]').parent().parent().click();
 
     cy.wait('@toolbarPrefsLoad');
 
