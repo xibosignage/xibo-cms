@@ -807,8 +807,6 @@ class Playlist extends Base
             throw new AccessDeniedException();
         }
 
-        $playlist->setUnmatchedProperty('tagsString', $playlist->getTagString());
-
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
             'playlist' => $playlist

@@ -28,40 +28,14 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Xibo\Tests\XmdsTestCase;
 
 /**
- * @property string $requiredFilesXml
- * @property string $requiredFilesXmlv6
+ * GetDependency tests, fonts, bundle
  */
 class GetDependencyTest extends XmdsTestCase
 {
+    use XmdsHelperTrait;
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->requiredFilesXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
-    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RequiredFiles>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpstorm</hardwareKey>
-    </tns:RequiredFiles>
-  </soap:Body>
-</soap:Envelope>';
-        
-        $this->requiredFilesXmlv6 = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
-    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RequiredFiles>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpunit6</hardwareKey>
-    </tns:RequiredFiles>
-  </soap:Body>
-</soap:Envelope>';
     }
 
     public static function successCasesBundle(): array
@@ -97,11 +71,7 @@ class GetDependencyTest extends XmdsTestCase
     #[DataProvider('successCasesFont')]
     public function testGetFont($version, $fileName)
     {
-        if ($version === 7) {
-            $rf = $this->sendRequest('POST', $this->requiredFilesXml, $version);
-        } else {
-            $rf = $this->sendRequest('POST', $this->requiredFilesXmlv6, $version);
-        }
+        $rf = $this->sendRequest('POST', $this->getRf($version), $version);
 
         $response = $rf->getBody()->getContents();
         $path = null;
@@ -114,16 +84,17 @@ class GetDependencyTest extends XmdsTestCase
 
         foreach ($array as $item) {
             foreach ($item as $file) {
-                if (!empty($file['@attributes'])) {
-                    if ($file['@attributes']['saveAs'] === $fileName) {
-                        if ($version === 7) {
-                            $this->assertSame('dependency', $file['@attributes']['type']);
-                        } else {
-                            $this->assertSame('media', $file['@attributes']['type']);
-                        }
-
-                        $path = strstr($file['@attributes']['path'], '?');
+                if (!empty($file['@attributes'])
+                    && !empty($file['@attributes']['saveAs'])
+                    && $file['@attributes']['saveAs'] === $fileName
+                ) {
+                    if ($version === 7) {
+                        $this->assertSame('dependency', $file['@attributes']['type']);
+                    } else {
+                        $this->assertSame('media', $file['@attributes']['type']);
                     }
+
+                    $path = strstr($file['@attributes']['path'], '?');
                 }
             }
         }
@@ -139,7 +110,7 @@ class GetDependencyTest extends XmdsTestCase
     #[DataProvider('successCasesBundle')]
     public function testGetBundlev7($version)
     {
-        $rf = $this->sendRequest('POST', $this->requiredFilesXml, $version);
+        $rf = $this->sendRequest('POST', $this->getRf($version), $version);
         $response = $rf->getBody()->getContents();
         $size = null;
         $id = null;
@@ -153,14 +124,14 @@ class GetDependencyTest extends XmdsTestCase
 
         foreach ($array as $item) {
             foreach ($item as $file) {
-                if (!empty($file['@attributes'])) {
-                    if ($file['@attributes']['saveAs'] === 'bundle.min.js') {
-                        $size = $file['@attributes']['size'];
-                        $type = $file['@attributes']['fileType'];
-                        $id = $file['@attributes']['id'];
-                    }
+                if (!empty($file['@attributes'])
+                    && !empty($file['@attributes']['saveAs'])
+                    && $file['@attributes']['saveAs'] === 'bundle.min.js'
+                ) {
+                    $size = $file['@attributes']['size'];
+                    $type = $file['@attributes']['fileType'];
+                    $id = $file['@attributes']['id'];
                 }
-
             }
         }
 
@@ -176,8 +147,8 @@ class GetDependencyTest extends XmdsTestCase
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
     <tns:GetDependency>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpstorm</hardwareKey>
+      <serverKey xsi:type="xsd:string">6v4RduQhaw5Q</serverKey>
+      <hardwareKey xsi:type="xsd:string">PHPUnit'.$version.'</hardwareKey>
       <fileType xsi:type="xsd:string">'. $type .'</fileType>
       <id xsi:type="xsd:string">'. $id .'</id>
       <chunkOffset xsi:type="xsd:double">0</chunkOffset>
@@ -202,9 +173,9 @@ class GetDependencyTest extends XmdsTestCase
     }
 
     #[DataProvider('successCasesBundleOld')]
-    public function testGetBundlev6($version)
+    public function testGetBundleOld($version)
     {
-        $rf = $this->sendRequest('POST', $this->requiredFilesXmlv6, $version);
+        $rf = $this->sendRequest('POST', $this->getRf($version), $version);
         $response = $rf->getBody()->getContents();
         $size = null;
         $id = null;
@@ -218,12 +189,13 @@ class GetDependencyTest extends XmdsTestCase
 
         foreach ($array as $item) {
             foreach ($item as $file) {
-                if (!empty($file['@attributes'])) {
-                    if ($file['@attributes']['saveAs'] === 'bundle.min.js') {
-                        $size = $file['@attributes']['size'];
-                        $type = $file['@attributes']['type'];
-                        $id = $file['@attributes']['id'];
-                    }
+                if (!empty($file['@attributes'])
+                    && !empty($file['@attributes']['saveAs'])
+                    && $file['@attributes']['saveAs'] === 'bundle.min.js'
+                ) {
+                    $size = $file['@attributes']['size'];
+                    $type = $file['@attributes']['type'];
+                    $id = $file['@attributes']['id'];
                 }
             }
         }
@@ -236,8 +208,8 @@ class GetDependencyTest extends XmdsTestCase
         $bundleXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
     <tns:GetFile>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpunit6</hardwareKey>
+      <serverKey xsi:type="xsd:string">6v4RduQhaw5Q</serverKey>
+      <hardwareKey xsi:type="xsd:string">PHPUnit'.$version.'</hardwareKey>
       <fileId xsi:type="xsd:string">'. $id .'</fileId>
       <fileType xsi:type="xsd:string">'. $type .'</fileType>
       <chunkOffset xsi:type="xsd:double">0</chunkOffset>

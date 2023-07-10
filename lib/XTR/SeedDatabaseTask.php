@@ -189,8 +189,9 @@ class SeedDatabaseTask implements TaskInterface
             'POP Display 1' => ['license' => Random::generateString(12, 'seed'), 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
             'POP Display 2' => ['license' => Random::generateString(12, 'seed'), 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
 
-            // 5 displays for xmds
-            'phpunitv7' => ['license' => 'PHPUnit7', 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            // 6 displays for xmds
+            'phpunitv7' => ['license' => 'PHPUnit7', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'phpunitwaiting' => ['license' => 'PHPUnitWaiting', 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
             'phpunitv6' => ['license' => 'PHPUnit6', 'licensed' => true, 'clientType' => 'windows', 'clientCode' => 304, 'clientVersion' => 3],
             'phpunitv5' => ['license' => 'PHPUnit5', 'licensed' => true, 'clientType' => 'windows', 'clientCode' => 304, 'clientVersion' => 3],
             'phpunitv4' => ['license' => 'PHPUnit4', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 217, 'clientVersion' => 2],
@@ -538,7 +539,7 @@ class SeedDatabaseTask implements TaskInterface
 
             $this->store->commitIfNecessary();
         } catch (GeneralException $e) {
-            $this->log->error('Error creating sync group: '. $e->getMessage());
+            $this->log->error('Error creating schedule : '. $e->getMessage());
         }
     }
 
@@ -558,7 +559,12 @@ class SeedDatabaseTask implements TaskInterface
                 'displayId' => $this->displays['phpunitv6']
             ]);
 
-            $syncGroup->leadDisplayId = $this->displays['phpunitv6'];
+            $this->store->update('UPDATE `display` SET `display`.syncGroupId = :syncGroupId WHERE `display`.displayId = :displayId', [
+                'syncGroupId' => $syncGroup->syncGroupId,
+                'displayId' => $this->displays['phpunitv7']
+            ]);
+
+            $syncGroup->leadDisplayId = $this->displays['phpunitv7'];
             $syncGroup->save();
             $this->store->commitIfNecessary();
             // Cache
@@ -580,12 +586,18 @@ class SeedDatabaseTask implements TaskInterface
             $schedule->isPriority = 0;
 
             // Campaign Id
-            $schedule->campaignId = $this->layouts['Image test'];
+            $schedule->campaignId = null;
             $schedule->syncTimezone = 0;
-            $schedule->syncEvent = 0;
+            $schedule->syncEvent = 1;
             $schedule->isGeoAware = 0;
             $schedule->maxPlaysPerHour = 0;
             $schedule->syncGroupId = $this->syncGroups['Simple Sync Group'];
+
+            $displayV7 = $this->displayFactory->getById($this->displays['phpunitv7']);
+            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayV7->displayGroupId));
+            $displayV6 = $this->displayFactory->getById($this->displays['phpunitv6']);
+            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayV6->displayGroupId));
+
             $schedule->save(['notify' => false]);
             $this->store->commitIfNecessary();
             // Update Sync Links
@@ -593,11 +605,18 @@ class SeedDatabaseTask implements TaskInterface
             VALUES(:eventId, :displayId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = :layoutId', [
                 'eventId' => $schedule->eventId,
                 'displayId' => $this->displays['phpunitv7'],
-                'layoutId' => $this->layouts['dataset test']
+                'layoutId' => $this->layouts['Image test']
+            ]);
+
+            $this->store->insert('INSERT INTO `schedule_sync` (`eventId`, `displayId`, `layoutId`)
+            VALUES(:eventId, :displayId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = :layoutId', [
+                'eventId' => $schedule->eventId,
+                'displayId' => $this->displays['phpunitv6'],
+                'layoutId' => $this->layouts['Image test']
             ]);
             $this->store->commitIfNecessary();
         } catch (GeneralException $e) {
-            $this->log->error('Error creating sync group: '. $e->getMessage());
+            $this->log->error('Error creating sync schedule: '. $e->getMessage());
         }
     }
 

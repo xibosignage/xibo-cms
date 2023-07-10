@@ -113,12 +113,8 @@ class TagFactory extends BaseFactory
         // Add to the list
         try {
             $tag = $this->getByTag($explode[0]);
-
-            if ($tag->isRequired == 1 && !isset($explode[1])) {
-                throw new InvalidArgumentException(sprintf('Selected Tag %s requires a value, please enter the Tag in %s|Value format or provide Tag value in the dedicated field.', $explode[0], $explode[0]), 'options');
-            }
-
             $tagLink = $this->createTagLink($tag->tagId, $tag->tag, $explode[1] ?? null);
+            $tagLink->validateOptions($tag);
         }
         catch (NotFoundException $e) {
             // New tag
@@ -135,18 +131,13 @@ class TagFactory extends BaseFactory
     {
         $tagLinks = [];
         foreach ($tagArray as $tag) {
-            $this->getLog()->debug('debug: tag ' . json_encode($tag));
             if (!is_array($tag)) {
                 $tag = json_decode($tag);
             }
             try {
                 $tagCheck = $this->getByTag($tag->tag);
-
-                if ($tagCheck->isRequired == 1 && !isset($tag->value)) {
-                    throw new InvalidArgumentException(sprintf('Selected Tag %s requires a value, please enter the Tag in %s|Value format or provide Tag value in the dedicated field.', $tag->tag, $tag->value), 'options');
-                }
-
                 $tagLink = $this->createTagLink($tagCheck->tagId, $tag->tag, $tag->value ?? null);
+                $tagLink->validateOptions($tag);
             } catch (NotFoundException $exception) {
                 $newTag = $this->createEmpty();
                 $newTag->tag = $tag->tag;

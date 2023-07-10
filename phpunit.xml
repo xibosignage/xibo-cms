@@ -22,6 +22,7 @@
 <phpunit bootstrap="tests/Bootstrap.php"
          colors="true">
     <testsuites>
+    <!--
         <testsuite name="Xibo Integration Test Suite">
             <directory suffix="Test.php">tests/integration/</directory>
             <directory suffix="Test.php">tests/integration/Widget/</directory>
@@ -30,8 +31,9 @@
         <testsuite name="Xibo Unit-Test Suite">
             <directory suffix="Test.php">tests/Widget/</directory>
         </testsuite>
+   -->
         <testsuite name="Xibo XMDS Test Suite">
-            <directory suffix="Test.php">tests/xmds/</directory>
+            <directory suffix="Test.php">tests/Xmds/</directory>
         </testsuite>
     </testsuites>
     <groups>

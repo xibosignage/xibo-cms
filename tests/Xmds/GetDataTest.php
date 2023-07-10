@@ -27,71 +27,37 @@ use DOMXPath;
 use Xibo\Tests\XmdsTestCase;
 
 /**
+ * Get data tests for xmds v7
  * @property string $dataSetXml
- * @property string $requiredFilesXml
- * @property string $requiredFilesXmlv6
  */
 class GetDataTest extends XmdsTestCase
 {
+    use XmdsHelperTrait;
     public function setUp(): void
     {
         parent::setUp();
 
-        $registerXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RegisterDisplay>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpstorm</hardwareKey>
-      <displayName xsi:type="xsd:string">PHPStorm</displayName>
-      <clientType xsi:type="xsd:string">windows</clientType>
-      <clientVersion xsi:type="xsd:string">4</clientVersion>
-      <clientCode xsi:type="xsd:int">420</clientCode>
-      <macAddress xsi:type="xsd:string">CC:40:D0:46:3C:A8</macAddress>
-    </tns:RegisterDisplay>
-  </soap:Body>
-</soap:Envelope>';
-
         // to make sure Display is logged in, otherwise WidgetSyncTask will not sync data.
-        $this->sendRequest('POST', $registerXml, 7);
-
-        $this->dataSetXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
-    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:GetData>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpstorm</hardwareKey>
-      <widgetId xsi:type="xsd:int">112</widgetId>
-    </tns:GetData>
-  </soap:Body>
-</soap:Envelope>';
-
-
-        $this->requiredFilesXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
-    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RequiredFiles>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpstorm</hardwareKey>
-    </tns:RequiredFiles>
-  </soap:Body>
-</soap:Envelope>';
+        $this->sendRequest(
+            'POST',
+            $this->register(
+                'PHPUnit7',
+                'phpunitv7',
+                'android'
+            ),
+            7
+        );
     }
     public function testGetData()
     {
         // Fresh RF
-        $this->sendRequest('POST', $this->requiredFilesXml, 7);
+        $this->sendRequest('POST', $this->getRf(7), 7);
 
         // Execute Widget Sync task so we can have data for our Widget
         exec('cd /var/www/cms; php bin/run.php 9');
 
         // XMDS GetData with our dataSet Widget
-        $response = $this->sendRequest('POST', $this->dataSetXml);
+        $response = $this->sendRequest('POST', $this->getWidgetData(7, 6));
         $content = $response->getBody()->getContents();
 
         // expect GetDataResponse
