@@ -1221,7 +1221,6 @@ class Library extends Base
         }
 
         $media->enableStat = ($media->enableStat == null) ? $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT') : $media->enableStat;
-        $media->setUnmatchedProperty('tagsString', $media->getTagString());
 
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
@@ -2126,8 +2125,6 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
-
-        $media->setUnmatchedProperty('tagsString', $media->getTagString());
 
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022-2023 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -483,8 +483,6 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
-
-        $displayGroup->setUnmatchedProperty('tagsString', $displayGroup->getTagString());
 
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([

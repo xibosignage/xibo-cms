@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -64,8 +64,8 @@ class Tag implements \JsonSerializable
     public $isRequired = 0;
 
     /**
-     * @SWG\Property(description="An array of options assigned to this Tag", @SWG\Items(type="string"))
-     * @var array
+     * @SWG\Property(description="An array of options assigned to this Tag")
+     * @var ?string
      */
     public $options;
 
@@ -129,7 +129,6 @@ class Tag implements \JsonSerializable
 
         if ($options['validate']) {
             $this->validate();
-            $this->validateTagOptions();
         }
 
         // If the tag doesn't exist already - save it
@@ -188,31 +187,6 @@ class Tag implements \JsonSerializable
         $tag = $this->tagFactory->getById($this->tagId);
 
         return $tag->isSystem === 1;
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function validateTagOptions()
-    {
-        if (isset($this->options)) {
-            $tagOptionsString = implode(',', json_decode($this->options));
-            $tagOptionsArray = explode(',', $tagOptionsString);
-
-            if (isset($this->value) && !in_array($this->value, $tagOptionsArray)) {
-                throw new InvalidArgumentException(
-                    sprintf(__('Provided tag value %s, not found in tag %s options'), $this->value, $this->tag),
-                    'tags'
-                );
-            }
-
-            if (!isset($this->value) && $this->isRequired == 1) {
-                throw new InvalidArgumentException(
-                    sprintf(__('Provided Tag %s, requires a value'), $this->tag),
-                    'tags'
-                );
-            }
-        }
     }
 
     /**

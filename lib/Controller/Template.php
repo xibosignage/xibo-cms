@@ -420,7 +420,6 @@ class Template extends Base
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
             'layout' => $layout,
-            'tagsString' => $layout->getTagString(),
             'help' => $this->getHelp()->link('Template', 'Add')
         ]);
 
@@ -716,7 +715,6 @@ class Template extends Base
         $this->getState()->template = 'template-form-edit';
         $this->getState()->setData([
             'layout' => $template,
-            'tagsString' => $template->getTagString(),
             'help' => $this->getHelp()->link('Template', 'Edit')
         ]);
 

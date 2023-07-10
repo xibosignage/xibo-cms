@@ -1218,7 +1218,6 @@ class Display extends Base
 
         // We have permission - load
         $display->load();
-        $display->setUnmatchedProperty('tagsString', $display->getTagString());
 
         // Dates
         $auditingUntilIso = !empty($display->auditingUntil)

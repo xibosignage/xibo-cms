@@ -633,7 +633,6 @@ class Campaign extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
-        $campaign->setUnmatchedProperty('tagsString', $campaign->getTagString());
 
         if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
