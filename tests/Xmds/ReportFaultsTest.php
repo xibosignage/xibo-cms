@@ -26,23 +26,15 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Xibo\Tests\XmdsTestCase;
 
 /**
- * @property string $xmlRequest
+ * Report fault tests
  */
 final class ReportFaultsTest extends XmdsTestCase
 {
+    use XmdsHelperTrait;
+
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->xmlRequest = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-          <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-            <tns:ReportFaults>
-              <serverKey xsi:type="xsd:string">test</serverKey>
-              <hardwareKey xsi:type="xsd:string">phpstorm</hardwareKey>
-              <fault xsi:type="xsd:string">[{date:"2023-04-20 17:03:52",expires:"2023-04-21 17:03:52",code:00001,reason:"Test",scheduleId:0,layoutId:0,regionId:0,mediaId:0,widgetId:0}]</fault>
-            </tns:ReportFaults>
-          </soap:Body>
-        </soap:Envelope>';
     }
 
     public static function successCases(): array
@@ -65,7 +57,7 @@ final class ReportFaultsTest extends XmdsTestCase
     #[DataProvider('successCases')]
     public function testSendFaultSuccess(int $version)
     {
-        $request = $this->sendRequest('POST', $this->xmlRequest, $version);
+        $request = $this->sendRequest('POST', $this->reportFault($version), $version);
 
         $this->assertStringContainsString(
             '<ns1:ReportFaultsResponse><success xsi:type="xsd:boolean">true</success>',
@@ -78,7 +70,7 @@ final class ReportFaultsTest extends XmdsTestCase
     public function testSendFaultFailure(int $version)
     {
         // disable exception on http_error in guzzle, so we can still check the response
-        $request = $this->sendRequest('POST', $this->xmlRequest, $version, false);
+        $request = $this->sendRequest('POST', $this->reportFault($version), $version, false);
 
         // check the fault code
         $this->assertStringContainsString(
@@ -101,6 +93,6 @@ final class ReportFaultsTest extends XmdsTestCase
         // we are expecting 500 Server Exception here for xmds 3,4 and 5
         $this->expectException('GuzzleHttp\Exception\ServerException');
         $this->expectExceptionCode(500);
-        $this->sendRequest('POST', $this->xmlRequest, $version);
+        $this->sendRequest('POST', $this->reportFault($version), $version);
     }
 }

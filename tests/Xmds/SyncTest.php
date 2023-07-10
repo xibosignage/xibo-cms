@@ -28,54 +28,15 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Xibo\Tests\xmdsTestCase;
 
 /**
- * @property string $scheduleXml
- * @property string $registerXml
- * @property string $registerLeadXml
+ * Sync Schedule and Register tests
  */
 class SyncTest extends XmdsTestCase
 {
+    use XmdsHelperTrait;
+
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->scheduleXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:Schedule>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpunitsync</hardwareKey>
-    </tns:Schedule>
-  </soap:Body>
-</soap:Envelope>';
-
-        $this->registerXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RegisterDisplay>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpunitsync</hardwareKey>
-      <displayName xsi:type="xsd:string">PHPUnitSync</displayName>
-      <clientType xsi:type="xsd:string">android</clientType>
-      <clientVersion xsi:type="xsd:string">4</clientVersion>
-      <clientCode xsi:type="xsd:int">420</clientCode>
-      <macAddress xsi:type="xsd:string">CC:40:D0:46:3C:A8</macAddress>
-      <licenceResult xsi:type="xsd:string">licensed</licenceResult>
-    </tns:RegisterDisplay>
-  </soap:Body>
-</soap:Envelope>';
-
-        $this->registerLeadXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RegisterDisplay>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpunit6</hardwareKey>
-      <displayName xsi:type="xsd:string">PHPUnit_v6</displayName>
-      <clientType xsi:type="xsd:string">android</clientType>
-      <clientVersion xsi:type="xsd:string">4</clientVersion>
-      <clientCode xsi:type="xsd:int">420</clientCode>
-      <macAddress xsi:type="xsd:string">CC:40:D0:46:3C:A8</macAddress>
-      <licenceResult xsi:type="xsd:string">licensed</licenceResult>
-    </tns:RegisterDisplay>
-  </soap:Body>
-</soap:Envelope>';
     }
 
     public static function registerSuccessCases(): array
@@ -88,7 +49,7 @@ class SyncTest extends XmdsTestCase
 
     public function testScheduleSyncEvent()
     {
-        $request = $this->sendRequest('POST', $this->scheduleXml, 7);
+        $request = $this->sendRequest('POST', $this->getSchedule('PHPUnit7'), 7);
 
         $response = $request->getBody()->getContents();
 
@@ -101,10 +62,18 @@ class SyncTest extends XmdsTestCase
         $innerDocument->loadXML($result);
         $layouts = $innerDocument->documentElement->getElementsByTagName('layout');
 
+        $i = 0;
         foreach ($layouts as $layout) {
-            $this->assertSame('165', $layout->getAttribute('file'));
-            $this->assertSame('1', $layout->getAttribute('syncEvent'));
-            $this->assertSame('64', $layout->getAttribute('scheduleid'));
+            if ($i === 0) {
+                $this->assertSame('6', $layout->getAttribute('file'));
+                $this->assertSame('1', $layout->getAttribute('syncEvent'));
+                $this->assertSame('2', $layout->getAttribute('scheduleid'));
+            } else if ($i === 1) {
+                $this->assertSame('5', $layout->getAttribute('file'));
+                $this->assertSame('0', $layout->getAttribute('syncEvent'));
+                $this->assertSame('1', $layout->getAttribute('scheduleid'));
+            }
+            $i++;
         }
     }
 
@@ -112,9 +81,18 @@ class SyncTest extends XmdsTestCase
     public function testRegisterDisplay($version)
     {
         if ($version === 7) {
-            $xml = $this->registerXml;
+            $this->sendRequest('POST', $this->notifyStatus($version, '{"lanIpAddress":"192.168.0.3"}'), $version);
+            $xml = $this->register(
+                'PHPUnit7',
+                'phpunitv7',
+                'android'
+            );
         } else {
-            $xml = $this->registerLeadXml;
+            $xml = $this->register(
+                'PHPUnit6',
+                'phpunitv6',
+                'android'
+            );
         }
 
         $request = $this->sendRequest('POST', $xml, $version);
@@ -138,9 +116,9 @@ class SyncTest extends XmdsTestCase
         $this->assertSame(1, count($syncNodes));
 
         if ($version === 7) {
-            $this->assertSame('192.168.0.3', $syncNodes->item(0)->textContent);
-        } else {
             $this->assertSame('lead', $syncNodes->item(0)->textContent);
+        } else {
+            $this->assertSame('192.168.0.3', $syncNodes->item(0)->textContent);
         }
     }
 }

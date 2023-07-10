@@ -27,48 +27,29 @@ use DOMXPath;
 use Xibo\Tests\XmdsTestCase;
 
 /**
- * @property string $registerWindowsXml
- * @property string $registerAndroidXml
+ * Register Displays tests
  */
 class RegisterDisplayTest extends XmdsTestCase
 {
+    use XmdsHelperTrait;
+
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->registerWindowsXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RegisterDisplay>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">phpstorm</hardwareKey>
-      <displayName xsi:type="xsd:string">PHPStorm</displayName>
-      <clientType xsi:type="xsd:string">windows</clientType>
-      <clientVersion xsi:type="xsd:string">4</clientVersion>
-      <clientCode xsi:type="xsd:int">420</clientCode>
-      <macAddress xsi:type="xsd:string">CC:40:D0:46:3C:A8</macAddress>
-    </tns:RegisterDisplay>
-  </soap:Body>
-</soap:Envelope>';
-
-        $this->registerAndroidXml = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:RegisterDisplay>
-      <serverKey xsi:type="xsd:string">test</serverKey>
-      <hardwareKey xsi:type="xsd:string">PHPUnitWaiting</hardwareKey>
-      <displayName xsi:type="xsd:string">phpunitwaiting</displayName>
-      <clientType xsi:type="xsd:string">android</clientType>
-      <clientVersion xsi:type="xsd:string">4</clientVersion>
-      <clientCode xsi:type="xsd:int">420</clientCode>
-      <macAddress xsi:type="xsd:string">CC:40:D0:46:3C:A8</macAddress>
-      <licenceResult xsi:type="xsd:string">trial</licenceResult>
-    </tns:RegisterDisplay>
-  </soap:Body>
-</soap:Envelope>';
     }
 
     public function testRegisterDisplayAuthed()
     {
-        $request = $this->sendRequest('POST', $this->registerWindowsXml, 7);
+        $request = $this->sendRequest(
+            'POST',
+            $this->register(
+                'PHPUnit7',
+                'phpunitv7',
+                'android'
+            ),
+            7
+        );
+
         $response = $request->getBody()->getContents();
 
         $document = new DOMDocument();
@@ -85,7 +66,15 @@ class RegisterDisplayTest extends XmdsTestCase
 
     public function testRegisterDisplayNoAuth()
     {
-        $request = $this->sendRequest('POST', $this->registerAndroidXml, 7);
+        $request = $this->sendRequest(
+            'POST',
+            $this->register(
+                'PHPUnitWaiting',
+                'phpunitwaiting',
+                'android'
+            ),
+            7
+        );
         $response = $request->getBody()->getContents();
 
         $document = new DOMDocument();
@@ -105,7 +94,6 @@ class RegisterDisplayTest extends XmdsTestCase
         $array = json_decode(json_encode(simplexml_load_string($result)), true);
 
         foreach ($array as $key => $value) {
-            // $this->getLogger()->debug($key . ' -> ' . json_encode($value));
             if ($key === 'commercialLicence') {
                 $this->assertSame('trial', $value);
             }
