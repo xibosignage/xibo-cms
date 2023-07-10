@@ -401,6 +401,14 @@
                         },
                     },
                 },
+                layoutTemplateReplace: {
+                    title: "{{ "Replace Layout"|trans }}",
+                    message: "{{ "Are you sure you want to replace your Layout with a template?"|trans }}",
+                    buttons: {
+                        cancel: "{{ "Cancel"|trans }}",
+                        delete: "{{ "Replace"|trans }}"
+                    },
+                },
                 exit: "{{ "Exit"|trans }}",
             };
 
@@ -465,6 +473,16 @@
                 layer: "{{ "Layer"|trans }}",
                 dataSlot: "{{ "Data Slot"|trans }}",
                 dataSlotHelpText: "{{ "When there are more than one of the same element for a widget you can set the slot for each element. For example with two of the same element you'd have data slot 1 and data slot 2. If 10 items were returned slot 1 would receive items 1,3,5,7,9 and slot 2 would receive items 2,4,6,8,19."|trans }}",
+                groupScale: "{{ "Scale with group"|trans }}",
+                groupScaleHelpText: "{{ "Scale element when scaling containing group."|trans }}",
+                groupScaleType: "{{ "Align"|trans }}",
+                groupScaleTypeHelpText: "{{ "Alignment when scaling the containing group."|trans }}",
+                groupScaleTypeOptions: {
+                    topLeft: "{{ "Top/Left" |trans }}",
+                    topRight: "{{ "Top/Right" |trans }}",
+                    bottomLeft: "{{ "Bottom/Left" |trans }}",
+                    bottomRight: "{{ "Bottom/Right" |trans }}",
+                },
                 somethingWentWrong: "{{ "Something went wrong!"|trans }}",
                 selectATarget: "{{ "Select a target region!"|trans }}",
                 actions: {

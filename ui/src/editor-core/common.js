@@ -14,7 +14,9 @@ module.exports = {
 
     if (bumpVal <= 1) {
       $('.loading-overlay').addClass('loading').fadeIn(400);
-      window.onbeforeunload = () => editorsTrans.onbeforeunload;
+      // TODO: Alert message disabled for now
+      // it clashes with the user timeout
+      // window.onbeforeunload = () => editorsTrans.onbeforeunload;
     }
 
     $('.loading-overlay').data('bump', bumpVal++);
@@ -31,7 +33,9 @@ module.exports = {
     if (bumpVal <= 0) {
       $('.loading-overlay.loading').fadeOut(400, function(el) {
         $(el).removeClass('loading');
-        window.onbeforeunload = null;
+        // TODO: Alert message disabled for now
+        // it clashes with the user timeout
+        // window.onbeforeunload = null;
       });
     }
 

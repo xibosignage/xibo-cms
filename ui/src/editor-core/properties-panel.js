@@ -636,8 +636,65 @@ PropertiesPanel.prototype.render = function(
             },
           ];
 
+          // TODO: for now we disable scaling type
+          // Show scaling type if element is in a group
+          if (
+            false &&
+            targetAux.groupId != '' &&
+            targetAux.groupId != undefined
+          ) {
+            commonFields.unshift(
+              {
+                id: 'groupScale',
+                title: propertiesPanelTrans.groupScale,
+                helpText: propertiesPanelTrans.groupScaleHelpText,
+                value: targetAux.groupScale,
+                type: 'checkbox',
+                visibility: [],
+              },
+              {
+                id: 'groupScaleType',
+                title: propertiesPanelTrans.groupScaleType,
+                helpText: propertiesPanelTrans.groupScaleTypeHelpText,
+                value: targetAux.groupScaleType,
+                options: [
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.topLeft,
+                    name: 'top_left',
+                  },
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.topRight,
+                    name: 'top_right',
+                  },
+                  {
+                    title: propertiesPanelTrans
+                      .groupScaleTypeOptions.bottomLeft,
+                    name: 'bottom_left',
+                  },
+                  {
+                    title: propertiesPanelTrans
+                      .groupScaleTypeOptions.bottomRight,
+                    name: 'bottom_right',
+                  },
+                ],
+                type: 'dropdown',
+                visibility: [
+                  {
+                    conditions: [
+                      {
+                        field: 'groupScale',
+                        type: 'eq',
+                        value: '0',
+                      },
+                    ],
+                  },
+                ],
+              },
+            );
+          }
+
           // Show slot if we the element isn't global
-          // or in a group
+          // and in a group
           if (
             targetAux.elementType != 'global' &&
             (
@@ -717,6 +774,11 @@ PropertiesPanel.prototype.render = function(
                 value = Number(value) - 1;
               }
 
+              // Save group scale to element
+              if (propertyName === 'groupScale') {
+                value = $target.is(':checked');
+              }
+
               // Set the property
               targetAux[propertyName] = value;
 
@@ -763,6 +825,7 @@ PropertiesPanel.prototype.render = function(
       app.mainObjectType === 'layout' &&
       (
         target.type === 'widget' ||
+        target.subType === 'playlist' ||
         isElementGroup
       )
     ) {
@@ -773,6 +836,8 @@ PropertiesPanel.prototype.render = function(
           type: 'element-group',
           top: targetAux.top,
           left: targetAux.left,
+          width: targetAux.width,
+          height: targetAux.height,
         };
       } else if (targetAux?.type === 'element') {
         positionProperties = {
@@ -787,6 +852,17 @@ PropertiesPanel.prototype.render = function(
         if (targetAux.canRotate) {
           positionProperties.rotation = targetAux.rotation;
         }
+      } else if (target.subType === 'playlist') {
+        positionProperties = {
+          type: 'region',
+          regionType: target.subType,
+          regionName: target.name,
+          top: target.dimensions.top,
+          left: target.dimensions.left,
+          width: target.dimensions.width,
+          height: target.dimensions.height,
+          zIndex: target.zIndex,
+        };
       } else {
         positionProperties = {
           type: 'region',
@@ -845,6 +921,9 @@ PropertiesPanel.prototype.render = function(
           }, true);
 
           lD.viewer.updateRegion(lD.layout.regions[regionId]);
+
+          // Update moveable
+          lD.viewer.updateMoveable();
         } else if (targetAux?.type == 'element') {
           // Element
           const $targetElement = $('#' + targetAux.elementId);
@@ -879,6 +958,9 @@ PropertiesPanel.prototype.render = function(
 
           // Update element
           lD.viewer.updateElement(targetAux, true);
+
+          // Update moveable
+          lD.viewer.updateMoveable();
         } else if (targetAux?.type == 'element-group') {
           // Element group
           const $targetElementGroup = $('#' + targetAux.id);
@@ -891,8 +973,20 @@ PropertiesPanel.prototype.render = function(
             left: form.find('[name="left"]').val() * viewerScale,
           });
 
+          // Scale group
+          // Update element dimension properties
+          targetAux.transform({
+            width: parseFloat(
+              form.find('[name="width"]').val(),
+            ),
+            height: parseFloat(
+              form.find('[name="height"]').val(),
+            ),
+          }, false);
+          lD.viewer.updateElementGroup(targetAux);
+
           // Save properties
-          lD.viewer.saveElementGroupProperties($targetElementGroup, true);
+          lD.viewer.saveElementGroupProperties($targetElementGroup, true, true);
 
           // Update moveable
           lD.viewer.updateMoveable();
@@ -942,6 +1036,9 @@ PropertiesPanel.prototype.render = function(
           form.find('[name="height"]').val(lD.layout.height);
           form.find('[name="top"]').val(0);
           form.find('[name="left"]').val(0);
+
+          // Update moveable
+          lD.viewer.updateMoveable();
         });
     }
 

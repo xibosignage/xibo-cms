@@ -97,6 +97,9 @@ window.lD = {
   propertiesPanel: {},
 
   folderId: '',
+
+  // Top layer value
+  topLayer: 0,
 };
 
 // Load Layout and build app structure
@@ -453,9 +456,9 @@ lD.selectObject =
       const newSelectedId =
         (target === null) ? this.layout.id : target.attr('id');
       const newSelectedType =
-      (target === null || target.data('type') === undefined) ?
-        'layout' :
-        target.data('type');
+        (target === null || target.data('type') === undefined) ?
+          'layout' :
+          target.data('type');
 
       const isInDrawer = function(target) {
         if (target !== null) {
@@ -1486,11 +1489,14 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     let addToGroupWidgetId = null;
     let addToExistingElementId = null;
 
-    // If target ( element or group ) is type global
+    // If target is type global ( and being edited )
     // if draggable is type global or if both are the same type
     const canBeAddedToGroup = function() {
-      return draggableData.dataType == 'global' ||
-        draggableData.dataType == $(droppable).data('elementType');
+      return $(droppable).hasClass('editing') &&
+      (
+        draggableData.dataType == 'global' ||
+        draggableData.dataType == $(droppable).data('elementType')
+      );
     };
 
     // Create group if group is type global
@@ -1867,46 +1873,102 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       console.error(jqXHR, textStatus, errorThrown);
     });
   } else if (draggableType === 'layout_template') {
-    // Show loading screen
-    lD.common.showLoadingScreen('addLayoutTemplate');
+    const addTemplateToLayout = function() {
+      // Show loading screen
+      lD.common.showLoadingScreen('addLayoutTemplate');
 
-    // Call the replace function and reload on success.
-    $.ajax({
-      method: urlsForApi.layout.applyTemplate.type,
-      url: urlsForApi.layout.applyTemplate.url
-        .replace(':id', lD.layout.layoutId),
-      cache: false,
-      dataType: 'json',
-      data: {
-        templateId: draggableData?.templateId,
-        source: draggableData?.source,
-        download: draggableData?.download,
-      },
-      success: function(response) {
-        // Hide loading screen
-        lD.common.hideLoadingScreen('addLayoutTemplate');
+      // Call the replace function and reload on success.
+      $.ajax({
+        method: urlsForApi.layout.applyTemplate.type,
+        url: urlsForApi.layout.applyTemplate.url
+          .replace(':id', lD.layout.layoutId),
+        cache: false,
+        dataType: 'json',
+        data: {
+          templateId: draggableData?.templateId,
+          source: draggableData?.source,
+          download: draggableData?.download,
+        },
+        success: function(response) {
+          // Hide loading screen
+          lD.common.hideLoadingScreen('addLayoutTemplate');
 
-        if (response.success && response.id) {
-          // eslint-disable-next-line new-cap
-          lD.reloadData(response.data,
-            {
-              refreshEditor: true,
-            });
-        } else if (response.login) {
-          // eslint-disable-next-line new-cap
-          LoginBox();
-        } else {
-          // eslint-disable-next-line new-cap
-          SystemMessage(response.message || errorMessagesTrans.unknown);
-        }
-      },
-      error: function(xhr) {
-        // Hide loading screen
-        lD.common.hideLoadingScreen('addLayoutTemplate');
+          if (response.success && response.id) {
+            // Deselect previous object
+            lD.selectObject();
 
-        console.error(xhr);
-      },
-    });
+            // eslint-disable-next-line new-cap
+            lD.reloadData(response.data,
+              {
+                refreshEditor: true,
+              });
+          } else if (response.login) {
+            // eslint-disable-next-line new-cap
+            LoginBox();
+          } else {
+            // eslint-disable-next-line new-cap
+            SystemMessage(response.message || errorMessagesTrans.unknown);
+          }
+        },
+        error: function(xhr) {
+          // Hide loading screen
+          lD.common.hideLoadingScreen('addLayoutTemplate');
+
+          console.error(xhr);
+        },
+      });
+    };
+
+    // Check if we have content on the layout
+    if (lD.layout.isEmpty()) {
+      addTemplateToLayout();
+    } else {
+      // Layout not empty, show modal
+      // Show confirmation modal
+      const $modal = $(confirmationModalTemplate(
+        {
+          title: editorsTrans.layoutTemplateReplace.title,
+          message: editorsTrans.layoutTemplateReplace.message,
+          buttons: {
+            cancel: {
+              label: editorsTrans.layoutTemplateReplace.buttons.cancel,
+              class: 'btn-default cancel',
+            },
+            delete: {
+              label: editorsTrans.layoutTemplateReplace.buttons.delete,
+              class: 'btn-primary confirm',
+            },
+          },
+        },
+      ));
+
+      const removeModal = function() {
+        $modal.modal('hide');
+        // Remove modal
+        $modal.remove();
+
+        // Remove backdrop
+        $('.modal-backdrop.show').remove();
+      };
+
+      // Add modal to the DOM
+      this.editorContainer.append($modal);
+
+      // Show modal
+      $modal.modal('show');
+
+      // Confirm button
+      $modal.find('button.confirm').on('click', function() {
+        // Remove modal
+        removeModal();
+
+        // Add template and replace content
+        addTemplateToLayout();
+      });
+
+      // Cancel button
+      $modal.find('button.cancel').on('click', removeModal);
+    }
   } else {
     // Adding a module
     // Check if the module has data type, if not
@@ -3823,8 +3885,9 @@ lD.addElementsToWidget = function(
   widget.saveElements().then((_res) => {
     const firstElement = elements[0];
 
-    // If it's group, save it as temporary object
-    if (isGroup) {
+    // If it's group with more than one element being added
+    // select group
+    if (isGroup && elements.length > 1) {
       lD.viewer.saveTemporaryObject(
         firstElement.groupId,
         'element-group',
@@ -3843,6 +3906,7 @@ lD.addElementsToWidget = function(
         {
           type: 'element',
           parentType: 'widget',
+          selectInGroupEdit: isGroup,
           widgetId: widget.widgetId,
           regionId: widget.regionId.split('_')[1],
         },
