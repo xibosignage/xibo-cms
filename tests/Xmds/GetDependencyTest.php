@@ -132,7 +132,6 @@ class GetDependencyTest extends XmdsTestCase
                     $type = $file['@attributes']['fileType'];
                     $id = $file['@attributes']['id'];
                 }
-
             }
         }
 
@@ -197,7 +196,6 @@ class GetDependencyTest extends XmdsTestCase
                     $size = $file['@attributes']['size'];
                     $type = $file['@attributes']['type'];
                     $id = $file['@attributes']['id'];
-
                 }
             }
         }
