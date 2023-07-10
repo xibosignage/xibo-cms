@@ -852,6 +852,17 @@ PropertiesPanel.prototype.render = function(
         if (targetAux.canRotate) {
           positionProperties.rotation = targetAux.rotation;
         }
+      } else if (target.subType === 'playlist') {
+        positionProperties = {
+          type: 'region',
+          regionType: target.subType,
+          regionName: target.name,
+          top: target.dimensions.top,
+          left: target.dimensions.left,
+          width: target.dimensions.width,
+          height: target.dimensions.height,
+          zIndex: target.zIndex,
+        };
       } else {
         positionProperties = {
           type: 'region',
@@ -1025,6 +1036,9 @@ PropertiesPanel.prototype.render = function(
           form.find('[name="height"]').val(lD.layout.height);
           form.find('[name="top"]').val(0);
           form.find('[name="left"]').val(0);
+
+          // Update moveable
+          lD.viewer.updateMoveable();
         });
     }
 
