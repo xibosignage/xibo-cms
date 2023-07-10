@@ -578,6 +578,16 @@ Viewer.prototype.handleInteractions = function() {
               });
               self.selectElement($(e.target));
             } else if (
+              $(e.target).data('subType') === 'zone' &&
+              $(e.target).hasClass('designer-region') &&
+              !$(e.target).hasClass('selected')
+            ) {
+              // Select zone
+              lD.selectObject({
+                target: $(e.target),
+              });
+              self.selectElement($(e.target));
+            } else if (
               $(e.target).find('.designer-widget').length > 0 &&
               !$(e.target).find('.designer-widget').hasClass('selected') &&
               !$(e.target).hasClass('selected')
