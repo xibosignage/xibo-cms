@@ -2117,7 +2117,8 @@ class Schedule extends Base
      *      in="query",
      *      required=false,
      *      type="array",
-     *      description="Filter events by an array of Display Group Ids"
+     *      description="Filter events by an array of Display Group Ids",
+     *      @SWG\Items(type="integer")
      *  ),
      *  @SWG\Response(
      *      response=200,

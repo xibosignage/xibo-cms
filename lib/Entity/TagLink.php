@@ -26,6 +26,9 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
+/**
+ * @SWG\Definition()
+ */
 class TagLink implements \JsonSerializable
 {
     use EntityTrait;
