@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -110,6 +110,9 @@ jQuery.fn.extend({
       }
     }
 
+    const useTransforms = window.feature.cssTransform &&
+      window.feature.cssTransition;
+
     // For each matched element
     this.each(function(_key, element) {
       // console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
@@ -216,8 +219,10 @@ jQuery.fn.extend({
 
       // Clear previous animation elements
       if (isMarquee) {
-        // Destroy marquee plugin
-        $contentDiv.marquee('destroy');
+        // Destroy marquee plugin (only the new one supports destroying)
+        if (useTransforms) {
+          $contentDiv.marquee('destroy');
+        }
       } else {
         // Destroy cycle plugin
         $(element).find('.anim-cycle').cycle('destroy');
@@ -374,24 +379,11 @@ jQuery.fn.extend({
       }
 
       if (marquee) {
-        // Which marquee to use?
-        const nua = navigator.userAgent;
-        /* The intention was to allow Chrome
-          based android to benefit from the new marquee
-          unfortunately though, it doesn't appear to work.
-          Maybe this is due to Chrome verison?
-          Android tends to have quite an old version.
-                var isAndroid = ((nua.indexOf('Mozilla/5.0') > -1
-                    && nua.indexOf('Android') > -1
-                    && nua.indexOf('AppleWebKit') > -1)
-                    && !(nua.indexOf('Chrome') > -1));*/
-        const isAndroid = nua.indexOf('Android') > -1;
-
         // Create a DIV to scroll, and put this inside the body
         const scroller = $('<div/>')
           .addClass('scroll');
 
-        if (!isAndroid) {
+        if (useTransforms) {
           // in old marquee scroll delay is 85 milliseconds
           // options.speed is the scrollamount
           // which is the number of pixels per 85 milliseconds
@@ -429,7 +421,7 @@ jQuery.fn.extend({
 
         if (!options.pauseEffectOnStart) {
           // Set some options on the extra DIV and make it a marquee
-          if (!isAndroid) {
+          if (useTransforms) {
             $contentDiv.find('.scroll').marquee();
           } else {
             $contentDiv.find('.scroll').overflowMarquee();
