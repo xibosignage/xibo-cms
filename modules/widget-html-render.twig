@@ -94,6 +94,13 @@
       }
     </script>
 {% endfor %}
+{% for widgetId, parser in onDataError %}
+    <script type="text/javascript" id="onDataError-{{ widgetId }}">
+      function onDataError_{{ widgetId }}(httpStatus, response) {
+        {{ parser|raw }}
+      }
+    </script>
+{% endfor %}
 {% for widgetId, parser in onRender %}
     <script type="text/javascript" id="onRender-{{ widgetId }}">
         function onRender_{{ widgetId }}(id, target, items, properties, meta) {
