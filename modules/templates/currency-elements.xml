@@ -27,7 +27,7 @@
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
         <thumbnail>currency-name</thumbnail>
-        <startWidth>200</startWidth>
+        <startWidth>360</startWidth>
         <startHeight>100</startHeight>
         <assets>
             <asset id="currency-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
@@ -69,6 +69,23 @@ if (String(value).includes('%')) {
 
 return value + '%';
 ]]></onElementParseData>
+        <onTemplateRender><![CDATA[
+var elementData = null;
+if (properties.hasOwnProperty('data')) {
+    elementData = properties.data;
+}
+
+if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
+    var changeStyle = elementData.ChangeStyle;
+    var $changePercent = $(target).find('div:first');
+
+    if (changeStyle === 'value-equal') {
+        $changePercent.css({color: 'gray'});
+    } else {
+        $changePercent.css({color: changeStyle === 'value-down' ? 'red' : 'green'});
+    }
+}
+]]></onTemplateRender>
         <assets>
             <asset id="currency-change-percentage" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-change-percentage.png" />
         </assets>
@@ -80,49 +97,38 @@ return value + '%';
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
         <thumbnail>currency-change-icon</thumbnail>
-        <startWidth>100</startWidth>
-        <startHeight>100</startHeight>
+        <startWidth>80</startWidth>
+        <startHeight>60</startHeight>
         <stencil>
             <hbs><![CDATA[
-<div class="arrow"><div class="{{data.ChangeIcon}}"></div></div>
+<div class="arrow"><div class="fa {{data.ChangeIcon}}
+    {{#eq data.ChangeIcon "up-arrow"}}fa-caret-up{{/eq}}
+    {{#eq data.ChangeIcon "down-arrow"}}fa-caret-down{{/eq}}
+    {{#eq data.ChangeIcon "right-arrow"}}fa-caret-right{{/eq}}"></div></div>
 <style>
 .arrow {
     width: 100%;
     height: 100%;
     position: relative;
+    display: inline-block;
+    text-align: center;
+}
+
+.arrow .fa {
+    font-size: calc({{prop.width}}px * 0.75);
+    {{#if prop.height}}line-height: {{prop.height}}px;{{/if}}
 }
 
 .down-arrow {
-    width: fit-content;
-    height: auto;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 10px solid red;
-    position: absolute;
-    top: calc(50% - 5px);
-    left: calc(50% - 11px);
+    color: red;
 }
 
 .up-arrow {
-    width: fit-content;
-    height: auto;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 10px solid green;
-    position: absolute;
-    top: calc(50% - 5px);
-    left: calc(50% - 11px);
+    color: green;
 }
 
 .right-arrow {
-    width: fit-content;
-    height: auto;
-    border-left: 10px solid gray;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    position: absolute;
-    top: calc(50% - 11px);
-    left: calc(50% - 5px);
+    color: gray;
 }
 </style>
 ]]></hbs>

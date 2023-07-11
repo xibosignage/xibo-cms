@@ -1423,6 +1423,9 @@ Viewer.prototype.renderElementContent = function(
         // Send uniqueID
         convertedProperties.uniqueID = element.elementId;
 
+        // Send element props
+        convertedProperties.prop = element;
+
         const extendOverrideKey = template?.extends?.override || null;
         const extendWithDataKey = template?.extends ?
           transformer.getExtendedDataKey(template.extends.with) : null;

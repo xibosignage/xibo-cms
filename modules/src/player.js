@@ -474,7 +474,7 @@ $(function() {
               };
               const templateData = Object.assign(
                 {}, elementProperties, elementCopy, globalOptions,
-                {uniqueID: elementCopy.elementId},
+                {uniqueID: elementCopy.elementId, prop: elementCopy},
               );
 
               // Get widget info if exists.
@@ -530,7 +530,9 @@ $(function() {
 
                         renderElement(Object.assign(
                           templateData,
-                          item,
+                          (String(dataOverride).length > 0 &&
+                              String(dataOverrideWith).length > 0) ?
+                            item : {data: item},
                         ));
                       }
                       templateAlreadyAdded = true;
