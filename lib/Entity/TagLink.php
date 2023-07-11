@@ -63,7 +63,7 @@ class TagLink implements \JsonSerializable
                 $tag->options = json_decode($tag->options);
             }
 
-            if (isset($this->value) && !in_array($this->value, $tag->options)) {
+            if (!empty($this->value) && !in_array($this->value, $tag->options)) {
                 throw new InvalidArgumentException(
                     sprintf(
                         __('Provided tag value %s, not found in tag %s options, please select the correct value'),
