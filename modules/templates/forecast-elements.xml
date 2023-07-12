@@ -1,0 +1,80 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>weather_summary</id>
+        <extends override="text" with="data.summary">text</extends>
+        <title>Summary</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-summary</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="weather-summary" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-summary.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_temperature</id>
+        <extends override="text" with="data.temperatureRound" escapeHtml="false">text</extends>
+        <title>Temperature</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-temperature</thumbnail>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+if (String(value).length === 0) {
+    return '';
+}
+
+if (String(value).includes('°C')) {
+    return value;
+}
+
+return value + '<sup>°C</sup>';
+]]></onElementParseData>
+        <assets>
+            <asset id="weather-temperature" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-temperature.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_icon</id>
+        <title>Icon</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-icon</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <stencil>
+            <hbs><![CDATA[
+                <div class="main-icon shadowed"><i class="wi [wicon]"></i></div>
+]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="weather-icon" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-icon.png" />
+        </assets>
+    </template>
+</templates>
