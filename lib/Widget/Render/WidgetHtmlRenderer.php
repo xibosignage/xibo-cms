@@ -36,7 +36,6 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -376,6 +375,7 @@ class WidgetHtmlRenderer
         $twig['twig'] = [];
         $twig['onRender'] = [];
         $twig['onParseData'] = [];
+        $twig['onDataError'] = [];
         $twig['onElementParseData'] = [];
         $twig['onTemplateRender'] = [];
         $twig['onInitialize'] = [];
@@ -477,6 +477,9 @@ class WidgetHtmlRenderer
             }
             if (!empty($module->onParseData)) {
                 $twig['onParseData'][$widget->widgetId] = $module->onParseData;
+            }
+            if (!empty($module->onDataError)) {
+                $twig['onDataError'][$widget->widgetId] = $module->onDataError;
             }
             if (!empty($module->onRender)) {
                 $twig['onRender'][$widget->widgetId] = $module->onRender;

@@ -5590,7 +5590,7 @@
                         "in": "formData",
                         "description": "A playlistId to add this uploaded media to",
                         "required": false,
-                        "type": "int"
+                        "type": "integer"
                     },
                     {
                         "name": "widgetFromDt",
@@ -8365,7 +8365,10 @@
                         "in": "query",
                         "description": "Filter events by an array of Display Group Ids",
                         "required": false,
-                        "type": "array"
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -11338,7 +11341,9 @@
                 "tags": {
                     "description": "Tags associated with this Campaign, array of TagLink objects",
                     "type": "array",
-                    "items": {}
+                    "items": {
+                        "$ref": "#/definitions/TagLink"
+                    }
                 },
                 "folderId": {
                     "description": "The id of the Folder this Campaign belongs to",
@@ -11962,7 +11967,9 @@
                 "tags": {
                     "description": "Tags associated with this Display, array of TagLink objects",
                     "type": "array",
-                    "items": {}
+                    "items": {
+                        "$ref": "#/definitions/TagLink"
+                    }
                 },
                 "overrideConfig": {
                     "description": "The configuration options that will overwrite Display Profile Config"
@@ -12082,7 +12089,9 @@
                 "tags": {
                     "description": "Tags associated with this Display Group, array of TagLink objects",
                     "type": "array",
-                    "items": {}
+                    "items": {
+                        "$ref": "#/definitions/TagLink"
+                    }
                 },
                 "bandwidthLimit": {
                     "description": "The display bandwidth limit",
@@ -12390,7 +12399,9 @@
                 "tags": {
                     "description": "Tags associated with this Layout, array of TagLink objects",
                     "type": "array",
-                    "items": {}
+                    "items": {
+                        "$ref": "#/definitions/TagLink"
+                    }
                 },
                 "folderId": {
                     "description": "The id of the Folder this Layout belongs to",
@@ -12503,7 +12514,9 @@
                 "tags": {
                     "description": "Tags associated with this Media, array of TagLink objects",
                     "type": "array",
-                    "items": {}
+                    "items": {
+                        "$ref": "#/definitions/TagLink"
+                    }
                 },
                 "fileSize": {
                     "description": "The file size in bytes",
@@ -12811,6 +12824,10 @@
                     "description": "Data Parser run against each data item applicable when a dataType is present",
                     "type": "string"
                 },
+                "onDataError": {
+                    "description": "An error function to run when the widget is unable to fetch data",
+                    "type": "string"
+                },
                 "onRender": {
                     "description": "JavaScript function run when a module is rendered, after data has been returned",
                     "type": "string"
@@ -12841,6 +12858,21 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "propertyGroups": {
+                    "description": "An array of additional module specific group properties",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "ModuleTemplate": {
+            "properties": {
+                "showIn": {
+                    "description": "A flag indicating whether the template should be excluded from the Layout Editor",
+                    "type": "string"
                 },
                 "propertyGroups": {
                     "description": "An array of additional module specific group properties",
@@ -13134,7 +13166,9 @@
                 "tags": {
                     "description": "Tags associated with this Playlist, array of TagLink objects",
                     "type": "array",
-                    "items": {}
+                    "items": {
+                        "$ref": "#/definitions/TagLink"
+                    }
                 },
                 "widgets": {
                     "description": "An array of Widgets assigned to this Playlist",
@@ -13577,6 +13611,61 @@
         },
         "SearchResult": {},
         "SearchResults": {},
+        "SyncGroup": {
+            "properties": {
+                "syncGroupId": {
+                    "description": "The ID of this Entity",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The name of this Entity",
+                    "type": "string"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime this entity was last modified"
+                },
+                "modifiedBy": {
+                    "description": "The ID of the user that last modified this sync group",
+                    "type": "integer"
+                },
+                "modifiedByName": {
+                    "description": "The name of the user that last modified this sync group",
+                    "type": "string"
+                },
+                "ownerId": {
+                    "description": "The ID of the owner of this sync group",
+                    "type": "integer"
+                },
+                "owner": {
+                    "description": "The name of the owner of this sync group",
+                    "type": "string"
+                },
+                "syncPublisherPort": {
+                    "description": "The publisher port number",
+                    "type": "integer"
+                },
+                "leadDisplayId": {
+                    "description": "The ID of the lead Display for this sync group",
+                    "type": "integer"
+                },
+                "leadDisplay": {
+                    "description": "The name of the lead Display for this sync group",
+                    "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Sync Group belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Sync Group",
+                    "type": "integer"
+                }
+            }
+        },
         "Tag": {
             "properties": {
                 "tagId": {
@@ -13597,6 +13686,22 @@
                 },
                 "options": {
                     "description": "An array of options assigned to this Tag"
+                }
+            }
+        },
+        "TagLink": {
+            "properties": {
+                "tag": {
+                    "description": "The Tag",
+                    "type": "string"
+                },
+                "tagId": {
+                    "description": "The Tag ID",
+                    "type": "integer"
+                },
+                "value": {
+                    "description": "The Tag Value",
+                    "type": "string"
                 }
             }
         },

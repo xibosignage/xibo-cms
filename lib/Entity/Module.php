@@ -189,6 +189,12 @@ class Module implements \JsonSerializable
     public $onParseData;
 
     /**
+     * @SWG\Property(description="An error function to run when the widget is unable to fetch data")
+     * @var string
+     */
+    public $onDataError;
+
+    /**
      * @SWG\Property(description="JavaScript function run when a module is rendered, after data has been returned")
      * @var string
      */
