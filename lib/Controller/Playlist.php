@@ -291,21 +291,23 @@ class Playlist extends Base
 
                     // Embed the name of this widget
                     $widget->setUnmatchedProperty('moduleName', $module->name);
-                    $widget->setUnmatchedProperty(
-                        'name',
-                        $widget->getOptionValue('name', $module->name)
-                    );
+
+                    if ($module->regionSpecific == 0) {
+                        // Use the media assigned to this widget
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                        $media->load();
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $media->name));
+
+                        // Augment with tags
+                        $widget->setUnmatchedProperty('tags', $media->tags);
+                    } else {
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
+                        $widget->setUnmatchedProperty('tags', []);
+                    }
 
                     // Sub-playlists should calculate a fresh duration
                     if ($widget->type === 'subplaylist') {
                         $widget->calculateDuration($module);
-                    }
-
-                    // Augment with tags?
-                    if ($loadTags && $module->regionSpecific == 0) {
-                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        $media->load();
-                        $widget->setUnmatchedProperty('tags', $media->tags);
                     }
 
                     // Get transitions
