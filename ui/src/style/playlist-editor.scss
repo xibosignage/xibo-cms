@@ -10,10 +10,10 @@ $playlist-editor-main-fb-color: $xibo-color-neutral-900;
 $playlist-editor-widget-bg-color: $xibo-color-primary-l5;
 $playlist-editor-widget-fg-color: $xibo-color-neutral-900;
 $playlist-editor-widget-fg-color2: $xibo-color-neutral-700;
-$playlist-editor-widget-selected-color: $xibo-color-semantic-success;
+$playlist-editor-widget-selected-color: lighten($xibo-color-semantic-success, 20%);
 $playlist-editor-widget-multi-selected-color: $xibo-color-accent;
 $playlist-editor-widget-multi-selected-hover-color: lighten($playlist-editor-widget-multi-selected-color, 20%);
-$playlist-editor-widget-hover-bg-color: lighten($xibo-color-semantic-success, 20%);
+$playlist-editor-widget-hover-bg-color: darken($xibo-color-primary-l5, 10%);
 $playlist-editor-widget-border-color: $xibo-color-neutral-700;
 $playlist-editor-playlist-hover-color-color: lighten($xibo-color-primary, 20%);
 
@@ -25,9 +25,9 @@ $playlist-editor-z-index-select-hover: 1014;
 $playlist-editor-timeline-fg-color: $xibo-color-primary;
 $playlist-editor-unsuccess-message-bg-color: $xibo-color-semantic-error;
 
-$left-bar-width: 100px;
+$left-bar-width: 140px;
 $bottom-bar-height: 38px;
-$timeline-left-margin-width: 100px;
+$timeline-left-margin-width: 140px;
 
 // CSS
 .editor-modal {
@@ -73,7 +73,8 @@ $timeline-left-margin-width: 100px;
         .back-button {
             width: 348px;
             a {
-                width: 100px;
+                min-width: 100px;
+                width: auto;
             }
             span {
                 display: inline;
@@ -320,8 +321,8 @@ $timeline-left-margin-width: 100px;
                 min-height: 2px;
                 position: relative;
                 background-color: $xibo-color-neutral-500;
-                left: 70px;
-                width: calc(100% - 70px);
+                left: 90px;
+                width: calc(100% - 90px);
             }
 
             .time-grid-step-with-value {
@@ -339,9 +340,9 @@ $timeline-left-margin-width: 100px;
             &::after {
                 content: ' ';
                 position: absolute;
-                width: calc(100% - 100px);
+                width: calc(100% - $left-bar-width);
                 height: 100%;
-                left: 100px;
+                left: $left-bar-width;
                 top: 0;
                 background-color: $xibo-color-neutral-0;
                 opacity: 0.7;
@@ -367,16 +368,16 @@ $timeline-left-margin-width: 100px;
                 gap: 6px;
                 position: relative;
 
-                &.minimal-widget {
-                    &>* {
-                        display: none;
-                    }
+                .playlist-widget-left-area {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
                 }
 
                 .widgetLabel {
                     flex: 0;
                     color: $playlist-editor-main-background-color;
-                    flex-basis: 28px;
+                    flex-basis: 48px;
                     margin: -6px 0;
                     text-align: center;
                     float: left;
@@ -389,7 +390,11 @@ $timeline-left-margin-width: 100px;
                         text-overflow: ellipsis;
                         white-space: nowrap;
                         overflow: hidden;
-                        padding: 0 2px;
+                        padding: 0 4px;
+                    }
+
+                    .widgetSubType {
+                        font-size: 1.2rem;
                     }
                 }
 
@@ -404,6 +409,9 @@ $timeline-left-margin-width: 100px;
 
                 .widgetProperties {
                     flex: 1;
+                    font-size: 1.25rem;
+                    display: flex;
+                    align-items: flex-end;
                 }
 
                 .widgetPreview {
@@ -438,13 +446,16 @@ $timeline-left-margin-width: 100px;
                 }
 
                 i.editProperty {
-                    float: right;
                     cursor: pointer;
-                    padding: 2px;
+                    padding: 4px;
+                    border-radius: 4px;
+                    width: 2rem;
+                    text-align: center;
                     color: $playlist-editor-widget-fg-color;
 
                     &:hover {
-                        color: lighten($playlist-editor-widget-fg-color, 20%);
+                        color: darken($playlist-editor-widget-fg-color, 20%);
+                        @include set-transparent-color(background-color, $xibo-color-neutral-0, 0.2);
                     }
                 }
 
@@ -475,6 +486,28 @@ $timeline-left-margin-width: 100px;
                         &:hover {
                             opacity: 0.9;
                         }
+                    }
+                }
+
+                &.minimal-widget {
+                    padding: 0;
+
+                    .widgetName {
+                        font-weight: normal;
+                    }
+
+                    .widgetProperties, .widgetDuration, .widgetPreview {
+                        display: none;
+                    }
+
+                    .widgetLabel {
+                        padding: 0;
+                        margin: 0;
+                    }
+
+                    .widgetSubType {
+                        font-size: 0.8rem;
+                        padding: 2px;
                     }
                 }
             }
@@ -512,6 +545,7 @@ $timeline-left-margin-width: 100px;
                 padding: 0;
                 border-radius: 0;
                 border: none;
+                flex: 1;
 
                 i {
                     font-size: 14px;
@@ -525,6 +559,10 @@ $timeline-left-margin-width: 100px;
                 &:focus {
                     box-shadow: none;
                 }
+            }
+
+            .btn-scale {
+                display: none;
             }
         }
 
@@ -684,5 +722,23 @@ $timeline-left-margin-width: 100px;
 
     .custom-overlay {
         z-index: $playlist-editor-z-index-overlay;
+    }
+
+    &.timeline-scaled {
+        .footer-controls {
+            .btn-scale-control {
+                background-color: $xibo-color-neutral-100;
+                color: $xibo-color-primary-d60;
+
+                &:hover {
+                    color: lighten($xibo-color-primary-d60, 20%);
+                    background-color: $xibo-color-neutral-0;
+                }
+            }
+
+            .btn-scale {
+                display: block;
+            }
+        }
     }
 }

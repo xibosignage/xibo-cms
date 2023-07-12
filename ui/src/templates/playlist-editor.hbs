@@ -10,17 +10,17 @@
 
 <div class="editor-footer">
     <div class="footer-controls">
-        <button class="btn" data-action="zoom-in">
+        <button class="btn btn-scale-control" data-action="toggle-scale-mode" data-toggle="tooltip"  data-placement="top" title="{{trans.zoomControls.scaleMode}}">
+            <i class="fas fa-ruler"></i>
+        </button>
+        <button class="btn btn-scale" data-action="zoom-in" data-toggle="tooltip"  data-placement="top" title="{{trans.zoomControls.in}}">
             <i class="fa fa-search-plus"></i>
         </button>
-        <button class="btn" data-action="zoom-out">
+        <button class="btn btn-scale" data-action="zoom-out" data-toggle="tooltip"  data-placement="top" title="{{trans.zoomControls.out}}">
             <i class="fa fa-search-minus"></i>
         </button>
-        <button class="btn" data-action="zoom-reset">
+        <button class="btn btn-scale" data-action="zoom-reset" data-toggle="tooltip"  data-placement="top" title="{{trans.zoomControls.default}}">
             <i class="fa fa-search"></i>
-        </button>
-        <button class="btn d-none" data-action="find-selected">
-            <i class="fa fa-map-marker"></i>
         </button>
     </div>
     <div class="footer-info">
