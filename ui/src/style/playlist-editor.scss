@@ -153,23 +153,23 @@ $timeline-left-margin-width: 140px;
 
 // Bootbox custom dialogs
 .second-dialog {
-    z-index: 3100;
+    z-index: $bootbox-second-dialog-z-index;
 
     &+.in.modal-backdrop {
-        z-index: 3000;
+        z-index: calc(#{$bootbox-second-dialog-z-index} - 100);
     }
 
     &~.select2-container.select2-container--open {
-        z-index: 3200;
+        z-index: calc(#{$bootbox-second-dialog-z-index} + 100);
     }
 }
 
 .inner-modal {
-    z-index: 3101;
+    z-index: calc(#{$bootbox-second-dialog-z-index} + 1);
 }
 
 .vakata-context {
-    z-index: 3102;
+    z-index: calc(#{$bootbox-second-dialog-z-index} + 2);
 }
 
 .playlist-widget-preview {

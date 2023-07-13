@@ -1219,7 +1219,8 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
   this.DOMObject.find('.toolbar-pane-content').removeData('mediaQueue');
 
   // Remove drop class from droppable elements
-  $('.ui-droppable, .droppable').removeClass('ui-droppable-active');
+  $('.ui-droppable, .droppable')
+    .removeClass('ui-droppable-active ui-droppable-actions-target');
 
   // Disable multi-select mode
   if (app.editorContainer.hasClass('multi-select')) {

@@ -542,7 +542,7 @@
                         position: absolute;
                         width: 100%;
                         flex-wrap: wrap;
-                        z-index: 10;
+                        z-index: calc(#{$toolbar-card-z-index} + 1);
                         gap: 3px;
                         padding: 4px 0;
                         @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
@@ -586,7 +586,7 @@
                         cursor: pointer;
                         color: $xibo-color-semantic-warning;
                         position: absolute;
-                        z-index: 2;
+                        z-index: calc(#{$toolbar-card-z-index} + 1);
                         background: $xibo-color-primary;
                         width: 16px;
                         @include border-radius(0px 0 4px 0);
@@ -881,7 +881,7 @@
 .media-preview {
     position: fixed;
     padding: 0 5px;
-    z-index: 1060;
+    z-index: $designer-overlay-z-index;
     height: 280px;
     width: 460px;
     bottom: -240px;

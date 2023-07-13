@@ -1240,7 +1240,8 @@ Viewer.prototype.renderElement = function(
     // If element has group, append it to the group container
     if (element.groupId) {
       // Add element to group container
-      $groupContainer.append($newElement);
+      $groupContainer.find('.designer-element-group-elements')
+        .append($newElement);
     } else {
       // Otherwise append it to the canvas region container
       $canvasRegionContainer.append($newElement);
@@ -1257,19 +1258,6 @@ Viewer.prototype.renderElement = function(
       top: element.group.top * viewerScale,
       width: element.group.width * viewerScale,
     });
-
-    // Check if element ::after layer is equal or greater than group layer
-    // If so, set group layer to element layer + 1
-    if (
-      $groupContainer.find('.group-select-overlay').css('z-index') == 'auto' ||
-      element.layer >=
-        Number($groupContainer.find('.group-select-overlay').css('z-index'))
-    ) {
-      $groupContainer.find('.group-select-overlay').css(
-        'z-index',
-        element.layer + 1,
-      );
-    }
   }
 
   // Render element content and handle interactions after
@@ -2056,8 +2044,7 @@ Viewer.prototype.selectElement = function(
     removeEditFromGroup &&
   !(
     $(element).hasClass('designer-element') &&
-    $(element).parent().hasClass('designer-element-group') &&
-    $(element).parent().hasClass('editing')
+    $(element).parents('.designer-element-group.editing').length > 0
   )) {
     this.DOMObject.find('.designer-element-group.editing')
       .removeClass('editing');
@@ -2716,20 +2703,23 @@ Viewer.prototype.editGroup = function(
     $(groupDOMObject).addClass('editing');
 
     // Add overlay and click to close
-    self.DOMObject.siblings('.viewer-overlay').show()
+    self.DOMObject.find('.viewer-overlay').show()
       .off().on('click', () => {
         self.editGroup(groupDOMObject);
       });
 
     // Bump z-index to show over overlay
-    $(groupDOMObject).css('z-index', 2);
+    const viewerOverlayIndex =
+      self.DOMObject.find('.viewer-overlay').css('z-index');
+
+    $(groupDOMObject).css('z-index', Number(viewerOverlayIndex) + 1);
 
     // Give group the same background as the layout's
     $(groupDOMObject).css('background-color',
       self.DOMObject.find('> .layout').css('background-color'));
   } else {
     // Hide overlay
-    self.DOMObject.siblings('.viewer-overlay').hide();
+    self.DOMObject.find('.viewer-overlay').hide();
 
     // Set z-index to auto
     $(groupDOMObject).css('z-index', '');
