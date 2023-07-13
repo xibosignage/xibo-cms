@@ -379,7 +379,10 @@ Topbar.prototype.updateLayoutStatus = function() {
   statusContainer.find('i').removeClass().addClass('fa fa-' + iconType);
 
   // Update duration
-  this.DOMObject.find('.layout-info-duration-value').html(lD.layout.duration);
+  this.DOMObject.find('.layout-info-duration-value').html(
+    lD.common.timeFormat(
+      lD.layout.duration,
+    ));
 };
 
 module.exports = Topbar;
