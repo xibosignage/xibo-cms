@@ -1,0 +1,230 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>weather_summary</id>
+        <extends override="text" with="data.summary">text</extends>
+        <title>Summary</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-summary</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="weather-summary" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-summary.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_temperature</id>
+        <extends override="text" with="data.temperatureRound" escapeHtml="false">text</extends>
+        <title>Temperature</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-temperature</thumbnail>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+if (String(value).length === 0) {
+    return '';
+}
+
+if (String(value).includes('°C')) {
+    return value;
+}
+
+return value + '<sup>°C</sup>';
+]]></onElementParseData>
+        <assets>
+            <asset id="weather-temperature" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-temperature.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_min_temperature</id>
+        <extends override="text" with="data.temperatureMinRound" escapeHtml="false">text</extends>
+        <title>Min. Temperature</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-min-temperature</thumbnail>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+if (String(value).length === 0) {
+    return '';
+}
+
+if (String(value).includes('°C')) {
+    return value;
+}
+
+return value + '<sup>°C</sup>';
+]]></onElementParseData>
+        <assets>
+            <asset id="weather-min-temperature" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-temperature.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_max_temperature</id>
+        <extends override="text" with="data.temperatureMaxRound" escapeHtml="false">text</extends>
+        <title>Max. Temperature</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-max-temperature</thumbnail>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+if (String(value).length === 0) {
+    return '';
+}
+
+if (String(value).includes('°C')) {
+    return value;
+}
+
+return value + '<sup>°C</sup>';
+]]></onElementParseData>
+        <assets>
+            <asset id="weather-max-temperature" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-max-temperature.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_humidity_percent</id>
+        <extends override="text" with="data.humidityPercent" escapeHtml="false">text</extends>
+        <title>Humidity Percent</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-humidity-percent</thumbnail>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+if (String(value).length === 0) {
+    return '';
+}
+
+if (String(value).includes('°C')) {
+    return value;
+}
+
+return value + '%';
+]]></onElementParseData>
+        <assets>
+            <asset id="weather-humidity-percent" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-humidity-percent.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_icon</id>
+        <title>Icon</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-icon</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <stencil>
+            <hbs><![CDATA[
+<div class="icon-container" data-css-url="[[assetId=weather-icons]]" style="text-align: center; width: 100%; height: 100%;">
+    <i class="wi {{data.wicon}}" style="
+        font-size: calc({{prop.width}}px * 0.55);
+        line-height: {{prop.height}}px;
+    "></i>
+</div>
+]]></hbs>
+        </stencil>
+        <onTemplateRender><![CDATA[
+var $iconContainer = $(target).find('.icon-container');
+
+// Inject CSS into target container if it's not added yet
+if ($(target).parent().parent().find('.sampleCSS').length == 0) {
+    $(target).parent().parent().prepend(`<link rel="stylesheet" href="${$iconContainer.data('cssUrl')}" class="sampleCSS" media="screen"/>`)
+}
+]]></onTemplateRender>
+        <assets>
+            <asset id="weather-icon" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-icon.png" />
+            <asset id="weather-icons" type="path" mimeType="text/css" path="/modules/assets/forecastio/weather-icons.min.css"></asset>
+            <asset id="weathericons-regular-webfont.eot" type="path" mimeType="application/vnd.ms-fontobject" path="/modules/assets/forecastio/weathericons-regular-webfont.eot"></asset>
+            <asset id="weathericons-regular-webfont.svg" type="path" mimeType="image/svg+xml" path="/modules/assets/forecastio/weathericons-regular-webfont.svg"></asset>
+            <asset id="weathericons-regular-webfont.ttf" type="path" mimeType="application/x-font-ttf" path="/modules/assets/forecastio/weathericons-regular-webfont.ttf"></asset>
+            <asset id="weathericons-regular-webfont.woff" type="path" mimeType="application/font-woff" path="/modules/assets/forecastio/weathericons-regular-webfont.woff"></asset>
+            <asset id="weathericons-regular-webfont.woff2" type="path" mimeType="application/font-woff2" path="/modules/assets/forecastio/weathericons-regular-webfont.woff2"></asset>
+            <asset id="WeatherIcons-Regular.otf" type="path" mimeType="application/x-font-opentype" path="/modules/assets/forecastio/WeatherIcons-Regular.otf"></asset>
+            <asset id="wi-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-cloudy.jpg"></asset>
+            <asset id="wi-day-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-day-cloudy.jpg"></asset>
+            <asset id="wi-day-sunny" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-day-sunny.jpg"></asset>
+            <asset id="wi-fog" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-fog.jpg"></asset>
+            <asset id="wi-hail" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-hail.jpg"></asset>
+            <asset id="wi-night-clear" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-night-clear.jpg"></asset>
+            <asset id="wi-night-partly-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-night-partly-cloudy.jpg"></asset>
+            <asset id="wi-rain" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-rain.jpg"></asset>
+            <asset id="wi-snow" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-snow.jpg"></asset>
+            <asset id="wi-windy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-windy.jpg"></asset>
+        </assets>
+    </template>
+    <template>
+        <id>weather_wind_direction</id>
+        <extends override="text" with="data.windDirection">text</extends>
+        <title>Wind Direction</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-wind-direction</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="weather-wind-direction" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-wind-direction.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_wind_speed</id>
+        <extends override="text" with="data.windSpeed">text</extends>
+        <title>Wind Speed</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-wind-speed</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="weather-wind-speed" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-wind-speed.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_wind_speed_unit</id>
+        <extends override="text" with="data.windSpeedUnit">text</extends>
+        <title>Wind Speed Unit</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>weather-wind-speed-unit</thumbnail>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
+        <assets>
+            <asset id="weather-wind-speed-unit" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-wind-speed-unit.png" />
+        </assets>
+    </template>
+</templates>
