@@ -111,7 +111,7 @@
     </stencil>
     <onRender><![CDATA[
 // If we don't get any results, then we should show an error message
-console.log({items});
+
 if (items.length === 0) {
     // Set the body dimensions to window dimensions
     $(target).css('cssText', 'width: 100% !important; height: 100% !important;');
