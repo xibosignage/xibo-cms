@@ -221,6 +221,8 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // Using units:
         $this->getLogger()->debug('Using units: ' . json_encode($unit));
 
+        $forecasts = [];
+
         // Parse into our forecast.
         // Load this data into our objects
         $this->currentDay = new Forecast();
@@ -237,22 +239,22 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $day->visibilityDistanceUnit = $this->currentDay->visibilityDistanceUnit;
             $this->processItemIntoDay($day, $dayItem, $units);
 
-            $this->forecast[] = $day;
+            $forecasts[] = $day;
         }
 
         // Enhance the currently with the high/low from the first daily forecast
-        $this->currentDay->temperatureHigh = $this->forecast[0]->temperatureHigh;
-        $this->currentDay->temperatureMaxRound = $this->forecast[0]->temperatureMaxRound;
-        $this->currentDay->temperatureLow = $this->forecast[0]->temperatureLow;
-        $this->currentDay->temperatureMinRound = $this->forecast[0]->temperatureMinRound;
-        $this->currentDay->temperatureMorning = $this->forecast[0]->temperatureMorning;
-        $this->currentDay->temperatureMorningRound = $this->forecast[0]->temperatureMorningRound;
-        $this->currentDay->temperatureNight = $this->forecast[0]->temperatureNight;
-        $this->currentDay->temperatureNightRound = $this->forecast[0]->temperatureNightRound;
-        $this->currentDay->temperatureEvening = $this->forecast[0]->temperatureEvening;
-        $this->currentDay->temperatureEveningRound = $this->forecast[0]->temperatureEveningRound;
-        $this->currentDay->temperatureMean = $this->forecast[0]->temperatureMean;
-        $this->currentDay->temperatureMeanRound = $this->forecast[0]->temperatureMeanRound;
+        $this->currentDay->temperatureHigh = $forecasts[0]->temperatureHigh;
+        $this->currentDay->temperatureMaxRound = $forecasts[0]->temperatureMaxRound;
+        $this->currentDay->temperatureLow = $forecasts[0]->temperatureLow;
+        $this->currentDay->temperatureMinRound = $forecasts[0]->temperatureMinRound;
+        $this->currentDay->temperatureMorning = $forecasts[0]->temperatureMorning;
+        $this->currentDay->temperatureMorningRound = $forecasts[0]->temperatureMorningRound;
+        $this->currentDay->temperatureNight = $forecasts[0]->temperatureNight;
+        $this->currentDay->temperatureNightRound = $forecasts[0]->temperatureNightRound;
+        $this->currentDay->temperatureEvening = $forecasts[0]->temperatureEvening;
+        $this->currentDay->temperatureEveningRound = $forecasts[0]->temperatureEveningRound;
+        $this->currentDay->temperatureMean = $forecasts[0]->temperatureMean;
+        $this->currentDay->temperatureMeanRound = $forecasts[0]->temperatureMeanRound;
 
         if ($dataProvider->getProperty('dayConditionsOnly', 0) == 1) {
             // Swap the night icons for their day equivalents
@@ -260,9 +262,14 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $this->currentDay->wicon = str_replace('-night', '', $this->currentDay->wicon);
         }
 
-        $item['currentDay'] = $this->currentDay;
-        $item['forecast'] = $this->forecast;
-        $dataProvider->addItem($item);
+        $dataProvider->addItem($this->currentDay);
+
+        if (count($forecasts) > 0) {
+            foreach ($forecasts as $forecast) {
+                $dataProvider->addItem($forecast);
+            }
+        }
+
         $dataProvider->addOrUpdateMeta('Attribution', 'Powered by OpenWeather');
     }
 

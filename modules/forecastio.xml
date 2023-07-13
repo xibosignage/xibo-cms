@@ -111,6 +111,7 @@
     </stencil>
     <onRender><![CDATA[
 // If we don't get any results, then we should show an error message
+
 if (items.length === 0) {
     // Set the body dimensions to window dimensions
     $(target).css('cssText', 'width: 100% !important; height: 100% !important;');
@@ -160,7 +161,7 @@ $content.empty();
 var currentContainerHTML = $(target).find('.current-day-template').html();
 
 // Make replacements [] with current day data
-currentContainerHTML = makeReplacement(currentContainerHTML, items[0].currentDay);
+currentContainerHTML = makeReplacement(currentContainerHTML, items[0]);
 
 // Add current day (main) template to content container
 $content.append(currentContainerHTML);
@@ -194,7 +195,7 @@ if (daysNum > 0) {
     $forecastContainer.empty();
 
     // Add the forecast days
-    items[0].forecast.forEach((day, index) => {
+    items.slice(1).forEach((day, index) => {
         // Check if we are within the offset
         if (index >= daysOffset) {
             // Check if we are within the number of days
