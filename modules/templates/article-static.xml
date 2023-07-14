@@ -132,11 +132,19 @@ if (properties.copyright) {
     });
 }
 
+// Clear container
+$(target).find('#content').empty();
+
+// Add items to container
+for (let index = 0; index < items.length; index++) {
+  $(items[index]).appendTo($(target).find('#content'));
+}
+
 // Render
 $(target).find('img').xiboImageRender(properties);
 
 $(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, items);
+$(target).xiboTextRender(properties, $(target).find('#content > *'));
         ]]></onTemplateRender>
     </template>
     <template>
@@ -779,8 +787,8 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 // and copyright is not already added
 if (
     properties.copyright &&
-    $(target).find('#content > .article').length > 0 &&
-    $(target).find('#content > .copyright').length <= 0
+    $(target).find('#content .article').length > 0 &&
+    $(target).find('#content .copyright').length <= 0
 ) {
     $(target).find('#content').append(
         $('<div class="copyright"><span>' + properties.copyright + '</span></div>')
@@ -792,7 +800,7 @@ if (
 
 // Render
 $(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content > .article, #content > .copyright'));
+$(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright'));
         ]]></onTemplateRender>
         <assets>
             <asset id="article_with_desc_and_name_separator" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-description-name.png" />
@@ -917,8 +925,8 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 // and copyright is not already added
 if (
     properties.copyright &&
-    $(target).find('#content > .article').length > 0 &&
-    $(target).find('#content > .copyright').length <= 0
+    $(target).find('#content .article').length > 0 &&
+    $(target).find('#content .copyright').length <= 0
 ) {
     $(target).find('#content').append(
         $('<div class="copyright"><span>' + properties.copyright + '</span></div>')
@@ -930,7 +938,7 @@ if (
 
 // Render
 $(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content > .article, #content > .copyright'));
+$(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright'));
         ]]></onTemplateRender>
         <assets>
             <asset id="article_title_only" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-only.png" />

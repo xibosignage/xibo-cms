@@ -47,7 +47,7 @@ Playlist.prototype.createDataStructure = function(data) {
         widgets[widget],
       );
 
-      if (newWidget.subType == 'image') {
+      if (newWidget.subType == 'image' || newWidget.subType == 'video') {
         newWidget.previewSrc =
           imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]);
       }
@@ -63,6 +63,10 @@ Playlist.prototype.createDataStructure = function(data) {
 
       // Check if widget is enabled
       newWidget.checkIfEnabled();
+
+      // Format duration
+      newWidget.calculatedDurationFormatted =
+        pE.common.timeFormat(newWidget.calculatedDuration);
 
       // Add newWidget to the playlist widget object
       this.widgets[newWidget.id] = newWidget;

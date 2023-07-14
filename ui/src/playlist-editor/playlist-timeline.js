@@ -6,11 +6,11 @@ const timelineInfoTemplate = require('../templates/playlist-timeline-info.hbs');
 const timelineHeaderInfoTemplate =
   require('../templates/playlist-timeline-header-info.hbs');
 
-const defaultStepHeight = 20;
-const zoomLevelChangeStep = 5;
-const minStepHeight = 5;
-const maxStepHeight = 60;
+const defaultStepHeight = 4;
+const minStepHeight = 2;
+const maxStepHeight = 90;
 const widgetMinHeight = 50;
+const widgetDefaultHeight = 90;
 
 /**
  * Timeline contructor
@@ -20,10 +20,14 @@ const widgetMinHeight = 50;
 const PlaylistTimeline = function(container) {
   this.DOMObject = container;
 
-  // Set step height ( for 1 second )
+  // Set step height
   this.stepHeight = defaultStepHeight;
+
   // Set total height
   this.totalTimelineHeight = 0;
+
+  // Timeline mode
+  this.scaledTimeline = false;
 };
 
 /**
@@ -155,7 +159,14 @@ PlaylistTimeline.prototype.render = function() {
       // Mark target as "to be saved"
       $(ui.item).addClass('to-be-saved');
 
+      // Re-render grid after drag to calculate scale values
+      if (!pE.timeline.scaledTimeline) {
+        pE.timeline.createGrid();
+      }
+
       pE.timeline.DOMObject.find('#unsaved').show();
+
+      // Save order
       saveOrderFunc();
     },
   });
@@ -176,52 +187,90 @@ PlaylistTimeline.prototype.createGrid = function() {
   // Empty grid container
   $timeGrid.empty();
 
-  // Add steps until we fill the timeline
-  // or we reach the number of elements
-  const timelineHeight = $timeGrid.parents('.editor-body').height() - 20;
-  const targetHeight = (timelineHeight > this.totalTimelineHeight) ?
-    timelineHeight : (this.totalTimelineHeight + this.stepHeight * 2);
-  let step = 0;
-  let stepDelta = 1;
-  let stepLabelDelta = 0;
+  // If we are in scaled mode
+  if (this.scaledTimeline) {
+    // Add steps until we fill the timeline
+    // or we reach the number of elements
+    const timelineHeight = $timeGrid.parents('.editor-body').height() - 20;
+    const targetHeight = (timelineHeight > this.totalTimelineHeight) ?
+      timelineHeight : (this.totalTimelineHeight + this.stepHeight * 2);
+    let step = 0;
+    let stepDelta = 1;
+    let stepLabelDelta = 0;
 
-  // Calculate step show and label delta
-  if (this.stepHeight > 30) {
-    stepDelta = 1;
-    stepLabelDelta = 1;
-  } else if (this.stepHeight > 15) {
-    stepDelta = 1;
-    stepLabelDelta = 2;
-  } else if (this.stepHeight >= 10) {
-    stepDelta = 2;
-    stepLabelDelta = 4;
-  } else {
-    stepDelta = 5;
-    stepLabelDelta = 10;
-  }
-
-  // Set grid container gap to height minus step height (2px)
-  const calculatedGap = (stepDelta * this.stepHeight) - 2;
-  $timeGrid.css('gap', calculatedGap + 'px');
-
-  for (
-    let auxHeight = targetHeight;
-    auxHeight > 0;
-    auxHeight -= (stepDelta * this.stepHeight)
-  ) {
-    if ( step % stepDelta === 0 ) {
-      if (step % stepLabelDelta === 0) {
-        // Add a labelled step
-        $stepWithValue.find('.step-value').text(step);
-        $timeGrid.append($stepWithValue.clone());
-      } else {
-        // Add a normal step
-        $timeGrid.append($step.clone());
-      }
+    // Calculate step show and label delta
+    if (this.stepHeight > 30) {
+      stepDelta = 1;
+      stepLabelDelta = 1;
+    } else if (this.stepHeight > 15) {
+      stepDelta = 1;
+      stepLabelDelta = 2;
+    } else if (this.stepHeight >= 7) {
+      stepDelta = 2;
+      stepLabelDelta = 4;
+    } else if (this.stepHeight >= 3) {
+      stepDelta = 5;
+      stepLabelDelta = 10;
+    } else if (this.stepHeight >= 2) {
+      stepDelta = 5;
+      stepLabelDelta = 20;
+    } else {
+      stepDelta = 10;
+      stepLabelDelta = 30;
     }
 
-    // Increment step
-    step += stepDelta;
+    // Set grid container gap to height minus step height (2px)
+    const calculatedGap = (stepDelta * this.stepHeight) - 2;
+    $timeGrid.css('gap', calculatedGap + 'px');
+
+    for (
+      let auxHeight = targetHeight;
+      auxHeight > 0;
+      auxHeight -= (stepDelta * this.stepHeight)
+    ) {
+      if ( step % stepDelta === 0 ) {
+        if (step % stepLabelDelta === 0) {
+          // Format date on step
+          const stepFormatted = pE.common.timeFormat(step);
+          // Add a labelled step
+          $stepWithValue.find('.step-value').text(stepFormatted);
+          $timeGrid.append($stepWithValue.clone());
+        } else {
+          // Add a normal step
+          $timeGrid.append($step.clone());
+        }
+      }
+
+      // Increment step
+      step += stepDelta;
+    }
+  } else {
+    // Create first step
+    $stepWithValue.find('.step-value').text(
+      pE.common.timeFormat(0),
+    );
+    $timeGrid.append($stepWithValue.clone());
+
+    let durationSum = 0;
+
+    // Create a labelled value for each widget in the timeline
+    this.DOMObject.find('.playlist-widget').each(function(_idx, el) {
+      const $widget = $(el);
+      const duration = $widget.data('duration');
+
+      // Format date on step and add to sum
+      durationSum += duration;
+      const durationFormatted = pE.common.timeFormat(
+        durationSum,
+      );
+
+      // Add a labelled step
+      $stepWithValue.find('.step-value').text(durationFormatted);
+      $timeGrid.append($stepWithValue.clone());
+    });
+
+    // Timeline fixed gap minus step height (2px)
+    $timeGrid.css('gap', (widgetDefaultHeight - 2) + 'px');
   }
 };
 
@@ -231,26 +280,38 @@ PlaylistTimeline.prototype.createGrid = function() {
 PlaylistTimeline.prototype.calculateWidgetHeights = function() {
   const self = this;
 
-  // Reset total height
-  self.totalTimelineHeight = 0;
+  // If we are in scaled mode
+  if (this.scaledTimeline) {
+    // Reset total height
+    self.totalTimelineHeight = 0;
 
-  // Calculate widget heights
-  this.DOMObject.find('.playlist-widget').each(function(_idx, el) {
-    const $widget = $(el);
-    const duration = $widget.data('duration');
+    // Calculate widget heights
+    this.DOMObject.find('.playlist-widget').each(function(_idx, el) {
+      const $widget = $(el);
+      const duration = $widget.data('duration');
 
-    // Calculate height
-    const height = duration * self.stepHeight;
+      // Calculate height
+      const height = duration * self.stepHeight;
 
-    // If height is less than minimum, show replacement
-    if (height < widgetMinHeight) {
-      $widget.addClass('minimal-widget');
-    }
+      // If height is less than minimum, show replacement
+      if (height < widgetMinHeight) {
+        $widget.addClass('minimal-widget');
+      }
 
-    // Set height
-    $widget.css('height', height + 'px');
-    self.totalTimelineHeight += height;
-  });
+      // Set height
+      $widget.css('height', height + 'px');
+      self.totalTimelineHeight += height;
+    });
+  } else {
+    // All widgets have default height
+    this.DOMObject.find('.playlist-widget')
+      .css('height', widgetDefaultHeight + 'px');
+
+    // Calculate timeline height
+    self.totalTimelineHeight =
+      this.DOMObject.find('.playlist-widget').length *
+      widgetDefaultHeight;
+  }
 };
 
 /**
@@ -258,6 +319,17 @@ PlaylistTimeline.prototype.calculateWidgetHeights = function() {
  * @param {number} zoomLevelChange
  */
 PlaylistTimeline.prototype.changeZoomLevel = function(zoomLevelChange) {
+  let zoomLevelChangeStep = 2;
+
+  // If we're working with higher zooms, increase step change
+  if (this.stepHeight >= 30) {
+    zoomLevelChangeStep = 20;
+  } else if (this.stepHeight >= 10) {
+    zoomLevelChangeStep = 4;
+  } else {
+    zoomLevelChangeStep = 2;
+  }
+
   // Calculate new zoom level
   // If zoomLevelChange is 0, it means we are resetting the zoom level
   this.stepHeight =
@@ -277,6 +349,9 @@ PlaylistTimeline.prototype.changeZoomLevel = function(zoomLevelChange) {
  * Update information about the current playlist
  */
 PlaylistTimeline.prototype.updateInfo = function() {
+  // Format playlist duration
+  pE.playlist.durationFormatted = pE.common.timeFormat(pE.playlist.duration);
+
   // Render timeline template
   const html = timelineInfoTemplate(
     $.extend({}, {
@@ -303,6 +378,21 @@ PlaylistTimeline.prototype.updateInfo = function() {
     .find('.selected-info').html(html);
   this.DOMObject.parents('.editor-modal')
     .find('.modal-header--left').html(headerHtml);
+};
+
+/**
+ * Switch timeline scale mode
+ * @param {boolean} force
+ */
+PlaylistTimeline.prototype.switchScaleMode = function(force) {
+  // Switch flag
+  this.scaledTimeline = (force) ? force: !this.scaledTimeline;
+
+  // If switched on, show scale controls
+  pE.editorContainer.toggleClass('timeline-scaled', this.scaledTimeline);
+
+  // Render again
+  this.render();
 };
 
 module.exports = PlaylistTimeline;

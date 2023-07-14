@@ -197,6 +197,15 @@ PropertiesPanel.prototype.save = function(
               );
             }
           });
+        } else if (app.mainObjectType == 'playlist') {
+          // Reload data, but don't refresh
+          // toolbar or properties panel
+          app.reloadData(
+            {
+              reloadToolbar: false,
+              reloadPropertiesPanel: false,
+            },
+          );
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element

@@ -122,11 +122,19 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
     items.push(properties.noDataMessage);
 }
 
+// Clear container
+$(target).find('#content').empty();
+
+// Add items to container
+for (let index = 0; index < items.length; index++) {
+  $(items[index]).appendTo($(target).find('#content'));
+}
+
 // Render
 $(target).find('img').xiboImageRender(properties);
 
 $(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, items);
+$(target).xiboTextRender(properties, $(target).find('#content > *'));
         ]]></onTemplateRender>
     </template>
     <!-- End of Custom Calendar -->

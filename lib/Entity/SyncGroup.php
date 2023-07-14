@@ -32,6 +32,9 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * @SWG\Definition()
+ */
 class SyncGroup implements \JsonSerializable
 {
     use EntityTrait;

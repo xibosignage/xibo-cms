@@ -143,15 +143,18 @@ pE.loadEditor = function(inline = false) {
   )
     .done(function(res) {
       if (res.data != null && res.data.length > 0) {
+        // Template type
+        const template = inline ?
+          playlistEditorTemplate :
+          playlistEditorExternalContainerTemplate;
+
         // Append layout html to the main div
         pE.editorContainer.html(
-          inline ?
-            playlistEditorTemplate() :
-            playlistEditorExternalContainerTemplate(
-              {
-                trans: editorsTrans,
-              },
-            ),
+          template(
+            {
+              trans: {...playlistEditorTrans, ...editorsTrans},
+            },
+          ),
         );
 
         // Initialize template manager
@@ -752,11 +755,13 @@ pE.refreshEditor = function(
 
 /**
  * Reload API data and replace the playlist structure with the new value
- * @param {boolean} [reloadToolbar=false] - Reload toolbar
- * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
+ * @param {boolean} [reloadEditor=true] - Reload editor
+ * @param {boolean} [reloadToolbar=true] - Reload toolbar
+ * @param {boolean} [reloadPropertiesPanel=true] - Reload properties panel
  */
 pE.reloadData = function(
   {
+    reloadEditor = true,
     reloadToolbar = true,
     reloadPropertiesPanel = true,
   } = {},
@@ -788,7 +793,7 @@ pE.reloadData = function(
 
         // folder Id
         pE.folderId = pE.playlist.folderId;
-        pE.refreshEditor({
+        (reloadEditor) && pE.refreshEditor({
           reloadToolbar: reloadToolbar,
           reloadPropertiesPanel: reloadPropertiesPanel,
         });
@@ -840,7 +845,10 @@ pE.saveOrder = function() {
   ).then((res) => { // Success
     pE.common.hideLoadingScreen('saveOrder');
 
-    self.reloadData();
+    self.reloadData({
+      reloadToolbar: false,
+      reloadPropertiesPanel: false,
+    });
   }).catch((error) => { // Fail/error
     pE.common.hideLoadingScreen('saveOrder');
 
@@ -1243,6 +1251,12 @@ pE.initElements = function() {
   pE.editorContainer.find('.footer-controls .btn[data-action="zoom-reset"]')
     .click(function() {
       pE.timeline.changeZoomLevel(0);
+    });
+
+  pE.editorContainer
+    .find('.footer-controls .btn[data-action="toggle-scale-mode"]')
+    .click(function() {
+      pE.timeline.switchScaleMode();
     });
 };
 

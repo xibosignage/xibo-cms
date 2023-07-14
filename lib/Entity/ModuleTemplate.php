@@ -29,6 +29,7 @@ use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Represents a module template
+ * @SWG\Definition()
  */
 class ModuleTemplate implements \JsonSerializable
 {
