@@ -186,7 +186,7 @@ jQuery.fn.extend({
         options.numItems &&
         options.numItems > 0
       ) {
-        items = items.slice(0, options.numItems)
+        items = items.slice(0, options.numItems);
       }
 
       // Reverse the items again (so they are in the correct order)

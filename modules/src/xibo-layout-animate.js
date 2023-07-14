@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -35,11 +35,8 @@ jQuery.fn.extend({
         options.effect == 'marqueeUp' ||
         options.effect == 'marqueeDown'
       ) {
-        // Android user agent?
-        const isAndroid = navigator.userAgent.indexOf('Android') > -1;
-
         // Start marquee
-        if (!isAndroid) {
+        if (window.feature.cssTransform && window.feature.cssTransition) {
           $contentDiv.find('.scroll').marquee();
         } else {
           $contentDiv.find('.scroll').overflowMarquee();
