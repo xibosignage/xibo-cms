@@ -30,17 +30,17 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '4.0.0-alpha2';
+    public static $WEBSITE_VERSION_NAME = '4.0.0-beta';
     public static $XMDS_VERSION = '7';
     public static $XLF_VERSION = 3;
     public static $VERSION_REQUIRED = '8.1.0';
     public static $VERSION_UNSUPPORTED = '9.0';
 
     /** @var null cache migration status for the whole request */
-    private static $_migration_status = null;
+    private static $migrationStatus = null;
 
     /** @var string the git commit ref */
-    private static $_git_commit = null;
+    private static $gitCommit = null;
 
     /**
      * Is there a migration pending?
@@ -62,18 +62,18 @@ class Environment
      */
     private static function getMigrationStatus()
     {
-        if (self::$_migration_status === null) {
+        if (self::$migrationStatus === null) {
             // Use a Phinx text wrapper to work out what the current status is
             // make sure this does not output anything to our output buffer
             ob_start();
             $phinx = new TextWrapper(new PhinxApplication(), ['configuration' => PROJECT_ROOT . '/phinx.php']);
             $phinx->getStatus();
 
-            self::$_migration_status = $phinx->getExitCode();
+            self::$migrationStatus = $phinx->getExitCode();
             ob_end_clean();
         }
 
-        return self::$_migration_status;
+        return self::$migrationStatus;
     }
 
     /**
@@ -82,17 +82,17 @@ class Environment
      */
     public static function getGitCommit()
     {
-        if (self::$_git_commit === null) {
+        if (self::$gitCommit === null) {
             if (isset($_SERVER['GIT_COMMIT']) && $_SERVER['GIT_COMMIT'] === 'dev') {
                 $out = [];
                 exec('cat /var/www/cms/.git/$(cat /var/www/cms/.git/HEAD | cut -d\' \' -f2)', $out);
-                self::$_git_commit = $out[0] ?? 'unavailable';
+                self::$gitCommit = $out[0] ?? 'unavailable';
             } else {
-                self::$_git_commit = $_SERVER['GIT_COMMIT'] ?? 'unavailable';
+                self::$gitCommit = $_SERVER['GIT_COMMIT'] ?? 'unavailable';
             }
         }
 
-        return self::$_git_commit;
+        return self::$gitCommit;
     }
 
     /**
