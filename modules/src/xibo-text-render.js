@@ -53,8 +53,16 @@ jQuery.fn.extend({
       $contentDiv.find('.text-render-anim-item').remove();
 
       // Show and reset the hidden elements
-      $contentDiv.find('.text-render-hidden-element')
-        .removeClass('text-render-hidden-element').show();
+      const $originalElements =
+        $contentDiv.find('.text-render-hidden-element');
+      $originalElements.removeClass('text-render-hidden-element').show();
+
+      // If we have a scroll container, move elements
+      // to content and destroy container
+      if ($contentDiv.find('div[class="scroll"]').length > 0) {
+        $originalElements.appendTo($contentDiv);
+        $contentDiv.find('div[class="scroll"]').remove();
+      }
     };
 
     // Calculate the dimensions of this item
@@ -171,7 +179,12 @@ jQuery.fn.extend({
       }
 
       // Get a new array with only the first N elements
-      items = items.slice(0, options.numItems);
+      if (
+        options.numItems &&
+        options.numItems > 0
+      ) {
+        items = items.slice(0, options.numItems)
+      }
 
       // Reverse the items again (so they are in the correct order)
       if (

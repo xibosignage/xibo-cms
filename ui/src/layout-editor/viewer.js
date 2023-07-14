@@ -2378,8 +2378,8 @@ Viewer.prototype.updateRegionContent = function(
 
     // Check if it's the first call
     // If it is, send a flag to pause effects on start
-    if (!$iframe.data('firstCall')) {
-      $iframe.data('firstCall', true);
+    if (!$iframe.data('notFirstCall')) {
+      $iframe.data('notFirstCall', true);
       options.pauseEffectOnStart = true;
     }
 
@@ -2401,6 +2401,7 @@ Viewer.prototype.updateRegionContent = function(
     if (!$iframe[0].contentWindow.window.globalOptions) {
       // Wait for the iframe to load and update it
       $iframe[0].onload = function() {
+        $iframe.data('notFirstCall', true);
         updateIframe($iframe);
       };
     } else {
