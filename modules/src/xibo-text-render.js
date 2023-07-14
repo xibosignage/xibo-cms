@@ -356,7 +356,7 @@ jQuery.fn.extend({
         ).each(function(_idx, _el) {
           if (!$(_el).hasClass('text-render-hidden-element')) {
             $(_el).css({
-              display: 'inline',
+              display: 'inline-block',
               'padding-left': '10px',
             });
           }
