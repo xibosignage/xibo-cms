@@ -37,6 +37,9 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   // Interactive actions
   this.actions = data.actions;
 
+  // Sync key
+  this.syncKey = data.syncKey;
+
   // set real dimentions
   this.dimensions = {
     width: data.width,

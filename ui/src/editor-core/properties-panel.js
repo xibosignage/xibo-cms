@@ -36,19 +36,27 @@ const PropertiesPanel = function(parent, container) {
   this.openTabOnRender = '';
 
   this.actionForm = {};
+
+  this.toSave = false;
 };
 
 /**
  * Save properties from the panel form
  * @param {object=} target - the element that the form relates to
  * @param {boolean=} [reloadAfterSave=true] - Refresh editor after save request
+ * @param {boolean=} [showErrorMessages=true] - Display error messages
+ * @param {function=} [callback=null] - Callback to be called after request
+ * @param {function=} [callbackNoWait=null]
+ *   - Callback to be called before request ends
  * @return {boolean} - false if form is invalid
  */
 PropertiesPanel.prototype.save = function(
   {
-    target = undefined,
+    target = null,
     reloadAfterSave = true,
     showErrorMessages = true,
+    callback = null,
+    callbackNoWait = null,
   } = {},
 ) {
   const app = this.parent;
@@ -236,6 +244,9 @@ PropertiesPanel.prototype.save = function(
         // Reload data if we're not saving an element
         reloadData();
       }
+
+      // Call callback if exists
+      (callback) && callback();
     }).catch((error) => { // Fail/error
       if (!showErrorMessages) {
         return;
@@ -265,6 +276,12 @@ PropertiesPanel.prototype.save = function(
       // Reset active tab
       self.openTabOnRender = '';
     });
+
+    // Call callback without waiting for the request
+    (callbackNoWait) && callbackNoWait();
+
+    // Mark form as not needed to be saved anymore
+    this.toSave = false;
   }
 };
 
@@ -815,14 +832,17 @@ PropertiesPanel.prototype.render = function(
           // When we change the element fields, save them
           self.DOMObject.find(
             '[name].element-property',
-          ).on(
-            'change',
-            function(_ev) {
+          ).on({
+            change: function(_ev) {
               // Debounce save based on the object being saved
               saveDebounced(
                 _ev.currentTarget,
               );
-            });
+            },
+            focus: function(_ev) {
+              self.toSave = true;
+            },
+          });
         });
       }
     }
@@ -1237,24 +1257,28 @@ PropertiesPanel.prototype.initFields = function(
 
     // Auto save when changing inputs
     $(self.DOMObject).find('form').off()
-      .on(
-        'change inputChange',
-        '.xibo-form-input:not(.position-input)' +
-        ':not(.action-form-input):not(.snippet-selector) ' +
-          'select:not(.element-property), ' +
-        '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
-          'input:not(.element-property), ' +
-        '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
-          'textarea:not(.element-property), ' +
-        '[name="backgroundImageId"] ',
-        function(_ev, options) {
+      .on({
+        'change inputChange': function(_ev, options) {
           // Debounce save based on the object being saved
           if (!options?.skipSave) {
             saveDebounced(
               self.parent.selectedObject,
             );
           }
-        });
+        },
+        focus: function(_ev) {
+          self.toSave = true;
+        },
+      },
+      '.xibo-form-input:not(.position-input)' +
+        ':not(.action-form-input):not(.snippet-selector) ' +
+        'select:not(.element-property), ' +
+      '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
+        'input:not(.element-property), ' +
+      '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
+        'textarea:not(.element-property), ' +
+      '[name="backgroundImageId"] ',
+      );
   }
 };
 
