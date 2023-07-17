@@ -630,6 +630,16 @@ Viewer.prototype.handleInteractions = function() {
             // Edit region if it's a playlist
             playlistEditorBtnClick($(e.target).attr('id'));
           } else if (
+            // Select static widget region
+            $(e.target).data('subType') === 'frame' &&
+            $(e.target).hasClass('designer-region') &&
+            $(e.target).find('.designer-widget').length > 0
+          ) {
+            lD.selectObject({
+              target: $(e.target),
+            });
+            self.selectElement($(e.target));
+          } else if (
             $(e.target).hasClass('group-select-overlay')
           ) {
             self.editGroup(

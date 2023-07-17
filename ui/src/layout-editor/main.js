@@ -483,12 +483,29 @@ lD.selectObject =
         (
           oldSelectedId != newSelectedId ||
           oldSelectedType != newSelectedType
-        ) &&
-        $(document.activeElement).parents('#properties-panel').length > 0
+        ) && this.propertiesPanel.toSave
       ) {
+        // Set flag back to false
+        this.propertiesPanel.toSave = false;
+
+        // Save previous element
         this.propertiesPanel.save({
-          reloadAfterSave: false,
+          target: this.selectedObject, // Save previous object
+          callbackNoWait: function() {
+            // Select object again, with the same params
+            lD.selectObject({
+              target: target,
+              forceSelect: forceSelect,
+              clickPosition: clickPosition,
+              refreshEditor: refreshEditor,
+              reloadViewer: reloadViewer,
+              reloadPropertiesPanel: reloadPropertiesPanel,
+            });
+          },
         });
+
+        // Prevent select to continue
+        return;
       }
 
       // Unselect the previous selectedObject object if still selected
