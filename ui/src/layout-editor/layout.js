@@ -273,6 +273,7 @@ Layout.prototype.createDataStructure = function(data) {
 
   // Set layout duration
   this.duration = layoutDuration;
+  this.durationFormatted = lD.common.timeFormat(layoutDuration);
 };
 
 /**

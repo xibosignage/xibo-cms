@@ -90,9 +90,13 @@ module.exports = {
   /**
      * Format time
      * @param {String} timeInSeconds - Time in seconds
+     * @param {boolean} alwaysShowMinutes - Always show 00:00 even with < 60s
      * @return {String} Formatted time
      */
-  timeFormat: function(timeInSeconds) {
+  timeFormat: function(
+    timeInSeconds,
+    alwaysShowMinutes = true,
+  ) {
     const h = Math.floor(timeInSeconds / 3600);
     const m = Math.floor(timeInSeconds % 3600 / 60);
     const s = Math.floor(timeInSeconds % 3600 % 60);
@@ -105,7 +109,8 @@ module.exports = {
     };
 
     const hDisplay = h > 0 ? zeroBefore(h) + ':' : '';
-    const mDisplay = (m > 0 || hDisplay != '') ? zeroBefore(m) + ':' : '';
+    const mDisplay = (m > 0 || hDisplay != '' || alwaysShowMinutes) ?
+      zeroBefore(m) + ':' : '';
     const sDisplay = mDisplay != '' ? zeroBefore(s) : s;
 
     return hDisplay + mDisplay + sDisplay;
