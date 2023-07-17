@@ -405,6 +405,7 @@ jQuery.fn.extend({
             'data-is-legacy': false,
             'data-speed': options.speed / 25 * 1000,
             'data-direction': options.direction,
+            'data-duplicated': true,
             scaleFactor: options.scaleFactor,
           });
         } else {
