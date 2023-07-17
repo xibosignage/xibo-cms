@@ -142,7 +142,11 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
     left: 0;
     background: black;
     @include transparent-object(65);
-    z-index: 3;
+    z-index: $loading-overlay-z-index;
+}
+
+.custom-overlay {
+    z-index: $custom-overlay-z-index;
 }
 
 .loading-overlay {
@@ -173,11 +177,11 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
     height: 100%;
     top: 0;
     left: 0;
-    z-index: $loading-overlay-z-index;
+    z-index: $context-menu-overlay-z-index;
 
     .context-menu {
         position: absolute;
-        z-index: ($loading-overlay-z-index + 1);
+        z-index: ($context-menu-overlay-z-index + 1);
         background: $xibo-color-neutral-0;
         @include box-shadow(4px 4px 8px $xibo-color-shadow);
 

@@ -2420,9 +2420,6 @@ lD.clearTemporaryData = function() {
   // Fix for remaining ckeditor elements or colorpickers
   destroyColorPicker(lD.editorContainer.find('.colorpicker-element'));
 
-  // Clean and hide inline editor controls
-  lD.editorContainer.find('#inline-editor-templates').html('');
-
   // Hide open tooltips
   lD.editorContainer.find('.tooltip').remove();
 
