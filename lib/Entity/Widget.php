@@ -281,8 +281,17 @@ class Widget implements \JsonSerializable
      * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $dispatcher, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayNotifyService, $actionFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $widgetOptionFactory,
+        $widgetMediaFactory,
+        $widgetAudioFactory,
+        $permissionFactory,
+        $displayNotifyService,
+        $actionFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->excludeProperty('module');
         $this->widgetOptionFactory = $widgetOptionFactory;
