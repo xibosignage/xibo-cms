@@ -60,6 +60,12 @@ window.lD = {
   // Read Only mode
   readOnlyMode: false,
 
+  // Template edit mode
+  templateEditMode: false,
+
+  // Exit url (based on layout or template editing)
+  exitURL: urlsForApi.layout.list.url,
+
   // Attach common functions to layout designer
   common: Common,
 
@@ -121,15 +127,33 @@ $(() => {
     '&embed=regions,playlists,widgets,widget_validity,tags,permissions,actions',
   ).done(function(res) {
     if (res.data != null && res.data.length > 0) {
+      const url = new URL(window.location.href);
+      // Check if we are in template edit mode
+      if (url.searchParams.get('isTemplateEditor') == '1') {
+        lD.templateEditMode = true;
+        lD.exitURL = urlsForApi.template.list.url;
+      }
+
       // Append layout html to the main div
       lD.editorContainer.html(
         designerMainTemplate(
           {
             trans: layoutEditorTrans,
-            exitURL: urlsForApi.layout.list.url,
+            exitURL: lD.exitURL,
           },
         ),
       );
+
+      // Check if we are in read only mode
+      if (res.data[0].publishedStatusId != 2) {
+        if (url.searchParams.get('vM') == '1') {
+          // Enter view mode
+          lD.enterReadOnlyMode();
+        } else {
+          // Enter welcome screen
+          lD.welcomeScreen();
+        }
+      }
 
       // Initialize template manager
       lD.templateManager = new TemplateManager(
@@ -285,18 +309,6 @@ $(() => {
         lD,
         lD.editorContainer.find('#properties-panel'),
       );
-
-      if (res.data[0].publishedStatusId != 2) {
-        const url = new URL(window.location.href);
-
-        if (url.searchParams.get('vM') == '1') {
-          // Enter view mode
-          lD.enterReadOnlyMode();
-        } else {
-          // Enter welcome screen
-          lD.welcomeScreen();
-        }
-      }
 
       // Setup helpers
       formHelpers.setup(lD, lD.layout);
@@ -1987,12 +1999,15 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       $modal.find('button.cancel').on('click', removeModal);
     }
   } else {
-    // Adding a module
-    // Check if the module has data type, if not
-    // create a frame region
-    // or playlist
-    const regionType = (draggableSubType === 'playlist') ?
-      'playlist' : 'frame';
+    // Adding a module, zone or playlist
+    let regionType = 'frame';
+
+    if (
+      draggableSubType === 'playlist' ||
+      draggableSubType === 'zone'
+    ) {
+      regionType = draggableSubType;
+    }
 
     // Deselect cards and drop zones
     lD.toolbar.deselectCardsAndDropZones();
@@ -2045,7 +2060,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       // Add module to layout, but create a region first
       lD.addRegion(dropPosition, regionType, dimensions).then((res) => {
         // Add module to new region if it's not a playlist
-        if (regionType !== 'playlist') {
+        if (regionType === 'frame') {
           lD.addModuleToPlaylist(
             res.data.regionId,
             res.data.regionPlaylist.playlistId,
@@ -2053,6 +2068,16 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             draggableData,
           );
         } else {
+          // Save zone or playlist to a temp object
+          // so it can be selected after refreshing
+          lD.viewer.saveTemporaryObject(
+            'region_' + res.data.regionId,
+            'region',
+            {
+              type: 'region',
+            },
+          );
+
           // Reload data ( and viewer )
           lD.reloadData(lD.layout,
             {
@@ -3010,8 +3035,8 @@ lD.unlockLayout = function() {
     if (res.success) {
       bootbox.hideAll();
 
-      // Redirect to the layout grid
-      window.location.href = urlsForApi.layout.list.url;
+      // Redirect to the layout or template grid
+      window.location.href = lD.exitURL;
     } else {
       // Login Form needed?
       if (res.login) {

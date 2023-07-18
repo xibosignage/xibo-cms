@@ -164,7 +164,7 @@ class Template extends Base
                 $template->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request, 'layout.designer', array('id' => $template->layoutId)),
+                    'url' => $this->urlFor($request, 'layout.designer', array('id' => $template->layoutId)) . '?isTemplateEditor=1',
                     'text' => __('Alter Template')
                 );
 
@@ -506,7 +506,7 @@ class Template extends Base
         } else {
             $tags = [];
         }
-        $tags[] = $this->tagFactory->getByTag('template');
+        $tags[] = $this->tagFactory->tagFromString('template');
 
         $layout = $this->layoutFactory->createFromResolution($resolutionId,
             $this->getUser()->userId,

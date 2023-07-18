@@ -148,6 +148,11 @@
                     type: 'GET'
                 },
             },
+            template: {
+                list: {
+                    url: "{{ url_for("template.view") }}"
+                },
+            },
             region: {
                 transform: {
                     url: "{{ url_for("region.position.all", {id: ':id'}) }}",
@@ -616,6 +621,7 @@
                     size: "{{ "Size" |trans }}",
                 },
                 playlist: "{{ "Playlist"|trans }}",
+                zone: "{{ "Zone"|trans }}", 
                 element: "{{ "Element"|trans }}",
                 elementGroup: "{{ "Element Group"|trans }}",
                 layout: "{{ "Layout"|trans }}",

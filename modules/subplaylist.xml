@@ -104,7 +104,7 @@
     <preview>
         <twig><![CDATA[
 <div style="text-align:center;">
-    <i alt="{{ "Sub-Playlist"|trans }} thumbnail" class="fa module-preview-icon module-icon-subplaylist"></i>
+    <i alt="{{ "Sub-Playlist"|trans }} thumbnail" class="module-preview-icon module-icon-subplaylist"></i>
     <br/>
     {% trans %}{{ countSubPlaylistWidgets }} Widgets / {{ calculatedDuration }} seconds{% endtrans %}
 </div>
