@@ -63,7 +63,9 @@ trait ModuleXmlTrait
                     $stencil->twig = $childNode->textContent;
                 } else if ($childNode->nodeName === 'hbs') {
                     $stencil->hbsId = $childNode->getAttribute('id');
-                    $stencil->hbs = $childNode->textContent;
+                    $stencil->hbs = trim($childNode->textContent);
+                } else if ($childNode->nodeName === 'style') {
+                    $stencil->style = trim($childNode->textContent);
                 } else if ($childNode->nodeName === 'elements') {
                     $stencil->elements = $this->parseElements($childNode->childNodes);
                 } else if ($childNode->nodeName === 'width') {
@@ -381,7 +383,7 @@ trait ModuleXmlTrait
                     $asset->path = $node->getAttribute('path');
                     $asset->mimeType = $node->getAttribute('mimeType');
                     $asset->type = $node->getAttribute('type');
-                    $asset->cmsOnly = $node->getAttribute('cmsOnly');
+                    $asset->cmsOnly = $node->getAttribute('cmsOnly') === 'true';
                     $asset->assetNo = count($this->assetCache) + 1;
                     $this->assetCache[$assetId] = $asset;
                 }

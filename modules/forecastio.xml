@@ -100,10 +100,6 @@
     <preview></preview>
     <stencil>
         <twig><![CDATA[
-<link rel="stylesheet" href="[[assetId=weather-icons]]" media="screen">
-<link rel="stylesheet" href="[[assetId=font-awesome]]" media="screen">
-<link rel="stylesheet" href="[[assetId=animate]]" media="screen">
-
 <div class="error-message" style="display: none; padding: 8px; background-color: #f9f9f9; color: #333;">
     <strong>{% trans "No results returned, please configure Open Weather Map connector!" %}</strong>
 </div>
