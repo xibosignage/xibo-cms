@@ -20,13 +20,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Xibo\Entity;
 
-$config = array(
-    'theme_name' => 'Xibo Compact Theme',
-    'theme_title' => 'Xibo Digital Signage',
-    'app_name' => 'Xibo',
-    'theme_url' => 'https://xibosignage.com',
-    'cms_source_url' => 'https://github.com/xibosignage/xibo/',
-    'cms_install_url' => 'https://xibosignage.com/manual/en/install_windows_client.html',
-    'cms_release_notes_url' => 'https://xibosignage.com/manual/en/release_notes.html'
-);
+/**
+ * A simple help link, used by the help service.
+ */
+class HelpLink implements \JsonSerializable
+{
+    public $title;
+    public $summary;
+    public $link;
+    public $parent;
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'title' => $this->title,
+            'summary' => $this->summary,
+            'link' => $this->link,
+            'parent' => $this->parent,
+        ];
+    }
+}

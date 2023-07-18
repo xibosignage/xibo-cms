@@ -30,7 +30,7 @@ You should have received a copy of the GNU Affero General Public License along w
 
 # Installation
 
-Installing an official release is [described in the manual](http://xibo.org.uk/manual/en/install_cms.html) and in the release notes of each release.
+Installing an official release is [described in the manual](https://xibosignage.com/docs/setup/cms-installation-guides) and in the release notes of each release.
 
 
 

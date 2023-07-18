@@ -508,9 +508,9 @@
                                     {% set helpText %}{% trans "The address of the user manual, which will be used as a prefix for all help links." %}{% endset %}
 
                                     {% if theme.isSettingEditable("HELP_BASE") %}
-                                        {{ forms.input("HELP_BASE", title, theme.getSetting("HELP_BASE", "https://xibo.org.uk/manual/"), helpText, "required") }}
+                                        {{ forms.input("HELP_BASE", title, theme.getSetting("HELP_BASE", "https://xibosignage.com/manual/"), helpText, "required") }}
                                     {% else %}
-                                        {{ forms.disabled("HELP_BASE", title, theme.getSetting("HELP_BASE", "https://xibo.org.uk/manual/"), helpText) }}
+                                        {{ forms.disabled("HELP_BASE", title, theme.getSetting("HELP_BASE", "https://xibosignage.com/manual/"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 

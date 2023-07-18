@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -20,39 +20,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Service;
 
-use Stash\Interfaces\PoolInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Xibo\Entity\HelpLink;
 
 /**
- * Interface HelpServiceInterface
+ * Return help links for a page.
  * @package Xibo\Service
  */
 interface HelpServiceInterface
 {
     /**
-     * HelpServiceInterface constructor.
-     * @param StorageServiceInterface $store
-     * @param ConfigServiceInterface $config
-     * @param PoolInterface $pool
-     * @param string $currentPage
-     */
-    public function __construct($store, $config, $pool, $currentPage);
-
-    /**
-     * Get Help Link
-     * @param string $topic
-     * @param string $category
+     * Get the landing page
      * @return string
      */
-    public function link($topic = '', $category = "General");
+    public function getLandingPage(): string;
 
     /**
-     * Raw Link
-     * @param string $suffix Suffix to append to the end of the manual page URL
-     * @return string
+     * Get links for page
+     * @param string $pageName The page name to return links for
+     * @return HelpLink[]
      */
-    public function address($suffix = '');
+    public function getLinksForPage(string $pageName): array;
 }

@@ -17,9 +17,8 @@
 
         <div class="dropdown-divider"></div>
         <a class="dropdown-item" id="reshowWelcomeMenuItem" href="{{ url_for("welcome.view") }}">{% trans "Reshow welcome" %}</a>
-        {% if horizontalNav %}
-            <a class="dropdown-item XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
-        {% endif %}
+
+        <a class="dropdown-item XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
 
         {% if not hideLogout %}
             <div class="dropdown-divider"></div>
