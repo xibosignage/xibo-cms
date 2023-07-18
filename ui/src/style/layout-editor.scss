@@ -23,7 +23,7 @@ body {
     position: relative;
     background-color: $xibo-color-neutral-0;
     @include box-shadow(0px 2px 2px $xibo-color-shadow);
-    z-index: 3;
+    z-index: $header-z-index;
 }
 
 /* Flex structure */
@@ -77,7 +77,7 @@ body {
     width: auto;
     height: 100%;
     display: flex;
-    z-index: 2;
+    z-index: $properties-panel-z-index;
 
     &.closed {
         width: 0;
@@ -187,7 +187,7 @@ body {
         font-size: 1rem;
         background-color: $xibo-color-neutral-0;
         color: $xibo-color-primary;
-        z-index: 1;
+        z-index: $viewer-button-z-index;
 
         &:hover {
             opacity: 1;
@@ -213,7 +213,7 @@ body {
             font-size: 1rem;
             background-color: $xibo-color-neutral-0;
             color: $xibo-color-primary;
-            z-index: 1;
+            z-index: $viewer-button-z-index;
 
             &.active {
                 background-color: $xibo-color-primary;
@@ -258,7 +258,7 @@ body {
         text-transform: uppercase;
         left: 6px;
         top: 4px;
-        z-index: 3;
+        z-index: $header-z-index;
 
         a {
             width: 100px;
@@ -329,6 +329,7 @@ body {
 
     .viewer-overlay {
         display: none;
+        z-index: $viewer-overlay-index;
         position: absolute;
         width: 100%;
         height: 100%;
@@ -337,57 +338,10 @@ body {
         background-color: rgb(255 255 255 / 80%);
     }
 
-    // Inline editor controls
-    #inline-editor-templates {
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        z-index: 2;
-        @include set-transparent-color(background-color, $xibo-color-primary, 0.8);
-        @include border-radius(0 4px 0 0);
-        opacity: 0.75;
-
-        &:hover {
-            opacity: 0.85;
-        }
-
-        .control-label {
-            padding: 5px;
-            margin: 0;
-            text-align: right;
-            color: $xibo-color-neutral-0;
-            font-weight: bold;
-        }
-
-        /* CKEditor controls */
-        .ckeditor_controls {
-            padding: 0 !important;
-
-            >div {
-                padding: 2px 5px;
-                min-width: 240px;
-                margin: 0;
-            }
-
-            .form-group {
-                margin-bottom: 0 !important;
-            }
-
-            .select2-container--bootstrap .select2-selection--single {
-                height: 26px;
-                padding: 2px 24px 2px 4px;
-            }
-        }
-
-        .ckeditor_select_container {
-            padding: 3px 0;
-            margin: 0;
-        }
-    }
-
     #layout-viewer {
         height: 100%;
         border: none;
+        position: relative;
         background: $xibo-color-neutral-900;
         padding: 18px;
         border-radius: 2px 2px 0 0;
@@ -430,7 +384,6 @@ body {
             background: $xibo-color-neutral-900;
         }
 
-
         .designer-region-playlist {
             background: $xibo-color-neutral-900;
 
@@ -443,7 +396,7 @@ body {
                 padding: 2px 5px;
                 font-weight: bold;
                 border-radius: 4px;
-                z-index: 100;
+                z-index: 1;
                 opacity: 0.3;
                 width: 1.8rem;
                 text-align: center;
@@ -545,7 +498,7 @@ body {
             }
 
             &.ui-droppable-active {
-                @include z-index-set($designer-z-index-select);
+                @include z-index-set($designer-select-z-index);
 
                 .action-label {
                     @include set-transparent-color(background-color, $xibo-color-action-target, 0.9);
@@ -577,7 +530,6 @@ body {
         height: calc(100% - 38px);
         width: 100%;
 
-        #inline-editor-templates,
         #fullscreenBtn,
         .snap-controls {
             z-index: calc(#{$designer-overlay-z-index} + 10);
@@ -1068,7 +1020,7 @@ body {
         }
 
         &.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
+            @include z-index-set($designer-select-z-index);
             background: $xibo-color-accent !important;
 
             &.ui-droppable-hover,
@@ -1091,13 +1043,13 @@ body {
             left: 0;
             outline: 2px dashed $xibo-color-primary;
             outline-offset: 1px;
+            z-index: $viewer-element-group-overlay-z-index;
         }
 
         &.selected {
             .group-select-overlay {
                 outline-offset: 0;
                 outline-style: solid;
-                z-index: auto;
             }
         }
 
@@ -1110,7 +1062,7 @@ body {
             padding: 2px 5px;
             font-weight: bold;
             border-radius: 4px;
-            z-index: 100;
+            z-index: $viewer-element-group-bts-z-index;
             opacity: 0.3;
             width: 1.8rem;
             text-align: center;
@@ -1170,7 +1122,7 @@ body {
             padding: 2px 5px;
             font-weight: bold;
             border-radius: 4px;
-            z-index: 100;
+            z-index: $viewer-element-group-bts-z-index;
             opacity: 0.3;
         }
 
@@ -1179,8 +1131,12 @@ body {
         }
 
         &.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
+            @include z-index-set($designer-select-z-index);
             background: $xibo-color-accent !important;
+
+            .group-select-overlay {
+                display: initial;
+            }
 
             &.ui-droppable-hover,
             &:hover {
@@ -1200,7 +1156,7 @@ body {
     /* Viewer */
     #layout-viewer {
         .designer-region.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
+            @include z-index-set($designer-select-z-index);
             background: $xibo-color-region-hover !important;
 
             &.ui-droppable-hover,
@@ -1219,7 +1175,7 @@ body {
 
         .designer-region:not(.designer-region-playlist) .designer-widget.ui-droppable-active,
         .widget-preview.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
+            @include z-index-set($designer-select-z-index);
             background: $xibo-color-widget-hover !important;
             width: 100%;
             height: 100%;
@@ -1244,11 +1200,11 @@ body {
         }
 
         .layout.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
+            @include z-index-set($designer-select-z-index);
         }
 
         &.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
+            @include z-index-set($designer-select-z-index);
             position: relative;
         }
 
@@ -1663,7 +1619,7 @@ div#bg_media_name {
 
 /* Moveable elements */
 .moveable-control-box {
-    z-index: 1 !important;
+    z-index: $viewer-moveable-z-index !important;
 }
 
 .moveable-line, .moveable-control {

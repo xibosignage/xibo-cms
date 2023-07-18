@@ -107,7 +107,7 @@
 
     &.detached {
         transform: scale(2);
-        z-index: 3001;
+        z-index: $properties-panel-rich-text-container-z-index;
         position: absolute;
 
         .text-area-buttons {

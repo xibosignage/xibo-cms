@@ -11,7 +11,7 @@
         padding: 0 16px !important;
         min-height: 30px;
         font-size: 0;
-        z-index: 2;
+        z-index: $viewer-bottom-bar-z-index;
         margin: 0;
         background: $xibo-color-neutral-0;
         right: 0;
@@ -118,7 +118,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 1060;
+    z-index: $toolbar-card-z-index;
     margin: 0;
 
     &.fs-edit {
