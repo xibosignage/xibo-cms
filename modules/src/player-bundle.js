@@ -20,7 +20,6 @@
  */
 
 /* eslint-disable no-unused-vars */
-window.feature = require('feature.js');
 window.jQuery = window.$ = require('jquery');
 require('babel-polyfill');
 window.moment = require('moment');

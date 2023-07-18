@@ -118,8 +118,7 @@ jQuery.fn.extend({
       }
     }
 
-    const useTransforms = window.feature.cssTransform &&
-      window.feature.cssTransition;
+    const isAndroid = navigator.userAgent.indexOf('Android') > -1;
 
     // For each matched element
     this.each(function(_key, element) {
@@ -134,6 +133,10 @@ jQuery.fn.extend({
         options.effect === 'marqueeRight' ||
         options.effect === 'marqueeUp' ||
         options.effect === 'marqueeDown';
+
+      const isUseNewMarquee = options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown' ||
+        !isAndroid;
 
       // Reset the animation elements
       resetRenderElements($contentDiv);
@@ -221,7 +224,7 @@ jQuery.fn.extend({
       // How many pages to we need?
       // if there's no effect, we don't need any pages
       const numberOfPages =
-        (options.itemsPerPage > 0 && options.effect != 'none') ?
+        (options.itemsPerPage > 0 && options.effect !== 'none') ?
           Math.ceil(options.numItems / options.itemsPerPage) :
           options.numItems;
 
@@ -231,11 +234,8 @@ jQuery.fn.extend({
       let appendTo = $contentDiv;
 
       // Clear previous animation elements
-      if (isMarquee) {
-        // Destroy marquee plugin (only the new one supports destroying)
-        if (useTransforms) {
-          $contentDiv.marquee('destroy');
-        }
+      if (isMarquee && isUseNewMarquee) {
+        $contentDiv.marquee('destroy');
       } else {
         // Destroy cycle plugin
         $(element).find('.anim-cycle').cycle('destroy');
@@ -244,7 +244,7 @@ jQuery.fn.extend({
       // If we have animations
       // Loop around each of the items we have been given
       // and append them to this element (in a div)
-      if (options.effect != 'none') {
+      if (options.effect !== 'none') {
         for (let i = 0; i < items.length; i++) {
           // We don't add any pages for marquee
           if (!isMarquee) {
@@ -294,7 +294,7 @@ jQuery.fn.extend({
       //  speed (how fast we need to move)
       let marquee = false;
 
-      if (options.effect == 'none') {
+      if (options.effect === 'none') {
         // Do nothing
       } else if (!isMarquee) {
         // Make sure the speed is something sensible
@@ -308,7 +308,7 @@ jQuery.fn.extend({
 
         // If we only have 1 item, then
         // we are in trouble and need to duplicate it.
-        if ($(slides).length <= 1 && options.type == 'text') {
+        if ($(slides).length <= 1 && options.type === 'text') {
           // Change our slide tag to be the paragraphs inside
           slides = slides + ' p';
 
@@ -357,15 +357,15 @@ jQuery.fn.extend({
           log: false,
         });
       } else if (
-        options.effect == 'marqueeLeft' ||
-        options.effect == 'marqueeRight'
+        options.effect === 'marqueeLeft' ||
+        options.effect === 'marqueeRight'
       ) {
         marquee = true;
         options.direction =
-          ((options.effect == 'marqueeLeft') ? 'left' : 'right');
+          ((options.effect === 'marqueeLeft') ? 'left' : 'right');
 
         // Make sure the speed is something sensible
-        options.speed = (options.speed == 0) ? 1 : options.speed;
+        options.speed = (options.speed === 0) ? 1 : options.speed;
 
         // Stack the articles up and move them across the screen
         $(
@@ -380,15 +380,15 @@ jQuery.fn.extend({
           }
         });
       } else if (
-        options.effect == 'marqueeUp' ||
-        options.effect == 'marqueeDown'
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown'
       ) {
         // We want a marquee
         marquee = true;
-        options.direction = ((options.effect == 'marqueeUp') ? 'up' : 'down');
+        options.direction = ((options.effect === 'marqueeUp') ? 'up' : 'down');
 
         // Make sure the speed is something sensible
-        options.speed = (options.speed == 0) ? 1 : options.speed;
+        options.speed = (options.speed === 0) ? 1 : options.speed;
       }
 
       if (marquee) {
@@ -396,7 +396,7 @@ jQuery.fn.extend({
         const scroller = $('<div/>')
           .addClass('scroll');
 
-        if (useTransforms) {
+        if (isUseNewMarquee) {
           // in old marquee scroll delay is 85 milliseconds
           // options.speed is the scrollamount
           // which is the number of pixels per 85 milliseconds
@@ -435,7 +435,7 @@ jQuery.fn.extend({
 
         if (!options.pauseEffectOnStart) {
           // Set some options on the extra DIV and make it a marquee
-          if (useTransforms) {
+          if (isUseNewMarquee) {
             $contentDiv.find('.scroll').marquee();
           } else {
             $contentDiv.find('.scroll').overflowMarquee();

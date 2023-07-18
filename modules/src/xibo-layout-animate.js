@@ -27,21 +27,24 @@ jQuery.fn.extend({
     options = $.extend({}, defaults, options);
 
     this.each(function(_key, element) {
+      const isAndroid = navigator.userAgent.indexOf('Android') > -1;
       const $contentDiv = $(element);
       // Marquee effect
       if (
-        options.effect == 'marqueeLeft' ||
-        options.effect == 'marqueeRight' ||
-        options.effect == 'marqueeUp' ||
-        options.effect == 'marqueeDown'
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown'
       ) {
-        // Start marquee
-        if (window.feature.cssTransform && window.feature.cssTransition) {
-          $contentDiv.find('.scroll').marquee();
-        } else {
+        $contentDiv.find('.scroll').marquee();
+      } else if (
+        options.effect === 'marqueeLeft' ||
+        options.effect === 'marqueeRight'
+      ) {
+        if (isAndroid) {
           $contentDiv.find('.scroll').overflowMarquee();
+        } else {
+          $contentDiv.find('.scroll').marquee();
         }
-      } else if (options.effect != 'none') { // Cycle effect
+      } else if (options.effect !== 'none') { // Cycle effect
         // Resume effect
         $contentDiv.find('.anim-cycle').cycle('resume');
       }
