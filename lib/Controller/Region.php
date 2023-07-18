@@ -246,7 +246,8 @@ class Region extends Base
             $sanitizedParams->getInt('width', ['default' => 250]),
             $sanitizedParams->getInt('height', ['default' => 250]),
             $sanitizedParams->getInt('top', ['default' => 50]),
-            $sanitizedParams->getInt('left', ['default' => 50])
+            $sanitizedParams->getInt('left', ['default' => 50]),
+            $sanitizedParams->getInt('zIndex', ['default' => 0])
         );
 
         $layout->regions[] = $region;
@@ -570,6 +571,7 @@ class Region extends Base
             $region->left = $newCoordinates->left;
             $region->width = $newCoordinates->width;
             $region->height = $newCoordinates->height;
+            $region->zIndex = $newCoordinates->zIndex;
             $this->getLog()->debug('Set ' . $region);
         }
 

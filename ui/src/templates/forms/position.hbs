@@ -4,6 +4,10 @@
         {{> inputs/hidden id="name" value=regionName customClass="position-input" }}
     {{/eq}}
 
+    {{#ifCond zIndex '!=' undefined}}
+        {{> inputs/number value=zIndex id="zIndex" title="Layer" helpText="The z-index" min="0" customClass="position-input" }}
+    {{/ifCond}}
+
     {{#ifCond top '!=' undefined}}
         {{> inputs/number value=top id="top" title="Top" helpText="The top position" customClass="position-input" }}
     {{/ifCond}}
@@ -22,10 +26,6 @@
 
     {{#ifCond rotation '!=' undefined}}
         {{> inputs/number value=rotation id="rotation" title="Rotation" helpText="The rotation" customClass="position-input" }}
-    {{/ifCond}}
-
-    {{#ifCond zIndex '!=' undefined}}
-        {{> inputs/number value=zIndex id="zIndex" title="Layer" helpText="The z-index" customClass="position-input" }}
     {{/ifCond}}
 
     {{> button id="setFullScreen" type="btn-block btn-outline-primary inline-btn" name="Make this element full screen." }}

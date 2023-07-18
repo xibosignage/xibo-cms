@@ -133,8 +133,8 @@ Layout.prototype.createDataStructure = function(data) {
       newRegion.index = parseInt(region) + 1;
 
       // Check if new region has top layer and set it
-      (newRegion.index > lD.topLayer) &&
-        (lD.topLayer = newRegion.index);
+      (newRegion.zIndex > lD.topLayer) &&
+        (lD.topLayer = newRegion.zIndex);
 
       // Widgets
       const widgets = newRegion.playlists.widgets;

@@ -1354,11 +1354,12 @@ Viewer.prototype.renderElementContent = function(
       element.slotView = Number(element.slot) + 1;
     }
 
-    // If template can be rotated
-    // set container and element to have that info
-    if (template.canRotate) {
+    // If rotatable is updated, update moveable
+    if (template.canRotate != undefined) {
       element.canRotate = template.canRotate;
       $elementContainer.data('canRotate', element.canRotate);
+
+      this.updateMoveable(true);
     }
 
     // Render element with template
