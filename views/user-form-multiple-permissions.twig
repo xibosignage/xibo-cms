@@ -39,7 +39,6 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help.permissions }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, permissionsMultiFormSubmit("{{ randomId }}")
 {% endblock %}

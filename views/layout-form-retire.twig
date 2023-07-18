@@ -30,7 +30,6 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help.retire }}")
     {% trans "Delete" %}, XiboSwapDialog("{{ url_for("layout.delete.form", {id: layout.layoutId}) }}")
     {% trans "No" %}, XiboDialogClose()
     {% trans "Yes" %}, $("#layoutRetireForm").submit()

@@ -219,13 +219,6 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\Help' => function (ContainerInterface $c) {
-                $controller = new \Xibo\Controller\Help(
-                    $c->get('helpFactory')
-                );
-                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                return $controller;
-            },
             '\Xibo\Controller\IconDashboard' => function (ContainerInterface $c) {
                 $controller =  new \Xibo\Controller\IconDashboard();
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

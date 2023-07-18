@@ -214,7 +214,6 @@ class PlayerSoftware extends Base
         $this->getState()->template = 'playersoftware-form-delete';
         $this->getState()->setData([
             'version' => $version,
-            'help' => $this->getHelp()->link('Player Software', 'Delete')
         ]);
 
         return $this->render($request, $response);
@@ -300,7 +299,6 @@ class PlayerSoftware extends Base
         $this->getState()->template = 'playersoftware-form-edit';
         $this->getState()->setData([
             'version' => $version,
-            'help' => $this->getHelp()->link('Player Software', 'Edit')
         ]);
 
         return $this->render($request, $response);

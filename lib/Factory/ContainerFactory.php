@@ -226,7 +226,6 @@ class ContainerFactory
                 $controller->setSanitizer($c->get('sanitizerService'));
                 $controller->setState($c->get('state'));
                 $controller->setUser($c->get('user'));
-                $controller->setHelp($c->get('helpService'));
                 $controller->setConfig($c->get('configService'));
                 $controller->setView($c->get('view'));
                 $controller->setDispatcher($c->get('dispatcher'));

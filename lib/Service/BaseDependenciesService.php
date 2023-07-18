@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,7 +28,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\NullHelpService;
 use Xibo\Helper\NullSanitizer;
 use Xibo\Helper\NullView;
 use Xibo\Helper\SanitizerService;
@@ -50,11 +49,6 @@ class BaseDependenciesService
      * @var ApplicationState
      */
     private $state;
-
-    /**
-     * @var HelpServiceInterface
-     */
-    private $helpService;
 
     /**
      * @var ConfigServiceInterface
@@ -128,19 +122,6 @@ class BaseDependenciesService
     public function getUser(): User
     {
         return $this->user;
-    }
-
-    public function setHelp(HelpService $helpService)
-    {
-        $this->helpService = $helpService;
-    }
-
-    public function getHelp() : HelpService
-    {
-        if ($this->helpService === null) {
-            $this->helpService = new NullHelpService();
-        }
-        return $this->helpService;
     }
 
     public function setConfig(ConfigServiceInterface $configService)

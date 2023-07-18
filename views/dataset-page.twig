@@ -200,13 +200,6 @@
                                     table.ajax.reload();
                                     XiboDialogClose();
                                 }
-                            },
-                            help: {
-                                label: "{% trans "Help" %}",
-                                className: "default btn-bb-help",
-                                callback: function() {
-                                    XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
-                                }
                             }
                         }
                     }).on('shown.bs.modal', function() {

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
@@ -140,10 +139,6 @@ class Logging extends Base
 
         $this->getState()->template = 'log-form-truncate';
         $this->getState()->autoSubmit = $this->getAutoSubmit('truncateForm');
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('Log', 'Truncate')
-        ]);
-
         return $this->render($request, $response);
     }
 

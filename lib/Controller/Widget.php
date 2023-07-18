@@ -525,7 +525,6 @@ class Widget extends Base
             'widgetId' => $id,
             'module' => $module,
             'error' => $error,
-            'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
 
         return $this->render($request, $response);
@@ -655,7 +654,6 @@ class Widget extends Base
                     array('id' => 'NW', 'name' => __('North West'))
                 )
             ],
-            'help' => $this->getHelp()->link('Transition', 'Edit')
         ]);
 
         return $this->render($request, $response);

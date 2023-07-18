@@ -764,11 +764,6 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'system',
                     'title' => __('Page which allows for Task Management for the platform')
                 ],
-                'help.view' => [
-                    'feature' => 'help.view',
-                    'group' => 'system',
-                    'title' => __('Page which allows for Help Link Management for the platform')
-                ],
                 'report.view' => [
                     'feature' => 'report.view',
                     'group' => 'reporting',

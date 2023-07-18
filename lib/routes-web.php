@@ -595,16 +595,6 @@ $app->get('/fault/view', ['\Xibo\Controller\Fault','displayPage'])
 $app->get('/license/view', ['\Xibo\Controller\Login','about'])->setName('license.view');
 
 //
-// help
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/help/view', ['\Xibo\Controller\Help','displayPage'])->setName('help.view');
-    $group->get('/help/form/add', ['\Xibo\Controller\Help','addForm'])->setName('help.add.form');
-    $group->get('/help/form/edit/{id}', ['\Xibo\Controller\Help','editForm'])->setName('help.edit.form');
-    $group->get('/help/form/delete/{id}', ['\Xibo\Controller\Help','deleteForm'])->setName('help.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['help.view']));
-
-//
 // Reporting
 //
 $app->get('/report/view', ['\Xibo\Controller\Stats','displayReportPage'])

@@ -342,9 +342,6 @@ class Applications extends Base
     public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'applications-form-add';
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('Services', 'Register')
-        ]);
 
         return $this->render($request, $response);
     }
@@ -393,7 +390,6 @@ class Applications extends Base
             'client' => $client,
             'scopes' => $scopes,
             'users' => $this->userFactory->query(),
-            'help' => $this->getHelp()->link('Services', 'Register')
         ]);
 
         return $this->render($request, $response);
@@ -422,7 +418,6 @@ class Applications extends Base
         $this->getState()->template = 'applications-form-delete';
         $this->getState()->setData([
             'client' => $client,
-            'help' => $this->getHelp()->link('Services', 'Register')
         ]);
 
         return $this->render($request, $response);

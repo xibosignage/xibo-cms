@@ -113,7 +113,6 @@ class Region extends Base
             'region' => $region,
             'layout' => $this->layoutFactory->getById($region->layoutId),
             'transitions' => $this->transitionData(),
-            'help' => $this->getHelp()->link('Region', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -141,7 +140,6 @@ class Region extends Base
         $this->getState()->setData([
             'region' => $region,
             'layout' => $this->layoutFactory->getById($region->layoutId),
-            'help' => $this->getHelp()->link('Region', 'Delete')
         ]);
 
         return $this->render($request, $response);

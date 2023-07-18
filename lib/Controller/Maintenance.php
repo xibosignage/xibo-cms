@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -72,10 +72,6 @@ class Maintenance extends Base
     public function tidyLibraryForm(Request $request, Response $response)
     {
         $this->getState()->template = 'maintenance-form-tidy';
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('Settings', 'TidyLibrary')
-        ]);
-
         return $this->render($request, $response);
     }
 

@@ -831,7 +831,6 @@ class Schedule extends Base
             'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
-            'help' => $this->getHelp()->link('Schedule', 'Add'),
             'reminders' => [],
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
@@ -1370,7 +1369,6 @@ class Schedule extends Base
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
             'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
-            'help' => $this->getHelp()->link('Schedule', 'Edit'),
             'reminders' => $scheduleReminders,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
@@ -1411,7 +1409,6 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-recurrence-form-delete';
         $this->getState()->setData([
             'event' => $schedule,
-            'help' => $this->getHelp()->link('Schedule', 'Delete'),
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
         ]);
@@ -1955,7 +1952,6 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-delete';
         $this->getState()->setData([
             'event' => $schedule,
-            'help' => $this->getHelp()->link('Schedule', 'Delete')
         ]);
 
         return $this->render($request,$response);

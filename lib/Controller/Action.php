@@ -496,7 +496,6 @@ class Action  extends Base
 
         $this->getState()->template = 'action-form-edit';
         $this->getState()->setData([
-            'help' => $this->getHelp()->link('Action', 'Edit'),
             'action' => $action,
             'source' => $action->source,
             'regions' => $layout->regions,

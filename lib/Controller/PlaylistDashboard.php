@@ -248,7 +248,6 @@ class PlaylistDashboard extends Base
         $this->getState()->template = 'playlist-module-form-delete';
         $this->getState()->setData([
             'widget' => $widget,
-            'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
 
         return $this->render($request, $response);

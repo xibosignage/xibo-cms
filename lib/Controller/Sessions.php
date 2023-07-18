@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SessionFactory;
@@ -132,7 +131,6 @@ class Sessions extends Base
         $this->getState()->template = 'sessions-form-confirm-logout';
         $this->getState()->setData([
             'sessionId' => $id,
-            'help' => $this->getHelp()->link('Sessions', 'Logout')
         ]);
 
         return $this->render($request, $response);

@@ -272,7 +272,6 @@ class Layout extends Base
             'users' => $this->userFactory->query(),
             'modules' => $moduleFactory->getAssignableModules(),
             'timeZones' => $timeZones,
-            'help' => $this->getHelp()->link('Layout', 'Edit'),
         ];
 
         // Call the render the template
@@ -929,9 +928,6 @@ class Layout extends Base
 
         $data = [
             'layout' => $layout,
-            'help' => [
-                'delete' => $this->getHelp()->link('Layout', 'Delete')
-            ]
         ];
 
         $this->getState()->template = 'layout-form-delete';
@@ -962,9 +958,6 @@ class Layout extends Base
 
         $data = [
             'layout' => $layout,
-            'help' => [
-                'delete' => $this->getHelp()->link('Layout', 'Retire')
-            ]
         ];
 
         $this->getState()->template = 'layout-form-retire';
@@ -1115,7 +1108,6 @@ class Layout extends Base
 
         $data = [
             'layout' => $layout,
-            'help' => $this->getHelp()->link('Layout', 'Retire')
         ];
 
         $this->getState()->template = 'layout-form-unretire';
@@ -1273,7 +1265,6 @@ class Layout extends Base
 
         $data = [
             'layout' => $layout,
-            'help' => $this->getHelp()->link('Layout', 'EnableStat')
         ];
 
         $this->getState()->template = 'layout-form-setenablestat';
@@ -1929,7 +1920,6 @@ class Layout extends Base
         $this->getState()->setData([
             'layout' => $layout,
             'tagString' => $layout->getTagString(),
-            'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -1974,7 +1964,6 @@ class Layout extends Base
             'resolutions' => $this->resolutionFactory->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
             'backgroundId' => $backgroundId,
             'backgrounds' => $backgrounds,
-            'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -2003,7 +1992,6 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-copy';
         $this->getState()->setData([
             'layout' => $layout,
-            'help' => $this->getHelp()->link('Layout', 'Copy')
         ]);
 
         return $this->render($request, $response);

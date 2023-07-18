@@ -420,7 +420,6 @@ class Template extends Base
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
             'layout' => $layout,
-            'help' => $this->getHelp()->link('Template', 'Add')
         ]);
 
         return $this->render($request, $response);
@@ -685,7 +684,6 @@ class Template extends Base
         $this->getState()->template = 'template-form-add';
         $this->getState()->setData([
             'resolutions' => $this->resolutionFactory->query(['resolution']),
-            'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
 
         return $this->render($request, $response);
@@ -715,7 +713,6 @@ class Template extends Base
         $this->getState()->template = 'template-form-edit';
         $this->getState()->setData([
             'layout' => $template,
-            'help' => $this->getHelp()->link('Template', 'Edit')
         ]);
 
         return $this->render($request, $response);

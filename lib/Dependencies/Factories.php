@@ -201,11 +201,6 @@ class Factories
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
-            'helpFactory' => function (ContainerInterface $c) {
-                $repository = new \Xibo\Factory\HelpFactory();
-                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
-                return $repository;
-            },
             'layoutFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\LayoutFactory(
                     $c->get('user'),

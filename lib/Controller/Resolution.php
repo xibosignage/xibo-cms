@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -192,10 +192,6 @@ class Resolution extends Base
     function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'resolution-form-add';
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('Resolution', 'Add')
-        ]);
-
         return $this->render($request, $response);
     }
 
@@ -221,7 +217,6 @@ class Resolution extends Base
         $this->getState()->template = 'resolution-form-edit';
         $this->getState()->setData([
             'resolution' => $resolution,
-            'help' => $this->getHelp()->link('Resolution', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -249,7 +244,6 @@ class Resolution extends Base
         $this->getState()->template = 'resolution-form-delete';
         $this->getState()->setData([
             'resolution' => $resolution,
-            'help' => $this->getHelp()->link('Resolution', 'Delete')
         ]);
 
         return $this->render($request, $response);

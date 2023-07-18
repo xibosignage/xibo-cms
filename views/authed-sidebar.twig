@@ -148,7 +148,7 @@
 
         {% endif %}
 
-        {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view", "help.view"]) %}
+        {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view"]) %}
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Advanced" %}</a></li>
 
@@ -167,19 +167,6 @@
             {% if currentUser.featureEnabled("fault.view") %}
                 <li class="sidebar-list"><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
             {% endif %}
-
-            {% if currentUser.featureEnabled("help.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("help.view") }}">{% trans "Help Links" %}</a></li>
-            {% endif %}
         {% endif %}
     </ul>
-
-    <div class="sidebar-footer row">
-        <div class="col-sm-6">
-            <a class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
-        </div>
-        <div class="col-sm-6">
-            <a href="{{ helpService.address() }}" target="_blank" title="{% trans "Open the Manual in a new Window" %}">{% trans "Manual" %}</a>
-        </div>
-    </div>
 </div>

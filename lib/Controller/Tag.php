@@ -272,10 +272,6 @@ class Tag extends Base
     public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'tag-form-add';
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('Tags', 'Add')
-        ]);
-
         return $this->render($request, $response);
     }
 
@@ -430,7 +426,6 @@ class Tag extends Base
         $this->getState()->setData([
             'tag' => $tag,
             'options' => $tagOptions,
-            'help' => $this->getHelp()->link('Tags', 'Add')
         ]);
 
         return $this->render($request, $response);
@@ -571,7 +566,6 @@ class Tag extends Base
         $this->getState()->template = 'tag-form-delete';
         $this->getState()->setData([
             'tag' => $tag,
-            'help' => $this->getHelp()->link('Tag', 'Delete')
         ]);
 
         return $this->render($request, $response);

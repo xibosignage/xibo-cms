@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -211,7 +211,6 @@ class DataSetColumn extends Base
             'dataSet' => $dataSet,
             'dataTypes' => $this->dataTypeFactory->query(),
             'dataSetColumnTypes' => $this->dataSetColumnTypeFactory->query(),
-            'help' => $this->getHelp()->link('DataSet', 'AddColumn')
         ]);
 
         return $this->render($request, $response);
@@ -417,7 +416,6 @@ class DataSetColumn extends Base
             'dataSetColumn' => $this->dataSetColumnFactory->getById($colId),
             'dataTypes' => $this->dataTypeFactory->query(),
             'dataSetColumnTypes' => $this->dataSetColumnTypeFactory->query(),
-            'help' => $this->getHelp()->link('DataSet', 'EditColumn')
         ]);
 
         return $this->render($request, $response);
@@ -623,7 +621,6 @@ class DataSetColumn extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'dataSetColumn' => $this->dataSetColumnFactory->getById($colId),
-            'help' => $this->getHelp()->link('DataSet', 'DeleteColumn')
         ]);
 
         return $this->render($request, $response);

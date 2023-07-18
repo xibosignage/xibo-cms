@@ -30,7 +30,6 @@
 {% block callBack %}setupScheduleForm{% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Delete" %}, XiboSwapDialog("{{ url_for("schedule.delete.form", {id: event.eventId}) }}")
     {% trans "Save" %}, beforeSubmitScheduleForm($("#scheduleEditForm"))

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -125,7 +125,6 @@ class Transition extends Base
         $this->getState()->template = 'transition-form-edit';
         $this->getState()->setData([
             'transition' => $transition,
-            'help' => $this->getHelp()->link('Transition', 'Edit')
         ]);
 
         return $this->render($request, $response);
