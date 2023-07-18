@@ -102,6 +102,26 @@
                         {% block pageFooter %}{% endblock %}
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% set helpLinks = helpService.getLinksForPage(route) %}
+                        {% if helpLinks|length > 0 %}
+                            <div class="card" style="width: 18rem;">
+                                <div class="card-header">
+                                    {{ "Help"|trans }}
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    {% for link in helpLinks %}
+                                        <li class="list-group-item">{{ link.title }}</li>
+                                    {% endfor %}
+                                </ul>
+                                <div class="card-footer">
+                                    <a href="{{ helpService.getLandingPage() }}" target="_blank">{{ "Visit the user manual"|trans }}</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

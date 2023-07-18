@@ -22,6 +22,8 @@
 
 namespace Xibo\Service;
 
+use Xibo\Entity\HelpLink;
+
 /**
  * Class HelpService
  * @package Xibo\Service
@@ -29,7 +31,9 @@ namespace Xibo\Service;
 class HelpService implements HelpServiceInterface
 {
     /** @var string */
-    private $helpBase;
+    private string $helpBase;
+
+    private ?array $links = null;
 
     /**
      * @inheritdoc
@@ -46,6 +50,30 @@ class HelpService implements HelpServiceInterface
 
     public function getLinksForPage(string $pageName): array
     {
-        return [];
+        if ($this->links === null) {
+            $this->loadLinks();
+        }
+        return $this->links[$pageName] ?? [];
+    }
+
+    private function loadLinks(): void
+    {
+        // Load links from file.
+        if (file_exists(PROJECT_ROOT . '/custom/help-links.json')) {
+            $links = json_decode(file_get_contents(PROJECT_ROOT . '/custom/help-links.json'), true);
+        } else if (file_exists(PROJECT_ROOT . '/help-links.json')) {
+            // TODO: pull these in from the manual on build.
+            $links = json_decode(file_get_contents(PROJECT_ROOT . '/help-links.json'), true);
+        } else {
+            $this->links = [];
+            return;
+        }
+
+        // Parse links.
+        foreach ($links as $pageName => $page) {
+            foreach ($page as $link) {
+                $this->links[$pageName][] = new HelpLink($link);
+            }
+        }
     }
 }

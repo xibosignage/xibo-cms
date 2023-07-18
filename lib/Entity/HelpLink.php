@@ -30,7 +30,16 @@ class HelpLink implements \JsonSerializable
     public $title;
     public $summary;
     public $link;
-    public $parent;
+
+    /**
+     * @param $array
+     */
+    public function __construct($array)
+    {
+        $this->title = $array['title'] ?? '';
+        $this->summary = $array['summary'] ?? '';
+        $this->link = $array['link'] ?? '';
+    }
 
     public function jsonSerialize(): array
     {
@@ -38,7 +47,6 @@ class HelpLink implements \JsonSerializable
             'title' => $this->title,
             'summary' => $this->summary,
             'link' => $this->link,
-            'parent' => $this->parent,
         ];
     }
 }
