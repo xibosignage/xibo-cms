@@ -9,8 +9,8 @@
                 <div class="tab-pane active" id="generalTab">
                     {{> inputs/hidden id="type" value=region.type customClass="region-input" }}
                     {{> inputs/text value=region.name id="name" title="Name" helpText="An optional name for this widget" customClass="region-input" }}
-                    {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this region should it loop?" customClass="region-input" }}
                     {{> inputs/text value=region.syncKey id="syncKey" title="Content Synchronisation Key" helpText="If this layout is scheduled using a synchronised event, this key will be used to match with other layouts in the same event." customClass="region-input" }}
+                    {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this region should it loop?" customClass="region-input" }}
                     {{> inputs/message messageType="info" title="When should the Region Loop be enabled?"}}
                     {{> inputs/message messageType="info" title="* If your Region contains more than one Widget, Loop should not be enabled."}}
                     {{> inputs/message messageType="info" title="* If your Region contains one Widget, and that Widget is a 'fixed' item (eg Text), Loop should not be enabled."}}
