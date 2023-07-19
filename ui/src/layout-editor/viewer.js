@@ -1401,7 +1401,9 @@ Viewer.prototype.renderElementContent = function(
       }
 
       // Get element data from widget
-      element.getData().then((elData) => {
+      element.getData().then((elementData) => {
+        const elData = elementData?.data;
+        const meta = elementData?.meta;
         // Check all data elements and make replacements
         for (const key in elData) {
           if (elData.hasOwnProperty(key)) {
@@ -1427,25 +1429,34 @@ Viewer.prototype.renderElementContent = function(
         const extendOverrideKey = template?.extends?.override || null;
         const extendWithDataKey = template?.extends ?
           transformer.getExtendedDataKey(template.extends.with) : null;
+        const metaKey = (meta && transformer?.extends) ? transformer
+          .getExtendedDataKey(template.extends.with, 'meta.') : null;
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
         const hasElementParseDataFn = typeof elementParseDataFn === 'function';
         const isInData = extendOverrideKey !== null &&
           elData && elData.hasOwnProperty(extendOverrideKey);
+        const isInMeta = metaKey !== null &&
+          meta.hasOwnProperty(metaKey);
 
         if (extendWithDataKey !== null) {
           if (isInData) {
             convertedProperties[extendOverrideKey] = elData[extendOverrideKey];
+          } else if (isInMeta) {
+            convertedProperties[extendOverrideKey] = meta[metaKey];
           } else {
             convertedProperties[extendOverrideKey] = elData[extendWithDataKey];
           }
         }
 
-        if (extendWithDataKey !== null) {
+        if (extendWithDataKey !== null || metaKey !== null) {
           if (template.onElementParseData && hasElementParseDataFn) {
             convertedProperties[extendOverrideKey] = elementParseDataFn(
               isInData ?
                 elData[extendOverrideKey] :
-                elData[extendWithDataKey],
+                isInMeta ?
+                  meta[metaKey] :
+                  elData[extendWithDataKey],
+              convertedProperties,
             );
           }
         } else {
@@ -1483,6 +1494,7 @@ Viewer.prototype.renderElementContent = function(
             $elementContainer.find('.element-content'),
             [],
             convertedProperties,
+            meta,
           );
         }
 

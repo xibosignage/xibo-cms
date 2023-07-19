@@ -231,8 +231,14 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $this->currentDay->visibilityDistanceUnit = $unit['visibilityUnit'] ?: 'km';
         $this->processItemIntoDay($this->currentDay, $data['current'], $units, true);
 
+        $countForecast = 0;
         // Process each day into a forecast
         foreach ($data['daily'] as $dayItem) {
+            // Skip first item as this is the currentDay
+            if ($countForecast++ === 0) {
+                continue;
+            }
+
             $day = new Forecast();
             $day->temperatureUnit = $this->currentDay->temperatureUnit;
             $day->windSpeedUnit = $this->currentDay->windSpeedUnit;

@@ -243,11 +243,11 @@ Element.prototype.getData = function() {
       resolve();
     } else {
       const slot = self.slot ? self.slot : 0;
-      parentWidget.getData().then((data) => {
+      parentWidget.getData().then(({data, meta}) => {
         // Resolve the promise with the data
         // If slot is outside the data array
         // restart from 0
-        resolve(data[slot % data.length]);
+        resolve({data: data[slot % data.length], meta});
       });
     }
   });

@@ -936,13 +936,16 @@ Widget.prototype.getData = function() {
             self.cachedDataPromise = null;
 
             // Resolve the promise with the data
-            self.cachedData = modulesList[i].sampleData;
+            self.cachedData = {
+              data: modulesList[i].sampleData,
+              meta: data?.meta || {},
+            };
             resolve(self.cachedData);
           }
         }
       } else if (data.data.length > 0) {
         // Return the item
-        self.cachedData = data.data;
+        self.cachedData = {data: data.data, meta: data?.meta || {}};
       }
 
       // Clear cached promise
