@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -30,12 +30,9 @@ class CreateStatTableMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-
         // If stat table exists then rename it
-        if($this->hasTable('stat'))  {
-
-            $statTable = $this->table('stat');
-            $statTable->rename('stat_archive');
+        if ($this->hasTable('stat')) {
+            $this->table('stat')->rename('stat_archive')->save();
         }
 
         // Create stat table

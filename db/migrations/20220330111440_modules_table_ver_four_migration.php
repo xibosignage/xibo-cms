@@ -32,7 +32,7 @@ class ModulesTableVerFourMigration extends AbstractMigration
     public function change()
     {
         // Rename the old table.
-        $this->table('module')->rename('module_old');
+        $this->table('module')->rename('module_old')->save();
 
         // Add our new table
         $this->table('module', ['id' => false, 'primary_key' => ['moduleId']])
@@ -78,7 +78,7 @@ class ModulesTableVerFourMigration extends AbstractMigration
             $this->execute('DELETE FROM `module` WHERE moduleId = \'core-datasetview\'');
 
             // Drop the old table
-            $this->dropTable('module_old');
+            $this->table('module_old')->drop()->save();
 
             // Add more v4 modules
 

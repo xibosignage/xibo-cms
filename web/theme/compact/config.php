@@ -27,6 +27,6 @@ $config = array(
     'app_name' => 'Xibo',
     'theme_url' => 'https://xibosignage.com',
     'cms_source_url' => 'https://github.com/xibosignage/xibo/',
-    'cms_install_url' => 'https://xibosignage.com/manual/en/install_windows_client.html',
-    'cms_release_notes_url' => 'https://xibosignage.com/manual/en/release_notes.html'
+    'cms_install_url' => 'manual/en/install_cms.html',
+    'cms_release_notes_url' => 'manual/en/release_notes.html',
 );

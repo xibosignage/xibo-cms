@@ -1,5 +1,24 @@
 <?php
-
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 use Phinx\Migration\AbstractMigration;
 
@@ -65,12 +84,12 @@ class OldUpgradeStep120Migration extends AbstractMigration
                 $this->execute('INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 9, dataSetId, view, edit, del FROM `lkdatasetgroup`;');
                 $this->execute('INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 3, displayGroupId, view, edit, del FROM `lkdisplaygroupgroup`;');
 
-                $this->dropTable('lkpagegroup');
-                $this->dropTable('lkmenuitemgroup');
-                $this->dropTable('lkcampaigngroup');
-                $this->dropTable('lkmediagroup');
-                $this->dropTable('lkdatasetgroup');
-                $this->dropTable('lkdisplaygroupgroup');
+                $this->table('lkpagegroup')->drop()->save();
+                $this->table('lkmenuitemgroup')->drop()->save();
+                $this->table('lkcampaigngroup')->drop()->save();
+                $this->table('lkmediagroup')->drop()->save();
+                $this->table('lkdatasetgroup')->drop()->save();
+                $this->table('lkdisplaygroupgroup')->drop()->save();
 
                 $pages = $this->table('pages');
                 $pages
@@ -100,9 +119,9 @@ class OldUpgradeStep120Migration extends AbstractMigration
                 $this->execute('UPDATE `pages` SET `title` = \'Home\' WHERE  `pages`.`name` = \'index\';');
                 $this->execute('UPDATE `pages` SET `title` = \'Audit Trail\' WHERE  `pages`.`name` = \'auditlog\';');
 
-                $this->dropTable('menuitem');
-                $this->dropTable('menu');
-                $this->dropTable('pagegroup');
+                $this->table('menuitem')->drop()->save();
+                $this->table('menu')->drop()->save();
+                $this->table('pagegroup')->drop()->save();
 
                 $layout = $this->table('layout');
                 $layout->addColumn('width', 'decimal')
@@ -175,10 +194,10 @@ class OldUpgradeStep120Migration extends AbstractMigration
                     ->addForeignKey('widgetId', 'widget', 'widgetId')
                     ->save();
 
-                $this->dropTable('oauth_log');
-                $this->dropTable('oauth_server_nonce');
-                $this->dropTable('oauth_server_token');
-                $this->dropTable('oauth_server_registry');
+                $this->table('oauth_log')->drop()->save();
+                $this->table('oauth_server_nonce')->drop()->save();
+                $this->table('oauth_server_token')->drop()->save();
+                $this->table('oauth_server_registry')->drop()->save();
 
                 // New oAuth tables
                 $oauthClients = $this->table('oauth_clients', ['id' => false, 'primary_key' => ['id']]);
@@ -261,7 +280,7 @@ class OldUpgradeStep120Migration extends AbstractMigration
                     ->addForeignKey('scope', 'oauth_scopes', 'id', ['delete' => 'CASCADE'])
                     ->save();
 
-                $this->dropTable('file');
+                $this->table('file')->drop()->save();
 
                 $this->execute('TRUNCATE TABLE `xmdsnonce`;');
                 $this->execute('RENAME TABLE `xmdsnonce` TO `requiredfile`;');
@@ -288,7 +307,7 @@ class OldUpgradeStep120Migration extends AbstractMigration
                 $this->execute('INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES (\'5\', \'Library Image\');');
                 $this->execute('UPDATE  `datatype` SET  `DataType` =  \'External Image\' WHERE  `datatype`.`DataTypeID` =4 AND  `datatype`.`DataType` =  \'Image\' LIMIT 1 ;');
 
-                $this->dropTable('lkdatasetlayout');
+                $this->table('lkdatasetlayout')->drop()->save();
 
                 $this->execute('CREATE TABLE `temp_lkmediadisplaygroup` AS SELECT `mediaid` ,`displaygroupid` FROM `lkmediadisplaygroup` WHERE 1 GROUP BY `mediaid` ,`displaygroupid`;');
                 $this->execute('DROP TABLE `lkmediadisplaygroup`;');

@@ -104,9 +104,12 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
         }
 
         // we are finally done
+        if ($this->checkIndexExists('player_software', 'player_software_ibfk_1')) {
+            $table->removeIndexByName('player_software_ibfk_1');
+        }
+
         // remove mediaId column and index/key
         $table
-            ->removeIndexByName('player_software_ibfk_1')
             ->dropForeignKey('mediaId')
             ->removeColumn('mediaId')
             ->save();
@@ -115,5 +118,25 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
         $this->execute('DELETE FROM `media` WHERE media.type = \'playersoftware\'');
         // delete module record for playersoftware
         $this->execute('DELETE FROM `module` WHERE `module`.moduleId = \'core-playersoftware\'');
+    }
+
+    /**
+     * Check if an index exists
+     * @param string $table
+     * @param $indexName
+     * @return bool
+     */
+    private function checkIndexExists($table, $indexName): bool
+    {
+        // Use the information schema to see if the index exists or not.
+        // all users have permission to the information schema
+        $sql = '
+          SELECT * 
+            FROM INFORMATION_SCHEMA.STATISTICS 
+           WHERE `table_schema` = DATABASE() 
+            AND `table_name` = \'' . $table . '\' 
+            AND `index_name` = \'' . $indexName . '\'';
+
+        return count($this->fetchAll($sql)) > 0;
     }
 }

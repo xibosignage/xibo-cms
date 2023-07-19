@@ -30,6 +30,6 @@ class RemoveHelpLinksMigration extends AbstractMigration
 {
     public function change(): void
     {
-        $this->dropTable('help');
+        $this->table('help')->drop()->save();
     }
 }
