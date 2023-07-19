@@ -29,7 +29,8 @@ class HelpLink implements \JsonSerializable
 {
     public $title;
     public $summary;
-    public $link;
+    public $url;
+    public $isAllowWhitelabel;
 
     /**
      * @param $array
@@ -38,7 +39,8 @@ class HelpLink implements \JsonSerializable
     {
         $this->title = $array['title'] ?? '';
         $this->summary = $array['summary'] ?? '';
-        $this->link = $array['link'] ?? '';
+        $this->url = $array['url'] ?? '';
+        $this->isAllowWhitelabel = $array['isAllowWhitelabel'] ?? true;
     }
 
     public function jsonSerialize(): array
@@ -46,7 +48,8 @@ class HelpLink implements \JsonSerializable
         return [
             'title' => $this->title,
             'summary' => $this->summary,
-            'link' => $this->link,
+            'url' => $this->url,
+            'isAllowWhitelabel' => $this->isAllowWhitelabel,
         ];
     }
 }

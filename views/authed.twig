@@ -102,29 +102,38 @@
                         {% block pageFooter %}{% endblock %}
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-12">
-                        {% set helpLinks = helpService.getLinksForPage(route) %}
-                        {% if helpLinks|length > 0 %}
-                            <div class="card" style="width: 18rem;">
-                                <div class="card-header">
-                                    {{ "Help"|trans }}
-                                </div>
-                                <ul class="list-group list-group-flush">
-                                    {% for link in helpLinks %}
-                                        <li class="list-group-item">{{ link.title }}</li>
-                                    {% endfor %}
-                                </ul>
-                                <div class="card-footer">
-                                    <a href="{{ helpService.getLandingPage() }}" target="_blank">{{ "Visit the user manual"|trans }}</a>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
             </div>
         </div>
     </div>
+
+    {% set helpLinks = helpService.getLinksForPage(route) %}
+    {% set isXiboThemed = theme.getThemeConfig("app_name") == "Xibo" %}
+    {% if helpLinks|length > 0 %}
+        <div id="help-pane" class="help-pane">
+            <div class="card help-pane-card">
+                <div class="card-header">{{ "Help"|trans }} <i class="close-icon fa fa-times"></i></div>
+                <ul class="list-group list-group-flush">
+                    {% for link in helpLinks %}
+                        {% if link.isAllowWhiteLabel or isXiboThemed %}
+                            <li class="list-group-item">
+                                <a href="{{ link.url }}" target="_blank">{{ link.title }}</a>
+                                {% if link.summary %}
+                                    <br/>
+                                    {{ link.summary|raw }}
+                                {% endif %}
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                <div class="card-footer">
+                    <a href="{{ helpService.getLandingPage() }}" target="_blank">{{ "Visit the user manual"|trans }}</a>
+                </div>
+            </div>
+            <div class="help-pane-icon">
+                <i class="fa fa-question-circle"></i>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block javaScriptTemplates %}

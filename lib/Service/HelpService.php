@@ -22,6 +22,8 @@
 
 namespace Xibo\Service;
 
+use Illuminate\Support\Str;
+use Symfony\Component\Yaml\Yaml;
 use Xibo\Entity\HelpLink;
 
 /**
@@ -59,20 +61,32 @@ class HelpService implements HelpServiceInterface
     private function loadLinks(): void
     {
         // Load links from file.
-        if (file_exists(PROJECT_ROOT . '/custom/help-links.json')) {
-            $links = json_decode(file_get_contents(PROJECT_ROOT . '/custom/help-links.json'), true);
-        } else if (file_exists(PROJECT_ROOT . '/help-links.json')) {
-            // TODO: pull these in from the manual on build.
-            $links = json_decode(file_get_contents(PROJECT_ROOT . '/help-links.json'), true);
-        } else {
-            $this->links = [];
+        try {
+            if (file_exists(PROJECT_ROOT . '/custom/help-links.yaml')) {
+                $links = (array)Yaml::parseFile(PROJECT_ROOT . '/custom/help-links.yaml');
+            } else if (file_exists(PROJECT_ROOT . '/help-links.yaml')) {
+                // TODO: pull these in from the manual on build.
+                $links = (array)Yaml::parseFile(PROJECT_ROOT . '/help-links.yaml');
+            } else {
+                $this->links = [];
+                return;
+            }
+        } catch (\Exception) {
             return;
         }
 
         // Parse links.
         foreach ($links as $pageName => $page) {
             foreach ($page as $link) {
-                $this->links[$pageName][] = new HelpLink($link);
+                $helpLink = new HelpLink($link);
+                if (!Str::startsWith($helpLink->url, ['http://', 'https://'])) {
+                    $helpLink->url = $this->helpBase .= $helpLink->url;
+                }
+                if (!empty($helpLink->summary)) {
+                    $helpLink->summary = \Parsedown::instance()->line($helpLink->summary);
+                }
+
+                $this->links[$pageName][] = $helpLink;
             }
         }
     }
