@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,24 +27,24 @@ jQuery.fn.extend({
     options = $.extend({}, defaults, options);
 
     this.each(function(_key, element) {
+      const isAndroid = navigator.userAgent.indexOf('Android') > -1;
       const $contentDiv = $(element);
       // Marquee effect
       if (
-        options.effect == 'marqueeLeft' ||
-        options.effect == 'marqueeRight' ||
-        options.effect == 'marqueeUp' ||
-        options.effect == 'marqueeDown'
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown'
       ) {
-        // Android user agent?
-        const isAndroid = navigator.userAgent.indexOf('Android') > -1;
-
-        // Start marquee
-        if (!isAndroid) {
-          $contentDiv.find('.scroll').marquee();
-        } else {
+        $contentDiv.find('.scroll').marquee();
+      } else if (
+        options.effect === 'marqueeLeft' ||
+        options.effect === 'marqueeRight'
+      ) {
+        if (isAndroid) {
           $contentDiv.find('.scroll').overflowMarquee();
+        } else {
+          $contentDiv.find('.scroll').marquee();
         }
-      } else if (options.effect != 'none') { // Cycle effect
+      } else if (options.effect !== 'none') { // Cycle effect
         // Resume effect
         $contentDiv.find('.anim-cycle').cycle('resume');
       }

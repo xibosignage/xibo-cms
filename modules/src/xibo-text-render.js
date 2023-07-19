@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -118,6 +118,8 @@ jQuery.fn.extend({
       }
     }
 
+    const isAndroid = navigator.userAgent.indexOf('Android') > -1;
+
     // For each matched element
     this.each(function(_key, element) {
       // console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
@@ -131,6 +133,10 @@ jQuery.fn.extend({
         options.effect === 'marqueeRight' ||
         options.effect === 'marqueeUp' ||
         options.effect === 'marqueeDown';
+
+      const isUseNewMarquee = options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown' ||
+        !isAndroid;
 
       // Reset the animation elements
       resetRenderElements($contentDiv);
@@ -183,7 +189,7 @@ jQuery.fn.extend({
         options.numItems &&
         options.numItems > 0
       ) {
-        items = items.slice(0, options.numItems)
+        items = items.slice(0, options.numItems);
       }
 
       // Reverse the items again (so they are in the correct order)
@@ -218,7 +224,7 @@ jQuery.fn.extend({
       // How many pages to we need?
       // if there's no effect, we don't need any pages
       const numberOfPages =
-        (options.itemsPerPage > 0 && options.effect != 'none') ?
+        (options.itemsPerPage > 0 && options.effect !== 'none') ?
           Math.ceil(options.numItems / options.itemsPerPage) :
           options.numItems;
 
@@ -228,8 +234,7 @@ jQuery.fn.extend({
       let appendTo = $contentDiv;
 
       // Clear previous animation elements
-      if (isMarquee) {
-        // Destroy marquee plugin
+      if (isMarquee && isUseNewMarquee) {
         $contentDiv.marquee('destroy');
       } else {
         // Destroy cycle plugin
@@ -239,7 +244,7 @@ jQuery.fn.extend({
       // If we have animations
       // Loop around each of the items we have been given
       // and append them to this element (in a div)
-      if (options.effect != 'none') {
+      if (options.effect !== 'none') {
         for (let i = 0; i < items.length; i++) {
           // We don't add any pages for marquee
           if (!isMarquee) {
@@ -289,7 +294,7 @@ jQuery.fn.extend({
       //  speed (how fast we need to move)
       let marquee = false;
 
-      if (options.effect == 'none') {
+      if (options.effect === 'none') {
         // Do nothing
       } else if (!isMarquee) {
         // Make sure the speed is something sensible
@@ -303,7 +308,7 @@ jQuery.fn.extend({
 
         // If we only have 1 item, then
         // we are in trouble and need to duplicate it.
-        if ($(slides).length <= 1 && options.type == 'text') {
+        if ($(slides).length <= 1 && options.type === 'text') {
           // Change our slide tag to be the paragraphs inside
           slides = slides + ' p';
 
@@ -352,15 +357,15 @@ jQuery.fn.extend({
           log: false,
         });
       } else if (
-        options.effect == 'marqueeLeft' ||
-        options.effect == 'marqueeRight'
+        options.effect === 'marqueeLeft' ||
+        options.effect === 'marqueeRight'
       ) {
         marquee = true;
         options.direction =
-          ((options.effect == 'marqueeLeft') ? 'left' : 'right');
+          ((options.effect === 'marqueeLeft') ? 'left' : 'right');
 
         // Make sure the speed is something sensible
-        options.speed = (options.speed == 0) ? 1 : options.speed;
+        options.speed = (options.speed === 0) ? 1 : options.speed;
 
         // Stack the articles up and move them across the screen
         $(
@@ -375,36 +380,23 @@ jQuery.fn.extend({
           }
         });
       } else if (
-        options.effect == 'marqueeUp' ||
-        options.effect == 'marqueeDown'
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown'
       ) {
         // We want a marquee
         marquee = true;
-        options.direction = ((options.effect == 'marqueeUp') ? 'up' : 'down');
+        options.direction = ((options.effect === 'marqueeUp') ? 'up' : 'down');
 
         // Make sure the speed is something sensible
-        options.speed = (options.speed == 0) ? 1 : options.speed;
+        options.speed = (options.speed === 0) ? 1 : options.speed;
       }
 
       if (marquee) {
-        // Which marquee to use?
-        const nua = navigator.userAgent;
-        /* The intention was to allow Chrome
-          based android to benefit from the new marquee
-          unfortunately though, it doesn't appear to work.
-          Maybe this is due to Chrome verison?
-          Android tends to have quite an old version.
-                var isAndroid = ((nua.indexOf('Mozilla/5.0') > -1
-                    && nua.indexOf('Android') > -1
-                    && nua.indexOf('AppleWebKit') > -1)
-                    && !(nua.indexOf('Chrome') > -1));*/
-        const isAndroid = nua.indexOf('Android') > -1;
-
         // Create a DIV to scroll, and put this inside the body
         const scroller = $('<div/>')
           .addClass('scroll');
 
-        if (!isAndroid) {
+        if (isUseNewMarquee) {
           // in old marquee scroll delay is 85 milliseconds
           // options.speed is the scrollamount
           // which is the number of pixels per 85 milliseconds
@@ -413,6 +405,7 @@ jQuery.fn.extend({
             'data-is-legacy': false,
             'data-speed': options.speed / 25 * 1000,
             'data-direction': options.direction,
+            'data-duplicated': true,
             scaleFactor: options.scaleFactor,
           });
         } else {
@@ -442,7 +435,7 @@ jQuery.fn.extend({
 
         if (!options.pauseEffectOnStart) {
           // Set some options on the extra DIV and make it a marquee
-          if (!isAndroid) {
+          if (isUseNewMarquee) {
             $contentDiv.find('.scroll').marquee();
           } else {
             $contentDiv.find('.scroll').overflowMarquee();
