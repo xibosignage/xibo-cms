@@ -170,7 +170,7 @@ $content.append(currentContainerHTML);
 var bgDivHTML = $(target).find('.bg-div').prop('outerHTML');
 if (bgDivHTML) {
     // Make replacements [] with current day data
-    bgDivHTML = makeReplacement(bgDivHTML, items[0].currentDay);
+    bgDivHTML = makeReplacement(bgDivHTML, items[0]);
 
     // Replace bg-div with current day data
     $(target).find('.bg-div').replaceWith(bgDivHTML);
@@ -186,9 +186,6 @@ var forecastTemplateHTML = $(target).find('.forecast-day-template').html();
 // Get the number of days to show for the forecast
 var daysNum = $forecastContainer.data('days-num');
 
-// Get the offset of days to show for the forecast
-var daysOffset = $forecastContainer.data('days-offset');
-
 // Check if we have forecast days to add
 if (daysNum > 0) {
     // Empty container
@@ -196,16 +193,13 @@ if (daysNum > 0) {
 
     // Add the forecast days
     items.slice(1).forEach((day, index) => {
-        // Check if we are within the offset
-        if (index >= daysOffset) {
-            // Check if we are within the number of days
-            if (index < daysOffset + daysNum) {
-                // Make replacements [] with forecast day data
-                var forecastDayHTML = makeReplacement(forecastTemplateHTML, day);
+        // Check if we are within the number of days
+        if (index < daysNum) {
+            // Make replacements [] with forecast day data
+            var forecastDayHTML = makeReplacement(forecastTemplateHTML, day);
 
-                // Add forecast day to forecast container
-                $forecastContainer.append(forecastDayHTML);
-            }
+            // Add forecast day to forecast container
+            $forecastContainer.append(forecastDayHTML);
         }
     });
 }

@@ -4,12 +4,12 @@
  */
 const transformer = function() {
   return {
-    getExtendedDataKey: function(value) {
+    getExtendedDataKey: function(value, prefix = 'data.') {
       if (typeof value === 'undefined' || String(value).length === 0) {
         return null;
       }
 
-      const dataKeyPrefix = 'data.';
+      const dataKeyPrefix = prefix;
       const dataKey = String(value);
 
       if (!dataKey.includes(dataKeyPrefix)) {

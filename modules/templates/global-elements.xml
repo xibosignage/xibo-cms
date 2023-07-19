@@ -198,7 +198,7 @@
                 <title>Date</title>
                 <default></default>
             </property>
-            <property id="dateFormat" type="text">
+            <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
                 <default>DD/MM/YYYY HH:mm:ss</default>
             </property>

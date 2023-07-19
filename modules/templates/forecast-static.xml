@@ -255,7 +255,7 @@
                 <div class="big-day">[time|D]</div>
                 <div class="big-temp">[temperatureRound]&deg;[temperatureUnit]</div>
             </div>
-            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="4"></div>
             <div class="container-footer">
                 <div class="powered">[Attribution]</div>
             </div>
@@ -1194,7 +1194,7 @@ body {
                 <div class="row forecast-second">||Wind||: [windDirection] [windSpeed] [windSpeedUnit]</div>
                 <div class="row forecast-second">||Humidity||: [humidityPercent]%</div>
             </div>
-            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="4"></div>
             <div class="weather-col col-12 powered">[Attribution]</div>
         </div>
     </div>
@@ -1572,7 +1572,7 @@ h1 {
         </div>
 
         <div class="row row-details bg-footer text-center">
-            <div class="forecast-container" data-days-num="2" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="2"></div>
         </div>
     </div>
 </div>
@@ -2000,7 +2000,7 @@ body {
                 </div>
                 <div class="upcoming top-small">
                     <div class="weather-col col-12 text-center">
-                        <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+                        <div class="forecast-container" data-days-num="4"></div>
                     </div>
                 </div>
             </div>
@@ -2837,7 +2837,7 @@ body {
 </div>
     </div>
     <div class="row footer">
-        <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+        <div class="forecast-container" data-days-num="4"></div>
     </div>
 <div class="month shadowed powered">[Attribution]</div></div>
 </div>
@@ -3251,7 +3251,7 @@ body {
             </div>
         </div>
         <div class="row row-details text-center">
-            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="4"></div>
             <div class="powered">[Attribution]</div>
         </div>
     </div>
@@ -3762,7 +3762,7 @@ text-transform: uppercase;
                 <p class="selector-temp">[temperatureMeanRound] &deg; [temperatureUnit]</p>
             </div>
             <div class="upcoming">
-                <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+                <div class="forecast-container" data-days-num="4"></div>
             </div>
         </div>
     </div>
@@ -4231,7 +4231,7 @@ body {
             </div>
         </div>
         <div class="row bg-footer row-details text-center">
-            <div class="forecast-container" data-days-num="3" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="3"></div>
             <div class="weather-col col-12 powered">[Attribution]</div>
         </div>
     </div>
@@ -4721,7 +4721,7 @@ h1 {
                 <div class="small-icon"><i class="wi [wicon]"></i></div>
                 <div class="small-temp">[temperatureRound]&deg;[temperatureUnit]</div>
             </div>
-            <div class="forecast-container" data-days-num="3" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="3"></div>
         </div>
         <div class="arrow-down"></div>
 
@@ -5156,7 +5156,7 @@ body {
                 <div class="info2">||Humidity|| [humidityPercent]%</div>
                 <div class="powered">[Attribution]</div>
             </div>
-            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="4"></div>
         </div>
     </div>
 </div>
@@ -5494,7 +5494,7 @@ body {
                 <div class="info2">||Humidity|| [humidityPercent]%</div>
                 <div class="powered">[Attribution]</div>
             </div>
-            <div class="forecast-container" data-days-num="4" data-days-offset="1"></div>
+            <div class="forecast-container" data-days-num="4"></div>
         </div>
     </div>
 </div>
