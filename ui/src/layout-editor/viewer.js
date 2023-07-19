@@ -840,6 +840,11 @@ Viewer.prototype.renderRegion = function(
     widgetToLoad :
     region.widgets[Object.keys(region.widgets)[0]];
 
+  // If region is selected, update moveable
+  if (region.selected) {
+    this.selectElement($container);
+  }
+
   // If there's no widget, return
   if (!widget && !isPlaylist) {
     return;
@@ -882,11 +887,6 @@ Viewer.prototype.renderRegion = function(
   this.renderRequest = {
     target: $container,
   };
-
-  // If region is selected, update moveable
-  if (region.selected) {
-    this.selectElement($container);
-  }
 
   this.renderRequest.request = $.get(requestPath).done(function(res) {
     // Clear request var after response

@@ -125,8 +125,8 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     // Create new list with "other" modules
     if (
       el.assignable == 1 &&
-    el.regionSpecific == 0 &&
-    ['image', 'audio', 'video'].indexOf(el.type) == -1
+      el.regionSpecific == 0 &&
+      ['image', 'audio', 'video'].indexOf(el.type) == -1
     ) {
       moduleListOtherFiltered.push({
         type: el.type,
@@ -159,6 +159,21 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       dataType: '',
       regionSpecific: 1,
       group: [],
+    });
+  }
+
+  // Add zone to template edit mode
+  if (
+    lD.templateEditMode != undefined &&
+    lD.templateEditMode === true &&
+    !isPlaylist
+  ) {
+    moduleListFiltered.push({
+      moduleId: 'zone',
+      name: toolbarTrans.zone,
+      type: 'zone',
+      dataType: '',
+      target: 'layout',
     });
   }
 

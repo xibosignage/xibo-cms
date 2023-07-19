@@ -1,11 +1,12 @@
 // Imports
 @import "mixins";
 @import "variables";
+$fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
+@import "~@fortawesome/fontawesome-free/scss/brands";
+@import "~@fortawesome/fontawesome-free/scss/solid";
+@import "~@fortawesome/fontawesome-free/scss/fontawesome";
 $fa-font-path: "~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
-$fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
-@import "~@fortawesome/fontawesome-free/scss/fontawesome";
-@import "~@fortawesome/fontawesome-free/scss/brands";
 
 
 // CSS
@@ -228,91 +229,91 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
 // Font Awesome
 /* TODO: Module icons should be based on classes defined in the module XML */
 .module-icon-audio, .media-icon-audio {
-    @extend .fa-file-audio;
+    @extend .fa, .fa-file-audio;
 }
 
 .module-icon-calendar {
-    @extend .fa-calendar-o;
+    @extend .fa, .fa-calendar-o;
 }
 
 .module-icon-ics-calendar {
-    @extend .fa-calendar-alt;
+    @extend .fa, .fa-calendar-alt;
 }
 
 .module-icon-chart {
-    @extend .fa-pie-chart;
+    @extend .fa, .fa-pie-chart;
 }
 
 .module-icon-clock, .module-icon-clock-digital, .module-icon-clock-flip, .module-icon-clock-analogue {
-    @extend .fa-clock-o;
+    @extend .fa, .fa-clock-o;
 }
 
 .module-icon-countdown, .module-icon-countdown-days, .module-icon-countdown-table, .module-icon-countdown-text, .module-icon-countdown-clock {
-    @extend .fa-hourglass-o;
+    @extend .fa, .fa-hourglass-o;
 }
 
 .module-icon-currencies {
-    @extend .fa-line-chart;
+    @extend .fa, .fa-line-chart;
 }
 
 .module-icon-dataset {
-    @extend .fa-table;
+    @extend .fa, .fa-table;
 }
 
 .module-icon-embedded {
-    @extend .fa-code;
+    @extend .fa, .fa-code;
 }
 
 .module-icon-flash, .media-icon-flash {
-    @extend .fa-flash;
+    @extend .fa, .fa-flash;
 }
 
 .module-icon-forecastio {
-    @extend .fa-cloud;
+    @extend .fa, .fa-cloud;
 }
 
 .module-icon-googletraffic {
-    @extend .fa-car;
+    @extend .fa, .fa-car;
 }
 
 .module-icon-hls {
-    @extend .fa-video-camera;
+    @extend .fa, .fa-video-camera;
 }
 
 .module-icon-htmlpackage, .media-icon-htmlpackage {
-    @extend .fa-file-code-o;
+    @extend .fa, .fa-file-code-o;
 }
 
 .module-icon-image, .media-icon-image {
-    @extend .fa-file-image-o;
+    @extend .fa, .fa-file-image-o;
 }
 
 .module-icon-localvideo {
-    @extend .fa-file-video-o;
+    @extend .fa, .fa-file-video-o;
 }
 
 .module-icon-notificationview {
-    @extend .fa-bell-o;
+    @extend .fa, .fa-bell-o;
 }
 
 .module-icon-pdf, .media-icon-pdf {
-    @extend .fa-file-pdf-o;
+    @extend .fa, .fa-file-pdf-o;
 }
 
 .module-icon-playlist, .module-icon-subplaylist {
-    @extend .fa-list-ol;
+    @extend .fa, .fa-list-ol;
 }
 
 .module-icon-powerpoint, .media-icon-powerpoint {
-    @extend .fa-file-powerpoint-o;
+    @extend .fa, .fa-file-powerpoint-o;
 }
 
 .module-icon-shellcommand {
-    @extend .fa-terminal;
+    @extend .fa, .fa-terminal;
 }
 
 .module-icon-spacer {
-    @extend .fa-hourglass-o;
+    @extend .fa, .fa-hourglass-o;
 }
 
 .module-icon-mastodon {
@@ -320,105 +321,110 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
 }
 
 .module-icon-stocks {
-    @extend .fa-bar-chart;
+    @extend .fa, .fa-bar-chart;
 }
 
 .module-icon-text {
-    @extend .fa-font;
+    @extend .fa, .fa-font;
 }
 
 .module-icon-rss-ticker {
-    @extend .fa-rss;
+    @extend .fa, .fa-rss;
 }
 
 .module-icon-twitter {
-    @extend .fa-twitter;
+    @extend .fa, .fa-twitter;
 }
 
 .module-icon-twittermetro {
-    @extend .fa-twitter-square;
+    @extend .fa, .fa-twitter-square;
 }
 
 .module-icon-video, .media-icon-video {
-    @extend .fa-file-video-o;
+    @extend .fa, .fa-file-video-o;
 }
 
 .module-icon-videoin {
-    @extend .fa-video-camera;
+    @extend .fa, .fa-video-camera;
 }
 
 .module-icon-weather {
-    @extend .fa-cloud;
+    @extend .fa, .fa-cloud;
 }
 
 .module-icon-webpage {
-    @extend .fa-sitemap;
+    @extend .fa, .fa-sitemap;
 }
 
 .module-icon-worldclock, .module-icon-worldclock-analogue, .module-icon-worldclock-digital, .module-icon-worldclock-flip {
-    @extend .fa-globe;
+    @extend .fa, .fa-globe;
 }
 
 .module-icon-menuboard {
-    @extend .fa-th;
+    @extend .fa, .fa-th;
 }
 
 .module-icon-dashboard {
-    @extend .fa-file-image;
+    @extend .fa, .fa-file-image;
 }
+
+.module-icon-zone {
+    @extend .fas, .fa-border-none;
+}
+
 
 /* Tools icons */
 .tool-icon-region {
-    @extend .fa-clone;
+    @extend .fa, .fa-clone;
 }
 
 .tool-icon-audio {
-    @extend .fa-volume-up;
+    @extend .fa, .fa-volume-up;
 }
 
 .tool-icon-expiry {
-    @extend .fa-calendar-check-o;
+    @extend .fa, .fa-calendar-check-o;
 }
 
 .tool-icon-transitionIn {
-    @extend .fa-sign-in;
+    @extend .fa, .fa-sign-in;
 }
 
 .tool-icon-transitionOut {
-    @extend .fa-sign-out;
+    @extend .fa, .fa-sign-out;
 }
 
 .tool-icon-permissions {
-    @extend .fa-user-secret;
+    @extend .fa, .fa-user-secret;
 }
 
 /* Actions icons */
 .actions-icon-navLayout {
-    @extend .fa-desktop;
+    @extend .fa, .fa-desktop;
 }
 
 .actions-icon-navWidget {
-    @extend .fa-square-o;
+    @extend .fa, .fa-square-o;
 }
 
 .actions-icon-nextWidget {
-    @extend .fa-caret-square-o-right;
+    @extend .fa, .fa-caret-square-o-right;
 }
 
 .actions-icon-previousWidget {
-    @extend .fa-caret-square-o-left;
+    @extend .fa, .fa-caret-square-o-left;
 }
 
 .actions-icon-nextLayout {
-    @extend .fa-arrow-circle-right;
+    @extend .fa, .fa-arrow-circle-right;
 }
 
 .actions-icon-previousLayout {
-    @extend .fa-arrow-circle-left;
+    @extend .fa, .fa-arrow-circle-left;
 }
 
 /* Form icons */
 .bg_not_found_icon {
-    @extend .fa-exclamation-triangle;
+    @extend .fa, .fa-exclamation-triangle;
     padding: 0 5px;
 }

@@ -43,7 +43,7 @@
                 <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
             </ul>
-            <form id="templateAddForm" class="form-horizontal" method="post" action="{{ url_for("template.add") }}" data-redirect="{{ url_for("layout.designer", {id: ':id'}) }}" data-gettag="{{ url_for("tag.getByName") }}">
+            <form id="templateAddForm" class="form-horizontal" method="post" action="{{ url_for("template.add") }}" data-redirect="{{ url_for("layout.designer", {id: ':id'}) }}?isTemplateEditor=1" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 

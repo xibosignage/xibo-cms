@@ -463,7 +463,7 @@ Layout.prototype.discard = function() {
       toastr.success(res.message);
 
       // Redirect to the layout grid
-      window.location.href = urlsForApi.layout.list.url;
+      window.location.href = lD.exitURL;
     } else {
       // Login Form needed?
       if (res.login) {
@@ -514,7 +514,7 @@ Layout.prototype.delete = function() {
       toastr.success(res.message);
 
       // Redirect to the layout grid
-      window.location.href = urlsForApi.layout.list.url;
+      window.location.href = lD.exitURL;
     } else {
       // Login Form needed?
       if (res.login) {
