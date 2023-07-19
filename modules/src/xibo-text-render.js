@@ -41,6 +41,7 @@ jQuery.fn.extend({
       widgetDesignHeight: 0,
       widgetDesignGap: 0,
       displayDirection: 0,
+      seamless: true,
     };
 
     options = $.extend({}, defaults, options);
@@ -52,6 +53,15 @@ jQuery.fn.extend({
       // Remove animation items
       $contentDiv.find('.text-render-anim-item').remove();
 
+      // If options is seamless, remove second .scroll marquee div
+      // so we don't have duplicated elements
+      if (
+        options.seamless &&
+        $contentDiv.find('.scroll .js-marquee').length > 1
+      ) {
+        $contentDiv.find('.scroll .js-marquee')[1].remove();
+      }
+
       // Show and reset the hidden elements
       const $originalElements =
         $contentDiv.find('.text-render-hidden-element');
@@ -59,9 +69,9 @@ jQuery.fn.extend({
 
       // If we have a scroll container, move elements
       // to content and destroy container
-      if ($contentDiv.find('div[class="scroll"]').length > 0) {
+      if ($contentDiv.find('.scroll').length > 0) {
         $originalElements.appendTo($contentDiv);
-        $contentDiv.find('div[class="scroll"]').remove();
+        $contentDiv.find('.scroll').remove();
       }
     };
 
@@ -405,7 +415,7 @@ jQuery.fn.extend({
             'data-is-legacy': false,
             'data-speed': options.speed / 25 * 1000,
             'data-direction': options.direction,
-            'data-duplicated': true,
+            'data-duplicated': options.seamless,
             scaleFactor: options.scaleFactor,
           });
         } else {
@@ -440,6 +450,9 @@ jQuery.fn.extend({
           } else {
             $contentDiv.find('.scroll').overflowMarquee();
           }
+
+          // Add animating class to prevent multiple inits
+          $contentDiv.find('.scroll').addClass('animating');
         }
       }
 
