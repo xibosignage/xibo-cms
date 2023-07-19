@@ -265,10 +265,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .social-media-it
             ]]></hbs>
             <twig><![CDATA[
 <style>
-.emojione {
-    width: 26px;
-    height: 26px
-}
 
 .item {
     float: left;
@@ -457,10 +453,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             ]]></hbs>
             <twig><![CDATA[
 <style>
-.emojione {
-    width: 26px;
-    height: 26px
-}
 
 .item {
     float: left;
@@ -654,10 +646,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             ]]></hbs>
             <twig><![CDATA[
 <style>
-.emojione {
-    width: 22px;
-    height: 22px
-}
 
 .main-container {
     width: 600px !important;
@@ -772,10 +760,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             ]]></hbs>
             <twig><![CDATA[
 <style>
-.emojione {
-    width: 20px;
-    height: 20px
-}
 
 .main-container {
     width: 800px !important;
@@ -909,10 +893,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             ]]></hbs>
             <twig><![CDATA[
 <style>
-.emojione {
-    width: 20px;
-    height: 20px
-}
 
 .main-container {
     width: 800px !important;
@@ -1068,11 +1048,6 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-}
-
-.emojione {
-    width: 30px;
-    height: 30px
 }
 
 .pic-container {
@@ -1291,11 +1266,6 @@ body {
     height: 270px;
 }
 
-.emojione {
-    width: 30px;
-    height: 30px
-}
-
 .social-date, .social-location {
     margin-top: 30px;
     font-size: 17px;
@@ -1452,11 +1422,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
 <style>
 .item {
     float: left;
-}
-
-.emojione {
-    width: 30px;
-    height: 30px
 }
 
 body {
@@ -1658,11 +1623,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     float: left;
 }
 
-.emojione {
-    width: 10px;
-    height: 10px
-}
-
 body {
     font-family: "Helvetica", "Arial", sans-serif;
     line-height: 1;
@@ -1848,11 +1808,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
 <style>
 .item {
     float: left;
-}
-
-.emojione {
-    width: 10px;
-    height: 10px
 }
 
 body {
@@ -2050,11 +2005,6 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
 <style>
 .item {
     float: left;
-}
-
-.emojione {
-    width: 10px;
-    height: 10px
 }
 
 body {
@@ -2599,11 +2549,6 @@ body {
     padding: 8px 6px 12px 6px;
     color: #fff;
     overflow: hidden;
-}
-
-.emojione {
-    width: 26px;
-    height: 26px;
 }
 
 .cell-1 .item-text {
