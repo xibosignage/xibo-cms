@@ -70,6 +70,7 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
       height: this.dimensions.height,
       top: this.dimensions.top,
       left: this.dimensions.left,
+      zIndex: this.zIndex,
       regionid: this.regionId,
     }];
 
@@ -83,6 +84,8 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
         transform.top : this.dimensions.top,
       left: (transform.left != undefined) ?
         transform.left : this.dimensions.left,
+      zIndex: (transform.zIndex != undefined) ?
+        transform.zIndex : this.zIndex,
       regionid: this.regionId,
     }];
 
@@ -113,6 +116,8 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
     transform.top : this.dimensions.top;
   this.dimensions.left = (transform.left != undefined) ?
     transform.left : this.dimensions.left;
+  this.zIndex = (transform.zIndex != undefined) ?
+    transform.zIndex : this.zIndex;
 };
 
 /**

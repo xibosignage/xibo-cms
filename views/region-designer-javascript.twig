@@ -58,13 +58,9 @@
             });
         });
         
-        form.find('[name="top"], [name="left"], [name="width"], [name="height"]').on('change', function(){
+        form.find('[name="top"], [name="left"], [name="width"], [name="height"], [name="zIndex"]').on('change', _.debounce(function(){
             formChangesRegion();
-        });
-
-        form.find('[name="zIndex"]').on('change', function(){
-            formChangesRegionZIndex();
-        });
+        }, 200));
 
         regionChangesForm();
 
@@ -81,21 +77,13 @@
             'width': form.find('[name="width"]').val(),
             'height': form.find('[name="height"]').val(),
             'top': form.find('[name="top"]').val(),
-            'left': form.find('[name="left"]').val()
+            'left': form.find('[name="left"]').val(),
+            'zIndex': form.find('[name="zIndex"]').val(),
         }, true);
 
         app.viewer.updateRegion(layout.regions[regionId]);
 
         app.viewer.updateMoveable();
-    }
-
-    function formChangesRegionZIndex() {
-        var app = lD;
-        var form = $(app.propertiesPanel.DOMObject).find('form');
-        var newZIndex = parseInt(form.find('[name="zIndex"]').val());
-
-        app.viewer.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
-        app.selectedObject.zIndex = newZIndex;
     }
 
     function regionChangesForm() {

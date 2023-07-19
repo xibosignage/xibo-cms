@@ -652,15 +652,7 @@ PropertiesPanel.prototype.render = function(
           properties = JSON.parse(JSON.stringify(properties));
 
           // Create common fields
-          const commonFields = [
-            {
-              id: 'layer',
-              title: propertiesPanelTrans.layer,
-              value: targetAux.layer,
-              type: 'number',
-              visibility: [],
-            },
-          ];
+          const commonFields = [];
 
           // TODO: for now we disable scaling type
           // Show scaling type if element is in a group
@@ -777,15 +769,6 @@ PropertiesPanel.prototype.render = function(
 
               // Get the value
               let value = $target.val();
-
-              // If property is layer, convert to int
-              // and don't allow negative values
-              if (propertyName === 'layer') {
-                value = parseInt(value);
-                if (value < 0) {
-                  value = 0;
-                }
-              }
 
               // If property is slot, set a value
               // with -1 to match with the array
@@ -934,93 +917,115 @@ PropertiesPanel.prototype.render = function(
       }
 
       // If we change any input, update the target position
-      self.DOMObject.find('#positionTab [name]').on('change', function(ev) {
-        const viewerScale = lD.viewer.containerElementDimensions.scale;
-        const form = $(ev.currentTarget).parents('#positionTab');
+      self.DOMObject.find('#positionTab [name]').on(
+        'change', _.debounce(function(ev) {
+          const viewerScale = lD.viewer.containerElementDimensions.scale;
+          const form = $(ev.currentTarget).parents('#positionTab');
 
-        if (targetAux == undefined) {
-          // Widget
-          const regionId = target.parent.id;
+          // Prevent layer to be negative
+          let zIndexVal = Number(form.find('[name="zIndex"]').val());
+          if (
+            zIndexVal &&
+            zIndexVal < 0
+          ) {
+            zIndexVal = 0;
 
-          lD.layout.regions[regionId].transform({
-            width: form.find('[name="width"]').val(),
-            height: form.find('[name="height"]').val(),
-            top: form.find('[name="top"]').val(),
-            left: form.find('[name="left"]').val(),
-          }, true);
-
-          lD.viewer.updateRegion(lD.layout.regions[regionId]);
-
-          // Update moveable
-          lD.viewer.updateMoveable();
-        } else if (targetAux?.type == 'element') {
-          // Element
-          const $targetElement = $('#' + targetAux.elementId);
-
-          // Move element
-          $targetElement.css({
-            width: form.find('[name="width"]').val() * viewerScale,
-            height: form.find('[name="height"]').val() * viewerScale,
-            top: form.find('[name="top"]').val() * viewerScale,
-            left: form.find('[name="left"]').val() * viewerScale,
-          });
-
-          // Rotate element
-          if (form.find('[name="rotation"]').val() != undefined) {
-            $targetElement.css('transform', 'rotate(' +
-              form.find('[name="rotation"]').val() +
-              'deg)');
-            lD.viewer.moveable.updateRect();
+            // Set form field back to 0
+            form.find('[name="zIndex"]').val(0);
           }
 
-          // Recalculate group dimensions
-          if (targetAux.groupId) {
-            lD.viewer.saveElementGroupProperties(
-              lD.viewer.DOMObject.find('#' + targetAux.groupId),
-              true,
-              false,
-            );
-          } else {
+          if (targetAux == undefined) {
+            // Widget
+            const regionId = target.parent.id;
+
+            lD.layout.regions[regionId].transform({
+              width: form.find('[name="width"]').val(),
+              height: form.find('[name="height"]').val(),
+              top: form.find('[name="top"]').val(),
+              left: form.find('[name="left"]').val(),
+              zIndex: zIndexVal,
+            }, true);
+
+            lD.viewer.updateRegion(lD.layout.regions[regionId]);
+
+            // Update moveable
+            lD.viewer.updateMoveable();
+          } else if (targetAux?.type == 'element') {
+            // Element
+            const $targetElement = $('#' + targetAux.elementId);
+
+            // Move element
+            $targetElement.css({
+              width: form.find('[name="width"]').val() * viewerScale,
+              height: form.find('[name="height"]').val() * viewerScale,
+              top: form.find('[name="top"]').val() * viewerScale,
+              left: form.find('[name="left"]').val() * viewerScale,
+              zIndex: zIndexVal,
+            });
+
+            // Rotate element
+            if (form.find('[name="rotation"]').val() != undefined) {
+              $targetElement.css('transform', 'rotate(' +
+                form.find('[name="rotation"]').val() +
+                'deg)');
+              lD.viewer.moveable.updateRect();
+            }
+
+            // Save layer
+            targetAux.layer = zIndexVal;
+
+            // Recalculate group dimensions
+            if (targetAux.groupId) {
+              lD.viewer.saveElementGroupProperties(
+                lD.viewer.DOMObject.find('#' + targetAux.groupId),
+                true,
+                false,
+              );
+            } else {
+              // Save properties
+              lD.viewer.saveElementProperties($targetElement, true);
+            }
+
+            // Update element
+            lD.viewer.updateElement(targetAux, true);
+
+            // Update moveable
+            lD.viewer.updateMoveable();
+          } else if (targetAux?.type == 'element-group') {
+            // Element group
+            const $targetElementGroup = $('#' + targetAux.id);
+
+            // Move element group
+            $targetElementGroup.css({
+              width: form.find('[name="width"]').val() * viewerScale,
+              height: form.find('[name="height"]').val() * viewerScale,
+              top: form.find('[name="top"]').val() * viewerScale,
+              left: form.find('[name="left"]').val() * viewerScale,
+            });
+
+            // Scale group
+            // Update element dimension properties
+            targetAux.transform({
+              width: parseFloat(
+                form.find('[name="width"]').val(),
+              ),
+              height: parseFloat(
+                form.find('[name="height"]').val(),
+              ),
+            }, false);
+            lD.viewer.updateElementGroup(targetAux);
+
             // Save properties
-            lD.viewer.saveElementProperties($targetElement, true);
+            lD.viewer.saveElementGroupProperties(
+              $targetElementGroup,
+              true,
+              true,
+            );
+
+            // Update moveable
+            lD.viewer.updateMoveable();
           }
-
-          // Update element
-          lD.viewer.updateElement(targetAux, true);
-
-          // Update moveable
-          lD.viewer.updateMoveable();
-        } else if (targetAux?.type == 'element-group') {
-          // Element group
-          const $targetElementGroup = $('#' + targetAux.id);
-
-          // Move element group
-          $targetElementGroup.css({
-            width: form.find('[name="width"]').val() * viewerScale,
-            height: form.find('[name="height"]').val() * viewerScale,
-            top: form.find('[name="top"]').val() * viewerScale,
-            left: form.find('[name="left"]').val() * viewerScale,
-          });
-
-          // Scale group
-          // Update element dimension properties
-          targetAux.transform({
-            width: parseFloat(
-              form.find('[name="width"]').val(),
-            ),
-            height: parseFloat(
-              form.find('[name="height"]').val(),
-            ),
-          }, false);
-          lD.viewer.updateElementGroup(targetAux);
-
-          // Save properties
-          lD.viewer.saveElementGroupProperties($targetElementGroup, true, true);
-
-          // Update moveable
-          lD.viewer.updateMoveable();
-        }
-      });
+        }, 200));
 
       // Handle set fullscreen button
       self.DOMObject.find('#positionTab #setFullScreen').off().on(

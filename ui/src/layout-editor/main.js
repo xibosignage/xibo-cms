@@ -104,7 +104,7 @@ window.lD = {
 
   folderId: '',
 
-  // Top layer value
+  // Save top layer so we can add new elements to top
   topLayer: 0,
 };
 
@@ -3229,6 +3229,15 @@ lD.addRegion = function(positionToAdd, regionType, dimensions) {
     lD.selectObject();
   }
 
+
+  // Calculate top layer
+  const topLayer = lD.calculateTopLayer() + 1;
+
+  // Add layer to the next top layer
+  dimensions.zIndex = (dimensions.zIndex) ?
+    (dimensions.zIndex + topLayer) :
+    topLayer;
+
   // If region type is not defined, use the default (frame)
   if (regionType == undefined) {
     regionType = 'frame';
@@ -3893,6 +3902,9 @@ lD.addElementsToWidget = function(
   isGroup = false,
   recalculateGroupBeforeSaving = false,
 ) {
+  // Calculate next top layer
+  const topLayer = lD.calculateTopLayer() + 1;
+
   // Loop through elements
   elements.forEach((element) => {
     // Add only if elements doesn't exist on widget already
@@ -3904,6 +3916,11 @@ lD.addElementsToWidget = function(
       element.elementId =
         'element_' + element.id + '_' +
         Math.floor(Math.random() * 1000000);
+
+      // Add layer to the next top layer
+      element.layer += (element.layer) ?
+        (element.layer + topLayer) :
+        topLayer;
 
       // Add element to the widget
       widget.addElement(element, false);
@@ -3958,4 +3975,31 @@ lD.addElementsToWidget = function(
         refreshEditor: true,
       });
   });
+};
+
+/**
+ * Calculate top layer
+ * @return {number} Top layer value
+ */
+lD.calculateTopLayer = function() {
+  this.topLayer = 0;
+
+  // Check regions layers
+  Object.values(lD.layout.regions).forEach((region) => {
+    if (region.zIndex > this.topLayer) {
+      this.topLayer = Number(region.zIndex);
+    }
+  });
+
+  // Check elements
+  Object.values(lD.layout.canvas.widgets).forEach((widget) => {
+    Object.values(widget.elements).forEach((element) => {
+      if (element.layer > this.topLayer) {
+        this.topLayer = Number(element.layer);
+      }
+    });
+  });
+
+  // Return top layer
+  return this.topLayer;
 };
