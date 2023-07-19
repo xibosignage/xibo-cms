@@ -44,7 +44,8 @@ if (strstr($dbhost, ':')) {
 
 $db = [
     'adapter' => 'mysql',
-    'charset' => 'utf8',
+    'charset' => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
     'host' => $dbhost,
     'port' => $dbport,
     'name' => $dbname,

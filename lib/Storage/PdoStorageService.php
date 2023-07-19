@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -128,7 +128,7 @@ class PdoStorageService implements StorageServiceInterface
         );
         $conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-        $conn->query("SET NAMES 'utf8'");
+        $conn->query("SET NAMES 'utf8mb4'");
 
         return $conn;
     }
@@ -151,7 +151,7 @@ class PdoStorageService implements StorageServiceInterface
         // Open the connection and set the error mode
         self::$conn['default'] = new \PDO($dsn, $user, $pass, $opts);
         self::$conn['default']->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        self::$conn['default']->query("SET NAMES 'utf8'");
+        self::$conn['default']->query("SET NAMES 'utf8mb4'");
 
         return self::$conn['default'];
     }
