@@ -3992,13 +3992,15 @@ lD.calculateTopLayer = function() {
   });
 
   // Check elements
-  Object.values(lD.layout.canvas.widgets).forEach((widget) => {
-    Object.values(widget.elements).forEach((element) => {
-      if (element.layer > this.topLayer) {
-        this.topLayer = Number(element.layer);
-      }
+  if (lD.layout.canvas.widgets) {
+    Object.values(lD.layout.canvas.widgets).forEach((widget) => {
+      Object.values(widget.elements).forEach((element) => {
+        if (element.layer > this.topLayer) {
+          this.topLayer = Number(element.layer);
+        }
+      });
     });
-  });
+  }
 
   // Return top layer
   return this.topLayer;
