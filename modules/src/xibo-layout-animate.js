@@ -34,15 +34,15 @@ jQuery.fn.extend({
         options.effect === 'marqueeUp' ||
         options.effect === 'marqueeDown'
       ) {
-        $contentDiv.find('.scroll').marquee();
+        $contentDiv.find('.scroll:not(.animating)').marquee();
       } else if (
         options.effect === 'marqueeLeft' ||
         options.effect === 'marqueeRight'
       ) {
         if (isAndroid) {
-          $contentDiv.find('.scroll').overflowMarquee();
+          $contentDiv.find('.scroll:not(.animating)').overflowMarquee();
         } else {
-          $contentDiv.find('.scroll').marquee();
+          $contentDiv.find('.scroll:not(.animating)').marquee();
         }
       } else if (options.effect !== 'none') { // Cycle effect
         // Resume effect
