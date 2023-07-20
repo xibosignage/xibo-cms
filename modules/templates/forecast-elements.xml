@@ -262,6 +262,22 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <thumbnail>weather-condition-bg-image</thumbnail>
         <startWidth>480</startWidth>
         <startHeight>600</startHeight>
+        <properties>
+            <property id="roundBorder" type="checkbox">
+                <title>Round Border</title>
+                <default>0</default>
+                <helpText>Should the square have rounded corners?</helpText>
+            </property>
+            <property id="borderRadius" type="number">
+                <title>Border Radius</title>
+                <default>20</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="roundBorder" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
         <stencil>
             <hbs><![CDATA[
 {{#if data.icon}}
@@ -309,6 +325,9 @@ if (meta && meta.hasOwnProperty('Attribution')) {
     left: 0;
     top: 0;
     z-index: -1;
+    {{#if roundBorder}}
+        {{#if borderRadius}}border-radius: {{borderRadius}}px;{{/if}}
+    {{/if}}
 }
 {{else}}
 .bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind {
@@ -339,9 +358,15 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-date-thumb</thumbnail>
+        <thumbnail>weather-date</thumbnail>
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <default>M d</default>
+            </property>
+        </properties>
         <onTemplateRender><![CDATA[
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
@@ -355,7 +380,7 @@ $(target).find('.date').each(function(_idx, dateEl){
 });
         ]]></onTemplateRender>
         <assets>
-            <asset id="weather-date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+            <asset id="weather-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-date.png" />
         </assets>
     </template>
 </templates>
