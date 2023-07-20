@@ -164,9 +164,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Add zone to template edit mode
   if (
-    lD.templateEditMode != undefined &&
-    lD.templateEditMode === true &&
-    !isPlaylist
+    !isPlaylist &&
+    this.parent.templateEditMode != undefined &&
+    this.parent.templateEditMode === true
   ) {
     moduleListFiltered.push({
       moduleId: 'zone',
@@ -2133,14 +2133,15 @@ Toolbar.prototype.createMediaPreview = function(media) {
  * @param {string} type - Type of media
  */
 Toolbar.prototype.openNewTabAndSearch = function(type) {
+  const self = this;
   const isLibraryMenu = !['audio', 'video', 'image'].includes(type);
   const getTabId = function(name) {
     if (isLibraryMenu) {
       name = 'library';
     }
 
-    for (let index = 0; index < lD.toolbar.menuItems.length; index++) {
-      const menu = lD.toolbar.menuItems[index];
+    for (let index = 0; index < self.menuItems.length; index++) {
+      const menu = self.menuItems[index];
       if (menu.name == name) {
         return index;
       }
