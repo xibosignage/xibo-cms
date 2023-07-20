@@ -320,6 +320,10 @@
                     url: "{{ url_for("module.getData", {regionId: ':regionId', id: ':id'}) }}",
                     type: 'GET'
                 },
+                assetDownload: {
+                    url: "{{ url_for("module.asset.download", {assetId: ':assetId'}) }}",
+                    type: 'GET'
+                },
             },
             actions: {
                 get: {
