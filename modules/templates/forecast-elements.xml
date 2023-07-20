@@ -358,9 +358,15 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-date-thumb</thumbnail>
+        <thumbnail>weather-date</thumbnail>
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="dateFormat" type="text">
+                <title>Date Format</title>
+                <default>MMM D</default>
+            </property>
+        </properties>
         <onTemplateRender><![CDATA[
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
@@ -374,7 +380,7 @@ $(target).find('.date').each(function(_idx, dateEl){
 });
         ]]></onTemplateRender>
         <assets>
-            <asset id="weather-date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+            <asset id="weather-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-date.png" />
         </assets>
     </template>
 </templates>
