@@ -200,7 +200,7 @@
             </property>
             <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
-                <default>#DATE_FORMAT#</default>
+                <default>d/m/Y H:i:s</default>
             </property>
             <property id="fontFamily" type="fontSelector">
                 <title>Font Family</title>
