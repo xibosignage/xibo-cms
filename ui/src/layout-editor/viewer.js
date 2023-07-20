@@ -1388,6 +1388,15 @@ Viewer.prototype.renderElementContent = function(
           // Add property to properties object
           convertedProperties[property.id] = (property.value == undefined) ?
             property.default : property.value;
+
+          // Convert variant=dateFormat from PHP to Moment format
+          if (property.id === 'dateFormat' &&
+            convertedProperties.hasOwnProperty(property.id)) {
+            convertedProperties[property.id] = DateFormatHelper
+              .convertPhpToMomentFormat(String(
+                convertedProperties[property.id],
+              ));
+          }
         }
       }
 

@@ -362,9 +362,9 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
         <properties>
-            <property id="dateFormat" type="text">
+            <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
-                <default>MMM D</default>
+                <default>M d</default>
             </property>
         </properties>
         <onTemplateRender><![CDATA[
