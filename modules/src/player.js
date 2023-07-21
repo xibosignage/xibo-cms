@@ -466,9 +466,13 @@ $(function() {
                   };
                 }
 
-                $content.append($(hbsTemplate).first()
+                const $elemContent = $('<div class="element-content"></div>');
+
+                $elemContent.html($(hbsTemplate).first().prop('outerHTML'));
+
+                $content.append($elemContent
                   .attr('id', data.elementId)
-                  .addClass(`${data.id}--item`)
+                  .addClass(`${data.uniqueID}--item`)
                   .css(cssStyles)
                   .prop('outerHTML'));
               };
@@ -541,7 +545,7 @@ $(function() {
                     if (templateAlreadyAdded) {
                       $target.xiboElementsRender(
                         renderData,
-                        $content.find(`.${templateData.id}--item`),
+                        $content.find(`.${templateData.uniqueID}--item`),
                       );
 
                       // Handle the rendering of the template
