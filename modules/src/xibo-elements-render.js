@@ -93,7 +93,7 @@ jQuery.fn.extend({
           options.effect === 'noTransition' || options.effect === 'none'
         ) ? noTransitionSpeed : options.speed,
         timeout: timeout,
-        slides: `> .${options.id}--item`,
+        slides: `> .${options.parentId}--item`,
         autoHeight: false,
         sync: false,
       });
