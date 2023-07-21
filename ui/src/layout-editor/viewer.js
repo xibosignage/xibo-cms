@@ -1359,7 +1359,7 @@ Viewer.prototype.renderElementContent = function(
       element.canRotate = template.canRotate;
       $elementContainer.data('canRotate', element.canRotate);
 
-      this.updateMoveable(true);
+      self.moveable.rotatable = element.canRotate;
     }
 
     // Render element with template
