@@ -1290,6 +1290,10 @@ Viewer.prototype.renderElementContent = function(
   // Get element container
   const $elementContainer = this.DOMObject.find(`#${element.elementId}`);
 
+  // Get asset container to add element assets
+  const $assetContainer =
+    this.parent.editorContainer.find('#asset-container');
+
   const macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
 
   // TODO: Copied from player.js, to be added to a library so it can be reused
@@ -1331,6 +1335,45 @@ Viewer.prototype.renderElementContent = function(
         stencil.hbs:
         '',
     );
+
+    // Add style to canvas region, if it's still not added
+    if (
+      $assetContainer.find('[data-style-template=' + template.templateId + ']')
+        .length === 0
+    ) {
+      const styleTemplate = Handlebars.compile(
+        (stencil?.style) ?
+          stencil.style:
+          '',
+      );
+
+      $(`<style data-style-template="${template.templateId}">`)
+        .html(styleTemplate()).prependTo($assetContainer);
+    }
+
+    // Add JS and CSS assets if not added already
+    template.assets.forEach((asset) => {
+      const assetURL = urlsForApi.module.assetDownload.url;
+      if (
+        asset.mimeType === 'text/css' &&
+        $assetContainer.find('[data-asset-id=' + asset.id + ']').length === 0
+      ) {
+        $(`<link rel="stylesheet"
+          href="${assetURL.replace(':assetId', asset.id)}"
+          data-asset-id="${asset.id}" media="screen"/>`)
+          .prependTo($assetContainer);
+      }
+
+      if (
+        asset.mimeType === 'text/javascript' &&
+        $assetContainer.find('[data-asset-id=' + asset.id + ']').length === 0
+      ) {
+        $(`<script type="text/javascript"
+          src="${assetURL.replace(':assetId', asset.id)}"
+          data-asset-id="${asset.id}"></script>`)
+          .prependTo($assetContainer);
+      }
+    });
 
     // If element dimensions are not set, set them
     // to the extended template, if it exists

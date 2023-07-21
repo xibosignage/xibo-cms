@@ -52,7 +52,7 @@
     <properties>
         <property id="hashtag" type="text">
             <title>Hashtag</title>
-            <helpText>Test your search by using a Hashtag to return results from the mastadon URL provided in the module settings.</helpText>
+            <helpText>Test your search by using a Hashtag to return results from the mastodon URL provided in the module settings.</helpText>
             <default></default>
         </property>
         <property id="searchOn" type="dropdown" mode="single">

@@ -3,11 +3,12 @@
         style="
         width: {{originalWidth}}px;
         height: {{originalHeight}}px;
-
         {{#if scale}}
             transform: scale({{scale}});
             transform-origin: top left;
-        {{/if}}">
+        {{/if}}
+        overflow: hidden;
+        ">
     </div>
 </div>
 

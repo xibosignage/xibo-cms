@@ -206,7 +206,6 @@ $content.xiboLayoutScaler(properties);
     ]]></onRender>
     <assets>
         <asset id="animate" type="path" mimeType="text/css" path="/modules/assets/forecastio/animate.css"></asset>
-        <asset id="font-awesome" type="path" mimeType="text/css" path="/modules/assets/forecastio/font-awesome.min.css"></asset>
         <asset id="weather-icons" type="path" mimeType="text/css" path="/modules/assets/forecastio/weather-icons.min.css"></asset>
         <asset id="weathericons-regular-webfont.eot" type="path" mimeType="application/vnd.ms-fontobject" path="/modules/assets/forecastio/weathericons-regular-webfont.eot"></asset>
         <asset id="weathericons-regular-webfont.svg" type="path" mimeType="image/svg+xml" path="/modules/assets/forecastio/weathericons-regular-webfont.svg"></asset>

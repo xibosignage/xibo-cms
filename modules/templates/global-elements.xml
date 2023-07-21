@@ -145,7 +145,7 @@
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="text-render-container"
+<div class="global-elements-text"
     style="
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
@@ -304,7 +304,7 @@
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="text-render-container"
+<div class="global-elements-date"
     style="
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
@@ -418,7 +418,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
+<div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
     {{#if url}}
         <img src="{{url}}" style="width:100%; height: 100%; object-fit: {{objectFit}}; object-position: {{alignId}} {{valignId}}; position: absolute; top: 0; left: 0;"/>
@@ -484,7 +484,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <preview></preview>
         <stencil>
             <hbs><![CDATA[
-<div class="line-container" style="position: relative;
+<div class="global-elements-line" style="position: relative;
     top: 0;
     left: 0;
     width: 100%;
@@ -596,7 +596,8 @@ $(target).find('.date').each(function(_idx, dateEl){
                 left: {{lineWidth}}px;
             {{/eq}}
         {{/eq}}"
-    ></div></div>]]></hbs>
+    ></div></div>
+            ]]></hbs>
         </stencil>
         <assets>
             <asset id="line-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/line.png" />
@@ -709,7 +710,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <preview></preview>
         <stencil>
             <hbs><![CDATA[
-<div class="circle-container" style="position: relative;
+<div class="global-elements-circle" style="position: relative;
     top: 0;
     left: 0;
     width: 100%;
@@ -739,7 +740,8 @@ $(target).find('.date').each(function(_idx, dateEl){
         </symbol>
     </defs>
     <use href="#circle_{{uniqueID}}" width="100%" height="100%" />
-</svg></div>]]></hbs>
+</svg></div>
+            ]]></hbs>
         </stencil>
         <assets>
             <asset id="circle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/circle.png" />
@@ -786,7 +788,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <preview></preview>
         <stencil>
             <hbs><![CDATA[
-<div class="triangle-container" style="position: relative;
+<div class="global-elements-triangle" style="position: relative;
     top: 0;
     left: 0;
     width: 100%;
@@ -810,7 +812,8 @@ $(target).find('.date').each(function(_idx, dateEl){
         </symbol>
     </defs>
     <use href="#triangle_{{uniqueID}}" width="100%" height="100%" />
-</svg></div>]]></hbs>
+</svg></div>
+            ]]></hbs>
         </stencil>
         <assets>
             <asset id="triangle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/triangle.png" />
@@ -857,7 +860,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <preview></preview>
         <stencil>
             <hbs><![CDATA[
-<div class="pentagon-container" style="position: relative;
+<div class="global-elements-pentagon" style="position: relative;
     top: 0;
     left: 0;
     width: 100%;
@@ -880,7 +883,8 @@ $(target).find('.date').each(function(_idx, dateEl){
         </symbol>
     </defs>
     <use href="#pentagon_{{uniqueID}}" width="100%" height="100%"></use>
-</svg></div>]]></hbs>
+</svg></div>
+            ]]></hbs>
         </stencil>
         <assets>
             <asset id="pentagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/pentagon.png" />
@@ -927,7 +931,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <preview></preview>
         <stencil>
             <hbs><![CDATA[
-<div class="hexagon-container" style="position: relative;
+<div class="global-elements-hexagon" style="position: relative;
     top: 0;
     left: 0;
     width: 100%;
@@ -950,7 +954,8 @@ $(target).find('.date').each(function(_idx, dateEl){
         </symbol>
     </defs>
     <use href="#hexagon_{{uniqueID}}" width="100%" height="100%"></use>
-</svg></div>]]></hbs>
+</svg></div>
+            ]]></hbs>
         </stencil>
         <assets>
             <asset id="hexagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/hexagon.png" />
