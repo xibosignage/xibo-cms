@@ -1254,11 +1254,9 @@ const formHelpers = function() {
               label: translations.done,
               className: 'btn-primary btn-bb-main',
               callback: function() {
-                if (typeof self.namespace.timeline.resetZoom === 'function') {
-                  self.namespace.timeline.resetZoom();
-                }
-
-                self.namespace.reloadData(self.mainObject);
+                self.namespace.reloadData(self.mainObject, {
+                  refreshEditor: true,
+                });
               },
             },
           },
@@ -1266,8 +1264,15 @@ const formHelpers = function() {
       );
     });
 
-    // Add to the second to last position
-    footer.find('button:last').before(replaceButton);
+    // Add to the second to last position ( if we have that button )
+    if (
+      footer.find('button:last').length > 0
+    ) {
+      footer.find('button:last').before(replaceButton);
+    } else {
+      // Just add to the footer
+      footer.append(replaceButton);
+    }
   };
 
   /**

@@ -903,7 +903,7 @@ body {
         .button-container {
             display: flex;
             flex-direction: column-reverse;
-            padding: 1rem 1rem 0.5rem 1rem;
+            padding: 1rem 1rem 8px 1rem;
             bottom: 0;
             font-size: 0;
             width: 100%;
@@ -920,7 +920,7 @@ body {
             }
 
             &>button {
-                margin-bottom: 0.5rem;
+                margin-bottom: 8px;
             }
         }
 

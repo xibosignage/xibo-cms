@@ -338,6 +338,7 @@ class Widget extends Base
             'module' => $module,
             'template' => $template,
             'media' => $media,
+            'mediaEditable' => $media === null ? false : $this->getUser()->checkEditable($media),
             'commonProperties' => [
                 'name' => $widget->getOptionValue('name', null),
                 'enableStat' => $widget->getOptionValue('enableStat', null),
