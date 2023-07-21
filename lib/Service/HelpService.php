@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,8 +22,9 @@
 
 namespace Xibo\Service;
 
-use Stash\Interfaces\PoolInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Illuminate\Support\Str;
+use Symfony\Component\Yaml\Yaml;
+use Xibo\Entity\HelpLink;
 
 /**
  * Class HelpService
@@ -31,106 +32,62 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class HelpService implements HelpServiceInterface
 {
-    /**
-     * @var StorageServiceInterface
-     */
-    private $store;
+    /** @var string */
+    private string $helpBase;
 
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
-
-    /**
-     * @var PoolInterface
-     */
-    private $pool;
-
-    /** @var  string */
-    private $currentPage;
+    private ?array $links = null;
 
     /**
      * @inheritdoc
      */
-    public function __construct($store, $config, $pool, $currentPage)
+    public function __construct($helpBase)
     {
-        $this->store = $store;
-        $this->config = $config;
-        $this->pool = $pool;
-
-        // Only take the first element of the current page
-        $currentPage = explode('/', ltrim($currentPage, '/'));
-        $this->currentPage = $currentPage[0];
+        $this->helpBase = $helpBase;
     }
 
-    /**
-     * Get Cache Pool
-     * @return \Stash\Interfaces\PoolInterface
-     */
-    private function getPool()
+    public function getLandingPage(): string
     {
-        return $this->pool;
+        return $this->helpBase;
     }
 
-    /**
-     * Get Store
-     * @return StorageServiceInterface
-     */
-    private function getStore()
+    public function getLinksForPage(string $pageName): array
     {
-        return $this->store;
+        if ($this->links === null) {
+            $this->loadLinks();
+        }
+        return $this->links[$pageName] ?? [];
     }
 
-    /**
-     * Get Config
-     * @return ConfigServiceInterface
-     */
-    private function getConfig()
+    private function loadLinks(): void
     {
-        return $this->config;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function link($topic = null, $category = 'General')
-    {
-        // if topic is empty use the page name
-        $topic = ucfirst(($topic === null) ? $this->currentPage : $topic);
-
-        $dbh = $this->getStore()->getConnection();
-
-        $sth = $dbh->prepare('SELECT Link FROM `help` WHERE Topic = :topic AND Category = :cat');
-        $sth->execute(array('topic' => $topic, 'cat' => $category));
-
-        if (!$link = $sth->fetchColumn(0)) {
-            $sth->execute(array('topic' => $topic, 'cat' => 'General'));
-            $link = $sth->fetchColumn(0);
+        // Load links from file.
+        try {
+            if (file_exists(PROJECT_ROOT . '/custom/help-links.yaml')) {
+                $links = (array)Yaml::parseFile(PROJECT_ROOT . '/custom/help-links.yaml');
+            } else if (file_exists(PROJECT_ROOT . '/help-links.yaml')) {
+                // TODO: pull these in from the manual on build.
+                $links = (array)Yaml::parseFile(PROJECT_ROOT . '/help-links.yaml');
+            } else {
+                $this->links = [];
+                return;
+            }
+        } catch (\Exception) {
+            return;
         }
 
-        return $this->getBaseUrl() . $link;
-    }
+        // Parse links.
+        foreach ($links as $pageName => $page) {
+            foreach ($page as $link) {
+                $helpLink = new HelpLink($link);
+                if (!Str::startsWith($helpLink->url, ['http://', 'https://'])) {
+                    $helpLink->url = $this->helpBase .= $helpLink->url;
+                }
+                if (!empty($helpLink->summary)) {
+                    $helpLink->summary = \Parsedown::instance()->line($helpLink->summary);
+                }
 
-    /**
-     * @inheritdoc
-     */
-    public function address($suffix = '')
-    {
-        return $this->getBaseUrl() . $suffix;
-    }
-
-    /**
-     * @return string
-     */
-    private function getBaseUrl()
-    {
-        $helpBase = $this->getConfig()->getSetting('HELP_BASE');
-
-        if (stripos($helpBase, 'http://') === false && stripos($helpBase, 'https://') === false) {
-            // We need to convert the URL to a full URL
-            $helpBase = $this->getConfig()->rootUri() . $helpBase;
+                $this->links[$pageName][] = $helpLink;
+            }
         }
-
-        return $helpBase;
     }
 }

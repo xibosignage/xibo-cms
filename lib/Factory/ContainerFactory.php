@@ -166,12 +166,13 @@ class ContainerFactory
                 );
             },
             'helpService' => function (ContainerInterface $c) {
-                return new HelpService(
-                    $c->get('store'),
-                    $c->get('configService'),
-                    $c->get('pool'),
-                    $c->get('rootUri')
-                );
+                // Pass in the help base configuration.
+                $helpBase = $c->get('configService')->getSetting('HELP_BASE');
+                if (stripos($helpBase, 'http://') === false && stripos($helpBase, 'https://') === false) {
+                    // We need to convert the URL to a full URL
+                    $helpBase = $c->get('configService')->rootUri() . $helpBase;
+                }
+                return new HelpService($helpBase);
             },
             'pool' => function (ContainerInterface $c) {
                 $drivers = [];
@@ -226,7 +227,6 @@ class ContainerFactory
                 $controller->setSanitizer($c->get('sanitizerService'));
                 $controller->setState($c->get('state'));
                 $controller->setUser($c->get('user'));
-                $controller->setHelp($c->get('helpService'));
                 $controller->setConfig($c->get('configService'));
                 $controller->setView($c->get('view'));
                 $controller->setDispatcher($c->get('dispatcher'));

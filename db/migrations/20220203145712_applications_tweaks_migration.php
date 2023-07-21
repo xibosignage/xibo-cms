@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -38,14 +38,14 @@ class ApplicationsTweaksMigration extends AbstractMigration
         // without this change, for old CMS instances where it was using latin1,
         // it will cause issues creating FK in the new oauth_lkclientuser table.
         $this->execute('
-            ALTER TABLE `oauth_clients` CHARACTER SET utf8 COLLATE utf8_general_ci,
-                CHANGE COLUMN `id` `id` VARCHAR(254) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-                CHANGE COLUMN `secret` `secret` VARCHAR(254) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-                CHANGE COLUMN `name` `name` VARCHAR(254) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL
+            ALTER TABLE `oauth_clients`  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                CHANGE COLUMN `id` `id` VARCHAR(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+                CHANGE COLUMN `secret` `secret` VARCHAR(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+                CHANGE COLUMN `name` `name` VARCHAR(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
         ');
 
         $this->table('oauth_lkclientuser', ['id' => 'lkClientUserId'])
-            ->addColumn('clientId', 'string')
+            ->addColumn('clientId', 'string', ['length' => 254])
             ->addColumn('userId', 'integer')
             ->addColumn('approvedDate', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('approvedIp', 'string', ['null' => true, 'default' => null])

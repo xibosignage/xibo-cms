@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -159,15 +159,6 @@ class Base
     public function getSanitizerService(): SanitizerService
     {
         return $this->baseDependenciesService->getSanitizer();
-    }
-
-    /**
-     * Get Help
-     * @return HelpServiceInterface
-     */
-    protected function getHelp()
-    {
-        return $this->baseDependenciesService->getHelp();
     }
 
     /**

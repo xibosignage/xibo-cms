@@ -1230,7 +1230,6 @@ class Playlist extends Base
         $this->getState()->template = 'region-form-timeline';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'help' => $this->getHelp()->link('Media', 'Playlists')
         ]);
 
         return $this->render($request, $response);
@@ -1812,7 +1811,6 @@ class Playlist extends Base
 
         $data = [
             'playlist' => $playlist,
-            'help' => $this->getHelp()->link('Playlist', 'EnableStat')
         ];
 
         $this->getState()->template = 'playlist-form-setenablestat';

@@ -1305,7 +1305,6 @@ class Display extends Base
             'settings' => $profile,
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
-            'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
             'displayTypes' => $displayTypes,
             'dayParts' => $dayparts,
@@ -1337,7 +1336,6 @@ class Display extends Base
         $this->getState()->template = 'display-form-delete';
         $this->getState()->setData([
             'display' => $display,
-            'help' => $this->getHelp()->link('Display', 'Delete')
         ]);
 
         return $this->render($request, $response);
@@ -1839,7 +1837,6 @@ class Display extends Base
             'extra' => [
                 'displayGroupsAssigned' => $groupsAssigned
             ],
-            'help' => $this->getHelp()->link('Display', 'Members')
         ]);
 
         return $this->render($request, $response);
@@ -1871,7 +1868,6 @@ class Display extends Base
         $this->getState()->template = 'display-form-set-bandwidth';
         $this->getState()->setData([
             'ids' => $ids,
-            'help' =>  $this->getHelp()->link('Display', 'setBandwidthLimit')
         ]);
 
         return $this->render($request, $response);
@@ -2097,7 +2093,6 @@ class Display extends Base
         $this->getState()->setData([
             'display' => $display,
             'nextCollect' => $nextCollect,
-            'help' =>  $this->getHelp()->link('Display', 'ScreenShot')
         ]);
 
         return $this->render($request, $response);
@@ -2185,7 +2180,6 @@ class Display extends Base
         $this->getState()->template = 'display-form-wakeonlan';
         $this->getState()->setData([
             'display' => $display,
-            'help' =>  $this->getHelp()->link('Display', 'WakeOnLan')
         ]);
 
         return $this->render($request, $response);

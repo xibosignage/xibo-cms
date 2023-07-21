@@ -19,16 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// --- Xibo JS files ----
-
-// Xibo Tour ( based on bootstrap-tour )
-require('./src/style/tour.scss');
-require('./src/core/tour.js');
-
-// Xibo forms
-require('./src/style/forms.scss');
-require('./src/core/forms.js');
-
-// Xibo help
-require('./src/core/help-pane.js');
-require('./src/style/help-pane.scss');
+$(function() {
+  const $help = $('#help-pane');
+  $help.find('.help-pane-icon').on('click', () => {
+    $help.find('.help-pane-card').toggle();
+  });
+  $help.find('.close-icon').on('click', () => {
+    $help.find('.help-pane-card').hide();
+  });
+});

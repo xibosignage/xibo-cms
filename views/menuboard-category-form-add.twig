@@ -30,7 +30,6 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Next" %}, XiboDialogApply("#menuBoardCategoryAddForm")
     {% trans "Save" %}, $("#menuBoardCategoryAddForm").submit()

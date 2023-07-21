@@ -31,7 +31,6 @@
 {% block callBack %}userProfileEditFormOpen{% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help.editProfile }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#userEditProfileForm").submit()
 {% endblock %}

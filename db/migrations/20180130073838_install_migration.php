@@ -1,7 +1,8 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1044,7 +1045,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (30, \'audit\', \'Error\', \'dropdown\', \'Set the level of logging the CMS should record. In production systems "error" is recommended.\', \'Emergency|Alert|Critical|Error|Warning|Notice|Info|Debug\', \'troubleshooting\', 1, \'Log Level\', \'\', 20, \'error\', 1, \'word\'),
 (33, \'LIBRARY_LOCATION\', \'\', \'text\', \'The fully qualified path to the CMS library location.\', NULL, \'configuration\', 1, \'Library Location\', \'required\', 10, \'\', 1, \'string\'),
 (34, \'SERVER_KEY\', \'\', \'text\', NULL, NULL, \'configuration\', 1, \'CMS Secret Key\', \'required\', 20, \'\', 1, \'string\'),
-(35, \'HELP_BASE\', \'http://www.xibo.org.uk/manual/en/\', \'text\', NULL, NULL, \'general\', 1, \'Location of the Manual\', \'required\', 10, \'http://www.xibo.org.uk/manual/\', 1, \'string\'),
+(35, \'HELP_BASE\', \'https://xibosignage.com/manual/en/\', \'text\', NULL, NULL, \'general\', 1, \'Location of the Manual\', \'required\', 10, \'https://xibosignage.com/manual/\', 1, \'string\'),
 (36, \'PHONE_HOME\', \'1\', \'checkbox\', \'Should the server send anonymous statistics back to the Xibo project?\', NULL, \'general\', 1, \'Allow usage tracking?\', \'\', 10, \'1\', 1, \'checkbox\'),
 (37, \'PHONE_HOME_KEY\', \'\', \'text\', \'Key used to distinguish each Xibo instance. This is generated randomly based on the time you first installed Xibo, and is completely untraceable.\', NULL, \'general\', 0, \'Phone home key\', \'\', 20, \'\', 0, \'string\'),
 (38, \'PHONE_HOME_URL\', \'https://xibo.org.uk/api/stats/track\', \'text\', \'The URL to connect to to PHONE_HOME (if enabled)\', NULL, \'network\', 0, \'Phone home URL\', \'\', 60, \'https://xibo.org.uk/api/stats/track\', 0, \'string\'),

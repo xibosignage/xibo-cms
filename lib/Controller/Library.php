@@ -392,7 +392,6 @@ class Library extends Base
 
         $data = [
             'media' => $media,
-            'help' => $this->getHelp()->link('Layout', 'EnableStat')
         ];
 
         $this->getState()->template = 'library-form-setenablestat';
@@ -909,7 +908,6 @@ class Library extends Base
         $this->getState()->template = 'library-form-delete';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Library', 'Delete')
         ]);
 
         return $this->render($request, $response);
@@ -1226,7 +1224,6 @@ class Library extends Base
         $this->getState()->setData([
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
-            'help' => $this->getHelp()->link('Library', 'Edit'),
             'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
@@ -1431,7 +1428,6 @@ class Library extends Base
             'sumGeneric' => ByteFormatter::format($sumGeneric),
             'countExcludingGeneric' => $countExcludingGeneric,
             'countGeneric' => $countGeneric,
-            'help' => $this->getHelp()->link('Content', 'TidyLibrary')
         ]);
 
         return $this->render($request, $response);
@@ -2129,7 +2125,6 @@ class Library extends Base
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Media', 'Copy')
         ]);
 
         return $this->render($request, $response);

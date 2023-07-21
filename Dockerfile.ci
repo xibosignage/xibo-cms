@@ -176,7 +176,11 @@ COPY --from=webpack /app/modules /var/www/cms/modules
 COPY --chown=www-data:www-data . /var/www/cms
 
 # OpenOOH specification
-ADD https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json /var/www/cms/openooh/specification.json
+RUN mkdir /var/www/cms/openooh \
+    && curl -o /var/www/cms/openooh/specification.json https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json
+
+# Help Links
+RUN curl -o help_links.yaml https://raw.githubusercontent.com/xibosignage/xibo-manual/develop/help_links.yaml || true
 
 # Run entry
 CMD ["/entrypoint.sh"]

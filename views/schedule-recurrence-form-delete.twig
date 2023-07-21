@@ -31,7 +31,6 @@
 {% block callBack %}setupScheduleForm{% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Yes" %}, $("#scheduleRecurrenceDeleteForm").submit()
 {% endblock %}

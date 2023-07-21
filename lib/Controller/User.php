@@ -1130,9 +1130,6 @@ class User extends Base
                 'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
                 'defaultUserType' => $defaultUserTypeId
             ],
-            'help' => [
-                'add' => $this->getHelp()->link('User', 'Add')
-            ]
         ]);
 
         return $this->render($request, $response);
@@ -1172,9 +1169,6 @@ class User extends Base
                 'homepage' => $homepage,
                 'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
             ],
-            'help' => [
-                'edit' => $this->getHelp()->link('User', 'Edit')
-            ]
         ]);
 
         return $this->render($request, $response);
@@ -1203,9 +1197,6 @@ class User extends Base
         $this->getState()->setData([
             'user' => $user,
             'users' => $this->userFactory->query(null, ['notUserId' => $id]),
-            'help' => [
-                'delete' => $this->getHelp()->link('User', 'Delete')
-            ]
         ]);
 
         return $this->render($request, $response);
@@ -1226,9 +1217,6 @@ class User extends Base
         $this->getState()->template = 'user-form-edit-profile';
         $this->getState()->setData([
             'user' => $user,
-            'help' => [
-                'editProfile' => $this->getHelp()->link('User', 'EditProfile')
-            ],
             'data' => [
                 'setup' => $this->urlFor($request,'user.setup.profile'),
                 'generate' => $this->urlFor($request,'user.recovery.generate.profile'),
@@ -1765,9 +1753,6 @@ class User extends Base
             'owners' => $this->userFactory->query(),
             'object' => $object,
             'objectNameOverride' => $this->getSanitizer($request->getParams())->getString('nameOverride'),
-            'help' => [
-                'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
-            ]
         ];
 
         $this->getState()->template = 'user-form-permissions';
@@ -1804,9 +1789,6 @@ class User extends Base
         $data = [
             'entity' => $entity,
             'objectIds' => $ids,
-            'help' => [
-                'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
-            ]
         ];
 
         $this->getState()->template = 'user-form-multiple-permissions';
@@ -2084,7 +2066,6 @@ class User extends Base
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
             'applications' => $this->applicationFactory->getAuthorisedByUserId($this->getUser()->userId),
-            'help' => $this->getHelp()->link('User', 'Applications')
         ]);
 
         return $this->render($request, $response);
@@ -2219,7 +2200,6 @@ class User extends Base
             'extra' => [
                 'userGroupsAssigned' => $groupsAssigned
             ],
-            'help' =>  $this->getHelp()->link('User', 'Members')
         ]);
 
         return $this->render($request, $response);

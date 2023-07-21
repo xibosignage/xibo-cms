@@ -647,16 +647,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['session.view']));
 
 //
-// Help
-//
-$app->get('/help', ['\Xibo\Controller\Help','grid'])->setName('help.search');
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/help/add', ['\Xibo\Controller\Help','add'])->setName('help.add');
-    $group->put('/help/edit/{id}', ['\Xibo\Controller\Help','edit'])->setName('help.edit');
-    $group->delete('/help/delete/{id}', ['\Xibo\Controller\Help','delete'])->setName('help.delete');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['help.view']));
-
-//
 // Settings
 //
 $app->put('/admin', ['\Xibo\Controller\Settings','update'])

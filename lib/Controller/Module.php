@@ -163,7 +163,6 @@ class Module extends Base
             'moduleConfigLocked' => $moduleConfigLocked,
             'moduleId' => $id,
             'module' => $module,
-            'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -232,7 +231,6 @@ class Module extends Base
         $this->getState()->autoSubmit = $this->getAutoSubmit('clearCache');
         $this->getState()->setData([
             'module' => $module,
-            'help' => $this->getHelp()->link('Module', 'General')
         ]);
 
         return $this->render($request, $response);

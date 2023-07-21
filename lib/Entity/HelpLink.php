@@ -20,26 +20,36 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Service;
-
-use Xibo\Entity\HelpLink;
+namespace Xibo\Entity;
 
 /**
- * Return help links for a page.
- * @package Xibo\Service
+ * A simple help link, used by the help service.
  */
-interface HelpServiceInterface
+class HelpLink implements \JsonSerializable
 {
-    /**
-     * Get the landing page
-     * @return string
-     */
-    public function getLandingPage(): string;
+    public $title;
+    public $summary;
+    public $url;
+    public $isAllowWhitelabel;
 
     /**
-     * Get links for page
-     * @param string $pageName The page name to return links for
-     * @return HelpLink[]
+     * @param $array
      */
-    public function getLinksForPage(string $pageName): array;
+    public function __construct($array)
+    {
+        $this->title = $array['title'] ?? '';
+        $this->summary = $array['summary'] ?? '';
+        $this->url = $array['url'] ?? '';
+        $this->isAllowWhitelabel = $array['isAllowWhitelabel'] ?? true;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'title' => $this->title,
+            'summary' => $this->summary,
+            'url' => $this->url,
+            'isAllowWhitelabel' => $this->isAllowWhitelabel,
+        ];
+    }
 }

@@ -2734,10 +2734,6 @@ function XiboMultiSelectTagFormRender(button) {
     XiboInitialise('#' + dialogId);
 }
 
-function XiboHelpRender(url) {
-    window.open(url);
-}
-
 /**
  * Xibo Ping
  * @param {String} url

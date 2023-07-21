@@ -1,7 +1,8 @@
 <?php
-/**
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 // We need to define XIBO as the settings.php file is protected with a !defined check.
@@ -44,7 +44,8 @@ if (strstr($dbhost, ':')) {
 
 $db = [
     'adapter' => 'mysql',
-    'charset' => 'utf8',
+    'charset' => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
     'host' => $dbhost,
     'port' => $dbport,
     'name' => $dbname,
@@ -65,5 +66,9 @@ return [
     'environments' => [
         'default_database' => 'production',
         'production' => $db
-    ]
+    ],
+    'feature_flags' => [
+        'unsigned_primary_keys' => false,
+        'column_null_default' => false,
+    ],
 ];

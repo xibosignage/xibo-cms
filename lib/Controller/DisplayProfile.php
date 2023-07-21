@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -487,7 +487,6 @@ class DisplayProfile extends Base
         $this->getState()->template = 'displayprofile-form-delete';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
-            'help' => $this->getHelp()->link('DisplayProfile', 'Delete')
         ]);
 
         return $this->render($request, $response);

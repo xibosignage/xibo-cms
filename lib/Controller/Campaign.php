@@ -426,7 +426,6 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-form-add';
         $this->getState()->setData([
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Add')
         ]);
 
         return $this->render($request, $response);
@@ -656,7 +655,6 @@ class Campaign extends Base
         $this->getState()->setData([
             'campaign' => $campaign,
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -952,7 +950,6 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-form-delete';
         $this->getState()->setData([
             'campaign' => $campaign,
-            'help' => $this->getHelp()->link('Campaign', 'Delete')
         ]);
 
         return $this->render($request, $response);
@@ -1265,7 +1262,6 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-preview';
         $this->getState()->setData([
             'campaign' => $campaign,
-            'help' => $this->getHelp()->link('Campaign', 'Preview'),
             'layouts' => $layouts,
             'duration' => $duration,
             'extendedLayouts' => $extendedLayouts

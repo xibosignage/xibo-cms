@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -31,13 +31,13 @@ class OauthUpgradeMigration extends AbstractMigration
     public function change()
     {
         // Delete oAuth tables which are no longer in use.
-        $this->dropTable('oauth_access_token_scopes');
-        $this->dropTable('oauth_session_scopes');
-        $this->dropTable('oauth_refresh_tokens');
-        $this->dropTable('oauth_auth_code_scopes');
-        $this->dropTable('oauth_auth_codes');
-        $this->dropTable('oauth_access_tokens');
-        $this->dropTable('oauth_sessions');
+        $this->table('oauth_access_token_scopes')->drop()->save();
+        $this->table('oauth_session_scopes')->drop()->save();
+        $this->table('oauth_refresh_tokens')->drop()->save();
+        $this->table('oauth_auth_code_scopes')->drop()->save();
+        $this->table('oauth_auth_codes')->drop()->save();
+        $this->table('oauth_access_tokens')->drop()->save();
+        $this->table('oauth_sessions')->drop()->save();
 
         // Add a new column to the Applications table to indicate whether an app is confidential or not
         $clients = $this->table('oauth_clients');

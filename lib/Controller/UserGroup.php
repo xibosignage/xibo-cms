@@ -214,12 +214,6 @@ class UserGroup extends Base
     function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'usergroup-form-add';
-        $this->getState()->setData([
-            'help' => [
-                'add' => $this->getHelp()->link('UserGroup', 'Add')
-            ]
-        ]);
-
         return $this->render($request, $response);
     }
 
@@ -245,9 +239,6 @@ class UserGroup extends Base
         $this->getState()->template = 'usergroup-form-edit';
         $this->getState()->setData([
             'group' => $group,
-            'help' => [
-                'add' => $this->getHelp()->link('UserGroup', 'Edit')
-            ]
         ]);
 
         return $this->render($request, $response);
@@ -275,9 +266,6 @@ class UserGroup extends Base
         $this->getState()->template = 'usergroup-form-delete';
         $this->getState()->setData([
             'group' => $group,
-            'help' => [
-                'delete' => $this->getHelp()->link('UserGroup', 'Delete')
-            ]
         ]);
 
         return $this->render($request, $response);
@@ -618,7 +606,6 @@ class UserGroup extends Base
             'features' => $group->features,
             'inheritedFeatures' => $inheritedFeatures,
             'userGroupFactory' => $this->userGroupFactory,
-            'help' => $this->getHelp()->link('User', 'Acl')
         ];
 
         $this->getState()->template = 'usergroup-form-acl';
@@ -698,7 +685,6 @@ class UserGroup extends Base
             'extra' => [
                 'usersAssigned' => $usersAssigned
             ],
-            'help' =>  $this->getHelp()->link('UserGroup', 'Members')
         ]);
 
         return $this->render($request, $response);

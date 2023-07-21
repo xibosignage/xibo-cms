@@ -1,3 +1,4 @@
+<?php
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
@@ -19,16 +20,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// --- Xibo JS files ----
+use Phinx\Migration\AbstractMigration;
 
-// Xibo Tour ( based on bootstrap-tour )
-require('./src/style/tour.scss');
-require('./src/core/tour.js');
-
-// Xibo forms
-require('./src/style/forms.scss');
-require('./src/core/forms.js');
-
-// Xibo help
-require('./src/core/help-pane.js');
-require('./src/style/help-pane.scss');
+/**
+ * Add Sync Key column to region table
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class RemoveHelpLinksMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        $this->table('help')->drop()->save();
+    }
+}

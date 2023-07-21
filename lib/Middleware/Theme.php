@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -129,6 +129,7 @@ class Theme implements Middleware
         ];
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
         $view['revision'] = Environment::getGitCommit();
+        $view['isDevMode'] = Environment::isDevMode();
         $samlSettings = $container->get('configService')->samlSettings;
         if (isset($samlSettings['workflow'])
             && isset($samlSettings['workflow']['slo'])

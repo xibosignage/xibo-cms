@@ -236,7 +236,7 @@
         </li>
     {% endif %}
 
-    {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view", "help.view"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view"]) %}
     {% set groupElementClass = (countViewable > 1) ? 'dropdown-item' : 'nav-link' %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
@@ -260,10 +260,6 @@
 
             {% if currentUser.featureEnabled("fault.view") %}
                 <a class="{{ groupElementClass }}" href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a>
-            {% endif %}
-
-            {% if currentUser.featureEnabled("help.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("help.view") }}">{% trans "Help Links" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>

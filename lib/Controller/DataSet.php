@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -341,7 +341,6 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
             'dataSets' => $this->dataSetFactory->query(),
-            'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
 
         return $this->render($request, $response);
@@ -651,7 +650,6 @@ class DataSet extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'dataSets' => $this->dataSetFactory->query(),
-            'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -949,7 +947,6 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-delete';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'help' => $this->getHelp()->link('DataSet', 'Delete')
         ]);
 
         return $this->render($request, $response);
@@ -1034,7 +1031,6 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-copy';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
 
         return $this->render($request, $response);

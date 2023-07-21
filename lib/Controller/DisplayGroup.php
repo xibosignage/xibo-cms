@@ -458,10 +458,6 @@ class DisplayGroup extends Base
     public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'displaygroup-form-add';
-        $this->getState()->setData([
-            'help' => $this->getHelp()->link('DisplayGroup', 'Add')
-        ]);
-
         return $this->render($request, $response);
     }
 
@@ -487,7 +483,6 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => $this->getHelp()->link('DisplayGroup', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -515,7 +510,6 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-delete';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => $this->getHelp()->link('DisplayGroup', 'Delete')
         ]);
 
         return $this->render($request, $response);
@@ -553,7 +547,6 @@ class DisplayGroup extends Base
                 'displayGroupsAssigned' => $groupsAssigned
             ],
             'tree' => $this->displayGroupFactory->getRelationShipTree($id),
-            'help' => $this->getHelp()->link('DisplayGroup', 'Members')
         ]);
 
         return $this->render($request, $response);
@@ -1421,7 +1414,6 @@ class DisplayGroup extends Base
             'displayGroup' => $displayGroup,
             'modules' => $this->moduleFactory->getLibraryModules(),
             'media' => $displayGroup->media,
-            'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
 
         return $this->render($request, $response);
@@ -1629,7 +1621,6 @@ class DisplayGroup extends Base
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'layouts' => $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId),
-            'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
 
         return $this->render($request, $response);

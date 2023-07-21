@@ -20,26 +20,28 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Service;
-
-use Xibo\Entity\HelpLink;
+use Phinx\Migration\AbstractMigration;
 
 /**
- * Return help links for a page.
- * @package Xibo\Service
+ * Convert all tables in the database to UF8MB4
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
-interface HelpServiceInterface
+class CollationToUtfmb4Migration extends AbstractMigration
 {
-    /**
-     * Get the landing page
-     * @return string
-     */
-    public function getLandingPage(): string;
+    public function change(): void
+    {
+        $tables = $this->fetchAll('
+            SELECT TABLE_NAME
+            FROM INFORMATION_SCHEMA.TABLES
+            WHERE `TABLE_SCHEMA` = DATABASE()
+              AND `TABLE_TYPE` = \'BASE TABLE\'
+                AND `ENGINE` = \'InnoDB\'
+                AND TABLE_COLLATION <> \'utf8mb4_general_ci\'
+        ');
 
-    /**
-     * Get links for page
-     * @param string $pageName The page name to return links for
-     * @return HelpLink[]
-     */
-    public function getLinksForPage(string $pageName): array;
+        foreach ($tables as $row) {
+            $this->execute('ALTER TABLE `' . $row['TABLE_NAME']
+                . '` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+        }
+    }
 }
