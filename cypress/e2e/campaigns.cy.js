@@ -126,6 +126,8 @@ describe('Campaigns', function() {
 
     it('delete a campaign and check if the display status is pending', function() {
         cy.intercept('/campaign?draw=2&*').as('campaignGridLoad');
+        cy.intercept('DELETE', '/campaign/*', (req) => {
+        }).as('deleteCampaign');
         cy.visit('/campaign/view');
 
         // Filter for the created campaign
@@ -142,6 +144,9 @@ describe('Campaigns', function() {
 
         // Delete the campaign
         cy.get('.bootbox .save-button').click();
+
+        // Wait for the intercepted DELETE request to complete with status 200
+        cy.wait('@deleteCampaign').its('response.statusCode').should('eq', 200);
 
         // check the display status
         cy.displayStatusEquals('List Campaign Display 1', 3).then((res) => {

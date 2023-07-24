@@ -206,7 +206,8 @@ class CypressTest extends Base
         // Set display status
         $display->mediaInventoryStatus = $status;
 
-        $this->store->update('UPDATE `display` SET MediaInventoryStatus = :status, auditingUntil = :auditingUntil WHERE displayId = :displayId', [
+        $this->store->update('UPDATE `display` SET MediaInventoryStatus = :status, auditingUntil = :auditingUntil 
+             WHERE displayId = :displayId', [
             'displayId' => $display->displayId,
             'auditingUntil' => Carbon::now()->addSeconds(86400)->format('U'),
             'status' => Display::$STATUS_DONE
