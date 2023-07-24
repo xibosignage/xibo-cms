@@ -1076,6 +1076,31 @@ PropertiesPanel.prototype.render = function(
         });
     }
 
+    // For media widget, add replacement button
+    if (
+      target.type === 'widget' &&
+      res.data.module.regionSpecific === 0 &&
+      res.data.media && res.data.mediaEditable === true
+    ) {
+      const $form = self.DOMObject.find('form');
+
+      // Get valid extensions from moduleList
+      const validExtensions = modulesList.find((module) => {
+        return module.moduleId == res.data.module.moduleId;
+      }).validExtensions;
+
+      // Add data to form so it can be used in mediaEditFormOpen
+      $form.data({
+        mediaId: res.data.media.mediaId,
+        mediaEditable: res.data.mediaEditable,
+        widgetId: target.widgetId,
+        validExtensions: validExtensions.replaceAll(',', '|'),
+      });
+
+      // Call media form open method
+      formHelpers.mediaEditFormOpen(self.DOMObject);
+    }
+
     // Init fields
     self.initFields(target, res.data, actionEditMode);
   }).fail(function(data) {
