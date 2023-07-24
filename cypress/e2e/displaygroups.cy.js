@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -40,7 +40,7 @@ describe('Display Groups', function () {
             .type('Cypress Test Displaygroup ' + testRun + '_1');
 
         // Add first by clicking next
-        cy.get('.modal #dialog_btn_3').click();
+        cy.get('.modal').contains('Next').click();
 
         // Check if displaygroup is added in toast message
         cy.contains('Added Cypress Test Displaygroup ' + testRun + '_1');

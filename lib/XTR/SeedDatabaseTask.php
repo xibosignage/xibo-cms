@@ -188,6 +188,7 @@ class SeedDatabaseTask implements TaskInterface
         $displays = [
             'POP Display 1' => ['license' => Random::generateString(12, 'seed'), 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
             'POP Display 2' => ['license' => Random::generateString(12, 'seed'), 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'List Campaign Display 1' => ['license' => Random::generateString(12, 'seed'), 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
 
             // 6 displays for xmds
             'phpunitv7' => ['license' => 'PHPUnit7', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],

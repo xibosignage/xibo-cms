@@ -46,16 +46,19 @@ describe('Layout Designer', function() {
 
     cy.get('[name="themeId"]').select('Dark', {force: true});
     cy.get('[name="offset"]').clear().type('1').trigger('change');
+    cy.wait('@saveWidget');
 
     cy.get('.widget-form .nav-link[href="#advancedTab"]').click();
-    cy.wait('@saveWidget');
 
     // Type the new name in the input
     cy.get('#advancedTab input[name="name"]').clear().type('newName');
+    cy.wait('@saveWidget');
 
     // Set a duration
     cy.get('#advancedTab input[name="useDuration"]').check();
-    cy.get('#advancedTab input[name="duration"]').clear().type(12).trigger('change');
+    cy.wait('@saveWidget');
+    cy.get('#advancedTab input[name="duration"]').clear().type('12').trigger('change');
+    cy.wait('@saveWidget');
 
     // Change the background of the layout
     cy.get('.viewer-element').click({force: true});

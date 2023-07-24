@@ -19,38 +19,24 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Campaigns', function () {
+/* eslint-disable max-len */
+describe('Campaigns', function() {
+    const testRun = Cypress._.random(0, 1e9);
 
-    var testRun = "";
-
-    beforeEach(function () {
+    beforeEach(function() {
         cy.login();
-
-        testRun = Cypress._.random(0, 1e9);
     });
 
-    /**
-     * Create a number of layouts
-     */
-    function createTempLayouts(num) {
-        for(let index = 1; index <= num; index++) {
-            var rand = Cypress._.random(0, 1e9);
-            cy.createLayout(rand).as('testLayoutId' + index);
-        }
-    }
+    // Create a list campaign
+    // Assign layout to it
+    // and add the id to the session
+    it('should add a campaign and assign a layout', function() {
+        cy.intercept('/campaign?draw=4&*').as('campaignGridLoad');
+        cy.intercept('/layout?*').as('layoutLoad');
+        cy.intercept('/user/pref').as('userPref');
 
-    /**
-     * Delete a number of layouts
-     */
-    function deleteTempLayouts(num) {
-        for(let index = 1; index <= num;index++) {
-            cy.get('@testLayoutId' + index).then((id) => {
-                cy.deleteLayout(id);
-            });
-        }
-    }
-
-    it('should add an empty campaign', function() {
+        // Intercept the POST request to get the campaign Id
+        cy.intercept('/campaign').as('postCampaign');
 
         cy.visit('/campaign/view');
 
@@ -65,114 +51,106 @@ describe('Campaigns', function () {
         // Wait for the edit form to pop open
         cy.contains('.modal .modal-title', testRun);
 
+        // Wait for the intercepted POST request to complete and the response to be received
+        cy.wait('@postCampaign').then((interception) => {
+            // Access the response body and extract the ID
+            const id = interception.response.body.id;
+            // Save the ID to the Cypress.env object
+            Cypress.env('sessionCampaignId', id);
+        });
+
         // Switch to the layouts tab.
         cy.contains('.modal .nav-tabs .nav-link', 'Layouts').click();
+        cy.wait('@layoutLoad');
+        cy.wait('@userPref');
 
         // Should have no layouts assigned
         cy.get('.modal #LayoutAssignSortable').children()
-          .should('have.length', 0);
+            .should('have.length', 0);
+        cy.wait('@layoutLoad');
+        cy.wait('@userPref');
+
+        // Search for 2 layouts names 'List Campaign Layout 1' and 'List Campaign Layout 2'
+        cy.get('.form-inline input[name="layout"]')
+            .type('List Campaign Layout').trigger('change');
+        cy.wait('@layoutLoad');
+        cy.wait('@userPref');
+
+        // Assign a layout
+        cy.get('#layoutAssignments tr:nth-child(1) a.assignItem').click();
+        cy.wait('@layoutLoad');
+        cy.wait('@userPref');
+        cy.get('#layoutAssignments tr:nth-child(2) a.assignItem').click();
+
+        // Save
+        cy.get('.bootbox .save-button').click();
+
+        // Wait for 4th campaign grid reload
+        cy.wait('@campaignGridLoad');
+
+        // Filter for the created campaign
+        cy.get('#Filter input[name="name"]')
+            .type('Cypress Test Campaign ' + testRun);
+
+        // Should have 2 layouts assigned
+        cy.get('#campaigns tbody tr').should('have.length', 1);
+        cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(5)').contains('2');
     });
 
-    it.skip('should assign layouts to an existing campaign', function() {
+    it('should schedule a campaign and should set display status to green', function() {
+        // At this point we know the campaignId
+        const displayName = 'List Campaign Display 1';
+        const sessionCampaignId = Cypress.env('sessionCampaignId');
 
-        // Create some layouts
-        createTempLayouts(2);
+        // Schedule the campaign
+        cy.scheduleCampaign(sessionCampaignId, displayName).then((res) => {
+            cy.displaySetStatus(displayName, 1);
 
-        // Create a new campaign and then assign some layouts to it
-        cy.createCampaign('Cypress Test Campaign ' + testRun).then((res) => {
+            // Go to display grid
+            cy.intercept('/display?draw=3&*').as('displayGridLoad');
 
-            cy.server();
-            cy.route('/campaign?draw=3&*').as('campaignGridLoad');
-
-            cy.visit('/campaign/view');
+            cy.visit('/display/view');
 
             // Filter for the created campaign
-            cy.get('#Filter input[name="name"]')
-                .type('Cypress Test Campaign ' + testRun);
+            cy.get('.FilterDiv input[name="display"]')
+                .type(displayName);
 
-            // Should have no layouts assigned
-            cy.get('#campaigns tbody tr').should('have.length', 1);
-            cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(5)').contains('0');
+            // Should have the display
+            cy.get('#displays tbody tr').should('have.length', 1);
 
-            // Click on the first row element to open the edit modal
-            cy.get('#campaigns tr:first-child .dropdown-toggle').click();
-            cy.get('#campaigns tr:first-child .campaign_button_edit').click();
-
-            // Switch to the layouts tab.
-            cy.contains('.modal .nav-tabs .nav-link', 'Layouts').click();
-
-            // Assign 2 layouts
-            cy.get('#layoutAssignments tr:nth-child(1) a.assignItem').click();
-            cy.get('#layoutAssignments tr:nth-child(2) a.assignItem').click();
-
-            // Save
-            cy.get('.bootbox .save-button').click();
-
-            // Wait for 4th campaign grid reload
-            cy.wait('@campaignGridLoad');
-
-            // Should have 2 layouts assigned
-            cy.get('#campaigns tbody tr').should('have.length', 1);
-            cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(5)').contains('2');
-
-            // Delete temp layouts
-            //deleteTempLayouts(2);
+            // Check the display status is green
+            cy.get('#displays tbody tr:nth-child(1)').should('have.class', 'table-success'); // For class "table-success"
+            cy.get('#displays tbody tr:nth-child(1)').should('have.class', 'odd'); // For class "odd"
         });
     });
 
-    it('searches and delete existing campaign', function() {
+    it('delete a campaign and check if the display status is pending', function() {
+        cy.intercept('/campaign?draw=2&*').as('campaignGridLoad');
+        cy.intercept('DELETE', '/campaign/*', (req) => {
+        }).as('deleteCampaign');
+        cy.visit('/campaign/view');
 
-        // Create a new campaign and then search for it and delete it
-        cy.createCampaign('Cypress Test Campaign ' + testRun).then((res) => {
-            cy.visit('/campaign/view');
+        // Filter for the created campaign
+        cy.get('#Filter input[name="name"]')
+            .type('Cypress Test Campaign ' + testRun);
 
-            // Filter for the created campaign
-            cy.get('#Filter input[name="name"]')
-                .type('Cypress Test Campaign ' + testRun);
+        // Wait for 2nd campaign grid reload
+        cy.wait('@campaignGridLoad');
 
-            // Click on the first row element to open the delete modal
-            cy.get('#campaigns tbody tr').should('have.length', 1);
-            cy.get('#campaigns tr:first-child .dropdown-toggle').click();
-            cy.get('#campaigns tr:first-child .campaign_button_delete').click();
+        cy.get('#campaigns tbody tr').should('have.length', 1);
 
-            // Delete test campaign
-            cy.get('.bootbox .save-button').click();
+        cy.get('#campaigns tr:first-child .dropdown-toggle').click();
+        cy.get('#campaigns tr:first-child .campaign_button_delete').click();
 
-            // Check if campaign is deleted in toast message
-            cy.contains('Deleted Cypress Test Campaign ' + testRun);
-        });
-    });
+        // Delete the campaign
+        cy.get('.bootbox .save-button').click();
 
-    it('selects multiple campaigns and delete them', function() {
+        // Wait for the intercepted DELETE request to complete with status 200
+        cy.wait('@deleteCampaign').its('response.statusCode').should('eq', 200);
 
-        // Create a new campaign and then search for it and delete it
-        cy.createCampaign('Cypress Test Campaign ' + testRun).then((res) => {
-
-            cy.server();
-            cy.route('/campaign?draw=2&*').as('campaignGridLoad');
-
-            // Delete all test campaigns
-            cy.visit('/campaign/view');
-
-            // Clear filter and search for text campaigns
-            cy.get('#Filter input[name="name"]')
-                .clear()
-                .type('Cypress Test Campaign');
-
-            // Wait for 2nd campaign grid reload
-            cy.wait('@campaignGridLoad');
-
-            // Select all
-            cy.get('button[data-toggle="selectAll"]').click();
-
-            // Delete all
-            cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-            cy.get('.dataTables_info a[data-button-id="campaign_button_delete"]').click();
-
-            cy.get('button.save-button').click();
-
-            // Modal should contain one successful delete at least
-            cy.get('.modal-body').contains(': Success');
+        // check the display status
+        cy.displayStatusEquals('List Campaign Display 1', 3).then((res) => {
+            expect(res.body).to.be.true;
         });
     });
 });
