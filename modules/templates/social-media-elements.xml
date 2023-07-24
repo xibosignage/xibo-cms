@@ -251,7 +251,7 @@
                     <layer>2</layer>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="dateFormat">MMM D, YYYY,  HH:mm</property>
+                        <property id="dateFormat">F d, Y H:i</property>
                         <property id="fontFamily">railway regular</property>
                         <property id="fontSize">16</property>
                         <property id="fontColor">#626262</property>
