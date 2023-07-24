@@ -28,6 +28,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-semantic-error;
 $left-bar-width: 140px;
 $bottom-bar-height: 38px;
 $timeline-left-margin-width: 140px;
+$timeline-step-height: 22px;
 
 // CSS
 .editor-modal {
@@ -260,38 +261,33 @@ $timeline-left-margin-width: 140px;
 
     #timeline-overlay-container {
         display: none;
-        padding: 0;
+        padding: 5px 0;
         position: absolute !important;
         width: 100%;
         min-height: 100%;
         top: 0;
         left: 0;
         opacity: 0.6;
+        z-index: 2;
 
         .timeline-overlay-step {
-            height: 14px;
-            background: darken($xibo-color-primary-l5, 10%);
-            margin-top: -5px;
-            margin-bottom: 5px;
+            position: relative;
+            z-index: 2;
+            height: $timeline-step-height;
+            background: darken($xibo-color-primary-l30, 10%);
+            margin-top: calc($timeline-step-height / -2);
+            margin-bottom: calc($timeline-step-height / 2);
+            cursor: pointer;
 
-            &:hover,
-            &.ui-droppable-hover {
-                background: lighten($xibo-color-primary-l5, 10%);
+            &:hover, &.ui-droppable-hover, &.ui-droppable-active:hover {
+                background: $xibo-color-primary-l30;
                 @include box-shadow(0px 0px 3px 1px $xibo-color-primary-l5);
             }
         }
 
         .timeline-overlay-dummy {
             height: 32px;
-        }
-
-        :nth-child(1) {
-            height: 12px;
-            margin: 0;
-        }
-
-        :nth-child(2) {
-            height: 35px;
+            margin-top: -$timeline-step-height;
         }
     }
 
@@ -514,16 +510,22 @@ $timeline-left-margin-width: 140px;
 
             &.ui-droppable-active {
                 @include z-index-set($playlist-editor-z-index-select);
-                background: $xibo-color-primary-l30  !important;
                 min-height: 100%;
 
                 #timeline-container {
-                    display: none;
+                    #timeline-overlay-container {
+                        display: block;
+                        background: darken($xibo-color-primary-l60, 15%)  !important;
+                    }
                 }
             }
 
-            &.ui-droppable-hover {
-                background: darken($xibo-color-primary-l30, 10%) !important;
+            &.ui-droppable-hover, &.ui-droppable-active:hover {
+                #timeline-container {
+                    #timeline-overlay-container {
+                        background: darken($xibo-color-primary-l60, 10%) !important;
+                    }
+                }
             }
         }
     }
