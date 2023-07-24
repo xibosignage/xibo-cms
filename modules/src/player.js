@@ -503,6 +503,11 @@ $(function() {
                     const {
                       dataItems,
                     } = composeFinalData(widgetInfo, data);
+                    const maxSlot = Math.max(
+                      ...widgetElement.elements.map(function(elem) {
+                        return elem?.slot || 0;
+                      }),
+                    ) + 1;
 
                     // For each data item, parse it and add it to the content;
                     let templateAlreadyAdded = false;
@@ -532,12 +537,21 @@ $(function() {
                           }
                         }
 
-                        renderElement(Object.assign(
-                          templateData,
-                          (String(dataOverride).length > 0 &&
-                              String(dataOverrideWith).length > 0) ?
-                            item : {data: item},
-                        ));
+                        if (_key >= element.slot && _key < dataItems?.length) {
+                          const currentSlot = element.slot + 1;
+                          const currentKey = _key + 1;
+                          const moduloEq = currentSlot === maxSlot ?
+                            0 : currentSlot;
+
+                          if (currentKey % maxSlot === moduloEq) {
+                            renderElement(Object.assign(
+                              templateData,
+                              (String(dataOverride).length > 0 &&
+                                String(dataOverrideWith).length > 0) ?
+                                item : {data: item},
+                            ));
+                          }
+                        }
                       }
                       templateAlreadyAdded = true;
                     });
