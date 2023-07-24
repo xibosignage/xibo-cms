@@ -478,6 +478,20 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\CypressTest' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\CypressTest(
+                    $c->get('store'),
+                    $c->get('session'),
+                    $c->get('scheduleFactory'),
+                    $c->get('displayGroupFactory'),
+                    $c->get('campaignFactory'),
+                    $c->get('displayFactory'),
+                    $c->get('layoutFactory'),
+                    $c->get('dayPartFactory')
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
             '\Xibo\Controller\Sessions' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Sessions(
                     $c->get('store'),

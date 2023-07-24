@@ -96,6 +96,10 @@ $app->post('/schedule', ['\Xibo\Controller\Schedule','add'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.add']))
     ->setName('schedule.add');
 
+$app->post('/scheduleCampaign', ['\Xibo\Controller\CypressTest','scheduleCampaign'])->setName('cypresstest.scheduleCampaign');
+$app->post('/displaySetStatus', ['\Xibo\Controller\CypressTest','displaySetStatus']);
+$app->get('/displayStatusEquals', ['\Xibo\Controller\CypressTest','displayStatusEquals']);
+
 $app->group('', function(RouteCollectorProxy $group) {
     $group->put('/schedule/{id}', ['\Xibo\Controller\Schedule','edit'])
         ->setName('schedule.edit');

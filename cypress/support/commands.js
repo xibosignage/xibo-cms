@@ -45,7 +45,8 @@
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 Cypress.Commands.add('login', function(callbackRoute = '/login') {
-  cy.visit(callbackRoute).then(function() {
+  cy.session('saveSession', () => {
+    cy.visit(callbackRoute);
     cy.request({
       method: 'POST',
       url: '/login',
@@ -417,6 +418,60 @@ Cypress.Commands.add('goToLayoutAndLoadPrefs', function(layoutId) {
 
   // Wait for user prefs to load
   cy.wait('@userPrefsLoad');
+});
+
+// Schedule a layout
+Cypress.Commands.add('scheduleCampaign', function(campaignId, displayName) {
+  cy.request({
+    method: 'POST',
+    url: '/api/scheduleCampaign',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      campaignId: campaignId,
+      displayName: displayName,
+    },
+  }).then((res) => {
+    return res.body.eventId;
+  });
+});
+
+//  Set Display Status
+Cypress.Commands.add('displaySetStatus', function(displayName, statusId) {
+  cy.request({
+    method: 'POST',
+    url: '/api/displaySetStatus',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      displayName: displayName,
+      statusId: statusId,
+    },
+  }).then((res) => {
+    return res.body;
+  });
+});
+
+// Check Display Status
+Cypress.Commands.add('displayStatusEquals', function(displayName, statusId) {
+  cy.request({
+    method: 'GET',
+    url: '/api/displayStatusEquals',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      displayName: displayName,
+      statusId: statusId,
+    },
+  }).then((res) => {
+    return res;
+  });
 });
 
 /**
