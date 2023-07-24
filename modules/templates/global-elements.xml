@@ -189,6 +189,7 @@
         <title>Date</title>
         <type>element</type>
         <dataType>global</dataType>
+        <showIn>none</showIn>
         <canRotate>true</canRotate>
         <thumbnail>date-thumb</thumbnail>
         <startWidth>300</startWidth>
@@ -347,6 +348,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <dataType>global</dataType>
         <title>Image</title>
         <thumbnail>image</thumbnail>
+        <showIn>none</showIn>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
         <properties>

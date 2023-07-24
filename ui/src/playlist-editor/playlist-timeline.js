@@ -62,7 +62,10 @@ PlaylistTimeline.prototype.render = function() {
   this.DOMObject.find('.timeline-overlay-step').droppable({
     greedy: true,
     tolerance: 'pointer',
-    accept: '[drop-to="region"]',
+    accept: (draggable) => {
+      // Check target
+      return pE.common.hasTarget(draggable, 'playlist');
+    },
     drop: function(event, ui) {
       const position = parseInt($(event.target).data('position')) + 1;
 
@@ -81,7 +84,7 @@ PlaylistTimeline.prototype.render = function() {
       pE.selectObject({
         target: $(e.target).parents('#playlist-timeline'),
         reloadViewer: true,
-        clickPosition: {positionToAdd: position},
+        positionToAdd: position,
       });
     }
   });
@@ -300,11 +303,20 @@ PlaylistTimeline.prototype.calculateWidgetHeights = function() {
 
       // Set height
       $widget.css('height', height + 'px');
+
+      // Give same height to the dropdown step
+      self.DOMObject.find(`.timeline-overlay-dummy[data-position=${_idx}]`)
+        .css('height', height + 'px');
+
       self.totalTimelineHeight += height;
     });
   } else {
     // All widgets have default height
     this.DOMObject.find('.playlist-widget')
+      .css('height', widgetDefaultHeight + 'px');
+
+    // Give same height to the dropdown step
+    this.DOMObject.find(`.timeline-overlay-dummy`)
       .css('height', widgetDefaultHeight + 'px');
 
     // Calculate timeline height
