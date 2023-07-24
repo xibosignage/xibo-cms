@@ -73,7 +73,7 @@ jQuery.fn.extend({
       // Make sure the speed is something sensible
       options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
-      const numberOfSlides = options.numItems;
+      const numberOfSlides = options.numItems || items?.length || 1;
       const duration = (options.durationIsPerItem) ?
         options.duration :
         options.duration / numberOfSlides;
