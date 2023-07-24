@@ -148,7 +148,7 @@
                     <layer>2</layer>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="dateFormat">D</property>
+                        <property id="dateFormat">d</property>
                         <property id="fontFamily">linear regular</property>
                         <property id="fontSize">80</property>
                         <property id="lineHeight">1.25</property>
@@ -167,7 +167,7 @@
                     <layer>2</layer>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="dateFormat">dddd</property>
+                        <property id="dateFormat">l</property>
                         <property id="fontFamily">railway regular</property>
                         <property id="fontSize">30</property>
                         <property id="fontColor">#fff</property>
@@ -184,7 +184,7 @@
                     <layer>2</layer>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="dateFormat">HH:mm</property>
+                        <property id="dateFormat">H:i</property>
                         <property id="fontFamily">railway regular</property>
                         <property id="fontSize">24</property>
                         <property id="fontColor">#fff</property>
@@ -277,7 +277,7 @@
                     <rotation>0</rotation>
                     <layer>2</layer>
                     <defaultProperties>
-                        <property id="dateFormat">ddd Do</property>
+                        <property id="dateFormat">l</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">32</property>
@@ -315,7 +315,7 @@
                     <rotation>0</rotation>
                     <layer>2</layer>
                     <defaultProperties>
-                        <property id="dateFormat">dddd Do @ HH:mm</property>
+                        <property id="dateFormat">M jS @ H:i</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="fontSize">18</property>
                         <property id="fontColor">#535353</property>
@@ -395,7 +395,7 @@
                     <rotation>0</rotation>
                     <layer>2</layer>
                     <defaultProperties>
-                        <property id="dateFormat">D MMMM</property>
+                        <property id="dateFormat">d F</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">30</property>
@@ -414,7 +414,7 @@
                     <rotation>0</rotation>
                     <layer>2</layer>
                     <defaultProperties>
-                        <property id="dateFormat">ddd</property>
+                        <property id="dateFormat">D</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">26</property>
@@ -433,7 +433,6 @@
                     <rotation>0</rotation>
                     <layer>2</layer>
                     <defaultProperties>
-                        <property id="dateFormat">D MMMM</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">30</property>
@@ -452,7 +451,7 @@
                     <rotation>0</rotation>
                     <layer>2</layer>
                     <defaultProperties>
-                        <property id="dateFormat">HH:mm</property>
+                        <property id="dateFormat">H:i</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">20</property>
@@ -472,7 +471,7 @@
                     <rotation>0</rotation>
                     <layer>2</layer>
                     <defaultProperties>
-                        <property id="dateFormat">- HH:mm</property>
+                        <property id="dateFormat">- H:i</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="bold">1</property>
                         <property id="fontSize">20</property>

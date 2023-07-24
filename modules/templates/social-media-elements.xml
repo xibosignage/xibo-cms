@@ -149,7 +149,7 @@
                     <height>40</height>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="dateFormat">HH:mm - DD/MM/YYYY</property>
+                        <property id="dateFormat">H:i - d/m/Y</property>
                         <property id="fontFamily">aileron regular</property>
                         <property id="fontSize">20</property>
                         <property id="fontColor">#3c3ad3</property>
@@ -251,7 +251,7 @@
                     <layer>2</layer>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="dateFormat">MMM D, YYYY,  HH:mm</property>
+                        <property id="dateFormat">F d, Y H:i</property>
                         <property id="fontFamily">railway regular</property>
                         <property id="fontSize">16</property>
                         <property id="fontColor">#626262</property>
@@ -329,7 +329,7 @@
                     <layer>1</layer>
                     <rotation>0</rotation>
                     <defaultProperties>
-                        <property id="dateFormat">MMM D,  HH:mm</property>
+                        <property id="dateFormat">M d,  H:i</property>
                         <property id="fontFamily">linear regular</property>
                         <property id="fontSize">20</property>
                         <property id="fontColor">#aeaeae</property>
