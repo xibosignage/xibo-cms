@@ -997,7 +997,10 @@ Widget.prototype.updateElementMap = function(element) {
         return (
           el == [] ||
           el == undefined ||
-          el[0].elGroup == elementGroupId);
+          (
+            elementGroupId != undefined &&
+            el[0].elGroup == elementGroupId
+          ));
       });
 
     let newSlot = 0;
