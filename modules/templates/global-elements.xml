@@ -195,7 +195,7 @@
         <startWidth>300</startWidth>
         <startHeight>80</startHeight>
         <properties>
-            <property id="date" type="date" format="DD/MM/YYYY HH:mm:ss" variant="dateTime">
+            <property id="date" type="date" format="d/m/Y H:i:s" variant="dateTime">
                 <title>Date</title>
                 <default></default>
             </property>
