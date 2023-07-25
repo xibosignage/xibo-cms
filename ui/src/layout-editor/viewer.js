@@ -57,6 +57,9 @@ const Viewer = function(parent, container) {
 
   // Initialise moveable
   this.initMoveable();
+
+  // Fullscreen mode flag
+  this.fullscreenMode = false;
 };
 
 /**
@@ -1589,6 +1592,16 @@ Viewer.prototype.toggleFullscreen = function() {
 
   this.DOMObject.parents('#layout-viewer-container').toggleClass('fullscreen');
   this.parent.editorContainer.toggleClass('fullscreen-mode');
+
+  this.fullscreenMode = this.parent.editorContainer.hasClass('fullscreen-mode');
+
+  // Add attribute to body for editor fullscreen to be used by the moveable
+  if (this.fullscreenMode) {
+    $('body').attr('layout-editor-fs', true);
+  } else {
+    $('body').removeAttr('layout-editor-fs');
+  }
+
   this.render(lD.selectedObject, lD.layout);
 };
 

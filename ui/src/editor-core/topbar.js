@@ -180,6 +180,14 @@ Topbar.prototype.render = function() {
 * @param {object} jumpListContainer
 */
 Topbar.prototype.setupJumpList = function(jumpListContainer) {
+  // If we are in template edit mode, don't show
+  if (
+    this.parent.templateEditMode != undefined &&
+    this.parent.templateEditMode === true
+  ) {
+    return;
+  }
+
   const html = topbarLayoutJumpList(this.jumpList);
 
   // Append layout html to the main div

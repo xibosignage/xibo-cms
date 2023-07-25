@@ -82,3 +82,7 @@ $toolbar-widgets-card-height: 60px;
 $toolbar-widgets-card-margin-bottom: 0.5rem;
 
 $properties-panel-width: 320px;
+
+$viewer-bottom-bar-height: 64px;
+$viewer-bottom-bar-border-width: 2px;
+$viewer-bottom-bar-plus-border-height: calc($viewer-bottom-bar-height + $viewer-bottom-bar-border-width);

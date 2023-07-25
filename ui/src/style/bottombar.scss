@@ -2,14 +2,14 @@
 @import "mixins";
 
 .editor-bottom-bar  {
-    height: 38px;
+    height: calc($viewer-bottom-bar-height + $viewer-bottom-bar-border-width);
     margin: 0px 16px 16px 16px;
     
     nav {
-        border: 2px solid $xibo-color-primary-l60;
+        border: $viewer-bottom-bar-border-width solid $xibo-color-primary-l60;
+        border-top: 0;
         color: $xibo-color-primary;
-        padding: 0 16px !important;
-        min-height: 30px;
+        min-height: $viewer-bottom-bar-height;
         font-size: 0;
         z-index: $viewer-bottom-bar-z-index;
         margin: 0;
@@ -62,20 +62,21 @@
             display: none;
         }
 
-        .viewer-navbar-overlay {
-            position: absolute;
+        .viewer-navbar-controls, .viewer-navbar-info {
+            display: flex;
+            align-items: center;
+            height: calc($viewer-bottom-bar-height / 2);
+            padding: 0 1rem;
+        }
+
+        .viewer-navbar-info {
             width: 100%;
             margin: 0;
-            height: 38px;
-            top: -40px;
             color: $xibo-color-primary-l5;
-            opacity: 0.8;
-            padding: 0 1rem;
-            left: 0;
             background-color: $xibo-color-primary;
 
             .info {
-                line-height: 2.5rem;
+                width: 100%;
 
                 .fa-arrow-right {
                     margin: 0 12px;
@@ -95,14 +96,10 @@
                 width: 38px;
                 font-size: 1.2rem;
             }
-
-            &:hover {
-                opacity: 1 !important;
-            }
         }
 
         &.designer-layout {
-            .viewer-navbar-overlay {
+            .viewer-navbar-info {
                 display: none;
             }
         }
@@ -113,25 +110,27 @@
     }
 }
 
-#layout-editor.fullscreen-mode .editor-bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: $toolbar-card-z-index;
-    margin: 0;
+#layout-editor.fullscreen-mode {
+    .editor-bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: $toolbar-card-z-index;
+        margin: 0;
 
-    &.fs-edit {
-        #inline-editor-save {
+        &.fs-edit {
+            #inline-editor-save {
+                display: inline-block;
+            }  
+        }
+
+        .hide-on-fs {
+            display: none;
+        }
+
+        .show-on-fs {
             display: inline-block;
-        }  
-    }
-
-    .hide-on-fs {
-        display: none;
-    }
-
-    .show-on-fs {
-        display: inline-block;
+        }
     }
 }
