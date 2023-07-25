@@ -2237,6 +2237,13 @@ class Schedule extends Base
                 $event->setUnmatchedProperty('recurringEventDescription', '');
             }
 
+            if (!$event->isAlwaysDayPart() && !$event->isCustomDayPart()) {
+                $dayPart = $this->dayPartFactory->getById($event->dayPartId);
+                $dayPart->adjustForDate(Carbon::createFromTimestamp($event->fromDt));
+                $event->fromDt = $dayPart->adjustedStart->format('U');
+                $event->toDt = $dayPart->adjustedEnd->format('U');
+            }
+
             if ($this->isApi($request)) {
                 continue;
             }
