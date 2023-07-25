@@ -1601,10 +1601,10 @@ var setupSelectForSchedule = function (dialog) {
                 return {
                     results: [
                         {
-                            text: groups.length > 1 ? $displaySelect.data('transGroups') : null,
+                            text: groups.length > 0 ? $displaySelect.data('transGroups') : null,
                             children: groups
                         },{
-                            text: displays.length > 1 ? $displaySelect.data('transDisplay') : null,
+                            text: displays.length > 0 ? $displaySelect.data('transDisplay') : null,
                             children: displays
                         }
                     ],
