@@ -305,6 +305,30 @@ class Schedule implements \JsonSerializable
     public $syncGroupId;
 
     /**
+     * @SWG\Property(description="The userName of the user that last modified this Schedule")
+     * @var string
+     */
+    public $modifiedBy;
+
+    /**
+     * @SWG\Property(description="The Date this Schedule was created on")
+     * @var string
+     */
+    public $createdOn;
+
+    /**
+     * @SWG\Property(description="The Date this Schedule was las updated on")
+     * @var string
+     */
+    public $updatedOn;
+
+    /**
+     * @SWG\Property(description="The name of this Scheduled Event")
+     * @var string
+     */
+    public $name;
+
+    /**
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
@@ -854,7 +878,11 @@ class Schedule implements \JsonSerializable
                 `actionLayoutCode`,
                 `maxPlaysPerHour`,
                 `parentCampaignId`,
-                `syncGroupId`
+                `syncGroupId`,
+                `modifiedBy`,
+                `createdOn`,
+                `updatedOn`,
+                `name`
             )
             VALUES (
                 :eventTypeId,
@@ -881,7 +909,11 @@ class Schedule implements \JsonSerializable
                 :actionLayoutCode,
                 :maxPlaysPerHour,
                 :parentCampaignId,
-                :syncGroupId
+                :syncGroupId,
+                :modifiedBy,
+                :createdOn,
+                :updatedOn,
+                :name
             )
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -911,6 +943,10 @@ class Schedule implements \JsonSerializable
             'maxPlaysPerHour' => $this->maxPlaysPerHour,
             'parentCampaignId' => $this->parentCampaignId == 0 ? null : $this->parentCampaignId,
             'syncGroupId' => $this->syncGroupId == 0 ? null : $this->syncGroupId,
+            'modifiedBy' => null,
+            'createdOn' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'updatedOn' => null,
+            'name' => !empty($this->name) ? $this->name : null
         ]);
     }
 
@@ -945,7 +981,10 @@ class Schedule implements \JsonSerializable
             `actionLayoutCode` = :actionLayoutCode,
             `maxPlaysPerHour` = :maxPlaysPerHour,
             `parentCampaignId` = :parentCampaignId,
-            `syncGroupId` = :syncGroupId
+            `syncGroupId` = :syncGroupId,
+            `modifiedBy` = :modifiedBy,
+            `updatedOn` = :updatedOn,
+            `name` = :name
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -973,6 +1012,9 @@ class Schedule implements \JsonSerializable
             'maxPlaysPerHour' => $this->maxPlaysPerHour,
             'parentCampaignId' => $this->parentCampaignId == 0 ? null : $this->parentCampaignId,
             'syncGroupId' => $this->syncGroupId == 0 ? null : $this->syncGroupId,
+            'modifiedBy' => $this->modifiedBy,
+            'updatedOn' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'name' => $this->name,
             'eventId' => $this->eventId,
         ]);
     }

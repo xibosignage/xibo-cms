@@ -385,7 +385,11 @@ class ScheduleFactory extends BaseFactory
             `schedule`.syncGroupId,
             `daypart`.isAlways,
             `daypart`.isCustom,
-            `syncgroup`.name AS syncGroupName
+            `syncgroup`.name AS syncGroupName,
+            `schedule`.modifiedBy,
+            `schedule`.createdOn,
+            `schedule`.updatedOn,
+            `schedule`.name
         ';
 
         $body = ' FROM `schedule`
