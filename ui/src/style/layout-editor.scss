@@ -198,7 +198,7 @@ body {
         position: absolute;
         display: flex;
         gap: 3px;
-        bottom: 42px;
+        bottom: 6px;
         right: 6px;
 
         .snap-to-grid-value {
@@ -320,7 +320,7 @@ body {
 
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
-    height: calc(100% - 54px);
+    height: calc(100% - $viewer-bottom-bar-plus-border-height - 16px);
     padding: 16px 16px 0px 16px;
 
     .main-panel-wrapper {
@@ -343,7 +343,7 @@ body {
         border: none;
         position: relative;
         background: $xibo-color-neutral-900;
-        padding: 18px;
+        padding: 6px;
         border-radius: 2px 2px 0 0;
         /* Prevent text select */
         -webkit-user-select: none;
@@ -359,7 +359,7 @@ body {
         .viewer-element {
             position: relative;
             overflow: clip;
-            overflow-clip-margin: 6px;
+            // overflow-clip-margin: 6px;
         }
 
         .viewer-element .module-preview-icon {
@@ -527,7 +527,7 @@ body {
         left: 0;
         top: 0;
         padding: 0;
-        height: calc(100% - 38px);
+        height: calc(100% - $viewer-bottom-bar-plus-border-height);
         width: 100%;
 
         #fullscreenBtn,
@@ -539,10 +539,10 @@ body {
             position: fixed;
             /* Stay in place */
             z-index: calc(#{$designer-overlay-z-index} + 10);
-            left: 8px;
-            top: 8px;
-            width: calc(100% - 16px);
-            height: calc(100% - 54px);
+            left: 6px;
+            top: 6px;
+            width: calc(100% - 12px);
+            height: calc(100% - $viewer-bottom-bar-plus-border-height - 12px);
             @include set-transparent-color(background-color, $xibo-color-neutral-900, 0.9);
         }
 
@@ -1620,6 +1620,10 @@ div#bg_media_name {
 /* Moveable elements */
 .moveable-control-box {
     z-index: $viewer-moveable-z-index !important;
+}
+
+body[layout-editor-fs] .moveable-control-box {
+    z-index: calc(#{$designer-overlay-z-index} + 30) !important;
 }
 
 .moveable-line, .moveable-control {
