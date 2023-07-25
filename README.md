@@ -1,25 +1,20 @@
-# Introduction
-
 [![Xibo - Digital Signage](web/theme/default/img/xibologo.png)](https://xibosignage.com)
 
 [![Github All Releases](https://img.shields.io/github/downloads/xibosignage/xibo-cms/total.svg)]()
 
 
 ## About Xibo
-
-Xibo is a Digital Signage platform released under the AGPLv3 Open Source licence. We are a powerful Open Source
-Digital Signage content management system with Windows display player software. We have commercial player options for
-Android, LG webOS and Samsung Tizen, as well as CMS hosting and support.
+Xibo is a powerful Open Source Digital Signage platform with a web content management system and Windows display player
+software. We have commercial player options for Android, LG webOS and Samsung Tizen, as well as CMS hosting and support.
 
 See [https://xibosignage.com](https://xibosignage.com) for more information.
 
 Our first open source release 1.0.0-rc1 landed in 2009, and we're committed to keeping everything you need to run a
 digital signage network, or single screen, open source and free to use.
 
-
 ## Licence
 
-[![Licence](https://img.shields.io/github/license/xibosignage/xibo-cms]()
+[![Licence](https://img.shields.io/github/license/xibosignage/xibo-cms)]()
 
 Copyright (C) 2006-2023 Xibo Signage Ltd and Contributors.
 
