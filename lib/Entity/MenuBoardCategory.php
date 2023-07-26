@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,6 +28,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\DataType\ProductCategory;
 
 /**
  * @SWG\Definition()
@@ -102,6 +103,19 @@ class MenuBoardCategory implements \JsonSerializable
             $this->mediaId,
             $this->code
         );
+    }
+
+    /**
+     * Convert this to a product category
+     * @return ProductCategory
+     */
+    public function toProductCategory(): ProductCategory
+    {
+        $productCategory = new ProductCategory();
+        $productCategory->name = $this->name;
+        //$productCategory->description = $this->description;
+        $productCategory->image = $this->mediaId;
+        return $productCategory;
     }
 
     /**

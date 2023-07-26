@@ -23,8 +23,10 @@
 namespace Xibo\Listener;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\MenuBoardCategoryRequest;
 use Xibo\Event\MenuBoardProductRequest;
 use Xibo\Factory\MenuBoardCategoryFactory;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Listener for dealing with a menu board provider
@@ -43,6 +45,7 @@ class MenuBoardProviderListener
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): MenuBoardProviderListener
     {
         $dispatcher->addListener(MenuBoardProductRequest::$NAME, [$this, 'onProductRequest']);
+        $dispatcher->addListener(MenuBoardCategoryRequest::$NAME, [$this, 'onCategoryRequest']);
         return $this;
     }
 
@@ -53,15 +56,59 @@ class MenuBoardProviderListener
         $dataProvider = $event->getDataProvider();
         $menuId = $dataProvider->getProperty('menuId', 0);
         if (empty($menuId)) {
-            $this->getLogger()->debug('onDataRequest: no menuId.');
+            $this->getLogger()->debug('onProductRequest: no menuId.');
             return;
         }
 
         $products = $this->menuBoardCategoryFactory->getProductData(null, ['menuId' => $menuId]);
 
-        foreach ($products as $product) {
-            $dataProvider->addItem($product->toProduct());
+        foreach ($products as $menuBoardProduct) {
+            $product = $menuBoardProduct->toProduct();
+
+            // Convert the image to a library image?
+            if ($product->image !== null) {
+                // The content is the ID of the image
+                try {
+                    $product->image = $dataProvider->addLibraryFile(intval($product->image));
+                } catch (NotFoundException $notFoundException) {
+                    $this->getLogger()->error('onProductRequest: Invalid library media reference: ' . $product->image);
+                    $product->image = null;
+                }
+            }
+            $dataProvider->addItem($product);
         }
+
+        $dataProvider->setIsHandled();
+    }
+
+    public function onCategoryRequest(MenuBoardCategoryRequest $event): void
+    {
+        $this->getLogger()->debug('onCategoryRequest: data source is ' . $event->getDataProvider()->getDataSource());
+
+        $dataProvider = $event->getDataProvider();
+        $menuId = $dataProvider->getProperty('menuId', 0);
+        if (empty($menuId)) {
+            $this->getLogger()->debug('onCategoryRequest: no menuId.');
+            return;
+        }
+        $categoryId = $dataProvider->getProperty('categoryId', 0);
+        if (empty($categoryId)) {
+            $this->getLogger()->debug('onCategoryRequest: no categoryId.');
+            return;
+        }
+
+        $category = $this->menuBoardCategoryFactory->getById($categoryId)->toProductCategory();
+        // Convert the image to a library image?
+        if ($category->image !== null) {
+            // The content is the ID of the image
+            try {
+                $category->image = $dataProvider->addLibraryFile(intval($category->image));
+            } catch (NotFoundException $notFoundException) {
+                $this->getLogger()->error('onCategoryRequest: Invalid library media reference: ' . $category->image);
+                $category->image = null;
+            }
+        }
+        $dataProvider->addItem($category);
 
         $dataProvider->setIsHandled();
     }

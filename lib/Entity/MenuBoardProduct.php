@@ -161,6 +161,10 @@ class MenuBoardProduct implements \JsonSerializable
         return sprintf('MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %s, Media %d, Code %s', $this->menuProductId, $this->menuCategoryId, $this->menuId, $this->name, $this->price, $this->mediaId, $this->code);
     }
 
+    /**
+     * Convert this to a Product
+     * @return Product
+     */
     public function toProduct(): Product
     {
         $product = new Product();
@@ -169,7 +173,7 @@ class MenuBoardProduct implements \JsonSerializable
         $product->description = $this->description;
         $product->availability = $this->availability;
         $product->allergyInfo = $this->allergyInfo;
-        $product->mediaId = $this->mediaId;
+        $product->image = $this->mediaId;
         foreach (($this->productOptions ?? []) as $productOption) {
             $product->productOptions[] = [
                 'name' => $productOption->option,

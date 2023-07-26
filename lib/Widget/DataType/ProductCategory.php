@@ -25,30 +25,22 @@ namespace Xibo\Widget\DataType;
 use Xibo\Widget\Definition\DataType;
 
 /**
- * Product DataType (primarily used for the Menu Board component)
+ * Product Category (primarily used for the Menu Board component)
  */
-class Product implements \JsonSerializable, DataTypeInterface
+class ProductCategory implements \JsonSerializable, DataTypeInterface
 {
     public $name;
-    public $price;
     public $description;
-    public $availability;
-    public $allergyInfo;
     public $image;
-    public $productOptions;
 
     public function getDefinition(): DataType
     {
         $dataType = new DataType();
-        $dataType->id = 'product';
-        $dataType->name = __('Proudct');
+        $dataType->id = 'product-category';
+        $dataType->name = __('Product Category');
         $dataType->addField('name', 'Name', 'string');
-        $dataType->addField('price', 'Price', 'string');
         $dataType->addField('description', 'Description', 'string');
-        $dataType->addField('availability', 'Availability', 'int');
-        $dataType->addField('allergyInfo', 'allergyInfo', 'string');
         $dataType->addField('image', 'image', 'int');
-        $dataType->addField('productOptions', 'productOptions', 'array');
         return $dataType;
     }
 
@@ -56,12 +48,8 @@ class Product implements \JsonSerializable, DataTypeInterface
     {
         return [
             'name' => $this->name,
-            'price' => $this->price,
             'description' => $this->description,
-            'availability' => $this->availability,
-            'allergyInfo' => $this->allergyInfo,
             'image' => $this->image,
-            'productOptions' => $this->productOptions,
         ];
     }
 }
