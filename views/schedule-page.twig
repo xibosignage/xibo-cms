@@ -188,6 +188,7 @@
                                     <th>{% trans 'ID' %}</th>
                                     <th></th>
                                     <th>{% trans 'Event Type' %}</th>
+                                    <th>{% trans 'Name' %}</th>
                                     <th>{% trans 'Start' %}</th>
                                     <th>{% trans 'End' %}</th>
                                     <th>{% trans 'Campaign' %}</th>
@@ -203,6 +204,9 @@
                                     <th>{% trans 'Recurrence Repeats On' %}</th>
                                     <th>{% trans 'Recurrence End' %}</th>
                                     <th>{% trans 'Priority?' %}</th>
+                                    <th>{% trans 'Created On' %}</th>
+                                    <th>{% trans 'Updated On' %}</th>
+                                    <th>{% trans 'Modified By' %}</th>
                                     <th class="rowMenu"></th>
                                 </tr>
                                 </thead>
@@ -1257,6 +1261,7 @@
           },
           {
             name: 'icon',
+            className: 'align-middle',
             responsivePriority: 2,
             data: function (data) {
               var eventIcon = 'fa-desktop';
@@ -1312,13 +1317,20 @@
           },
           {
             name: 'eventTypeId',
+            className: 'align-middle',
             responsivePriority: 2,
             data: function (data) {
               return data.eventTypeName
             }
           },
           {
+            data: 'name',
+            className: 'align-middle',
+            responsivePriority: 3,
+          },
+          {
             name: 'fromDt',
+            className: 'align-middle',
             responsivePriority: 2,
             data: function (data) {
               if (data.isAlways === 1) {
@@ -1330,6 +1342,7 @@
           },
           {
             name: 'toDt',
+            className: 'align-middle',
             responsivePriority: 2,
             data: function (data) {
               if (data.isAlways === 1) {
@@ -1341,6 +1354,7 @@
           },
           {
             name: 'campaign',
+            className: 'align-middle',
             responsivePriority: 2,
             data: function (data) {
               if (data.eventTypeId !== 9) {
@@ -1357,6 +1371,7 @@
           },
           {
             name: 'displayGroups',
+            className: 'align-middle',
             responsivePriority: 2,
             sortable: false,
             data: function (data) {
@@ -1372,10 +1387,12 @@
           },
           {
             data: 'shareOfVoice',
+            className: 'align-middle',
             responsivePriority: 4,
           },
           {
             name: 'maxPlaysPerHour',
+            className: 'align-middle',
             responsivePriority: 4,
             data: function (data) {
               if (data.maxPlaysPerHour === 0) {
@@ -1387,31 +1404,37 @@
           },
           {
             data: 'isGeoAware',
+            className: 'align-middle',
             responsivePriority: 4,
             "render": dataTableTickCrossColumn,
           },
           {
             data: 'recurringEvent',
+            className: 'align-middle',
             responsivePriority: 4,
             "render": dataTableTickCrossColumn,
           },
           {
             data: 'recurringEventDescription',
+            className: 'align-middle',
             responsivePriority: 4,
             sortable: false,
           },
           {
             data: 'recurrenceType',
+            className: 'align-middle',
             visible: false,
             responsivePriority: 4,
           },
           {
             data: 'recurrenceDetail',
+            className: 'align-middle',
             visible: false,
             responsivePriority: 4,
           },
           {
             name: 'recurrenceRepeatsOn',
+            className: 'align-middle',
             visible: false,
             responsivePriority: 4,
             data: function (data) {
@@ -1440,6 +1463,7 @@
           },
           {
             name: 'recurrenceRange',
+            className: 'align-middle',
             visible: false,
             responsivePriority: 4,
             data: function (data) {
@@ -1452,10 +1476,27 @@
           },
           {
             data: 'isPriority',
+            className: 'align-middle',
             responsivePriority: 2,
           },
           {
+            data: 'createdOn',
+            className: 'align-middle',
+            responsivePriority: 4,
+          },
+          {
+            data: 'updatedOn',
+            className: 'align-middle',
+            responsivePriority: 4,
+          },
+          {
+            data: 'modifiedByName',
+            className: 'align-middle',
+            responsivePriority: 4,
+          },
+          {
             orderable: false,
+            className: 'align-middle',
             responsivePriority: 1,
             data: dataTableButtonsColumn
           },

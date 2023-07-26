@@ -1477,11 +1477,11 @@ var setupSelectForSchedule = function (dialog) {
     $campaignSelect.select2({
         dropdownParent: $(dialog),
         ajax: {
-            url: $campaignSelect.data("searchUrl"),
-            dataType: "json",
+            url: $campaignSelect.data('searchUrl'),
+            dataType: 'json',
             data: function(params) {
                 var query = {
-                    isLayoutSpecific: $campaignSelect.data("searchIsLayoutSpecific"),
+                    isLayoutSpecific: $campaignSelect.data('searchIsLayoutSpecific'),
                     retired: 0,
                     totalDuration: 0,
                     name: params.term,
@@ -1489,20 +1489,20 @@ var setupSelectForSchedule = function (dialog) {
                     length: 10,
                     columns: [
                         {
-                            "data": "isLayoutSpecific"
+                            data: 'isLayoutSpecific'
                         },
                         {
-                            "data": "campaign"
+                            data: 'campaign'
                         }
                     ],
                     order: [
                         {
-                            "column": 0,
-                            "dir": "asc"
+                            column: 0,
+                            dir: 'asc'
                         },
                         {
-                            "column": 1,
-                            "dir": "asc"
+                            column: 1,
+                            dir: 'asc'
                         }
                     ]
                 };
@@ -1519,8 +1519,8 @@ var setupSelectForSchedule = function (dialog) {
 
                 $.each(data.data, function(index, el) {
                     results.push({
-                        "id": el["campaignId"],
-                        "text": el["campaign"]
+                        id: el['campaignId'],
+                        text: el['campaign']
                     });
                 });
 
@@ -1540,8 +1540,9 @@ var setupSelectForSchedule = function (dialog) {
     var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
     $displaySelect.select2({
         ajax: {
-            url: $displaySelect.data("searchUrl"),
-            dataType: "json",
+            url: $displaySelect.data('searchUrl'),
+            dataType: 'json',
+            dropdownParent: $(dialog),
             data: function(params) {
                 var query = {
                     isDisplaySpecific: -1,
@@ -1551,20 +1552,20 @@ var setupSelectForSchedule = function (dialog) {
                     length: 10,
                     columns: [
                         {
-                            "data": "isDisplaySpecific"
+                            data: 'isDisplaySpecific'
                         },
                         {
-                            "data": "displayGroup"
+                            data: 'displayGroup'
                         }
                     ],
                     order: [
                         {
-                            "column": 0,
-                            "dir": "asc"
+                            column: 0,
+                            dir: 'asc'
                         },
                         {
-                            "column": 1,
-                            "dir": "asc"
+                            column: 1,
+                            dir: 'asc'
                         }
                     ]
                 };
@@ -1583,13 +1584,13 @@ var setupSelectForSchedule = function (dialog) {
                 $.each(data.data, function(index, element) {
                     if (element.isDisplaySpecific === 1) {
                         displays.push({
-                            "id": element.displayGroupId,
-                            "text": element.displayGroup
+                            id: element.displayGroupId,
+                            text: element.displayGroup
                         });
                     } else {
                         groups.push({
-                            "id": element.displayGroupId,
-                            "text": element.displayGroup
+                            id: element.displayGroupId,
+                            text: element.displayGroup
                         });
                     }
                 });
@@ -1600,11 +1601,11 @@ var setupSelectForSchedule = function (dialog) {
                 return {
                     results: [
                         {
-                            "text": $displaySelect.data('transGroups'),
-                            "children": groups
+                            text: groups.length > 0 ? $displaySelect.data('transGroups') : null,
+                            children: groups
                         },{
-                            "text": $displaySelect.data('transDisplay'),
-                            "children": displays
+                            text: displays.length > 0 ? $displaySelect.data('transDisplay') : null,
+                            children: displays
                         }
                     ],
                     pagination: {

@@ -806,12 +806,15 @@ function membersFormSubmit(id) {
               LoginBox(response.message);
             } else {
               // Likely just an error that we want to report on
-              form.find('.saving').remove();
+              // Remove the saving cog
+              form.closest('.modal-dialog').find('.saving').remove();
               SystemMessageInline(response.message, form.closest('.modal'));
             }
           }
         },
         error: function(responseText) {
+          // Remove the saving cog
+          form.closest('.modal-dialog').find('.saving').remove();
           SystemMessage(responseText, false);
         },
       });
@@ -819,7 +822,7 @@ function membersFormSubmit(id) {
     // When the queue completes naturally, execute this function.
     complete: function() {
       // Remove the save button
-      form.find('.saving').parent().remove();
+      form.closest('.modal-dialog').find('.saving').parent().remove();
 
       // Refresh the grids
       // (this is a global refresh)

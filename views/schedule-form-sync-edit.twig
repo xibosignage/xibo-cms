@@ -54,6 +54,10 @@
                     <div class="tab-pane active" id="general">
                         {{ forms.hidden("eventTypeId", eventTypeId) }}
 
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "Optional Name for this Event (1-50 characters)" %}{% endset %}
+                        {{ forms.input("name", title, event.name, helpText) }}
+
                         {% set title %}{% trans "Sync Group" %}{% endset %}
                         {% set helpText %}{% trans "Please select existing Sync Group" %}{% endset %}
                         {% set attributes = [

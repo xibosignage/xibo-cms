@@ -385,7 +385,12 @@ class ScheduleFactory extends BaseFactory
             `schedule`.syncGroupId,
             `daypart`.isAlways,
             `daypart`.isCustom,
-            `syncgroup`.name AS syncGroupName
+            `syncgroup`.name AS syncGroupName,
+            `schedule`.modifiedBy,
+            `user`.userName as modifiedByName,
+            `schedule`.createdOn,
+            `schedule`.updatedOn,
+            `schedule`.name
         ';
 
         $body = ' FROM `schedule`
@@ -399,6 +404,8 @@ class ScheduleFactory extends BaseFactory
             ON `command`.commandId = `schedule`.commandId
             LEFT OUTER JOIN `syncgroup`
             ON `syncgroup`.syncGroupId = `schedule`.syncGroupId
+            LEFT OUTER JOIN `user`
+            ON `user`.userId = `schedule`.modifiedBy
           WHERE 1 = 1';
 
         if ($parsedFilter->getInt('eventId') !== null) {
@@ -578,6 +585,7 @@ class ScheduleFactory extends BaseFactory
                     'recurrenceMonthlyRepeatsOn',
                     'isGeoAware',
                     'maxPlaysPerHour',
+                    'modifiedBy'
                 ]
             ]);
         }
