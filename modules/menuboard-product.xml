@@ -1,0 +1,43 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-menuboard-product</id>
+    <name>Menu Board: Products</name>
+    <author>Core</author>
+    <description>Display products from a Menu Board</description>
+    <class>\Xibo\Widget\MenuBoardProductProvider</class>
+    <dataCacheKey>%menuId%</dataCacheKey>
+    <type>menuboard-product</type>
+    <dataType>product</dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="menuId" type="number">
+            <title>Menu</title>
+            <helpText>Please select the Menu to use as a source of data for this template.</helpText>
+        </property>
+    </properties>
+    <preview></preview>
+</module>

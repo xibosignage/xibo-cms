@@ -45,7 +45,7 @@
                 <li class="sidebar-list"><a href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a></li>
             {% endif %}
 
-            {% if currentUser.featureEnabled("menuboard.view") and not hideMenuBoard %}
+            {% if currentUser.featureEnabled("menuboard.view") %}
                 <li class="sidebar-list"><a href="{{ url_for("menuBoard.view") }}">{% trans "Menu Boards" %}</a></li>
             {% endif %}
         {% endif %}

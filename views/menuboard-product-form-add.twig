@@ -65,7 +65,7 @@
 
                         {% set title %}{% trans "Availability" %}{% endset %}
                         {% set helpText %}{% trans "Should this Product appear as available?" %}{% endset %}
-                        {{ forms.switch('availability', title, "", helpText) }}
+                        {{ forms.switch('availability', title, 1, helpText) }}
 
                         {% set title %}{% trans "Code" %}{% endset %}
                         {% set helpText %}{% trans "The Code identifier for this Menu Board Product" %}{% endset %}

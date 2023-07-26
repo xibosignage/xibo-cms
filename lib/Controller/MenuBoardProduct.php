@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -174,17 +174,17 @@ class MenuBoardProduct extends Base
                 continue;
             }
 
-            $menuBoardProduct->thumbnail = '';
             $menuBoardProduct->includeProperty('buttons');
             $menuBoardProduct->buttons = [];
 
             if ($menuBoardProduct->mediaId != 0) {
-                $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]);
-                $menuBoardProduct->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
-                $menuBoardProduct->thumbnailUrl = $download . '&isThumb=1';
+                $menuBoardProduct->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]),
+                );
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
                 $menuBoardProduct->buttons[] = [
                     'id' => 'menuBoardProduct_edit_button',
                     'url' => $this->urlFor($request, 'menuBoard.product.edit.form', ['id' => $menuBoardProduct->menuProductId]),
@@ -192,7 +192,7 @@ class MenuBoardProduct extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
                 $menuBoardProduct->buttons[] = ['divider' => true];
 
                 $menuBoardProduct->buttons[] = [

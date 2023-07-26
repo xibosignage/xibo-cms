@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,6 +27,7 @@ use Xibo\Factory\MenuBoardProductOptionFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Widget\DataType\Product;
 
 /**
  * @SWG\Definition()
@@ -79,7 +80,7 @@ class MenuBoardProduct implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The Menu Board Product availability")
-     * @var string
+     * @var int
      */
     public $availability;
 
@@ -97,7 +98,7 @@ class MenuBoardProduct implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The Menu Board Product array of options", @SWG\Items(type="string"))
-     * @var array
+     * @var MenuBoardProductOption[]
      */
     public $productOptions;
 
@@ -158,6 +159,24 @@ class MenuBoardProduct implements \JsonSerializable
     public function __toString()
     {
         return sprintf('MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %s, Media %d, Code %s', $this->menuProductId, $this->menuCategoryId, $this->menuId, $this->name, $this->price, $this->mediaId, $this->code);
+    }
+
+    public function toProduct(): Product
+    {
+        $product = new Product();
+        $product->name = $this->name;
+        $product->price = $this->price;
+        $product->description = $this->description;
+        $product->availability = $this->availability;
+        $product->allergyInfo = $this->allergyInfo;
+        $product->mediaId = $this->mediaId;
+        foreach (($this->productOptions ?? []) as $productOption) {
+            $product->productOptions[] = [
+                'name' => $productOption->option,
+                'value' => $productOption->value,
+            ];
+        }
+        return $product;
     }
 
     /**

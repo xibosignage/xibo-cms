@@ -113,10 +113,20 @@
                         responsivePriority: 2
                     },
                     {
-                        "name": "mediaId",
                         responsivePriority: 3,
-                        "data": null,
-                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                        data: 'mediaId',
+                        render: function (data, type, row) {
+                          if (type !== 'display' || data === null || data === '') {
+                            return data;
+                          }
+
+                          if (row.thumbnail && row.thumbnail !== '') {
+                            return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' +
+                              row.thumbnail + '>' + '<img src="' + row.thumbnail + '&isThumb=1" />';
+                          } else {
+                            return '';
+                          }
+                        }
                     },
                     {
                         "data": "availability",

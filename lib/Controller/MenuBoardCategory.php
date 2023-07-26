@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -162,18 +162,22 @@ class MenuBoardCategory extends Base
                 continue;
             }
 
-            $menuBoardCategory->thumbnail = '';
-
             if ($menuBoardCategory->mediaId != 0) {
-                $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardCategory->mediaId], ['preview' => 1]);
-                $menuBoardCategory->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
-                $menuBoardCategory->thumbnailUrl = $download . '&isThumb=1';
+                $menuBoardCategory->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor(
+                        $request,
+                        'library.download',
+                        ['id' => $menuBoardCategory->mediaId],
+                        ['preview' => 1],
+                    )
+                );
             }
 
             $menuBoardCategory->includeProperty('buttons');
             $menuBoardCategory->buttons = [];
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
                 $menuBoardCategory->buttons[] = [
                     'id' => 'menuBoardCategory_button_viewproducts',
                     'url' => $this->urlFor($request, 'menuBoard.product.view', ['id' => $menuBoardCategory->menuCategoryId]),
@@ -188,7 +192,7 @@ class MenuBoardCategory extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
                 $menuBoardCategory->buttons[] = ['divider' => true];
 
                 $menuBoardCategory->buttons[] = [
