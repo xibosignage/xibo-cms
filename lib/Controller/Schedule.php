@@ -1698,7 +1698,7 @@ class Schedule extends Base
         $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
         $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
         $schedule->name = $sanitizedParams->getString('name');
-        $schedule->modifiedBy = $this->getUser()->userName;
+        $schedule->modifiedBy = $this->getUser()->getId();
 
         // Set the parentCampaignId for campaign events
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {

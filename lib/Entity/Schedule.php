@@ -305,10 +305,11 @@ class Schedule implements \JsonSerializable
     public $syncGroupId;
 
     /**
-     * @SWG\Property(description="The userName of the user that last modified this Schedule")
-     * @var string
+     * @SWG\Property(description="The userId of the user that last modified this Schedule")
+     * @var int
      */
     public $modifiedBy;
+    public $modifiedByName;
 
     /**
      * @SWG\Property(description="The Date this Schedule was created on")
