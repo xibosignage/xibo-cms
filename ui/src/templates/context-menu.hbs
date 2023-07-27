@@ -18,6 +18,21 @@
         {{/if}}
 
         <div class="main-button-container d-flex flex-column">
+            {{#if canChangeLayer}}
+                <div class="context-menu-btn" data-title="{{trans.bringToFront}}" data-action="Layer" data-action-type="bringToFront" data-toggle="tooltip" data-container=".context-menu">
+                    <i class="fas fa-caret-square-up"></i><span>{{trans.bringToFront}}</span>
+                </div>
+                <div class="context-menu-btn" data-title="{{trans.bringForward}}" data-action="Layer" data-action-type="bringForward" data-toggle="tooltip" data-container=".context-menu">
+                    <i class="fas fa-caret-up"></i><span>{{trans.bringForward}}</span>
+                </div>
+                <div class="context-menu-btn" data-title="{{trans.sendBackwards}}" data-action="Layer" data-action-type="sendBackwards" data-toggle="tooltip" data-container=".context-menu">
+                    <i class="fas fa-caret-down"></i><span>{{trans.sendBackwards}}</span>
+                </div>
+                <div class="context-menu-btn" data-title="{{trans.sendToBack}}" data-action="Layer" data-action-type="sendToBack" data-toggle="tooltip" data-container=".context-menu">
+                    <i class="fas fa-caret-square-down"></i><span>{{trans.sendToBack}}</span>
+                </div>
+            {{/if}}
+
             {{#eq type "widget"}}
                 {{#if isEditable}}
                     {{#if canAttachAudio}}

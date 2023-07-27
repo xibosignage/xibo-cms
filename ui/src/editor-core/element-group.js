@@ -6,8 +6,9 @@
  * @param {object} data - data from the API request
  * @param {number} widgetId - widget id
  * @param {number} regionId - region id
+ * @param {object} parentWidget - parent widget
  */
-const ElementGroup = function(data, widgetId, regionId) {
+const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   this.widgetId = widgetId;
   this.regionId = regionId;
   this.type = 'element-group';
@@ -24,8 +25,9 @@ const ElementGroup = function(data, widgetId, regionId) {
   // Data slot index
   this.slot = data.slot;
 
-  // Set element to always be deletable
-  this.isDeletable = true;
+  // Set element to have same properties for edit and delete as parent widget
+  this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
+  this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
 };
 
 ElementGroup.prototype.updateSlot = function(

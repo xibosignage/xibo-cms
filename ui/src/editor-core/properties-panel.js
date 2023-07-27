@@ -1777,7 +1777,8 @@ PropertiesPanel.prototype.attachActionsForm = function() {
  * @param {object} properties
  */
 PropertiesPanel.prototype.updatePositionForm = function(properties) {
-  const $positionTab = this.DOMObject.find('form #positionTab');
+  const $positionTab =
+    this.DOMObject.find('form #positionTab, form.region-form #positioningTab');
 
   // Loop properties
   $.each(properties, function(key, value) {

@@ -104,8 +104,8 @@ window.lD = {
 
   folderId: '',
 
-  // Save top layer so we can add new elements to top
-  topLayer: 0,
+  // Save all element layer in a map
+  layerMap: [],
 };
 
 // Load Layout and build app structure
@@ -1746,19 +1746,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             'canvas',
           );
 
-          // Get highest layer and group type
-          let highestLayer = 0;
-          Object.values(elementGroup.elements).forEach((el)=> {
-            if (el.layer > highestLayer) {
-              highestLayer = el.layer;
-            }
-          });
-
           // Set group type as the same as the target widget
           addToGroupType = targetWidget.subType;
-
-          // Assign layer to element
-          elementOptions.layer = highestLayer + 1;
 
           // Add group object
           elementOptions.group = elementGroup;
@@ -1800,6 +1789,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             ),
             $(droppable).data('widgetId'),
             $(droppable).data('regionId'),
+            targetWidget,
           );
 
           // Set group if for the elements
@@ -2715,12 +2705,19 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   // Get object
   const layoutObject = lD.getElementByTypeAndId(objType, objId, objAuxId);
 
+  // Check if we can change the object layer
+  const canChangeLayer = (
+    layoutObject.isEditable &&
+    layoutObject.type != 'element-group'
+  );
+
   // Create menu and append to the designer div
   // ( using the object extended with translations )
   lD.editorContainer.append(
     contextMenuTemplate(Object.assign(layoutObject, {
       trans: contextMenuTrans,
       canBeCopied: canBeCopied,
+      canChangeLayer: canChangeLayer,
     })),
   );
 
@@ -2783,6 +2780,90 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       lD.layout.moveWidgetInRegion(
         layoutObject.regionId, layoutObject.id, target.data('actionType'),
       );
+    } else if (target.data('action') == 'Layer') {
+      const actionType = target.data('actionType');
+      const originalLayer = (layoutObject.type === 'region') ?
+        layoutObject.zIndex :
+        layoutObject.layer;
+      let newLayer = null;
+      let groupElements;
+
+      // If we're changing for a grouped element, get all elements from group
+      if (
+        layoutObject.type === 'element' &&
+        layoutObject.groupId != undefined
+      ) {
+        groupElements = layoutObject.group.elements;
+      }
+
+      // Calculate Layers
+      const calculatedLayers = lD.calculateLayers(
+        originalLayer,
+        groupElements,
+      );
+
+      switch (actionType) {
+        case 'bringToFront':
+          // Only update layer if original isn't the top one
+          if (originalLayer != calculatedLayers.availableTop) {
+            // Find top layer and get 1 over it
+            newLayer = calculatedLayers.availableTop;
+          }
+          break;
+        case 'bringForward':
+          // Only update layer if original isn't the top one
+          if (originalLayer != calculatedLayers.availableUp) {
+            // Find above layer and get 1 over it
+            newLayer = calculatedLayers.availableUp;
+          }
+          break;
+        case 'sendBackwards':
+          // Only update layer if original isn't the bottom one
+          if (originalLayer != calculatedLayers.availableDown) {
+            // Find below layer and get 1 under it
+            newLayer = calculatedLayers.availableDown;
+          }
+          break;
+        case 'sendToBack':
+          // Only update layer if original isn't the bottom one
+          if (originalLayer != calculatedLayers.availableBottom) {
+            // Find bottom layer and add 1 under it
+            newLayer = calculatedLayers.availableBottom;
+          }
+          break;
+      }
+
+      // Only update if we have a new layer
+      if (newLayer != null) {
+        if (layoutObject.type === 'region') {
+          // Transform region
+          layoutObject.transform({
+            zIndex: newLayer,
+          });
+
+          // Update on viewer
+          lD.viewer.updateRegion(layoutObject);
+        } else if (layoutObject.type === 'element') {
+          layoutObject.layer = newLayer;
+
+          // Get widget
+          const elementWidget =
+            lD.getElementByTypeAndId('widget', objAuxId, 'canvas');
+
+          // Update element in the viewer
+          lD.viewer.updateElement(layoutObject, true);
+
+          // Save elements to the widget
+          elementWidget.saveElements();
+        }
+
+        // If object is selected, update position form with new layer
+        if (layoutObject.selected) {
+          lD.propertiesPanel.updatePositionForm({
+            zIndex: newLayer,
+          });
+        }
+      }
     } else if (target.data('action') == 'Copy') {
       // For now, use an offset value to position the new element
       const offsetMove = 20;
@@ -3229,9 +3310,8 @@ lD.addRegion = function(positionToAdd, regionType, dimensions) {
     lD.selectObject();
   }
 
-
-  // Calculate top layer
-  const topLayer = lD.calculateTopLayer() + 1;
+  // Calculate next available top layer
+  const topLayer = lD.calculateLayers().availableTop;
 
   // Add layer to the next top layer
   dimensions.zIndex = (dimensions.zIndex) ?
@@ -3894,19 +3974,37 @@ lD.closeDrawerWidget = function() {
  * @param {object[]} elements - One or more elements to be added
  * @param {widget} widget - Target widget
  * @param {boolean} isGroup
- * @param {boolean} recalculateGroupBeforeSaving
+ * @param {boolean} addingToExistingGroup
+ *  - Adding to existing group, we need to recalculate group dimensions
  */
 lD.addElementsToWidget = function(
   elements,
   widget,
   isGroup = false,
-  recalculateGroupBeforeSaving = false,
+  addingToExistingGroup = false,
 ) {
-  // Calculate next top layer
-  const topLayer = lD.calculateTopLayer() + 1;
+  // Calculate next available global top layer
+  let topLayer = lD.calculateLayers().availableTop;
 
   // Loop through elements
   elements.forEach((element) => {
+    // Check if first element has a group
+    if (
+      addingToExistingGroup &&
+      element.groupId
+    ) {
+      // Get group
+      const widgetGroup = widget.elementGroups[
+        element.groupId
+      ];
+
+      // Calculate next available global top layer
+      topLayer = lD.calculateLayers(
+        null,
+        (widgetGroup) ? widgetGroup.elements : null,
+      ).availableTop;
+    }
+
     // Add only if elements doesn't exist on widget already
     if (!(
       element.elementId &&
@@ -3918,7 +4016,7 @@ lD.addElementsToWidget = function(
         Math.floor(Math.random() * 1000000);
 
       // Add layer to the next top layer
-      element.layer += (element.layer) ?
+      element.layer = (element.layer) ?
         (element.layer + topLayer) :
         topLayer;
 
@@ -3927,8 +4025,8 @@ lD.addElementsToWidget = function(
     }
   });
 
-  // Recalcalate group dimensions
-  if (recalculateGroupBeforeSaving) {
+  // Recalculate group dimensions
+  if (addingToExistingGroup) {
     // Get group
     const widgetGroup = widget.elementGroups[
       elements[0].groupId
@@ -3979,29 +4077,181 @@ lD.addElementsToWidget = function(
 
 /**
  * Calculate top layer
- * @return {number} Top layer value
+ * @param {number} baseLayer - Base layer to be compared
+ * @param {object=} groupElements - Calculate only for group elements
+ * @return {object} Calculated layers
  */
-lD.calculateTopLayer = function() {
-  this.topLayer = 0;
+lD.calculateLayers = function(baseLayer, groupElements) {
+  const self = this;
 
-  // Check regions layers
-  Object.values(lD.layout.regions).forEach((region) => {
-    if (region.zIndex > this.topLayer) {
-      this.topLayer = Number(region.zIndex);
+  const limits = {
+    bottom: 0,
+    top: 1000,
+  };
+
+  // Reset layer map
+  const layerMap = [];
+
+  // Target layer
+  const calculatedLayers = {
+    top: null,
+    bottom: null,
+    availableTop: null,
+    availableUp: null,
+    availableDown: null,
+    availableBottom: null,
+    shift: {
+      position: null,
+      direction: null, // 0- down, 1- up
+    },
+  };
+
+  const addElementToLayerMap = function(layer, elementType, elementId) {
+    if (
+      layerMap[layer] == undefined
+    ) {
+      layerMap[layer] = [];
     }
-  });
 
-  // Check elements
-  if (lD.layout.canvas.widgets) {
-    Object.values(lD.layout.canvas.widgets).forEach((widget) => {
-      Object.values(widget.elements).forEach((element) => {
-        if (element.layer > this.topLayer) {
-          this.topLayer = Number(element.layer);
-        }
-      });
+    layerMap[layer].push({
+      id: elementId,
+      type: elementType,
     });
+  };
+
+  // Calculate only for elements in a group
+  if (groupElements) {
+    Object.values(groupElements).forEach((element) => {
+      const elementLayer = Number(element.layer);
+
+      if (
+        calculatedLayers.top === null ||
+        elementLayer > calculatedLayers.top) {
+        calculatedLayers.top = elementLayer;
+      }
+
+      if (
+        calculatedLayers.bottom === null ||
+        elementLayer < calculatedLayers.bottom
+      ) {
+        calculatedLayers.bottom = elementLayer;
+      }
+
+      // Save to layer map
+      addElementToLayerMap(elementLayer, 'element', element.elementId);
+    });
+  } else {
+    // Check regions layers
+    Object.values(lD.layout.regions).forEach((region) => {
+      const regionLayer = Number(region.zIndex);
+
+      if (
+        calculatedLayers.top === null ||
+        regionLayer > calculatedLayers.top
+      ) {
+        calculatedLayers.top = regionLayer;
+      }
+
+      if (
+        calculatedLayers.bottom === null ||
+        regionLayer < calculatedLayers.bottom
+      ) {
+        calculatedLayers.bottom = regionLayer;
+      }
+
+      // Save to layer map
+      addElementToLayerMap(regionLayer, 'region', region.id);
+    });
+
+    // Check elements
+    if (lD.layout.canvas.widgets) {
+      Object.values(lD.layout.canvas.widgets).forEach((widget) => {
+        Object.values(widget.elements).forEach((element) => {
+          const elementLayer = Number(element.layer);
+
+          if (
+            calculatedLayers.top === null ||
+            elementLayer > calculatedLayers.top) {
+            calculatedLayers.top = elementLayer;
+          }
+
+          if (
+            calculatedLayers.bottom === null ||
+            elementLayer < calculatedLayers.bottom
+          ) {
+            calculatedLayers.bottom = elementLayer;
+          }
+
+          // Save to layer map
+          addElementToLayerMap(elementLayer, 'element', element.elementId);
+        });
+      });
+    }
+
+    // Save layerMap to the global var
+    self.layerMap = layerMap;
   }
 
-  // Return top layer
-  return this.topLayer;
+  // Find if the element is already the only one on top and bottom layers
+  const isSingleOnTopLayer = (baseLayer === undefined) ? false : (
+    layerMap[calculatedLayers.top].length === 1 &&
+    calculatedLayers.top === baseLayer
+  );
+
+  const isSingleOnBottomLayer = (baseLayer === undefined) ? false : (
+    layerMap[calculatedLayers.bottom].length === 1 &&
+    calculatedLayers.bottom === baseLayer
+  );
+
+  // Find the next available layer at top
+  if (
+    layerMap[calculatedLayers.top + 1] === undefined &&
+    !isSingleOnTopLayer
+  ) {
+    // Set top value, but not over the limit
+    calculatedLayers.availableTop = Math.min(
+      (calculatedLayers.top + 1),
+      limits.top,
+    );
+  }
+
+  // Find the next available layer at bottom
+  if (
+    layerMap[calculatedLayers.bottom - 1] === undefined &&
+    !isSingleOnBottomLayer
+  ) {
+    // Set bottom value, but not below the limit
+    calculatedLayers.availableBottom = Math.max(
+      (calculatedLayers.bottom - 1),
+      limits.bottom,
+    );
+  }
+
+  // If we have a base layer target...
+  if (baseLayer != undefined) {
+    // Find the item above the baseLayer, and get layer over it
+    for (let layer = baseLayer + 1; layer < layerMap.length; layer++) {
+      if (layerMap[layer] != undefined) {
+        calculatedLayers.availableUp = Math.min(
+          (layer + 1),
+          limits.top,
+        );
+        break;
+      }
+    }
+
+    // Find the item below the baseLayer, and get layer under it
+    for (let layer = baseLayer - 1; layer >= 0; layer--) {
+      if (layerMap[layer] != undefined) {
+        calculatedLayers.availableDown = Math.max(
+          (layer - 1),
+          limits.bottom,
+        );
+        break;
+      }
+    }
+  }
+
+  // Return calculated layers
+  return calculatedLayers;
 };
