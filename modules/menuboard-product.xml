@@ -24,7 +24,7 @@
     <author>Core</author>
     <description>Display products from a Menu Board</description>
     <class>\Xibo\Widget\MenuBoardProductProvider</class>
-    <dataCacheKey>%menuId%</dataCacheKey>
+    <dataCacheKey>%menuId%_%showUnavailable%</dataCacheKey>
     <type>menuboard-product</type>
     <dataType>product</dataType>
     <schemaVersion>1</schemaVersion>
@@ -37,6 +37,30 @@
         <property id="menuId" type="number">
             <title>Menu</title>
             <helpText>Please select the Menu to use as a source of data for this template.</helpText>
+        </property>
+        <property id="categoryId" type="number">
+            <title>Category</title>
+            <helpText>Filter by Category</helpText>
+            <visibility>
+                <test>
+                    <condition field="menuId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="showUnavailable" type="checkbox">
+            <title>Show Unavailable Products?</title>
+            <helpText>Should the currently unavailable products appear in the menu?</helpText>
+            <default>0</default>
+        </property>
+        <property id="durationIsPerItem" type="checkbox">
+            <title>Duration is per item</title>
+            <helpText>The duration specified is per item otherwise it is per menu.</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
         </property>
     </properties>
     <preview></preview>

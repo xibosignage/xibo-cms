@@ -60,7 +60,17 @@ class MenuBoardProviderListener
             return;
         }
 
-        $products = $this->menuBoardCategoryFactory->getProductData(null, ['menuId' => $menuId]);
+        // Build a filter
+        $filter = [
+            'menuId' => $menuId,
+        ];
+
+        // Show Unavailable?
+        if ($dataProvider->getProperty('showUnavailable', 0) === 0) {
+            $filter['availability'] = 0;
+        }
+
+        $products = $this->menuBoardCategoryFactory->getProductData(['name'], $filter);
 
         foreach ($products as $menuBoardProduct) {
             $product = $menuBoardProduct->toProduct();
