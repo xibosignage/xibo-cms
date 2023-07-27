@@ -38,9 +38,9 @@ class ProductCategory implements \JsonSerializable, DataTypeInterface
         $dataType = new DataType();
         $dataType->id = 'product-category';
         $dataType->name = __('Product Category');
-        $dataType->addField('name', 'Name', 'string');
-        $dataType->addField('description', 'Description', 'string');
-        $dataType->addField('image', 'image', 'int');
+        $dataType->addField('name', __('Name'), 'string');
+        $dataType->addField('description', __('Description'), 'string');
+        $dataType->addField('image', __('Image'), 'int');
         return $dataType;
     }
 

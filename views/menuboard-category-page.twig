@@ -47,6 +47,7 @@
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Media" %}</th>
                             <th>{% trans "Code" %}</th>
+                            <th>{% trans "Description" %}</th>
                             <th class="rowMenu"></th>
                         </tr>
                         </thead>
@@ -108,6 +109,10 @@
                     },
                     {
                         "data": "code", responsivePriority: 3
+                    },
+                    {
+                      data: 'description',
+                      responsivePriority: 3,
                     },
                     {
                         "orderable": false,

@@ -34,6 +34,7 @@ class Product implements \JsonSerializable, DataTypeInterface
     public $description;
     public $availability;
     public $allergyInfo;
+    public $calories;
     public $image;
     public $productOptions;
 
@@ -41,14 +42,15 @@ class Product implements \JsonSerializable, DataTypeInterface
     {
         $dataType = new DataType();
         $dataType->id = 'product';
-        $dataType->name = __('Proudct');
-        $dataType->addField('name', 'Name', 'string');
-        $dataType->addField('price', 'Price', 'string');
-        $dataType->addField('description', 'Description', 'string');
-        $dataType->addField('availability', 'Availability', 'int');
-        $dataType->addField('allergyInfo', 'allergyInfo', 'string');
-        $dataType->addField('image', 'image', 'int');
-        $dataType->addField('productOptions', 'productOptions', 'array');
+        $dataType->name = __('Product');
+        $dataType->addField('name', __('Name'), 'string');
+        $dataType->addField('price', __('Price'), 'decimal');
+        $dataType->addField('description', __('Description'), 'string');
+        $dataType->addField('availability', __('Availability'), 'int');
+        $dataType->addField('allergyInfo', __('Allergy Information'), 'string');
+        $dataType->addField('calories', __('Calories'), 'string');
+        $dataType->addField('image', __('Image'), 'int');
+        $dataType->addField('productOptions', __('Product Options'), 'array');
         return $dataType;
     }
 

@@ -60,6 +60,7 @@
                             <th>{% trans "Media" %}</th>
                             <th>{% trans "Availability" %}</th>
                             <th>{% trans "Allergy Information" %}</th>
+                            <th>{% trans "Calories" %}</th>
                             <th>{% trans "Code" %}</th>
                             <th class="rowMenu"></th>
                         </tr>
@@ -147,6 +148,10 @@
                     },
                     {
                         "data": "allergyInfo",
+                        responsivePriority: 2
+                    },
+                    {
+                        data: 'calories',
                         responsivePriority: 2
                     },
                     {

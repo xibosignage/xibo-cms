@@ -57,11 +57,15 @@
 
                         {% set title %}{% trans "Price" %}{% endset %}
                         {% set helpText %}{% trans "The Price for this Menu Board Product" %}{% endset %}
-                        {{ forms.input("price", title, "", helpText) }}
+                        {{ forms.number("price", title, "", helpText) }}
 
                         {% set title %}{% trans "Allergy Information" %}{% endset %}
                         {% set helpText %}{% trans "The Allergy Information for this Menu Board Product" %}{% endset %}
                         {{ forms.input("allergyInfo", title, "", helpText) }}
+
+                        {% set title %}{% trans "Calories" %}{% endset %}
+                        {% set helpText %}{% trans "How many calories are in this product>" %}{% endset %}
+                        {{ forms.input("calories", title, "", helpText) }}
 
                         {% set title %}{% trans "Availability" %}{% endset %}
                         {% set helpText %}{% trans "Should this Product appear as available?" %}{% endset %}

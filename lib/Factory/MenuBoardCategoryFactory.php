@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022-2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -76,14 +76,14 @@ class MenuBoardCategoryFactory extends BaseFactory
      * @param string $code
      * @return MenuBoardCategory
      */
-    public function create($menuId, $name, $mediaId, $code)
+    public function create($menuId, $name, $mediaId, $code, $description)
     {
         $menuBoardCategory = $this->createEmpty();
         $menuBoardCategory->menuId = $menuId;
         $menuBoardCategory->name = $name;
         $menuBoardCategory->mediaId = $mediaId;
         $menuBoardCategory->code = $code;
-
+        $menuBoardCategory->description = $description;
         return $menuBoardCategory;
     }
 
@@ -92,9 +92,10 @@ class MenuBoardCategoryFactory extends BaseFactory
      * @param int $menuId
      * @param int $menuCategoryId
      * @param string $name
-     * @param string $price
+     * @param float $price
      * @param string $description
      * @param string $allergyInfo
+     * @param int $calories
      * @param int $availability
      * @param int $mediaId
      * @param string $code
@@ -107,6 +108,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         $price,
         $description,
         $allergyInfo,
+        $calories,
         $availability,
         $mediaId,
         $code
@@ -118,10 +120,10 @@ class MenuBoardCategoryFactory extends BaseFactory
         $menuBoardProduct->price = $price;
         $menuBoardProduct->description = $description;
         $menuBoardProduct->allergyInfo = $allergyInfo;
+        $menuBoardProduct->$calories = $$calories;
         $menuBoardProduct->availability = $availability;
         $menuBoardProduct->mediaId = $mediaId;
         $menuBoardProduct->code = $code;
-
         return $menuBoardProduct;
     }
 
@@ -198,11 +200,12 @@ class MenuBoardCategoryFactory extends BaseFactory
         $entries = [];
 
         $select = '
-            SELECT menu_category.menuCategoryId,
-               `menu_category`.menuId,
-               `menu_category`.name,
-               `menu_category`.code,
-               `menu_category`.mediaId
+            SELECT `menu_category`.`menuCategoryId`,
+               `menu_category`.`menuId`,
+               `menu_category`.`name`,
+               `menu_category`.`description`,
+               `menu_category`.`code`,
+               `menu_category`.`mediaId`
             ';
 
         $body = ' FROM menu_category WHERE 1 = 1 ';
@@ -293,6 +296,7 @@ class MenuBoardCategoryFactory extends BaseFactory
                `menu_product`.mediaId,
                `menu_product`.availability,
                `menu_product`.allergyInfo,
+               `menu_product`.`calories`,
                `menu_product`.code
             ';
 
@@ -354,7 +358,15 @@ class MenuBoardCategoryFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $menuProduct = $this->createEmptyProduct()->hydrate($row, ['intProperties' => ['availability']]);
+            $menuProduct = $this->createEmptyProduct()->hydrate($row, [
+                'intProperties' => [
+                    'availability',
+                    'calories',
+                ],
+                'doubleProperties' => [
+                    'price',
+                ]
+            ]);
             $entries[] = $menuProduct;
         }
 

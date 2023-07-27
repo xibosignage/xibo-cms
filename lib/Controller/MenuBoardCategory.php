@@ -274,6 +274,13 @@ class MenuBoardCategory extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="Menu Board Category description",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -305,8 +312,9 @@ class MenuBoardCategory extends Base
         $name = $sanitizedParams->getString('name');
         $mediaId = $sanitizedParams->getInt('mediaId');
         $code = $sanitizedParams->getString('code');
+        $description = $sanitizedParams->getString('description');
 
-        $menuBoardCategory = $this->menuBoardCategoryFactory->create($id, $name, $mediaId, $code);
+        $menuBoardCategory = $this->menuBoardCategoryFactory->create($id, $name, $mediaId, $code, $description);
         $menuBoardCategory->save();
 
         // Return
@@ -384,6 +392,13 @@ class MenuBoardCategory extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="Menu Board Category description",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -413,7 +428,7 @@ class MenuBoardCategory extends Base
         $menuBoardCategory->name = $sanitizedParams->getString('name');
         $menuBoardCategory->mediaId = $sanitizedParams->getInt('mediaId');
         $menuBoardCategory->code = $sanitizedParams->getString('code');
-
+        $menuBoardCategory->description = $sanitizedParams->getString('description');
         $menuBoardCategory->save();
 
         // Success

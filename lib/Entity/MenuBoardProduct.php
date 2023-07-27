@@ -62,7 +62,7 @@ class MenuBoardProduct implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The Menu Board Product price")
-     * @var string
+     * @var double
      */
     public $price;
 
@@ -89,6 +89,12 @@ class MenuBoardProduct implements \JsonSerializable
      * @var string
      */
     public $allergyInfo;
+
+    /**
+     * @SWG\Property(description="The Menu Board Product allergy information")
+     * @var int
+     */
+    public $calories;
 
     /**
      * @SWG\Property(description="The Menu Board Product associated mediaId")
@@ -125,31 +131,18 @@ class MenuBoardProduct implements \JsonSerializable
      * Get the Id
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->menuProductId;
     }
 
     /**
-     * Get the Id
-     * @return int
-     */
-    public function getCategoryId()
-    {
-        return $this->menuCategoryId;
-    }
-
-    /**
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate(): void
     {
         if (!v::stringType()->notEmpty()->validate($this->name)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
-        }
-
-        if (!v::stringType()->notEmpty()->validate($this->price)) {
-            throw new InvalidArgumentException(__('Price cannot be empty'), 'price');
         }
     }
 
@@ -158,7 +151,16 @@ class MenuBoardProduct implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %s, Media %d, Code %s', $this->menuProductId, $this->menuCategoryId, $this->menuId, $this->name, $this->price, $this->mediaId, $this->code);
+        return sprintf(
+            'MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %s, Media %d, Code %s',
+            $this->menuProductId,
+            $this->menuCategoryId,
+            $this->menuId,
+            $this->name,
+            $this->price,
+            $this->mediaId,
+            $this->code
+        );
     }
 
     /**
@@ -173,6 +175,7 @@ class MenuBoardProduct implements \JsonSerializable
         $product->description = $this->description;
         $product->availability = $this->availability;
         $product->allergyInfo = $this->allergyInfo;
+        $product->calories = $this->calories;
         $product->image = $this->mediaId;
         foreach (($this->productOptions ?? []) as $productOption) {
             $product->productOptions[] = [
@@ -210,42 +213,73 @@ class MenuBoardProduct implements \JsonSerializable
     /**
      * Add Menu Board Product
      */
-    private function add()
+    private function add(): void
     {
-        $this->menuProductId = $this->getStore()->insert(
-            'INSERT INTO `menu_product` (menuCategoryId, menuId, name, price, description, mediaId, availability, allergyInfo, code) VALUES (:menuCategoryId, :menuId, :name, :price, :description, :mediaId, :availability, :allergyInfo, :code)',
-            [
-                'menuCategoryId' => $this->menuCategoryId,
-                'menuId' => $this->menuId,
-                'name' => $this->name,
-                'price' => $this->price,
-                'description' => $this->description,
-                'mediaId' => $this->mediaId,
-                'availability' => $this->availability,
-                'allergyInfo' => $this->allergyInfo,
-                'code' => $this->code
-            ]
-        );
+        $this->menuProductId = $this->getStore()->insert('
+            INSERT INTO `menu_product` (
+                `menuCategoryId`,
+                `menuId`,
+                `name`,
+                `price`,
+                `description`,
+                `mediaId`,
+                `availability`,
+                `allergyInfo`,
+                `calories`,
+                `code`
+            )
+            VALUES (
+                :menuCategoryId,
+                :menuId,
+                :name,
+                :price,
+                :description,
+                :mediaId,
+                :availability,
+                :allergyInfo,
+                :code
+            )
+        ', [
+            'menuCategoryId' => $this->menuCategoryId,
+            'menuId' => $this->menuId,
+            'name' => $this->name,
+            'price' => $this->price,
+            'description' => $this->description,
+            'mediaId' => $this->mediaId,
+            'availability' => $this->availability,
+            'allergyInfo' => $this->allergyInfo,
+            'calories' => $this->calories,
+            'code' => $this->code,
+        ]);
     }
 
     /**
      * Update Menu Board Product
      */
-    private function update()
+    private function update(): void
     {
-        $this->getStore()->update(
-            'UPDATE `menu_product` SET name = :name, price = :price, description = :description, mediaId = :mediaId, availability = :availability, allergyInfo = :allergyInfo, code = :code WHERE menuProductId = :menuProductId',
-            [
-                'name' => $this->name,
-                'price' => $this->price,
-                'description' => $this->description,
-                'mediaId' => $this->mediaId,
-                'availability' => $this->availability,
-                'allergyInfo' => $this->allergyInfo,
-                'code' => $this->code,
-                'menuProductId' => $this->menuProductId
-            ]
-        );
+        $this->getStore()->update('
+            UPDATE `menu_product` SET
+                `name` = :name,
+                `price` = :price,
+                `description` = :description,
+                `mediaId` = :mediaId,
+                `availability` = :availability,
+                `allergyInfo` = :allergyInfo,
+                `calories` = :calories,
+                `code` = :code
+             WHERE `menuProductId` = :menuProductId
+        ', [
+            'name' => $this->name,
+            'price' => $this->price,
+            'description' => $this->description,
+            'mediaId' => $this->mediaId,
+            'availability' => $this->availability,
+            'allergyInfo' => $this->allergyInfo,
+            'calories' => $this->calories,
+            'code' => $this->code,
+            'menuProductId' => $this->menuProductId
+        ]);
     }
 
     /**

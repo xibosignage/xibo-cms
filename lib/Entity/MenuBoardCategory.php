@@ -56,6 +56,12 @@ class MenuBoardCategory implements \JsonSerializable
     public $name;
 
     /**
+     * @SWG\Property(description="The Menu Board Category description")
+     * @var string
+     */
+    public $description;
+
+    /**
      * @SWG\Property(description="The Menu Board Category code identifier")
      * @var string
      */
@@ -113,7 +119,7 @@ class MenuBoardCategory implements \JsonSerializable
     {
         $productCategory = new ProductCategory();
         $productCategory->name = $this->name;
-        //$productCategory->description = $this->description;
+        $productCategory->description = $this->description;
         $productCategory->image = $this->mediaId;
         return $productCategory;
     }
@@ -210,30 +216,33 @@ class MenuBoardCategory implements \JsonSerializable
         }
     }
 
-    private function add()
+    private function add(): void
     {
-        $this->menuCategoryId = $this->getStore()->insert(
-            'INSERT INTO `menu_category` (name, menuId, mediaId, code) VALUES (:name, :menuId, :mediaId, :code)',
-            [
-                'name' => $this->name,
-                'mediaId' => $this->mediaId,
-                'menuId' => $this->menuId,
-                'code' => $this->code
-            ]
-        );
+        $this->menuCategoryId = $this->getStore()->insert('
+            INSERT INTO `menu_category` (`name`, `menuId`, `mediaId`, `code`, `description`)
+                VALUES (:name, :menuId, :mediaId, :code, :description)
+        ', [
+            'name' => $this->name,
+            'mediaId' => $this->mediaId,
+            'menuId' => $this->menuId,
+            'code' => $this->code,
+            'description' => $this->description,
+        ]);
     }
 
-    private function update()
+    private function update(): void
     {
-        $this->getStore()->update(
-            'UPDATE `menu_category` SET name = :name, mediaId = :mediaId, code = :code WHERE menuCategoryId = :menuCategoryId',
-            [
-                'menuCategoryId' => $this->menuCategoryId,
-                'name' => $this->name,
-                'mediaId' => $this->mediaId,
-                'code' => $this->code
-            ]
-        );
+        $this->getStore()->update('
+            UPDATE `menu_category` 
+                SET `name` = :name, `mediaId` = :mediaId, `code` = :code, `description` = :description
+             WHERE `menuCategoryId` = :menuCategoryId
+        ', [
+            'menuCategoryId' => $this->menuCategoryId,
+            'name' => $this->name,
+            'mediaId' => $this->mediaId,
+            'code' => $this->code,
+            'description' => $this->description,
+        ]);
     }
 
     /**

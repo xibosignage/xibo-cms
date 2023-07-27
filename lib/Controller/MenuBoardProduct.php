@@ -303,15 +303,22 @@ class MenuBoardProduct extends Base
      *  @SWG\Parameter(
      *      name="price",
      *      in="formData",
-     *      description="Menu Board Product price, including the currency symbol if needed",
-     *      type="string",
-     *      required=true
+     *      description="Menu Board Product price",
+     *      type="decimal",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="allergyInfo",
      *      in="formData",
      *      description="Menu Board Product allergyInfo",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="calories",
+     *      in="formData",
+     *      description="Menu Board Product calories",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -382,9 +389,10 @@ class MenuBoardProduct extends Base
 
         $name = $sanitizedParams->getString('name');
         $mediaId = $sanitizedParams->getInt('mediaId');
-        $price = $sanitizedParams->getString('price');
+        $price = $sanitizedParams->getDouble('price');
         $description = $sanitizedParams->getString('description');
         $allergyInfo = $sanitizedParams->getString('allergyInfo');
+        $calories = $sanitizedParams->getInt('calories');
         $availability = $sanitizedParams->getCheckbox('availability');
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
@@ -397,6 +405,7 @@ class MenuBoardProduct extends Base
             $price,
             $description,
             $allergyInfo,
+            $calories,
             $availability,
             $mediaId,
             $code
@@ -488,15 +497,22 @@ class MenuBoardProduct extends Base
      *  @SWG\Parameter(
      *      name="price",
      *      in="formData",
-     *      description="Menu Board Product price, including the currency symbol if needed",
-     *      type="string",
-     *      required=true
+     *      description="Menu Board Product price",
+     *      type="decimal",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="allergyInfo",
      *      in="formData",
      *      description="Menu Board Product allergyInfo",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="calories",
+     *      in="formData",
+     *      description="Menu Board Product calories",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -564,8 +580,9 @@ class MenuBoardProduct extends Base
 
         $menuBoardProduct->name = $sanitizedParams->getString('name');
         $menuBoardProduct->description = $sanitizedParams->getString('description');
-        $menuBoardProduct->price = $sanitizedParams->getString('price');
+        $menuBoardProduct->price = $sanitizedParams->getDouble('price');
         $menuBoardProduct->allergyInfo = $sanitizedParams->getString('allergyInfo');
+        $menuBoardProduct->calories = $sanitizedParams->getString('calories');
         $menuBoardProduct->availability = $sanitizedParams->getCheckbox('availability');
         $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId');
         $menuBoardProduct->code = $sanitizedParams->getString('code');
