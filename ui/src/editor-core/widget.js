@@ -709,6 +709,7 @@ Widget.prototype.addElement = function(
     element,
     this.widgetId,
     this.regionId,
+    this,
   );
 
   // Update elements map for the widget
@@ -726,6 +727,7 @@ Widget.prototype.addElement = function(
         ),
         this.widgetId,
         this.regionId,
+        this,
       );
     }
 

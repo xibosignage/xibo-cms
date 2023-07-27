@@ -190,6 +190,7 @@ Layout.prototype.createDataStructure = function(data) {
                   element,
                   newWidget.widgetId,
                   data.regions[region].regionId,
+                  newWidget,
                 );
 
               // Check if new element has top layer and set it
@@ -212,6 +213,7 @@ Layout.prototype.createDataStructure = function(data) {
                       ),
                       newWidget.widgetId,
                       data.regions[region].regionId,
+                      newWidget,
                     );
                 }
 

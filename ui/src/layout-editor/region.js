@@ -110,12 +110,16 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
   }
 
   // Apply changes to the region ( updating values )
-  this.dimensions.width = transform.width;
-  this.dimensions.height = transform.height;
+  this.dimensions.width = (transform.width != undefined) ?
+    transform.width : this.dimensions.width;
+  this.dimensions.height = (transform.height != undefined) ?
+    transform.height : this.dimensions.height;
+
   this.dimensions.top = (transform.top != undefined) ?
     transform.top : this.dimensions.top;
   this.dimensions.left = (transform.left != undefined) ?
     transform.left : this.dimensions.left;
+
   this.zIndex = (transform.zIndex != undefined) ?
     transform.zIndex : this.zIndex;
 };
