@@ -100,8 +100,9 @@
                           }
 
                           if (row.thumbnail && row.thumbnail !== '') {
-                            return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' +
-                              row.thumbnail + '>' + '<img src="' + row.thumbnail + '&isThumb=1" />';
+                            return '<a class="img-replace" data-toggle="lightbox" data-type="image"' +
+                              ' href="' + row.thumbnail + '">' +
+                              '<img src="' + row.thumbnail + '&isThumb=1" alt="Thumbnail" />';
                           } else {
                             return '';
                           }
