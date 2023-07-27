@@ -160,6 +160,21 @@ $(function() {
         }).done(function(data) {
           resolve(data);
         }).fail(function(jqXHR, textStatus, errorThrown) {
+          if (
+              typeof window[`onDataError_${widget.widgetId}`] === 'function'
+          ) {
+            const onDataError = window[
+              `onDataError_${widget.widgetId}`
+            ](jqXHR.status, jqXHR.responseJSON);
+
+            if (onDataError == false) {
+              xiboIC.reportFault({
+                code: '5001',
+                reason: 'No Data',
+              });
+            }
+          }
+
           console.log(jqXHR, textStatus, errorThrown);
         });
       } else {
@@ -191,6 +206,10 @@ $(function() {
       dataItems,
       showError,
     } = composeFinalData(widget, data);
+
+    if (dataItems.length === 0 && showError) {
+      xiboIC.expireNow({targetId: widget.widgetId});
+    }
 
     if (showError && data?.message) {
       $target.append(
