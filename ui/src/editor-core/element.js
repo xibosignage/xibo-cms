@@ -6,8 +6,10 @@
  * @param {object} data - data from the API request
  * @param {number} widgetId - widget id
  * @param {number} regionId - region id
+ * @param {object} parentWidget - parent widget
  */
-const Element = function(data, widgetId, regionId) {
+const Element = function(data, widgetId, regionId, parentWidget) {
+  this.type = 'element';
   this.widgetId = widgetId;
   this.regionId = regionId;
   this.groupId = data.groupId;
@@ -30,8 +32,9 @@ const Element = function(data, widgetId, regionId) {
   this.layer = data.layer;
   this.properties = data.properties;
 
-  // Set element to always be deletable
-  this.isDeletable = true;
+  // Set element to have same properties for edit and delete as parent widget
+  this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
+  this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
 
   // Element data from the linked widget/module
   this.data = {};

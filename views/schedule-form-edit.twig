@@ -56,6 +56,10 @@
                   data-playlist-get-url="{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "Optional Name for this Event (1-50 characters)" %}{% endset %}
+                        {{ forms.input("name", title, event.name, helpText) }}
+
                         {% set title %}{% trans "Event Type" %}{% endset %}
                         {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
                         {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "eventTypeId", "eventTypeName", helpText) }}
