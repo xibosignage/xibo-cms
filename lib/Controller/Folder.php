@@ -99,9 +99,6 @@ class Folder extends Base
         } else {
             // Show a tree view of all folders.
             $rootFolder = $this->folderFactory->getById(1);
-            $rootFolder->setUnmatchedProperty('a_attr', [
-                'title' => __('Right click a Folder for further Options')
-            ]);
 
             // homeFolderId,
             // do we show tree for current user

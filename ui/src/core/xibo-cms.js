@@ -3789,6 +3789,10 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                     }
                 }
 
+                if (e?.original?.isRoot === 1) {
+                    $(container).find('a#'+e.id+'_anchor').attr('title', translations.folderRootTitle)
+                }
+
                 // get the home folder
                 if (e.type !== undefined && e.type === 'home') {
                     homeNodeId = e.id;
