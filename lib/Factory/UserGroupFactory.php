@@ -797,7 +797,7 @@ class UserGroupFactory extends BaseFactory
                 'folder.add' => [
                     'feature' => 'folder.add',
                     'group' => 'folders',
-                    'title' => __('Create new Folders')
+                    'title' => __('Allow users to create Sub-Folders under Folders they have access to. (Except the Root Folder)')
                 ],
                 'folder.modify' => [
                     'feature' => 'folder.modify',

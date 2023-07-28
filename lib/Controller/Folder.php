@@ -359,11 +359,14 @@ class Folder extends Base
         return $response->withJson($folder->buttons);
     }
 
-    private function decorateWithButtons($folder)
+    private function decorateWithButtons(\Xibo\Entity\Folder $folder)
     {
         $user = $this->getUser();
 
-        if ($user->featureEnabled('folder.add') &&  $user->checkViewable($folder)) {
+        if ($user->featureEnabled('folder.add')
+            && $user->checkViewable($folder)
+            && (!$folder->isRoot() || $user->isSuperAdmin())
+        ) {
             $folder->buttons['create'] = true;
         }
 
