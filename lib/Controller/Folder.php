@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022-2023 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -85,6 +85,7 @@ class Folder extends Base
      */
     public function grid(Request $request, Response $response, $folderId = null)
     {
+        $params = $this->getSanitizer($request->getParams());
         // Should we return information for a specific folder?
         if ($folderId !== null) {
             $folder = $this->folderFactory->getById($folderId);
@@ -99,7 +100,15 @@ class Folder extends Base
             // Show a tree view of all folders.
             $rootFolder = $this->folderFactory->getById(1);
             $rootFolder->a_attr['title'] = __('Right click a Folder for further Options');
-            $this->buildTreeView($rootFolder, $this->getUser()->homeFolderId);
+
+            // homeFolderId,
+            // do we show tree for current user
+            // or a specified user?
+            $homeFolderId = ($params->getInt('homeFolderId') !== null)
+                ? $params->getInt('homeFolderId')
+                : $this->getUser()->homeFolderId;
+
+            $this->buildTreeView($rootFolder, $homeFolderId);
             return $response->withJson([$rootFolder]);
         }
     }
