@@ -1886,7 +1886,7 @@ class User extends Base
 
             if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
-                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false]);
+                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false, 'validate' => false]);
             } else {
                 throw new ConfigurationException(__('Cannot change owner on this Object'));
             }
