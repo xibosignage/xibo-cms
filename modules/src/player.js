@@ -167,7 +167,7 @@ $(function() {
               `onDataError_${widget.widgetId}`
             ](jqXHR.status, jqXHR.responseJSON);
 
-            if (onDataError == false) {
+            if (typeof onDataError === 'undefined' || onDataError == false) {
               xiboIC.reportFault({
                 code: '5001',
                 reason: 'No Data',
