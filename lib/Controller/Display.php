@@ -499,6 +499,7 @@ class Display extends Base
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'bounds' => $parsedQueryParams->getString('bounds'),
             'syncGroupId' => $parsedQueryParams->getInt('syncGroupId'),
+            'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers')
         ];
     }
 

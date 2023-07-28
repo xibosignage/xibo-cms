@@ -320,10 +320,49 @@ class UserGroupFactory extends BaseFactory
             $params['displayGroupId'] = $parsedFilter->getInt('displayGroupId');
         }
 
+        if (in_array('`member`', $sortOrder) || in_array('`member` DESC', $sortOrder)) {
+            $members = [];
+
+            // DisplayGroup members with provided Display Group ID
+            if ($parsedFilter->getInt('userIdMember') !== null) {
+                foreach ($this->getStore()->select($select . $body, $params) as $row) {
+                    $userGroupId = $this->getSanitizer($row)->getInt('groupId');
+
+                    if ($this->getStore()->exists(
+                        'SELECT groupId FROM `lkusergroup` WHERE userId = :userId AND groupId = :groupId ',
+                        [
+                            'groupId' => $userGroupId,
+                            'userId' => $parsedFilter->getInt('userIdMember')
+                        ]
+                    )) {
+                        $members[] = $userGroupId;
+                    }
+                }
+            }
+        }
+
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+
+        if (isset($members) && $members != []) {
+            $sqlOrderMembers = 'ORDER BY FIELD(group.groupId,' . implode(',', $members) . ')';
+
+            foreach ($sortOrder as $sort) {
+                if ($sort == '`member`') {
+                    $order .= $sqlOrderMembers;
+                    continue;
+                }
+
+                if ($sort == '`member` DESC') {
+                    $order .= $sqlOrderMembers . ' DESC';
+                    continue;
+                }
+            }
+        }
+
+        if (is_array($sortOrder) && (!in_array('`member`', $sortOrder) && !in_array('`member` DESC', $sortOrder))) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

@@ -282,6 +282,7 @@ class User extends Base
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'retired' => $sanitizedParams->getInt('retired'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'userGroupIdMembers' => $sanitizedParams->getInt('userGroupIdMembers'),
         ];
 
         // Load results into an array
