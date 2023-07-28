@@ -60,7 +60,7 @@
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
 
-                <select name="campaignId" id="campaignId" class="d-none form-control"
+                <select name="campaignId" id="campaignIdFilter" class="d-none form-control"
                     data-search-url= "{{ url_for("campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
@@ -955,7 +955,7 @@
             // Select lists
             var dialog = 'body';
 
-            var $campaignSelect = $('.xibo-calendar-controls #campaignId');
+            var $campaignSelect = $('.xibo-calendar-controls #campaignIdFilter');
             $campaignSelect.select2({
                 dropdownParent: $(dialog),
                 ajax: {
