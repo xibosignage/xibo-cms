@@ -568,6 +568,7 @@ $(function() {
                           if (onElementParseData) {
                             item[dataOverride] = onElementParseData(
                               item[extendDataWith],
+                              templateData,
                             );
                           }
                         }

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,6 +28,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\DataType\ProductCategory;
 
 /**
  * @SWG\Definition()
@@ -53,6 +54,12 @@ class MenuBoardCategory implements \JsonSerializable
      * @var string
      */
     public $name;
+
+    /**
+     * @SWG\Property(description="The Menu Board Category description")
+     * @var string
+     */
+    public $description;
 
     /**
      * @SWG\Property(description="The Menu Board Category code identifier")
@@ -102,6 +109,19 @@ class MenuBoardCategory implements \JsonSerializable
             $this->mediaId,
             $this->code
         );
+    }
+
+    /**
+     * Convert this to a product category
+     * @return ProductCategory
+     */
+    public function toProductCategory(): ProductCategory
+    {
+        $productCategory = new ProductCategory();
+        $productCategory->name = $this->name;
+        $productCategory->description = $this->description;
+        $productCategory->image = $this->mediaId;
+        return $productCategory;
     }
 
     /**
@@ -196,30 +216,33 @@ class MenuBoardCategory implements \JsonSerializable
         }
     }
 
-    private function add()
+    private function add(): void
     {
-        $this->menuCategoryId = $this->getStore()->insert(
-            'INSERT INTO `menu_category` (name, menuId, mediaId, code) VALUES (:name, :menuId, :mediaId, :code)',
-            [
-                'name' => $this->name,
-                'mediaId' => $this->mediaId,
-                'menuId' => $this->menuId,
-                'code' => $this->code
-            ]
-        );
+        $this->menuCategoryId = $this->getStore()->insert('
+            INSERT INTO `menu_category` (`name`, `menuId`, `mediaId`, `code`, `description`)
+                VALUES (:name, :menuId, :mediaId, :code, :description)
+        ', [
+            'name' => $this->name,
+            'mediaId' => $this->mediaId,
+            'menuId' => $this->menuId,
+            'code' => $this->code,
+            'description' => $this->description,
+        ]);
     }
 
-    private function update()
+    private function update(): void
     {
-        $this->getStore()->update(
-            'UPDATE `menu_category` SET name = :name, mediaId = :mediaId, code = :code WHERE menuCategoryId = :menuCategoryId',
-            [
-                'menuCategoryId' => $this->menuCategoryId,
-                'name' => $this->name,
-                'mediaId' => $this->mediaId,
-                'code' => $this->code
-            ]
-        );
+        $this->getStore()->update('
+            UPDATE `menu_category` 
+                SET `name` = :name, `mediaId` = :mediaId, `code` = :code, `description` = :description
+             WHERE `menuCategoryId` = :menuCategoryId
+        ', [
+            'menuCategoryId' => $this->menuCategoryId,
+            'name' => $this->name,
+            'mediaId' => $this->mediaId,
+            'code' => $this->code,
+            'description' => $this->description,
+        ]);
     }
 
     /**
