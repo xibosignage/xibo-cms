@@ -64,8 +64,12 @@
                         {{ forms.input("allergyInfo", title, "", helpText) }}
 
                         {% set title %}{% trans "Calories" %}{% endset %}
-                        {% set helpText %}{% trans "How many calories are in this product>" %}{% endset %}
+                        {% set helpText %}{% trans "How many calories are in this product?" %}{% endset %}
                         {{ forms.input("calories", title, "", helpText) }}
+
+                        {% set title %}{% trans "Display Order" %}{% endset %}
+                        {% set helpText %}{% trans "Set a display order for this item to appear, leave empty to add to the end." %}{% endset %}
+                        {{ forms.number('displayOrder', title, null, helpText) }}
 
                         {% set title %}{% trans "Availability" %}{% endset %}
                         {% set helpText %}{% trans "Should this Product appear as available?" %}{% endset %}

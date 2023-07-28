@@ -24,7 +24,7 @@
     <author>Core</author>
     <description>Display products from a Menu Board</description>
     <class>\Xibo\Widget\MenuBoardProductProvider</class>
-    <dataCacheKey>%menuId%_%showUnavailable%</dataCacheKey>
+    <dataCacheKey>%menuId%_%showUnavailable%_%sortField%_%sortDescending%_%lowerLimit%_%upperLimit%</dataCacheKey>
     <type>menuboard-product</type>
     <dataType>product</dataType>
     <schemaVersion>1</schemaVersion>
@@ -47,11 +47,6 @@
                 </test>
             </visibility>
         </property>
-        <property id="showUnavailable" type="checkbox">
-            <title>Show Unavailable Products?</title>
-            <helpText>Should the currently unavailable products appear in the menu?</helpText>
-            <default>0</default>
-        </property>
         <property id="durationIsPerItem" type="checkbox">
             <title>Duration is per item</title>
             <helpText>The duration specified is per item otherwise it is per menu.</helpText>
@@ -61,6 +56,52 @@
                     <condition field="dataSetId" type="neq"></condition>
                 </test>
             </visibility>
+        </property>
+        <property id="sortField" type="dropdown" mode="single">
+            <title>Sort by</title>
+            <helpText>How should we sort the menu items?</helpText>
+            <default>displayOrder</default>
+            <options>
+                <option name="displayOrder">Display Order</option>
+                <option name="name">Name</option>
+                <option name="price">Price</option>
+                <option name="id">ID</option>
+            </options>
+        </property>
+        <property id="sortDescending" type="checkbox">
+            <title>Sort descending?</title>
+            <default>0</default>
+        </property>
+        <property id="showUnavailable" type="checkbox">
+            <title>Show Unavailable Products?</title>
+            <helpText>Should the currently unavailable products appear in the menu?</helpText>
+            <default>0</default>
+        </property>
+        <property type="message">
+            <title>Row limits can be used to return a subset of menu items. For example if you wanted the 10th to the 20th item you could put 10 and 20.</title>
+        </property>
+        <property id="lowerLimit" type="number">
+            <title>Lower Row Limit</title>
+            <helpText>Optionally provide a Lower Row Limit (enter 0 for no limit).</helpText>
+            <default>0</default>
+            <rule>
+                <test message="Lower limit must be 0 or above">
+                    <condition type="gte">0</condition>
+                </test>
+                <test message="Lower limit must be lower than the upper limit">
+                    <condition field="upperLimit" type="lte"></condition>
+                </test>
+            </rule>
+        </property>
+        <property id="upperLimit" type="number">
+            <title>Upper Row Limit</title>
+            <helpText>Optionally provide an Upper Row Limit (enter 0 for no limit).</helpText>
+            <default>0</default>
+            <rule>
+                <test message="Upper limit must be 0 or above">
+                    <condition type="gte">0</condition>
+                </test>
+            </rule>
         </property>
     </properties>
     <preview></preview>

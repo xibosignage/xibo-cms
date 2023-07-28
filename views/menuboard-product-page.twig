@@ -58,6 +58,7 @@
                             <th>{% trans "Description" %}</th>
                             <th>{% trans "Price" %}</th>
                             <th>{% trans "Media" %}</th>
+                            <th>{% trans "Display Order" %}</th>
                             <th>{% trans "Availability" %}</th>
                             <th>{% trans "Allergy Information" %}</th>
                             <th>{% trans "Calories" %}</th>
@@ -91,7 +92,7 @@
                 filter: false,
                 searchDelay: 3000,
                 dataType: 'json',
-                "order": [[1, "asc"]],
+                "order": [[5, "asc"]],
                 ajax: {
                     url: "{{ url_for("menuBoard.product.search", {id: menuBoardCategory.menuCategoryId}) }}",
                     "data": function (d) {
@@ -129,6 +130,10 @@
                             return '';
                           }
                         }
+                    },
+                    {
+                        data: 'displayOrder',
+                        responsivePriority: 2,
                     },
                     {
                         "data": "availability",

@@ -46,6 +46,11 @@ class MenuboardAdditionalFieldsMigration extends AbstractMigration
                 'null' => true,
                 'default' => null,
             ])
+            ->addColumn('displayOrder', 'integer', [
+                'length' => \Phinx\Db\Adapter\MysqlAdapter::INT_MEDIUM,
+                'null' => false,
+                'default' => 0,
+            ])
             ->changeColumn('price', 'decimal', [
                 'precision' => 10,
                 'scale' => 4,

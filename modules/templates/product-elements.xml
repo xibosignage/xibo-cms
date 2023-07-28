@@ -18,7 +18,6 @@
   ~ You should have received a copy of the GNU Affero General Public License
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
-
 <templates>
     <template>
         <id>product_name</id>
@@ -27,13 +26,15 @@
         <type>element</type>
         <dataType>product</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>product-name</thumbnail>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <!-- To replace -->
-            <asset id="product-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-title.png" />
-        </assets>
+        <properties>
+            <property id="effect" type="effectSelector" variant="all">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+        </properties>
     </template>
     <template>
         <id>product_price</id>
@@ -45,6 +46,11 @@
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
         <properties>
+            <property id="currencyCode" type="text">
+                <title>Currency Code</title>
+                <helpText>The 3 digit currency code to apply to the price, e.g. USD/GBP/EUR</helpText>
+                <default></default>
+            </property>
             <property id="prefix" type="text">
                 <title>Prefix</title>
                 <default></default>
@@ -52,6 +58,11 @@
             <property id="suffix" type="text">
                 <title>Suffix</title>
                 <default></default>
+            </property>
+            <property id="effect" type="effectSelector" variant="all">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
             </property>
         </properties>
         <onElementParseData><![CDATA[
@@ -61,7 +72,13 @@ if (String(value).length === 0) {
     return '';
 }
 
-value = Intl.NumberFormat().format(value);
+var options = {};
+if (properties.currencyCode && properties.currencyCode !== '') {
+    options.style = 'currency';
+    options.currency = properties.currencyCode;
+}
+
+value = new Intl.NumberFormat(undefined, options).format(value);
 
 if (properties.prefix && properties.prefix !== '') {
     value = properties.prefix + '' + value;

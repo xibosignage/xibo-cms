@@ -322,6 +322,13 @@ class MenuBoardProduct extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Menu Board Product Display Order, used for sorting",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
      *      name="availability",
      *      in="formData",
      *      description="Menu Board Product availability",
@@ -393,10 +400,16 @@ class MenuBoardProduct extends Base
         $description = $sanitizedParams->getString('description');
         $allergyInfo = $sanitizedParams->getString('allergyInfo');
         $calories = $sanitizedParams->getInt('calories');
+        $displayOrder = $sanitizedParams->getInt('displayOrder');
         $availability = $sanitizedParams->getCheckbox('availability');
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
         $code = $sanitizedParams->getString('code');
+
+        // If the display order is empty, get the next highest one.
+        if ($displayOrder === null) {
+            $displayOrder = $this->menuBoardCategoryFactory->getNextDisplayOrder($menuBoardCategory->menuCategoryId);
+        }
 
         $menuBoardProduct = $this->menuBoardCategoryFactory->createProduct(
             $menuBoard->menuId,
@@ -406,6 +419,7 @@ class MenuBoardProduct extends Base
             $description,
             $allergyInfo,
             $calories,
+            $displayOrder,
             $availability,
             $mediaId,
             $code
@@ -516,6 +530,13 @@ class MenuBoardProduct extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Menu Board Product Display Order, used for sorting",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
      *      name="availability",
      *      in="formData",
      *      description="Menu Board Product availability",
@@ -583,6 +604,7 @@ class MenuBoardProduct extends Base
         $menuBoardProduct->price = $sanitizedParams->getDouble('price');
         $menuBoardProduct->allergyInfo = $sanitizedParams->getString('allergyInfo');
         $menuBoardProduct->calories = $sanitizedParams->getString('calories');
+        $menuBoardProduct->displayOrder = $sanitizedParams->getInt('displayOrder');
         $menuBoardProduct->availability = $sanitizedParams->getCheckbox('availability');
         $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId');
         $menuBoardProduct->code = $sanitizedParams->getString('code');

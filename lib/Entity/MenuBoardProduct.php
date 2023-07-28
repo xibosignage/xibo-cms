@@ -79,6 +79,12 @@ class MenuBoardProduct implements \JsonSerializable
     public $code;
 
     /**
+     * @SWG\Property(description="The Menu Board Product display order, used for sorting")
+     * @var int
+     */
+    public $displayOrder;
+
+    /**
      * @SWG\Property(description="The Menu Board Product availability")
      * @var int
      */
@@ -223,6 +229,7 @@ class MenuBoardProduct implements \JsonSerializable
                 `price`,
                 `description`,
                 `mediaId`,
+                `displayOrder`,
                 `availability`,
                 `allergyInfo`,
                 `calories`,
@@ -235,8 +242,10 @@ class MenuBoardProduct implements \JsonSerializable
                 :price,
                 :description,
                 :mediaId,
+                :displayOrder,
                 :availability,
                 :allergyInfo,
+                :calories,
                 :code
             )
         ', [
@@ -246,6 +255,7 @@ class MenuBoardProduct implements \JsonSerializable
             'price' => $this->price,
             'description' => $this->description,
             'mediaId' => $this->mediaId,
+            'displayOrder' => $this->displayOrder,
             'availability' => $this->availability,
             'allergyInfo' => $this->allergyInfo,
             'calories' => $this->calories,
@@ -264,6 +274,7 @@ class MenuBoardProduct implements \JsonSerializable
                 `price` = :price,
                 `description` = :description,
                 `mediaId` = :mediaId,
+                `displayOrder` = :displayOrder,
                 `availability` = :availability,
                 `allergyInfo` = :allergyInfo,
                 `calories` = :calories,
@@ -274,6 +285,7 @@ class MenuBoardProduct implements \JsonSerializable
             'price' => $this->price,
             'description' => $this->description,
             'mediaId' => $this->mediaId,
+            'displayOrder' => $this->displayOrder,
             'availability' => $this->availability,
             'allergyInfo' => $this->allergyInfo,
             'calories' => $this->calories,

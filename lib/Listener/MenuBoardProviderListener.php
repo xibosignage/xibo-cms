@@ -60,6 +60,15 @@ class MenuBoardProviderListener
             return;
         }
 
+        // Sorting
+        $desc = $dataProvider->getProperty('sortDescending') == 1 ? ' DESC' : '';
+        $sort = match ($dataProvider->getProperty('sortField')) {
+            'name' => '`name`' . $desc,
+            'price' => '`price`' . $desc,
+            'id' => '`menuProductId`' . $desc,
+            default => '`displayOrder`' . $desc,
+        };
+
         // Build a filter
         $filter = [
             'menuId' => $menuId,
@@ -67,10 +76,23 @@ class MenuBoardProviderListener
 
         // Show Unavailable?
         if ($dataProvider->getProperty('showUnavailable', 0) === 0) {
-            $filter['availability'] = 0;
+            $filter['availability'] = 1;
         }
 
-        $products = $this->menuBoardCategoryFactory->getProductData(['name'], $filter);
+        // limits?
+        $lowerLimit = $dataProvider->getProperty('lowerLimit', 0);
+        $upperLimit = $dataProvider->getProperty('upperLimit', 0);
+        if ($lowerLimit !== 0 || $upperLimit !== 0) {
+            // Start should be the lower limit
+            // Size should be the distance between upper and lower
+            $filter['start'] = $lowerLimit;
+            $filter['length'] = $upperLimit - $lowerLimit;
+
+            $this->getLogger()->debug('onProductRequest: applied limits, start: '
+                . $filter['start'] . ', length: ' . $filter['length']);
+        }
+
+        $products = $this->menuBoardCategoryFactory->getProductData([$sort], $filter);
 
         foreach ($products as $menuBoardProduct) {
             $product = $menuBoardProduct->toProduct();
