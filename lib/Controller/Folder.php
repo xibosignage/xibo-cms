@@ -85,6 +85,7 @@ class Folder extends Base
      */
     public function grid(Request $request, Response $response, $folderId = null)
     {
+        $params = $this->getSanitizer($request->getParams());
         // Should we return information for a specific folder?
         if ($folderId !== null) {
             $folder = $this->folderFactory->getById($folderId);
@@ -101,7 +102,15 @@ class Folder extends Base
             $rootFolder->setUnmatchedProperty('a_attr', [
                 'title' => __('Right click a Folder for further Options')
             ]);
-            $this->buildTreeView($rootFolder, $this->getUser()->homeFolderId);
+
+            // homeFolderId,
+            // do we show tree for current user
+            // or a specified user?
+            $homeFolderId = ($params->getInt('homeFolderId') !== null)
+                    ? $params->getInt('homeFolderId')
+                    : $this->getUser()->homeFolderId;
+            
+            $this->buildTreeView($rootFolder, $homeFolderId);
             return $response->withJson([$rootFolder]);
         }
     }

@@ -3616,7 +3616,7 @@ function updateRangeFilter($element, $from, $to, callBack) {
     (typeof callBack === 'function') && callBack();
 }
 
-function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [])
+function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [], homeFolderId = null)
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
@@ -3766,7 +3766,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                     return true;
                 },
                 'data' : {
-                    "url": foldersUrl
+                    "url": foldersUrl + (homeFolderId ? '?homeFolderId='+homeFolderId : '')
                 }
             }
         }).bind('ready.jstree', function(e, data) {
