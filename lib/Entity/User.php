@@ -764,7 +764,10 @@ class User implements \JsonSerializable, UserEntityInterface
         } else if ($options['passwordUpdate']) {
             $this->updatePassword();
             $this->audit($this->userId, 'User updated password', false);
-        } else if ($this->hash() != $this->hash || $this->hasPropertyChanged('twoFactorRecoveryCodes')) {
+        } else if ($this->hash() != $this->hash
+            || $this->hasPropertyChanged('twoFactorRecoveryCodes')
+            || $this->hasPropertyChanged('password')
+        ) {
             $this->update();
             $this->audit($this->userId, 'User updated');
         }
