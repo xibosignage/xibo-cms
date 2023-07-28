@@ -29,6 +29,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DuplicateEntityException;
 
 /**
  * Class PlayerVersion
@@ -225,10 +226,34 @@ class PlayerVersion implements \JsonSerializable
             'validate' => true
         ], $options);
 
-        if ($this->versionId == null || $this->versionId == 0)
+        if ($options['validate']) {
+            $this->validate();
+        }
+
+        if ($this->versionId == null || $this->versionId == 0) {
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
+    }
+
+    public function validate() {
+        // do we already have a file with the same exact name?
+        $params = [];
+        $checkSQL = 'SELECT `fileName` FROM `player_software` WHERE `fileName` = :fileName';
+
+        if ($this->versionId != null) {
+            $checkSQL .= ' AND `versionId` <> :versionId ';
+            $params['versionId'] = $this->versionId;
+        }
+
+        $params['fileName'] = $this->fileName;
+
+        $result = $this->getStore()->select($checkSQL, $params);
+
+        if (count($result) > 0) {
+            throw new DuplicateEntityException(__('You already own Player Version file with this name.'));
+        }
     }
 
     public function decorateRecord()
