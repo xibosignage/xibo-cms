@@ -138,6 +138,30 @@ $(function() {
   }
 
   /**
+   * onDataError callback
+   * @param {Object} widget - Widget
+   * @param {string|number} httpStatus
+   * @param {Object} response - Response body|json
+   */
+  function onDataErrorCallback(widget, httpStatus, response) {
+    if (
+        typeof window[`onDataError_${widget.widgetId}`] === 'function'
+    ) {
+      const onDataError = window[
+          `onDataError_${widget.widgetId}`
+          ](httpStatus, response);
+
+      if (typeof onDataError === 'undefined' || onDataError == false) {
+        xiboIC.reportFault({
+          code: '5001',
+          reason: 'No Data',
+        });
+      }
+    }
+
+  }
+
+  /**
    * Get widget data
    * @param {object} widget
    * @return {Promise}
@@ -158,23 +182,15 @@ $(function() {
           method: 'GET',
           url: widget.url,
         }).done(function(data) {
-          resolve(data);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-          if (
-              typeof window[`onDataError_${widget.widgetId}`] === 'function'
+          if (data && data.hasOwnProperty('success') &&
+            data.success === false && data.error
           ) {
-            const onDataError = window[
-              `onDataError_${widget.widgetId}`
-            ](jqXHR.status, jqXHR.responseJSON);
-
-            if (typeof onDataError === 'undefined' || onDataError == false) {
-              xiboIC.reportFault({
-                code: '5001',
-                reason: 'No Data',
-              });
-            }
+            onDataErrorCallback(widget, data.error, data);
           }
 
+          resolve(data);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          onDataErrorCallback(widget, jqXHR.status, jqXHR.responseJSON);
           console.log(jqXHR, textStatus, errorThrown);
         });
       } else {
