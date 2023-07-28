@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022-2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -463,7 +463,7 @@ class DisplayGroupFactory extends BaseFactory
         if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
             $members = [];
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayGroupId = $parsedBody->getInt($row['displayGroupId']);
+                $displayGroupId = $this->getSanitizer($row)->getInt('displayGroupId');
                 $parentId = $parsedBody->getInt('displayGroupIdMembers');
 
                 if ($this->getStore()->exists('SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `childId` = :childId AND `depth` = 1',
@@ -513,7 +513,7 @@ class DisplayGroupFactory extends BaseFactory
             }
         }
 
-        if (is_array($sortOrder) && ($sortOrder != ['`member`'] && $sortOrder != ['`member` DESC'] )) {
+        if (is_array($sortOrder) && (!in_array('`member`', $sortOrder) && !in_array('`member` DESC', $sortOrder))) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
         }
 
