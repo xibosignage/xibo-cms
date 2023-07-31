@@ -257,7 +257,10 @@ class Campaign extends Base
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
+        $campaigns = $this->campaignFactory->query(
+            $this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams)
+        );
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -284,11 +287,15 @@ class Campaign extends Base
 
             // Schedule
             if ($this->getUser()->featureEnabled('schedule.add') && $campaign->type === 'list') {
-                $campaign->buttons[] = array(
+                $campaign->buttons[] = [
                     'id' => 'campaign_button_schedule',
-                    'url' => $this->urlFor($request,'schedule.add.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
+                    'url' => $this->urlFor(
+                        $request,
+                        'schedule.add.form',
+                        ['id' => $campaign->campaignId, 'from' => 'Campaign']
+                    ),
                     'text' => __('Schedule')
-                );
+                ];
             }
 
             // Preview
@@ -319,7 +326,7 @@ class Campaign extends Base
                         'url' => $this->urlFor($request, 'campaign.edit.form', ['id' => $campaign->campaignId]),
                         'text' => __('Edit'),
                     );
-                } else if ($campaign->type === 'ad' && $this->getUser()->featureEnabled('ad.campaigns')) {
+                } else if ($campaign->type === 'ad' && $this->getUser()->featureEnabled('ad.campaign')) {
                     $campaign->buttons[] = [
                         'id' => 'campaign_button_edit',
                         'linkType' => '_self',
@@ -333,11 +340,22 @@ class Campaign extends Base
                     // Select Folder
                     $campaign->buttons[] = [
                         'id' => 'campaign_button_selectfolder',
-                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $campaign->campaignId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'campaign.selectfolder.form',
+                            ['id' => $campaign->campaignId]
+                        ),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $campaign->campaignId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'campaign.selectfolder',
+                                    ['id' => $campaign->campaignId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -350,7 +368,11 @@ class Campaign extends Base
                 // Copy the campaign
                 $campaign->buttons[] = [
                     'id' => 'campaign_button_copy',
-                    'url' => $this->urlFor($request,'campaign.copy.form', ['id' => $campaign->campaignId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'campaign.copy.form',
+                        ['id' => $campaign->campaignId]
+                    ),
                     'text' => __('Copy')
                 ];
             } else {
@@ -363,11 +385,22 @@ class Campaign extends Base
                 // Delete Campaign
                 $campaign->buttons[] = [
                     'id' => 'campaign_button_delete',
-                    'url' => $this->urlFor($request,'campaign.delete.form', ['id' => $campaign->campaignId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'campaign.delete.form',
+                        ['id' => $campaign->campaignId]
+                    ),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.delete', ['id' => $campaign->campaignId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'campaign.delete',
+                                ['id' => $campaign->campaignId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'campaign_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -472,7 +505,8 @@ class Campaign extends Base
      *  @SWG\Parameter(
      *      name="cyclePlaybackEnabled",
      *      in="formData",
-     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time
+     * it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
      *      type="integer",
      *      required=false
      *   ),
@@ -573,7 +607,9 @@ class Campaign extends Base
             $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
 
             // For compatibility with existing API implementations we set a default here.
-            $campaign->listPlayOrder = ($campaign->cyclePlaybackEnabled) ? 'block' : $sanitizedParams->getString('listPlayOrder', ['default' => 'round']);
+            $campaign->listPlayOrder = ($campaign->cyclePlaybackEnabled)
+                    ? 'block'
+                    : $sanitizedParams->getString('listPlayOrder', ['default' => 'round']);
         } else if ($campaign->type === 'ad') {
             $campaign->targetType = $sanitizedParams->getString('targetType');
             $campaign->target = $sanitizedParams->getInt('target');
@@ -1445,7 +1481,9 @@ class Campaign extends Base
 
         $campaign->folderId = $folderId;
         $folder = $this->folderFactory->getById($campaign->folderId);
-        $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+            ? $folder->id
+            : $folder->getPermissionFolderId();
 
         if ($campaign->isLayoutSpecific === 1) {
             $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, true, true);

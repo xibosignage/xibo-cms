@@ -499,6 +499,7 @@ class Display extends Base
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'bounds' => $parsedQueryParams->getString('bounds'),
             'syncGroupId' => $parsedQueryParams->getInt('syncGroupId'),
+            'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers')
         ];
     }
 
@@ -659,12 +660,17 @@ class Display extends Base
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
-        $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
+        $embed = ($parsedQueryParams->getString('embed') != null)
+            ? explode(',', $parsedQueryParams->getString('embed'))
+            : [];
 
         $filter = $this->getFilters($parsedQueryParams);
 
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
+        $displays = $this->displayFactory->query(
+            $this->gridRenderSort($parsedQueryParams),
+            $this->gridRenderFilter($filter, $parsedQueryParams)
+        );
 
         // Get all Display Profiles
         $displayProfiles = [];
@@ -696,8 +702,11 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
 
             if ($this->isApi($request)) {
-                $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
-                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 :  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                $display->lastAccessed =
+                    Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+                $display->auditingUntil = ($display->auditingUntil == 0)
+                    ? 0
+                    : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
                 $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
                 $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;

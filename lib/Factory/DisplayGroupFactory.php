@@ -449,13 +449,29 @@ class DisplayGroupFactory extends BaseFactory
         if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
             $members = [];
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayGroupId = $parsedBody->getInt($row['displayGroupId']);
+                $displayGroupId = $this->getSanitizer($row)->getInt('displayGroupId');
                 $parentId = $parsedBody->getInt('displayGroupIdMembers');
 
                 if ($this->getStore()->exists('SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `childId` = :childId AND `depth` = 1',
                     [
                         'parentId' => $parentId,
                         'childId' => $displayGroupId
+                    ]
+                )) {
+                    $members[] = $displayGroupId;
+                }
+            }
+        } else if ($parsedBody->getInt('displayIdMember') !== null) {
+            $members = [];
+
+            foreach ($this->getStore()->select($select . $body, $params) as $row) {
+                $displayGroupId = $this->getSanitizer($row)->getInt('displayGroupId');
+                $displayId = $parsedBody->getInt('displayIdMember');
+
+                if ($this->getStore()->exists('SELECT `displayGroupId` FROM `lkdisplaydg` WHERE `displayId` = :displayId AND `displayGroupId` = :displayGroupId ',
+                    [
+                        'displayId' => $displayId,
+                        'displayGroupId' => $displayGroupId
                     ]
                 )) {
                     $members[] = $displayGroupId;
@@ -499,7 +515,7 @@ class DisplayGroupFactory extends BaseFactory
             }
         }
 
-        if (is_array($sortOrder) && ($sortOrder != ['`member`'] && $sortOrder != ['`member` DESC'] )) {
+        if (is_array($sortOrder) && (!in_array('`member`', $sortOrder) && !in_array('`member` DESC', $sortOrder))) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
         }
 

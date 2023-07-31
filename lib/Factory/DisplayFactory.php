@@ -560,16 +560,21 @@ class DisplayFactory extends BaseFactory
             }
         }
 
-        // run the special query to help sort by displays already assigned to this display group, we want to run it only if we're sorting by member column.
-        if ($parsedBody->getInt('displayGroupIdMembers') !== null && ($sortOrder == ['`member`'] || $sortOrder == ['`member` DESC'] )) {
+        // run the special query to help sort by displays already assigned to this display group,
+        // or by displays assigned to this syncGroup
+        // we want to run it only if we're sorting by member column.
+        if (in_array('`member`', $sortOrder) || in_array('`member` DESC', $sortOrder)) {
             $members = [];
-            $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
 
-            foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayId = $this->getSanitizer($row)->getInt('displayId');
+            // DisplayGroup members with provided Display Group ID
+            if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
+                $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
 
-                if ($this->getStore()->exists(
-                    'SELECT display.display, display.displayId, displaygroup.displayGroupId
+                foreach ($this->getStore()->select($select . $body, $params) as $row) {
+                    $displayId = $this->getSanitizer($row)->getInt('displayId');
+
+                    if ($this->getStore()->exists(
+                        'SELECT display.display, display.displayId, displaygroup.displayGroupId
                                                     FROM display
                                                       INNER JOIN `lkdisplaydg` 
                                                           ON lkdisplaydg.displayId = `display`.displayId 
@@ -578,12 +583,31 @@ class DisplayFactory extends BaseFactory
                                                       INNER JOIN `displaygroup` 
                                                           ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
                                                           AND `displaygroup`.isDisplaySpecific = 0',
-                    [
-                        'displayGroupId' => $displayGroupId,
-                        'displayId' => $displayId
-                    ]
-                )) {
-                    $members[] = $displayId;
+                        [
+                            'displayGroupId' => $displayGroupId,
+                            'displayId' => $displayId
+                        ]
+                    )) {
+                        $members[] = $displayId;
+                    }
+                }
+            } else if ($parsedBody->getInt('syncGroupIdMembers') !== null) {
+                // Sync Group Members with provided Sync Group ID
+                foreach ($this->getStore()->select($select . $body, $params) as $row) {
+                    $displayId = $this->getSanitizer($row)->getInt('displayId');
+
+                    if ($this->getStore()->exists(
+                        'SELECT display.displayId 
+                                FROM `display` 
+                                WHERE `display`.syncGroupId = :syncGroupId
+                                    AND `display`.displayId = :displayId',
+                        [
+                            'syncGroupId' => $parsedBody->getInt('syncGroupIdMembers'),
+                            'displayId' => $displayId
+                        ]
+                    )) {
+                        $members[] = $displayId;
+                    }
                 }
             }
         }
@@ -625,7 +649,7 @@ class DisplayFactory extends BaseFactory
             }
         }
 
-        if (is_array($sortOrder) && ($sortOrder != ['`member`'] && $sortOrder != ['`member` DESC'] )) {
+        if (is_array($sortOrder) && (!in_array('`member`', $sortOrder) && !in_array('`member` DESC', $sortOrder))) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
         }
 

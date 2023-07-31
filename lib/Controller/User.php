@@ -282,6 +282,7 @@ class User extends Base
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'retired' => $sanitizedParams->getInt('retired'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'userGroupIdMembers' => $sanitizedParams->getInt('userGroupIdMembers'),
         ];
 
         // Load results into an array
@@ -1886,7 +1887,7 @@ class User extends Base
 
             if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
-                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false]);
+                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false, 'validate' => false]);
             } else {
                 throw new ConfigurationException(__('Cannot change owner on this Object'));
             }

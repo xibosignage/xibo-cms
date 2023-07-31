@@ -163,6 +163,9 @@ function XiboInitialise(scope, options) {
         // Folder navigation relies on triggering the change event on this hidden field.
         $(this).find('.XiboFilter form #folderId').on('change', filterRefresh);
 
+        // Tags need on change trigger.
+        $(this).find('.XiboFilter form input[data-role="tagsInputInline"]').on('change', filterRefresh);
+
         // check to see if we need to share folder tree state globally or per page
         var gridFolderState = rememberFolderTreeStateGlobally ? 'grid-folder-tree-state' : 'grid_'+gridName ;
         // init the jsTree
@@ -3613,7 +3616,7 @@ function updateRangeFilter($element, $from, $to, callBack) {
     (typeof callBack === 'function') && callBack();
 }
 
-function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [])
+function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected = null, onBuildContextMenu = null, plugins = [], homeFolderId = null)
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
@@ -3763,7 +3766,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                     return true;
                 },
                 'data' : {
-                    "url": foldersUrl
+                    "url": foldersUrl + (homeFolderId ? '?homeFolderId='+homeFolderId : '')
                 }
             }
         }).bind('ready.jstree', function(e, data) {
@@ -3784,6 +3787,10 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                     } else {
                         $(container).jstree().disable_node(node);
                     }
+                }
+
+                if (e?.original?.isRoot === 1) {
+                    $(container).find('a#'+e.id+'_anchor').attr('title', translations.folderRootTitle)
                 }
 
                 // get the home folder

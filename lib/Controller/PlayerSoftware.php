@@ -608,7 +608,10 @@ class PlayerSoftware extends Base
             // Add the Player Software record
             $playerSoftware = $this->getPlayerVersionFactory()->createEmpty();
             $playerSoftware->modifiedBy = $this->getUser()->userName;
-            $playerSoftware->fileName = $file->fileName;
+
+            // SoC players have issues parsing fileNames with spaces in them
+            // replace any unexpected character in fileName with -
+            $playerSoftware->fileName = preg_replace('/[^a-zA-Z0-9_.]+/', '-', $file->fileName);
             $playerSoftware->size = filesize($filePath);
             $playerSoftware->md5 = md5_file($filePath);
             $playerSoftware->decorateRecord();

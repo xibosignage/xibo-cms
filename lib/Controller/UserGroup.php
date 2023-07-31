@@ -125,7 +125,8 @@ class UserGroup extends Base
             'group' => $sanitizedQueryParams->getString('userGroup'),
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-            'isUserSpecific' => 0
+            'isUserSpecific' => 0,
+            'userIdMember' => $sanitizedQueryParams->getInt('userIdMember'),
         ];
 
         $groups = $this->userGroupFactory->query(
