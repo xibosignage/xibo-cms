@@ -47,6 +47,7 @@
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Media" %}</th>
                             <th>{% trans "Code" %}</th>
+                            <th>{% trans "Description" %}</th>
                             <th class="rowMenu"></th>
                         </tr>
                         </thead>
@@ -91,13 +92,28 @@
                         "render": dataTableSpacingPreformatted
                     },
                     {
-                        "name": "mediaId",
                         responsivePriority: 3,
-                        "data": null,
-                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                        data: 'mediaId',
+                        render: function (data, type, row) {
+                          if (type !== 'display' || data === null || data === '') {
+                            return data;
+                          }
+
+                          if (row.thumbnail && row.thumbnail !== '') {
+                            return '<a class="img-replace" data-toggle="lightbox" data-type="image"' +
+                              ' href="' + row.thumbnail + '">' +
+                              '<img src="' + row.thumbnail + '&isThumb=1" alt="Thumbnail" />';
+                          } else {
+                            return '';
+                          }
+                        }
                     },
                     {
                         "data": "code", responsivePriority: 3
+                    },
+                    {
+                      data: 'description',
+                      responsivePriority: 3,
                     },
                     {
                         "orderable": false,

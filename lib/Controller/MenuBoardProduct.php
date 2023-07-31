@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -174,17 +174,17 @@ class MenuBoardProduct extends Base
                 continue;
             }
 
-            $menuBoardProduct->thumbnail = '';
             $menuBoardProduct->includeProperty('buttons');
             $menuBoardProduct->buttons = [];
 
             if ($menuBoardProduct->mediaId != 0) {
-                $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]);
-                $menuBoardProduct->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
-                $menuBoardProduct->thumbnailUrl = $download . '&isThumb=1';
+                $menuBoardProduct->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]),
+                );
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
                 $menuBoardProduct->buttons[] = [
                     'id' => 'menuBoardProduct_edit_button',
                     'url' => $this->urlFor($request, 'menuBoard.product.edit.form', ['id' => $menuBoardProduct->menuProductId]),
@@ -192,7 +192,7 @@ class MenuBoardProduct extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
                 $menuBoardProduct->buttons[] = ['divider' => true];
 
                 $menuBoardProduct->buttons[] = [
@@ -303,9 +303,9 @@ class MenuBoardProduct extends Base
      *  @SWG\Parameter(
      *      name="price",
      *      in="formData",
-     *      description="Menu Board Product price, including the currency symbol if needed",
-     *      type="string",
-     *      required=true
+     *      description="Menu Board Product price",
+     *      type="decimal",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="allergyInfo",
@@ -313,6 +313,20 @@ class MenuBoardProduct extends Base
      *      description="Menu Board Product allergyInfo",
      *      type="string",
      *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="calories",
+     *      in="formData",
+     *      description="Menu Board Product calories",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Menu Board Product Display Order, used for sorting",
+     *      type="integer",
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="availability",
@@ -382,13 +396,20 @@ class MenuBoardProduct extends Base
 
         $name = $sanitizedParams->getString('name');
         $mediaId = $sanitizedParams->getInt('mediaId');
-        $price = $sanitizedParams->getString('price');
+        $price = $sanitizedParams->getDouble('price');
         $description = $sanitizedParams->getString('description');
         $allergyInfo = $sanitizedParams->getString('allergyInfo');
+        $calories = $sanitizedParams->getInt('calories');
+        $displayOrder = $sanitizedParams->getInt('displayOrder');
         $availability = $sanitizedParams->getCheckbox('availability');
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
         $code = $sanitizedParams->getString('code');
+
+        // If the display order is empty, get the next highest one.
+        if ($displayOrder === null) {
+            $displayOrder = $this->menuBoardCategoryFactory->getNextDisplayOrder($menuBoardCategory->menuCategoryId);
+        }
 
         $menuBoardProduct = $this->menuBoardCategoryFactory->createProduct(
             $menuBoard->menuId,
@@ -397,6 +418,8 @@ class MenuBoardProduct extends Base
             $price,
             $description,
             $allergyInfo,
+            $calories,
+            $displayOrder,
             $availability,
             $mediaId,
             $code
@@ -488,9 +511,9 @@ class MenuBoardProduct extends Base
      *  @SWG\Parameter(
      *      name="price",
      *      in="formData",
-     *      description="Menu Board Product price, including the currency symbol if needed",
-     *      type="string",
-     *      required=true
+     *      description="Menu Board Product price",
+     *      type="decimal",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="allergyInfo",
@@ -498,6 +521,20 @@ class MenuBoardProduct extends Base
      *      description="Menu Board Product allergyInfo",
      *      type="string",
      *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="calories",
+     *      in="formData",
+     *      description="Menu Board Product calories",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Menu Board Product Display Order, used for sorting",
+     *      type="integer",
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="availability",
@@ -564,8 +601,10 @@ class MenuBoardProduct extends Base
 
         $menuBoardProduct->name = $sanitizedParams->getString('name');
         $menuBoardProduct->description = $sanitizedParams->getString('description');
-        $menuBoardProduct->price = $sanitizedParams->getString('price');
+        $menuBoardProduct->price = $sanitizedParams->getDouble('price');
         $menuBoardProduct->allergyInfo = $sanitizedParams->getString('allergyInfo');
+        $menuBoardProduct->calories = $sanitizedParams->getString('calories');
+        $menuBoardProduct->displayOrder = $sanitizedParams->getInt('displayOrder');
         $menuBoardProduct->availability = $sanitizedParams->getCheckbox('availability');
         $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId');
         $menuBoardProduct->code = $sanitizedParams->getString('code');

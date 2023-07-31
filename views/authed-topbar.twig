@@ -76,7 +76,7 @@
         </li>
     {% endif %}
 
-    {% set countViewable = currentUser.featureEnabledCount(["library.view", "playlist.view", "dataset.view", "menuboard.view"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["library.view", "playlist.view", "dataset.view", "menuBoard.view"]) %}
     {% set groupElementClass = (countViewable > 1) ? 'dropdown-item' : 'nav-link' %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
@@ -98,7 +98,7 @@
                 <a class="{{ groupElementClass }}" href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a>
             {% endif %}
 
-            {% if currentUser.featureEnabled("menuboard.view") and not hideMenuBoard %}
+            {% if currentUser.featureEnabled("menuBoard.view") %}
                 <a class="{{ groupElementClass }}" href="{{ url_for("menuBoard.view") }}">{% trans "Menu Boards" %}</a>
             {% endif %}
         {% if countViewable > 1 %}

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -76,14 +76,14 @@ class MenuBoardCategoryFactory extends BaseFactory
      * @param string $code
      * @return MenuBoardCategory
      */
-    public function create($menuId, $name, $mediaId, $code)
+    public function create($menuId, $name, $mediaId, $code, $description)
     {
         $menuBoardCategory = $this->createEmpty();
         $menuBoardCategory->menuId = $menuId;
         $menuBoardCategory->name = $name;
         $menuBoardCategory->mediaId = $mediaId;
         $menuBoardCategory->code = $code;
-
+        $menuBoardCategory->description = $description;
         return $menuBoardCategory;
     }
 
@@ -92,9 +92,10 @@ class MenuBoardCategoryFactory extends BaseFactory
      * @param int $menuId
      * @param int $menuCategoryId
      * @param string $name
-     * @param string $price
+     * @param float $price
      * @param string $description
      * @param string $allergyInfo
+     * @param int $calories
      * @param int $availability
      * @param int $mediaId
      * @param string $code
@@ -107,6 +108,8 @@ class MenuBoardCategoryFactory extends BaseFactory
         $price,
         $description,
         $allergyInfo,
+        $calories,
+        $displayOrder,
         $availability,
         $mediaId,
         $code
@@ -118,10 +121,11 @@ class MenuBoardCategoryFactory extends BaseFactory
         $menuBoardProduct->price = $price;
         $menuBoardProduct->description = $description;
         $menuBoardProduct->allergyInfo = $allergyInfo;
+        $menuBoardProduct->calories = $calories;
+        $menuBoardProduct->displayOrder = $displayOrder;
         $menuBoardProduct->availability = $availability;
         $menuBoardProduct->mediaId = $mediaId;
         $menuBoardProduct->code = $code;
-
         return $menuBoardProduct;
     }
 
@@ -198,11 +202,12 @@ class MenuBoardCategoryFactory extends BaseFactory
         $entries = [];
 
         $select = '
-            SELECT menu_category.menuCategoryId,
-               `menu_category`.menuId,
-               `menu_category`.name,
-               `menu_category`.code,
-               `menu_category`.mediaId
+            SELECT `menu_category`.`menuCategoryId`,
+               `menu_category`.`menuId`,
+               `menu_category`.`name`,
+               `menu_category`.`description`,
+               `menu_category`.`code`,
+               `menu_category`.`mediaId`
             ';
 
         $body = ' FROM menu_category WHERE 1 = 1 ';
@@ -266,6 +271,19 @@ class MenuBoardCategoryFactory extends BaseFactory
         return $entries;
     }
 
+    public function getNextDisplayOrder(int $categoryId): int
+    {
+        $results = $this->getStore()->select('
+            SELECT MAX(`displayOrder`) AS next
+              FROM menu_product
+            WHERE menuCategoryId = :categoryId
+        ', [
+            'categoryId' => $categoryId,
+        ]);
+
+        return ($results[0]['next'] ?? 0) + 1;
+    }
+
     /**
      * @param null $sortOrder
      * @param array $filterBy
@@ -274,7 +292,7 @@ class MenuBoardCategoryFactory extends BaseFactory
     public function getProductData($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null) {
-            $sortOrder = ['availability DESC, menuProductId'];
+            $sortOrder = ['`displayOrder`, `availability` DESC, `menuProductId`'];
         }
 
         $sanitizedFilter = $this->getSanitizer($filterBy);
@@ -284,32 +302,34 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         $select = '
             SELECT 
-               `menu_product`.menuProductId,
-               `menu_product`.menuId,
-               `menu_product`.menuCategoryId,
-               `menu_product`.name,
-               `menu_product`.price,
-               `menu_product`.description,
-               `menu_product`.mediaId,
-               `menu_product`.availability,
-               `menu_product`.allergyInfo,
-               `menu_product`.code
+               `menu_product`.`menuProductId`,
+               `menu_product`.`menuId`,
+               `menu_product`.`menuCategoryId`,
+               `menu_product`.`name`,
+               `menu_product`.`price`,
+               `menu_product`.`description`,
+               `menu_product`.`mediaId`,
+               `menu_product`.`displayOrder`,
+               `menu_product`.`availability`,
+               `menu_product`.`allergyInfo`,
+               `menu_product`.`calories`,
+               `menu_product`.`code`
             ';
 
         $body = ' FROM menu_product WHERE 1 = 1  ';
 
         if ($sanitizedFilter->getInt('menuProductId') !== null) {
-            $body .= ' AND `menu_product`.menuProductId = :menuProductId ';
+            $body .= ' AND `menu_product`.`menuProductId` = :menuProductId ';
             $params['menuProductId'] = $sanitizedFilter->getInt('menuProductId');
         }
 
         if ($sanitizedFilter->getInt('menuId') !== null) {
-            $body .= ' AND `menu_product`.menuId = :menuId ';
+            $body .= ' AND `menu_product`.`menuId` = :menuId ';
             $params['menuId'] = $sanitizedFilter->getInt('menuId');
         }
 
         if ($sanitizedFilter->getInt('menuCategoryId') !== null) {
-            $body .= ' AND `menu_product`.menuCategoryId = :menuCategoryId ';
+            $body .= ' AND `menu_product`.`menuCategoryId` = :menuCategoryId ';
             $params['menuCategoryId'] = $sanitizedFilter->getInt('menuCategoryId');
         }
 
@@ -319,22 +339,22 @@ class MenuBoardCategoryFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('availability') !== null) {
-            $body .= ' AND `menu_product`.availability = :availability ';
+            $body .= ' AND `menu_product`.`availability` = :availability ';
             $params['availability'] = $sanitizedFilter->getInt('availability');
         }
 
         if ($sanitizedFilter->getString('categories') != null) {
             $categories = implode('","', array_map('intval', explode(',', $sanitizedFilter->getString('categories'))));
-            $body .= ' AND `menu_product`.menuCategoryId IN ("' . $categories . '") ';
+            $body .= ' AND `menu_product`.`menuCategoryId` IN ("' . $categories . '") ';
         }
 
         if ($sanitizedFilter->getInt('mediaId') !== null) {
-            $body .= ' AND `menu_product`.mediaId = :mediaId ';
+            $body .= ' AND `menu_product`.`mediaId` = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
         if ($sanitizedFilter->getString('code') != '') {
-            $body.= ' AND `menu_product`.code LIKE :code ';
+            $body.= ' AND `menu_product`.`code` LIKE :code ';
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
@@ -354,7 +374,16 @@ class MenuBoardCategoryFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $menuProduct = $this->createEmptyProduct()->hydrate($row, ['intProperties' => ['availability']]);
+            $menuProduct = $this->createEmptyProduct()->hydrate($row, [
+                'intProperties' => [
+                    'availability',
+                    'calories',
+                    'displayOrder',
+                ],
+                'doubleProperties' => [
+                    'price',
+                ]
+            ]);
             $entries[] = $menuProduct;
         }
 

@@ -167,7 +167,7 @@ class MenuBoard extends Base
             $menuBoard->includeProperty('buttons');
             $menuBoard->buttons = [];
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
                 $menuBoard->buttons[] = [
                     'id' => 'menuBoard_button_viewcategories',
                     'url' => $this->urlFor($request, 'menuBoard.category.view', ['id' => $menuBoard->menuId]),
@@ -203,7 +203,7 @@ class MenuBoard extends Base
                 }
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkPermissionsModifyable($menuBoard)) {
+            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkPermissionsModifyable($menuBoard)) {
                 $menuBoard->buttons[] = ['divider' => true];
 
                 // Share button
@@ -231,7 +231,7 @@ class MenuBoard extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify')
+            if ($this->getUser()->featureEnabled('menuBoard.modify')
                 && $this->getUser()->checkDeleteable($menuBoard)
             ) {
                 $menuBoard->buttons[] = ['divider' => true];
