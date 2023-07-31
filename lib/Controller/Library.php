@@ -1034,7 +1034,7 @@ class Library extends Base
      *      name="playlistId",
      *      in="formData",
      *      description="A playlistId to add this uploaded media to",
-     *      type="int",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-06 11:51+0100\n"
+"POT-Creation-Date: 2023-07-31 17:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15299,7 +15299,7 @@ msgid "Cannot modify root folder."
 msgstr ""
 
 #: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:430
-#: lib/Controller/Folder.php:329
+#: lib/Controller/Folder.php:338
 msgid "Cannot remove Folder with content"
 msgstr ""
 
@@ -18714,7 +18714,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:706 lib/Controller/DisplayGroup.php:2531
 #: lib/Controller/DataSet.php:622 lib/Controller/Notification.php:575
 #: lib/Controller/Campaign.php:605 lib/Controller/Campaign.php:1337
-#: lib/Controller/Module.php:735 lib/Controller/Folder.php:204
+#: lib/Controller/Module.php:735 lib/Controller/Folder.php:213
 #: lib/Controller/Playlist.php:707 lib/Controller/DataSetColumn.php:386
 #: lib/Controller/Tag.php:356 lib/Controller/Layout.php:549
 #: lib/Controller/Help.php:191 lib/Controller/DisplayProfile.php:303
@@ -18731,7 +18731,7 @@ msgstr ""
 #: lib/Controller/DataSet.php:917 lib/Controller/ScheduleReport.php:429
 #: lib/Controller/Notification.php:705 lib/Controller/Campaign.php:912
 #: lib/Controller/MenuBoard.php:465 lib/Controller/Module.php:379
-#: lib/Controller/Module.php:848 lib/Controller/Folder.php:272
+#: lib/Controller/Module.php:848 lib/Controller/Folder.php:281
 #: lib/Controller/Playlist.php:892 lib/Controller/Transition.php:159
 #: lib/Controller/Library.php:1353 lib/Controller/DataSetColumn.php:594
 #: lib/Controller/Tag.php:506 lib/Controller/Connector.php:201
@@ -18753,7 +18753,7 @@ msgstr ""
 #: lib/Controller/DataSet.php:1008 lib/Controller/ScheduleReport.php:467
 #: lib/Controller/Notification.php:764 lib/Controller/Campaign.php:991
 #: lib/Controller/SavedReport.php:290 lib/Controller/MenuBoard.php:542
-#: lib/Controller/Module.php:983 lib/Controller/Folder.php:334
+#: lib/Controller/Module.php:983 lib/Controller/Folder.php:343
 #: lib/Controller/Playlist.php:973 lib/Controller/Library.php:961
 #: lib/Controller/DataSetColumn.php:684 lib/Controller/Tag.php:632
 #: lib/Controller/Layout.php:967 lib/Controller/MenuBoardCategory.php:498
@@ -19436,41 +19436,40 @@ msgstr ""
 msgid "Switched to Normal Mode"
 msgstr ""
 
-#: lib/Controller/Folder.php:101
+#: lib/Controller/Folder.php:102
 msgid "Right click a Folder for further Options"
 msgstr ""
 
-#: lib/Controller/Folder.php:136
+#: lib/Controller/Folder.php:145
 msgid "Private Folder"
 msgstr ""
 
-#: lib/Controller/Folder.php:259
+#: lib/Controller/Folder.php:268
 msgid "Cannot edit root Folder"
 msgstr ""
 
-#: lib/Controller/Folder.php:318
+#: lib/Controller/Folder.php:327
 msgid "Cannot remove root Folder"
 msgstr ""
 
-#: lib/Controller/Folder.php:329
+#: lib/Controller/Folder.php:338
 msgid "Reassign objects from this Folder before deleting."
 msgstr ""
 
-#: lib/Controller/Folder.php:422
+#: lib/Controller/Folder.php:434
 msgid "Please select different folder, cannot move Folder to the same Folder"
 msgstr ""
 
-#: lib/Controller/Folder.php:428
+#: lib/Controller/Folder.php:440
 msgid ""
 "Please select different folder, cannot move Folder inside of one of its sub-"
 "folders"
 msgstr ""
 
-#: lib/Controller/Folder.php:435
+#: lib/Controller/Folder.php:445
 msgid ""
-"This Folder is already a sub-folder of the selected Folder,\n"
-"                     if you wish to move its content to the parent Folder, "
-"please check the merge checkbox."
+"This Folder is already a sub-folder of the selected Folder, if you wish to "
+"move its content to the parent Folder, please check the merge checkbox."
 msgstr ""
 
 #: lib/Controller/DataSetData.php:156
@@ -21125,15 +21124,15 @@ msgstr ""
 msgid "Library Quota must be a positive number."
 msgstr ""
 
-#: lib/Entity/User.php:1083
+#: lib/Entity/User.php:1086
 msgid "Provided Object not under permission management"
 msgstr ""
 
-#: lib/Entity/User.php:1340
+#: lib/Entity/User.php:1343
 msgid "You have exceeded your library quota"
 msgstr ""
 
-#: lib/Entity/User.php:1358
+#: lib/Entity/User.php:1361
 msgid "Your password does not meet the required complexity"
 msgstr ""
 
@@ -22197,7 +22196,9 @@ msgid "View Folder Tree on Grids and Forms"
 msgstr ""
 
 #: lib/Factory/UserGroupFactory.php:790
-msgid "Create new Folders"
+msgid ""
+"Allow users to create Sub-Folders under Folders they have access to. (Except "
+"the Root Folder)"
 msgstr ""
 
 #: lib/Factory/UserGroupFactory.php:795
