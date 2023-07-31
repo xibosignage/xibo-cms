@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -442,12 +442,7 @@ class Folder extends Base
         }
 
         if ($folder->parentId === $newParentFolder->getId() && $params->getCheckbox('merge') !== 1) {
-            throw new InvalidArgumentException(
-                __(
-                    'This Folder is already a sub-folder of the selected Folder,
-                     if you wish to move its content to the parent Folder, please check the merge checkbox.'
-                )
-            );
+            throw new InvalidArgumentException(__('This Folder is already a sub-folder of the selected Folder, if you wish to move its content to the parent Folder, please check the merge checkbox.'));//phpcs:ignore
         }
 
         // if we need to merge contents of the folder, dispatch an event that will move every object inside the folder

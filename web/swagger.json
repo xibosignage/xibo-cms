@@ -5319,7 +5319,7 @@
                         "in": "formData",
                         "description": "A playlistId to add this uploaded media to",
                         "required": false,
-                        "type": "int"
+                        "type": "integer"
                     },
                     {
                         "name": "widgetFromDt",
