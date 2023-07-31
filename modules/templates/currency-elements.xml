@@ -29,6 +29,13 @@
         <thumbnail>currency-name</thumbnail>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+        </properties>
         <assets>
             <asset id="currency-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
         </assets>
@@ -43,6 +50,13 @@
         <thumbnail>currency-last-trade-price</thumbnail>
         <startWidth>250</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+        </properties>
         <assets>
             <asset id="currency-last-trade-price" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-last-trade-price.png" />
         </assets>
@@ -57,6 +71,13 @@
         <thumbnail>currency-change-percentage</thumbnail>
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+        </properties>
         <onElementParseData><![CDATA[
 // value - element to be parsed
 if (String(value).length === 0) {
@@ -103,6 +124,13 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+            </property>
+        </properties>
+        <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
             </property>
         </properties>
         <stencil>
@@ -158,6 +186,13 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         <thumbnail>currency-logo</thumbnail>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+        </properties>
         <stencil>
             <hbs><![CDATA[
 <div class="currency-elements-logo" data-css-url="[[assetId=flagsCSS]]">

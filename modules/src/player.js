@@ -453,6 +453,7 @@ $(function() {
           if (widgetElement?.elements?.length > 0) {
             $.each(widgetElement.elements, function(_elemKey, element) {
               const elementCopy = JSON.parse(JSON.stringify(element));
+              const elementProperties = elementCopy?.properties || {};
 
               if (Object.keys(elementCopy).length > 0 &&
                 elementCopy.hasOwnProperty('properties')
@@ -480,7 +481,6 @@ $(function() {
                 hbs = Handlebars.compile($template.html());
               }
 
-              const elementProperties = element?.properties || {};
               const renderElement = (data, isStatic) => {
                 const hbsTemplate = hbs(
                   Object.assign(data, globalOptions),
@@ -531,6 +531,7 @@ $(function() {
                     duration: widgetInfo.duration,
                     marqueeInlineSelector: `.${templateData.id}--item`,
                     parentId: elementCopy.elementId,
+                    effect: elementProperties?.effect || 'noTransition',
                   },
                 );
                 getWidgetData(widgetInfo)
