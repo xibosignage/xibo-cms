@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -195,8 +195,13 @@ class Handlers
                         $template = 'error';
                     }
 
-                    return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData))
-                        ->withStatus($statusCode);
+                    try {
+                        return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData))
+                            ->withStatus($statusCode);
+                    } catch (\Exception $exception) {
+                        $response->getBody()->write('Fatal error');
+                        return $response->withStatus(500);
+                    }
                 }
             }
         };
