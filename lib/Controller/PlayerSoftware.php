@@ -608,7 +608,7 @@ class PlayerSoftware extends Base
             // Add the Player Software record
             $playerSoftware = $this->getPlayerVersionFactory()->createEmpty();
             $playerSoftware->modifiedBy = $this->getUser()->userName;
-            $playerSoftware->fileName = $file->fileName;
+            $playerSoftware->fileName = urlencode($file->fileName);
             $playerSoftware->size = filesize($filePath);
             $playerSoftware->md5 = md5_file($filePath);
             $playerSoftware->decorateRecord();
