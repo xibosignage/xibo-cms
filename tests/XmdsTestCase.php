@@ -24,6 +24,7 @@ namespace Xibo\Tests;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ServerException;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
@@ -31,6 +32,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Xibo\Support\Exception\GeneralException;
 
 class xmdsTestCase extends TestCase
 {
@@ -72,11 +74,18 @@ class xmdsTestCase extends TestCase
         array $headers = ['HTTP_ACCEPT'=>'text/xml']
     ): ResponseInterface {
         // Create a request for tests
-        return $this->client->request($method, $path . $version, [
-            'headers' => $headers,
-            'body' => $body,
-            'http_errors' => $httpErrors
-        ]);
+        try {
+            return $this->client->request($method, $path . $version, [
+                'headers' => $headers,
+                'body' => $body,
+                'http_errors' => $httpErrors
+            ]);
+        } catch (ServerException $exception) {
+            if ($exception->hasResponse()) {
+                throw new GeneralException($exception->getResponse()->getBody()->getContents());
+            }
+            throw new GeneralException('No response');
+        }
     }
 
     protected function getFile(
