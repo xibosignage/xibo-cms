@@ -2745,6 +2745,7 @@ class Soap
                 $dependency->legacyId,
                 $dependency->id,
                 $dependencyBasePath,
+                $dependency->size,
                 $isSupportsDependency
             )
             ->save()->rfId;

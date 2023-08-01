@@ -36,6 +36,11 @@ class RequiredFileFactory extends BaseFactory
 {
     private $statement = null;
 
+    private $hydrate = [
+        'intProperties' => ['bytesRequested', 'complete'],
+        'stringProperties' => ['realId'],
+    ];
+
     /**
      * @return RequiredFile
      */
@@ -65,7 +70,7 @@ class RequiredFileFactory extends BaseFactory
         $this->statement->execute($params);
 
         foreach ($this->statement->fetchAll(\PDO::FETCH_ASSOC) as $item) {
-            $files[] = $this->createEmpty()->hydrate($item, ['stringProperties' => ['realId']]);
+            $files[] = $this->createEmpty()->hydrate($item, $this->hydrate);
         }
 
         return $files;
@@ -152,7 +157,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Dependency'));
         }
 
-        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+        return $this->createEmpty()->hydrate($result[0], $this->hydrate);
     }
 
     /**
@@ -195,7 +200,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Path'));
         }
 
-        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+        return $this->createEmpty()->hydrate($result[0], $this->hydrate);
     }
 
     /**
@@ -222,7 +227,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Dependency ID'));
         }
 
-        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+        return $this->createEmpty()->hydrate($result[0], $this->hydrate);
     }
 
     /**
@@ -298,6 +303,7 @@ class RequiredFileFactory extends BaseFactory
      * @param $id
      * @param string|int $realId
      * @param $path
+     * @param int $size
      * @param bool $isUseRealId
      * @return RequiredFile
      */
@@ -307,6 +313,7 @@ class RequiredFileFactory extends BaseFactory
         $id,
         $realId,
         $path,
+        int $size,
         bool $isUseRealId = true
     ): RequiredFile {
         try {
@@ -321,6 +328,7 @@ class RequiredFileFactory extends BaseFactory
         $requiredFile->fileType = $fileType;
         $requiredFile->realId = $realId;
         $requiredFile->path = $path;
+        $requiredFile->size = $size;
         return $requiredFile;
     }
 
@@ -357,18 +365,20 @@ class RequiredFileFactory extends BaseFactory
     {
         $params = $this->getSanitizer($request);
         $displayId = $params->getInt('displayId');
-        $itemId = $params->getInt('itemId');
 
         switch ($params->getString('type')) {
             case 'L':
+                $itemId = $params->getInt('itemId');
                 $file = $this->getByDisplayAndLayout($displayId, $itemId);
                 break;
 
             case 'M':
+                $itemId = $params->getInt('itemId');
                 $file = $this->getByDisplayAndMedia($displayId, $itemId);
                 break;
 
             case 'P':
+                $itemId = $params->getString('itemId');
                 $fileType = $params->getString('fileType');
                 if (empty($fileType)) {
                     throw new NotFoundException(__('Missing fileType'));
@@ -380,7 +390,7 @@ class RequiredFileFactory extends BaseFactory
                     !($fileType == 'media' && $itemId < 0)
                 );
 
-                // Update $file->path with the path on disk (likely /dependencies/$fileType/$itemId)
+                // Update $file->path with the path on disk (likely /assets/$itemId)
                 $event = new XmdsDependencyRequestEvent($file);
                 $this->getDispatcher()->dispatch($event, XmdsDependencyRequestEvent::$NAME);
 
